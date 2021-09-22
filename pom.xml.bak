@@ -8,23 +8,30 @@
     <relativePath></relativePath>
     <!-- lookup parent from repository -->
   </parent>
-  <groupId>com.example</groupId>
-  <artifactId>template</artifactId>
+  <groupId>com.semanticbits.measureservice</groupId>
+  <artifactId>measureservice</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <name>template</name>
-  <description>Demo project for Spring Boot</description>
+  <name>Measure Service</name>
+  <description>Measure Service for MADiE</description>
   <properties>
     <java.version>16</java.version>
     <mvn.checkstyle.file>madie-checkstyle.xml</mvn.checkstyle.file>
     <mvn.checkstyle.version>3.1.2</mvn.checkstyle.version>
     <mvnreports.version>3.1.1</mvnreports.version>
     <mvnsite.version>3.9.1</mvnsite.version>
+    <springboot.version>2.5.4</springboot.version>
   </properties>
   <dependencies>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
+    
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-data-mongodb</artifactId>
+    </dependency>
+    
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
@@ -139,9 +146,6 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-pmd-plugin</artifactId>
         <version>3.15.0</version>
-        <configuration>
-          <targetJdk>1.6</targetJdk>
-        </configuration>
         <executions>
           <execution>
             <goals>
@@ -150,6 +154,9 @@
             </goals>
           </execution>
         </executions>
+        <configuration>
+          <targetJdk>1.6</targetJdk>
+        </configuration>
       </plugin>
 
       <plugin>
