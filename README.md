@@ -1,0 +1,2 @@
+# microservice-template
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/5534763bd4164c4383414b90a3e6e492)](https://app.codacy.com/gh/MeasureAuthoringTool/microservice-template?utm_source=github.com&utm_medium=referral&utm_content=MeasureAuthoringTool/microservice-template&utm_campaign=Badge_Grade_Settings)
