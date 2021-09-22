@@ -1,0 +1,17 @@
+version: "3"
+services:
+  vsacterm:
+    build:
+      context: .
+    volumes:
+      - ./:/app:cached
+      - ~/.m2:/root/.m2:consistent
+    ports:
+      - "8080:8080"
+
+    
+
+ 
+
+
+ 
