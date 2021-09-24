@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<module name="Checker">
+    <property name="charset" value="UTF-8" />
+
+    <property name="severity" value="error" />
+
+    <property name="fileExtensions" value="java, properties, xml" />
+
+    <!-- https://checkstyle.sourceforge.io/config_sizes.html#FileLength -->
+    <module name="FileLength">
+        <property name="max" value="300" />
+    </module>
+<module name="SuppressionFilter">
+  <property name="file" value="suppressions.xml"/>
+  <property name="optional" value="false"/>
+</module>
+    <!-- https://checkstyle.sourceforge.io/config_sizes.html#LineLength -->
+    <module name="LineLength">
+        <property name="fileExtensions" value="java"/>
+        <property name="max" value="100"/>
+        <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
+    </module>
+    <module name="SuppressWarningsFilter" />
+    <module name="TreeWalker">
+        <module name="SuppressWarningsHolder" />
+        <!-- https://checkstyle.sourceforge.io/config_sizes.html#MethodLength -->
+        <module name="MethodLength">
+            <property name="tokens" value="METHOD_DEF" />
+            <property name="max" value="60" />
+        </module>
+
+        <!-- https://checkstyle.sourceforge.io/config_misc.html#OuterTypeFilename -->
+        <module name="OuterTypeFilename" />
+
+        <!-- https://checkstyle.sourceforge.io/config_coding.html#IllegalTokenText -->
+        <module name="IllegalTokenText">
+            <property name="tokens" value="STRING_LITERAL, CHAR_LITERAL" />
+            <property name="format"
+                      value="\\u00(09|0(a|A)|0(c|C)|0(d|D)|22|27|5(C|c))|\\(0(10|11|12|14|15|42|47)|134)" />
+            <property name="message"
+                      value="Consider using special escape sequence instead of octal value or Unicode escaped value." />
+        </module>
+
+        <!-- https://checkstyle.sourceforge.io/config_misc.html#AvoidEscapedUnicodeCharacters -->
+        <module name="AvoidEscapedUnicodeCharacters">
+            <property name="allowEscapesForControlCharacters"
+                      value="true" />
+            <property name="allowByTailComment" value="true" />
+            <property name="allowNonPrintableEscapes" value="true" />
+        </module>
+
+        <!-- https://checkstyle.sourceforge.io/config_design.html#OneTopLevelClass -->
+        <module name="OneTopLevelClass" />
+
+        <!-- https://checkstyle.sourceforge.io/config_blocks.html#EmptyBlock -->
+        <module name="EmptyBlock">
+            <property name="option" value="TEXT" />
+            <property name="tokens"
+                      value="LITERAL_TRY, LITERAL_FINALLY, LITERAL_IF, LITERAL_ELSE, LITERAL_SWITCH" />
+        </module>
+
+        <!-- https://checkstyle.sourceforge.io/config_blocks.html#NeedBraces -->
+        <module name="NeedBraces" />
+
+        <!-- https://checkstyle.sourceforge.io/config_coding.html#MultipleVariableDeclarations -->
+        <module name="MultipleVariableDeclarations" />
+
+        <!-- https://checkstyle.sourceforge.io/config_misc.html#ArrayTypeStyle -->
+        <module name="ArrayTypeStyle" />
+
+        <!-- https://checkstyle.sourceforge.io/config_coding.html#MissingSwitchDefault -->
+        <module name="MissingSwitchDefault" />
+
+        <!-- https://checkstyle.sourceforge.io/config_coding.html#FallThrough -->
+        <module name="FallThrough" />
+
+        <!-- https://checkstyle.sourceforge.io/config_misc.html#UpperEll -->
+        <module name="UpperEll" />
+
+        <!-- https://checkstyle.sourceforge.io/config_modifier.html#ModifierOrder -->
+        <module name="ModifierOrder"/>
+
+    </module>
+</module>

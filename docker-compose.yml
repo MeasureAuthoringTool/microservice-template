@@ -1,0 +1,35 @@
+version: "3"
+services:
+  madie-measure:
+    build:
+      context: .
+    volumes:
+      - ./:/app:cached
+      - ~/.m2:/root/.m2:consistent
+    ports:
+      - "8080:8080"
+    depends_on:
+      - "madie-mongo"
+    environment:
+      WAIT_HOSTS: madie-mongo:27017
+      
+  madie-mongo:
+    image: mongo:4.4
+    tmpfs: /data/db
+    restart: always
+    container_name: 'madie-mongo'
+    ports:
+      - 27017:27017
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=E5press0
+      - MONGO_INITDB_DATABASE=admin
+    volumes:
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+
+    
+
+ 
+
+
+ 
