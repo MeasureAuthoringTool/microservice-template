@@ -1,13 +1,14 @@
 package com.semanticbits.measureservice.models;
 
-import org.springframework.data.annotation.Id;
+import org.bson.types.ObjectId;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 
 import lombok.Data;
 
 @Data
 public class Measure {
 
-  @Id private Long id;
+  @MongoId ObjectId id;
   private String measureHumanReadableId;
   private String measureSetId;
 }
