@@ -1,12 +1,16 @@
 package com.semanticbits.measureservice;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import com.semanticbits.measureservice.resources.MeasureController;
 
 @SpringBootTest
 class MeasureServiceApplicationTests {
+  @Autowired private MeasureController controller;
 
   @Test
   /*
@@ -20,6 +24,6 @@ class MeasureServiceApplicationTests {
    */
   void contextLoads() {
     // if the Spring App loads, this will pass
-    assertTrue(true);
+    assertNotNull(controller);
   }
 }
