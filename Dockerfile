@@ -9,4 +9,4 @@ ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.7.3/wait
 RUN chmod +x /wait
 
 ## Launch the wait tool and then your application
-ENTRYPOINT ["java","-jar","app.jar"]
+ENTRYPOINT ["java","-jar","-Dspring.profiles.active=it", "app.jar"]
