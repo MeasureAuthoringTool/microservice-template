@@ -3,7 +3,7 @@ db.createUser(
     pwd: "h3ll0th3r3",
     roles: [ { db: "admin", role: "userAdmin" } ]
   }
-)
+);
 
 
 db.createUser(
@@ -11,17 +11,17 @@ db.createUser(
     pwd: "c1lynd3rs",
     roles: [ { db: "admin", role: "dbAdmin" } ]
   }
-)
+);
 
-db.grantRolesToUser( "dba",  [ { db: "playground", role: "dbOwner"  } ] )
+db.grantRolesToUser( "dba",  [ { db: "playground", role: "dbOwner"  } ] );
 
-db.runCommand( { rolesInfo: { role: "dbOwner", db: "playground" }, showPrivileges: true} )
+db.runCommand( { rolesInfo: { role: "dbOwner", db: "playground" }, showPrivileges: true} );
 
 db.createUser(
   { user: "gakins",
     pwd: "E5press0",
     roles: [ { db: "madie", role: "readWrite" } ]
   }
-)
+);
 
 
