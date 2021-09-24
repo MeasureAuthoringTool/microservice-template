@@ -1,4 +1,4 @@
-package com.semanticbits.measureservice.resources;
+package cms.gov.madie.measure.resources;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -14,8 +14,9 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 
-import com.semanticbits.measureservice.models.Measure;
-import com.semanticbits.measureservice.repositories.MeasureRepository;
+import cms.gov.madie.measure.models.Measure;
+import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.resources.MeasureController;
 
 @ExtendWith(MockitoExtension.class)
 class MeasureControllerTest {

@@ -1,4 +1,4 @@
-package com.semanticbits.measureservice.models;
+package cms.gov.madie.measure.models;
 
 import java.util.Date;
 
