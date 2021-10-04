@@ -1,4 +1,4 @@
-package com.semanticbits.measureservice;
+package cms.gov.madie.measure;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.semanticbits.measureservice.resources.MeasureController;
+import cms.gov.madie.measure.resources.MeasureController;
 
 @SpringBootTest
 class MeasureServiceApplicationTests {
