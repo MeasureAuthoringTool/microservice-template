@@ -1,4 +1,4 @@
-package com.semanticbits.measureservice.resources;
+package cms.gov.madie.measure.resources;
 
 import java.util.List;
 
@@ -10,9 +10,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.semanticbits.measureservice.models.Measure;
-import com.semanticbits.measureservice.repositories.MeasureRepository;
-
+import cms.gov.madie.measure.models.Measure;
+import cms.gov.madie.measure.repositories.MeasureRepository;
 import lombok.RequiredArgsConstructor;
 
 @RestController
