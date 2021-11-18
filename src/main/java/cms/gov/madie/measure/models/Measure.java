@@ -15,11 +15,12 @@ public class Measure {
   private String measureSetId;
   private String version;
   private String revisionNumber;
-  private boolean state;
+  private String state;
   private String name;
   private String cql;
   private Date createdAt;
   private String createdBy;
   private Date lastModifiedAt;
   private String lastModifiedBy;
+  private String model;
 }
