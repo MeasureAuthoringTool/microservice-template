@@ -5,12 +5,18 @@ import java.util.Date;
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import cms.gov.madie.measure.serializer.ObjectIdSerializer;
 import lombok.Data;
 
 @Data
 public class Measure {
 
-  @MongoId ObjectId id;
+  @MongoId
+  @JsonSerialize(using = ObjectIdSerializer.class)
+  ObjectId id;
+
   private String measureHumanReadableId;
   private String measureSetId;
   private String version;
