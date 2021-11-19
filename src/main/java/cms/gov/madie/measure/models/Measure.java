@@ -22,7 +22,7 @@ public class Measure {
   private String version;
   private String revisionNumber;
   private String state;
-  private String name;
+  private String measureName;
   private String cql;
   private Date createdAt;
   private String createdBy;
