@@ -1,11 +1,16 @@
 package cms.gov.madie.measure.resources;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import cms.gov.madie.measure.models.Measure;
 import cms.gov.madie.measure.repositories.MeasureRepository;
@@ -30,5 +35,21 @@ public class MeasureController {
     Measure savedMeasure = repository.save(measure);
 
     return ResponseEntity.status(HttpStatus.CREATED).body(savedMeasure);
+  }
+
+  @PutMapping("/measure")
+  public ResponseEntity<String> updateMeasure(@RequestBody Measure measure) {
+    ResponseEntity<String> response = ResponseEntity
+            .badRequest()
+            .body("Measure does not exist.");
+
+    if (measure.getId() != null) {
+      Optional<Measure> persistedMeasure = repository.findById(measure.getId().toString());
+      if (persistedMeasure.isPresent()) {
+        repository.save(measure);
+        response = ResponseEntity.ok().body("Measure updated successfully.");
+      }
+    }
+    return response;
   }
 }
