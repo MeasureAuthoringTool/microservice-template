@@ -1,9 +1,11 @@
 package cms.gov.madie.measure.resources;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.bson.types.ObjectId;
@@ -19,7 +21,6 @@ import org.springframework.http.ResponseEntity;
 
 import cms.gov.madie.measure.models.Measure;
 import cms.gov.madie.measure.repositories.MeasureRepository;
-import cms.gov.madie.measure.resources.MeasureController;
 
 @ExtendWith(MockitoExtension.class)
 class MeasureControllerTest {
@@ -55,6 +56,23 @@ class MeasureControllerTest {
 
     ResponseEntity<List<Measure>> response = controller.getMeasures();
     assertEquals("IDIDID", response.getBody().get(0).getMeasureSetId());
+  }
+
+  @Test
+  void getMeasure() {
+    String id = "testid";
+    Optional<Measure> optionalMeasure = Optional.of(measure);
+    Mockito.doReturn(optionalMeasure).when(repository).findById(id);
+    // measure found
+    ResponseEntity<Measure> response = controller.getMeasure(id);
+    assertEquals(measure.getMeasureName(), Objects.requireNonNull(response.getBody()).getMeasureName());
+
+    // if measure not found
+    Optional<Measure> empty = Optional.empty();
+    Mockito.doReturn(empty).when(repository).findById(id);
+    response = controller.getMeasure(id);
+    assertNull(response.getBody());
+    assertEquals(response.getStatusCodeValue(), 404);
   }
 
   @Test
