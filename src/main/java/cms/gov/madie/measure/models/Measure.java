@@ -1,22 +1,14 @@
 package cms.gov.madie.measure.models;
 
 import java.util.Date;
-
-import org.bson.types.ObjectId;
-import org.springframework.data.mongodb.core.mapping.MongoId;
-
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
-import cms.gov.madie.measure.serializer.ObjectIdSerializer;
+import org.springframework.data.annotation.Id;
 import lombok.Data;
 
 @Data
 public class Measure {
 
-  @MongoId
-  @JsonSerialize(using = ObjectIdSerializer.class)
-  ObjectId id;
-
+  @Id
+  private String id;
   private String measureHumanReadableId;
   private String measureSetId;
   private String version;

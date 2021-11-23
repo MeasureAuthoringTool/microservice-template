@@ -77,11 +77,11 @@ class MeasureControllerTest {
 
   @Test
   void updateMeasureSuccessfully() {
-    measure.setId(new ObjectId());
+    measure.setId(ObjectId.get().toString());
     Optional<Measure> persistedMeasure = Optional.of(measure);
     Mockito.doReturn(persistedMeasure)
             .when(repository)
-            .findById(measure.getId().toString());
+            .findById(measure.getId());
 
     Mockito.doReturn(measure)
             .when(repository)
@@ -98,12 +98,12 @@ class MeasureControllerTest {
     assertEquals("Measure does not exist.", response.getBody());
 
     // non-existing measure or measure with fake id
-    measure.setId(new ObjectId("5399aba6e4b0ae375bfdca88"));
+    measure.setId("5399aba6e4b0ae375bfdca88");
     Optional<Measure> empty = Optional.empty();
 
     Mockito.doReturn(empty)
             .when(repository)
-            .findById(measure.getId().toString());
+            .findById(measure.getId());
 
     response = controller.updateMeasure(measure);
     assertEquals("Measure does not exist.", response.getBody());
