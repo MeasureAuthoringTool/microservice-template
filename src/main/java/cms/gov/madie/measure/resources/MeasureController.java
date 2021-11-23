@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,6 +27,14 @@ public class MeasureController {
   public ResponseEntity<List<Measure>> getMeasures() {
     List<Measure> measures = repository.findAll();
     return ResponseEntity.ok(measures);
+  }
+
+  @GetMapping("/measures/{id}")
+  public ResponseEntity<Measure> getMeasure(@PathVariable("id") String id) {
+
+    Optional<Measure> measure = repository.findById(id);
+    return measure.map(ResponseEntity::ok)
+            .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
   }
 
   @PostMapping("/measure")
