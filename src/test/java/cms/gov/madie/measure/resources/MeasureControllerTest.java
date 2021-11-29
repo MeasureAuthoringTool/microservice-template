@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -78,9 +77,12 @@ class MeasureControllerTest {
 
   @Test
   void updateMeasureSuccessfully() {
-    measure.setId(new ObjectId());
     Optional<Measure> persistedMeasure = Optional.of(measure);
-    Mockito.doReturn(persistedMeasure).when(repository).findById(measure.getId().toString());
+    measure.setId("5399aba6e4b0ae375bfdca88");
+
+    Mockito.doReturn(persistedMeasure)
+        .when(repository)
+        .findById(ArgumentMatchers.<String>eq(measure.getId()));
 
     Mockito.doReturn(measure).when(repository).save(measure);
 
@@ -95,10 +97,10 @@ class MeasureControllerTest {
     assertEquals("Measure does not exist.", response.getBody());
 
     // non-existing measure or measure with fake id
-    measure.setId(new ObjectId("5399aba6e4b0ae375bfdca88"));
+    measure.setId("5399aba6e4b0ae375bfdca88");
     Optional<Measure> empty = Optional.empty();
 
-    Mockito.doReturn(empty).when(repository).findById(measure.getId().toString());
+    Mockito.doReturn(empty).when(repository).findById(measure.getId());
 
     response = controller.updateMeasure(measure);
     assertEquals("Measure does not exist.", response.getBody());
