@@ -65,7 +65,8 @@ class MeasureControllerTest {
     Mockito.doReturn(optionalMeasure).when(repository).findById(id);
     // measure found
     ResponseEntity<Measure> response = controller.getMeasure(id);
-    assertEquals(measure.getMeasureName(), Objects.requireNonNull(response.getBody()).getMeasureName());
+    assertEquals(
+        measure.getMeasureName(), Objects.requireNonNull(response.getBody()).getMeasureName());
 
     // if measure not found
     Optional<Measure> empty = Optional.empty();
@@ -79,13 +80,9 @@ class MeasureControllerTest {
   void updateMeasureSuccessfully() {
     measure.setId(new ObjectId());
     Optional<Measure> persistedMeasure = Optional.of(measure);
-    Mockito.doReturn(persistedMeasure)
-            .when(repository)
-            .findById(measure.getId().toString());
+    Mockito.doReturn(persistedMeasure).when(repository).findById(measure.getId().toString());
 
-    Mockito.doReturn(measure)
-            .when(repository)
-            .save(measure);
+    Mockito.doReturn(measure).when(repository).save(measure);
 
     ResponseEntity<String> response = controller.updateMeasure(measure);
     assertEquals("Measure updated successfully.", response.getBody());
@@ -101,9 +98,7 @@ class MeasureControllerTest {
     measure.setId(new ObjectId("5399aba6e4b0ae375bfdca88"));
     Optional<Measure> empty = Optional.empty();
 
-    Mockito.doReturn(empty)
-            .when(repository)
-            .findById(measure.getId().toString());
+    Mockito.doReturn(empty).when(repository).findById(measure.getId().toString());
 
     response = controller.updateMeasure(measure);
     assertEquals("Measure does not exist.", response.getBody());

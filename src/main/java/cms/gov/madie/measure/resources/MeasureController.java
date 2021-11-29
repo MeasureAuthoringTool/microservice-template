@@ -33,8 +33,9 @@ public class MeasureController {
   public ResponseEntity<Measure> getMeasure(@PathVariable("id") String id) {
 
     Optional<Measure> measure = repository.findById(id);
-    return measure.map(ResponseEntity::ok)
-            .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    return measure
+        .map(ResponseEntity::ok)
+        .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
   }
 
   @PostMapping("/measure")
@@ -48,9 +49,7 @@ public class MeasureController {
 
   @PutMapping("/measure")
   public ResponseEntity<String> updateMeasure(@RequestBody Measure measure) {
-    ResponseEntity<String> response = ResponseEntity
-            .badRequest()
-            .body("Measure does not exist.");
+    ResponseEntity<String> response = ResponseEntity.badRequest().body("Measure does not exist.");
 
     if (measure.getId() != null) {
       Optional<Measure> persistedMeasure = repository.findById(measure.getId().toString());
