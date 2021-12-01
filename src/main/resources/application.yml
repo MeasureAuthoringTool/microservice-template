@@ -8,6 +8,9 @@ server:
    servlet:
       context-path: /api
       
+madie:
+   allowedApi: http://localhost:9000      
+      
 management:
    endpoints:
       enabled-by-default: false
