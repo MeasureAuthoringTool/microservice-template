@@ -21,7 +21,7 @@ public class MeasureServiceApplication {
         registry
             .addMapping("/**")
             .allowedMethods("PUT", "POST", "GET")
-            .allowedOrigins("http://localhost:9000");
+            .allowedOrigins("http://localhost:9000", "https://dev-madie.hcqis.org");
       }
     };
   }
