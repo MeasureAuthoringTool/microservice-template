@@ -181,7 +181,6 @@
               <skip>false</skip>
               <fixImports>false</fixImports>
               <maxLineLength>100</maxLineLength>
-              <enablePreview>true</enablePreview>
             </configuration>
           </execution>
         </executions>
