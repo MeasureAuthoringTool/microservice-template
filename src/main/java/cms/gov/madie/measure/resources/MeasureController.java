@@ -52,7 +52,7 @@ public class MeasureController {
     ResponseEntity<String> response = ResponseEntity.badRequest().body("Measure does not exist.");
 
     if (measure.getId() != null) {
-      Optional<Measure> persistedMeasure = repository.findById(measure.getId().toString());
+      Optional<Measure> persistedMeasure = repository.findById(measure.getId());
       if (persistedMeasure.isPresent()) {
         repository.save(measure);
         response = ResponseEntity.ok().body("Measure updated successfully.");
