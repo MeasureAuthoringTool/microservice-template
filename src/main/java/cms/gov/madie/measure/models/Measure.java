@@ -23,4 +23,5 @@ public class Measure {
   private Date lastModifiedAt;
   private String lastModifiedBy;
   private String model;
+  private MeasureMetaData measureMetaData = new MeasureMetaData();
 }
