@@ -20,6 +20,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -70,6 +71,7 @@ public class MeasureControllerMvcTest {
             post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.measureName").value("Measure Name is Required"));
+    verifyNoInteractions(measureRepository);
   }
 
   @Test
@@ -80,6 +82,7 @@ public class MeasureControllerMvcTest {
             put("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.measureName").value("Measure Name is Required"));
+    verifyNoInteractions(measureRepository);
   }
 
   @Test
@@ -90,6 +93,7 @@ public class MeasureControllerMvcTest {
             post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.measureName").value("Measure Name is Required"));
+    verifyNoInteractions(measureRepository);
   }
 
   @Test
@@ -100,6 +104,7 @@ public class MeasureControllerMvcTest {
             put("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.measureName").value("Measure Name is Required"));
+    verifyNoInteractions(measureRepository);
   }
 
   @Test
@@ -110,6 +115,7 @@ public class MeasureControllerMvcTest {
             post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.measureName").value("Measure Name can not contain underscores"));
+    verifyNoInteractions(measureRepository);
   }
 
   @Test
@@ -120,6 +126,7 @@ public class MeasureControllerMvcTest {
             put("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.measureName").value("Measure Name can not contain underscores"));
+    verifyNoInteractions(measureRepository);
   }
 
   @Test
@@ -134,6 +141,7 @@ public class MeasureControllerMvcTest {
             jsonPath("$.measureName")
                 .value(
                     "Measure Name contains at least one letter and can not be more than 500 characters"));
+    verifyNoInteractions(measureRepository);
   }
 
   @Test
@@ -148,6 +156,7 @@ public class MeasureControllerMvcTest {
             jsonPath("$.measureName")
                 .value(
                     "Measure Name contains at least one letter and can not be more than 500 characters"));
+    verifyNoInteractions(measureRepository);
   }
 
   @Test
