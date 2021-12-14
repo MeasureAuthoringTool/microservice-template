@@ -17,3 +17,13 @@ management:
    endpoint:
       health:
          enabled: true
+
+mongock:
+   start-system-version: 1
+   migration-scan-package:
+      - cms.gov.madie.measure.changes
+   enabled: true
+   # read/write concerns should be changed for PROD
+   mongo-db:
+      read-concern: local
+   test-enabled: false

@@ -8,6 +8,7 @@ import javax.validation.constraints.Pattern;
 
 import org.hibernate.validator.constraints.Length;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,6 +25,7 @@ public class Measure {
   private String revisionNumber;
   private String state;
 
+  @Indexed(unique = true)
   @NotBlank(
       groups = {ValidationOrder1.class},
       message = "Measure Name is Required")
