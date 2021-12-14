@@ -29,12 +29,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(MeasureController.class)
+@WebMvcTest({MeasureController.class})
 public class MeasureControllerMvcTest {
 
   @MockBean private MeasureRepository measureRepository;
   @Autowired private MockMvc mockMvc;
-  @Captor ArgumentCaptor<Measure> measureArgumentCaptor;
+  @Captor private ArgumentCaptor<Measure> measureArgumentCaptor;
 
   @Test
   public void testUpdatePassed() throws Exception {
@@ -42,7 +42,11 @@ public class MeasureControllerMvcTest {
     String measureName = "TestMeasure";
     String steward = "d0cc18ce-63fd-4b94-b713-c1d9fd6b2329";
 
-    when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(mock(Measure.class)));
+    Measure priorMeasure = new Measure();
+    priorMeasure.setId(measureId);
+    priorMeasure.setMeasureName(measureName);
+
+    when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(priorMeasure));
     when(measureRepository.save(any(Measure.class))).thenReturn(mock(Measure.class));
 
     final String measureAsJson =
@@ -70,7 +74,7 @@ public class MeasureControllerMvcTest {
         .perform(
             post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.measureName").value("Measure Name is Required"));
+        .andExpect(jsonPath("$.validationErrors.measureName").value("Measure Name is Required"));
     verifyNoInteractions(measureRepository);
   }
 
@@ -81,7 +85,7 @@ public class MeasureControllerMvcTest {
         .perform(
             put("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.measureName").value("Measure Name is Required"));
+        .andExpect(jsonPath("$.validationErrors.measureName").value("Measure Name is Required"));
     verifyNoInteractions(measureRepository);
   }
 
@@ -92,7 +96,7 @@ public class MeasureControllerMvcTest {
         .perform(
             post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.measureName").value("Measure Name is Required"));
+        .andExpect(jsonPath("$.validationErrors.measureName").value("Measure Name is Required"));
     verifyNoInteractions(measureRepository);
   }
 
@@ -103,7 +107,7 @@ public class MeasureControllerMvcTest {
         .perform(
             put("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.measureName").value("Measure Name is Required"));
+        .andExpect(jsonPath("$.validationErrors.measureName").value("Measure Name is Required"));
     verifyNoInteractions(measureRepository);
   }
 
@@ -114,7 +118,9 @@ public class MeasureControllerMvcTest {
         .perform(
             post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.measureName").value("Measure Name can not contain underscores"));
+        .andExpect(
+            jsonPath("$.validationErrors.measureName")
+                .value("Measure Name can not contain underscores"));
     verifyNoInteractions(measureRepository);
   }
 
@@ -125,7 +131,9 @@ public class MeasureControllerMvcTest {
         .perform(
             put("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.measureName").value("Measure Name can not contain underscores"));
+        .andExpect(
+            jsonPath("$.validationErrors.measureName")
+                .value("Measure Name can not contain underscores"));
     verifyNoInteractions(measureRepository);
   }
 
@@ -138,7 +146,7 @@ public class MeasureControllerMvcTest {
             post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(
-            jsonPath("$.measureName")
+            jsonPath("$.validationErrors.measureName")
                 .value(
                     "Measure Name contains at least one letter and can not be more than 500 characters"));
     verifyNoInteractions(measureRepository);
@@ -153,7 +161,7 @@ public class MeasureControllerMvcTest {
             put("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(
-            jsonPath("$.measureName")
+            jsonPath("$.validationErrors.measureName")
                 .value(
                     "Measure Name contains at least one letter and can not be more than 500 characters"));
     verifyNoInteractions(measureRepository);
@@ -162,21 +170,73 @@ public class MeasureControllerMvcTest {
   @Test
   public void testNewMeasurePassed() throws Exception {
     Measure saved = new Measure();
-    saved.setId("id123");
-    saved.setMeasureName("SavedMeasure");
+    String measureId = "id123";
+    saved.setId(measureId);
+    String measureName = "SavedMeasure";
+    saved.setMeasureName(measureName);
+    when(measureRepository.findByMeasureName(eq(measureName))).thenReturn(Optional.empty());
     when(measureRepository.save(any(Measure.class))).thenReturn(saved);
 
-    final String measureAsJson = "{\"measureName\": \"SavedMeasure\"}";
+    final String measureAsJson = "{\"measureName\": \"%s\"}".formatted(measureName);
     mockMvc
         .perform(
             post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.measureName").value("SavedMeasure"))
-        .andExpect(jsonPath("$.id").value("id123"));
+        .andExpect(jsonPath("$.measureName").value(measureName))
+        .andExpect(jsonPath("$.id").value(measureId));
 
+    verify(measureRepository, times(1)).findByMeasureName(eq(measureName));
     verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
     verifyNoMoreInteractions(measureRepository);
     Measure savedMeasure = measureArgumentCaptor.getValue();
-    Assertions.assertEquals("SavedMeasure", savedMeasure.getMeasureName());
+    Assertions.assertEquals(measureName, savedMeasure.getMeasureName());
+  }
+
+  @Test
+  public void testNewMeasureDuplicatedKey() throws Exception {
+    Measure existing = new Measure();
+    String measureId = "id123";
+    existing.setId(measureId);
+    String measureName = "SavedMeasure";
+    existing.setMeasureName(measureName);
+    when(measureRepository.findByMeasureName(eq(measureName))).thenReturn(Optional.of(existing));
+
+    final String measureAsJson = "{\"measureName\": \"%s\"}".formatted(measureName);
+    mockMvc
+        .perform(
+            post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.duplicateKey").value("Measure.measureName"));
+
+    verify(measureRepository, times(1)).findByMeasureName(eq(measureName));
+    verifyNoMoreInteractions(measureRepository);
+  }
+
+  @Test
+  public void testUpdateMeasureDuplicatedKey() throws Exception {
+    Measure priorMeasure = new Measure();
+    priorMeasure.setId("id0");
+    priorMeasure.setMeasureName("TestMeasure");
+    when(measureRepository.findById(eq(priorMeasure.getId())))
+        .thenReturn(Optional.of(priorMeasure));
+
+    Measure existingMeasure = new Measure();
+    existingMeasure.setId("id1");
+    existingMeasure.setMeasureName("SavedMeasure");
+    when(measureRepository.findByMeasureName(eq(existingMeasure.getMeasureName())))
+        .thenReturn(Optional.of(existingMeasure));
+
+    final String measureAsJson =
+        "{\"id\": \"%s\",\"measureName\": \"%s\"}"
+            .formatted(priorMeasure.getId(), existingMeasure.getMeasureName());
+    mockMvc
+        .perform(
+            put("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.duplicateKey").value("Measure.measureName"));
+
+    verify(measureRepository, times(1)).findById(eq(priorMeasure.getId()));
+    verify(measureRepository, times(1)).findByMeasureName(eq(existingMeasure.getMeasureName()));
+    verifyNoMoreInteractions(measureRepository);
   }
 }

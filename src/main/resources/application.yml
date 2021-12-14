@@ -10,11 +10,22 @@ server:
       
 madie:
    allowedApi: http://localhost:9000      
-      
+
+
 management:
    endpoints:
       enabled-by-default: false
    endpoint:
       health:
-         enabled: true               
-         
+         enabled: true
+
+mongock:
+   start-system-version: 1
+   migration-scan-package:
+      - cms.gov.madie.measure.changes
+   enabled: true
+   # read/write concerns should be changed for PROD
+   mongo-db:
+      read-concern: local
+   test-enabled: false
+
