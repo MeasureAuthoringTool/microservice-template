@@ -2,19 +2,18 @@ spring:
    data:
       mongodb:
          database: ${MONGO_DATABASE:madie}
-         uri: ${MONGO_URI:mongodb://gakins:E5press0@localhost:27017/madie}?authSource=admin&maxPoolSize=50&connectTimeoutMS=2000&serverSelectionTimeoutMS=2000
+         uri: ${MONGO_URI:mongodb://${DBUSER}:${DBPASS}@localhost:27017/madie}?authSource=admin&maxPoolSize=50&connectTimeoutMS=2000&serverSelectionTimeoutMS=2000
 
 server:
    servlet:
       context-path: /api
-      
+
 madie:
-   allowedApi: http://localhost:9000      
-      
+   allowedApi: http://localhost:9000
+
 management:
    endpoints:
       enabled-by-default: false
    endpoint:
       health:
-         enabled: true               
-         
+         enabled: true
