@@ -28,7 +28,18 @@ public class Measure {
   @Indexed(unique = true)
   @NotBlank(
       groups = {ValidationOrder1.class},
-      message = "Measure Name is Required")
+      message = "Measure Library Name is required")
+  @Pattern(
+      regexp = "^[A-Z][a-zA-Z0-9]*$",
+      groups = {
+        ValidationOrder2.class,
+      },
+      message = "Measure Library Name is invalid")
+  private String cqlLibraryName;
+
+  @NotBlank(
+      groups = {ValidationOrder1.class},
+      message = "Measure Name is required")
   @Length(
       min = 1,
       max = 500,

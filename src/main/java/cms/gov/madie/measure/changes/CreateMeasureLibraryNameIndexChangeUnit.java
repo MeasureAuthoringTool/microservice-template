@@ -10,9 +10,9 @@ import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 import lombok.RequiredArgsConstructor;
 
-@ChangeUnit(id = "CreateMeasureNameIndexChangeUnit", order = "0001")
+@ChangeUnit(id = "CreateMeasureLibraryNameIndexChangeUnit", order = "0001")
 @RequiredArgsConstructor
-public class CreateMeasureNameIndexChangeUnit {
+public class CreateMeasureLibraryNameIndexChangeUnit {
 
   private final MongoTemplate template;
 
@@ -20,7 +20,7 @@ public class CreateMeasureNameIndexChangeUnit {
   public void executeChange() {
     template
         .indexOps(Measure.class)
-        .ensureIndex(new Index().unique().on("measureName", Sort.Direction.ASC));
+        .ensureIndex(new Index().unique().on("cqlLibraryName", Sort.Direction.ASC));
   }
 
   @RollbackExecution

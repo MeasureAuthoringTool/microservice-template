@@ -7,5 +7,5 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import cms.gov.madie.measure.models.Measure;
 
 public interface MeasureRepository extends MongoRepository<Measure, String> {
-  Optional<Measure> findByMeasureName(String measureName);
+  Optional<Measure> findByCqlLibraryName(String cqlLibraryName);
 }

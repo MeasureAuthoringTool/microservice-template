@@ -7,7 +7,7 @@ public class DuplicateKeyException extends org.springframework.dao.DuplicateKeyE
   private final String key;
 
   public DuplicateKeyException(String key) {
-    super("Key should not have duplicate value: " + key);
+    super("Duplicate key: " + key);
     this.key = key;
   }
 }

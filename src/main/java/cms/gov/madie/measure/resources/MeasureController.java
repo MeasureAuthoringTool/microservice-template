@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.resources;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +33,6 @@ public class MeasureController {
 
   @GetMapping("/measures/{id}")
   public ResponseEntity<Measure> getMeasure(@PathVariable("id") String id) {
-
     Optional<Measure> measure = repository.findById(id);
     return measure
         .map(ResponseEntity::ok)
@@ -43,7 +43,7 @@ public class MeasureController {
   public ResponseEntity<Measure> addMeasure(
       @RequestBody @Validated(Measure.ValidationSequence.class) Measure measure) {
 
-    checkDuplicateMeasureName(measure.getMeasureName());
+    checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
 
     // Clear ID so that the unique GUID from MongoDB will be applied
     measure.setId(null);
@@ -60,8 +60,8 @@ public class MeasureController {
     if (measure.getId() != null) {
       Optional<Measure> persistedMeasure = repository.findById(measure.getId());
       if (persistedMeasure.isPresent()) {
-        if (!persistedMeasure.get().getMeasureName().equals(measure.getMeasureName())) {
-          checkDuplicateMeasureName(measure.getMeasureName());
+        if (isCqlLibraryNameChanged(measure, persistedMeasure)) {
+          checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
         }
         repository.save(measure);
         response = ResponseEntity.ok().body("Measure updated successfully.");
@@ -70,9 +70,13 @@ public class MeasureController {
     return response;
   }
 
-  private void checkDuplicateMeasureName(String measureName) {
-    if (repository.findByMeasureName(measureName).isPresent()) {
-      throw new DuplicateKeyException("Measure.measureName");
+  private boolean isCqlLibraryNameChanged(Measure measure, Optional<Measure> persistedMeasure) {
+    return !Objects.equals(persistedMeasure.get().getCqlLibraryName(), measure.getCqlLibraryName());
+  }
+
+  private void checkDuplicateCqlLibraryName(String cqlLibraryName) {
+    if (repository.findByCqlLibraryName(cqlLibraryName).isPresent()) {
+      throw new DuplicateKeyException("Measure.cqlLibraryName");
     }
   }
 }
