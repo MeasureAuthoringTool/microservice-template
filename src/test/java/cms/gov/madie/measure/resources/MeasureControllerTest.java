@@ -40,7 +40,7 @@ class MeasureControllerTest {
 
   @Test
   void saveMeasure() {
-    Mockito.doReturn(measure).when(repository).save(ArgumentMatchers.<Measure>any());
+    Mockito.doReturn(measure).when(repository).save(ArgumentMatchers.any());
 
     Measure measures = new Measure();
 
@@ -82,7 +82,7 @@ class MeasureControllerTest {
 
     Mockito.doReturn(persistedMeasure)
         .when(repository)
-        .findById(ArgumentMatchers.<String>eq(measure.getId()));
+        .findById(ArgumentMatchers.eq(measure.getId()));
 
     Mockito.doReturn(measure).when(repository).save(measure);
 
