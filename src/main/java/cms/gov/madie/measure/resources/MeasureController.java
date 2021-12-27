@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import cms.gov.madie.measure.models.Measure;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import io.micrometer.core.instrument.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -75,7 +76,8 @@ public class MeasureController {
   }
 
   private void checkDuplicateCqlLibraryName(String cqlLibraryName) {
-    if (repository.findByCqlLibraryName(cqlLibraryName).isPresent()) {
+    if (StringUtils.isNotEmpty(cqlLibraryName)
+        && repository.findByCqlLibraryName(cqlLibraryName).isPresent()) {
       throw new DuplicateKeyException("Measure.cqlLibraryName");
     }
   }
