@@ -44,7 +44,7 @@ public class Measure {
       min = 1,
       max = 500,
       groups = {ValidationOrder2.class},
-      message = "Measure Name contains at least one letter and can not be more than 500 characters")
+      message = "Measure Name can not be more than 500 characters")
   @Pattern(
       regexp = "^[^_]+$",
       groups = {ValidationOrder3.class},
