@@ -26,9 +26,9 @@ public class Measure {
   private String state;
 
   @Indexed(unique = true)
-  @NotBlank(
-      groups = {ValidationOrder1.class},
-      message = "Measure Library Name is required")
+  // @NotBlank(
+  // groups = {ValidationOrder1.class},
+  // message = "Measure Library Name is required")
   @Pattern(
       regexp = "^[A-Z][a-zA-Z0-9]*$",
       groups = {
