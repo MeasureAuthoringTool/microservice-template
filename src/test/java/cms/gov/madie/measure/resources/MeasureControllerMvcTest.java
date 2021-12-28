@@ -221,7 +221,8 @@ public class MeasureControllerMvcTest {
                 .content(newMeasureAsJson)
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.duplicateKey").value("Measure.cqlLibraryName"));
+        .andExpect(jsonPath("$.duplicateKey").value("Measure.cqlLibraryName"))
+        .andExpect(jsonPath("$.message").value("CQL library with given name already exists"));
 
     verify(measureRepository, times(1)).findByCqlLibraryName(eq(cqlLibraryName));
     verifyNoMoreInteractions(measureRepository);
@@ -255,7 +256,8 @@ public class MeasureControllerMvcTest {
                 .content(updatedMeasureAsJson)
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.duplicateKey").value("Measure.cqlLibraryName"));
+        .andExpect(jsonPath("$.duplicateKey").value("Measure.cqlLibraryName"))
+        .andExpect(jsonPath("$.message").value("CQL library with given name already exists"));
 
     verify(measureRepository, times(1)).findById(eq(priorMeasure.getId()));
     verify(measureRepository, times(1))
