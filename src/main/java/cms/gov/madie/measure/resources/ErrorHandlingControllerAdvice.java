@@ -2,6 +2,7 @@ package cms.gov.madie.measure.resources;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.validation.ConstraintViolationException;
 
@@ -48,7 +49,8 @@ public class ErrorHandlingControllerAdvice {
   Map<String, Object> onDuplicateKeyExceptionException(
       DuplicateKeyException ex, WebRequest request) {
     Map<String, Object> errorAttributes = getErrorAttributes(request);
-    errorAttributes.put("duplicateKey", ex.getKey());
+    errorAttributes.put(
+        "validationErrors", Map.of(ex.getKey(), Objects.requireNonNull(ex.getMessage())));
     return errorAttributes;
   }
 

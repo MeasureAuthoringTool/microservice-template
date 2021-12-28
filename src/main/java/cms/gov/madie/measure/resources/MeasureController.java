@@ -79,7 +79,7 @@ public class MeasureController {
     if (StringUtils.isNotEmpty(cqlLibraryName)
         && repository.findByCqlLibraryName(cqlLibraryName).isPresent()) {
       throw new DuplicateKeyException(
-          "Measure.cqlLibraryName", "CQL library with given name already exists");
+          "cqlLibraryName", "CQL library with given name already exists");
     }
   }
 }
