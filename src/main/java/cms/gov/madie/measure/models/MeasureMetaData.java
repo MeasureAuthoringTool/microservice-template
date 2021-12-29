@@ -7,5 +7,4 @@ import lombok.NoArgsConstructor;
 @Data
 public class MeasureMetaData {
   private String measureSteward;
-  private String measureScoring;
 }
