@@ -15,7 +15,6 @@
   <description>Measure Service for MADiE</description>
   <properties>
     <java.version>16</java.version>
-    <log4j2.version>2.17.0</log4j2.version>
     <mvn.checkstyle.file>madie-checkstyle.xml</mvn.checkstyle.file>
     <mvn.checkstyle.version>3.1.2</mvn.checkstyle.version>
     <mvnreports.version>3.1.1</mvnreports.version>
@@ -42,16 +41,6 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-mongodb</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-core</artifactId>
-      <!-- <version>2.16.0</version> -->
-    </dependency>
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-api</artifactId>
-      <!-- <version>2.16.0</version> -->
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>

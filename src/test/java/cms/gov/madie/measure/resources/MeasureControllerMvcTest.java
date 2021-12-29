@@ -144,15 +144,14 @@ public class MeasureControllerMvcTest {
     final String measureName = "A".repeat(501);
     final String measureAsJson =
         "{ \"measureName\":\"%s\", \"cqlLibraryName\":\"ALib\"  }".formatted(measureName);
+    verifyNoInteractions(measureRepository);
     mockMvc
         .perform(
             post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(
             jsonPath("$.validationErrors.measureName")
-                .value(
-                    "Measure Name contains at least one letter and can not be more than 500 characters"));
-    verifyNoInteractions(measureRepository);
+                .value("Measure Name can not be more than 500 characters"));
   }
 
   @Test
@@ -166,8 +165,7 @@ public class MeasureControllerMvcTest {
         .andExpect(status().isBadRequest())
         .andExpect(
             jsonPath("$.validationErrors.measureName")
-                .value(
-                    "Measure Name contains at least one letter and can not be more than 500 characters"));
+                .value("Measure Name can not be more than 500 characters"));
     verifyNoInteractions(measureRepository);
   }
 
