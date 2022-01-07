@@ -85,4 +85,15 @@ public class ErrorHandlingControllerAdvice {
     errorAttributes.put("error", HttpStatus.BAD_REQUEST.getReasonPhrase());
     return errorAttributes;
   }
+
+  @ExceptionHandler(InvalidModelTypeException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  @ResponseBody
+  Map<String, Object> handleInvalidModelTypeException(
+      InvalidModelTypeException ex, WebRequest request) {
+    Map<String, Object> errorAttributes = getErrorAttributes(request);
+    errorAttributes.put(
+        "validationErrors", Map.of(ex.getKey(), Objects.requireNonNull(ex.getMessage())));
+    return errorAttributes;
+  }
 }
