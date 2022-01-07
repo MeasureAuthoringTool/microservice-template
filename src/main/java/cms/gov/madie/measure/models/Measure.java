@@ -60,7 +60,7 @@ public class Measure {
   private String createdBy;
   private Date lastModifiedAt;
   private String lastModifiedBy;
-  // MAT-3792
+
   @EnumValidator(
       enumClass = ModelType.class,
       message = "MADiE was unable to complete your request, please try again.",

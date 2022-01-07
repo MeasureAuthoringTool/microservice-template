@@ -47,9 +47,6 @@ public class MeasureController {
 
     checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
 
-    // MAT-3792
-    // checkModelType(measure);
-
     // Clear ID so that the unique GUID from MongoDB will be applied
     measure.setId(null);
     Measure savedMeasure = repository.save(measure);
@@ -84,14 +81,6 @@ public class MeasureController {
         && repository.findByCqlLibraryName(cqlLibraryName).isPresent()) {
       throw new DuplicateKeyException(
           "cqlLibraryName", "CQL library with given name already exists");
-    }
-  }
-
-  private void checkModelType(Measure measure) {
-    ModelType modelType = ModelType.valueOfName(measure.getModel());
-    if (modelType == null) {
-      throw new InvalidModelTypeException(
-          "invalidModelType", "MADiE was unable to complete your request, please try again.");
     }
   }
 }
