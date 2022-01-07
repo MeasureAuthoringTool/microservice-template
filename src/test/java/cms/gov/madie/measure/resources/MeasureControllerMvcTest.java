@@ -42,18 +42,20 @@ public class MeasureControllerMvcTest {
     String measureName = "TestMeasure";
     String steward = "d0cc18ce-63fd-4b94-b713-c1d9fd6b2329";
     String libName = "TestLib";
+    String model = "QI-Core";
 
     Measure priorMeasure = new Measure();
     priorMeasure.setId(measureId);
     priorMeasure.setMeasureName(measureName);
     priorMeasure.setCqlLibraryName(libName);
+    priorMeasure.setModel(model);
 
     when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(priorMeasure));
     when(measureRepository.save(any(Measure.class))).thenReturn(mock(Measure.class));
 
     final String measureAsJson =
-        "{\"id\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"measureMetaData\": { \"measureSteward\" : \"%s\" }}"
-            .formatted(measureId, measureName, libName, steward);
+        "{\"id\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"measureMetaData\": { \"measureSteward\" : \"%s\"}, \"model\":\"%s\" }"
+            .formatted(measureId, measureName, libName, steward, model);
     mockMvc
         .perform(
             put("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
@@ -67,6 +69,7 @@ public class MeasureControllerMvcTest {
     Assertions.assertNotNull(savedMeasure.getMeasureMetaData());
     Assertions.assertEquals(measureName, savedMeasure.getMeasureName());
     Assertions.assertEquals(steward, savedMeasure.getMeasureMetaData().getMeasureSteward());
+    Assertions.assertEquals(model, savedMeasure.getModel());
   }
 
   @Test
@@ -176,19 +179,23 @@ public class MeasureControllerMvcTest {
     saved.setId(measureId);
     String measureName = "SavedMeasure";
     String libraryName = "Lib1";
+    String model = "QI-Core";
     saved.setMeasureName(measureName);
     saved.setCqlLibraryName(libraryName);
+    saved.setModel(model);
     when(measureRepository.findByCqlLibraryName(eq(libraryName))).thenReturn(Optional.empty());
     when(measureRepository.save(any(Measure.class))).thenReturn(saved);
 
     final String measureAsJson =
-        "{\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\"}".formatted(measureName, libraryName);
+        "{\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\", \"model\": \"%s\"}"
+            .formatted(measureName, libraryName, model);
     mockMvc
         .perform(
             post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.measureName").value(measureName))
         .andExpect(jsonPath("$.cqlLibraryName").value(libraryName))
+        .andExpect(jsonPath("$.model").value(model))
         .andExpect(jsonPath("$.id").value(measureId));
 
     verify(measureRepository, times(1)).findByCqlLibraryName(eq(libraryName));
@@ -197,6 +204,7 @@ public class MeasureControllerMvcTest {
     Measure savedMeasure = measureArgumentCaptor.getValue();
     Assertions.assertEquals(measureName, savedMeasure.getMeasureName());
     Assertions.assertEquals(libraryName, savedMeasure.getCqlLibraryName());
+    Assertions.assertEquals(model, savedMeasure.getModel());
   }
 
   @Test
@@ -207,12 +215,15 @@ public class MeasureControllerMvcTest {
     existing.setMeasureName("ExistingMeasure");
     String cqlLibraryName = "ExistingLibrary";
     existing.setCqlLibraryName(cqlLibraryName);
+    String model = "QI-Core";
+    existing.setModel(model);
 
     when(measureRepository.findByCqlLibraryName(eq(cqlLibraryName)))
         .thenReturn(Optional.of(existing));
 
     final String newMeasureAsJson =
-        "{\"measureName\": \"NewMeasure\", \"cqlLibraryName\": \"%s\"}".formatted(cqlLibraryName);
+        "{\"measureName\": \"NewMeasure\", \"cqlLibraryName\": \"%s\",\"model\":\"%s\"}"
+            .formatted(cqlLibraryName, model);
     mockMvc
         .perform(
             post("/measure")
@@ -233,6 +244,7 @@ public class MeasureControllerMvcTest {
     priorMeasure.setId("id0");
     priorMeasure.setMeasureName("TestMeasure");
     priorMeasure.setCqlLibraryName("TestMeasureLibrary");
+    priorMeasure.setModel("QI-Core");
     when(measureRepository.findById(eq(priorMeasure.getId())))
         .thenReturn(Optional.of(priorMeasure));
 
@@ -244,11 +256,12 @@ public class MeasureControllerMvcTest {
         .thenReturn(Optional.of(existingMeasure));
 
     final String updatedMeasureAsJson =
-        "{\"id\": \"%s\",\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\"}"
+        "{\"id\": \"%s\",\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\", \"model\":\"%s\"}"
             .formatted(
                 priorMeasure.getId(),
                 priorMeasure.getMeasureName(),
-                existingMeasure.getCqlLibraryName());
+                existingMeasure.getCqlLibraryName(),
+                priorMeasure.getModel());
     mockMvc
         .perform(
             put("/measure")
@@ -336,23 +349,41 @@ public class MeasureControllerMvcTest {
     String libraryName = "ALi12aAccllklk6U";
     saved.setMeasureName(measureName);
     saved.setCqlLibraryName(libraryName);
+    String model = "QI-Core";
+    saved.setModel(model);
 
     when(measureRepository.findByCqlLibraryName(eq(libraryName))).thenReturn(Optional.empty());
     when(measureRepository.save(any(Measure.class))).thenReturn(saved);
 
     final String measureAsJson =
-        "{ \"measureName\":\"%s\", \"cqlLibraryName\":\"%s\" }".formatted(measureName, libraryName);
+        "{ \"measureName\":\"%s\", \"cqlLibraryName\":\"%s\", \"model\":\"%s\" }"
+            .formatted(measureName, libraryName, model);
     mockMvc
         .perform(
             post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.measureName").value(measureName))
         .andExpect(jsonPath("$.cqlLibraryName").value(libraryName))
+        .andExpect(jsonPath("$.model").value(model))
         .andExpect(jsonPath("$.id").value(measureId));
 
     verify(measureRepository, times(1)).findByCqlLibraryName(eq(libraryName));
     verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
     verifyNoMoreInteractions(measureRepository);
+  }
+
+  @Test
+  public void testNewMeasureFailsWithInvalidModelType() throws Exception {
+    final String measureAsJson =
+        "{ \"measureName\":\"TestName\", \"cqlLibraryName\":\"TEST1\", \"model\":\"Test\" }";
+    mockMvc
+        .perform(
+            post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
+        .andExpect(status().isBadRequest())
+        .andExpect(
+            jsonPath("$.validationErrors.model")
+                .value("MADiE was unable to complete your request, please try again."));
+    verifyNoInteractions(measureRepository);
   }
 
   @Test
@@ -366,13 +397,14 @@ public class MeasureControllerMvcTest {
     String libraryName = "ALi12aAccllklk6U";
     saved.setMeasureName(measureName);
     saved.setCqlLibraryName(libraryName);
+    String model = "QI-Core";
 
     when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(saved));
     when(measureRepository.save(any(Measure.class))).thenReturn(saved);
 
     final String measureAsJson =
-        "{ \"id\": \"%s\", \"measureName\":\"%s\", \"cqlLibraryName\":\"%s\" }"
-            .formatted(measureId, measureName, libraryName);
+        "{ \"id\": \"%s\", \"measureName\":\"%s\", \"cqlLibraryName\":\"%s\", \"model\":\"%s\"}"
+            .formatted(measureId, measureName, libraryName, model);
     mockMvc
         .perform(
             put("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))

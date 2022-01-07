@@ -52,8 +52,7 @@ public class Measure {
   @Pattern(
       regexp = ".*[a-zA-Z]+.*",
       groups = {ValidationOrder4.class},
-      message = "A measure name must contain at least one letter."
-  )
+      message = "A measure name must contain at least one letter.")
   private String measureName;
 
   private String cql;
@@ -61,7 +60,13 @@ public class Measure {
   private String createdBy;
   private Date lastModifiedAt;
   private String lastModifiedBy;
+
+  @EnumValidator(
+      enumClass = ModelType.class,
+      message = "MADiE was unable to complete your request, please try again.",
+      groups = {ValidationOrder5.class})
   private String model;
+
   private String measureScoring;
   private MeasureMetaData measureMetaData = new MeasureMetaData();
 
@@ -70,6 +75,7 @@ public class Measure {
     Measure.ValidationOrder2.class,
     Measure.ValidationOrder3.class,
     Measure.ValidationOrder4.class,
+    Measure.ValidationOrder5.class,
   })
   public interface ValidationSequence {}
 
@@ -80,4 +86,6 @@ public class Measure {
   public interface ValidationOrder3 {}
 
   public interface ValidationOrder4 {}
+
+  public interface ValidationOrder5 {}
 }
