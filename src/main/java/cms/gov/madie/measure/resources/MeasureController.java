@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import cms.gov.madie.measure.models.Measure;
-import cms.gov.madie.measure.models.ModelType;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import io.micrometer.core.instrument.util.StringUtils;
 import lombok.RequiredArgsConstructor;
