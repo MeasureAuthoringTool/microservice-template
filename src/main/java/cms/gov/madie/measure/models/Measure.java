@@ -10,8 +10,6 @@ import org.hibernate.validator.constraints.Length;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -63,7 +61,6 @@ public class Measure {
   private Date lastModifiedAt;
   private String lastModifiedBy;
   // MAT-3792
-  @JsonProperty("model")
   @EnumValidator(
       enumClass = ModelType.class,
       message = "MADiE was unable to complete your request, please try again.",

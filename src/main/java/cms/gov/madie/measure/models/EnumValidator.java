@@ -13,22 +13,11 @@ import javax.validation.constraints.NotNull;
 
 @NotNull(message = "Value cannot be null")
 @ReportAsSingleViolation
-@Target({
-  ElementType.METHOD,
-  ElementType.FIELD,
-  ElementType.ANNOTATION_TYPE,
-  ElementType.CONSTRUCTOR,
-  ElementType.PARAMETER,
-  ElementType.TYPE_USE
-})
+@Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Constraint(validatedBy = EnumValidatorImpl.class)
 public @interface EnumValidator {
-  /*
-    String[] acceptedValues();
-
-  */
 
   Class<? extends Enum<?>> enumClass();
 

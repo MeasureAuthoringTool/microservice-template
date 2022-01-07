@@ -7,23 +7,19 @@ import lombok.Getter;
 
 @Getter
 public enum ModelType {
-  QI_CORE("1", "QI-Core");
+  QI_CORE("QI-Core");
 
-  private String key;
   private String value;
   private static final Map<String, ModelType> MODEL_TYPE_BY_VALUE =
       new HashMap<String, ModelType>();
 
   static {
     for (ModelType mt : values()) {
-      System.out.println("mt.getValue() = " + mt.getValue());
       MODEL_TYPE_BY_VALUE.put(mt.getValue(), mt);
     }
   }
 
-  ModelType(String key, String value) {
-    System.out.println("key = " + key + " value = " + value);
-    this.key = key;
+  ModelType(String value) {
     this.value = value;
   }
 
