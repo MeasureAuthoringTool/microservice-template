@@ -33,7 +33,7 @@ class MeasureSerializationTest {
             + "    \"lastModifiedAt\": null,\n"
             + "    \"lastModifiedBy\": null,\n"
             + "    \"model\": null,\n"
-            + "    \"measureScoring\": \"COHORT\",\n"
+            + "    \"measureScoring\": \"Cohort\",\n"
             + "    \"measureMetaData\": {\n"
             + "        \"measureSteward\": \"Bill\"\n"
             + "    }\n"
