@@ -68,13 +68,13 @@ public class Measure {
   private String model;
 
   @NotBlank(
-      groups = {ValidationOrder1.class},
-      message = "Measure Scoring is required."
-  )
+      groups = {ValidationOrder5.class},
+      message = "Measure Scoring is required.")
   @EnumValidator(
       enumClass = MeasureScoring.class,
       groups = {ValidationOrder5.class})
   private String measureScoring;
+
   private MeasureMetaData measureMetaData = new MeasureMetaData();
 
   @GroupSequence({

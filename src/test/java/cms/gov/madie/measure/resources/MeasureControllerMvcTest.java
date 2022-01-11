@@ -3,7 +3,6 @@ package cms.gov.madie.measure.resources;
 import java.util.Optional;
 
 import cms.gov.madie.measure.models.MeasureScoring;
-import cms.gov.madie.measure.models.ModelType;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -58,8 +57,8 @@ public class MeasureControllerMvcTest {
     when(measureRepository.save(any(Measure.class))).thenReturn(mock(Measure.class));
 
     final String measureAsJson =
-        "{\"id\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"measureMetaData\": { \"measureSteward\" : \"%s\"}, \"model\":\"%s\" }"
-            .formatted(measureId, measureName, libName, steward, model);
+        "{\"id\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"measureMetaData\": { \"measureSteward\" : \"%s\"}, \"model\":\"%s\", \"measureScoring\":\"%s\" }"
+            .formatted(measureId, measureName, libName, steward, model, scoring);
     mockMvc
         .perform(
             put("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
@@ -83,7 +82,7 @@ public class MeasureControllerMvcTest {
         .perform(
             post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.validationErrors.measureName").value("Measure Name is required"));
+        .andExpect(jsonPath("$.validationErrors.measureName").value("Measure Name is required."));
     verifyNoInteractions(measureRepository);
   }
 
@@ -94,7 +93,7 @@ public class MeasureControllerMvcTest {
         .perform(
             put("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.validationErrors.measureName").value("Measure Name is required"));
+        .andExpect(jsonPath("$.validationErrors.measureName").value("Measure Name is required."));
     verifyNoInteractions(measureRepository);
   }
 
@@ -105,7 +104,7 @@ public class MeasureControllerMvcTest {
         .perform(
             post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.validationErrors.measureName").value("Measure Name is required"));
+        .andExpect(jsonPath("$.validationErrors.measureName").value("Measure Name is required."));
     verifyNoInteractions(measureRepository);
   }
 
@@ -116,7 +115,7 @@ public class MeasureControllerMvcTest {
         .perform(
             put("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.validationErrors.measureName").value("Measure Name is required"));
+        .andExpect(jsonPath("$.validationErrors.measureName").value("Measure Name is required."));
     verifyNoInteractions(measureRepository);
   }
 
@@ -129,7 +128,7 @@ public class MeasureControllerMvcTest {
         .andExpect(status().isBadRequest())
         .andExpect(
             jsonPath("$.validationErrors.measureName")
-                .value("Measure Name can not contain underscores"));
+                .value("Measure Name can not contain underscores."));
     verifyNoInteractions(measureRepository);
   }
 
@@ -142,7 +141,7 @@ public class MeasureControllerMvcTest {
         .andExpect(status().isBadRequest())
         .andExpect(
             jsonPath("$.validationErrors.measureName")
-                .value("Measure Name can not contain underscores"));
+                .value("Measure Name can not contain underscores."));
     verifyNoInteractions(measureRepository);
   }
 
@@ -158,7 +157,7 @@ public class MeasureControllerMvcTest {
         .andExpect(status().isBadRequest())
         .andExpect(
             jsonPath("$.validationErrors.measureName")
-                .value("Measure Name can not be more than 500 characters"));
+                .value("Measure Name can not be more than 500 characters."));
   }
 
   @Test
@@ -172,7 +171,7 @@ public class MeasureControllerMvcTest {
         .andExpect(status().isBadRequest())
         .andExpect(
             jsonPath("$.validationErrors.measureName")
-                .value("Measure Name can not be more than 500 characters"));
+                .value("Measure Name can not be more than 500 characters."));
     verifyNoInteractions(measureRepository);
   }
 
@@ -184,10 +183,11 @@ public class MeasureControllerMvcTest {
     String measureName = "SavedMeasure";
     String libraryName = "Lib1";
     String model = "QI-Core";
-    String scoring = "PROPORTION";
+    String scoring = MeasureScoring.PROPORTION.toString();
     saved.setMeasureName(measureName);
     saved.setCqlLibraryName(libraryName);
     saved.setModel(model);
+    saved.setMeasureScoring(scoring);
     when(measureRepository.findByCqlLibraryName(eq(libraryName))).thenReturn(Optional.empty());
     when(measureRepository.save(any(Measure.class))).thenReturn(saved);
 
@@ -224,13 +224,15 @@ public class MeasureControllerMvcTest {
     existing.setCqlLibraryName(cqlLibraryName);
     String model = "QI-Core";
     existing.setModel(model);
+    String scoring = MeasureScoring.PROPORTION.toString();
+    existing.setMeasureScoring(scoring);
 
     when(measureRepository.findByCqlLibraryName(eq(cqlLibraryName)))
         .thenReturn(Optional.of(existing));
 
     final String newMeasureAsJson =
-        "{\"measureName\": \"NewMeasure\", \"cqlLibraryName\": \"%s\",\"model\":\"%s\"}"
-            .formatted(cqlLibraryName, model);
+        "{\"measureName\": \"NewMeasure\", \"cqlLibraryName\": \"%s\",\"model\":\"%s\",\"measureScoring\":\"%s\"}"
+            .formatted(cqlLibraryName, model, scoring);
     mockMvc
         .perform(
             post("/measure")
@@ -239,7 +241,7 @@ public class MeasureControllerMvcTest {
         .andExpect(status().isBadRequest())
         .andExpect(
             jsonPath("$.validationErrors.cqlLibraryName")
-                .value("CQL library with given name already exists"));
+                .value("CQL library with given name already exists."));
 
     verify(measureRepository, times(1)).findByCqlLibraryName(eq(cqlLibraryName));
     verifyNoMoreInteractions(measureRepository);
@@ -252,6 +254,7 @@ public class MeasureControllerMvcTest {
     priorMeasure.setMeasureName("TestMeasure");
     priorMeasure.setCqlLibraryName("TestMeasureLibrary");
     priorMeasure.setModel("QI-Core");
+    priorMeasure.setMeasureScoring(MeasureScoring.RATIO.toString());
     when(measureRepository.findById(eq(priorMeasure.getId())))
         .thenReturn(Optional.of(priorMeasure));
 
@@ -263,12 +266,13 @@ public class MeasureControllerMvcTest {
         .thenReturn(Optional.of(existingMeasure));
 
     final String updatedMeasureAsJson =
-        "{\"id\": \"%s\",\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\", \"model\":\"%s\"}"
+        "{\"id\": \"%s\",\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\", \"model\":\"%s\", \"measureScoring\":\"%s\"}"
             .formatted(
                 priorMeasure.getId(),
                 priorMeasure.getMeasureName(),
                 existingMeasure.getCqlLibraryName(),
-                priorMeasure.getModel());
+                priorMeasure.getModel(),
+                priorMeasure.getMeasureScoring());
     mockMvc
         .perform(
             put("/measure")
@@ -277,7 +281,7 @@ public class MeasureControllerMvcTest {
         .andExpect(status().isBadRequest())
         .andExpect(
             jsonPath("$.validationErrors.cqlLibraryName")
-                .value("CQL library with given name already exists"));
+                .value("CQL library with given name already exists."));
 
     verify(measureRepository, times(1)).findById(eq(priorMeasure.getId()));
     verify(measureRepository, times(1))
@@ -294,7 +298,7 @@ public class MeasureControllerMvcTest {
         .andExpect(status().isBadRequest())
         .andExpect(
             jsonPath("$.validationErrors.measureName")
-                .value("Measure Name can not contain underscores"));
+                .value("Measure Name can not contain underscores."));
     verifyNoInteractions(measureRepository);
   }
 
@@ -306,7 +310,8 @@ public class MeasureControllerMvcTest {
             post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(
-            jsonPath("$.validationErrors.cqlLibraryName").value("Measure Library Name is invalid"));
+            jsonPath("$.validationErrors.cqlLibraryName")
+                .value("Measure Library Name is invalid."));
     verifyNoInteractions(measureRepository);
   }
 
@@ -318,7 +323,8 @@ public class MeasureControllerMvcTest {
             put("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(
-            jsonPath("$.validationErrors.cqlLibraryName").value("Measure Library Name is invalid"));
+            jsonPath("$.validationErrors.cqlLibraryName")
+                .value("Measure Library Name is invalid."));
     verifyNoInteractions(measureRepository);
   }
 
@@ -330,7 +336,8 @@ public class MeasureControllerMvcTest {
             post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(
-            jsonPath("$.validationErrors.cqlLibraryName").value("Measure Library Name is invalid"));
+            jsonPath("$.validationErrors.cqlLibraryName")
+                .value("Measure Library Name is invalid."));
     verifyNoInteractions(measureRepository);
   }
 
@@ -342,7 +349,8 @@ public class MeasureControllerMvcTest {
             post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(
-            jsonPath("$.validationErrors.cqlLibraryName").value("Measure Library Name is invalid"));
+            jsonPath("$.validationErrors.cqlLibraryName")
+                .value("Measure Library Name is invalid."));
     verifyNoInteractions(measureRepository);
   }
 
@@ -358,13 +366,15 @@ public class MeasureControllerMvcTest {
     saved.setCqlLibraryName(libraryName);
     String model = "QI-Core";
     saved.setModel(model);
+    String scoring = MeasureScoring.CONTINUOUS_VARIABLE.toString();
+    saved.setMeasureScoring(scoring);
 
     when(measureRepository.findByCqlLibraryName(eq(libraryName))).thenReturn(Optional.empty());
     when(measureRepository.save(any(Measure.class))).thenReturn(saved);
 
     final String measureAsJson =
-        "{ \"measureName\":\"%s\", \"cqlLibraryName\":\"%s\", \"model\":\"%s\" }"
-            .formatted(measureName, libraryName, model);
+        "{ \"measureName\":\"%s\", \"cqlLibraryName\":\"%s\", \"model\":\"%s\", \"measureScoring\":\"%s\" }"
+            .formatted(measureName, libraryName, model, scoring);
     mockMvc
         .perform(
             post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
@@ -381,7 +391,7 @@ public class MeasureControllerMvcTest {
 
   @Test
   public void
-  testUpdateMeasurePassesIfCqlLibraryNameStartsWithCapitalCharAndFollowedByAlphaNumeric()
+      testUpdateMeasurePassesIfCqlLibraryNameStartsWithCapitalCharAndFollowedByAlphaNumeric()
           throws Exception {
     String measureId = "id123";
     Measure saved = new Measure();
@@ -391,18 +401,21 @@ public class MeasureControllerMvcTest {
     saved.setMeasureName(measureName);
     saved.setCqlLibraryName(libraryName);
     String model = "QI-Core";
+    saved.setModel(model);
+    String scoring = MeasureScoring.CONTINUOUS_VARIABLE.toString();
+    saved.setMeasureScoring(scoring);
 
     when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(saved));
     when(measureRepository.save(any(Measure.class))).thenReturn(saved);
 
     final String measureAsJson =
-            "{ \"id\": \"%s\", \"measureName\":\"%s\", \"cqlLibraryName\":\"%s\", \"model\":\"%s\"}"
-                    .formatted(measureId, measureName, libraryName, model);
+        "{ \"id\": \"%s\", \"measureName\":\"%s\", \"cqlLibraryName\":\"%s\", \"model\":\"%s\", \"measureScoring\":\"%s\"}"
+            .formatted(measureId, measureName, libraryName, model, scoring);
     mockMvc
-            .perform(
-                    put("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().isOk())
-            .andExpect(content().string("Measure updated successfully."));
+        .perform(
+            put("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Measure updated successfully."));
 
     verify(measureRepository, times(1)).findById(eq(measureId));
     verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
@@ -426,14 +439,14 @@ public class MeasureControllerMvcTest {
   @Test
   public void testNewMeasureFailsWithInvalidMeasureScoringType() throws Exception {
     final String measureAsJson =
-            "{ \"measureName\":\"TestName\", \"cqlLibraryName\":\"TEST1\", \"model\":\"QI-Core\", \"measureScoring\":\"Test\" }";
+        "{ \"measureName\":\"TestName\", \"cqlLibraryName\":\"TEST1\", \"model\":\"QI-Core\", \"measureScoring\":\"Test\" }";
     mockMvc
-            .perform(
-                    post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(status().isBadRequest())
-            .andExpect(
-                    jsonPath("$.validationErrors.model")
-                            .value("Value provided is not a valid option."));
+        .perform(
+            post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
+        .andExpect(status().isBadRequest())
+        .andExpect(
+            jsonPath("$.validationErrors.measureScoring")
+                .value("Value provided is not a valid option."));
     verifyNoInteractions(measureRepository);
   }
 }
