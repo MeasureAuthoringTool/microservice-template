@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import cms.gov.madie.measure.models.Measure;
+import cms.gov.madie.measure.models.MeasureScoring;
 
 class MeasureSerializationTest {
 
@@ -41,7 +42,7 @@ class MeasureSerializationTest {
     Measure measure;
     try {
       measure = objectMapper.readValue(measureString, Measure.class);
-      assertEquals(measure.getMeasureScoring(), "Cohort");
+      assertEquals(measure.getMeasureScoring(), MeasureScoring.COHORT.toString());
     } catch (JsonProcessingException e) {
       fail(e);
     }
