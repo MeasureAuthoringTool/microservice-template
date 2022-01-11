@@ -28,27 +28,27 @@ public class Measure {
   @Indexed(unique = true)
   @NotBlank(
       groups = {ValidationOrder1.class},
-      message = "Measure Library Name is required")
+      message = "Measure Library Name is required.")
   @Pattern(
       regexp = "^[A-Z][a-zA-Z0-9]*$",
       groups = {
         ValidationOrder2.class,
       },
-      message = "Measure Library Name is invalid")
+      message = "Measure Library Name is invalid.")
   private String cqlLibraryName;
 
   @NotBlank(
       groups = {ValidationOrder1.class},
-      message = "Measure Name is required")
+      message = "Measure Name is required.")
   @Length(
       min = 1,
       max = 500,
       groups = {ValidationOrder2.class},
-      message = "Measure Name can not be more than 500 characters")
+      message = "Measure Name can not be more than 500 characters.")
   @Pattern(
       regexp = "^[^_]+$",
       groups = {ValidationOrder3.class},
-      message = "Measure Name can not contain underscores")
+      message = "Measure Name can not contain underscores.")
   @Pattern(
       regexp = ".*[a-zA-Z]+.*",
       groups = {ValidationOrder4.class},
@@ -67,6 +67,13 @@ public class Measure {
       groups = {ValidationOrder5.class})
   private String model;
 
+  @NotBlank(
+      groups = {ValidationOrder1.class},
+      message = "Measure Scoring is required."
+  )
+  @EnumValidator(
+      enumClass = MeasureScoring.class,
+      groups = {ValidationOrder5.class})
   private String measureScoring;
   private MeasureMetaData measureMetaData = new MeasureMetaData();
 

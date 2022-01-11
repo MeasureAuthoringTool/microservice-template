@@ -21,7 +21,7 @@ public @interface EnumValidator {
 
   Class<? extends Enum<?>> enumClass();
 
-  String message() default "Value is not valid";
+  String message() default "Value provided is not a valid option.";
 
   Class<?>[] groups() default {};
 

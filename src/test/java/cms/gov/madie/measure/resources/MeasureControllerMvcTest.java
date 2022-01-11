@@ -2,6 +2,8 @@ package cms.gov.madie.measure.resources;
 
 import java.util.Optional;
 
+import cms.gov.madie.measure.models.MeasureScoring;
+import cms.gov.madie.measure.models.ModelType;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -43,12 +45,14 @@ public class MeasureControllerMvcTest {
     String steward = "d0cc18ce-63fd-4b94-b713-c1d9fd6b2329";
     String libName = "TestLib";
     String model = "QI-Core";
+    String scoring = MeasureScoring.COHORT.toString();
 
     Measure priorMeasure = new Measure();
     priorMeasure.setId(measureId);
     priorMeasure.setMeasureName(measureName);
     priorMeasure.setCqlLibraryName(libName);
     priorMeasure.setModel(model);
+    priorMeasure.setMeasureScoring(scoring);
 
     when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(priorMeasure));
     when(measureRepository.save(any(Measure.class))).thenReturn(mock(Measure.class));
@@ -180,6 +184,7 @@ public class MeasureControllerMvcTest {
     String measureName = "SavedMeasure";
     String libraryName = "Lib1";
     String model = "QI-Core";
+    String scoring = "PROPORTION";
     saved.setMeasureName(measureName);
     saved.setCqlLibraryName(libraryName);
     saved.setModel(model);
@@ -187,8 +192,8 @@ public class MeasureControllerMvcTest {
     when(measureRepository.save(any(Measure.class))).thenReturn(saved);
 
     final String measureAsJson =
-        "{\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\", \"model\": \"%s\"}"
-            .formatted(measureName, libraryName, model);
+        "{\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\", \"model\": \"%s\", \"measureScoring\": \"%s\" }"
+            .formatted(measureName, libraryName, model, scoring);
     mockMvc
         .perform(
             post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
@@ -196,7 +201,8 @@ public class MeasureControllerMvcTest {
         .andExpect(jsonPath("$.measureName").value(measureName))
         .andExpect(jsonPath("$.cqlLibraryName").value(libraryName))
         .andExpect(jsonPath("$.model").value(model))
-        .andExpect(jsonPath("$.id").value(measureId));
+        .andExpect(jsonPath("$.id").value(measureId))
+        .andExpect(jsonPath("$.measureScoring").value(scoring));
 
     verify(measureRepository, times(1)).findByCqlLibraryName(eq(libraryName));
     verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
@@ -205,6 +211,7 @@ public class MeasureControllerMvcTest {
     Assertions.assertEquals(measureName, savedMeasure.getMeasureName());
     Assertions.assertEquals(libraryName, savedMeasure.getCqlLibraryName());
     Assertions.assertEquals(model, savedMeasure.getModel());
+    Assertions.assertEquals(scoring, savedMeasure.getMeasureScoring());
   }
 
   @Test
@@ -373,22 +380,8 @@ public class MeasureControllerMvcTest {
   }
 
   @Test
-  public void testNewMeasureFailsWithInvalidModelType() throws Exception {
-    final String measureAsJson =
-        "{ \"measureName\":\"TestName\", \"cqlLibraryName\":\"TEST1\", \"model\":\"Test\" }";
-    mockMvc
-        .perform(
-            post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
-        .andExpect(status().isBadRequest())
-        .andExpect(
-            jsonPath("$.validationErrors.model")
-                .value("MADiE was unable to complete your request, please try again."));
-    verifyNoInteractions(measureRepository);
-  }
-
-  @Test
   public void
-      testUpdateMeasurePassesIfCqlLibraryNameStartsWithCapitalCharAndFollowedByAlphaNumeric()
+  testUpdateMeasurePassesIfCqlLibraryNameStartsWithCapitalCharAndFollowedByAlphaNumeric()
           throws Exception {
     String measureId = "id123";
     Measure saved = new Measure();
@@ -403,16 +396,44 @@ public class MeasureControllerMvcTest {
     when(measureRepository.save(any(Measure.class))).thenReturn(saved);
 
     final String measureAsJson =
-        "{ \"id\": \"%s\", \"measureName\":\"%s\", \"cqlLibraryName\":\"%s\", \"model\":\"%s\"}"
-            .formatted(measureId, measureName, libraryName, model);
+            "{ \"id\": \"%s\", \"measureName\":\"%s\", \"cqlLibraryName\":\"%s\", \"model\":\"%s\"}"
+                    .formatted(measureId, measureName, libraryName, model);
     mockMvc
-        .perform(
-            put("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
-        .andExpect(status().isOk())
-        .andExpect(content().string("Measure updated successfully."));
+            .perform(
+                    put("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().isOk())
+            .andExpect(content().string("Measure updated successfully."));
 
     verify(measureRepository, times(1)).findById(eq(measureId));
     verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
     verifyNoMoreInteractions(measureRepository);
+  }
+
+  @Test
+  public void testNewMeasureFailsWithInvalidModelType() throws Exception {
+    final String measureAsJson =
+        "{ \"measureName\":\"TestName\", \"cqlLibraryName\":\"TEST1\", \"model\":\"Test\" }";
+    mockMvc
+        .perform(
+            post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
+        .andExpect(status().isBadRequest())
+        .andExpect(
+            jsonPath("$.validationErrors.model")
+                .value("MADiE was unable to complete your request, please try again."));
+    verifyNoInteractions(measureRepository);
+  }
+
+  @Test
+  public void testNewMeasureFailsWithInvalidMeasureScoringType() throws Exception {
+    final String measureAsJson =
+            "{ \"measureName\":\"TestName\", \"cqlLibraryName\":\"TEST1\", \"model\":\"QI-Core\", \"measureScoring\":\"Test\" }";
+    mockMvc
+            .perform(
+                    post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().isBadRequest())
+            .andExpect(
+                    jsonPath("$.validationErrors.model")
+                            .value("Value provided is not a valid option."));
+    verifyNoInteractions(measureRepository);
   }
 }
