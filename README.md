@@ -9,7 +9,7 @@ The application can be run as a spring-boot application. It requires a locally r
 The MongoDb instance can be run with 
 
 ```
-docker compose down --remove-orphans && docker volume prune && docker compose build --no-cache && docker compose up --force-recreate --build madie-mong
+docker compose down --remove-orphans && docker volume prune && docker compose build --no-cache && docker compose up --force-recreate --build madie-mongo
 ```
 
 The application can also be run in a Docker container.  This can be done by running
