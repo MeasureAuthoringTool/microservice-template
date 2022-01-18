@@ -3,6 +3,8 @@ package cms.gov.madie.measure.resources;
 import java.util.Optional;
 
 import cms.gov.madie.measure.models.MeasureScoring;
+import cms.gov.madie.measure.models.ModelType;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -12,6 +14,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import cms.gov.madie.measure.models.Measure;
 import cms.gov.madie.measure.repositories.MeasureRepository;
@@ -24,11 +28,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 
 @WebMvcTest({MeasureController.class})
 public class MeasureControllerMvcTest {
@@ -36,6 +43,7 @@ public class MeasureControllerMvcTest {
   @MockBean private MeasureRepository measureRepository;
   @Autowired private MockMvc mockMvc;
   @Captor private ArgumentCaptor<Measure> measureArgumentCaptor;
+  private static final String TEST_USER_ID = "test-okta-user-id-123";
 
   @Test
   public void testUpdatePassed() throws Exception {
@@ -61,7 +69,11 @@ public class MeasureControllerMvcTest {
             .formatted(measureId, measureName, libName, steward, model, scoring);
     mockMvc
         .perform(
-            put("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
+            put("/measure")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isOk())
         .andExpect(content().string("Measure updated successfully."));
 
@@ -80,7 +92,11 @@ public class MeasureControllerMvcTest {
     final String measureAsJson = "{  }";
     mockMvc
         .perform(
-            post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
+            post("/measure")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.validationErrors.measureName").value("Measure Name is required."));
     verifyNoInteractions(measureRepository);
@@ -91,7 +107,11 @@ public class MeasureControllerMvcTest {
     final String measureAsJson = "{  }";
     mockMvc
         .perform(
-            put("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
+            put("/measure")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.validationErrors.measureName").value("Measure Name is required."));
     verifyNoInteractions(measureRepository);
@@ -102,7 +122,11 @@ public class MeasureControllerMvcTest {
     final String measureAsJson = "{ \"measureName\":\"\" }";
     mockMvc
         .perform(
-            post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
+            post("/measure")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.validationErrors.measureName").value("Measure Name is required."));
     verifyNoInteractions(measureRepository);
@@ -113,7 +137,11 @@ public class MeasureControllerMvcTest {
     final String measureAsJson = "{ \"measureName\":\"\" }";
     mockMvc
         .perform(
-            put("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
+            put("/measure")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.validationErrors.measureName").value("Measure Name is required."));
     verifyNoInteractions(measureRepository);
@@ -124,7 +152,11 @@ public class MeasureControllerMvcTest {
     final String measureAsJson = "{ \"measureName\":\"A_Name\", \"cqlLibraryName\":\"ALib\" }";
     mockMvc
         .perform(
-            post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
+            post("/measure")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(
             jsonPath("$.validationErrors.measureName")
@@ -137,7 +169,11 @@ public class MeasureControllerMvcTest {
     final String measureAsJson = "{ \"measureName\":\"A_Name\", \"cqlLibraryName\":\"ALib\" }";
     mockMvc
         .perform(
-            put("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
+            put("/measure")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(
             jsonPath("$.validationErrors.measureName")
@@ -153,7 +189,11 @@ public class MeasureControllerMvcTest {
     verifyNoInteractions(measureRepository);
     mockMvc
         .perform(
-            post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
+            post("/measure")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(
             jsonPath("$.validationErrors.measureName")
@@ -167,7 +207,11 @@ public class MeasureControllerMvcTest {
         "{ \"measureName\":\"%s\", \"cqlLibraryName\":\"ALib\" }".formatted(measureName);
     mockMvc
         .perform(
-            put("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
+            put("/measure")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(
             jsonPath("$.validationErrors.measureName")
@@ -194,9 +238,15 @@ public class MeasureControllerMvcTest {
     final String measureAsJson =
         "{\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\", \"model\": \"%s\", \"measureScoring\": \"%s\" }"
             .formatted(measureName, libraryName, model, scoring);
+
     mockMvc
         .perform(
-            post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
+            MockMvcRequestBuilders.post("/measure")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.measureName").value(measureName))
         .andExpect(jsonPath("$.cqlLibraryName").value(libraryName))
@@ -236,6 +286,8 @@ public class MeasureControllerMvcTest {
     mockMvc
         .perform(
             post("/measure")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
                 .content(newMeasureAsJson)
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
@@ -276,6 +328,8 @@ public class MeasureControllerMvcTest {
     mockMvc
         .perform(
             put("/measure")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
                 .content(updatedMeasureAsJson)
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
@@ -294,7 +348,11 @@ public class MeasureControllerMvcTest {
     final String measureAsJson = "{ \"measureName\":\"A_Name\", \"cqlLibraryName\":\"ALib\" }";
     mockMvc
         .perform(
-            put("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
+            put("/measure")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(
             jsonPath("$.validationErrors.measureName")
@@ -307,7 +365,11 @@ public class MeasureControllerMvcTest {
     final String measureAsJson = "{ \"measureName\":\"AName\", \"cqlLibraryName\":\"aLib\" }";
     mockMvc
         .perform(
-            post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
+            post("/measure")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(
             jsonPath("$.validationErrors.cqlLibraryName")
@@ -320,7 +382,11 @@ public class MeasureControllerMvcTest {
     final String measureAsJson = "{ \"measureName\":\"AName\", \"cqlLibraryName\":\"aLib\" }";
     mockMvc
         .perform(
-            put("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
+            put("/measure")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(
             jsonPath("$.validationErrors.cqlLibraryName")
@@ -333,7 +399,11 @@ public class MeasureControllerMvcTest {
     final String measureAsJson = "{ \"measureName\":\"AName\", \"cqlLibraryName\":\"ALi''b\" }";
     mockMvc
         .perform(
-            post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
+            post("/measure")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(
             jsonPath("$.validationErrors.cqlLibraryName")
@@ -346,7 +416,11 @@ public class MeasureControllerMvcTest {
     final String measureAsJson = "{ \"measureName\":\"AName\", \"cqlLibraryName\":\"ALi_'b\" }";
     mockMvc
         .perform(
-            post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
+            post("/measure")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(
             jsonPath("$.validationErrors.cqlLibraryName")
@@ -377,7 +451,11 @@ public class MeasureControllerMvcTest {
             .formatted(measureName, libraryName, model, scoring);
     mockMvc
         .perform(
-            post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
+            post("/measure")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.measureName").value(measureName))
         .andExpect(jsonPath("$.cqlLibraryName").value(libraryName))
@@ -413,7 +491,11 @@ public class MeasureControllerMvcTest {
             .formatted(measureId, measureName, libraryName, model, scoring);
     mockMvc
         .perform(
-            put("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
+            put("/measure")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isOk())
         .andExpect(content().string("Measure updated successfully."));
 
@@ -428,7 +510,11 @@ public class MeasureControllerMvcTest {
         "{ \"measureName\":\"TestName\", \"cqlLibraryName\":\"TEST1\", \"model\":\"Test\" }";
     mockMvc
         .perform(
-            post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
+            post("/measure")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(
             jsonPath("$.validationErrors.model")
@@ -442,11 +528,38 @@ public class MeasureControllerMvcTest {
         "{ \"measureName\":\"TestName\", \"cqlLibraryName\":\"TEST1\", \"model\":\"QI-Core\", \"measureScoring\":\"Test\" }";
     mockMvc
         .perform(
-            post("/measure").content(measureAsJson).contentType(MediaType.APPLICATION_JSON_VALUE))
+            post("/measure")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(
             jsonPath("$.validationErrors.measureScoring")
                 .value("Value provided is not a valid option."));
     verifyNoInteractions(measureRepository);
+  }
+
+  @Test
+  public void testNewMeasureFailedWithoutSecurityToken() throws Exception {
+    final String measureAsJson =
+        "{\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\", \"model\": \"%s\", \"measureScoring\": \"%s\" }"
+            .formatted(
+                "testMeasureName",
+                "testLibraryName",
+                ModelType.QI_CORE.toString(),
+                MeasureScoring.PROPORTION.toString());
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.post("/measure")
+                    .content(measureAsJson)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isForbidden())
+            .andReturn();
+    String resultStr = result.getResponse().getErrorMessage();
+    assertEquals("Forbidden", resultStr);
   }
 }
