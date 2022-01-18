@@ -1,29 +1,37 @@
 spring:
-   data:
-      mongodb:
-         database: ${MONGO_DATABASE:madie}
-         uri: ${MONGO_URI:mongodb://${DBUSER}:${DBPASS}@localhost:27017/madie}?authSource=admin&maxPoolSize=50&connectTimeoutMS=2000&serverSelectionTimeoutMS=2000
+  session:
+    store-type: none
+  data:
+    mongodb:
+      database: ${MONGO_DATABASE:madie}
+      uri: ${MONGO_URI:mongodb://${DBUSER}:${DBPASS}@localhost:27017/madie}?authSource=admin&maxPoolSize=50&connectTimeoutMS=2000&serverSelectionTimeoutMS=2000
 
 server:
-   servlet:
-      context-path: /api
+  servlet:
+    context-path: /api
 
 madie:
-   allowedApi: http://localhost:9000
+  allowedApi: http://localhost:9000
 
 management:
-   endpoints:
-      enabled-by-default: false
-   endpoint:
-      health:
-         enabled: true
+  endpoints:
+    enabled-by-default: false
+  endpoint:
+    health:
+      enabled: true
+
+okta:
+  oauth2:
+    issuer: ${OKTA_ISSUER}
+    audience: api://default
+
 
 mongock:
-   start-system-version: 1
-   migration-scan-package:
-      - cms.gov.madie.measure.changes
-   enabled: true
-   # read/write concerns should be changed for PROD
-   mongo-db:
-      read-concern: local
-   test-enabled: false
+  start-system-version: 1
+  migration-scan-package:
+    - cms.gov.madie.measure.changes
+  enabled: true
+  # read/write concerns should be changed for PROD
+  mongo-db:
+    read-concern: local
+  test-enabled: false
