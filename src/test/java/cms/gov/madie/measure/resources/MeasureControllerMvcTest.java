@@ -241,7 +241,7 @@ public class MeasureControllerMvcTest {
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders.post("/measure")
+            post("/measure")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .content(measureAsJson)
