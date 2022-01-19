@@ -1,6 +1,4 @@
 spring:
-  session:
-    store-type: none
   data:
     mongodb:
       database: ${MONGO_DATABASE:madie}
@@ -22,7 +20,7 @@ management:
 
 okta:
   oauth2:
-    issuer: https://dev-18092578.okta.com/oauth2/default
+    issuer: ${OKTA_ISSUER}
     audience: api://default
 
 
