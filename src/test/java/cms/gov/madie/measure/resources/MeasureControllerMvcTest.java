@@ -5,7 +5,6 @@ import java.util.Optional;
 import cms.gov.madie.measure.models.MeasureScoring;
 import cms.gov.madie.measure.models.ModelType;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -29,6 +28,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -81,10 +81,10 @@ public class MeasureControllerMvcTest {
     verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
     verifyNoMoreInteractions(measureRepository);
     Measure savedMeasure = measureArgumentCaptor.getValue();
-    Assertions.assertNotNull(savedMeasure.getMeasureMetaData());
-    Assertions.assertEquals(measureName, savedMeasure.getMeasureName());
-    Assertions.assertEquals(steward, savedMeasure.getMeasureMetaData().getMeasureSteward());
-    Assertions.assertEquals(model, savedMeasure.getModel());
+    assertNotNull(savedMeasure.getMeasureMetaData());
+    assertEquals(measureName, savedMeasure.getMeasureName());
+    assertEquals(steward, savedMeasure.getMeasureMetaData().getMeasureSteward());
+    assertEquals(model, savedMeasure.getModel());
   }
 
   @Test
@@ -258,10 +258,10 @@ public class MeasureControllerMvcTest {
     verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
     verifyNoMoreInteractions(measureRepository);
     Measure savedMeasure = measureArgumentCaptor.getValue();
-    Assertions.assertEquals(measureName, savedMeasure.getMeasureName());
-    Assertions.assertEquals(libraryName, savedMeasure.getCqlLibraryName());
-    Assertions.assertEquals(model, savedMeasure.getModel());
-    Assertions.assertEquals(scoring, savedMeasure.getMeasureScoring());
+    assertEquals(measureName, savedMeasure.getMeasureName());
+    assertEquals(libraryName, savedMeasure.getCqlLibraryName());
+    assertEquals(model, savedMeasure.getModel());
+    assertEquals(scoring, savedMeasure.getMeasureScoring());
   }
 
   @Test
