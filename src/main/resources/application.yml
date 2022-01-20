@@ -22,7 +22,7 @@ management:
 okta:
   oauth2:
     issuer: ${OKTA_ISSUER:https://dev-18092578.okta.com/oauth2/default}
-    audience: api://default
+    audience: ${OKTA_AUDIENCE:api://default}
 
 
 mongock:
