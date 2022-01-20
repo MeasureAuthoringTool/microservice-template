@@ -8,8 +8,8 @@ jobs:
   gitleaks_scan:
     runs-on: ubuntu-latest
     env:
-      REPO: https://github.com/MeasureAuthoringTool/microservice-template
-      REMOTE_EXCLUDES_URL: https://raw.githubusercontent.com/semanticbits/bmat-gitleaks-automation/master/microservice-template/gitleaks.toml
+      REPO: https://github.com/MeasureAuthoringTool/measure-service
+      REMOTE_EXCLUDES_URL: https://raw.githubusercontent.com/semanticbits/bmat-gitleaks-automation/master/measure-service/gitleaks.toml
       GITLEAKS_VERSION: v7.5.0
     steps:
       - name: Execute Gitleaks
