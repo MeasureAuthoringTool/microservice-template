@@ -24,8 +24,8 @@ public class TestCaseController {
   @PostMapping(ControllerUtil.TEST_CASE + "/{measureId}")
   public ResponseEntity<TestCase> addTestCase(
       @RequestBody TestCase testCase, @PathVariable String measureId) {
-    testCase = testCaseService.persistTestCase(testCase, measureId);
-    return ResponseEntity.status(HttpStatus.CREATED).body(testCase);
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(testCaseService.persistTestCase(testCase, measureId));
   }
 
   @GetMapping(ControllerUtil.TEST_CASES + "/{measureId}")

@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.service;
 
+import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.models.Measure;
 import cms.gov.madie.measure.models.TestCase;
 import cms.gov.madie.measure.repositories.MeasureRepository;
@@ -17,15 +18,14 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
 public class TestCaseServiceTest {
-  @Mock
-  private MeasureRepository repository;
+  @Mock private MeasureRepository repository;
 
-  @InjectMocks
-  private TestCaseService testCaseService;
+  @InjectMocks private TestCaseService testCaseService;
 
   private TestCase testCase;
   private Measure measure;
@@ -65,5 +65,14 @@ public class TestCaseServiceTest {
     List<TestCase> persistTestCase = testCaseService.findTestCasesByMeasureId(measure.getId());
     assertEquals(1, persistTestCase.size());
     assertEquals(testCase.getId(), persistTestCase.get(0).getId());
+  }
+
+  @Test
+  public void testFindTestCasesByMeasureIdWhenMeasureDoesNotExist() {
+    Optional<Measure> optional = Optional.empty();
+    Mockito.doReturn(optional).when(repository).findById(any(String.class));
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> testCaseService.findTestCasesByMeasureId(measure.getId()));
   }
 }

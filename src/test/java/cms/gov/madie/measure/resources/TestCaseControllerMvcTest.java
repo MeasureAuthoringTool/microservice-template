@@ -3,6 +3,7 @@ package cms.gov.madie.measure.resources;
 import cms.gov.madie.measure.models.TestCase;
 import cms.gov.madie.measure.services.TestCaseService;
 import cms.gov.madie.measure.utils.ControllerUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,7 +55,7 @@ public class TestCaseControllerMvcTest {
   }
 
   @Test
-  public void testNewTestCasePassed() throws Exception {
+  public void testNewTestCase() throws Exception {
     when(testCaseService.persistTestCase(any(TestCase.class), any(String.class)))
         .thenReturn(testCase);
 
@@ -79,7 +80,7 @@ public class TestCaseControllerMvcTest {
   }
 
   @Test
-  public void getTestCases() throws Exception {
+  public void testGetTestCases() throws Exception {
     when(testCaseService.findTestCasesByMeasureId(any(String.class))).thenReturn(List.of(testCase));
 
     mockMvc
@@ -100,11 +101,7 @@ public class TestCaseControllerMvcTest {
     assertEquals(measureId, "testId");
   }
 
-  private String asJsonString(final Object obj) {
-    try {
-      return new ObjectMapper().writeValueAsString(obj);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+  private String asJsonString(final Object obj) throws JsonProcessingException {
+    return new ObjectMapper().writeValueAsString(obj);
   }
 }
