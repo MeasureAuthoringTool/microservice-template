@@ -61,7 +61,7 @@ public class TestCaseControllerMvcTest {
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders.post("/measure/1234/test-cases")
+            MockMvcRequestBuilders.post("/measures/1234/test-cases")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .content(asJsonString(testCase))
@@ -85,7 +85,7 @@ public class TestCaseControllerMvcTest {
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders.get("/measure/1234/test-cases")
+            MockMvcRequestBuilders.get("/measures/1234/test-cases")
                 .with(user(TEST_USER_ID))
                 .with(csrf()))
         .andExpect(MockMvcResultMatchers.status().isOk())

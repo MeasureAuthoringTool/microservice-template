@@ -1,5 +1,5 @@
 package cms.gov.madie.measure.utils;
 
 public class ControllerUtil {
-  public static final String TEST_CASES = "/measure/{measureId}/test-cases";
+  public static final String TEST_CASES = "/measures/{measureId}/test-cases";
 }
