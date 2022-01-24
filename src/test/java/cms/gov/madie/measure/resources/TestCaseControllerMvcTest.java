@@ -61,7 +61,7 @@ public class TestCaseControllerMvcTest {
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders.post(ControllerUtil.TEST_CASE + "/fooId")
+            MockMvcRequestBuilders.post("/measure/1234/test-cases")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .content(asJsonString(testCase))
@@ -85,7 +85,7 @@ public class TestCaseControllerMvcTest {
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders.get(ControllerUtil.TEST_CASES + "/testId")
+            MockMvcRequestBuilders.get("/measure/1234/test-cases")
                 .with(user(TEST_USER_ID))
                 .with(csrf()))
         .andExpect(MockMvcResultMatchers.status().isOk())
@@ -98,7 +98,7 @@ public class TestCaseControllerMvcTest {
                         + "\"lastModifiedBy\":\"TestUser2\"}]"));
     verify(testCaseService, times(1)).findTestCasesByMeasureId(measureIdCaptor.capture());
     String measureId = measureIdCaptor.getValue();
-    assertEquals(measureId, "testId");
+    assertEquals(measureId, "1234");
   }
 
   private String asJsonString(final Object obj) throws JsonProcessingException {

@@ -21,14 +21,14 @@ public class TestCaseController {
 
   @Autowired private final TestCaseService testCaseService;
 
-  @PostMapping(ControllerUtil.TEST_CASE + "/{measureId}")
+  @PostMapping(ControllerUtil.TEST_CASES)
   public ResponseEntity<TestCase> addTestCase(
       @RequestBody TestCase testCase, @PathVariable String measureId) {
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(testCaseService.persistTestCase(testCase, measureId));
   }
 
-  @GetMapping(ControllerUtil.TEST_CASES + "/{measureId}")
+  @GetMapping(ControllerUtil.TEST_CASES)
   public ResponseEntity<List<TestCase>> getTestCasesByMeasureId(@PathVariable String measureId) {
     return ResponseEntity.ok(testCaseService.findTestCasesByMeasureId(measureId));
   }

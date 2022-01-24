@@ -1,8 +1,8 @@
 spring:
   data:
     mongodb:
-      database: ${MONGO_DATABASE:madie}
-      uri: ${MONGO_URI:mongodb://${DBUSER}:${DBPASS}@localhost:27017/madie}?authSource=admin&maxPoolSize=50&connectTimeoutMS=2000&serverSelectionTimeoutMS=2000
+      database: admin
+      uri: mongodb://root:E5press0@localhost:27017/madie?authSource=admin&maxPoolSize=50&connectTimeoutMS=2000&serverSelectionTimeoutMS=2000
 
 
 server:
@@ -21,8 +21,8 @@ management:
 
 okta:
   oauth2:
-    issuer: ${OKTA_ISSUER:https://dev-18092578.okta.com/oauth2/default}
-    audience: ${OKTA_AUDIENCE:api://default}
+    issuer: https://dev-18092578.okta.com/oauth2/default
+    audience: api://default
 
 
 mongock:
