@@ -2,7 +2,6 @@ package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.models.TestCase;
 import cms.gov.madie.measure.services.TestCaseService;
-import cms.gov.madie.measure.utils.ControllerUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
