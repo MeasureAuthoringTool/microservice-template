@@ -62,7 +62,7 @@ public class TestCaseControllerTest {
         .when(testCaseService)
         .findTestCasesByMeasureId(any(String.class));
 
-    ResponseEntity<List<TestCase>> response = controller.getTestCases(measure.getId());
+    ResponseEntity<List<TestCase>> response = controller.getTestCasesByMeasureId(measure.getId());
     assertEquals(1, Objects.requireNonNull(response.getBody()).size());
     assertEquals("IPPPass", response.getBody().get(0).getName());
     assertEquals("BloodPressure>124", response.getBody().get(0).getSeries());

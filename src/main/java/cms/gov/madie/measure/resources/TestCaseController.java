@@ -29,7 +29,7 @@ public class TestCaseController {
   }
 
   @GetMapping(ControllerUtil.TEST_CASES + "/{measureId}")
-  public ResponseEntity<List<TestCase>> getTestCases(@PathVariable String measureId) {
+  public ResponseEntity<List<TestCase>> getTestCasesByMeasureId(@PathVariable String measureId) {
     return ResponseEntity.ok(testCaseService.findTestCasesByMeasureId(measureId));
   }
 }
