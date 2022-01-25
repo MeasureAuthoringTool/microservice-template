@@ -261,6 +261,10 @@ public class MeasureControllerMvcTest {
     assertEquals(libraryName, savedMeasure.getCqlLibraryName());
     assertEquals(model, savedMeasure.getModel());
     assertEquals(scoring, savedMeasure.getMeasureScoring());
+    assertEquals(TEST_USER_ID, savedMeasure.getCreatedBy());
+    assertEquals(TEST_USER_ID, savedMeasure.getLastModifiedBy());
+    assertNotNull(savedMeasure.getCreatedAt());
+    assertNotNull(savedMeasure.getLastModifiedAt());
   }
 
   @Test
