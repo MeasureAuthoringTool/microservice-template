@@ -1,8 +1,12 @@
 package cms.gov.madie.measure.resources;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.*;
 
+import java.security.Principal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -11,10 +15,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentMatchers;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 
@@ -40,12 +41,22 @@ class MeasureControllerTest {
 
   @Test
   void saveMeasure() {
+    ArgumentCaptor<Measure> saveMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
     Mockito.doReturn(measure).when(repository).save(ArgumentMatchers.any());
 
     Measure measures = new Measure();
+    Principal principal = Mockito.mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
 
-    ResponseEntity<Measure> response = controller.addMeasure(measures);
+    ResponseEntity<Measure> response = controller.addMeasure(measures, principal);
     assertEquals("IDIDID", response.getBody().getMeasureSetId());
+
+    verify(repository, times(1)).save(saveMeasureArgCaptor.capture());
+    Measure savedMeasure = saveMeasureArgCaptor.getValue();
+    assertThat(savedMeasure.getCreatedBy(), is(equalTo("test.user")));
+    assertThat(savedMeasure.getLastModifiedBy(), is(equalTo("test.user")));
+    assertThat(savedMeasure.getCreatedAt(), is(notNullValue()));
+    assertThat(savedMeasure.getLastModifiedAt(), is(notNullValue()));
   }
 
   @Test

@@ -1,6 +1,6 @@
 package cms.gov.madie.measure.models;
 
-import java.util.Date;
+import java.time.Instant;
 
 import javax.validation.GroupSequence;
 import javax.validation.constraints.NotBlank;
@@ -56,9 +56,9 @@ public class Measure {
   private String measureName;
 
   private String cql;
-  private Date createdAt;
+  private Instant createdAt;
   private String createdBy;
-  private Date lastModifiedAt;
+  private Instant lastModifiedAt;
   private String lastModifiedBy;
 
   @EnumValidator(
