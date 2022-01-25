@@ -6,12 +6,13 @@ import javax.validation.GroupSequence;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import java.util.List;
 
 @NoArgsConstructor
 @Data
@@ -56,6 +57,7 @@ public class Measure {
   private String measureName;
 
   private String cql;
+  private List<TestCase> testCases;
   private Instant createdAt;
   private String createdBy;
   private Instant lastModifiedAt;
