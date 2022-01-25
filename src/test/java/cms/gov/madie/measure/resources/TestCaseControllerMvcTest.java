@@ -15,7 +15,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.List;
 
@@ -29,6 +28,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 @WebMvcTest({TestCaseController.class})
 public class TestCaseControllerMvcTest {
@@ -70,11 +70,11 @@ public class TestCaseControllerMvcTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON))
         .andDo(print())
-        .andExpect(MockMvcResultMatchers.status().isCreated())
-        .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(TEST_ID))
-        .andExpect(MockMvcResultMatchers.jsonPath("$.createdBy").value(TEST_USER))
-        .andExpect(MockMvcResultMatchers.jsonPath("$.lastModifiedBy").value(TEST_USER_2))
-        .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(TEST_NAME));
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.id").value(TEST_ID))
+        .andExpect(jsonPath("$.createdBy").value(TEST_USER))
+        .andExpect(jsonPath("$.lastModifiedBy").value(TEST_USER_2))
+        .andExpect(jsonPath("$.name").value(TEST_NAME));
     verify(testCaseService, times(1))
         .persistTestCase(testCaseCaptor.capture(), measureIdCaptor.capture());
     TestCase persistedTestCase = testCaseCaptor.getValue();
@@ -90,9 +90,8 @@ public class TestCaseControllerMvcTest {
             MockMvcRequestBuilders.get("/measures/1234/test-cases")
                 .with(user(TEST_USER_ID))
                 .with(csrf()))
-        .andExpect(MockMvcResultMatchers.status().isOk())
-        .andExpect(
-            MockMvcResultMatchers.content()
+        .andExpect(status().isOk())
+        .andExpect(content()
                 .string(
                     "[{\"id\":\"TESTID\",\"name\":\"TestName\",\"series\":null,"
                         + "\"description\":\"Test Description\",\"createdAt\":null,"
