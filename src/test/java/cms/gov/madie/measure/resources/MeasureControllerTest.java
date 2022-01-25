@@ -45,7 +45,7 @@ class MeasureControllerTest {
     Mockito.doReturn(measure).when(repository).save(ArgumentMatchers.any());
 
     Measure measures = new Measure();
-    Principal principal = Mockito.mock(Principal.class);
+    Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
     ResponseEntity<Measure> response = controller.addMeasure(measures, principal);
