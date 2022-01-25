@@ -1,9 +1,12 @@
 package cms.gov.madie.measure.resources;
 
+import java.security.Principal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +23,7 @@ import cms.gov.madie.measure.repositories.MeasureRepository;
 import io.micrometer.core.instrument.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 public class MeasureController {
@@ -42,14 +46,20 @@ public class MeasureController {
 
   @PostMapping("/measure")
   public ResponseEntity<Measure> addMeasure(
-      @RequestBody @Validated(Measure.ValidationSequence.class) Measure measure) {
-
+          @RequestBody @Validated(Measure.ValidationSequence.class) Measure measure, Principal principal) {
+    final String username = principal.getName();
+    log.info("User [{}] is attempting to create a new measure", username);
     checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
 
     // Clear ID so that the unique GUID from MongoDB will be applied
+    Instant now = Instant.now();
     measure.setId(null);
+    measure.setCreatedBy(username);
+    measure.setCreatedAt(now);
+    measure.setLastModifiedBy(username);
+    measure.setLastModifiedAt(now);
     Measure savedMeasure = repository.save(measure);
-
+    log.info("User [{}] successfully created new measure with ID [{}]", username, measure.getId());
     return ResponseEntity.status(HttpStatus.CREATED).body(savedMeasure);
   }
 
