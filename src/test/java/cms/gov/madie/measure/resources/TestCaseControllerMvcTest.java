@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.resources;
 
+import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.models.TestCase;
 import cms.gov.madie.measure.services.TestCaseService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -26,6 +27,8 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest({TestCaseController.class})
 public class TestCaseControllerMvcTest {
@@ -95,6 +98,25 @@ public class TestCaseControllerMvcTest {
                         + "\"description\":\"Test Description\",\"createdAt\":null,"
                         + "\"createdBy\":\"TestUser\",\"lastModifiedAt\":null,"
                         + "\"lastModifiedBy\":\"TestUser2\"}]"));
+    verify(testCaseService, times(1)).findTestCasesByMeasureId(measureIdCaptor.capture());
+    String measureId = measureIdCaptor.getValue();
+    assertEquals(measureId, "1234");
+  }
+
+  @Test
+  public void testGetTestCasesWhenMeasureWithMeasureIdMissing() throws Exception {
+    when(testCaseService.findTestCasesByMeasureId(any(String.class)))
+            .thenThrow(new ResourceNotFoundException("Measure", "1234"));
+
+    mockMvc
+            .perform(
+                    MockMvcRequestBuilders.get("/measures/1234/test-cases")
+                            .with(user(TEST_USER_ID))
+                            .with(csrf()))
+            .andExpect(status().isBadRequest())
+            .andExpect(
+                    jsonPath("$.message")
+                            .value("Could not find Measure with id: 1234"));
     verify(testCaseService, times(1)).findTestCasesByMeasureId(measureIdCaptor.capture());
     String measureId = measureIdCaptor.getValue();
     assertEquals(measureId, "1234");

@@ -6,6 +6,7 @@ import java.util.Objects;
 
 import javax.validation.ConstraintViolationException;
 
+import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
@@ -72,6 +73,13 @@ public class ErrorHandlingControllerAdvice {
     Map<String, Object> errorAttributes = getErrorAttributes(request);
     errorAttributes.put("validationErrors", validationErrors);
     return errorAttributes;
+  }
+
+  @ExceptionHandler(ResourceNotFoundException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  @ResponseBody
+  Map<String, Object> onResourceNotFoundException(WebRequest request) {
+    return getErrorAttributes(request);
   }
 
   private Map<String, Object> getErrorAttributes(WebRequest request) {
