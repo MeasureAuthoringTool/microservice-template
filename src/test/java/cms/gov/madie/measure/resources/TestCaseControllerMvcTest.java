@@ -26,17 +26,21 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 @WebMvcTest({TestCaseController.class})
 public class TestCaseControllerMvcTest {
 
-  @MockBean private TestCaseService testCaseService;
-  @Autowired private MockMvc mockMvc;
-  @Captor ArgumentCaptor<TestCase> testCaseCaptor;
-  @Captor ArgumentCaptor<String> measureIdCaptor;
+  @MockBean
+  private TestCaseService testCaseService;
+  @Autowired
+  private MockMvc mockMvc;
+  @Captor
+  ArgumentCaptor<TestCase> testCaseCaptor;
+  @Captor
+  ArgumentCaptor<String> measureIdCaptor;
 
   private TestCase testCase;
   private static final String TEST_ID = "TESTID";
@@ -59,24 +63,24 @@ public class TestCaseControllerMvcTest {
   @Test
   public void testNewTestCase() throws Exception {
     when(testCaseService.persistTestCase(any(TestCase.class), any(String.class)))
-        .thenReturn(testCase);
+            .thenReturn(testCase);
 
     mockMvc
-        .perform(
-            MockMvcRequestBuilders.post("/measures/1234/test-cases")
-                .with(user(TEST_USER_ID))
-                .with(csrf())
-                .content(asJsonString(testCase))
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON))
-        .andDo(print())
-        .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.id").value(TEST_ID))
-        .andExpect(jsonPath("$.createdBy").value(TEST_USER))
-        .andExpect(jsonPath("$.lastModifiedBy").value(TEST_USER_2))
-        .andExpect(jsonPath("$.name").value(TEST_NAME));
+            .perform(
+                    MockMvcRequestBuilders.post("/measures/1234/test-cases")
+                            .with(user(TEST_USER_ID))
+                            .with(csrf())
+                            .content(asJsonString(testCase))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.id").value(TEST_ID))
+            .andExpect(jsonPath("$.createdBy").value(TEST_USER))
+            .andExpect(jsonPath("$.lastModifiedBy").value(TEST_USER_2))
+            .andExpect(jsonPath("$.name").value(TEST_NAME));
     verify(testCaseService, times(1))
-        .persistTestCase(testCaseCaptor.capture(), measureIdCaptor.capture());
+            .persistTestCase(testCaseCaptor.capture(), measureIdCaptor.capture());
     TestCase persistedTestCase = testCaseCaptor.getValue();
     assertEquals(TEST_DESCRIPTION, persistedTestCase.getDescription());
   }
@@ -86,17 +90,17 @@ public class TestCaseControllerMvcTest {
     when(testCaseService.findTestCasesByMeasureId(any(String.class))).thenReturn(List.of(testCase));
 
     mockMvc
-        .perform(
-            MockMvcRequestBuilders.get("/measures/1234/test-cases")
-                .with(user(TEST_USER_ID))
-                .with(csrf()))
-        .andExpect(status().isOk())
-        .andExpect(content()
-                .string(
-                    "[{\"id\":\"TESTID\",\"name\":\"TestName\",\"series\":null,"
-                        + "\"description\":\"Test Description\",\"createdAt\":null,"
-                        + "\"createdBy\":\"TestUser\",\"lastModifiedAt\":null,"
-                        + "\"lastModifiedBy\":\"TestUser2\"}]"));
+            .perform(
+                    MockMvcRequestBuilders.get("/measures/1234/test-cases")
+                            .with(user(TEST_USER_ID))
+                            .with(csrf()))
+            .andExpect(status().isOk())
+            .andExpect(content()
+                    .string(
+                            "[{\"id\":\"TESTID\",\"name\":\"TestName\",\"series\":null,"
+                                    + "\"description\":\"Test Description\",\"createdAt\":null,"
+                                    + "\"createdBy\":\"TestUser\",\"lastModifiedAt\":null,"
+                                    + "\"lastModifiedBy\":\"TestUser2\"}]"));
     verify(testCaseService, times(1)).findTestCasesByMeasureId(measureIdCaptor.capture());
     String measureId = measureIdCaptor.getValue();
     assertEquals(measureId, "1234");
@@ -113,9 +117,7 @@ public class TestCaseControllerMvcTest {
                             .with(user(TEST_USER_ID))
                             .with(csrf()))
             .andExpect(status().isBadRequest())
-            .andExpect(
-                    jsonPath("$.message")
-                            .value("Could not find Measure with id: 1234"));
+            .andExpect(jsonPath("$.message").value("Could not find Measure with id: 1234"));
     verify(testCaseService, times(1)).findTestCasesByMeasureId(measureIdCaptor.capture());
     String measureId = measureIdCaptor.getValue();
     assertEquals(measureId, "1234");
