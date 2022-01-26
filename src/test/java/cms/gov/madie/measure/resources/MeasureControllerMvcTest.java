@@ -1,10 +1,12 @@
 package cms.gov.madie.measure.resources;
 
+import java.util.List;
 import java.util.Optional;
 
 import cms.gov.madie.measure.models.MeasureScoring;
 import cms.gov.madie.measure.models.ModelType;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -18,8 +20,10 @@ import org.springframework.test.web.servlet.MvcResult;
 import cms.gov.madie.measure.models.Measure;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -28,8 +32,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -564,5 +567,95 @@ public class MeasureControllerMvcTest {
             .andReturn();
     String resultStr = result.getResponse().getErrorMessage();
     assertEquals("Forbidden", resultStr);
+  }
+
+  @Test
+  public void testGetMeasuresNoQueryParams() throws Exception {
+    Measure m1 = Measure.builder().measureName("Measure1").cqlLibraryName("TestLib1")
+            .createdBy("test-okta-user-id-123").measureScoring("Proportion").model("QI-Core").build();
+    Measure m2 = Measure.builder().measureName("Measure2").cqlLibraryName("TestLib2")
+            .createdBy("test-okta-user-id-123").measureScoring("Proportion").model("QI-Core").build();
+    Measure m3 = Measure.builder().measureName("Measure3").cqlLibraryName("TestLib3")
+            .createdBy("test-okta-user-id-999").measureScoring("Proportion").model("QI-Core").build();
+
+    List<Measure> allMeasures = List.of(m1, m2, m3);
+    when(measureRepository.findAll()).thenReturn(allMeasures);
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                get("/measures")
+                        .with(user(TEST_USER_ID))
+                        .accept(MediaType.APPLICATION_JSON)
+            ).andExpect(status().isOk())
+            .andReturn();
+    String resultStr = result.getResponse().getContentAsString();
+
+    ObjectMapper mapper = new ObjectMapper();
+    String expectedJsonStr = mapper.writeValueAsString(allMeasures);
+
+    assertThat(resultStr, is(equalTo(expectedJsonStr)));
+    verify(measureRepository, times(1)).findAll();
+    verifyNoMoreInteractions(measureRepository);
+  }
+
+  @Test
+  public void testGetMeasuresWithCurrentUserFalse() throws Exception {
+    Measure m1 = Measure.builder().measureName("Measure1").cqlLibraryName("TestLib1")
+            .createdBy("test-okta-user-id-123").measureScoring("Proportion").model("QI-Core").build();
+    Measure m2 = Measure.builder().measureName("Measure2").cqlLibraryName("TestLib2")
+            .createdBy("test-okta-user-id-123").measureScoring("Proportion").model("QI-Core").build();
+    Measure m3 = Measure.builder().measureName("Measure3").cqlLibraryName("TestLib3")
+            .createdBy("test-okta-user-id-999").measureScoring("Proportion").model("QI-Core").build();
+
+    List<Measure> allMeasures = List.of(m1, m2, m3);
+    when(measureRepository.findAll()).thenReturn(allMeasures);
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                get("/measures")
+                        .with(user(TEST_USER_ID))
+                        .queryParam("currentUser", "false")
+                        .accept(MediaType.APPLICATION_JSON)
+            ).andExpect(status().isOk())
+            .andReturn();
+    String resultStr = result.getResponse().getContentAsString();
+
+    ObjectMapper mapper = new ObjectMapper();
+    String expectedJsonStr = mapper.writeValueAsString(allMeasures);
+
+    assertThat(resultStr, is(equalTo(expectedJsonStr)));
+    verify(measureRepository, times(1)).findAll();
+    verifyNoMoreInteractions(measureRepository);
+  }
+
+  @Test
+  public void testGetMeasuresFilterByCurrentUser() throws Exception {
+    Measure m1 = Measure.builder().measureName("Measure1").cqlLibraryName("TestLib1")
+            .createdBy("test-okta-user-id-123").measureScoring("Proportion").model("QI-Core").build();
+    Measure m2 = Measure.builder().measureName("Measure2").cqlLibraryName("TestLib2")
+            .createdBy("test-okta-user-id-123").measureScoring("Proportion").model("QI-Core").build();
+
+    List<Measure> measures = List.of(m1, m2);
+    when(measureRepository.findAllByCreatedBy(anyString())).thenReturn(measures);
+
+    MvcResult result =
+            mockMvc
+                    .perform(
+                            get("/measures")
+                                    .with(user(TEST_USER_ID))
+                                    .queryParam("currentUser", "true")
+                                    .accept(MediaType.APPLICATION_JSON)
+                    ).andExpect(status().isOk())
+                    .andReturn();
+    String resultStr = result.getResponse().getContentAsString();
+
+    ObjectMapper mapper = new ObjectMapper();
+    String expectedJsonStr = mapper.writeValueAsString(measures);
+
+    assertThat(resultStr, is(equalTo(expectedJsonStr)));
+    verify(measureRepository, times(1)).findAllByCreatedBy(eq(TEST_USER_ID));
+    verifyNoMoreInteractions(measureRepository);
   }
 }
