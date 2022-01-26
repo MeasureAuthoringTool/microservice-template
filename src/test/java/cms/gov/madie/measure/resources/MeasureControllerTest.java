@@ -2,8 +2,7 @@ package cms.gov.madie.measure.resources;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.security.Principal;
@@ -60,11 +59,32 @@ class MeasureControllerTest {
   }
 
   @Test
-  void getMeasures() {
-    List<Measure> measures = Arrays.asList(measure);
-    Mockito.doReturn(measures).when(repository).findAll();
+  void getMeasuresWithoutCurrentUserFilter() {
+    List<Measure> measures = List.of(measure);
+    when(repository.findAll()).thenReturn(measures);
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
 
-    ResponseEntity<List<Measure>> response = controller.getMeasures();
+    ResponseEntity<List<Measure>> response = controller.getMeasures(principal, false);
+    verify(repository, times(1)).findAll();
+    verifyNoMoreInteractions(repository);
+    assertNotNull(response.getBody());
+    assertNotNull(response.getBody().get(0));
+    assertEquals("IDIDID", response.getBody().get(0).getMeasureSetId());
+  }
+
+  @Test
+  void getMeasuresWithCurrentUserFilter() {
+    List<Measure> measures = List.of(measure);
+    when(repository.findAllByCreatedBy(anyString())).thenReturn(measures);
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    ResponseEntity<List<Measure>> response = controller.getMeasures(principal, true);
+    verify(repository, times(1)).findAllByCreatedBy(eq("test.user"));
+    verifyNoMoreInteractions(repository);
+    assertNotNull(response.getBody());
+    assertNotNull(response.getBody().get(0));
     assertEquals("IDIDID", response.getBody().get(0).getMeasureSetId());
   }
 

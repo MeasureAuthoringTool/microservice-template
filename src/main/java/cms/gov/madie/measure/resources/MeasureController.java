@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import cms.gov.madie.measure.models.Measure;
@@ -31,8 +32,12 @@ public class MeasureController {
   @Autowired private final MeasureRepository repository;
 
   @GetMapping("/measures")
-  public ResponseEntity<List<Measure>> getMeasures() {
-    List<Measure> measures = repository.findAll();
+  public ResponseEntity<List<Measure>> getMeasures(
+          Principal principal,
+          @RequestParam(required = false, defaultValue = "false", name = "currentUser") boolean filterByCurrentUser) {
+    final String username = principal.getName();
+    List<Measure> measures = filterByCurrentUser ?
+            repository.findAllByCreatedBy(username) : repository.findAll();
     return ResponseEntity.ok(measures);
   }
 
