@@ -1,6 +1,5 @@
 package cms.gov.madie.measure.resources;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -637,8 +636,6 @@ public class MeasureControllerMvcTest {
             .createdBy("test-okta-user-id-123").measureScoring("Proportion").model("QI-Core").build();
     Measure m2 = Measure.builder().measureName("Measure2").cqlLibraryName("TestLib2")
             .createdBy("test-okta-user-id-123").measureScoring("Proportion").model("QI-Core").build();
-    Measure m3 = Measure.builder().measureName("Measure3").cqlLibraryName("TestLib3")
-            .createdBy("test-okta-user-id-999").measureScoring("Proportion").model("QI-Core").build();
 
     List<Measure> measures = List.of(m1, m2);
     when(measureRepository.findAllByCreatedBy(anyString())).thenReturn(measures);
