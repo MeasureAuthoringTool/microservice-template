@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.resources;
 
+import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.models.TestCase;
 import cms.gov.madie.measure.services.TestCaseService;
 import cms.gov.madie.measure.utils.ControllerUtil;
@@ -10,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -31,5 +33,22 @@ public class TestCaseController {
   @GetMapping(ControllerUtil.TEST_CASES)
   public ResponseEntity<List<TestCase>> getTestCasesByMeasureId(@PathVariable String measureId) {
     return ResponseEntity.ok(testCaseService.findTestCasesByMeasureId(measureId));
+  }
+
+  @GetMapping(ControllerUtil.TEST_CASES + "/{testCaseId}")
+  public ResponseEntity<TestCase> getTestCase(
+      @PathVariable String measureId, @PathVariable String testCaseId) {
+    return ResponseEntity.ok(testCaseService.getTestCase(measureId, testCaseId));
+  }
+
+  @PutMapping(ControllerUtil.TEST_CASES + "/{testCaseId}")
+  public ResponseEntity<TestCase> updateTestCase(
+      @RequestBody TestCase testCase,
+      @PathVariable String measureId,
+      @PathVariable String testCaseId) {
+    if (testCase.getId() == null || !testCase.getId().equals(testCaseId)) {
+      throw new ResourceNotFoundException("Test Case", testCaseId);
+    }
+    return ResponseEntity.ok(testCaseService.updateTestCase(testCase, measureId));
   }
 }

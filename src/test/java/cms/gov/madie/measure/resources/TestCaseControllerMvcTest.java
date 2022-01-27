@@ -37,6 +37,7 @@ public class TestCaseControllerMvcTest {
   @Autowired private MockMvc mockMvc;
   @Captor ArgumentCaptor<TestCase> testCaseCaptor;
   @Captor ArgumentCaptor<String> measureIdCaptor;
+  @Captor ArgumentCaptor<String> testCaseIdCaptor;
 
   private TestCase testCase;
   private static final String TEST_ID = "TESTID";
@@ -100,7 +101,7 @@ public class TestCaseControllerMvcTest {
                         + "\"lastModifiedBy\":\"TestUser2\"}]"));
     verify(testCaseService, times(1)).findTestCasesByMeasureId(measureIdCaptor.capture());
     String measureId = measureIdCaptor.getValue();
-    assertEquals(measureId, "1234");
+    assertEquals("1234", measureId);
   }
 
   @Test
@@ -117,10 +118,70 @@ public class TestCaseControllerMvcTest {
         .andExpect(jsonPath("$.message").value("Could not find Measure with id: 1234"));
     verify(testCaseService, times(1)).findTestCasesByMeasureId(measureIdCaptor.capture());
     String measureId = measureIdCaptor.getValue();
-    assertEquals(measureId, "1234");
+    assertEquals("1234", measureId);
   }
 
   private String asJsonString(final Object obj) throws JsonProcessingException {
     return new ObjectMapper().writeValueAsString(obj);
+  }
+
+  @Test
+  public void getTestCase() throws Exception {
+    when(testCaseService.getTestCase(any(String.class), any(String.class))).thenReturn(testCase);
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get("/measures/1234/test-cases/TESTID")
+                .with(user(TEST_USER_ID))
+                .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(
+            content()
+                .string(
+                    "{\"id\":\"TESTID\",\"name\":\"TestName\",\"series\":null,"
+                        + "\"description\":\"Test Description\",\"createdAt\":null,"
+                        + "\"createdBy\":\"TestUser\",\"lastModifiedAt\":null,"
+                        + "\"lastModifiedBy\":\"TestUser2\"}"));
+    verify(testCaseService, times(1))
+        .getTestCase(measureIdCaptor.capture(), testCaseIdCaptor.capture());
+    assertEquals("1234", measureIdCaptor.getValue());
+    assertEquals("TESTID", testCaseIdCaptor.getValue());
+  }
+
+  @Test
+  public void updateTestCase() throws Exception {
+    String modifiedDescription = "New Description";
+    testCase.setDescription(modifiedDescription);
+    when(testCaseService.updateTestCase(any(TestCase.class), any(String.class)))
+        .thenReturn(testCase);
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.put("/measures/1234/test-cases/TESTID")
+                .content(
+                    "{\"id\":\"TESTID\",\"name\":\"TestName\",\"series\":null,"
+                        + "\"description\":\""
+                        + modifiedDescription
+                        + "\",\"createdAt\":null,"
+                        + "\"createdBy\":\"TestUser\",\"lastModifiedAt\":null,"
+                        + "\"lastModifiedBy\":\"TestUser2\"}")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(user(TEST_USER_ID))
+                .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(
+            content()
+                .string(
+                    "{\"id\":\"TESTID\",\"name\":\"TestName\",\"series\":null,"
+                        + "\"description\":\""
+                        + modifiedDescription
+                        + "\",\"createdAt\":null,"
+                        + "\"createdBy\":\"TestUser\",\"lastModifiedAt\":null,"
+                        + "\"lastModifiedBy\":\"TestUser2\"}"));
+    verify(testCaseService, times(1))
+        .updateTestCase(testCaseCaptor.capture(), measureIdCaptor.capture());
+    assertEquals("1234", measureIdCaptor.getValue());
+    assertEquals("TESTID", testCaseCaptor.getValue().getId());
+    assertEquals(modifiedDescription, testCaseCaptor.getValue().getDescription());
   }
 }
