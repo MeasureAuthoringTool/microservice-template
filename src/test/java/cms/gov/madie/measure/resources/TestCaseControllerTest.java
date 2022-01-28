@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
@@ -66,5 +67,30 @@ public class TestCaseControllerTest {
     assertEquals(1, Objects.requireNonNull(response.getBody()).size());
     assertEquals("IPPPass", response.getBody().get(0).getName());
     assertEquals("BloodPressure>124", response.getBody().get(0).getSeries());
+  }
+
+  @Test
+  void getTestCase() {
+    Mockito.doReturn(testCase)
+        .when(testCaseService)
+        .getTestCase(any(String.class), any(String.class));
+
+    ResponseEntity<TestCase> response = controller.getTestCase(measure.getId(), testCase.getId());
+    assertNotNull(response.getBody());
+    assertEquals("IPPPass", response.getBody().getName());
+    assertEquals("BloodPressure>124", response.getBody().getSeries());
+  }
+
+  @Test
+  void updateTestCase() {
+    Mockito.doReturn(testCase)
+        .when(testCaseService)
+        .updateTestCase(any(TestCase.class), any(String.class));
+
+    ResponseEntity<TestCase> response =
+        controller.updateTestCase(testCase, measure.getId(), testCase.getId());
+    assertNotNull(response.getBody());
+    assertEquals("IPPPass", response.getBody().getName());
+    assertEquals("BloodPressure>124", response.getBody().getSeries());
   }
 }
