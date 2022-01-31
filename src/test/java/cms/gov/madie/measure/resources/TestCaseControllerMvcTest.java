@@ -189,15 +189,17 @@ public class TestCaseControllerMvcTest {
 
   @Test
   public void testGetTestCaseSeriesByMeasureIdThrows404() throws Exception {
-    final String measureId = "TESTID";
     when(testCaseService.findTestCaseSeriesByMeasureId(anyString()))
-            .thenThrow(new ResourceNotFoundException("Measure", measureId));
+            .thenThrow(new ResourceNotFoundException("Measure", "1234"));
     mockMvc
         .perform(
             get("/measures/1234/test-cases/series")
                 .with(user(TEST_USER_ID))
                 .with(csrf()))
         .andExpect(status().isNotFound());
+    verify(testCaseService, times(1))
+        .findTestCaseSeriesByMeasureId(measureIdCaptor.capture());
+    assertEquals("1234", measureIdCaptor.getValue());
   }
 
   @Test
@@ -211,6 +213,9 @@ public class TestCaseControllerMvcTest {
                 .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(content().string("[]"));
+    verify(testCaseService, times(1))
+        .findTestCaseSeriesByMeasureId(measureIdCaptor.capture());
+    assertEquals("1234", measureIdCaptor.getValue());
   }
 
   @Test
@@ -224,5 +229,8 @@ public class TestCaseControllerMvcTest {
                 .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(content().string("[\"SeriesAAA\",\"SeriesBBB\"]"));
+    verify(testCaseService, times(1))
+        .findTestCaseSeriesByMeasureId(measureIdCaptor.capture());
+    assertEquals("1234", measureIdCaptor.getValue());
   }
 }
