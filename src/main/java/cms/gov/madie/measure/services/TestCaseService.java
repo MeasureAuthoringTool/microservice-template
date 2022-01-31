@@ -8,6 +8,8 @@ import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class TestCaseService {
@@ -62,5 +64,13 @@ public class TestCaseService {
       throw new ResourceNotFoundException("Measure", measureId);
     }
     return measure;
+  }
+
+  public List<String> findTestCaseSeriesByMeasureId(String measureId) {
+    Measure measure = measureRepository.findAllTestCaseSeriesByMeasureId(measureId)
+            .orElseThrow(() -> new ResourceNotFoundException("Measure", measureId));
+    return Optional.ofNullable(measure.getTestCases())
+            .orElse(List.of())
+            .stream().map(TestCase::getSeries).distinct().collect(Collectors.toList());
   }
 }
