@@ -14,6 +14,7 @@ import java.util.Date;
 public class TestCase {
   private String id;
   private String name;
+  private String title;
   private String series;
   private String description;
   private Date createdAt;
