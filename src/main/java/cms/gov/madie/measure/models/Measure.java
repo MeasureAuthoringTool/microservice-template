@@ -17,7 +17,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import java.util.List;
 
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class Measure {

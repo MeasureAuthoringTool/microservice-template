@@ -51,4 +51,9 @@ public class TestCaseController {
     }
     return ResponseEntity.ok(testCaseService.updateTestCase(testCase, measureId));
   }
+
+  @GetMapping(ControllerUtil.TEST_CASES+"/series")
+  public ResponseEntity<List<String>> getTestCaseSeriesByMeasureId(@PathVariable String measureId) {
+    return ResponseEntity.ok(testCaseService.findTestCaseSeriesByMeasureId(measureId));
+  }
 }

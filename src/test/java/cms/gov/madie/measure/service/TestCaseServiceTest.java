@@ -14,12 +14,15 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class TestCaseServiceTest {
@@ -74,5 +77,47 @@ public class TestCaseServiceTest {
     assertThrows(
         ResourceNotFoundException.class,
         () -> testCaseService.findTestCasesByMeasureId(measure.getId()));
+  }
+
+  @Test
+  public void testFindTestCaseSeriesByMeasureIdThrowsExceptionWhenMeasureDoesNotExist() {
+    Optional<Measure> optional = Optional.empty();
+    when(repository.findAllTestCaseSeriesByMeasureId(anyString())).thenReturn(optional);
+    assertThrows(ResourceNotFoundException.class,
+            () -> testCaseService.findTestCaseSeriesByMeasureId(measure.getId()));
+  }
+
+  @Test
+  public void testFindTestCaseSeriesByMeasureIdReturnsEmptyListWhenTestCasesNull() {
+    Measure noTestCases = measure.toBuilder().build();
+    measure.setTestCases(null);
+    Optional<Measure> optional = Optional.of(noTestCases);
+    when(repository.findAllTestCaseSeriesByMeasureId(anyString())).thenReturn(optional);
+    List<String> output = testCaseService.findTestCaseSeriesByMeasureId(measure.getId());
+    assertEquals(List.of(), output);
+  }
+
+  @Test
+  public void testFindTestCaseSeriesByMeasureIdReturnsEmptyListWhenTestCasesEmpty() {
+    Measure noTestCases = measure.toBuilder().build();
+    measure.setTestCases(new ArrayList<>());
+    Optional<Measure> optional = Optional.of(noTestCases);
+    when(repository.findAllTestCaseSeriesByMeasureId(anyString())).thenReturn(optional);
+    List<String> output = testCaseService.findTestCaseSeriesByMeasureId(measure.getId());
+    assertEquals(List.of(), output);
+  }
+
+  @Test
+  public void testFindTestCaseSeriesByMeasureIdReturnsDistinctList() {
+    Measure withTestCases = measure.toBuilder().build();
+    withTestCases.setTestCases(List.of(
+      TestCase.builder().id(ObjectId.get().toString()).series("SeriesAAA").build(),
+      TestCase.builder().id(ObjectId.get().toString()).series("SeriesAAA").build(),
+      TestCase.builder().id(ObjectId.get().toString()).series("SeriesBBB").build()
+    ));
+    Optional<Measure> optional = Optional.of(withTestCases);
+    when(repository.findAllTestCaseSeriesByMeasureId(anyString())).thenReturn(optional);
+    List<String> output = testCaseService.findTestCaseSeriesByMeasureId(measure.getId());
+    assertEquals(List.of("SeriesAAA","SeriesBBB"), output);
   }
 }

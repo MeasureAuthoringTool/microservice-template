@@ -20,11 +20,13 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -88,7 +90,7 @@ public class TestCaseControllerMvcTest {
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders.get("/measures/1234/test-cases")
+            get("/measures/1234/test-cases")
                 .with(user(TEST_USER_ID))
                 .with(csrf()))
         .andExpect(status().isOk())
@@ -111,7 +113,7 @@ public class TestCaseControllerMvcTest {
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders.get("/measures/1234/test-cases")
+            get("/measures/1234/test-cases")
                 .with(user(TEST_USER_ID))
                 .with(csrf()))
         .andExpect(status().isNotFound())
@@ -131,7 +133,7 @@ public class TestCaseControllerMvcTest {
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders.get("/measures/1234/test-cases/TESTID")
+            get("/measures/1234/test-cases/TESTID")
                 .with(user(TEST_USER_ID))
                 .with(csrf()))
         .andExpect(status().isOk())
@@ -183,5 +185,44 @@ public class TestCaseControllerMvcTest {
     assertEquals("1234", measureIdCaptor.getValue());
     assertEquals("TESTID", testCaseCaptor.getValue().getId());
     assertEquals(modifiedDescription, testCaseCaptor.getValue().getDescription());
+  }
+
+  @Test
+  public void testGetTestCaseSeriesByMeasureIdThrows404() throws Exception {
+    final String measureId = "TESTID";
+    when(testCaseService.findTestCaseSeriesByMeasureId(anyString()))
+            .thenThrow(new ResourceNotFoundException("Measure", measureId));
+    mockMvc
+        .perform(
+            get("/measures/1234/test-cases/series")
+                .with(user(TEST_USER_ID))
+                .with(csrf()))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  public void testGetTestCaseSeriesByMeasureIdReturnsEmptyList() throws Exception {
+    when(testCaseService.findTestCaseSeriesByMeasureId(anyString()))
+            .thenReturn(List.of());
+    mockMvc
+        .perform(
+            get("/measures/1234/test-cases/series")
+                .with(user(TEST_USER_ID))
+                .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(content().string("[]"));
+  }
+
+  @Test
+  public void testGetTestCaseSeriesByMeasureIdReturnsSeries() throws Exception {
+    when(testCaseService.findTestCaseSeriesByMeasureId(anyString()))
+            .thenReturn(List.of("SeriesAAA", "SeriesBBB"));
+    mockMvc
+        .perform(
+            get("/measures/1234/test-cases/series")
+                .with(user(TEST_USER_ID))
+                .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(content().string("[\"SeriesAAA\",\"SeriesBBB\"]"));
   }
 }

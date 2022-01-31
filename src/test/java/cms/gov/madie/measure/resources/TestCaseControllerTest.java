@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.resources;
 
+import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.models.Measure;
 import cms.gov.madie.measure.models.TestCase;
 import cms.gov.madie.measure.services.TestCaseService;
@@ -16,9 +17,10 @@ import org.springframework.http.ResponseEntity;
 import java.util.List;
 import java.util.Objects;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class TestCaseControllerTest {
@@ -92,5 +94,30 @@ public class TestCaseControllerTest {
     assertNotNull(response.getBody());
     assertEquals("IPPPass", response.getBody().getName());
     assertEquals("BloodPressure>124", response.getBody().getSeries());
+  }
+
+  @Test
+  public void testGetTestCaseSeriesByMeasureIdReturnsEmptyList() {
+    when(testCaseService.findTestCaseSeriesByMeasureId(anyString()))
+            .thenReturn(List.of());
+    ResponseEntity<List<String>> output = controller.getTestCaseSeriesByMeasureId(measure.getId());
+    assertNotNull(output.getBody());
+    assertEquals(List.of(), output.getBody());
+  }
+
+  @Test
+  public void testGetTestCaseSeriesByMeasureIdReturnsSeries() {
+    when(testCaseService.findTestCaseSeriesByMeasureId(anyString()))
+            .thenReturn(List.of("SeriesAAA", "SeriesBBB"));
+    ResponseEntity<List<String>> output = controller.getTestCaseSeriesByMeasureId(measure.getId());
+    assertNotNull(output.getBody());
+    assertEquals(List.of("SeriesAAA","SeriesBBB"), output.getBody());
+  }
+
+  @Test
+  public void testGetTestCaseSeriesByMeasureIdBubblesUpExceptions() {
+    when(testCaseService.findTestCaseSeriesByMeasureId(anyString()))
+            .thenThrow(new ResourceNotFoundException("Measure", measure.getId()));
+    assertThrows(ResourceNotFoundException.class, () -> controller.getTestCaseSeriesByMeasureId(measure.getId()));
   }
 }
