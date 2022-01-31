@@ -46,6 +46,7 @@ public class TestCaseControllerMvcTest {
   private static final String TEST_USER = "TestUser";
   private static final String TEST_USER_2 = "TestUser2";
   private static final String TEST_NAME = "TestName";
+  private static final String TEST_TITLE = "TestTitle";
   private static final String TEST_DESCRIPTION = "Test Description";
   private static final String TEST_USER_ID = "test-okta-user-id-123";
 
@@ -57,6 +58,7 @@ public class TestCaseControllerMvcTest {
     testCase.setCreatedBy(TEST_USER);
     testCase.setLastModifiedBy(TEST_USER_2);
     testCase.setName(TEST_NAME);
+    testCase.setTitle(TEST_TITLE);
   }
 
   @Test
@@ -97,7 +99,7 @@ public class TestCaseControllerMvcTest {
         .andExpect(
             content()
                 .string(
-                    "[{\"id\":\"TESTID\",\"name\":\"TestName\",\"series\":null,"
+                    "[{\"id\":\"TESTID\",\"name\":\"TestName\",\"title\":\"TestTitle\",\"series\":null,"
                         + "\"description\":\"Test Description\",\"createdAt\":null,"
                         + "\"createdBy\":\"TestUser\",\"lastModifiedAt\":null,"
                         + "\"lastModifiedBy\":\"TestUser2\"}]"));
@@ -140,7 +142,7 @@ public class TestCaseControllerMvcTest {
         .andExpect(
             content()
                 .string(
-                    "{\"id\":\"TESTID\",\"name\":\"TestName\",\"series\":null,"
+                    "{\"id\":\"TESTID\",\"name\":\"TestName\",\"title\":\"TestTitle\",\"series\":null,"
                         + "\"description\":\"Test Description\",\"createdAt\":null,"
                         + "\"createdBy\":\"TestUser\",\"lastModifiedAt\":null,"
                         + "\"lastModifiedBy\":\"TestUser2\"}"));
@@ -161,7 +163,7 @@ public class TestCaseControllerMvcTest {
         .perform(
             MockMvcRequestBuilders.put("/measures/1234/test-cases/TESTID")
                 .content(
-                    "{\"id\":\"TESTID\",\"name\":\"TestName\",\"series\":null,"
+                    "{\"id\":\"TESTID\",\"name\":\"TestName\",\"title\":\"TestTitle\",\"series\":null,"
                         + "\"description\":\""
                         + modifiedDescription
                         + "\",\"createdAt\":null,"
@@ -174,7 +176,7 @@ public class TestCaseControllerMvcTest {
         .andExpect(
             content()
                 .string(
-                    "{\"id\":\"TESTID\",\"name\":\"TestName\",\"series\":null,"
+                    "{\"id\":\"TESTID\",\"name\":\"TestName\",\"title\":\"TestTitle\",\"series\":null,"
                         + "\"description\":\""
                         + modifiedDescription
                         + "\",\"createdAt\":null,"
