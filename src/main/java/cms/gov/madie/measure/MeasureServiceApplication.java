@@ -18,10 +18,9 @@ public class MeasureServiceApplication {
     return new WebMvcConfigurer() {
       @Override
       public void addCorsMappings(CorsRegistry registry) {
-        registry
-            .addMapping("/**")
-            .allowedMethods("PUT", "POST", "GET")
-            .allowedOrigins("http://localhost:9000", "https://dev-madie.hcqis.org");
+	registry.addMapping("/**").allowedMethods("PUT", "POST", "GET").allowedOrigins(
+	    "http://localhost:9000", "https://dev-madie.hcqis.org", "https://test-madie.hcqis.org",
+	    "https://impl-madie.hcqis.org");
       }
     };
   }
