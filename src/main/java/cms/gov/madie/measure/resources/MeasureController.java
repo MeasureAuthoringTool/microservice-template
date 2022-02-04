@@ -33,11 +33,12 @@ public class MeasureController {
 
   @GetMapping("/measures")
   public ResponseEntity<List<Measure>> getMeasures(
-          Principal principal,
-          @RequestParam(required = false, defaultValue = "false", name = "currentUser") boolean filterByCurrentUser) {
+      Principal principal,
+      @RequestParam(required = false, defaultValue = "false", name = "currentUser")
+          boolean filterByCurrentUser) {
     final String username = principal.getName();
-    List<Measure> measures = filterByCurrentUser ?
-            repository.findAllByCreatedBy(username) : repository.findAll();
+    List<Measure> measures =
+        filterByCurrentUser ? repository.findAllByCreatedBy(username) : repository.findAll();
     return ResponseEntity.ok(measures);
   }
 
@@ -51,7 +52,8 @@ public class MeasureController {
 
   @PostMapping("/measure")
   public ResponseEntity<Measure> addMeasure(
-          @RequestBody @Validated(Measure.ValidationSequence.class) Measure measure, Principal principal) {
+      @RequestBody @Validated(Measure.ValidationSequence.class) Measure measure,
+      Principal principal) {
     final String username = principal.getName();
     log.info("User [{}] is attempting to create a new measure", username);
     checkDuplicateCqlLibraryName(measure.getCqlLibraryName());

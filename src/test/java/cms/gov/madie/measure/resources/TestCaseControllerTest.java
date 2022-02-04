@@ -39,6 +39,7 @@ public class TestCaseControllerTest {
     testCase.setSeries("BloodPressure>124");
     testCase.setCreatedBy("TestUser");
     testCase.setLastModifiedBy("TestUser2");
+    testCase.setDescription("TESTCASEDESCRIPTION");
 
     measure = new Measure();
     measure.setId(ObjectId.get().toString());
@@ -117,7 +118,24 @@ public class TestCaseControllerTest {
   @Test
   public void testGetTestCaseSeriesByMeasureIdBubblesUpExceptions() {
     when(testCaseService.findTestCaseSeriesByMeasureId(anyString()))
-            .thenThrow(new ResourceNotFoundException("Measure", measure.getId()));
-    assertThrows(ResourceNotFoundException.class, () -> controller.getTestCaseSeriesByMeasureId(measure.getId()));
+        .thenThrow(new ResourceNotFoundException("Measure", measure.getId()));
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> controller.getTestCaseSeriesByMeasureId(measure.getId()));
+  }
+
+  @Test
+  void saveTestCaseWithSanitizedDescription() {
+
+    Mockito.doReturn(testCase)
+        .when(testCaseService)
+        .persistTestCase(any(TestCase.class), any(String.class));
+
+    TestCase newTestCase = new TestCase();
+    newTestCase.setDescription("TESTCASEDESCRIPTION<script>alert('Wufff!')</script>");
+
+    ResponseEntity<TestCase> response = controller.addTestCase(newTestCase, measure.getId());
+    assertEquals("TESTID", response.getBody().getId());
+    assertEquals("TESTCASEDESCRIPTION", response.getBody().getDescription());
   }
 }

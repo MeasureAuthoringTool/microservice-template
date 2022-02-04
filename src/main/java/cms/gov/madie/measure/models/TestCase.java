@@ -7,6 +7,10 @@ import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
+import javax.validation.GroupSequence;
+
+import org.hibernate.validator.constraints.Length;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -16,9 +20,22 @@ public class TestCase {
   private String name;
   private String title;
   private String series;
+
+  @Length(
+      max = 250,
+      groups = {ValidationOrder1.class},
+      message = "Test Case Description can not be more than 250 characters.")
   private String description;
+
   private Date createdAt;
   private String createdBy;
   private Date lastModifiedAt;
   private String lastModifiedBy;
+
+  @GroupSequence({
+    TestCase.ValidationOrder1.class,
+  })
+  public interface ValidationSequence {}
+
+  public interface ValidationOrder1 {}
 }

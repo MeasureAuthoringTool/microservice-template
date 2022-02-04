@@ -83,8 +83,9 @@ public class TestCaseServiceTest {
   public void testFindTestCaseSeriesByMeasureIdThrowsExceptionWhenMeasureDoesNotExist() {
     Optional<Measure> optional = Optional.empty();
     when(repository.findAllTestCaseSeriesByMeasureId(anyString())).thenReturn(optional);
-    assertThrows(ResourceNotFoundException.class,
-            () -> testCaseService.findTestCaseSeriesByMeasureId(measure.getId()));
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> testCaseService.findTestCaseSeriesByMeasureId(measure.getId()));
   }
 
   @Test
@@ -110,14 +111,14 @@ public class TestCaseServiceTest {
   @Test
   public void testFindTestCaseSeriesByMeasureIdReturnsDistinctList() {
     Measure withTestCases = measure.toBuilder().build();
-    withTestCases.setTestCases(List.of(
-      TestCase.builder().id(ObjectId.get().toString()).series("SeriesAAA").build(),
-      TestCase.builder().id(ObjectId.get().toString()).series("SeriesAAA").build(),
-      TestCase.builder().id(ObjectId.get().toString()).series("SeriesBBB").build()
-    ));
+    withTestCases.setTestCases(
+        List.of(
+            TestCase.builder().id(ObjectId.get().toString()).series("SeriesAAA").build(),
+            TestCase.builder().id(ObjectId.get().toString()).series("SeriesAAA").build(),
+            TestCase.builder().id(ObjectId.get().toString()).series("SeriesBBB").build()));
     Optional<Measure> optional = Optional.of(withTestCases);
     when(repository.findAllTestCaseSeriesByMeasureId(anyString())).thenReturn(optional);
     List<String> output = testCaseService.findTestCaseSeriesByMeasureId(measure.getId());
-    assertEquals(List.of("SeriesAAA","SeriesBBB"), output);
+    assertEquals(List.of("SeriesAAA", "SeriesBBB"), output);
   }
 }

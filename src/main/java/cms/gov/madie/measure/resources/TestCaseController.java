@@ -4,10 +4,15 @@ import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.models.TestCase;
 import cms.gov.madie.measure.services.TestCaseService;
 import cms.gov.madie.measure.utils.ControllerUtil;
+import io.micrometer.core.instrument.util.StringUtils;
 import lombok.RequiredArgsConstructor;
+
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,7 +30,13 @@ public class TestCaseController {
 
   @PostMapping(ControllerUtil.TEST_CASES)
   public ResponseEntity<TestCase> addTestCase(
-      @RequestBody TestCase testCase, @PathVariable String measureId) {
+      @RequestBody @Validated(TestCase.ValidationSequence.class) TestCase testCase,
+      @PathVariable String measureId) {
+
+    if (!StringUtils.isBlank(testCase.getDescription())) {
+      testCase.setDescription(Jsoup.clean(testCase.getDescription(), Safelist.basic()));
+    }
+
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(testCaseService.persistTestCase(testCase, measureId));
   }
@@ -43,16 +54,20 @@ public class TestCaseController {
 
   @PutMapping(ControllerUtil.TEST_CASES + "/{testCaseId}")
   public ResponseEntity<TestCase> updateTestCase(
-      @RequestBody TestCase testCase,
+      @RequestBody @Validated(TestCase.ValidationSequence.class) TestCase testCase,
       @PathVariable String measureId,
       @PathVariable String testCaseId) {
     if (testCase.getId() == null || !testCase.getId().equals(testCaseId)) {
       throw new ResourceNotFoundException("Test Case", testCaseId);
     }
+    if (!StringUtils.isBlank(testCase.getDescription())) {
+      testCase.setDescription(Jsoup.clean(testCase.getDescription(), Safelist.basic()));
+    }
+
     return ResponseEntity.ok(testCaseService.updateTestCase(testCase, measureId));
   }
 
-  @GetMapping(ControllerUtil.TEST_CASES+"/series")
+  @GetMapping(ControllerUtil.TEST_CASES + "/series")
   public ResponseEntity<List<String>> getTestCaseSeriesByMeasureId(@PathVariable String measureId) {
     return ResponseEntity.ok(testCaseService.findTestCaseSeriesByMeasureId(measureId));
   }
