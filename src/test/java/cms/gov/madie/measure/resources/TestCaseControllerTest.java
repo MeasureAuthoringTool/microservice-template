@@ -99,8 +99,7 @@ public class TestCaseControllerTest {
 
   @Test
   public void testGetTestCaseSeriesByMeasureIdReturnsEmptyList() {
-    when(testCaseService.findTestCaseSeriesByMeasureId(anyString()))
-            .thenReturn(List.of());
+    when(testCaseService.findTestCaseSeriesByMeasureId(anyString())).thenReturn(List.of());
     ResponseEntity<List<String>> output = controller.getTestCaseSeriesByMeasureId(measure.getId());
     assertNotNull(output.getBody());
     assertEquals(List.of(), output.getBody());
@@ -109,10 +108,10 @@ public class TestCaseControllerTest {
   @Test
   public void testGetTestCaseSeriesByMeasureIdReturnsSeries() {
     when(testCaseService.findTestCaseSeriesByMeasureId(anyString()))
-            .thenReturn(List.of("SeriesAAA", "SeriesBBB"));
+        .thenReturn(List.of("SeriesAAA", "SeriesBBB"));
     ResponseEntity<List<String>> output = controller.getTestCaseSeriesByMeasureId(measure.getId());
     assertNotNull(output.getBody());
-    assertEquals(List.of("SeriesAAA","SeriesBBB"), output.getBody());
+    assertEquals(List.of("SeriesAAA", "SeriesBBB"), output.getBody());
   }
 
   @Test

@@ -31,6 +31,7 @@ public class TestCase {
   private String createdBy;
   private Date lastModifiedAt;
   private String lastModifiedBy;
+  private String json;
 
   @GroupSequence({
     TestCase.ValidationOrder1.class,

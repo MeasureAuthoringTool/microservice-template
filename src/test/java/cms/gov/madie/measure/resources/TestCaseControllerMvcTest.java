@@ -49,6 +49,7 @@ public class TestCaseControllerMvcTest {
   private static final String TEST_TITLE = "TestTitle";
   private static final String TEST_DESCRIPTION = "Test Description";
   private static final String TEST_USER_ID = "test-okta-user-id-123";
+  private static final String TEST_JSON = "{\"test\":\"test\"}";
 
   @BeforeEach
   public void setUp() {
@@ -59,6 +60,7 @@ public class TestCaseControllerMvcTest {
     testCase.setLastModifiedBy(TEST_USER_2);
     testCase.setName(TEST_NAME);
     testCase.setTitle(TEST_TITLE);
+    testCase.setJson(TEST_JSON);
   }
 
   @Test
@@ -79,11 +81,13 @@ public class TestCaseControllerMvcTest {
         .andExpect(jsonPath("$.id").value(TEST_ID))
         .andExpect(jsonPath("$.createdBy").value(TEST_USER))
         .andExpect(jsonPath("$.lastModifiedBy").value(TEST_USER_2))
-        .andExpect(jsonPath("$.name").value(TEST_NAME));
+        .andExpect(jsonPath("$.name").value(TEST_NAME))
+        .andExpect(jsonPath("$.json").value(TEST_JSON));
     verify(testCaseService, times(1))
         .persistTestCase(testCaseCaptor.capture(), measureIdCaptor.capture());
     TestCase persistedTestCase = testCaseCaptor.getValue();
     assertEquals(TEST_DESCRIPTION, persistedTestCase.getDescription());
+    assertEquals(TEST_JSON, persistedTestCase.getJson());
   }
 
   @Test
@@ -99,7 +103,8 @@ public class TestCaseControllerMvcTest {
                     "[{\"id\":\"TESTID\",\"name\":\"TestName\",\"title\":\"TestTitle\",\"series\":null,"
                         + "\"description\":\"Test Description\",\"createdAt\":null,"
                         + "\"createdBy\":\"TestUser\",\"lastModifiedAt\":null,"
-                        + "\"lastModifiedBy\":\"TestUser2\"}]"));
+                        + "\"lastModifiedBy\":\"TestUser2\","
+                        + "\"json\":\"{\\\"test\\\":\\\"test\\\"}\"}]"));
     verify(testCaseService, times(1)).findTestCasesByMeasureId(measureIdCaptor.capture());
     String measureId = measureIdCaptor.getValue();
     assertEquals("1234", measureId);
@@ -136,7 +141,8 @@ public class TestCaseControllerMvcTest {
                     "{\"id\":\"TESTID\",\"name\":\"TestName\",\"title\":\"TestTitle\",\"series\":null,"
                         + "\"description\":\"Test Description\",\"createdAt\":null,"
                         + "\"createdBy\":\"TestUser\",\"lastModifiedAt\":null,"
-                        + "\"lastModifiedBy\":\"TestUser2\"}"));
+                        + "\"lastModifiedBy\":\"TestUser2\","
+                        + "\"json\":\"{\\\"test\\\":\\\"test\\\"}\"}"));
     verify(testCaseService, times(1))
         .getTestCase(measureIdCaptor.capture(), testCaseIdCaptor.capture());
     assertEquals("1234", measureIdCaptor.getValue());
@@ -147,6 +153,7 @@ public class TestCaseControllerMvcTest {
   public void updateTestCase() throws Exception {
     String modifiedDescription = "New Description";
     testCase.setDescription(modifiedDescription);
+    testCase.setJson("{\"new\":\"json\"}");
     when(testCaseService.updateTestCase(any(TestCase.class), any(String.class)))
         .thenReturn(testCase);
 
@@ -159,7 +166,8 @@ public class TestCaseControllerMvcTest {
                         + modifiedDescription
                         + "\",\"createdAt\":null,"
                         + "\"createdBy\":\"TestUser\",\"lastModifiedAt\":null,"
-                        + "\"lastModifiedBy\":\"TestUser2\"}")
+                        + "\"lastModifiedBy\":\"TestUser2\","
+                        + "\"json\":\"{\\\"new\\\":\\\"json\\\"}\"}")
                 .contentType(MediaType.APPLICATION_JSON)
                 .with(user(TEST_USER_ID))
                 .with(csrf()))
@@ -172,7 +180,8 @@ public class TestCaseControllerMvcTest {
                         + modifiedDescription
                         + "\",\"createdAt\":null,"
                         + "\"createdBy\":\"TestUser\",\"lastModifiedAt\":null,"
-                        + "\"lastModifiedBy\":\"TestUser2\"}"));
+                        + "\"lastModifiedBy\":\"TestUser2\","
+                        + "\"json\":\"{\\\"new\\\":\\\"json\\\"}\"}"));
     verify(testCaseService, times(1))
         .updateTestCase(testCaseCaptor.capture(), measureIdCaptor.capture());
     assertEquals("1234", measureIdCaptor.getValue());
