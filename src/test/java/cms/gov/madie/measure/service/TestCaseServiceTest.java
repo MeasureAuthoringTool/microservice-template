@@ -120,4 +120,19 @@ public class TestCaseServiceTest {
     List<String> output = testCaseService.findTestCaseSeriesByMeasureId(measure.getId());
     assertEquals(List.of("SeriesAAA","SeriesBBB"), output);
   }
+
+  @Test
+  public void testFindTestCaseSeriesByMeasureIdReturnsListWithoutNullsAndEmptyStrings() {
+    Measure withTestCases = measure.toBuilder().build();
+    withTestCases.setTestCases(List.of(
+      TestCase.builder().id(ObjectId.get().toString()).series("SeriesAAA").build(),
+      TestCase.builder().id(ObjectId.get().toString()).series("").build(),
+      TestCase.builder().id(ObjectId.get().toString()).series(null).build(),
+      TestCase.builder().id(ObjectId.get().toString()).series("SeriesBBB").build()
+    ));
+    Optional<Measure> optional = Optional.of(withTestCases);
+    when(repository.findAllTestCaseSeriesByMeasureId(anyString())).thenReturn(optional);
+    List<String> output = testCaseService.findTestCaseSeriesByMeasureId(measure.getId());
+    assertEquals(List.of("SeriesAAA","SeriesBBB"), output);
+  }
 }

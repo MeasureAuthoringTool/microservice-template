@@ -68,9 +68,11 @@ public class TestCaseService {
 
   public List<String> findTestCaseSeriesByMeasureId(String measureId) {
     Measure measure = measureRepository.findAllTestCaseSeriesByMeasureId(measureId)
-            .orElseThrow(() -> new ResourceNotFoundException("Measure", measureId));
+        .orElseThrow(() -> new ResourceNotFoundException("Measure", measureId));
     return Optional.ofNullable(measure.getTestCases())
-            .orElse(List.of())
-            .stream().map(TestCase::getSeries).distinct().collect(Collectors.toList());
+        .orElse(List.of())
+        .stream().map(TestCase::getSeries)
+        .filter(series -> series != null && !series.trim().isEmpty())
+        .distinct().collect(Collectors.toList());
   }
 }
