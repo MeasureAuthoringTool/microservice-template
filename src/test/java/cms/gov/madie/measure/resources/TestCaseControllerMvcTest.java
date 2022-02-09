@@ -40,6 +40,7 @@ public class TestCaseControllerMvcTest {
   @Captor ArgumentCaptor<TestCase> testCaseCaptor;
   @Captor ArgumentCaptor<String> measureIdCaptor;
   @Captor ArgumentCaptor<String> testCaseIdCaptor;
+  @Captor ArgumentCaptor<String> usernameCaptor;
 
   private TestCase testCase;
   private static final String TEST_ID = "TESTID";
@@ -65,7 +66,7 @@ public class TestCaseControllerMvcTest {
 
   @Test
   public void testNewTestCase() throws Exception {
-    when(testCaseService.persistTestCase(any(TestCase.class), any(String.class)))
+    when(testCaseService.persistTestCase(any(TestCase.class), any(String.class), any(String.class)))
         .thenReturn(testCase);
 
     mockMvc
@@ -84,10 +85,11 @@ public class TestCaseControllerMvcTest {
         .andExpect(jsonPath("$.name").value(TEST_NAME))
         .andExpect(jsonPath("$.json").value(TEST_JSON));
     verify(testCaseService, times(1))
-        .persistTestCase(testCaseCaptor.capture(), measureIdCaptor.capture());
+        .persistTestCase(testCaseCaptor.capture(), measureIdCaptor.capture(), usernameCaptor.capture());
     TestCase persistedTestCase = testCaseCaptor.getValue();
     assertEquals(TEST_DESCRIPTION, persistedTestCase.getDescription());
     assertEquals(TEST_JSON, persistedTestCase.getJson());
+    assertEquals(TEST_USER_ID, usernameCaptor.getValue());
   }
 
   @Test
@@ -163,7 +165,7 @@ public class TestCaseControllerMvcTest {
     String modifiedDescription = "New Description";
     testCase.setDescription(modifiedDescription);
     testCase.setJson("{\"new\":\"json\"}");
-    when(testCaseService.updateTestCase(any(TestCase.class), any(String.class)))
+    when(testCaseService.updateTestCase(any(TestCase.class), any(String.class), any(String.class)))
         .thenReturn(testCase);
 
     mockMvc
@@ -192,10 +194,11 @@ public class TestCaseControllerMvcTest {
                         + "\"lastModifiedBy\":\"TestUser2\","
                         + "\"json\":\"{\\\"new\\\":\\\"json\\\"}\"}"));
     verify(testCaseService, times(1))
-        .updateTestCase(testCaseCaptor.capture(), measureIdCaptor.capture());
+        .updateTestCase(testCaseCaptor.capture(), measureIdCaptor.capture(), usernameCaptor.capture());
     assertEquals("1234", measureIdCaptor.getValue());
     assertEquals("TESTID", testCaseCaptor.getValue().getId());
     assertEquals(modifiedDescription, testCaseCaptor.getValue().getDescription());
+    assertEquals(TEST_USER_ID, usernameCaptor.getValue());
   }
 
   @Test

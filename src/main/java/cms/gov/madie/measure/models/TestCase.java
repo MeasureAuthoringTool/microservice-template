@@ -5,10 +5,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
 import java.util.Date;
 
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class TestCase {
@@ -17,9 +18,9 @@ public class TestCase {
   private String title;
   private String series;
   private String description;
-  private Date createdAt;
+  private Instant createdAt;
   private String createdBy;
-  private Date lastModifiedAt;
+  private Instant lastModifiedAt;
   private String lastModifiedBy;
   private String json;
 }

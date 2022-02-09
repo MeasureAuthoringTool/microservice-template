@@ -7,9 +7,11 @@ import cms.gov.madie.measure.repositories.MeasureRepository;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 public class TestCaseService {
@@ -20,11 +22,16 @@ public class TestCaseService {
     this.measureRepository = measureRepository;
   }
 
-  public TestCase persistTestCase(TestCase testCase, String measureId) {
+  public TestCase persistTestCase(TestCase testCase, String measureId, String username) {
     Measure measure = findMeasureById(measureId);
 
+    Instant now = Instant.now();
     // mongo doesn't create object id for embedded objects, setting manually
     testCase.setId(ObjectId.get().toString());
+    testCase.setCreatedAt(now);
+    testCase.setCreatedBy(username);
+    testCase.setLastModifiedAt(now);
+    testCase.setLastModifiedBy(username);
     if (measure.getTestCases() == null) {
       measure.setTestCases(List.of(testCase));
     } else {
@@ -34,9 +41,27 @@ public class TestCaseService {
     return testCase;
   }
 
-  public TestCase updateTestCase(TestCase testCase, String measureId) {
+  public TestCase updateTestCase(TestCase testCase, String measureId, String username) {
     Measure measure = findMeasureById(measureId);
+    List<TestCase> tcs = measure.getTestCases();
+    Instant now = Instant.now();
+    testCase.setLastModifiedAt(now);
+    testCase.setLastModifiedBy(username);
+//    TestCase existing = measure.getTestCases().stream().filter(tc -> tc.getId().equals(testCase.getId())).findFirst().orElse(null);
+    int idx = IntStream.range(0, tcs.size())
+        .filter(i -> tcs.get(i).getId().equals(testCase.getId()))
+        .findFirst()
+        .orElse(-1);
+    if (idx > -1) {
+      TestCase existing = tcs.get(idx);
+      testCase.setCreatedAt(existing.getCreatedAt());
+      testCase.setCreatedBy(existing.getCreatedBy());
+    } else {
+      testCase.setCreatedAt(now);
+      testCase.setCreatedBy(username);
+    }
     measure.getTestCases().removeIf(tc -> tc.getId().equals(testCase.getId()));
+
     measure.getTestCases().add(testCase);
     measureRepository.save(measure);
     return testCase;

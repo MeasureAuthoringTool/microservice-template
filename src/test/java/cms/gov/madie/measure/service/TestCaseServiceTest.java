@@ -5,24 +5,29 @@ import cms.gov.madie.measure.models.Measure;
 import cms.gov.madie.measure.models.TestCase;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.TestCaseService;
+import org.assertj.core.util.Lists;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 public class TestCaseServiceTest {
@@ -51,13 +56,26 @@ public class TestCaseServiceTest {
 
   @Test
   public void testPersistTestCase() {
+    ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     Optional<Measure> optional = Optional.of(measure);
     Mockito.doReturn(optional).when(repository).findById(any(String.class));
 
     Mockito.doReturn(measure).when(repository).save(any(Measure.class));
 
-    TestCase persistTestCase = testCaseService.persistTestCase(testCase, measure.getId());
+    TestCase persistTestCase = testCaseService.persistTestCase(testCase, measure.getId(), "test.user");
+    verify(repository, times(1)).save(measureCaptor.capture());
     assertEquals(testCase.getId(), persistTestCase.getId());
+    Measure savedMeasure = measureCaptor.getValue();
+    assertEquals(measure.getLastModifiedBy(), savedMeasure.getLastModifiedBy());
+    assertEquals(measure.getLastModifiedAt(), savedMeasure.getLastModifiedAt());
+    assertNotNull(savedMeasure.getTestCases());
+    assertEquals(1, savedMeasure.getTestCases().size());
+    TestCase capturedTestCase = savedMeasure.getTestCases().get(0);
+    int lastModCompareTo = capturedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
+    assertEquals("test.user", capturedTestCase.getLastModifiedBy());
+    assertEquals("test.user", capturedTestCase.getCreatedBy());
+    assertEquals(1, lastModCompareTo);
+    assertEquals(capturedTestCase.getLastModifiedAt(), capturedTestCase.getCreatedAt());
   }
 
   @Test
@@ -134,5 +152,76 @@ public class TestCaseServiceTest {
     when(repository.findAllTestCaseSeriesByMeasureId(anyString())).thenReturn(optional);
     List<String> output = testCaseService.findTestCaseSeriesByMeasureId(measure.getId());
     assertEquals(List.of("SeriesAAA","SeriesBBB"), output);
+  }
+
+  @Test
+  public void testUpdateTestCaseUpdatesLastModifiedFields() {
+    ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
+    Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
+    TestCase originalTestCase = testCase.toBuilder()
+        .createdAt(createdAt)
+        .createdBy("test.user5")
+        .lastModifiedAt(createdAt)
+        .lastModifiedBy("test.user5")
+        .build();
+    List<TestCase> testCases = new ArrayList();
+    testCases.add(originalTestCase);
+    Measure originalMeasure = measure.toBuilder().testCases(testCases).build();
+    Optional<Measure> optional = Optional.of(originalMeasure);
+    Mockito.doReturn(optional).when(repository).findById(any(String.class));
+
+    TestCase updatingTestCase = testCase.toBuilder().title("UpdatedTitle").series("UpdatedSeries").build();
+    Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(any(Measure.class));
+
+    TestCase updatedTestCase = testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user");
+    verify(repository, times(1)).save(measureCaptor.capture());
+    assertEquals(updatingTestCase.getId(), updatedTestCase.getId());
+    Measure savedMeasure = measureCaptor.getValue();
+    assertEquals(measure.getLastModifiedBy(), savedMeasure.getLastModifiedBy());
+    assertEquals(measure.getLastModifiedAt(), savedMeasure.getLastModifiedAt());
+    assertNotNull(savedMeasure.getTestCases());
+    assertEquals(1, savedMeasure.getTestCases().size());
+    assertEquals(updatedTestCase, savedMeasure.getTestCases().get(0));
+
+    int lastModCompareTo = updatedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
+    assertEquals("test.user", updatedTestCase.getLastModifiedBy());
+    assertEquals(originalTestCase.getCreatedBy(), updatedTestCase.getCreatedBy());
+    assertEquals(1, lastModCompareTo);
+    assertNotEquals(updatedTestCase.getLastModifiedAt(), updatedTestCase.getCreatedAt());
+    assertEquals("test.user5", updatedTestCase.getCreatedBy());
+  }
+
+  @Test
+  public void testUpdateTestCasePreventsModificationOfCreatedByFields() {
+    ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
+    Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
+    TestCase originalTestCase = testCase.toBuilder()
+        .createdAt(createdAt)
+        .createdBy("test.user5")
+        .lastModifiedAt(createdAt)
+        .lastModifiedBy("test.user5")
+        .build();
+    List<TestCase> testCases = new ArrayList();
+    testCases.add(originalTestCase);
+    Measure originalMeasure = measure.toBuilder().testCases(testCases).build();
+    Optional<Measure> optional = Optional.of(originalMeasure);
+    Mockito.doReturn(optional).when(repository).findById(any(String.class));
+
+    TestCase updatingTestCase = testCase.toBuilder()
+        .createdBy("Nobody")
+        .createdAt(Instant.now())
+        .title("UpdatedTitle")
+        .series("UpdatedSeries")
+        .build();
+    Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(any(Measure.class));
+
+    TestCase updatedTestCase = testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user");
+
+    int lastModCompareTo = updatedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
+    assertEquals("test.user", updatedTestCase.getLastModifiedBy());
+    assertEquals(1, lastModCompareTo);
+    assertNotEquals(updatedTestCase.getLastModifiedAt(), updatedTestCase.getCreatedAt());
+    assertEquals(originalTestCase.getCreatedAt(), updatedTestCase.getCreatedAt());
+    assertEquals(originalTestCase.getCreatedBy(), updatedTestCase.getCreatedBy());
   }
 }
