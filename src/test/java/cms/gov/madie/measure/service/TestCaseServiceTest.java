@@ -260,6 +260,7 @@ public class TestCaseServiceTest {
     int lastModCompareTo =
         updatedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
     assertEquals(1, lastModCompareTo);
+    assertNotNull(updatedTestCase.getId());
     assertEquals(updatedTestCase.getLastModifiedAt(), updatedTestCase.getCreatedAt());
     assertEquals("test.user", updatedTestCase.getCreatedBy());
     assertEquals("test.user", updatedTestCase.getLastModifiedBy());
@@ -294,6 +295,7 @@ public class TestCaseServiceTest {
     int lastModCompareTo =
         updatedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
     assertEquals(1, lastModCompareTo);
+    assertNotNull(updatedTestCase.getId());
     assertEquals(updatedTestCase.getLastModifiedAt(), updatedTestCase.getCreatedAt());
     assertEquals("test.user", updatedTestCase.getCreatedBy());
     assertEquals("test.user", updatedTestCase.getLastModifiedBy());
@@ -331,6 +333,7 @@ public class TestCaseServiceTest {
     int lastModCompareTo =
         updatedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
     assertEquals(1, lastModCompareTo);
+    assertNotNull(updatedTestCase.getId());
     assertEquals(updatedTestCase.getLastModifiedAt(), updatedTestCase.getCreatedAt());
     assertEquals("test.user", updatedTestCase.getCreatedBy());
     assertEquals("test.user", updatedTestCase.getLastModifiedBy());
