@@ -47,8 +47,6 @@ public class TestCaseService {
     Instant now = Instant.now();
     testCase.setLastModifiedAt(now);
     testCase.setLastModifiedBy(username);
-    //    TestCase existing = measure.getTestCases().stream().filter(tc ->
-    // tc.getId().equals(testCase.getId())).findFirst().orElse(null);
     int idx =
         IntStream.range(0, tcs.size())
             .filter(i -> tcs.get(i).getId().equals(testCase.getId()))
