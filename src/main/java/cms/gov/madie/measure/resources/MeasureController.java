@@ -33,11 +33,12 @@ public class MeasureController {
 
   @GetMapping("/measures")
   public ResponseEntity<List<Measure>> getMeasures(
-          Principal principal,
-          @RequestParam(required = false, defaultValue = "false", name = "currentUser") boolean filterByCurrentUser) {
+      Principal principal,
+      @RequestParam(required = false, defaultValue = "false", name = "currentUser")
+          boolean filterByCurrentUser) {
     final String username = principal.getName();
-    List<Measure> measures = filterByCurrentUser ?
-            repository.findAllByCreatedBy(username) : repository.findAll();
+    List<Measure> measures =
+        filterByCurrentUser ? repository.findAllByCreatedBy(username) : repository.findAll();
     return ResponseEntity.ok(measures);
   }
 
@@ -51,7 +52,8 @@ public class MeasureController {
 
   @PostMapping("/measure")
   public ResponseEntity<Measure> addMeasure(
-          @RequestBody @Validated(Measure.ValidationSequence.class) Measure measure, Principal principal) {
+      @RequestBody @Validated(Measure.ValidationSequence.class) Measure measure,
+      Principal principal) {
     final String username = principal.getName();
     log.info("User [{}] is attempting to create a new measure", username);
     checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
@@ -70,8 +72,10 @@ public class MeasureController {
 
   @PutMapping("/measure")
   public ResponseEntity<String> updateMeasure(
-      @RequestBody @Validated(Measure.ValidationSequence.class) Measure measure) {
+      @RequestBody @Validated(Measure.ValidationSequence.class) Measure measure,
+      Principal principal) {
     ResponseEntity<String> response = ResponseEntity.badRequest().body("Measure does not exist.");
+    final String username = principal.getName();
 
     if (measure.getId() != null) {
       Optional<Measure> persistedMeasure = repository.findById(measure.getId());
@@ -79,6 +83,11 @@ public class MeasureController {
         if (isCqlLibraryNameChanged(measure, persistedMeasure)) {
           checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
         }
+        measure.setLastModifiedBy(username);
+        measure.setLastModifiedAt(Instant.now());
+        // prevent users from overwriting the createdAt/By
+        measure.setCreatedAt(persistedMeasure.get().getCreatedAt());
+        measure.setCreatedBy(persistedMeasure.get().getCreatedBy());
         repository.save(measure);
         response = ResponseEntity.ok().body("Measure updated successfully.");
       }

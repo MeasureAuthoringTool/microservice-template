@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.security.Principal;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -40,13 +42,14 @@ class MeasureControllerTest {
   @Test
   void saveMeasure() {
     ArgumentCaptor<Measure> saveMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
-    Mockito.doReturn(measure).when(repository).save(ArgumentMatchers.any());
+    doReturn(measure).when(repository).save(ArgumentMatchers.any());
 
     Measure measures = new Measure();
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
     ResponseEntity<Measure> response = controller.addMeasure(measures, principal);
+    assertNotNull(response.getBody());
     assertEquals("IDIDID", response.getBody().getMeasureSetId());
 
     verify(repository, times(1)).save(saveMeasureArgCaptor.capture());
@@ -91,7 +94,7 @@ class MeasureControllerTest {
   void getMeasure() {
     String id = "testid";
     Optional<Measure> optionalMeasure = Optional.of(measure);
-    Mockito.doReturn(optionalMeasure).when(repository).findById(id);
+    doReturn(optionalMeasure).when(repository).findById(id);
     // measure found
     ResponseEntity<Measure> response = controller.getMeasure(id);
     assertEquals(
@@ -99,7 +102,7 @@ class MeasureControllerTest {
 
     // if measure not found
     Optional<Measure> empty = Optional.empty();
-    Mockito.doReturn(empty).when(repository).findById(id);
+    doReturn(empty).when(repository).findById(id);
     response = controller.getMeasure(id);
     assertNull(response.getBody());
     assertEquals(response.getStatusCodeValue(), 404);
@@ -107,32 +110,64 @@ class MeasureControllerTest {
 
   @Test
   void updateMeasureSuccessfully() {
-    Optional<Measure> persistedMeasure = Optional.of(measure);
-    measure.setId("5399aba6e4b0ae375bfdca88");
+    ArgumentCaptor<Measure> saveMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user2");
 
-    Mockito.doReturn(persistedMeasure)
+    Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
+    Measure originalMeasure =
+        measure
+            .toBuilder()
+            .id("5399aba6e4b0ae375bfdca88")
+            .createdAt(createdAt)
+            .createdBy("test.user")
+            .build();
+
+    Instant original = Instant.now().minus(140, ChronoUnit.HOURS);
+
+    Measure m1 =
+        originalMeasure
+            .toBuilder()
+            .createdBy("test.user")
+            .createdAt(original)
+            .lastModifiedBy("test.user")
+            .lastModifiedAt(original)
+            .build();
+
+    doReturn(Optional.of(originalMeasure))
         .when(repository)
-        .findById(ArgumentMatchers.eq(measure.getId()));
+        .findById(ArgumentMatchers.eq(originalMeasure.getId()));
 
-    Mockito.doReturn(measure).when(repository).save(measure);
+    doAnswer((args) -> args.getArgument(0))
+        .when(repository)
+        .save(ArgumentMatchers.any(Measure.class));
 
-    ResponseEntity<String> response = controller.updateMeasure(measure);
+    ResponseEntity<String> response = controller.updateMeasure(m1, principal);
     assertEquals("Measure updated successfully.", response.getBody());
+    verify(repository, times(1)).save(saveMeasureArgCaptor.capture());
+    Measure savedMeasure = saveMeasureArgCaptor.getValue();
+    assertThat(savedMeasure.getCreatedAt(), is(notNullValue()));
+    assertThat(savedMeasure.getCreatedBy(), is(equalTo("test.user")));
+    assertThat(savedMeasure.getLastModifiedAt(), is(notNullValue()));
+    assertThat(savedMeasure.getLastModifiedBy(), is(equalTo("test.user2")));
   }
 
   @Test
   void updateNonExistingMeasure() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user2");
+
     // no measure id specified
-    ResponseEntity<String> response = controller.updateMeasure(measure);
+    ResponseEntity<String> response = controller.updateMeasure(measure, principal);
     assertEquals("Measure does not exist.", response.getBody());
 
     // non-existing measure or measure with fake id
     measure.setId("5399aba6e4b0ae375bfdca88");
     Optional<Measure> empty = Optional.empty();
 
-    Mockito.doReturn(empty).when(repository).findById(measure.getId());
+    doReturn(empty).when(repository).findById(measure.getId());
 
-    response = controller.updateMeasure(measure);
+    response = controller.updateMeasure(measure, principal);
     assertEquals("Measure does not exist.", response.getBody());
   }
 }

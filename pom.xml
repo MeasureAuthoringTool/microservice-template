@@ -29,12 +29,12 @@
       <artifactId>spring-boot-starter-web</artifactId>
       <exclusions>
         <exclusion>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-to-slf4j</artifactId>
+          <artifactId>log4j-to-slf4j</artifactId>
+          <groupId>org.apache.logging.log4j</groupId>
         </exclusion>
         <exclusion>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j</artifactId>
+          <artifactId>log4j</artifactId>
+          <groupId>org.apache.logging.log4j</groupId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -228,7 +228,7 @@
           </execution>
         </executions>
         <configuration>
-          <targetJdk>1.6</targetJdk>
+          <targetJdk>16</targetJdk>
         </configuration>
       </plugin>
 

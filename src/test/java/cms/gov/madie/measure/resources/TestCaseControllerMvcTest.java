@@ -40,6 +40,7 @@ public class TestCaseControllerMvcTest {
   @Captor ArgumentCaptor<TestCase> testCaseCaptor;
   @Captor ArgumentCaptor<String> measureIdCaptor;
   @Captor ArgumentCaptor<String> testCaseIdCaptor;
+  @Captor ArgumentCaptor<String> usernameCaptor;
 
   private TestCase testCase;
   private static final String TEST_ID = "TESTID";
@@ -65,7 +66,7 @@ public class TestCaseControllerMvcTest {
 
   @Test
   public void testNewTestCase() throws Exception {
-    when(testCaseService.persistTestCase(any(TestCase.class), any(String.class)))
+    when(testCaseService.persistTestCase(any(TestCase.class), any(String.class), any(String.class)))
         .thenReturn(testCase);
 
     mockMvc
@@ -84,10 +85,12 @@ public class TestCaseControllerMvcTest {
         .andExpect(jsonPath("$.name").value(TEST_NAME))
         .andExpect(jsonPath("$.json").value(TEST_JSON));
     verify(testCaseService, times(1))
-        .persistTestCase(testCaseCaptor.capture(), measureIdCaptor.capture());
+        .persistTestCase(
+            testCaseCaptor.capture(), measureIdCaptor.capture(), usernameCaptor.capture());
     TestCase persistedTestCase = testCaseCaptor.getValue();
     assertEquals(TEST_DESCRIPTION, persistedTestCase.getDescription());
     assertEquals(TEST_JSON, persistedTestCase.getJson());
+    assertEquals(TEST_USER_ID, usernameCaptor.getValue());
   }
 
   @Test
@@ -95,10 +98,7 @@ public class TestCaseControllerMvcTest {
     when(testCaseService.findTestCasesByMeasureId(any(String.class))).thenReturn(List.of(testCase));
 
     mockMvc
-        .perform(
-            get("/measures/1234/test-cases")
-                .with(user(TEST_USER_ID))
-                .with(csrf()))
+        .perform(get("/measures/1234/test-cases").with(user(TEST_USER_ID)).with(csrf()))
         .andExpect(status().isOk())
         .andExpect(
             content()
@@ -119,10 +119,7 @@ public class TestCaseControllerMvcTest {
         .thenThrow(new ResourceNotFoundException("Measure", "1234"));
 
     mockMvc
-        .perform(
-            get("/measures/1234/test-cases")
-                .with(user(TEST_USER_ID))
-                .with(csrf()))
+        .perform(get("/measures/1234/test-cases").with(user(TEST_USER_ID)).with(csrf()))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.message").value("Could not find Measure with id: 1234"));
     verify(testCaseService, times(1)).findTestCasesByMeasureId(measureIdCaptor.capture());
@@ -139,10 +136,7 @@ public class TestCaseControllerMvcTest {
     when(testCaseService.getTestCase(any(String.class), any(String.class))).thenReturn(testCase);
 
     mockMvc
-        .perform(
-            get("/measures/1234/test-cases/TESTID")
-                .with(user(TEST_USER_ID))
-                .with(csrf()))
+        .perform(get("/measures/1234/test-cases/TESTID").with(user(TEST_USER_ID)).with(csrf()))
         .andExpect(status().isOk())
         .andExpect(
             content()
@@ -163,7 +157,7 @@ public class TestCaseControllerMvcTest {
     String modifiedDescription = "New Description";
     testCase.setDescription(modifiedDescription);
     testCase.setJson("{\"new\":\"json\"}");
-    when(testCaseService.updateTestCase(any(TestCase.class), any(String.class)))
+    when(testCaseService.updateTestCase(any(TestCase.class), any(String.class), any(String.class)))
         .thenReturn(testCase);
 
     mockMvc
@@ -192,56 +186,45 @@ public class TestCaseControllerMvcTest {
                         + "\"lastModifiedBy\":\"TestUser2\","
                         + "\"json\":\"{\\\"new\\\":\\\"json\\\"}\"}"));
     verify(testCaseService, times(1))
-        .updateTestCase(testCaseCaptor.capture(), measureIdCaptor.capture());
+        .updateTestCase(
+            testCaseCaptor.capture(), measureIdCaptor.capture(), usernameCaptor.capture());
     assertEquals("1234", measureIdCaptor.getValue());
     assertEquals("TESTID", testCaseCaptor.getValue().getId());
     assertEquals(modifiedDescription, testCaseCaptor.getValue().getDescription());
+    assertEquals(TEST_USER_ID, usernameCaptor.getValue());
   }
 
   @Test
   public void testGetTestCaseSeriesByMeasureIdThrows404() throws Exception {
     when(testCaseService.findTestCaseSeriesByMeasureId(anyString()))
-            .thenThrow(new ResourceNotFoundException("Measure", "1234"));
+        .thenThrow(new ResourceNotFoundException("Measure", "1234"));
     mockMvc
-        .perform(
-            get("/measures/1234/test-cases/series")
-                .with(user(TEST_USER_ID))
-                .with(csrf()))
+        .perform(get("/measures/1234/test-cases/series").with(user(TEST_USER_ID)).with(csrf()))
         .andExpect(status().isNotFound());
-    verify(testCaseService, times(1))
-        .findTestCaseSeriesByMeasureId(measureIdCaptor.capture());
+    verify(testCaseService, times(1)).findTestCaseSeriesByMeasureId(measureIdCaptor.capture());
     assertEquals("1234", measureIdCaptor.getValue());
   }
 
   @Test
   public void testGetTestCaseSeriesByMeasureIdReturnsEmptyList() throws Exception {
-    when(testCaseService.findTestCaseSeriesByMeasureId(anyString()))
-            .thenReturn(List.of());
+    when(testCaseService.findTestCaseSeriesByMeasureId(anyString())).thenReturn(List.of());
     mockMvc
-        .perform(
-            get("/measures/1234/test-cases/series")
-                .with(user(TEST_USER_ID))
-                .with(csrf()))
+        .perform(get("/measures/1234/test-cases/series").with(user(TEST_USER_ID)).with(csrf()))
         .andExpect(status().isOk())
         .andExpect(content().string("[]"));
-    verify(testCaseService, times(1))
-        .findTestCaseSeriesByMeasureId(measureIdCaptor.capture());
+    verify(testCaseService, times(1)).findTestCaseSeriesByMeasureId(measureIdCaptor.capture());
     assertEquals("1234", measureIdCaptor.getValue());
   }
 
   @Test
   public void testGetTestCaseSeriesByMeasureIdReturnsSeries() throws Exception {
     when(testCaseService.findTestCaseSeriesByMeasureId(anyString()))
-            .thenReturn(List.of("SeriesAAA", "SeriesBBB"));
+        .thenReturn(List.of("SeriesAAA", "SeriesBBB"));
     mockMvc
-        .perform(
-            get("/measures/1234/test-cases/series")
-                .with(user(TEST_USER_ID))
-                .with(csrf()))
+        .perform(get("/measures/1234/test-cases/series").with(user(TEST_USER_ID)).with(csrf()))
         .andExpect(status().isOk())
         .andExpect(content().string("[\"SeriesAAA\",\"SeriesBBB\"]"));
-    verify(testCaseService, times(1))
-        .findTestCaseSeriesByMeasureId(measureIdCaptor.capture());
+    verify(testCaseService, times(1)).findTestCaseSeriesByMeasureId(measureIdCaptor.capture());
     assertEquals("1234", measureIdCaptor.getValue());
   }
 }

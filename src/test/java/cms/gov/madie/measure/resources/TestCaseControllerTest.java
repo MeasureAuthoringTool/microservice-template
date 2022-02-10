@@ -8,19 +8,21 @@ import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 public class TestCaseControllerTest {
@@ -49,21 +51,24 @@ public class TestCaseControllerTest {
 
   @Test
   void saveTestCase() {
-    Mockito.doReturn(testCase)
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    doReturn(testCase)
         .when(testCaseService)
-        .persistTestCase(any(TestCase.class), any(String.class));
+        .persistTestCase(any(TestCase.class), any(String.class), any(String.class));
 
     TestCase newTestCase = new TestCase();
 
-    ResponseEntity<TestCase> response = controller.addTestCase(newTestCase, measure.getId());
+    ResponseEntity<TestCase> response =
+        controller.addTestCase(newTestCase, measure.getId(), principal);
+    assertNotNull(response.getBody());
     assertEquals("TESTID", response.getBody().getId());
   }
 
   @Test
   void getTestCases() {
-    Mockito.doReturn(List.of(testCase))
-        .when(testCaseService)
-        .findTestCasesByMeasureId(any(String.class));
+    doReturn(List.of(testCase)).when(testCaseService).findTestCasesByMeasureId(any(String.class));
 
     ResponseEntity<List<TestCase>> response = controller.getTestCasesByMeasureId(measure.getId());
     assertEquals(1, Objects.requireNonNull(response.getBody()).size());
@@ -73,9 +78,7 @@ public class TestCaseControllerTest {
 
   @Test
   void getTestCase() {
-    Mockito.doReturn(testCase)
-        .when(testCaseService)
-        .getTestCase(any(String.class), any(String.class));
+    doReturn(testCase).when(testCaseService).getTestCase(any(String.class), any(String.class));
 
     ResponseEntity<TestCase> response = controller.getTestCase(measure.getId(), testCase.getId());
     assertNotNull(response.getBody());
@@ -85,21 +88,28 @@ public class TestCaseControllerTest {
 
   @Test
   void updateTestCase() {
-    Mockito.doReturn(testCase)
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user2");
+
+    doReturn(testCase)
         .when(testCaseService)
-        .updateTestCase(any(TestCase.class), any(String.class));
+        .updateTestCase(any(TestCase.class), any(String.class), any(String.class));
 
     ResponseEntity<TestCase> response =
-        controller.updateTestCase(testCase, measure.getId(), testCase.getId());
+        controller.updateTestCase(testCase, measure.getId(), testCase.getId(), principal);
     assertNotNull(response.getBody());
     assertEquals("IPPPass", response.getBody().getName());
     assertEquals("BloodPressure>124", response.getBody().getSeries());
+
+    ArgumentCaptor<String> usernameCaptor = ArgumentCaptor.forClass(String.class);
+    verify(testCaseService, times(1))
+        .updateTestCase(any(TestCase.class), anyString(), usernameCaptor.capture());
+    assertEquals("test.user2", usernameCaptor.getValue());
   }
 
   @Test
   public void testGetTestCaseSeriesByMeasureIdReturnsEmptyList() {
-    when(testCaseService.findTestCaseSeriesByMeasureId(anyString()))
-            .thenReturn(List.of());
+    when(testCaseService.findTestCaseSeriesByMeasureId(anyString())).thenReturn(List.of());
     ResponseEntity<List<String>> output = controller.getTestCaseSeriesByMeasureId(measure.getId());
     assertNotNull(output.getBody());
     assertEquals(List.of(), output.getBody());
@@ -108,16 +118,18 @@ public class TestCaseControllerTest {
   @Test
   public void testGetTestCaseSeriesByMeasureIdReturnsSeries() {
     when(testCaseService.findTestCaseSeriesByMeasureId(anyString()))
-            .thenReturn(List.of("SeriesAAA", "SeriesBBB"));
+        .thenReturn(List.of("SeriesAAA", "SeriesBBB"));
     ResponseEntity<List<String>> output = controller.getTestCaseSeriesByMeasureId(measure.getId());
     assertNotNull(output.getBody());
-    assertEquals(List.of("SeriesAAA","SeriesBBB"), output.getBody());
+    assertEquals(List.of("SeriesAAA", "SeriesBBB"), output.getBody());
   }
 
   @Test
   public void testGetTestCaseSeriesByMeasureIdBubblesUpExceptions() {
     when(testCaseService.findTestCaseSeriesByMeasureId(anyString()))
-            .thenThrow(new ResourceNotFoundException("Measure", measure.getId()));
-    assertThrows(ResourceNotFoundException.class, () -> controller.getTestCaseSeriesByMeasureId(measure.getId()));
+        .thenThrow(new ResourceNotFoundException("Measure", measure.getId()));
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> controller.getTestCaseSeriesByMeasureId(measure.getId()));
   }
 }

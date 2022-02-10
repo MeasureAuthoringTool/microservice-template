@@ -7,6 +7,8 @@ import cms.gov.madie.measure.repositories.MeasureRepository;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -20,11 +22,16 @@ public class TestCaseService {
     this.measureRepository = measureRepository;
   }
 
-  public TestCase persistTestCase(TestCase testCase, String measureId) {
+  public TestCase persistTestCase(TestCase testCase, String measureId, String username) {
     Measure measure = findMeasureById(measureId);
 
+    Instant now = Instant.now();
     // mongo doesn't create object id for embedded objects, setting manually
     testCase.setId(ObjectId.get().toString());
+    testCase.setCreatedAt(now);
+    testCase.setCreatedBy(username);
+    testCase.setLastModifiedAt(now);
+    testCase.setLastModifiedBy(username);
     if (measure.getTestCases() == null) {
       measure.setTestCases(List.of(testCase));
     } else {
@@ -34,9 +41,30 @@ public class TestCaseService {
     return testCase;
   }
 
-  public TestCase updateTestCase(TestCase testCase, String measureId) {
+  public TestCase updateTestCase(TestCase testCase, String measureId, String username) {
     Measure measure = findMeasureById(measureId);
-    measure.getTestCases().removeIf(tc -> tc.getId().equals(testCase.getId()));
+    if (measure.getTestCases() == null) {
+      measure.setTestCases(new ArrayList<>());
+    }
+
+    Instant now = Instant.now();
+    testCase.setLastModifiedAt(now);
+    testCase.setLastModifiedBy(username);
+
+    Optional<TestCase> existingOpt =
+        measure.getTestCases().stream().filter(p -> p.getId().equals(testCase.getId())).findFirst();
+    if (existingOpt.isPresent()) {
+      TestCase existing = existingOpt.get();
+      testCase.setCreatedAt(existing.getCreatedAt());
+      testCase.setCreatedBy(existing.getCreatedBy());
+      measure.getTestCases().remove(existing);
+    } else {
+      // still allowing upsert
+      testCase.setId(ObjectId.get().toString());
+      testCase.setCreatedAt(now);
+      testCase.setCreatedBy(username);
+    }
+
     measure.getTestCases().add(testCase);
     measureRepository.save(measure);
     return testCase;
@@ -67,12 +95,14 @@ public class TestCaseService {
   }
 
   public List<String> findTestCaseSeriesByMeasureId(String measureId) {
-    Measure measure = measureRepository.findAllTestCaseSeriesByMeasureId(measureId)
-        .orElseThrow(() -> new ResourceNotFoundException("Measure", measureId));
-    return Optional.ofNullable(measure.getTestCases())
-        .orElse(List.of())
-        .stream().map(TestCase::getSeries)
+    Measure measure =
+        measureRepository
+            .findAllTestCaseSeriesByMeasureId(measureId)
+            .orElseThrow(() -> new ResourceNotFoundException("Measure", measureId));
+    return Optional.ofNullable(measure.getTestCases()).orElse(List.of()).stream()
+        .map(TestCase::getSeries)
         .filter(series -> series != null && !series.trim().isEmpty())
-        .distinct().collect(Collectors.toList());
+        .distinct()
+        .collect(Collectors.toList());
   }
 }
