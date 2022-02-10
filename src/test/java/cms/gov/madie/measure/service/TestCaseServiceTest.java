@@ -5,7 +5,6 @@ import cms.gov.madie.measure.models.Measure;
 import cms.gov.madie.measure.models.TestCase;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.TestCaseService;
-import org.assertj.core.util.Lists;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -169,7 +168,7 @@ public class TestCaseServiceTest {
             .lastModifiedAt(createdAt)
             .lastModifiedBy("test.user5")
             .build();
-    List<TestCase> testCases = new ArrayList();
+    List<TestCase> testCases = new ArrayList<>();
     testCases.add(originalTestCase);
     Measure originalMeasure = measure.toBuilder().testCases(testCases).build();
     Optional<Measure> optional = Optional.of(originalMeasure);
@@ -201,7 +200,6 @@ public class TestCaseServiceTest {
 
   @Test
   public void testUpdateTestCasePreventsModificationOfCreatedByFields() {
-    ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
     TestCase originalTestCase =
         testCase
@@ -211,7 +209,7 @@ public class TestCaseServiceTest {
             .lastModifiedAt(createdAt)
             .lastModifiedBy("test.user5")
             .build();
-    List<TestCase> testCases = new ArrayList();
+    List<TestCase> testCases = new ArrayList<>();
     testCases.add(originalTestCase);
     Measure originalMeasure = measure.toBuilder().testCases(testCases).build();
     Optional<Measure> optional = Optional.of(originalMeasure);

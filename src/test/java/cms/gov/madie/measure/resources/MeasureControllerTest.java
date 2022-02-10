@@ -49,6 +49,7 @@ class MeasureControllerTest {
     when(principal.getName()).thenReturn("test.user");
 
     ResponseEntity<Measure> response = controller.addMeasure(measures, principal);
+    assertNotNull(response.getBody());
     assertEquals("IDIDID", response.getBody().getMeasureSetId());
 
     verify(repository, times(1)).save(saveMeasureArgCaptor.capture());
@@ -137,7 +138,7 @@ class MeasureControllerTest {
         .when(repository)
         .findById(ArgumentMatchers.eq(originalMeasure.getId()));
 
-    Mockito.doAnswer((args) -> args.getArgument(0))
+    doAnswer((args) -> args.getArgument(0))
         .when(repository)
         .save(ArgumentMatchers.any(Measure.class));
 
@@ -164,7 +165,7 @@ class MeasureControllerTest {
     measure.setId("5399aba6e4b0ae375bfdca88");
     Optional<Measure> empty = Optional.empty();
 
-    Mockito.doReturn(empty).when(repository).findById(measure.getId());
+    doReturn(empty).when(repository).findById(measure.getId());
 
     response = controller.updateMeasure(measure, principal);
     assertEquals("Measure does not exist.", response.getBody());
