@@ -68,9 +68,7 @@ public class TestCaseControllerTest {
 
   @Test
   void getTestCases() {
-    doReturn(List.of(testCase))
-        .when(testCaseService)
-        .findTestCasesByMeasureId(any(String.class));
+    doReturn(List.of(testCase)).when(testCaseService).findTestCasesByMeasureId(any(String.class));
 
     ResponseEntity<List<TestCase>> response = controller.getTestCasesByMeasureId(measure.getId());
     assertEquals(1, Objects.requireNonNull(response.getBody()).size());
@@ -80,9 +78,7 @@ public class TestCaseControllerTest {
 
   @Test
   void getTestCase() {
-    doReturn(testCase)
-        .when(testCaseService)
-        .getTestCase(any(String.class), any(String.class));
+    doReturn(testCase).when(testCaseService).getTestCase(any(String.class), any(String.class));
 
     ResponseEntity<TestCase> response = controller.getTestCase(measure.getId(), testCase.getId());
     assertNotNull(response.getBody());

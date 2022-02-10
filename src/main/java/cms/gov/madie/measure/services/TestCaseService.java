@@ -8,10 +8,10 @@ import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @Service
 public class TestCaseService {
@@ -43,24 +43,27 @@ public class TestCaseService {
 
   public TestCase updateTestCase(TestCase testCase, String measureId, String username) {
     Measure measure = findMeasureById(measureId);
-    List<TestCase> tcs = measure.getTestCases();
+    if (measure.getTestCases() == null) {
+      measure.setTestCases(new ArrayList<>());
+    }
+
     Instant now = Instant.now();
     testCase.setLastModifiedAt(now);
     testCase.setLastModifiedBy(username);
-    int idx =
-        IntStream.range(0, tcs.size())
-            .filter(i -> tcs.get(i).getId().equals(testCase.getId()))
-            .findFirst()
-            .orElse(-1);
-    if (idx > -1) {
-      TestCase existing = tcs.get(idx);
+
+    Optional<TestCase> existingOpt =
+        measure.getTestCases().stream().filter(p -> p.getId().equals(testCase.getId())).findFirst();
+    if (existingOpt.isPresent()) {
+      TestCase existing = existingOpt.get();
       testCase.setCreatedAt(existing.getCreatedAt());
       testCase.setCreatedBy(existing.getCreatedBy());
+      measure.getTestCases().remove(existing);
     } else {
+      // still allowing upsert
+      testCase.setId(ObjectId.get().toString());
       testCase.setCreatedAt(now);
       testCase.setCreatedBy(username);
     }
-    measure.getTestCases().removeIf(tc -> tc.getId().equals(testCase.getId()));
 
     measure.getTestCases().add(testCase);
     measureRepository.save(measure);
