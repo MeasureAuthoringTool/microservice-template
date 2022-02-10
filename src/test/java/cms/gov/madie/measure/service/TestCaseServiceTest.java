@@ -62,7 +62,8 @@ public class TestCaseServiceTest {
 
     Mockito.doReturn(measure).when(repository).save(any(Measure.class));
 
-    TestCase persistTestCase = testCaseService.persistTestCase(testCase, measure.getId(), "test.user");
+    TestCase persistTestCase =
+        testCaseService.persistTestCase(testCase, measure.getId(), "test.user");
     verify(repository, times(1)).save(measureCaptor.capture());
     assertEquals(testCase.getId(), persistTestCase.getId());
     Measure savedMeasure = measureCaptor.getValue();
@@ -71,7 +72,8 @@ public class TestCaseServiceTest {
     assertNotNull(savedMeasure.getTestCases());
     assertEquals(1, savedMeasure.getTestCases().size());
     TestCase capturedTestCase = savedMeasure.getTestCases().get(0);
-    int lastModCompareTo = capturedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
+    int lastModCompareTo =
+        capturedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
     assertEquals("test.user", capturedTestCase.getLastModifiedBy());
     assertEquals("test.user", capturedTestCase.getCreatedBy());
     assertEquals(1, lastModCompareTo);
@@ -101,8 +103,9 @@ public class TestCaseServiceTest {
   public void testFindTestCaseSeriesByMeasureIdThrowsExceptionWhenMeasureDoesNotExist() {
     Optional<Measure> optional = Optional.empty();
     when(repository.findAllTestCaseSeriesByMeasureId(anyString())).thenReturn(optional);
-    assertThrows(ResourceNotFoundException.class,
-            () -> testCaseService.findTestCaseSeriesByMeasureId(measure.getId()));
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> testCaseService.findTestCaseSeriesByMeasureId(measure.getId()));
   }
 
   @Test
@@ -128,52 +131,56 @@ public class TestCaseServiceTest {
   @Test
   public void testFindTestCaseSeriesByMeasureIdReturnsDistinctList() {
     Measure withTestCases = measure.toBuilder().build();
-    withTestCases.setTestCases(List.of(
-      TestCase.builder().id(ObjectId.get().toString()).series("SeriesAAA").build(),
-      TestCase.builder().id(ObjectId.get().toString()).series("SeriesAAA").build(),
-      TestCase.builder().id(ObjectId.get().toString()).series("SeriesBBB").build()
-    ));
+    withTestCases.setTestCases(
+        List.of(
+            TestCase.builder().id(ObjectId.get().toString()).series("SeriesAAA").build(),
+            TestCase.builder().id(ObjectId.get().toString()).series("SeriesAAA").build(),
+            TestCase.builder().id(ObjectId.get().toString()).series("SeriesBBB").build()));
     Optional<Measure> optional = Optional.of(withTestCases);
     when(repository.findAllTestCaseSeriesByMeasureId(anyString())).thenReturn(optional);
     List<String> output = testCaseService.findTestCaseSeriesByMeasureId(measure.getId());
-    assertEquals(List.of("SeriesAAA","SeriesBBB"), output);
+    assertEquals(List.of("SeriesAAA", "SeriesBBB"), output);
   }
 
   @Test
   public void testFindTestCaseSeriesByMeasureIdReturnsListWithoutNullsAndEmptyStrings() {
     Measure withTestCases = measure.toBuilder().build();
-    withTestCases.setTestCases(List.of(
-      TestCase.builder().id(ObjectId.get().toString()).series("SeriesAAA").build(),
-      TestCase.builder().id(ObjectId.get().toString()).series("").build(),
-      TestCase.builder().id(ObjectId.get().toString()).series(null).build(),
-      TestCase.builder().id(ObjectId.get().toString()).series("SeriesBBB").build()
-    ));
+    withTestCases.setTestCases(
+        List.of(
+            TestCase.builder().id(ObjectId.get().toString()).series("SeriesAAA").build(),
+            TestCase.builder().id(ObjectId.get().toString()).series("").build(),
+            TestCase.builder().id(ObjectId.get().toString()).series(null).build(),
+            TestCase.builder().id(ObjectId.get().toString()).series("SeriesBBB").build()));
     Optional<Measure> optional = Optional.of(withTestCases);
     when(repository.findAllTestCaseSeriesByMeasureId(anyString())).thenReturn(optional);
     List<String> output = testCaseService.findTestCaseSeriesByMeasureId(measure.getId());
-    assertEquals(List.of("SeriesAAA","SeriesBBB"), output);
+    assertEquals(List.of("SeriesAAA", "SeriesBBB"), output);
   }
 
   @Test
   public void testUpdateTestCaseUpdatesLastModifiedFields() {
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
-    TestCase originalTestCase = testCase.toBuilder()
-        .createdAt(createdAt)
-        .createdBy("test.user5")
-        .lastModifiedAt(createdAt)
-        .lastModifiedBy("test.user5")
-        .build();
+    TestCase originalTestCase =
+        testCase
+            .toBuilder()
+            .createdAt(createdAt)
+            .createdBy("test.user5")
+            .lastModifiedAt(createdAt)
+            .lastModifiedBy("test.user5")
+            .build();
     List<TestCase> testCases = new ArrayList();
     testCases.add(originalTestCase);
     Measure originalMeasure = measure.toBuilder().testCases(testCases).build();
     Optional<Measure> optional = Optional.of(originalMeasure);
     Mockito.doReturn(optional).when(repository).findById(any(String.class));
 
-    TestCase updatingTestCase = testCase.toBuilder().title("UpdatedTitle").series("UpdatedSeries").build();
+    TestCase updatingTestCase =
+        testCase.toBuilder().title("UpdatedTitle").series("UpdatedSeries").build();
     Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(any(Measure.class));
 
-    TestCase updatedTestCase = testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user");
+    TestCase updatedTestCase =
+        testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user");
     verify(repository, times(1)).save(measureCaptor.capture());
     assertEquals(updatingTestCase.getId(), updatedTestCase.getId());
     Measure savedMeasure = measureCaptor.getValue();
@@ -183,7 +190,8 @@ public class TestCaseServiceTest {
     assertEquals(1, savedMeasure.getTestCases().size());
     assertEquals(updatedTestCase, savedMeasure.getTestCases().get(0));
 
-    int lastModCompareTo = updatedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
+    int lastModCompareTo =
+        updatedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
     assertEquals("test.user", updatedTestCase.getLastModifiedBy());
     assertEquals(originalTestCase.getCreatedBy(), updatedTestCase.getCreatedBy());
     assertEquals(1, lastModCompareTo);
@@ -195,29 +203,35 @@ public class TestCaseServiceTest {
   public void testUpdateTestCasePreventsModificationOfCreatedByFields() {
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
-    TestCase originalTestCase = testCase.toBuilder()
-        .createdAt(createdAt)
-        .createdBy("test.user5")
-        .lastModifiedAt(createdAt)
-        .lastModifiedBy("test.user5")
-        .build();
+    TestCase originalTestCase =
+        testCase
+            .toBuilder()
+            .createdAt(createdAt)
+            .createdBy("test.user5")
+            .lastModifiedAt(createdAt)
+            .lastModifiedBy("test.user5")
+            .build();
     List<TestCase> testCases = new ArrayList();
     testCases.add(originalTestCase);
     Measure originalMeasure = measure.toBuilder().testCases(testCases).build();
     Optional<Measure> optional = Optional.of(originalMeasure);
     Mockito.doReturn(optional).when(repository).findById(any(String.class));
 
-    TestCase updatingTestCase = testCase.toBuilder()
-        .createdBy("Nobody")
-        .createdAt(Instant.now())
-        .title("UpdatedTitle")
-        .series("UpdatedSeries")
-        .build();
+    TestCase updatingTestCase =
+        testCase
+            .toBuilder()
+            .createdBy("Nobody")
+            .createdAt(Instant.now())
+            .title("UpdatedTitle")
+            .series("UpdatedSeries")
+            .build();
     Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(any(Measure.class));
 
-    TestCase updatedTestCase = testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user");
+    TestCase updatedTestCase =
+        testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user");
 
-    int lastModCompareTo = updatedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
+    int lastModCompareTo =
+        updatedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
     assertEquals("test.user", updatedTestCase.getLastModifiedBy());
     assertEquals(1, lastModCompareTo);
     assertNotEquals(updatedTestCase.getLastModifiedAt(), updatedTestCase.getCreatedAt());

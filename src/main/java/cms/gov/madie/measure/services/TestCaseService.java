@@ -47,11 +47,13 @@ public class TestCaseService {
     Instant now = Instant.now();
     testCase.setLastModifiedAt(now);
     testCase.setLastModifiedBy(username);
-//    TestCase existing = measure.getTestCases().stream().filter(tc -> tc.getId().equals(testCase.getId())).findFirst().orElse(null);
-    int idx = IntStream.range(0, tcs.size())
-        .filter(i -> tcs.get(i).getId().equals(testCase.getId()))
-        .findFirst()
-        .orElse(-1);
+    //    TestCase existing = measure.getTestCases().stream().filter(tc ->
+    // tc.getId().equals(testCase.getId())).findFirst().orElse(null);
+    int idx =
+        IntStream.range(0, tcs.size())
+            .filter(i -> tcs.get(i).getId().equals(testCase.getId()))
+            .findFirst()
+            .orElse(-1);
     if (idx > -1) {
       TestCase existing = tcs.get(idx);
       testCase.setCreatedAt(existing.getCreatedAt());
@@ -92,12 +94,14 @@ public class TestCaseService {
   }
 
   public List<String> findTestCaseSeriesByMeasureId(String measureId) {
-    Measure measure = measureRepository.findAllTestCaseSeriesByMeasureId(measureId)
-        .orElseThrow(() -> new ResourceNotFoundException("Measure", measureId));
-    return Optional.ofNullable(measure.getTestCases())
-        .orElse(List.of())
-        .stream().map(TestCase::getSeries)
+    Measure measure =
+        measureRepository
+            .findAllTestCaseSeriesByMeasureId(measureId)
+            .orElseThrow(() -> new ResourceNotFoundException("Measure", measureId));
+    return Optional.ofNullable(measure.getTestCases()).orElse(List.of()).stream()
+        .map(TestCase::getSeries)
         .filter(series -> series != null && !series.trim().isEmpty())
-        .distinct().collect(Collectors.toList());
+        .distinct()
+        .collect(Collectors.toList());
   }
 }

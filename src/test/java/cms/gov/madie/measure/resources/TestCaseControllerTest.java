@@ -61,7 +61,8 @@ public class TestCaseControllerTest {
 
     TestCase newTestCase = new TestCase();
 
-    ResponseEntity<TestCase> response = controller.addTestCase(newTestCase, measure.getId(), principal);
+    ResponseEntity<TestCase> response =
+        controller.addTestCase(newTestCase, measure.getId(), principal);
     assertEquals("TESTID", response.getBody().getId());
   }
 
@@ -105,14 +106,14 @@ public class TestCaseControllerTest {
     assertEquals("BloodPressure>124", response.getBody().getSeries());
 
     ArgumentCaptor<String> usernameCaptor = ArgumentCaptor.forClass(String.class);
-    verify(testCaseService, times(1)).updateTestCase(any(TestCase.class), anyString(), usernameCaptor.capture());
+    verify(testCaseService, times(1))
+        .updateTestCase(any(TestCase.class), anyString(), usernameCaptor.capture());
     assertEquals("test.user2", usernameCaptor.getValue());
   }
 
   @Test
   public void testGetTestCaseSeriesByMeasureIdReturnsEmptyList() {
-    when(testCaseService.findTestCaseSeriesByMeasureId(anyString()))
-            .thenReturn(List.of());
+    when(testCaseService.findTestCaseSeriesByMeasureId(anyString())).thenReturn(List.of());
     ResponseEntity<List<String>> output = controller.getTestCaseSeriesByMeasureId(measure.getId());
     assertNotNull(output.getBody());
     assertEquals(List.of(), output.getBody());
@@ -121,16 +122,18 @@ public class TestCaseControllerTest {
   @Test
   public void testGetTestCaseSeriesByMeasureIdReturnsSeries() {
     when(testCaseService.findTestCaseSeriesByMeasureId(anyString()))
-            .thenReturn(List.of("SeriesAAA", "SeriesBBB"));
+        .thenReturn(List.of("SeriesAAA", "SeriesBBB"));
     ResponseEntity<List<String>> output = controller.getTestCaseSeriesByMeasureId(measure.getId());
     assertNotNull(output.getBody());
-    assertEquals(List.of("SeriesAAA","SeriesBBB"), output.getBody());
+    assertEquals(List.of("SeriesAAA", "SeriesBBB"), output.getBody());
   }
 
   @Test
   public void testGetTestCaseSeriesByMeasureIdBubblesUpExceptions() {
     when(testCaseService.findTestCaseSeriesByMeasureId(anyString()))
-            .thenThrow(new ResourceNotFoundException("Measure", measure.getId()));
-    assertThrows(ResourceNotFoundException.class, () -> controller.getTestCaseSeriesByMeasureId(measure.getId()));
+        .thenThrow(new ResourceNotFoundException("Measure", measure.getId()));
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> controller.getTestCaseSeriesByMeasureId(measure.getId()));
   }
 }

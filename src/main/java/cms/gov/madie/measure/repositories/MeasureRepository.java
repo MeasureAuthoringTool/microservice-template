@@ -10,7 +10,9 @@ import org.springframework.data.mongodb.repository.Query;
 
 public interface MeasureRepository extends MongoRepository<Measure, String> {
   Optional<Measure> findByCqlLibraryName(String cqlLibraryName);
+
   List<Measure> findAllByCreatedBy(String user);
-  @Query(value="{_id: ?0}", fields="{'testCases.series': 1, _id: 0}")
+
+  @Query(value = "{_id: ?0}", fields = "{'testCases.series': 1, _id: 0}")
   Optional<Measure> findAllTestCaseSeriesByMeasureId(String measureId);
 }

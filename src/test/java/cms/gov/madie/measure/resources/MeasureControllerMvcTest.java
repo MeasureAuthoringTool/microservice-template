@@ -91,7 +91,8 @@ public class MeasureControllerMvcTest {
     assertEquals(model, savedMeasure.getModel());
     assertNotNull(savedMeasure.getLastModifiedAt());
     assertEquals(TEST_USER_ID, savedMeasure.getLastModifiedBy());
-    int lastModCompareTo = savedMeasure.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
+    int lastModCompareTo =
+        savedMeasure.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
     assertEquals(1, lastModCompareTo);
   }
 
@@ -577,23 +578,38 @@ public class MeasureControllerMvcTest {
 
   @Test
   public void testGetMeasuresNoQueryParams() throws Exception {
-    Measure m1 = Measure.builder().measureName("Measure1").cqlLibraryName("TestLib1")
-            .createdBy("test-okta-user-id-123").measureScoring("Proportion").model("QI-Core").build();
-    Measure m2 = Measure.builder().measureName("Measure2").cqlLibraryName("TestLib2")
-            .createdBy("test-okta-user-id-123").measureScoring("Proportion").model("QI-Core").build();
-    Measure m3 = Measure.builder().measureName("Measure3").cqlLibraryName("TestLib3")
-            .createdBy("test-okta-user-id-999").measureScoring("Proportion").model("QI-Core").build();
+    Measure m1 =
+        Measure.builder()
+            .measureName("Measure1")
+            .cqlLibraryName("TestLib1")
+            .createdBy("test-okta-user-id-123")
+            .measureScoring("Proportion")
+            .model("QI-Core")
+            .build();
+    Measure m2 =
+        Measure.builder()
+            .measureName("Measure2")
+            .cqlLibraryName("TestLib2")
+            .createdBy("test-okta-user-id-123")
+            .measureScoring("Proportion")
+            .model("QI-Core")
+            .build();
+    Measure m3 =
+        Measure.builder()
+            .measureName("Measure3")
+            .cqlLibraryName("TestLib3")
+            .createdBy("test-okta-user-id-999")
+            .measureScoring("Proportion")
+            .model("QI-Core")
+            .build();
 
     List<Measure> allMeasures = List.of(m1, m2, m3);
     when(measureRepository.findAll()).thenReturn(allMeasures);
 
     MvcResult result =
         mockMvc
-            .perform(
-                get("/measures")
-                        .with(user(TEST_USER_ID))
-                        .accept(MediaType.APPLICATION_JSON)
-            ).andExpect(status().isOk())
+            .perform(get("/measures").with(user(TEST_USER_ID)).accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
             .andReturn();
     String resultStr = result.getResponse().getContentAsString();
 
@@ -607,12 +623,30 @@ public class MeasureControllerMvcTest {
 
   @Test
   public void testGetMeasuresWithCurrentUserFalse() throws Exception {
-    Measure m1 = Measure.builder().measureName("Measure1").cqlLibraryName("TestLib1")
-            .createdBy("test-okta-user-id-123").measureScoring("Proportion").model("QI-Core").build();
-    Measure m2 = Measure.builder().measureName("Measure2").cqlLibraryName("TestLib2")
-            .createdBy("test-okta-user-id-123").measureScoring("Proportion").model("QI-Core").build();
-    Measure m3 = Measure.builder().measureName("Measure3").cqlLibraryName("TestLib3")
-            .createdBy("test-okta-user-id-999").measureScoring("Proportion").model("QI-Core").build();
+    Measure m1 =
+        Measure.builder()
+            .measureName("Measure1")
+            .cqlLibraryName("TestLib1")
+            .createdBy("test-okta-user-id-123")
+            .measureScoring("Proportion")
+            .model("QI-Core")
+            .build();
+    Measure m2 =
+        Measure.builder()
+            .measureName("Measure2")
+            .cqlLibraryName("TestLib2")
+            .createdBy("test-okta-user-id-123")
+            .measureScoring("Proportion")
+            .model("QI-Core")
+            .build();
+    Measure m3 =
+        Measure.builder()
+            .measureName("Measure3")
+            .cqlLibraryName("TestLib3")
+            .createdBy("test-okta-user-id-999")
+            .measureScoring("Proportion")
+            .model("QI-Core")
+            .build();
 
     List<Measure> allMeasures = List.of(m1, m2, m3);
     when(measureRepository.findAll()).thenReturn(allMeasures);
@@ -621,10 +655,10 @@ public class MeasureControllerMvcTest {
         mockMvc
             .perform(
                 get("/measures")
-                        .with(user(TEST_USER_ID))
-                        .queryParam("currentUser", "false")
-                        .accept(MediaType.APPLICATION_JSON)
-            ).andExpect(status().isOk())
+                    .with(user(TEST_USER_ID))
+                    .queryParam("currentUser", "false")
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
             .andReturn();
     String resultStr = result.getResponse().getContentAsString();
 
@@ -638,23 +672,35 @@ public class MeasureControllerMvcTest {
 
   @Test
   public void testGetMeasuresFilterByCurrentUser() throws Exception {
-    Measure m1 = Measure.builder().measureName("Measure1").cqlLibraryName("TestLib1")
-            .createdBy("test-okta-user-id-123").measureScoring("Proportion").model("QI-Core").build();
-    Measure m2 = Measure.builder().measureName("Measure2").cqlLibraryName("TestLib2")
-            .createdBy("test-okta-user-id-123").measureScoring("Proportion").model("QI-Core").build();
+    Measure m1 =
+        Measure.builder()
+            .measureName("Measure1")
+            .cqlLibraryName("TestLib1")
+            .createdBy("test-okta-user-id-123")
+            .measureScoring("Proportion")
+            .model("QI-Core")
+            .build();
+    Measure m2 =
+        Measure.builder()
+            .measureName("Measure2")
+            .cqlLibraryName("TestLib2")
+            .createdBy("test-okta-user-id-123")
+            .measureScoring("Proportion")
+            .model("QI-Core")
+            .build();
 
     List<Measure> measures = List.of(m1, m2);
     when(measureRepository.findAllByCreatedBy(anyString())).thenReturn(measures);
 
     MvcResult result =
-            mockMvc
-                    .perform(
-                            get("/measures")
-                                    .with(user(TEST_USER_ID))
-                                    .queryParam("currentUser", "true")
-                                    .accept(MediaType.APPLICATION_JSON)
-                    ).andExpect(status().isOk())
-                    .andReturn();
+        mockMvc
+            .perform(
+                get("/measures")
+                    .with(user(TEST_USER_ID))
+                    .queryParam("currentUser", "true")
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
     String resultStr = result.getResponse().getContentAsString();
 
     ObjectMapper mapper = new ObjectMapper();

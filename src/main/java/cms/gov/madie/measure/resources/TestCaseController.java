@@ -51,10 +51,11 @@ public class TestCaseController {
     if (testCase.getId() == null || !testCase.getId().equals(testCaseId)) {
       throw new ResourceNotFoundException("Test Case", testCaseId);
     }
-    return ResponseEntity.ok(testCaseService.updateTestCase(testCase, measureId, principal.getName()));
+    return ResponseEntity.ok(
+        testCaseService.updateTestCase(testCase, measureId, principal.getName()));
   }
 
-  @GetMapping(ControllerUtil.TEST_CASES+"/series")
+  @GetMapping(ControllerUtil.TEST_CASES + "/series")
   public ResponseEntity<List<String>> getTestCaseSeriesByMeasureId(@PathVariable String measureId) {
     return ResponseEntity.ok(testCaseService.findTestCaseSeriesByMeasureId(measureId));
   }

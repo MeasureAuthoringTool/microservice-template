@@ -114,20 +114,32 @@ class MeasureControllerTest {
     when(principal.getName()).thenReturn("test.user2");
 
     Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
-    Measure originalMeasure = measure.toBuilder().id("5399aba6e4b0ae375bfdca88").createdAt(createdAt).createdBy("test.user").build();
+    Measure originalMeasure =
+        measure
+            .toBuilder()
+            .id("5399aba6e4b0ae375bfdca88")
+            .createdAt(createdAt)
+            .createdBy("test.user")
+            .build();
 
     Instant original = Instant.now().minus(140, ChronoUnit.HOURS);
 
-    Measure m1 = originalMeasure.toBuilder()
-        .createdBy("test.user").createdAt(original)
-        .lastModifiedBy("test.user").lastModifiedAt(original)
-        .build();
+    Measure m1 =
+        originalMeasure
+            .toBuilder()
+            .createdBy("test.user")
+            .createdAt(original)
+            .lastModifiedBy("test.user")
+            .lastModifiedAt(original)
+            .build();
 
     Mockito.doReturn(Optional.of(originalMeasure))
         .when(repository)
         .findById(ArgumentMatchers.eq(originalMeasure.getId()));
 
-    Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(ArgumentMatchers.any(Measure.class));
+    Mockito.doAnswer((args) -> args.getArgument(0))
+        .when(repository)
+        .save(ArgumentMatchers.any(Measure.class));
 
     ResponseEntity<String> response = controller.updateMeasure(m1, principal);
     assertEquals("Measure updated successfully.", response.getBody());
