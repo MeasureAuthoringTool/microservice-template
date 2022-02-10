@@ -42,7 +42,7 @@ class MeasureControllerTest {
   @Test
   void saveMeasure() {
     ArgumentCaptor<Measure> saveMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
-    Mockito.doReturn(measure).when(repository).save(ArgumentMatchers.any());
+    doReturn(measure).when(repository).save(ArgumentMatchers.any());
 
     Measure measures = new Measure();
     Principal principal = mock(Principal.class);
@@ -94,7 +94,7 @@ class MeasureControllerTest {
   void getMeasure() {
     String id = "testid";
     Optional<Measure> optionalMeasure = Optional.of(measure);
-    Mockito.doReturn(optionalMeasure).when(repository).findById(id);
+    doReturn(optionalMeasure).when(repository).findById(id);
     // measure found
     ResponseEntity<Measure> response = controller.getMeasure(id);
     assertEquals(
@@ -102,7 +102,7 @@ class MeasureControllerTest {
 
     // if measure not found
     Optional<Measure> empty = Optional.empty();
-    Mockito.doReturn(empty).when(repository).findById(id);
+    doReturn(empty).when(repository).findById(id);
     response = controller.getMeasure(id);
     assertNull(response.getBody());
     assertEquals(response.getStatusCodeValue(), 404);
@@ -134,7 +134,7 @@ class MeasureControllerTest {
             .lastModifiedAt(original)
             .build();
 
-    Mockito.doReturn(Optional.of(originalMeasure))
+    doReturn(Optional.of(originalMeasure))
         .when(repository)
         .findById(ArgumentMatchers.eq(originalMeasure.getId()));
 

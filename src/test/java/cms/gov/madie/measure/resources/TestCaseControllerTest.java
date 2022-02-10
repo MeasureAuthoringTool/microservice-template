@@ -11,7 +11,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 
@@ -55,7 +54,7 @@ public class TestCaseControllerTest {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
-    Mockito.doReturn(testCase)
+    doReturn(testCase)
         .when(testCaseService)
         .persistTestCase(any(TestCase.class), any(String.class), any(String.class));
 
@@ -63,12 +62,13 @@ public class TestCaseControllerTest {
 
     ResponseEntity<TestCase> response =
         controller.addTestCase(newTestCase, measure.getId(), principal);
+    assertNotNull(response.getBody());
     assertEquals("TESTID", response.getBody().getId());
   }
 
   @Test
   void getTestCases() {
-    Mockito.doReturn(List.of(testCase))
+    doReturn(List.of(testCase))
         .when(testCaseService)
         .findTestCasesByMeasureId(any(String.class));
 
@@ -80,7 +80,7 @@ public class TestCaseControllerTest {
 
   @Test
   void getTestCase() {
-    Mockito.doReturn(testCase)
+    doReturn(testCase)
         .when(testCaseService)
         .getTestCase(any(String.class), any(String.class));
 
@@ -95,7 +95,7 @@ public class TestCaseControllerTest {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user2");
 
-    Mockito.doReturn(testCase)
+    doReturn(testCase)
         .when(testCaseService)
         .updateTestCase(any(TestCase.class), any(String.class), any(String.class));
 
