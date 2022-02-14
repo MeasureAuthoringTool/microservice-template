@@ -80,6 +80,11 @@
       <artifactId>lombok</artifactId>
       <optional>true</optional>
     </dependency>
+    <dependency>
+      <groupId>org.jsoup</groupId>
+      <artifactId>jsoup</artifactId>
+      <version>1.14.3</version>
+    </dependency>
 
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -228,7 +233,7 @@
           </execution>
         </executions>
         <configuration>
-          <targetJdk>16</targetJdk>
+          <targetJdk>1.6</targetJdk>
         </configuration>
       </plugin>
 

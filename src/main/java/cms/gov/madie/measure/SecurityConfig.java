@@ -20,6 +20,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         .and()
         .oauth2ResourceServer()
-        .jwt();
+        .jwt()
+        .and()
+        .and()
+        .headers()
+        .xssProtection()
+        .and()
+        .contentSecurityPolicy("script-src 'self'");
   }
 }
