@@ -72,8 +72,10 @@ public class MeasureController {
 
   @PutMapping("/measure")
   public ResponseEntity<String> updateMeasure(
-      @RequestBody @Validated(Measure.ValidationSequence.class) Measure measure) {
+      @RequestBody @Validated(Measure.ValidationSequence.class) Measure measure,
+      Principal principal) {
     ResponseEntity<String> response = ResponseEntity.badRequest().body("Measure does not exist.");
+    final String username = principal.getName();
 
     if (measure.getId() != null) {
       Optional<Measure> persistedMeasure = repository.findById(measure.getId());
@@ -81,6 +83,11 @@ public class MeasureController {
         if (isCqlLibraryNameChanged(measure, persistedMeasure)) {
           checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
         }
+        measure.setLastModifiedBy(username);
+        measure.setLastModifiedAt(Instant.now());
+        // prevent users from overwriting the createdAt/By
+        measure.setCreatedAt(persistedMeasure.get().getCreatedAt());
+        measure.setCreatedBy(persistedMeasure.get().getCreatedBy());
         repository.save(measure);
         response = ResponseEntity.ok().body("Measure updated successfully.");
       }

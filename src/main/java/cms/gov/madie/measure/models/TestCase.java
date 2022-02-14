@@ -5,14 +5,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.Instant;
 
 import javax.validation.GroupSequence;
 
 import org.hibernate.validator.constraints.Length;
 
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class TestCase {
@@ -27,9 +27,9 @@ public class TestCase {
       message = "Test Case Description can not be more than 250 characters.")
   private String description;
 
-  private Date createdAt;
+  private Instant createdAt;
   private String createdBy;
-  private Date lastModifiedAt;
+  private Instant lastModifiedAt;
   private String lastModifiedBy;
   private String json;
 

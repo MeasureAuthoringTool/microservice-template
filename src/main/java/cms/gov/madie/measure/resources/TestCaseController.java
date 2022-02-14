@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -30,15 +31,13 @@ public class TestCaseController {
 
   @PostMapping(ControllerUtil.TEST_CASES)
   public ResponseEntity<TestCase> addTestCase(
-      @RequestBody @Validated(TestCase.ValidationSequence.class) TestCase testCase,
-      @PathVariable String measureId) {
+      @RequestBody TestCase testCase, @PathVariable String measureId, Principal principal) {
 
     if (!StringUtils.isBlank(testCase.getDescription())) {
       testCase.setDescription(Jsoup.clean(testCase.getDescription(), Safelist.basic()));
     }
-
     return ResponseEntity.status(HttpStatus.CREATED)
-        .body(testCaseService.persistTestCase(testCase, measureId));
+        .body(testCaseService.persistTestCase(testCase, measureId, principal.getName()));
   }
 
   @GetMapping(ControllerUtil.TEST_CASES)
@@ -56,15 +55,18 @@ public class TestCaseController {
   public ResponseEntity<TestCase> updateTestCase(
       @RequestBody @Validated(TestCase.ValidationSequence.class) TestCase testCase,
       @PathVariable String measureId,
-      @PathVariable String testCaseId) {
+      @PathVariable String testCaseId,
+      Principal principal) {
     if (testCase.getId() == null || !testCase.getId().equals(testCaseId)) {
       throw new ResourceNotFoundException("Test Case", testCaseId);
     }
+
     if (!StringUtils.isBlank(testCase.getDescription())) {
       testCase.setDescription(Jsoup.clean(testCase.getDescription(), Safelist.basic()));
     }
 
-    return ResponseEntity.ok(testCaseService.updateTestCase(testCase, measureId));
+    return ResponseEntity.ok(
+        testCaseService.updateTestCase(testCase, measureId, principal.getName()));
   }
 
   @GetMapping(ControllerUtil.TEST_CASES + "/series")

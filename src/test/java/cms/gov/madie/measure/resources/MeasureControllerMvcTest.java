@@ -1,5 +1,7 @@
 package cms.gov.madie.measure.resources;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -87,6 +89,11 @@ public class MeasureControllerMvcTest {
     assertEquals(measureName, savedMeasure.getMeasureName());
     assertEquals(steward, savedMeasure.getMeasureMetaData().getMeasureSteward());
     assertEquals(model, savedMeasure.getModel());
+    assertNotNull(savedMeasure.getLastModifiedAt());
+    assertEquals(TEST_USER_ID, savedMeasure.getLastModifiedBy());
+    int lastModCompareTo =
+        savedMeasure.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
+    assertEquals(1, lastModCompareTo);
   }
 
   @Test
