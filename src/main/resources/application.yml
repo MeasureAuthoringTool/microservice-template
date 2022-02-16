@@ -34,3 +34,6 @@ mongock:
   mongo-db:
     read-concern: local
   test-enabled: false
+
+hapi-fhir:
+  url: ${HAPI_FHIR_URL:http://localhost:8087/fhir}

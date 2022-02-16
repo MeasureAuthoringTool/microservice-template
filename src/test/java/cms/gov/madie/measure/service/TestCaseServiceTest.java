@@ -3,6 +3,7 @@ package cms.gov.madie.measure.service;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.models.Measure;
 import cms.gov.madie.measure.models.TestCase;
+import cms.gov.madie.measure.models.TestCaseWrapper;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.TestCaseService;
 import org.bson.types.ObjectId;
@@ -62,8 +63,11 @@ public class TestCaseServiceTest {
 
     Mockito.doReturn(measure).when(repository).save(any(Measure.class));
 
-    TestCase persistTestCase =
-        testCaseService.persistTestCase(testCase, measure.getId(), "test.user");
+//    TestCase persistTestCase =
+//        testCaseService.persistTestCase(testCase, measure.getId(), "test.user");
+    TestCaseWrapper testCaseWrapper = testCaseService.persistTestCase(testCase, measure.getId(), "test.user");
+    assertNotNull(testCaseWrapper);
+    TestCase persistTestCase = testCaseWrapper.getTestCase();
     verify(repository, times(1)).save(measureCaptor.capture());
     assertEquals(testCase.getId(), persistTestCase.getId());
     Measure savedMeasure = measureCaptor.getValue();
@@ -179,8 +183,11 @@ public class TestCaseServiceTest {
         testCase.toBuilder().title("UpdatedTitle").series("UpdatedSeries").build();
     Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(any(Measure.class));
 
-    TestCase updatedTestCase =
+    TestCaseWrapper updatedTestCaseWrapper =
         testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user");
+    assertNotNull(updatedTestCaseWrapper);
+    TestCase updatedTestCase = updatedTestCaseWrapper.getTestCase();
+    assertNotNull(updatedTestCase);
     verify(repository, times(1)).save(measureCaptor.capture());
     assertEquals(updatingTestCase.getId(), updatedTestCase.getId());
     Measure savedMeasure = measureCaptor.getValue();
@@ -225,9 +232,11 @@ public class TestCaseServiceTest {
             .build();
     Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(any(Measure.class));
 
-    TestCase updatedTestCase =
+    TestCaseWrapper updatedTestCaseWrapper =
         testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user");
 
+    TestCase updatedTestCase = updatedTestCaseWrapper.getTestCase();
+    assertNotNull(updatedTestCase);
     int lastModCompareTo =
         updatedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
     assertEquals("test.user", updatedTestCase.getLastModifiedBy());
@@ -254,9 +263,11 @@ public class TestCaseServiceTest {
             .series("UpdatedSeries")
             .build();
 
-    TestCase updatedTestCase =
+    TestCaseWrapper updatedTestCaseWrapper =
         testCaseService.updateTestCase(upsertingTestCase, measure.getId(), "test.user");
 
+    TestCase updatedTestCase = updatedTestCaseWrapper.getTestCase();
+    assertNotNull(updatedTestCase);
     int lastModCompareTo =
         updatedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
     assertEquals(1, lastModCompareTo);
@@ -289,9 +300,11 @@ public class TestCaseServiceTest {
             .series("UpdatedSeries")
             .build();
 
-    TestCase updatedTestCase =
+    TestCaseWrapper updatedTestCaseWrapper =
         testCaseService.updateTestCase(upsertingTestCase, measure.getId(), "test.user");
 
+    TestCase updatedTestCase = updatedTestCaseWrapper.getTestCase();
+    assertNotNull(updatedTestCase);
     int lastModCompareTo =
         updatedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
     assertEquals(1, lastModCompareTo);
@@ -327,9 +340,11 @@ public class TestCaseServiceTest {
             .series("UpdatedSeries")
             .build();
 
-    TestCase updatedTestCase =
+    TestCaseWrapper updatedTestCaseWrapper =
         testCaseService.updateTestCase(upsertingTestCase, measure.getId(), "test.user");
 
+    TestCase updatedTestCase = updatedTestCaseWrapper.getTestCase();
+    assertNotNull(updatedTestCase);
     int lastModCompareTo =
         updatedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
     assertEquals(1, lastModCompareTo);

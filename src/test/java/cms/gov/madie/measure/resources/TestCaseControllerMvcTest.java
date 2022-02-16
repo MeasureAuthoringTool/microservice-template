@@ -2,6 +2,7 @@ package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.models.TestCase;
+import cms.gov.madie.measure.models.TestCaseWrapper;
 import cms.gov.madie.measure.services.TestCaseService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -43,6 +44,7 @@ public class TestCaseControllerMvcTest {
   @Captor ArgumentCaptor<String> usernameCaptor;
 
   private TestCase testCase;
+  private TestCaseWrapper testCaseWrapper;
   private static final String TEST_ID = "TESTID";
   private static final String TEST_USER = "TestUser";
   private static final String TEST_USER_2 = "TestUser2";
@@ -62,12 +64,15 @@ public class TestCaseControllerMvcTest {
     testCase.setName(TEST_NAME);
     testCase.setTitle(TEST_TITLE);
     testCase.setJson(TEST_JSON);
+
+    testCaseWrapper = new TestCaseWrapper();
+    testCaseWrapper.setTestCase(testCase);
   }
 
   @Test
   public void testNewTestCase() throws Exception {
     when(testCaseService.persistTestCase(any(TestCase.class), any(String.class), any(String.class)))
-        .thenReturn(testCase);
+        .thenReturn(testCaseWrapper);
 
     mockMvc
         .perform(
@@ -158,7 +163,7 @@ public class TestCaseControllerMvcTest {
     testCase.setDescription(modifiedDescription);
     testCase.setJson("{\"new\":\"json\"}");
     when(testCaseService.updateTestCase(any(TestCase.class), any(String.class), any(String.class)))
-        .thenReturn(testCase);
+        .thenReturn(testCaseWrapper);
 
     mockMvc
         .perform(

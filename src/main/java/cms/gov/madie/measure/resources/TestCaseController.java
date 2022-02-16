@@ -2,6 +2,7 @@ package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.models.TestCase;
+import cms.gov.madie.measure.models.TestCaseWrapper;
 import cms.gov.madie.measure.services.TestCaseService;
 import cms.gov.madie.measure.utils.ControllerUtil;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,7 @@ public class TestCaseController {
   @Autowired private final TestCaseService testCaseService;
 
   @PostMapping(ControllerUtil.TEST_CASES)
-  public ResponseEntity<TestCase> addTestCase(
+  public ResponseEntity<TestCaseWrapper> addTestCase(
       @RequestBody TestCase testCase, @PathVariable String measureId, Principal principal) {
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(testCaseService.persistTestCase(testCase, measureId, principal.getName()));
@@ -43,7 +44,7 @@ public class TestCaseController {
   }
 
   @PutMapping(ControllerUtil.TEST_CASES + "/{testCaseId}")
-  public ResponseEntity<TestCase> updateTestCase(
+  public ResponseEntity<TestCaseWrapper> updateTestCase(
       @RequestBody TestCase testCase,
       @PathVariable String measureId,
       @PathVariable String testCaseId,

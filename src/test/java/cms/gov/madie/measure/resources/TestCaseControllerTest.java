@@ -3,6 +3,7 @@ package cms.gov.madie.measure.resources;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.models.Measure;
 import cms.gov.madie.measure.models.TestCase;
+import cms.gov.madie.measure.models.TestCaseWrapper;
 import cms.gov.madie.measure.services.TestCaseService;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,10 +61,11 @@ public class TestCaseControllerTest {
 
     TestCase newTestCase = new TestCase();
 
-    ResponseEntity<TestCase> response =
+    ResponseEntity<TestCaseWrapper> response =
         controller.addTestCase(newTestCase, measure.getId(), principal);
     assertNotNull(response.getBody());
-    assertEquals("TESTID", response.getBody().getId());
+    assertNotNull(response.getBody().getTestCase());
+    assertEquals("TESTID", response.getBody().getTestCase().getId());
   }
 
   @Test
@@ -95,11 +97,12 @@ public class TestCaseControllerTest {
         .when(testCaseService)
         .updateTestCase(any(TestCase.class), any(String.class), any(String.class));
 
-    ResponseEntity<TestCase> response =
+    ResponseEntity<TestCaseWrapper> response =
         controller.updateTestCase(testCase, measure.getId(), testCase.getId(), principal);
     assertNotNull(response.getBody());
-    assertEquals("IPPPass", response.getBody().getName());
-    assertEquals("BloodPressure>124", response.getBody().getSeries());
+    assertNotNull(response.getBody().getTestCase());
+    assertEquals("IPPPass", response.getBody().getTestCase().getName());
+    assertEquals("BloodPressure>124", response.getBody().getTestCase().getSeries());
 
     ArgumentCaptor<String> usernameCaptor = ArgumentCaptor.forClass(String.class);
     verify(testCaseService, times(1))
