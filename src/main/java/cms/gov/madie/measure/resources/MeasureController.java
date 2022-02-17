@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import cms.gov.madie.measure.exceptions.InvalidIdException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -70,12 +71,17 @@ public class MeasureController {
     return ResponseEntity.status(HttpStatus.CREATED).body(savedMeasure);
   }
 
-  @PutMapping("/measure")
+  @PutMapping("/measure/{id}")
   public ResponseEntity<String> updateMeasure(
+      @PathVariable("id") String id,
       @RequestBody @Validated(Measure.ValidationSequence.class) Measure measure,
       Principal principal) {
     ResponseEntity<String> response = ResponseEntity.badRequest().body("Measure does not exist.");
     final String username = principal.getName();
+    if (id == null || id.isEmpty() || !id.equals(measure.getId())) {
+      log.info("got invalid id [{}] vs measureId: [{}]", id, measure.getId());
+      throw new InvalidIdException("Measure", "Update (PUT)", "(PUT [base]/[resource]/[id])");
+    }
 
     if (measure.getId() != null) {
       Optional<Measure> persistedMeasure = repository.findById(measure.getId());
