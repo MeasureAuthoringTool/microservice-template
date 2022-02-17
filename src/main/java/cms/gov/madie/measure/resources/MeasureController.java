@@ -71,7 +71,7 @@ public class MeasureController {
     return ResponseEntity.status(HttpStatus.CREATED).body(savedMeasure);
   }
 
-  @PutMapping("/measure/{id}")
+  @PutMapping("/measures/{id}")
   public ResponseEntity<String> updateMeasure(
       @PathVariable("id") String id,
       @RequestBody @Validated(Measure.ValidationSequence.class) Measure measure,

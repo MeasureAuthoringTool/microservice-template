@@ -73,7 +73,7 @@ public class MeasureControllerMvcTest {
             .formatted(measureId, measureName, libName, steward, model, scoring);
     mockMvc
         .perform(
-            put("/measure/"+measureId)
+            put("/measures/"+measureId)
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .content(measureAsJson)
@@ -116,7 +116,7 @@ public class MeasureControllerMvcTest {
     final String measureAsJson = "{ \"id\": \"m1234\" }";
     mockMvc
         .perform(
-            put("/measure/m1234")
+            put("/measures/m1234")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .content(measureAsJson)
@@ -146,7 +146,7 @@ public class MeasureControllerMvcTest {
     final String measureAsJson = "{ \"id\": \"m1234\", \"measureName\":\"\" }";
     mockMvc
         .perform(
-            put("/measure/m1234")
+            put("/measures/m1234")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .content(measureAsJson)
@@ -178,7 +178,7 @@ public class MeasureControllerMvcTest {
     final String measureAsJson = "{ \"id\": \"m1234\", \"measureName\":\"A_Name\", \"cqlLibraryName\":\"ALib\" }";
     mockMvc
         .perform(
-            put("/measure/m1234")
+            put("/measures/m1234")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .content(measureAsJson)
@@ -216,7 +216,7 @@ public class MeasureControllerMvcTest {
         "{ \"id\": \"m1234\", \"measureName\":\"%s\", \"cqlLibraryName\":\"ALib\" }".formatted(measureName);
     mockMvc
         .perform(
-            put("/measure/m1234")
+            put("/measures/m1234")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .content(measureAsJson)
@@ -340,7 +340,7 @@ public class MeasureControllerMvcTest {
                 priorMeasure.getMeasureScoring());
     mockMvc
         .perform(
-            put("/measure/"+priorMeasure.getId())
+            put("/measures/"+priorMeasure.getId())
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .content(updatedMeasureAsJson)
@@ -361,7 +361,7 @@ public class MeasureControllerMvcTest {
     final String measureAsJson = "{ \"id\": \"m1234\", \"measureName\":\"A_Name\", \"cqlLibraryName\":\"ALib\" }";
     mockMvc
         .perform(
-            put("/measure/m1234")
+            put("/measures/m1234")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .content(measureAsJson)
@@ -395,7 +395,7 @@ public class MeasureControllerMvcTest {
     final String measureAsJson = "{ \"id\": \"m1234\", \"measureName\":\"AName\", \"cqlLibraryName\":\"aLib\" }";
     mockMvc
         .perform(
-            put("/measure/m1234")
+            put("/measures/m1234")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .content(measureAsJson)
@@ -504,7 +504,7 @@ public class MeasureControllerMvcTest {
             .formatted(measureId, measureName, libraryName, model, scoring);
     mockMvc
         .perform(
-            put("/measure/"+measureId)
+            put("/measures/"+measureId)
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .content(measureAsJson)
@@ -541,7 +541,7 @@ public class MeasureControllerMvcTest {
             .formatted(measureName, libraryName, model, scoring);
     mockMvc
         .perform(
-            put("/measure/"+measureId)
+            put("/measures/"+measureId)
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .content(measureAsJson)
@@ -575,7 +575,7 @@ public class MeasureControllerMvcTest {
             .formatted(measureName, libraryName, model, scoring);
     mockMvc
         .perform(
-            put("/measure/"+measureId)
+            put("/measures/"+measureId)
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .content(measureAsJson)
