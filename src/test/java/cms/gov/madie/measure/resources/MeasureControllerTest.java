@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import cms.gov.madie.measure.exceptions.InvalidIdException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -142,7 +143,7 @@ class MeasureControllerTest {
         .when(repository)
         .save(ArgumentMatchers.any(Measure.class));
 
-    ResponseEntity<String> response = controller.updateMeasure(m1, principal);
+    ResponseEntity<String> response = controller.updateMeasure(m1.getId(), m1, principal);
     assertEquals("Measure updated successfully.", response.getBody());
     verify(repository, times(1)).save(saveMeasureArgCaptor.capture());
     Measure savedMeasure = saveMeasureArgCaptor.getValue();
@@ -153,21 +154,52 @@ class MeasureControllerTest {
   }
 
   @Test
+  void testUpdateMeasureReturnsExceptionForNullId() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user2");
+
+    assertThrows(InvalidIdException.class, () ->
+      controller.updateMeasure(null, measure, principal)
+    );
+  }
+
+  @Test
+  void testUpdateMeasureReturnsExceptionForEmptyStringId() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user2");
+
+    assertThrows(InvalidIdException.class, () ->
+      controller.updateMeasure("", measure, principal)
+    );
+  }
+
+  @Test
+  void testUpdateMeasureReturnsExceptionForNonMatchingIds() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user2");
+    Measure m1234 = measure.toBuilder().id("ID1234").build();
+
+    assertThrows(InvalidIdException.class, () ->
+      controller.updateMeasure("ID5678", m1234, principal)
+    );
+  }
+
+  @Test
   void updateNonExistingMeasure() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user2");
 
     // no measure id specified
-    ResponseEntity<String> response = controller.updateMeasure(measure, principal);
-    assertEquals("Measure does not exist.", response.getBody());
-
+    assertThrows(InvalidIdException.class, () ->
+        controller.updateMeasure(measure.getId(), measure, principal)
+    );
     // non-existing measure or measure with fake id
     measure.setId("5399aba6e4b0ae375bfdca88");
     Optional<Measure> empty = Optional.empty();
 
     doReturn(empty).when(repository).findById(measure.getId());
 
-    response = controller.updateMeasure(measure, principal);
+    ResponseEntity<String> response = controller.updateMeasure(measure.getId(), measure, principal);
     assertEquals("Measure does not exist.", response.getBody());
   }
 }
