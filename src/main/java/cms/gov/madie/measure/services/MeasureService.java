@@ -31,7 +31,7 @@ public class MeasureService {
       measure.setGroups(List.of(group));
     } else {
       Optional<Group> existingGroupOpt =
-              measure.getGroups().stream().filter(g -> g.getId().equals(group.getId())).findFirst();
+          measure.getGroups().stream().filter(g -> g.getId().equals(group.getId())).findFirst();
       // if group already exists, just update it
       if (existingGroupOpt.isPresent()) {
         Group existingGroup = existingGroupOpt.get();

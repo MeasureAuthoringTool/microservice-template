@@ -13,8 +13,7 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Group {
-  @Id
-  private String id;
+  @Id private String id;
   private String scoring;
   private Map<MeasurePopulation, String> population;
 }

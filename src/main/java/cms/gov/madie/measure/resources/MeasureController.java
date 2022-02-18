@@ -104,14 +104,14 @@ public class MeasureController {
     return response;
   }
 
-  @PostMapping("/measures/{measureId}/groups/")
+  @PostMapping("/measures/{measureId}/groups")
   public ResponseEntity<Group> createGroup(
       @RequestBody Group group, @PathVariable String measureId, Principal principal) {
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(measureService.createOrUpdateGroup(group, measureId, principal.getName()));
   }
 
-  @PutMapping("/measures/{measureId}/groups/")
+  @PutMapping("/measures/{measureId}/groups")
   public ResponseEntity<Group> updateGroup(
       @RequestBody Group group, @PathVariable String measureId, Principal principal) {
     return ResponseEntity.ok(

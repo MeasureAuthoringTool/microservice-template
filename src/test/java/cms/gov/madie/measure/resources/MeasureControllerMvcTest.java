@@ -806,7 +806,7 @@ public class MeasureControllerMvcTest {
 
     mockMvc
         .perform(
-            post("/measures/1234/groups/")
+            post("/measures/1234/groups")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .content(groupJson)
@@ -843,7 +843,7 @@ public class MeasureControllerMvcTest {
 
     mockMvc
         .perform(
-            put("/measures/1234/groups/")
+            put("/measures/1234/groups")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .content(groupJson)
