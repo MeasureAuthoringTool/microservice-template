@@ -10,7 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 public class UserInputSanitizeUtilTest {
 
   @Test
-  public void testSanitizeUserInput_emptyString() {
+  public void testSanitizeUserInputWithEmptyString() {
     String input = "";
     String result = UserInputSanitizeUtil.sanitizeUserInput(input);
 
@@ -18,7 +18,7 @@ public class UserInputSanitizeUtilTest {
   }
 
   @Test
-  public void testSanitizeUserInput_removeScript() {
+  public void testSanitizeUserInputWithScript() {
     String input = "<script>alert(\"Let's play hide and seek!\")</script>";
     String result = UserInputSanitizeUtil.sanitizeUserInput(input);
 
@@ -26,7 +26,7 @@ public class UserInputSanitizeUtilTest {
   }
 
   @Test
-  public void testSanitizeUserInput_removeScriptAttributes() {
+  public void testSanitizeUserInputWithScriptAttributes() {
     String input = "<b onmouseover=alert('Wufff!')>click me!</b>";
     String result = UserInputSanitizeUtil.sanitizeUserInput(input);
 
@@ -34,7 +34,7 @@ public class UserInputSanitizeUtilTest {
   }
 
   @Test
-  public void testSanitizeUserInput_removeCodeEncoding() {
+  public void testSanitizeUserInputWithCodeEncoding() {
     String input =
         "<META HTTP-EQUIV=\"refresh\" CONTENT=\"0;url=data:text/html;base64,PHNjcmlwdD5hbGVydCgndGVzdDMnKTwvc2NyaXB0Pg\">";
     String result = UserInputSanitizeUtil.sanitizeUserInput(input);
@@ -43,7 +43,7 @@ public class UserInputSanitizeUtilTest {
   }
 
   @Test
-  public void testSanitizeUserInput_removeScriptViaEncodedUri() {
+  public void testSanitizeUserInputWithScriptViaEncodedUri() {
     String input = "<IMG SRC=j&#X41vascript:alert('test2')>";
     String result = UserInputSanitizeUtil.sanitizeUserInput(input);
 
@@ -51,7 +51,7 @@ public class UserInputSanitizeUtilTest {
   }
 
   @Test
-  public void testSanitizeUserInput_keepNonMaliciousSymbols() {
+  public void testSanitizeUserInputWithNonMaliciousSymbols() {
     String input = "4 < A1C < 5 and med use > 3 &&";
     String result = UserInputSanitizeUtil.sanitizeUserInput(input);
 
