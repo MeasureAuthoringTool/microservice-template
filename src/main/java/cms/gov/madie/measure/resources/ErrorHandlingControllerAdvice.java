@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.resources;
 
+import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,6 +79,13 @@ public class ErrorHandlingControllerAdvice {
   @ResponseBody
   Map<String, Object> onResourceNotFoundException(WebRequest request) {
     return getErrorAttributes(request, HttpStatus.NOT_FOUND);
+  }
+
+  @ExceptionHandler(InvalidIdException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  @ResponseBody
+  Map<String, Object> onInvalidKeyException(WebRequest request) {
+    return getErrorAttributes(request, HttpStatus.BAD_REQUEST);
   }
 
   private Map<String, Object> getErrorAttributes(WebRequest request, HttpStatus httpStatus) {
