@@ -7,6 +7,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 import cms.gov.madie.measure.exceptions.InvalidIdException;
+import cms.gov.madie.measure.models.Group;
+import cms.gov.madie.measure.services.MeasureService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -31,6 +33,7 @@ import lombok.RequiredArgsConstructor;
 public class MeasureController {
 
   @Autowired private final MeasureRepository repository;
+  @Autowired private final MeasureService measureService;
 
   @GetMapping("/measures")
   public ResponseEntity<List<Measure>> getMeasures(
@@ -99,6 +102,20 @@ public class MeasureController {
       }
     }
     return response;
+  }
+
+  @PostMapping("/measures/{measureId}/groups/")
+  public ResponseEntity<Group> createGroup(
+      @RequestBody Group group, @PathVariable String measureId, Principal principal) {
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(measureService.createOrUpdateGroup(group, measureId, principal.getName()));
+  }
+
+  @PutMapping("/measures/{measureId}/groups/")
+  public ResponseEntity<Group> updateGroup(
+      @RequestBody Group group, @PathVariable String measureId, Principal principal) {
+    return ResponseEntity.ok(
+        measureService.createOrUpdateGroup(group, measureId, principal.getName()));
   }
 
   private boolean isCqlLibraryNameChanged(Measure measure, Optional<Measure> persistedMeasure) {

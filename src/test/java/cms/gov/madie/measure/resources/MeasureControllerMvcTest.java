@@ -3,11 +3,18 @@ package cms.gov.madie.measure.resources;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import cms.gov.madie.measure.models.Group;
+import cms.gov.madie.measure.models.MeasurePopulation;
 import cms.gov.madie.measure.models.MeasureScoring;
 import cms.gov.madie.measure.models.ModelType;
 
+import cms.gov.madie.measure.models.TestCase;
+import cms.gov.madie.measure.services.MeasureService;
+import cms.gov.madie.measure.services.TestCaseService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -21,6 +28,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import cms.gov.madie.measure.models.Measure;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -35,6 +43,7 @@ import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -45,9 +54,15 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 public class MeasureControllerMvcTest {
 
   @MockBean private MeasureRepository measureRepository;
+  @MockBean private MeasureService measureService;
+
   @Autowired private MockMvc mockMvc;
   @Captor private ArgumentCaptor<Measure> measureArgumentCaptor;
   private static final String TEST_USER_ID = "test-okta-user-id-123";
+
+  @Captor ArgumentCaptor<Group> groupCaptor;
+  @Captor ArgumentCaptor<String> measureIdCaptor;
+  @Captor ArgumentCaptor<String> usernameCaptor;
 
   @Test
   public void testUpdatePassed() throws Exception {
@@ -777,5 +792,78 @@ public class MeasureControllerMvcTest {
     assertThat(resultStr, is(equalTo(expectedJsonStr)));
     verify(measureRepository, times(1)).findAllByCreatedBy(eq(TEST_USER_ID));
     verifyNoMoreInteractions(measureRepository);
+  }
+
+  @Test
+  public void testCreateGroup() throws Exception {
+    Group group =
+        Group.builder()
+            .scoring("Cohort")
+            .id("test-id")
+            .population(Map.of(MeasurePopulation.INITIAL_POPULATION, "Initial Population"))
+            .build();
+
+    final String groupJson =
+        "{\"scoring\":\"Cohort\",\"population\":{\"initialPopulation\":\"Initial Population\"}}";
+    when(measureService.createOrUpdateGroup(any(Group.class), any(String.class), any(String.class)))
+        .thenReturn(group);
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.post("/measures/1234/groups/")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(groupJson)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isCreated());
+
+    verify(measureService, times(1))
+        .createOrUpdateGroup(
+            groupCaptor.capture(), measureIdCaptor.capture(), usernameCaptor.capture());
+
+    Group persistedGroup = groupCaptor.getValue();
+    assertEquals(group.getScoring(), persistedGroup.getScoring());
+    assertEquals(
+        "Initial Population",
+        persistedGroup.getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
+  }
+
+  @Test
+  public void testUpdateGroup() throws Exception {
+    String updateIppDefinition = "FactorialOfFive";
+    Group group =
+        Group.builder()
+            .scoring("Cohort")
+            .id("test-id")
+            .population(Map.of(MeasurePopulation.INITIAL_POPULATION, updateIppDefinition))
+            .build();
+
+    final String groupJson =
+        "{\"id\":\"test-id\",\"scoring\":\"Cohort\",\"population\":{\"initialPopulation\":\"FactorialOfFive\"}}";
+    when(measureService.createOrUpdateGroup(any(Group.class), any(String.class), any(String.class)))
+        .thenReturn(group);
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.put("/measures/1234/groups/")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(groupJson)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isOk());
+
+    verify(measureService, times(1))
+        .createOrUpdateGroup(
+            groupCaptor.capture(), measureIdCaptor.capture(), usernameCaptor.capture());
+
+    Group persistedGroup = groupCaptor.getValue();
+    assertEquals(group.getScoring(), persistedGroup.getScoring());
+    assertEquals(
+        updateIppDefinition,
+        persistedGroup.getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
   }
 }

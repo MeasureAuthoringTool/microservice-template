@@ -3,16 +3,23 @@ package cms.gov.madie.measure.resources;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.security.Principal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
 import cms.gov.madie.measure.exceptions.InvalidIdException;
+import cms.gov.madie.measure.models.Group;
+import cms.gov.madie.measure.models.MeasurePopulation;
+import cms.gov.madie.measure.models.TestCase;
+import cms.gov.madie.measure.services.MeasureService;
+import cms.gov.madie.measure.services.TestCaseService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +34,7 @@ import cms.gov.madie.measure.repositories.MeasureRepository;
 class MeasureControllerTest {
 
   @Mock private MeasureRepository repository;
+  @Mock private MeasureService measureService;
 
   @InjectMocks private MeasureController controller;
 
@@ -197,5 +205,51 @@ class MeasureControllerTest {
 
     ResponseEntity<String> response = controller.updateMeasure(measure.getId(), measure, principal);
     assertEquals("Measure does not exist.", response.getBody());
+  }
+
+  @Test
+  void createGroup() {
+    Group group =
+        Group.builder()
+            .scoring("Cohort")
+            .population(Map.of(MeasurePopulation.INITIAL_POPULATION, "Initial Population"))
+            .build();
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    doReturn(group)
+        .when(measureService)
+        .createOrUpdateGroup(any(Group.class), any(String.class), any(String.class));
+
+    Group newGroup = new Group();
+
+    ResponseEntity<Group> response = controller.createGroup(newGroup, "measure-id", principal);
+    assertNotNull(response.getBody());
+    assertEquals(group.getId(), response.getBody().getId());
+    assertEquals(group.getScoring(), response.getBody().getScoring());
+    assertEquals(group.getPopulation(), response.getBody().getPopulation());
+  }
+
+  @Test
+  void updateGroup() {
+    Group group =
+        Group.builder()
+            .scoring("Cohort")
+            .population(Map.of(MeasurePopulation.INITIAL_POPULATION, "Initial Population"))
+            .build();
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    doReturn(group)
+        .when(measureService)
+        .createOrUpdateGroup(any(Group.class), any(String.class), any(String.class));
+
+    Group newGroup = new Group();
+
+    ResponseEntity<Group> response = controller.updateGroup(newGroup, "measure-id", principal);
+    assertNotNull(response.getBody());
+    assertEquals(group.getId(), response.getBody().getId());
+    assertEquals(group.getScoring(), response.getBody().getScoring());
+    assertEquals(group.getPopulation(), response.getBody().getPopulation());
   }
 }
