@@ -11,10 +11,7 @@ import cms.gov.madie.measure.models.MeasurePopulation;
 import cms.gov.madie.measure.models.MeasureScoring;
 import cms.gov.madie.measure.models.ModelType;
 
-import cms.gov.madie.measure.models.TestCase;
 import cms.gov.madie.measure.services.MeasureService;
-import cms.gov.madie.measure.services.TestCaseService;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -28,7 +25,6 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import cms.gov.madie.measure.models.Measure;
 import cms.gov.madie.measure.repositories.MeasureRepository;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -810,7 +806,7 @@ public class MeasureControllerMvcTest {
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders.post("/measures/1234/groups/")
+            post("/measures/1234/groups/")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .content(groupJson)
@@ -847,7 +843,7 @@ public class MeasureControllerMvcTest {
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders.put("/measures/1234/groups/")
+            put("/measures/1234/groups/")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .content(groupJson)
