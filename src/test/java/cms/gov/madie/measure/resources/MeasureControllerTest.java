@@ -158,9 +158,8 @@ class MeasureControllerTest {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user2");
 
-    assertThrows(InvalidIdException.class, () ->
-      controller.updateMeasure(null, measure, principal)
-    );
+    assertThrows(
+        InvalidIdException.class, () -> controller.updateMeasure(null, measure, principal));
   }
 
   @Test
@@ -168,9 +167,7 @@ class MeasureControllerTest {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user2");
 
-    assertThrows(InvalidIdException.class, () ->
-      controller.updateMeasure("", measure, principal)
-    );
+    assertThrows(InvalidIdException.class, () -> controller.updateMeasure("", measure, principal));
   }
 
   @Test
@@ -179,9 +176,8 @@ class MeasureControllerTest {
     when(principal.getName()).thenReturn("test.user2");
     Measure m1234 = measure.toBuilder().id("ID1234").build();
 
-    assertThrows(InvalidIdException.class, () ->
-      controller.updateMeasure("ID5678", m1234, principal)
-    );
+    assertThrows(
+        InvalidIdException.class, () -> controller.updateMeasure("ID5678", m1234, principal));
   }
 
   @Test
@@ -190,9 +186,9 @@ class MeasureControllerTest {
     when(principal.getName()).thenReturn("test.user2");
 
     // no measure id specified
-    assertThrows(InvalidIdException.class, () ->
-        controller.updateMeasure(measure.getId(), measure, principal)
-    );
+    assertThrows(
+        InvalidIdException.class,
+        () -> controller.updateMeasure(measure.getId(), measure, principal));
     // non-existing measure or measure with fake id
     measure.setId("5399aba6e4b0ae375bfdca88");
     Optional<Measure> empty = Optional.empty();
