@@ -3,6 +3,7 @@ package cms.gov.madie.measure.resources;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.models.TestCase;
 import cms.gov.madie.measure.services.TestCaseService;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,11 +15,13 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
@@ -51,6 +54,8 @@ public class TestCaseControllerMvcTest {
   private static final String TEST_DESCRIPTION = "Test Description";
   private static final String TEST_USER_ID = "test-okta-user-id-123";
   private static final String TEST_JSON = "{\"test\":\"test\"}";
+  private static final String TEXT_251_CHARACTORS =
+      "abcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyz";
 
   @BeforeEach
   public void setUp() {
@@ -226,5 +231,149 @@ public class TestCaseControllerMvcTest {
         .andExpect(content().string("[\"SeriesAAA\",\"SeriesBBB\"]"));
     verify(testCaseService, times(1)).findTestCaseSeriesByMeasureId(measureIdCaptor.capture());
     assertEquals("1234", measureIdCaptor.getValue());
+  }
+
+  @Test
+  public void testNewTestCaseDescription251Characters() throws Exception {
+    testCase.setDescription(TEXT_251_CHARACTORS);
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.post("/measures/1234/test-cases")
+                    .with(user(TEST_USER_ID))
+                    .with(csrf())
+                    .content(asJsonString(testCase))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(
+                jsonPath("$.validationErrors.description")
+                    .value("Test Case Description can not be more than 250 characters."))
+            .andReturn();
+
+    String response = result.getResponse().getContentAsString();
+    assertTrue(response.contains("Test Case Description can not be more than 250 characters."));
+  }
+
+  @Test
+  public void testNewTestCaseTitle251Characters() throws Exception {
+    testCase.setTitle(TEXT_251_CHARACTORS);
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.post("/measures/1234/test-cases")
+                    .with(user(TEST_USER_ID))
+                    .with(csrf())
+                    .content(asJsonString(testCase))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(
+                jsonPath("$.validationErrors.title")
+                    .value("Test Case Title can not be more than 250 characters."))
+            .andReturn();
+
+    String response = result.getResponse().getContentAsString();
+    assertTrue(response.contains("Test Case Title can not be more than 250 characters."));
+  }
+
+  @Test
+  public void testNewTestCaseSeries251Characters() throws Exception {
+    testCase.setSeries(TEXT_251_CHARACTORS);
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.post("/measures/1234/test-cases")
+                    .with(user(TEST_USER_ID))
+                    .with(csrf())
+                    .content(asJsonString(testCase))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(
+                jsonPath("$.validationErrors.series")
+                    .value("Test Case Series can not be more than 250 characters."))
+            .andReturn();
+
+    String response = result.getResponse().getContentAsString();
+    assertTrue(response.contains("Test Case Series can not be more than 250 characters."));
+  }
+
+  @Test
+  public void testUpdateTestCaseDescription251Characters() throws Exception {
+    testCase.setDescription(TEXT_251_CHARACTORS);
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.put("/measures/1234/test-cases/TESTID")
+                    .with(user(TEST_USER_ID))
+                    .with(csrf())
+                    .content(asJsonString(testCase))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(
+                jsonPath("$.validationErrors.description")
+                    .value("Test Case Description can not be more than 250 characters."))
+            .andReturn();
+
+    String response = result.getResponse().getContentAsString();
+    assertTrue(response.contains("Test Case Description can not be more than 250 characters."));
+  }
+
+  @Test
+  public void testUpdateTestCaseTitle251Characters() throws Exception {
+    testCase.setTitle(TEXT_251_CHARACTORS);
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.put("/measures/1234/test-cases/TESTID")
+                    .with(user(TEST_USER_ID))
+                    .with(csrf())
+                    .content(asJsonString(testCase))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(
+                jsonPath("$.validationErrors.title")
+                    .value("Test Case Title can not be more than 250 characters."))
+            .andReturn();
+
+    String response = result.getResponse().getContentAsString();
+    assertTrue(response.contains("Test Case Title can not be more than 250 characters."));
+  }
+
+  @Test
+  public void testUpdateTestCaseSeries251Characters() throws Exception {
+    testCase.setSeries(TEXT_251_CHARACTORS);
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.put("/measures/1234/test-cases/TESTID")
+                    .with(user(TEST_USER_ID))
+                    .with(csrf())
+                    .content(asJsonString(testCase))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(
+                jsonPath("$.validationErrors.series")
+                    .value("Test Case Series can not be more than 250 characters."))
+            .andReturn();
+
+    String response = result.getResponse().getContentAsString();
+    assertTrue(response.contains("Test Case Series can not be more than 250 characters."));
   }
 }
