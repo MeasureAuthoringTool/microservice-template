@@ -29,7 +29,9 @@ public class TestCaseController {
 
   @PostMapping(ControllerUtil.TEST_CASES)
   public ResponseEntity<TestCase> addTestCase(
-      @RequestBody TestCase testCase, @PathVariable String measureId, Principal principal) {
+      @RequestBody @Validated(TestCase.ValidationSequence.class) TestCase testCase,
+      @PathVariable String measureId,
+      Principal principal) {
 
     sanitizeTestCase(testCase);
 
