@@ -1,11 +1,5 @@
 package cms.gov.madie.measure.models;
 
-import java.time.Instant;
-
-import javax.validation.GroupSequence;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,6 +8,10 @@ import org.hibernate.validator.constraints.Length;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 
+import javax.validation.GroupSequence;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Pattern;
+import java.time.Instant;
 import java.util.List;
 
 @Data
@@ -62,6 +60,7 @@ public class Measure {
 
   private String cql;
   private List<TestCase> testCases;
+  private List<Group> groups;
   private Instant createdAt;
   private String createdBy;
   private Instant lastModifiedAt;
