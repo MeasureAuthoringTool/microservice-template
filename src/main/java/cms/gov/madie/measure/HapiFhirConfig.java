@@ -1,10 +1,10 @@
 package cms.gov.madie.measure;
 
 import lombok.Getter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestTemplate;
 
 @Configuration
 public class HapiFhirConfig {
@@ -12,18 +12,9 @@ public class HapiFhirConfig {
   @Value("${hapi-fhir.url}")
   private String hapiFhirUrl;
 
-//  /**
-//   * Create a FHIR Context for R4. According to the HAPI FHIR documentation this is an expensive operation
-//   * so the context should be created once and reused for the lifetime of the application.
-//   * @return
-//   */
-//  @Bean
-//  public FhirContext fhirR4Context() {
-//    return FhirContext.forR4();
-//  }
-//
-//  @Bean
-//  public IGenericClient hapiFhirR4Client(@Autowired FhirContext fhirR4Context) {
-//    return fhirR4Context.newRestfulGenericClient(hapiFhirUrl);
-//  }
+  @Bean(name="hapiFhirRestTemplate")
+  public RestTemplate restTemplate() {
+    // ToDo: add configuration like certs for HAPI FHIR
+    return new RestTemplate();
+  }
 }

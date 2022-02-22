@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.service;
 
+import cms.gov.madie.measure.HapiFhirConfig;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.models.Measure;
 import cms.gov.madie.measure.models.TestCase;
@@ -15,17 +16,18 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.*;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
+import java.nio.charset.Charset;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.times;
@@ -33,6 +35,8 @@ import static org.mockito.Mockito.times;
 @ExtendWith(MockitoExtension.class)
 public class TestCaseServiceTest {
   @Mock private MeasureRepository repository;
+  @Mock private HapiFhirConfig hapiFhirConfig;
+  @Mock private RestTemplate hapiFhirRestTemplate;
 
   @InjectMocks private TestCaseService testCaseService;
 
@@ -47,6 +51,7 @@ public class TestCaseServiceTest {
     testCase.setSeries("BloodPressure>124");
     testCase.setCreatedBy("TestUser");
     testCase.setLastModifiedBy("TestUser2");
+    testCase.setJson("{\"resourceType\":\"Patient\"}");
 
     measure = new Measure();
     measure.setId(ObjectId.get().toString());
@@ -62,6 +67,16 @@ public class TestCaseServiceTest {
     Mockito.doReturn(optional).when(repository).findById(any(String.class));
 
     Mockito.doReturn(measure).when(repository).save(any(Measure.class));
+
+    Mockito.when(hapiFhirConfig.getHapiFhirUrl()).thenReturn("http://test.hapi/fhir");
+    final String json = "{\"resourceType\":\"Patient\"}";
+    ResponseEntity<String> response = ResponseEntity
+        .ok()
+        .header(HttpHeaders.CONTENT_LOCATION, "http://test.hapi/fhir/Patient/511/_history/1")
+        .body(json);
+    Mockito.when(hapiFhirConfig.getHapiFhirUrl()).thenReturn("http://test.hapi/fhir");
+    Mockito.when(hapiFhirRestTemplate.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class), any(Class.class)))
+        .thenReturn(response);
 
     TestCase persistTestCase =
         testCaseService.persistTestCase(testCase, measure.getId(), "test.user");
@@ -82,6 +97,9 @@ public class TestCaseServiceTest {
     assertEquals("test.user", capturedTestCase.getCreatedBy());
     assertEquals(1, lastModCompareTo);
     assertEquals(capturedTestCase.getLastModifiedAt(), capturedTestCase.getCreatedAt());
+
+    assertNotNull(persistTestCase.getHapiOperationOutcome());
+    assertEquals(200, persistTestCase.getHapiOperationOutcome().getCode());
   }
 
   @Test
@@ -381,4 +399,149 @@ public class TestCaseServiceTest {
     assertEquals(otherExistingTC, savedMeasure.getTestCases().get(0));
     assertEquals(updatedTestCase, savedMeasure.getTestCases().get(1));
   }
+
+  @Test
+  public void testUpsertFhirPatientHandlesNullInput() {
+    TestCase output = testCaseService.upsertFhirPatient(null);
+    assertNull(output);
+  }
+
+  @Test
+  public void testUpsertFhirPatientHandlesTestCaseWithNullJson() {
+    TestCase testCase = new TestCase();
+    testCase.setJson(null);
+    TestCase output = testCaseService.upsertFhirPatient(testCase);
+    assertNotNull(output);
+    assertNull(output.getJson());
+    Mockito.verifyNoInteractions(hapiFhirRestTemplate);
+  }
+
+  @Test
+  public void testUpsertFhirPatientCreatesPatient() {
+    final String json = "{\"resourceType\":\"Patient\"}";
+    final String createdJson = "{\"resourceType\":\"Patient\", \"id\": \"511\"}";
+    ResponseEntity<String> response = ResponseEntity
+        .created(URI.create("http://test.hapi/fhir/Patient/511/_history/1"))
+        .header(HttpHeaders.CONTENT_LOCATION, "http://test.hapi/fhir/Patient/511/_history/1")
+        .body(createdJson);
+
+    Mockito.when(hapiFhirConfig.getHapiFhirUrl()).thenReturn("http://test.hapi/fhir");
+
+    Mockito.when(hapiFhirRestTemplate.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class), any(Class.class)))
+        .thenReturn(response);
+
+    TestCase testCase = TestCase.builder().json(json).build();
+    TestCase output = testCaseService.upsertFhirPatient(testCase);
+    assertNotNull(output);
+    assertEquals(createdJson, output.getJson());
+    assertNotNull(output.getHapiOperationOutcome());
+    assertEquals(201, output.getHapiOperationOutcome().getCode());
+    assertEquals("/Patient/511", output.getResourceUri());
+  }
+
+
+  @Test
+  public void testUpsertFhirPatientUpdatesPatientWithExistingResource() {
+    final String json = "{\"resourceType\":\"Patient\", \"id\": \"511\"}";
+    ResponseEntity<String> response = ResponseEntity
+        .ok()
+        .header(HttpHeaders.CONTENT_LOCATION, "http://test.hapi/fhir/Patient/511/_history/1")
+        .body(json);
+
+    Mockito.when(hapiFhirConfig.getHapiFhirUrl()).thenReturn("http://test.hapi/fhir");
+
+    Mockito.when(hapiFhirRestTemplate.exchange(anyString(), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+        .thenReturn(response);
+
+    TestCase testCase = TestCase.builder().json(json).resourceUri("/Patient/511").build();
+    TestCase output = testCaseService.upsertFhirPatient(testCase);
+    assertNotNull(output);
+    assertEquals(json, output.getJson());
+    assertNotNull(output.getHapiOperationOutcome());
+    assertEquals(200, output.getHapiOperationOutcome().getCode());
+  }
+
+
+  @Test
+  public void testUpsertFhirPatientHandlesMissingContentLocationHeader() {
+    final String json = "{\"resourceType\":\"Patient\", \"id\": \"511\"}";
+    ResponseEntity<String> response = ResponseEntity
+        .ok()
+        .body(json);
+
+    Mockito.when(hapiFhirConfig.getHapiFhirUrl()).thenReturn("http://test.hapi/fhir");
+
+    Mockito.when(hapiFhirRestTemplate.exchange(anyString(), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+        .thenReturn(response);
+
+    TestCase testCase = TestCase.builder().json(json).resourceUri("/Patient/511").build();
+    TestCase output = testCaseService.upsertFhirPatient(testCase);
+    assertNotNull(output);
+    assertEquals(json, output.getJson());
+    assertNotNull(output.getHapiOperationOutcome());
+    assertEquals(500, output.getHapiOperationOutcome().getCode());
+  }
+
+
+  @Test
+  public void testUpsertFhirPatientHandlesHttpClientErrorException() {
+    final String json = "{\"resourceType\":\"Patient\", \"id\": \"511\"}";
+
+    Mockito.when(hapiFhirConfig.getHapiFhirUrl()).thenReturn("http://test.hapi/fhir");
+
+    final String exceptionJson = "{\"resourceType\": \"OperationOutcome\", \"text\": {}, \"issue\": []}";
+    Mockito.when(hapiFhirRestTemplate.exchange(anyString(), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+        .thenThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Bad Request", exceptionJson.getBytes(), Charset.defaultCharset()));
+
+    TestCase testCase = TestCase.builder().json(json).resourceUri("/Patient/511").build();
+    TestCase output = testCaseService.upsertFhirPatient(testCase);
+    assertNotNull(output);
+    assertEquals(json, output.getJson());
+    assertNotNull(output.getHapiOperationOutcome());
+    assertEquals(400, output.getHapiOperationOutcome().getCode());
+    Map<String, Object> outcomeResponse = output.getHapiOperationOutcome().getOutcomeResponse();
+    assertNotNull(outcomeResponse);
+    assertEquals("OperationOutcome", outcomeResponse.get("resourceType"));
+  }
+
+  @Test
+  public void testUpsertFhirPatientHandlesJsonExceptionWhileHandlingHttpClientErrorException() {
+    final String json = "{\"resourceType\":\"Patient\", \"id\": \"511\"}";
+
+    Mockito.when(hapiFhirConfig.getHapiFhirUrl()).thenReturn("http://test.hapi/fhir");
+
+    final String malformedExceptionJson = "{\"resourceType\": \"OperationOutcome\", \"text\": {}, \"issue\": [}";
+    Mockito.when(hapiFhirRestTemplate.exchange(anyString(), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+        .thenThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Bad Request", malformedExceptionJson.getBytes(), Charset.defaultCharset()));
+
+    TestCase testCase = TestCase.builder().json(json).resourceUri("/Patient/511").build();
+    TestCase output = testCaseService.upsertFhirPatient(testCase);
+    assertNotNull(output);
+    assertEquals(json, output.getJson());
+    assertNotNull(output.getHapiOperationOutcome());
+    assertEquals(500, output.getHapiOperationOutcome().getCode());
+    assertEquals(output.getHapiOperationOutcome().getMessage(),
+        "Unable to persist to HAPI FHIR due to errors, but HAPI outcome not able to be interpreted!");
+  }
+
+
+  @Test
+  public void testUpsertFhirPatientHandlesOtherExceptions() {
+    final String json = "{\"resourceType\":\"Patient\", \"id\": \"511\"}";
+
+    Mockito.when(hapiFhirConfig.getHapiFhirUrl()).thenReturn("http://test.hapi/fhir");
+
+    Mockito.when(hapiFhirRestTemplate.exchange(anyString(), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+        .thenThrow(new RuntimeException("Test exception"));
+
+    TestCase testCase = TestCase.builder().json(json).resourceUri("/Patient/511").build();
+    TestCase output = testCaseService.upsertFhirPatient(testCase);
+    assertNotNull(output);
+    assertEquals(json, output.getJson());
+    assertNotNull(output.getHapiOperationOutcome());
+    assertEquals(500, output.getHapiOperationOutcome().getCode());
+    assertEquals(output.getHapiOperationOutcome().getMessage(),
+        "An unknown exception occurred with the HAPI FHIR server");
+  }
+
 }
