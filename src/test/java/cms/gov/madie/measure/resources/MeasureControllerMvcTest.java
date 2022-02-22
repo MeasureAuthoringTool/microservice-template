@@ -3,11 +3,15 @@ package cms.gov.madie.measure.resources;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import cms.gov.madie.measure.models.Group;
+import cms.gov.madie.measure.models.MeasurePopulation;
 import cms.gov.madie.measure.models.MeasureScoring;
 import cms.gov.madie.measure.models.ModelType;
 
+import cms.gov.madie.measure.services.MeasureService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -35,6 +39,7 @@ import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -45,9 +50,15 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 public class MeasureControllerMvcTest {
 
   @MockBean private MeasureRepository measureRepository;
+  @MockBean private MeasureService measureService;
+
   @Autowired private MockMvc mockMvc;
   @Captor private ArgumentCaptor<Measure> measureArgumentCaptor;
   private static final String TEST_USER_ID = "test-okta-user-id-123";
+
+  @Captor ArgumentCaptor<Group> groupCaptor;
+  @Captor ArgumentCaptor<String> measureIdCaptor;
+  @Captor ArgumentCaptor<String> usernameCaptor;
 
   @Test
   public void testUpdatePassed() throws Exception {
@@ -73,7 +84,7 @@ public class MeasureControllerMvcTest {
             .formatted(measureId, measureName, libName, steward, model, scoring);
     mockMvc
         .perform(
-            put("/measure")
+            put("/measures/" + measureId)
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .content(measureAsJson)
@@ -113,10 +124,10 @@ public class MeasureControllerMvcTest {
 
   @Test
   public void testUpdateMeasureNameMustNotBeNull() throws Exception {
-    final String measureAsJson = "{  }";
+    final String measureAsJson = "{ \"id\": \"m1234\" }";
     mockMvc
         .perform(
-            put("/measure")
+            put("/measures/m1234")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .content(measureAsJson)
@@ -143,10 +154,10 @@ public class MeasureControllerMvcTest {
 
   @Test
   public void testUpdateMeasureNameMustNotBeEmpty() throws Exception {
-    final String measureAsJson = "{ \"measureName\":\"\" }";
+    final String measureAsJson = "{ \"id\": \"m1234\", \"measureName\":\"\" }";
     mockMvc
         .perform(
-            put("/measure")
+            put("/measures/m1234")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .content(measureAsJson)
@@ -175,10 +186,11 @@ public class MeasureControllerMvcTest {
 
   @Test
   public void testUpdateMeasureFailsIfUnderscoreInMeasureName() throws Exception {
-    final String measureAsJson = "{ \"measureName\":\"A_Name\", \"cqlLibraryName\":\"ALib\" }";
+    final String measureAsJson =
+        "{ \"id\": \"m1234\", \"measureName\":\"A_Name\", \"cqlLibraryName\":\"ALib\" }";
     mockMvc
         .perform(
-            put("/measure")
+            put("/measures/m1234")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .content(measureAsJson)
@@ -213,10 +225,11 @@ public class MeasureControllerMvcTest {
   public void testUpdateMeasureNameMaxLengthFailed() throws Exception {
     final String measureName = "A".repeat(501);
     final String measureAsJson =
-        "{ \"measureName\":\"%s\", \"cqlLibraryName\":\"ALib\" }".formatted(measureName);
+        "{ \"id\": \"m1234\", \"measureName\":\"%s\", \"cqlLibraryName\":\"ALib\" }"
+            .formatted(measureName);
     mockMvc
         .perform(
-            put("/measure")
+            put("/measures/m1234")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .content(measureAsJson)
@@ -340,7 +353,7 @@ public class MeasureControllerMvcTest {
                 priorMeasure.getMeasureScoring());
     mockMvc
         .perform(
-            put("/measure")
+            put("/measures/" + priorMeasure.getId())
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .content(updatedMeasureAsJson)
@@ -358,10 +371,11 @@ public class MeasureControllerMvcTest {
 
   @Test
   public void testNewMeasureNoUnderscore() throws Exception {
-    final String measureAsJson = "{ \"measureName\":\"A_Name\", \"cqlLibraryName\":\"ALib\" }";
+    final String measureAsJson =
+        "{ \"id\": \"m1234\", \"measureName\":\"A_Name\", \"cqlLibraryName\":\"ALib\" }";
     mockMvc
         .perform(
-            put("/measure")
+            put("/measures/m1234")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .content(measureAsJson)
@@ -392,10 +406,11 @@ public class MeasureControllerMvcTest {
 
   @Test
   public void testUpdateMeasureFailsIfCqlLibaryNameStartsWithLowerCase() throws Exception {
-    final String measureAsJson = "{ \"measureName\":\"AName\", \"cqlLibraryName\":\"aLib\" }";
+    final String measureAsJson =
+        "{ \"id\": \"m1234\", \"measureName\":\"AName\", \"cqlLibraryName\":\"aLib\" }";
     mockMvc
         .perform(
-            put("/measure")
+            put("/measures/m1234")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .content(measureAsJson)
@@ -504,7 +519,7 @@ public class MeasureControllerMvcTest {
             .formatted(measureId, measureName, libraryName, model, scoring);
     mockMvc
         .perform(
-            put("/measure")
+            put("/measures/" + measureId)
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .content(measureAsJson)
@@ -515,6 +530,70 @@ public class MeasureControllerMvcTest {
     verify(measureRepository, times(1)).findById(eq(measureId));
     verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
     verifyNoMoreInteractions(measureRepository);
+  }
+
+  @Test
+  public void testUpdateMeasureReturnsBadRequestWhenIdsDoNotMatch() throws Exception {
+    String measureId = "id123";
+    Measure saved = new Measure();
+    saved.setId(measureId);
+    String measureName = "SavedMeasure";
+    String libraryName = "ALi12aAccllklk6U";
+    saved.setMeasureName(measureName);
+    saved.setCqlLibraryName(libraryName);
+    String model = "QI-Core";
+    saved.setModel(model);
+    String scoring = MeasureScoring.CONTINUOUS_VARIABLE.toString();
+    saved.setMeasureScoring(scoring);
+
+    when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(saved));
+    when(measureRepository.save(any(Measure.class))).thenReturn(saved);
+
+    final String measureAsJson =
+        "{ \"id\": \"id1234\", \"measureName\":\"%s\", \"cqlLibraryName\":\"%s\", \"model\":\"%s\", \"measureScoring\":\"%s\"}"
+            .formatted(measureName, libraryName, model, scoring);
+    mockMvc
+        .perform(
+            put("/measures/" + measureId)
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+        .andExpect(status().isBadRequest());
+
+    verifyNoInteractions(measureRepository);
+  }
+
+  @Test
+  public void testUpdateMeasureReturnsBadRequestWhenIdInObjectIsNull() throws Exception {
+    String measureId = "id123";
+    Measure saved = new Measure();
+    saved.setId(measureId);
+    String measureName = "SavedMeasure";
+    String libraryName = "ALi12aAccllklk6U";
+    saved.setMeasureName(measureName);
+    saved.setCqlLibraryName(libraryName);
+    String model = "QI-Core";
+    saved.setModel(model);
+    String scoring = MeasureScoring.CONTINUOUS_VARIABLE.toString();
+    saved.setMeasureScoring(scoring);
+
+    when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(saved));
+    when(measureRepository.save(any(Measure.class))).thenReturn(saved);
+
+    final String measureAsJson =
+        "{ \"id\": null, \"measureName\":\"%s\", \"cqlLibraryName\":\"%s\", \"model\":\"%s\", \"measureScoring\":\"%s\"}"
+            .formatted(measureName, libraryName, model, scoring);
+    mockMvc
+        .perform(
+            put("/measures/" + measureId)
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+        .andExpect(status().isBadRequest());
+
+    verifyNoInteractions(measureRepository);
   }
 
   @Test
@@ -709,5 +788,78 @@ public class MeasureControllerMvcTest {
     assertThat(resultStr, is(equalTo(expectedJsonStr)));
     verify(measureRepository, times(1)).findAllByCreatedBy(eq(TEST_USER_ID));
     verifyNoMoreInteractions(measureRepository);
+  }
+
+  @Test
+  public void testCreateGroup() throws Exception {
+    Group group =
+        Group.builder()
+            .scoring("Cohort")
+            .id("test-id")
+            .population(Map.of(MeasurePopulation.INITIAL_POPULATION, "Initial Population"))
+            .build();
+
+    final String groupJson =
+        "{\"scoring\":\"Cohort\",\"population\":{\"initialPopulation\":\"Initial Population\"}}";
+    when(measureService.createOrUpdateGroup(any(Group.class), any(String.class), any(String.class)))
+        .thenReturn(group);
+
+    mockMvc
+        .perform(
+            post("/measures/1234/groups")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(groupJson)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isCreated());
+
+    verify(measureService, times(1))
+        .createOrUpdateGroup(
+            groupCaptor.capture(), measureIdCaptor.capture(), usernameCaptor.capture());
+
+    Group persistedGroup = groupCaptor.getValue();
+    assertEquals(group.getScoring(), persistedGroup.getScoring());
+    assertEquals(
+        "Initial Population",
+        persistedGroup.getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
+  }
+
+  @Test
+  public void testUpdateGroup() throws Exception {
+    String updateIppDefinition = "FactorialOfFive";
+    Group group =
+        Group.builder()
+            .scoring("Cohort")
+            .id("test-id")
+            .population(Map.of(MeasurePopulation.INITIAL_POPULATION, updateIppDefinition))
+            .build();
+
+    final String groupJson =
+        "{\"id\":\"test-id\",\"scoring\":\"Cohort\",\"population\":{\"initialPopulation\":\"FactorialOfFive\"}}";
+    when(measureService.createOrUpdateGroup(any(Group.class), any(String.class), any(String.class)))
+        .thenReturn(group);
+
+    mockMvc
+        .perform(
+            put("/measures/1234/groups")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(groupJson)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isOk());
+
+    verify(measureService, times(1))
+        .createOrUpdateGroup(
+            groupCaptor.capture(), measureIdCaptor.capture(), usernameCaptor.capture());
+
+    Group persistedGroup = groupCaptor.getValue();
+    assertEquals(group.getScoring(), persistedGroup.getScoring());
+    assertEquals(
+        updateIppDefinition,
+        persistedGroup.getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
   }
 }

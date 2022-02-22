@@ -42,6 +42,7 @@ public class TestCaseControllerTest {
     testCase.setSeries("BloodPressure>124");
     testCase.setCreatedBy("TestUser");
     testCase.setLastModifiedBy("TestUser2");
+    testCase.setDescription("TESTCASEDESCRIPTION");
 
     measure = new Measure();
     measure.setId(ObjectId.get().toString());
@@ -152,5 +153,48 @@ public class TestCaseControllerTest {
     assertThrows(
         ResourceNotFoundException.class,
         () -> controller.getTestCaseSeriesByMeasureId(measure.getId()));
+  }
+
+  @Test
+  void saveTestCaseWithSanitizedDescription() {
+
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    doReturn(testCase)
+        .when(testCaseService)
+        .persistTestCase(any(TestCase.class), any(String.class), any(String.class));
+
+    TestCase newTestCase = new TestCase();
+    newTestCase.setDescription("TESTCASEDESCRIPTION<script>alert('Wufff!')</script>");
+
+    ResponseEntity<TestCase> response =
+        controller.addTestCase(newTestCase, measure.getId(), principal);
+    assertEquals("TESTID", response.getBody().getId());
+    assertEquals("TESTCASEDESCRIPTION", response.getBody().getDescription());
+  }
+
+  @Test
+  void updateTestCaseWithSanitizedDescription() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user2");
+
+    doReturn(testCase)
+        .when(testCaseService)
+        .updateTestCase(any(TestCase.class), any(String.class), any(String.class));
+
+    testCase.setDescription("TESTCASEDESCRIPTION<script>alert('Wufff!')</script>");
+
+    ResponseEntity<TestCase> response =
+        controller.updateTestCase(testCase, measure.getId(), testCase.getId(), principal);
+    assertNotNull(response.getBody());
+    assertEquals("IPPPass", response.getBody().getName());
+    assertEquals("BloodPressure>124", response.getBody().getSeries());
+    assertEquals("TESTCASEDESCRIPTION", response.getBody().getDescription());
+
+    ArgumentCaptor<String> usernameCaptor = ArgumentCaptor.forClass(String.class);
+    verify(testCaseService, times(1))
+        .updateTestCase(any(TestCase.class), anyString(), usernameCaptor.capture());
+    assertEquals("test.user2", usernameCaptor.getValue());
   }
 }
