@@ -20,8 +20,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -71,8 +70,10 @@ public class TestCaseControllerMvcTest {
 
   @Test
   public void testNewTestCase() throws Exception {
+//    when(testCaseService.persistTestCase(any(TestCase.class), any(String.class), any(String.class)))
+//        .thenReturn(testCaseWrapper);
     when(testCaseService.persistTestCase(any(TestCase.class), any(String.class), any(String.class)))
-        .thenReturn(testCaseWrapper);
+        .thenReturn(testCase);
 
     mockMvc
         .perform(
@@ -138,7 +139,7 @@ public class TestCaseControllerMvcTest {
 
   @Test
   public void getTestCase() throws Exception {
-    when(testCaseService.getTestCase(any(String.class), any(String.class))).thenReturn(testCase);
+    when(testCaseService.getTestCase(any(String.class), any(String.class), anyBoolean())).thenReturn(testCase,null);
 
     mockMvc
         .perform(get("/measures/1234/test-cases/TESTID").with(user(TEST_USER_ID)).with(csrf()))
@@ -152,7 +153,7 @@ public class TestCaseControllerMvcTest {
                         + "\"lastModifiedBy\":\"TestUser2\","
                         + "\"json\":\"{\\\"test\\\":\\\"test\\\"}\"}"));
     verify(testCaseService, times(1))
-        .getTestCase(measureIdCaptor.capture(), testCaseIdCaptor.capture());
+        .getTestCase(measureIdCaptor.capture(), testCaseIdCaptor.capture(), anyBoolean());
     assertEquals("1234", measureIdCaptor.getValue());
     assertEquals("TESTID", testCaseIdCaptor.getValue());
   }
@@ -162,8 +163,10 @@ public class TestCaseControllerMvcTest {
     String modifiedDescription = "New Description";
     testCase.setDescription(modifiedDescription);
     testCase.setJson("{\"new\":\"json\"}");
+//    when(testCaseService.updateTestCase(any(TestCase.class), any(String.class), any(String.class)))
+//        .thenReturn(testCaseWrapper);
     when(testCaseService.updateTestCase(any(TestCase.class), any(String.class), any(String.class)))
-        .thenReturn(testCaseWrapper);
+        .thenReturn(testCase);
 
     mockMvc
         .perform(

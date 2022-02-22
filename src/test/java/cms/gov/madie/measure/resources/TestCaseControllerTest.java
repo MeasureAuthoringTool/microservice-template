@@ -61,11 +61,17 @@ public class TestCaseControllerTest {
 
     TestCase newTestCase = new TestCase();
 
-    ResponseEntity<TestCaseWrapper> response =
+//    ResponseEntity<TestCaseWrapper> response =
+//        controller.addTestCase(newTestCase, measure.getId(), principal);
+//    assertNotNull(response.getBody());
+//    assertNotNull(response.getBody().getTestCase());
+//    assertEquals("TESTID", response.getBody().getTestCase().getId());
+
+    ResponseEntity<TestCase> response =
         controller.addTestCase(newTestCase, measure.getId(), principal);
     assertNotNull(response.getBody());
-    assertNotNull(response.getBody().getTestCase());
-    assertEquals("TESTID", response.getBody().getTestCase().getId());
+    assertNotNull(response.getBody());
+    assertEquals("TESTID", response.getBody().getId());
   }
 
   @Test
@@ -80,9 +86,15 @@ public class TestCaseControllerTest {
 
   @Test
   void getTestCase() {
-    doReturn(testCase).when(testCaseService).getTestCase(any(String.class), any(String.class));
+    doReturn(testCase).when(testCaseService).getTestCase(any(String.class), any(String.class), anyBoolean());
 
-    ResponseEntity<TestCase> response = controller.getTestCase(measure.getId(), testCase.getId());
+//    ResponseEntity<TestCaseWrapper> response = controller.getTestCase(measure.getId(), testCase.getId(), true);
+//    assertNotNull(response.getBody());
+//    assertNotNull(response.getBody().getTestCase());
+//    assertEquals("IPPPass", response.getBody().getTestCase().getName());
+//    assertEquals("BloodPressure>124", response.getBody().getTestCase().getSeries());
+    ResponseEntity<TestCase> response = controller.getTestCase(measure.getId(), testCase.getId(), true);
+    assertNotNull(response.getBody());
     assertNotNull(response.getBody());
     assertEquals("IPPPass", response.getBody().getName());
     assertEquals("BloodPressure>124", response.getBody().getSeries());
@@ -97,12 +109,18 @@ public class TestCaseControllerTest {
         .when(testCaseService)
         .updateTestCase(any(TestCase.class), any(String.class), any(String.class));
 
-    ResponseEntity<TestCaseWrapper> response =
+//    ResponseEntity<TestCaseWrapper> response =
+//        controller.updateTestCase(testCase, measure.getId(), testCase.getId(), principal);
+//    assertNotNull(response.getBody());
+//    assertNotNull(response.getBody().getTestCase());
+    ResponseEntity<TestCase> response =
         controller.updateTestCase(testCase, measure.getId(), testCase.getId(), principal);
     assertNotNull(response.getBody());
-    assertNotNull(response.getBody().getTestCase());
-    assertEquals("IPPPass", response.getBody().getTestCase().getName());
-    assertEquals("BloodPressure>124", response.getBody().getTestCase().getSeries());
+    assertNotNull(response.getBody());
+//    assertEquals("IPPPass", response.getBody().getTestCase().getName());
+//    assertEquals("BloodPressure>124", response.getBody().getTestCase().getSeries());
+    assertEquals("IPPPass", response.getBody().getName());
+    assertEquals("BloodPressure>124", response.getBody().getSeries());
 
     ArgumentCaptor<String> usernameCaptor = ArgumentCaptor.forClass(String.class);
     verify(testCaseService, times(1))

@@ -63,11 +63,11 @@ public class TestCaseServiceTest {
 
     Mockito.doReturn(measure).when(repository).save(any(Measure.class));
 
-//    TestCase persistTestCase =
-//        testCaseService.persistTestCase(testCase, measure.getId(), "test.user");
-    TestCaseWrapper testCaseWrapper = testCaseService.persistTestCase(testCase, measure.getId(), "test.user");
-    assertNotNull(testCaseWrapper);
-    TestCase persistTestCase = testCaseWrapper.getTestCase();
+    TestCase persistTestCase =
+        testCaseService.persistTestCase(testCase, measure.getId(), "test.user");
+//    TestCaseWrapper testCaseWrapper = testCaseService.persistTestCase(testCase, measure.getId(), "test.user");
+//    assertNotNull(testCaseWrapper);
+//    TestCase persistTestCase = testCaseWrapper.getTestCase();
     verify(repository, times(1)).save(measureCaptor.capture());
     assertEquals(testCase.getId(), persistTestCase.getId());
     Measure savedMeasure = measureCaptor.getValue();
@@ -183,11 +183,15 @@ public class TestCaseServiceTest {
         testCase.toBuilder().title("UpdatedTitle").series("UpdatedSeries").build();
     Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(any(Measure.class));
 
-    TestCaseWrapper updatedTestCaseWrapper =
+//    TestCaseWrapper updatedTestCaseWrapper =
+//        testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user");
+//    assertNotNull(updatedTestCaseWrapper);
+//    TestCase updatedTestCase = updatedTestCaseWrapper.getTestCase();
+//    assertNotNull(updatedTestCase);
+    TestCase updatedTestCase =
         testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user");
-    assertNotNull(updatedTestCaseWrapper);
-    TestCase updatedTestCase = updatedTestCaseWrapper.getTestCase();
     assertNotNull(updatedTestCase);
+
     verify(repository, times(1)).save(measureCaptor.capture());
     assertEquals(updatingTestCase.getId(), updatedTestCase.getId());
     Measure savedMeasure = measureCaptor.getValue();
@@ -232,11 +236,15 @@ public class TestCaseServiceTest {
             .build();
     Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(any(Measure.class));
 
-    TestCaseWrapper updatedTestCaseWrapper =
+//    TestCaseWrapper updatedTestCaseWrapper =
+//        testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user");
+//    assertNotNull(updatedTestCaseWrapper);
+//    TestCase updatedTestCase = updatedTestCaseWrapper.getTestCase();
+//    assertNotNull(updatedTestCase);
+    TestCase updatedTestCase =
         testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user");
-
-    TestCase updatedTestCase = updatedTestCaseWrapper.getTestCase();
     assertNotNull(updatedTestCase);
+
     int lastModCompareTo =
         updatedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
     assertEquals("test.user", updatedTestCase.getLastModifiedBy());
@@ -263,11 +271,15 @@ public class TestCaseServiceTest {
             .series("UpdatedSeries")
             .build();
 
-    TestCaseWrapper updatedTestCaseWrapper =
+    //    TestCaseWrapper updatedTestCaseWrapper =
+    //        testCaseService.updateTestCase(upsertingTestCase, measure.getId(), "test.user");
+    //    assertNotNull(updatedTestCaseWrapper);
+    //    TestCase updatedTestCase = updatedTestCaseWrapper.getTestCase();
+    //    assertNotNull(updatedTestCase);
+    TestCase updatedTestCase =
         testCaseService.updateTestCase(upsertingTestCase, measure.getId(), "test.user");
-
-    TestCase updatedTestCase = updatedTestCaseWrapper.getTestCase();
     assertNotNull(updatedTestCase);
+
     int lastModCompareTo =
         updatedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
     assertEquals(1, lastModCompareTo);
@@ -300,11 +312,15 @@ public class TestCaseServiceTest {
             .series("UpdatedSeries")
             .build();
 
-    TestCaseWrapper updatedTestCaseWrapper =
+    //    TestCaseWrapper updatedTestCaseWrapper =
+    //        testCaseService.updateTestCase(upsertingTestCase, measure.getId(), "test.user");
+    //    assertNotNull(updatedTestCaseWrapper);
+    //    TestCase updatedTestCase = updatedTestCaseWrapper.getTestCase();
+    //    assertNotNull(updatedTestCase);
+    TestCase updatedTestCase =
         testCaseService.updateTestCase(upsertingTestCase, measure.getId(), "test.user");
-
-    TestCase updatedTestCase = updatedTestCaseWrapper.getTestCase();
     assertNotNull(updatedTestCase);
+
     int lastModCompareTo =
         updatedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
     assertEquals(1, lastModCompareTo);
@@ -340,11 +356,16 @@ public class TestCaseServiceTest {
             .series("UpdatedSeries")
             .build();
 
-    TestCaseWrapper updatedTestCaseWrapper =
+    //    TestCaseWrapper updatedTestCaseWrapper =
+    //        testCaseService.updateTestCase(upsertingTestCase, measure.getId(), "test.user");
+    //    assertNotNull(updatedTestCaseWrapper);
+    //    TestCase updatedTestCase = updatedTestCaseWrapper.getTestCase();
+    //    assertNotNull(updatedTestCase);
+    TestCase updatedTestCase =
         testCaseService.updateTestCase(upsertingTestCase, measure.getId(), "test.user");
-
-    TestCase updatedTestCase = updatedTestCaseWrapper.getTestCase();
     assertNotNull(updatedTestCase);
+
+
     int lastModCompareTo =
         updatedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
     assertEquals(1, lastModCompareTo);

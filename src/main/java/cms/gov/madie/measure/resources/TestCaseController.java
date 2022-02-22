@@ -9,12 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
@@ -26,8 +21,10 @@ public class TestCaseController {
   @Autowired private final TestCaseService testCaseService;
 
   @PostMapping(ControllerUtil.TEST_CASES)
-  public ResponseEntity<TestCaseWrapper> addTestCase(
+  public ResponseEntity<TestCase> addTestCase(
       @RequestBody TestCase testCase, @PathVariable String measureId, Principal principal) {
+//    return ResponseEntity.status(HttpStatus.CREATED)
+//        .body(testCaseService.persistTestCase(testCase, measureId, principal.getName()));
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(testCaseService.persistTestCase(testCase, measureId, principal.getName()));
   }
@@ -39,12 +36,12 @@ public class TestCaseController {
 
   @GetMapping(ControllerUtil.TEST_CASES + "/{testCaseId}")
   public ResponseEntity<TestCase> getTestCase(
-      @PathVariable String measureId, @PathVariable String testCaseId) {
-    return ResponseEntity.ok(testCaseService.getTestCase(measureId, testCaseId));
+      @PathVariable String measureId, @PathVariable String testCaseId, @RequestParam(name = "validate", defaultValue = "true") boolean validate) {
+    return ResponseEntity.ok(testCaseService.getTestCase(measureId, testCaseId, validate));
   }
 
   @PutMapping(ControllerUtil.TEST_CASES + "/{testCaseId}")
-  public ResponseEntity<TestCaseWrapper> updateTestCase(
+  public ResponseEntity<TestCase> updateTestCase(
       @RequestBody TestCase testCase,
       @PathVariable String measureId,
       @PathVariable String testCaseId,
