@@ -26,6 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 
 import cms.gov.madie.measure.models.Measure;
+import cms.gov.madie.measure.models.MeasureMetaData;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -122,6 +123,9 @@ class MeasureControllerTest {
     when(principal.getName()).thenReturn("test.user2");
 
     Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
+    MeasureMetaData metaData = new MeasureMetaData();
+    metaData.setMeasureDescription("TestDescription");
+    measure.setMeasureMetaData(metaData);
     Measure originalMeasure =
         measure
             .toBuilder()
@@ -157,6 +161,8 @@ class MeasureControllerTest {
     assertThat(savedMeasure.getCreatedBy(), is(equalTo("test.user")));
     assertThat(savedMeasure.getLastModifiedAt(), is(notNullValue()));
     assertThat(savedMeasure.getLastModifiedBy(), is(equalTo("test.user2")));
+    assertThat(
+        savedMeasure.getMeasureMetaData().getMeasureDescription(), is(equalTo("TestDescription")));
   }
 
   @Test
