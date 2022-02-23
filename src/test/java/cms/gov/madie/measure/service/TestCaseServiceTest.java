@@ -80,9 +80,6 @@ public class TestCaseServiceTest {
 
     TestCase persistTestCase =
         testCaseService.persistTestCase(testCase, measure.getId(), "test.user");
-//    TestCaseWrapper testCaseWrapper = testCaseService.persistTestCase(testCase, measure.getId(), "test.user");
-//    assertNotNull(testCaseWrapper);
-//    TestCase persistTestCase = testCaseWrapper.getTestCase();
     verify(repository, times(1)).save(measureCaptor.capture());
     assertEquals(testCase.getId(), persistTestCase.getId());
     Measure savedMeasure = measureCaptor.getValue();
@@ -201,11 +198,6 @@ public class TestCaseServiceTest {
         testCase.toBuilder().title("UpdatedTitle").series("UpdatedSeries").build();
     Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(any(Measure.class));
 
-//    TestCaseWrapper updatedTestCaseWrapper =
-//        testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user");
-//    assertNotNull(updatedTestCaseWrapper);
-//    TestCase updatedTestCase = updatedTestCaseWrapper.getTestCase();
-//    assertNotNull(updatedTestCase);
     TestCase updatedTestCase =
         testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user");
     assertNotNull(updatedTestCase);
@@ -254,11 +246,6 @@ public class TestCaseServiceTest {
             .build();
     Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(any(Measure.class));
 
-//    TestCaseWrapper updatedTestCaseWrapper =
-//        testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user");
-//    assertNotNull(updatedTestCaseWrapper);
-//    TestCase updatedTestCase = updatedTestCaseWrapper.getTestCase();
-//    assertNotNull(updatedTestCase);
     TestCase updatedTestCase =
         testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user");
     assertNotNull(updatedTestCase);
@@ -289,11 +276,6 @@ public class TestCaseServiceTest {
             .series("UpdatedSeries")
             .build();
 
-    //    TestCaseWrapper updatedTestCaseWrapper =
-    //        testCaseService.updateTestCase(upsertingTestCase, measure.getId(), "test.user");
-    //    assertNotNull(updatedTestCaseWrapper);
-    //    TestCase updatedTestCase = updatedTestCaseWrapper.getTestCase();
-    //    assertNotNull(updatedTestCase);
     TestCase updatedTestCase =
         testCaseService.updateTestCase(upsertingTestCase, measure.getId(), "test.user");
     assertNotNull(updatedTestCase);
@@ -330,11 +312,6 @@ public class TestCaseServiceTest {
             .series("UpdatedSeries")
             .build();
 
-    //    TestCaseWrapper updatedTestCaseWrapper =
-    //        testCaseService.updateTestCase(upsertingTestCase, measure.getId(), "test.user");
-    //    assertNotNull(updatedTestCaseWrapper);
-    //    TestCase updatedTestCase = updatedTestCaseWrapper.getTestCase();
-    //    assertNotNull(updatedTestCase);
     TestCase updatedTestCase =
         testCaseService.updateTestCase(upsertingTestCase, measure.getId(), "test.user");
     assertNotNull(updatedTestCase);
@@ -374,11 +351,6 @@ public class TestCaseServiceTest {
             .series("UpdatedSeries")
             .build();
 
-    //    TestCaseWrapper updatedTestCaseWrapper =
-    //        testCaseService.updateTestCase(upsertingTestCase, measure.getId(), "test.user");
-    //    assertNotNull(updatedTestCaseWrapper);
-    //    TestCase updatedTestCase = updatedTestCaseWrapper.getTestCase();
-    //    assertNotNull(updatedTestCase);
     TestCase updatedTestCase =
         testCaseService.updateTestCase(upsertingTestCase, measure.getId(), "test.user");
     assertNotNull(updatedTestCase);
@@ -500,9 +472,6 @@ public class TestCaseServiceTest {
     assertEquals(json, output.getJson());
     assertNotNull(output.getHapiOperationOutcome());
     assertEquals(400, output.getHapiOperationOutcome().getCode());
-//    Map<String, Object> outcomeResponse = output.getHapiOperationOutcome().getOutcomeResponse();
-//    assertNotNull(outcomeResponse);
-//    assertEquals("OperationOutcome", outcomeResponse.get("resourceType"));
   }
 
   @Test
