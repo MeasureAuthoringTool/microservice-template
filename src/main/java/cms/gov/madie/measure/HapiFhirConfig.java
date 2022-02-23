@@ -12,6 +12,10 @@ public class HapiFhirConfig {
   @Value("${hapi-fhir.url}")
   private String hapiFhirUrl;
 
+  @Getter
+  @Value("${hapi-fhir.patient.uri")
+  private String hapiFhirPatientUri;
+
   @Bean(name="hapiFhirRestTemplate")
   public RestTemplate restTemplate() {
     // ToDo: add configuration like certs for HAPI FHIR

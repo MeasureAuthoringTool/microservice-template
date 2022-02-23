@@ -14,5 +14,6 @@ import java.util.Map;
 public class HapiOperationOutcome {
   private int code;
   private String message;
-  private Map<String, Object> outcomeResponse;
+  // Plain object as we don't know or care about the structure of the HAPI FHIR response
+  private Object outcomeResponse;
 }
