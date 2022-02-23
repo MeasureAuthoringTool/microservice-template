@@ -43,14 +43,11 @@ public class TestCase {
   private String createdBy;
   private Instant lastModifiedAt;
   private String lastModifiedBy;
-  @JsonIgnore
-  private String resourceUri;
-  @JsonIgnore
-  private boolean isValidResource;
+  @JsonIgnore private String resourceUri;
+  @JsonIgnore private boolean isValidResource;
   private String json;
 
-  @Transient
-  private HapiOperationOutcome hapiOperationOutcome;
+  @Transient private HapiOperationOutcome hapiOperationOutcome;
 
   @GroupSequence({
     TestCase.ValidationOrder1.class,

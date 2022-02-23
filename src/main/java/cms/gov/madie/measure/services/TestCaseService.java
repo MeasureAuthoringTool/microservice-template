@@ -33,7 +33,10 @@ public class TestCaseService {
   private RestTemplate hapiFhirRestTemplate;
 
   @Autowired
-  public TestCaseService(MeasureRepository measureRepository, HapiFhirConfig hapiFhirConfig, @Qualifier("hapiFhirRestTemplate") RestTemplate hapiFhirRestTemplate) {
+  public TestCaseService(
+      MeasureRepository measureRepository,
+      HapiFhirConfig hapiFhirConfig,
+      @Qualifier("hapiFhirRestTemplate") RestTemplate hapiFhirRestTemplate) {
     this.measureRepository = measureRepository;
     this.hapiFhirConfig = hapiFhirConfig;
     this.hapiFhirRestTemplate = hapiFhirRestTemplate;
@@ -98,12 +101,12 @@ public class TestCaseService {
   }
 
   public TestCase getTestCase(String measureId, String testCaseId, boolean validate) {
-    TestCase testCase = Optional.ofNullable(findMeasureById(measureId).getTestCases())
-        .orElseThrow(() -> new ResourceNotFoundException("Test Case", testCaseId))
-        .stream()
-        .filter(tc -> tc.getId().equals(testCaseId))
-        .findFirst()
-        .orElse(null);
+    TestCase testCase =
+        Optional.ofNullable(findMeasureById(measureId).getTestCases())
+            .orElseThrow(() -> new ResourceNotFoundException("Test Case", testCaseId)).stream()
+            .filter(tc -> tc.getId().equals(testCaseId))
+            .findFirst()
+            .orElse(null);
     if (testCase == null) {
       throw new ResourceNotFoundException("Test Case", testCaseId);
     } else if (validate && !testCase.isValidResource()) {
@@ -144,21 +147,35 @@ public class TestCaseService {
       HttpEntity<String> patientEntity = new HttpEntity<>(testCase.getJson(), headers);
       testCase.setValidResource(false);
       try {
-        ResponseEntity<String> response = testCase.getResourceUri() == null
-            ? hapiFhirRestTemplate.exchange(hapiFhirConfig.getHapiFhirUrl() + hapiFhirConfig.getHapiFhirPatientUri(),
-            HttpMethod.POST, patientEntity, String.class)
-            : hapiFhirRestTemplate.exchange(hapiFhirConfig.getHapiFhirUrl() + testCase.getResourceUri(),
-            HttpMethod.PUT, patientEntity, String.class);
+        ResponseEntity<String> response =
+            testCase.getResourceUri() == null
+                ? hapiFhirRestTemplate.exchange(
+                    hapiFhirConfig.getHapiFhirUrl() + hapiFhirConfig.getHapiFhirPatientUri(),
+                    HttpMethod.POST,
+                    patientEntity,
+                    String.class)
+                : hapiFhirRestTemplate.exchange(
+                    hapiFhirConfig.getHapiFhirUrl() + testCase.getResourceUri(),
+                    HttpMethod.PUT,
+                    patientEntity,
+                    String.class);
         testCase.setJson(response.getBody());
         List<String> contentLocation = response.getHeaders().get(HttpHeaders.CONTENT_LOCATION);
         if (contentLocation == null || contentLocation.size() != 1) {
-          testCase.setHapiOperationOutcome(HapiOperationOutcome.builder().code(500).message("Unable to read HAPI response").build());
+          testCase.setHapiOperationOutcome(
+              HapiOperationOutcome.builder()
+                  .code(500)
+                  .message("Unable to read HAPI response")
+                  .build());
         } else {
           final String location = contentLocation.get(0);
           final String locationUri = location.substring(hapiFhirConfig.getHapiFhirUrl().length());
-          final String resourceUri = locationUri.contains("/_history")
-              ? locationUri.substring(0, locationUri.indexOf("/_history")) : locationUri;
-          testCase.setHapiOperationOutcome(HapiOperationOutcome.builder().code(response.getStatusCodeValue()).build());
+          final String resourceUri =
+              locationUri.contains("/_history")
+                  ? locationUri.substring(0, locationUri.indexOf("/_history"))
+                  : locationUri;
+          testCase.setHapiOperationOutcome(
+              HapiOperationOutcome.builder().code(response.getStatusCodeValue()).build());
           testCase.setValidResource(true);
           testCase.setResourceUri(resourceUri);
         }
@@ -179,21 +196,25 @@ public class TestCaseService {
     return testCase;
   }
 
-  private TestCase handleHapiPatientClientErrorException(TestCase testCase, HttpClientErrorException ex) {
+  private TestCase handleHapiPatientClientErrorException(
+      TestCase testCase, HttpClientErrorException ex) {
     try {
       ObjectMapper mapper = new ObjectMapper();
-      testCase.setHapiOperationOutcome(HapiOperationOutcome.builder()
-          .code(ex.getRawStatusCode())
-          .message("Unable to persist to HAPI FHIR due to errors")
-          .outcomeResponse(mapper.readValue(ex.getResponseBodyAsString(), Object.class))
-          .build());
+      testCase.setHapiOperationOutcome(
+          HapiOperationOutcome.builder()
+              .code(ex.getRawStatusCode())
+              .message("Unable to persist to HAPI FHIR due to errors")
+              .outcomeResponse(mapper.readValue(ex.getResponseBodyAsString(), Object.class))
+              .build());
     } catch (JsonProcessingException e) {
-      testCase.setHapiOperationOutcome(HapiOperationOutcome.builder()
-          .code(500)
-          .message("Unable to persist to HAPI FHIR due to errors, but HAPI outcome not able to be interpreted!")
-          .build());
+      testCase.setHapiOperationOutcome(
+          HapiOperationOutcome.builder()
+              .code(500)
+              .message(
+                  "Unable to persist to HAPI FHIR due to errors, "
+                      + "but HAPI outcome not able to be interpreted!")
+              .build());
     }
     return testCase;
   }
-
 }

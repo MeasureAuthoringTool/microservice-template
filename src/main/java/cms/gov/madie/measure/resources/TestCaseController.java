@@ -47,7 +47,9 @@ public class TestCaseController {
 
   @GetMapping(ControllerUtil.TEST_CASES + "/{testCaseId}")
   public ResponseEntity<TestCase> getTestCase(
-      @PathVariable String measureId, @PathVariable String testCaseId, @RequestParam(name = "validate", defaultValue = "true") boolean validate) {
+      @PathVariable String measureId,
+      @PathVariable String testCaseId,
+      @RequestParam(name = "validate", defaultValue = "true") boolean validate) {
     return ResponseEntity.ok(testCaseService.getTestCase(measureId, testCaseId, validate));
   }
 

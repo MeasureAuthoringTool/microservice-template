@@ -71,11 +71,12 @@ public class TestCaseServiceTest {
     when(hapiFhirConfig.getHapiFhirUrl()).thenReturn("http://test.hapi/fhir");
     when(hapiFhirConfig.getHapiFhirPatientUri()).thenReturn("/Patient");
     final String json = "{\"resourceType\":\"Patient\"}";
-    ResponseEntity<String> response = ResponseEntity
-        .ok()
-        .header(HttpHeaders.CONTENT_LOCATION, "http://test.hapi/fhir/Patient/511/_history/1")
-        .body(json);
-    when(hapiFhirRestTemplate.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class), any(Class.class)))
+    ResponseEntity<String> response =
+        ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_LOCATION, "http://test.hapi/fhir/Patient/511/_history/1")
+            .body(json);
+    when(hapiFhirRestTemplate.exchange(
+            anyString(), eq(HttpMethod.POST), any(HttpEntity.class), any(Class.class)))
         .thenReturn(response);
 
     TestCase persistTestCase =
@@ -355,7 +356,6 @@ public class TestCaseServiceTest {
         testCaseService.updateTestCase(upsertingTestCase, measure.getId(), "test.user");
     assertNotNull(updatedTestCase);
 
-
     int lastModCompareTo =
         updatedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
     assertEquals(1, lastModCompareTo);
@@ -392,15 +392,16 @@ public class TestCaseServiceTest {
   public void testUpsertFhirPatientCreatesPatient() {
     final String json = "{\"resourceType\":\"Patient\"}";
     final String createdJson = "{\"resourceType\":\"Patient\", \"id\": \"511\"}";
-    ResponseEntity<String> response = ResponseEntity
-        .created(URI.create("http://test.hapi/fhir/Patient/511/_history/1"))
-        .header(HttpHeaders.CONTENT_LOCATION, "http://test.hapi/fhir/Patient/511/_history/1")
-        .body(createdJson);
+    ResponseEntity<String> response =
+        ResponseEntity.created(URI.create("http://test.hapi/fhir/Patient/511/_history/1"))
+            .header(HttpHeaders.CONTENT_LOCATION, "http://test.hapi/fhir/Patient/511/_history/1")
+            .body(createdJson);
 
     when(hapiFhirConfig.getHapiFhirUrl()).thenReturn("http://test.hapi/fhir");
     when(hapiFhirConfig.getHapiFhirPatientUri()).thenReturn("/Patient");
 
-    when(hapiFhirRestTemplate.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class), any(Class.class)))
+    when(hapiFhirRestTemplate.exchange(
+            anyString(), eq(HttpMethod.POST), any(HttpEntity.class), any(Class.class)))
         .thenReturn(response);
 
     TestCase testCase = TestCase.builder().json(json).build();
@@ -412,18 +413,18 @@ public class TestCaseServiceTest {
     assertEquals("/Patient/511", output.getResourceUri());
   }
 
-
   @Test
   public void testUpsertFhirPatientUpdatesPatientWithExistingResource() {
     final String json = "{\"resourceType\":\"Patient\", \"id\": \"511\"}";
-    ResponseEntity<String> response = ResponseEntity
-        .ok()
-        .header(HttpHeaders.CONTENT_LOCATION, "http://test.hapi/fhir/Patient/511/_history/1")
-        .body(json);
+    ResponseEntity<String> response =
+        ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_LOCATION, "http://test.hapi/fhir/Patient/511/_history/1")
+            .body(json);
 
     when(hapiFhirConfig.getHapiFhirUrl()).thenReturn("http://test.hapi/fhir");
 
-    when(hapiFhirRestTemplate.exchange(anyString(), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+    when(hapiFhirRestTemplate.exchange(
+            anyString(), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
         .thenReturn(response);
 
     TestCase testCase = TestCase.builder().json(json).resourceUri("/Patient/511").build();
@@ -434,17 +435,15 @@ public class TestCaseServiceTest {
     assertEquals(200, output.getHapiOperationOutcome().getCode());
   }
 
-
   @Test
   public void testUpsertFhirPatientHandlesMissingContentLocationHeader() {
     final String json = "{\"resourceType\":\"Patient\", \"id\": \"511\"}";
-    ResponseEntity<String> response = ResponseEntity
-        .ok()
-        .body(json);
+    ResponseEntity<String> response = ResponseEntity.ok().body(json);
 
     when(hapiFhirConfig.getHapiFhirUrl()).thenReturn("http://test.hapi/fhir");
 
-    when(hapiFhirRestTemplate.exchange(anyString(), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+    when(hapiFhirRestTemplate.exchange(
+            anyString(), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
         .thenReturn(response);
 
     TestCase testCase = TestCase.builder().json(json).resourceUri("/Patient/511").build();
@@ -455,16 +454,22 @@ public class TestCaseServiceTest {
     assertEquals(500, output.getHapiOperationOutcome().getCode());
   }
 
-
   @Test
   public void testUpsertFhirPatientHandlesHttpClientErrorException() {
     final String json = "{\"resourceType\":\"Patient\", \"id\": \"511\"}";
 
     when(hapiFhirConfig.getHapiFhirUrl()).thenReturn("http://test.hapi/fhir");
 
-    final String exceptionJson = "{\"resourceType\": \"OperationOutcome\", \"text\": {}, \"issue\": []}";
-    when(hapiFhirRestTemplate.exchange(anyString(), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
-        .thenThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Bad Request", exceptionJson.getBytes(), Charset.defaultCharset()));
+    final String exceptionJson =
+        "{\"resourceType\": \"OperationOutcome\", \"text\": {}, \"issue\": []}";
+    when(hapiFhirRestTemplate.exchange(
+            anyString(), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+        .thenThrow(
+            new HttpClientErrorException(
+                HttpStatus.BAD_REQUEST,
+                "Bad Request",
+                exceptionJson.getBytes(),
+                Charset.defaultCharset()));
 
     TestCase testCase = TestCase.builder().json(json).resourceUri("/Patient/511").build();
     TestCase output = testCaseService.upsertFhirPatient(testCase);
@@ -480,9 +485,16 @@ public class TestCaseServiceTest {
 
     when(hapiFhirConfig.getHapiFhirUrl()).thenReturn("http://test.hapi/fhir");
 
-    final String malformedExceptionJson = "{\"resourceType\": \"OperationOutcome\", \"text\": {}, \"issue\": [}";
-    when(hapiFhirRestTemplate.exchange(anyString(), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
-        .thenThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Bad Request", malformedExceptionJson.getBytes(), Charset.defaultCharset()));
+    final String malformedExceptionJson =
+        "{\"resourceType\": \"OperationOutcome\", \"text\": {}, \"issue\": [}";
+    when(hapiFhirRestTemplate.exchange(
+            anyString(), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+        .thenThrow(
+            new HttpClientErrorException(
+                HttpStatus.BAD_REQUEST,
+                "Bad Request",
+                malformedExceptionJson.getBytes(),
+                Charset.defaultCharset()));
 
     TestCase testCase = TestCase.builder().json(json).resourceUri("/Patient/511").build();
     TestCase output = testCaseService.upsertFhirPatient(testCase);
@@ -490,10 +502,10 @@ public class TestCaseServiceTest {
     assertEquals(json, output.getJson());
     assertNotNull(output.getHapiOperationOutcome());
     assertEquals(500, output.getHapiOperationOutcome().getCode());
-    assertEquals(output.getHapiOperationOutcome().getMessage(),
+    assertEquals(
+        output.getHapiOperationOutcome().getMessage(),
         "Unable to persist to HAPI FHIR due to errors, but HAPI outcome not able to be interpreted!");
   }
-
 
   @Test
   public void testUpsertFhirPatientHandlesOtherExceptions() {
@@ -501,7 +513,8 @@ public class TestCaseServiceTest {
 
     when(hapiFhirConfig.getHapiFhirUrl()).thenReturn("http://test.hapi/fhir");
 
-    when(hapiFhirRestTemplate.exchange(anyString(), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+    when(hapiFhirRestTemplate.exchange(
+            anyString(), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
         .thenThrow(new RuntimeException("Test exception"));
 
     TestCase testCase = TestCase.builder().json(json).resourceUri("/Patient/511").build();
@@ -510,13 +523,15 @@ public class TestCaseServiceTest {
     assertEquals(json, output.getJson());
     assertNotNull(output.getHapiOperationOutcome());
     assertEquals(500, output.getHapiOperationOutcome().getCode());
-    assertEquals(output.getHapiOperationOutcome().getMessage(),
+    assertEquals(
+        output.getHapiOperationOutcome().getMessage(),
         "An unknown exception occurred with the HAPI FHIR server");
   }
 
   @Test
   public void testGetTestCaseReturnsTestCaseById() {
-    Optional<Measure> optional = Optional.of(measure.toBuilder().testCases(Arrays.asList(testCase)).build());
+    Optional<Measure> optional =
+        Optional.of(measure.toBuilder().testCases(Arrays.asList(testCase)).build());
     Mockito.doReturn(optional).when(repository).findById(any(String.class));
     TestCase output = testCaseService.getTestCase(measure.getId(), testCase.getId(), false);
     assertEquals(testCase, output);
@@ -527,14 +542,16 @@ public class TestCaseServiceTest {
     when(hapiFhirConfig.getHapiFhirUrl()).thenReturn("http://test.hapi/fhir");
     when(hapiFhirConfig.getHapiFhirPatientUri()).thenReturn("/Patient");
     final String json = "{\"resourceType\":\"Patient\"}";
-    ResponseEntity<String> response = ResponseEntity
-        .ok()
-        .header(HttpHeaders.CONTENT_LOCATION, "http://test.hapi/fhir/Patient/511/_history/1")
-        .body(json);
-    when(hapiFhirRestTemplate.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class), any(Class.class)))
+    ResponseEntity<String> response =
+        ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_LOCATION, "http://test.hapi/fhir/Patient/511/_history/1")
+            .body(json);
+    when(hapiFhirRestTemplate.exchange(
+            anyString(), eq(HttpMethod.POST), any(HttpEntity.class), any(Class.class)))
         .thenReturn(response);
 
-    Optional<Measure> optional = Optional.of(measure.toBuilder().testCases(Arrays.asList(testCase)).build());
+    Optional<Measure> optional =
+        Optional.of(measure.toBuilder().testCases(Arrays.asList(testCase)).build());
     Mockito.doReturn(optional).when(repository).findById(any(String.class));
     TestCase output = testCaseService.getTestCase(measure.getId(), testCase.getId(), true);
     assertEquals(testCase, output);
@@ -545,29 +562,34 @@ public class TestCaseServiceTest {
   @Test
   public void testGetTestCaseThrowsNotFoundExceptionForMeasureWithEmptyListTestCases() {
     Mockito.doReturn(Optional.of(measure.toBuilder().testCases(Lists.emptyList()).build()))
-        .when(repository).findById(any(String.class));
-    assertThrows(ResourceNotFoundException.class, () ->
-        testCaseService.getTestCase(measure.getId(), testCase.getId(), false));
+        .when(repository)
+        .findById(any(String.class));
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> testCaseService.getTestCase(measure.getId(), testCase.getId(), false));
   }
 
   @Test
   public void testGetTestCaseThrowsNotFoundExceptionForMeasureWithNullTestCases() {
     Mockito.doReturn(Optional.of(measure.toBuilder().testCases(null).build()))
-        .when(repository).findById(any(String.class));
-    assertThrows(ResourceNotFoundException.class, () ->
-        testCaseService.getTestCase(measure.getId(), testCase.getId(), false));
+        .when(repository)
+        .findById(any(String.class));
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> testCaseService.getTestCase(measure.getId(), testCase.getId(), false));
   }
 
   @Test
   public void testGetTestCaseThrowsNotFoundExceptionForMeasureWithOtherTestCases() {
-    List<TestCase> testCases = List.of(
-        TestCase.builder().id("TC1_ID").title("TC1").build(),
-        TestCase.builder().id("TC2_ID").title("TC2").build()
-    );
+    List<TestCase> testCases =
+        List.of(
+            TestCase.builder().id("TC1_ID").title("TC1").build(),
+            TestCase.builder().id("TC2_ID").title("TC2").build());
     Mockito.doReturn(Optional.of(measure.toBuilder().testCases(testCases).build()))
-        .when(repository).findById(any(String.class));
-    assertThrows(ResourceNotFoundException.class, () ->
-        testCaseService.getTestCase(measure.getId(), testCase.getId(), false));
+        .when(repository)
+        .findById(any(String.class));
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> testCaseService.getTestCase(measure.getId(), testCase.getId(), false));
   }
-
 }

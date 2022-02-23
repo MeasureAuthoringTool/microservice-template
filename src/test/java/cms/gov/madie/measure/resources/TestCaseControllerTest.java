@@ -80,8 +80,11 @@ public class TestCaseControllerTest {
 
   @Test
   void getTestCase() {
-    doReturn(testCase).when(testCaseService).getTestCase(any(String.class), any(String.class), anyBoolean());
-    ResponseEntity<TestCase> response = controller.getTestCase(measure.getId(), testCase.getId(), true);
+    doReturn(testCase)
+        .when(testCaseService)
+        .getTestCase(any(String.class), any(String.class), anyBoolean());
+    ResponseEntity<TestCase> response =
+        controller.getTestCase(measure.getId(), testCase.getId(), true);
     assertNotNull(response.getBody());
     assertNotNull(response.getBody());
     assertEquals("IPPPass", response.getBody().getName());

@@ -21,7 +21,6 @@
     <mvnsite.version>3.9.1</mvnsite.version>
     <springboot.version>2.5.7</springboot.version>
     <springfox.version>3.0.0</springfox.version>
-    <hapifhir.version>5.6.2</hapifhir.version>
   </properties>
 
   <dependencies>

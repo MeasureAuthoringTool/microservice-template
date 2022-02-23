@@ -139,7 +139,8 @@ public class TestCaseControllerMvcTest {
 
   @Test
   public void getTestCase() throws Exception {
-    when(testCaseService.getTestCase(any(String.class), any(String.class), anyBoolean())).thenReturn(testCase,null);
+    when(testCaseService.getTestCase(any(String.class), any(String.class), anyBoolean()))
+        .thenReturn(testCase, null);
 
     mockMvc
         .perform(get("/measures/1234/test-cases/TESTID").with(user(TEST_USER_ID)).with(csrf()))
