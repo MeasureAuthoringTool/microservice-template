@@ -6,6 +6,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class MeasureMetaData {
-  private String measureSteward;
-  private String measureDescription;
+  private String steward;
+  private String description;
 }

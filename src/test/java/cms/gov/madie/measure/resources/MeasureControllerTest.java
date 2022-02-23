@@ -124,7 +124,7 @@ class MeasureControllerTest {
 
     Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
     MeasureMetaData metaData = new MeasureMetaData();
-    metaData.setMeasureDescription("TestDescription");
+    metaData.setDescription("TestDescription");
     measure.setMeasureMetaData(metaData);
     Measure originalMeasure =
         measure
@@ -161,8 +161,7 @@ class MeasureControllerTest {
     assertThat(savedMeasure.getCreatedBy(), is(equalTo("test.user")));
     assertThat(savedMeasure.getLastModifiedAt(), is(notNullValue()));
     assertThat(savedMeasure.getLastModifiedBy(), is(equalTo("test.user2")));
-    assertThat(
-        savedMeasure.getMeasureMetaData().getMeasureDescription(), is(equalTo("TestDescription")));
+    assertThat(savedMeasure.getMeasureMetaData().getDescription(), is(equalTo("TestDescription")));
   }
 
   @Test
