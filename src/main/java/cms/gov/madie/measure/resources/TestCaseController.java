@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.security.Principal;
 import java.util.List;
@@ -46,8 +47,10 @@ public class TestCaseController {
 
   @GetMapping(ControllerUtil.TEST_CASES + "/{testCaseId}")
   public ResponseEntity<TestCase> getTestCase(
-      @PathVariable String measureId, @PathVariable String testCaseId) {
-    return ResponseEntity.ok(testCaseService.getTestCase(measureId, testCaseId));
+      @PathVariable String measureId,
+      @PathVariable String testCaseId,
+      @RequestParam(name = "validate", defaultValue = "true") boolean validate) {
+    return ResponseEntity.ok(testCaseService.getTestCase(measureId, testCaseId, validate));
   }
 
   @PutMapping(ControllerUtil.TEST_CASES + "/{testCaseId}")

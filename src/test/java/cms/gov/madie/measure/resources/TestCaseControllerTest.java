@@ -64,6 +64,7 @@ public class TestCaseControllerTest {
     ResponseEntity<TestCase> response =
         controller.addTestCase(newTestCase, measure.getId(), principal);
     assertNotNull(response.getBody());
+    assertNotNull(response.getBody());
     assertEquals("TESTID", response.getBody().getId());
   }
 
@@ -79,9 +80,12 @@ public class TestCaseControllerTest {
 
   @Test
   void getTestCase() {
-    doReturn(testCase).when(testCaseService).getTestCase(any(String.class), any(String.class));
-
-    ResponseEntity<TestCase> response = controller.getTestCase(measure.getId(), testCase.getId());
+    doReturn(testCase)
+        .when(testCaseService)
+        .getTestCase(any(String.class), any(String.class), anyBoolean());
+    ResponseEntity<TestCase> response =
+        controller.getTestCase(measure.getId(), testCase.getId(), true);
+    assertNotNull(response.getBody());
     assertNotNull(response.getBody());
     assertEquals("IPPPass", response.getBody().getName());
     assertEquals("BloodPressure>124", response.getBody().getSeries());
@@ -98,6 +102,7 @@ public class TestCaseControllerTest {
 
     ResponseEntity<TestCase> response =
         controller.updateTestCase(testCase, measure.getId(), testCase.getId(), principal);
+    assertNotNull(response.getBody());
     assertNotNull(response.getBody());
     assertEquals("IPPPass", response.getBody().getName());
     assertEquals("BloodPressure>124", response.getBody().getSeries());
