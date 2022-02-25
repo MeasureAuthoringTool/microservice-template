@@ -13,7 +13,7 @@ public class HapiFhirConfig {
   private String hapiFhirUrl;
 
   @Getter
-  @Value("${hapi-fhir.patient.uri")
+  @Value("${hapi-fhir.patient.uri}")
   private String hapiFhirPatientUri;
 
   @Bean(name = "hapiFhirRestTemplate")
