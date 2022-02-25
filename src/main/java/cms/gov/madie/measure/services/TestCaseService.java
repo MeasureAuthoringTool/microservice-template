@@ -180,7 +180,7 @@ public class TestCaseService {
         }
         return testCase;
       } catch (HttpClientErrorException ex) {
-        log.info("HAPI FHIR returned response code [{}]", ex.getRawStatusCode());
+        log.warn("HAPI FHIR returned response code [{}]", ex.getRawStatusCode(), ex);
         return handleHapiPatientClientErrorException(testCase, ex);
       } catch (Exception ex) {
         log.error("Exception occurred invoking PUT on HAPI FHIR:", ex);
