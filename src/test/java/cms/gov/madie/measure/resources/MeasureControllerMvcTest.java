@@ -66,6 +66,7 @@ public class MeasureControllerMvcTest {
     String measureName = "TestMeasure";
     String steward = "d0cc18ce-63fd-4b94-b713-c1d9fd6b2329";
     String description = "TestDescription";
+    String copyright = "TestCopyright";
     String libName = "TestLib";
     String model = "QI-Core";
     String scoring = MeasureScoring.COHORT.toString();
@@ -81,8 +82,9 @@ public class MeasureControllerMvcTest {
     when(measureRepository.save(any(Measure.class))).thenReturn(mock(Measure.class));
 
     final String measureAsJson =
-        "{\"id\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"measureMetaData\": { \"steward\" : \"%s\", \"description\" : \"%s\"}, \"model\":\"%s\", \"measureScoring\":\"%s\" }"
-            .formatted(measureId, measureName, libName, steward, description, model, scoring);
+        "{\"id\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"measureMetaData\": { \"steward\" : \"%s\", \"description\" : \"%s\", \"copyright\" : \"%s\"}, \"model\":\"%s\", \"measureScoring\":\"%s\" }"
+            .formatted(
+                measureId, measureName, libName, steward, description, copyright, model, scoring);
     mockMvc
         .perform(
             put("/measures/" + measureId)
@@ -101,6 +103,7 @@ public class MeasureControllerMvcTest {
     assertEquals(measureName, savedMeasure.getMeasureName());
     assertEquals(steward, savedMeasure.getMeasureMetaData().getSteward());
     assertEquals(description, savedMeasure.getMeasureMetaData().getDescription());
+    assertEquals(copyright, savedMeasure.getMeasureMetaData().getCopyright());
     assertEquals(model, savedMeasure.getModel());
     assertNotNull(savedMeasure.getLastModifiedAt());
     assertEquals(TEST_USER_ID, savedMeasure.getLastModifiedBy());
