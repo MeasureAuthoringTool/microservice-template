@@ -35,7 +35,7 @@ class MeasureSerializationTest {
             + "    \"model\": null,\n"
             + "    \"measureScoring\": \"Cohort\",\n"
             + "    \"measureMetaData\": {\n"
-            + "        \"steward\": \"Bill\",\n \"description\": \"TestDescription\"\n"
+            + "        \"steward\": \"Bill\",\n \"description\": \"TestDescription\",\n \"copyright\": \"TestCopyright\"\n"
             + "    }\n"
             + "}";
 

@@ -8,4 +8,5 @@ import lombok.NoArgsConstructor;
 public class MeasureMetaData {
   private String steward;
   private String description;
+  private String copyright;
 }
