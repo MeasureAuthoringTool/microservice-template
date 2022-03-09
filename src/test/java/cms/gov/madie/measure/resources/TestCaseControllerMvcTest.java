@@ -113,7 +113,8 @@ public class TestCaseControllerMvcTest {
                         + "\"description\":\"Test Description\",\"createdAt\":null,"
                         + "\"createdBy\":\"TestUser\",\"lastModifiedAt\":null,"
                         + "\"lastModifiedBy\":\"TestUser2\","
-                        + "\"json\":\"{\\\"test\\\":\\\"test\\\"}\",\"hapiOperationOutcome\":null}]"));
+                        + "\"json\":\"{\\\"test\\\":\\\"test\\\"}\",\"hapiOperationOutcome\":null,"
+                        + "\"groupPopulations\":null}]"));
     verify(testCaseService, times(1)).findTestCasesByMeasureId(measureIdCaptor.capture());
     String measureId = measureIdCaptor.getValue();
     assertEquals("1234", measureId);
@@ -152,7 +153,8 @@ public class TestCaseControllerMvcTest {
                         + "\"description\":\"Test Description\",\"createdAt\":null,"
                         + "\"createdBy\":\"TestUser\",\"lastModifiedAt\":null,"
                         + "\"lastModifiedBy\":\"TestUser2\","
-                        + "\"json\":\"{\\\"test\\\":\\\"test\\\"}\",\"hapiOperationOutcome\":null}"));
+                        + "\"json\":\"{\\\"test\\\":\\\"test\\\"}\",\"hapiOperationOutcome\":null,"
+                        + "\"groupPopulations\":null}"));
     verify(testCaseService, times(1))
         .getTestCase(measureIdCaptor.capture(), testCaseIdCaptor.capture(), anyBoolean());
     assertEquals("1234", measureIdCaptor.getValue());
@@ -191,7 +193,8 @@ public class TestCaseControllerMvcTest {
                         + "\",\"createdAt\":null,"
                         + "\"createdBy\":\"TestUser\",\"lastModifiedAt\":null,"
                         + "\"lastModifiedBy\":\"TestUser2\","
-                        + "\"json\":\"{\\\"new\\\":\\\"json\\\"}\",\"hapiOperationOutcome\":null}"));
+                        + "\"json\":\"{\\\"new\\\":\\\"json\\\"}\",\"hapiOperationOutcome\":null,"
+                        + "\"groupPopulations\":null}"));
     verify(testCaseService, times(1))
         .updateTestCase(
             testCaseCaptor.capture(), measureIdCaptor.capture(), usernameCaptor.capture());

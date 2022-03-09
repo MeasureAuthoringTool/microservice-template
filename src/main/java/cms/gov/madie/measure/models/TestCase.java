@@ -8,8 +8,11 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Transient;
 
 import java.time.Instant;
+import java.util.List;
 
 import javax.validation.GroupSequence;
+import javax.validation.Valid;
+import javax.validation.groups.Default;
 
 import org.hibernate.validator.constraints.Length;
 
@@ -49,8 +52,12 @@ public class TestCase {
 
   @Transient private HapiOperationOutcome hapiOperationOutcome;
 
+  @Valid
+  private List<TestCaseGroupPopulation> groupPopulations;
+
   @GroupSequence({
     TestCase.ValidationOrder1.class,
+    Default.class
   })
   public interface ValidationSequence {}
 
