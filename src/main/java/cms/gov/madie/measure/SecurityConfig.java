@@ -1,6 +1,7 @@
 package cms.gov.madie.measure;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -14,6 +15,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .and()
         .authorizeRequests()
         .antMatchers("/actuator/**")
+        .permitAll()
+        .and()
+        .csrf()
+        .disable()
+        .authorizeRequests()
+        .antMatchers(HttpMethod.POST, "/log/**")
+        .permitAll()
+        .and()
+        .authorizeRequests()
+        .antMatchers(HttpMethod.GET, "/getlogger")
         .permitAll()
         .and()
         .authorizeRequests()
