@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequiredArgsConstructor
-@Slf4j(topic = "logging")
+@Slf4j(topic = "login/logout_audit")
 public class LoggingController {
 
   @GetMapping("/getlogger")
@@ -22,13 +22,13 @@ public class LoggingController {
 
   @PostMapping("/log/login")
   public ResponseEntity<String> loginLog(@RequestBody String message) {
-    log.info("loginLog(): " + message);
+    log.info("LOGIN: " + message);
     return ResponseEntity.status(HttpStatus.OK).body("logged login message: " + message);
   }
 
   @PostMapping("/log/logout")
   public ResponseEntity<String> logoutLog(@RequestBody String message) {
-    log.info("logoutLog(): " + message);
+    log.info("LOGOUT: " + message);
     return ResponseEntity.status(HttpStatus.OK).body("logged logout message: " + message);
   }
 }
