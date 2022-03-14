@@ -14,5 +14,4 @@ public class TestCasePopulationValue {
   private MeasurePopulation name;
   private Boolean expected;
   private Boolean actual;
-
 }

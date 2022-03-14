@@ -52,13 +52,9 @@ public class TestCase {
 
   @Transient private HapiOperationOutcome hapiOperationOutcome;
 
-  @Valid
-  private List<TestCaseGroupPopulation> groupPopulations;
+  @Valid private List<TestCaseGroupPopulation> groupPopulations;
 
-  @GroupSequence({
-    TestCase.ValidationOrder1.class,
-    Default.class
-  })
+  @GroupSequence({TestCase.ValidationOrder1.class, Default.class})
   public interface ValidationSequence {}
 
   public interface ValidationOrder1 {}
