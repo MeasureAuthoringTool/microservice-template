@@ -19,6 +19,12 @@ import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -55,10 +61,11 @@ public class MeasureControllerMvcTest {
   @Autowired private MockMvc mockMvc;
   @Captor private ArgumentCaptor<Measure> measureArgumentCaptor;
   private static final String TEST_USER_ID = "test-okta-user-id-123";
-
+  private static PageRequest INITIAL_PAGE = PageRequest.of(0, 10);
   @Captor ArgumentCaptor<Group> groupCaptor;
   @Captor ArgumentCaptor<String> measureIdCaptor;
   @Captor ArgumentCaptor<String> usernameCaptor;
+  @Captor ArgumentCaptor<PageRequest> pageRequestCaptor;
 
   @Test
   public void testUpdatePassed() throws Exception {
@@ -697,8 +704,8 @@ public class MeasureControllerMvcTest {
             .model("QI-Core")
             .build();
 
-    List<Measure> allMeasures = List.of(m1, m2, m3);
-    when(measureRepository.findAll()).thenReturn(allMeasures);
+    Page<Measure> allMeasures = new PageImpl<>(List.of(m1, m2, m3));
+    when(measureRepository.findAll(any(Pageable.class))).thenReturn(allMeasures);
 
     MvcResult result =
         mockMvc
@@ -711,7 +718,7 @@ public class MeasureControllerMvcTest {
     String expectedJsonStr = mapper.writeValueAsString(allMeasures);
 
     assertThat(resultStr, is(equalTo(expectedJsonStr)));
-    verify(measureRepository, times(1)).findAll();
+    verify(measureRepository, times(1)).findAll(any(Pageable.class));
     verifyNoMoreInteractions(measureRepository);
   }
 
@@ -742,8 +749,8 @@ public class MeasureControllerMvcTest {
             .model("QI-Core")
             .build();
 
-    List<Measure> allMeasures = List.of(m1, m2, m3);
-    when(measureRepository.findAll()).thenReturn(allMeasures);
+    Page<Measure> allMeasures = new PageImpl<>(List.of(m1, m2, m3));
+    when(measureRepository.findAll(any(Pageable.class))).thenReturn(allMeasures);
 
     MvcResult result =
         mockMvc
@@ -760,7 +767,61 @@ public class MeasureControllerMvcTest {
     String expectedJsonStr = mapper.writeValueAsString(allMeasures);
 
     assertThat(resultStr, is(equalTo(expectedJsonStr)));
-    verify(measureRepository, times(1)).findAll();
+    verify(measureRepository, times(1)).findAll(any(Pageable.class));
+    verifyNoMoreInteractions(measureRepository);
+  }
+
+  @Test
+  public void getMeasuresWithCustomPaging() throws Exception {
+    Measure m1 =
+        Measure.builder()
+            .measureName("Measure1")
+            .cqlLibraryName("TestLib1")
+            .createdBy("test-okta-user-id-123")
+            .measureScoring("Proportion")
+            .model("QI-Core")
+            .build();
+    Measure m2 =
+        Measure.builder()
+            .measureName("Measure2")
+            .cqlLibraryName("TestLib2")
+            .createdBy("test-okta-user-id-123")
+            .measureScoring("Proportion")
+            .model("QI-Core")
+            .build();
+    Measure m3 =
+        Measure.builder()
+            .measureName("Measure3")
+            .cqlLibraryName("TestLib3")
+            .createdBy("test-okta-user-id-999")
+            .measureScoring("Proportion")
+            .model("QI-Core")
+            .build();
+
+    Page<Measure> allMeasures = new PageImpl<>(List.of(m1, m2, m3));
+    when(measureRepository.findAll(any(Pageable.class))).thenReturn(allMeasures);
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                get("/measures")
+                    .with(user(TEST_USER_ID))
+                    .queryParam("currentUser", "false")
+                    .queryParam("limit", "25")
+                    .queryParam("page", "3")
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+    String resultStr = result.getResponse().getContentAsString();
+
+    ObjectMapper mapper = new ObjectMapper();
+    String expectedJsonStr = mapper.writeValueAsString(allMeasures);
+
+    assertThat(resultStr, is(equalTo(expectedJsonStr)));
+    verify(measureRepository, times(1)).findAll(pageRequestCaptor.capture());
+    PageRequest pageRequestValue = pageRequestCaptor.getValue();
+    assertEquals(25, pageRequestValue.getPageSize());
+    assertEquals(3, pageRequestValue.getPageNumber());
     verifyNoMoreInteractions(measureRepository);
   }
 
@@ -783,8 +844,11 @@ public class MeasureControllerMvcTest {
             .model("QI-Core")
             .build();
 
-    List<Measure> measures = List.of(m1, m2);
-    when(measureRepository.findAllByCreatedBy(anyString())).thenReturn(measures);
+    // Page<Measure> measures = List.of(m1, m2);
+    final Page<Measure> measures = new PageImpl<>(List.of(m1, m2));
+
+    when(measureRepository.findAllByCreatedBy(anyString(), any(PageRequest.class)))
+        .thenReturn(measures); // fix
 
     MvcResult result =
         mockMvc
@@ -801,7 +865,8 @@ public class MeasureControllerMvcTest {
     String expectedJsonStr = mapper.writeValueAsString(measures);
 
     assertThat(resultStr, is(equalTo(expectedJsonStr)));
-    verify(measureRepository, times(1)).findAllByCreatedBy(eq(TEST_USER_ID));
+    verify(measureRepository, times(1))
+        .findAllByCreatedBy(eq(TEST_USER_ID), any(PageRequest.class));
     verifyNoMoreInteractions(measureRepository);
   }
 
