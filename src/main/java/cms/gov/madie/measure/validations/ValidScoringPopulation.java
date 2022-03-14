@@ -10,6 +10,8 @@ import java.lang.annotation.*;
 @Documented
 public @interface ValidScoringPopulation {
   String message() default "Populations do not match Scoring";
+
   Class<?>[] groups() default {};
+
   Class<? extends Payload>[] payload() default {};
 }

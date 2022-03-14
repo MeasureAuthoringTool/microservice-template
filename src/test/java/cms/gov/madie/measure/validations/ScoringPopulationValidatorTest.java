@@ -15,8 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ScoringPopulationValidatorTest {
 
-  @Mock
-  private ConstraintValidatorContext validatorContext;
+  @Mock private ConstraintValidatorContext validatorContext;
 
   private ScoringPopulationValidator validator = new ScoringPopulationValidator();
 
@@ -30,10 +29,9 @@ class ScoringPopulationValidatorTest {
   public void testValidatorReturnsFalseForMissingScoring() {
     TestCaseGroupPopulation groupPopulation = new TestCaseGroupPopulation();
     groupPopulation.setScoring(null);
-    groupPopulation
-        .setPopulationValues(
-            List.of(TestCasePopulationValue.builder().name(MeasurePopulation.INITIAL_POPULATION).build())
-        );
+    groupPopulation.setPopulationValues(
+        List.of(
+            TestCasePopulationValue.builder().name(MeasurePopulation.INITIAL_POPULATION).build()));
     boolean output = validator.isValid(groupPopulation, validatorContext);
     assertFalse(output);
   }
@@ -60,9 +58,7 @@ class ScoringPopulationValidatorTest {
   public void testValidatorReturnsFalseForMissingPopulation() {
     TestCaseGroupPopulation groupPopulation = new TestCaseGroupPopulation();
     groupPopulation.setScoring(MeasureScoring.COHORT);
-    groupPopulation.setPopulationValues(List.of(
-        TestCasePopulationValue.builder().build()
-    ));
+    groupPopulation.setPopulationValues(List.of(TestCasePopulationValue.builder().build()));
     boolean output = validator.isValid(groupPopulation, validatorContext);
     assertFalse(output);
   }
@@ -71,9 +67,8 @@ class ScoringPopulationValidatorTest {
   public void testValidatorReturnsFalseForIncorrectPopulation() {
     TestCaseGroupPopulation groupPopulation = new TestCaseGroupPopulation();
     groupPopulation.setScoring(MeasureScoring.COHORT);
-    groupPopulation.setPopulationValues(List.of(
-        TestCasePopulationValue.builder().name(MeasurePopulation.DENOMINATOR).build()
-    ));
+    groupPopulation.setPopulationValues(
+        List.of(TestCasePopulationValue.builder().name(MeasurePopulation.DENOMINATOR).build()));
     boolean output = validator.isValid(groupPopulation, validatorContext);
     assertFalse(output);
   }
@@ -82,11 +77,10 @@ class ScoringPopulationValidatorTest {
   public void testValidatorReturnsTrueForCorrectPopulation() {
     TestCaseGroupPopulation groupPopulation = new TestCaseGroupPopulation();
     groupPopulation.setScoring(MeasureScoring.COHORT);
-    groupPopulation.setPopulationValues(List.of(
-        TestCasePopulationValue.builder().name(MeasurePopulation.INITIAL_POPULATION).build()
-    ));
+    groupPopulation.setPopulationValues(
+        List.of(
+            TestCasePopulationValue.builder().name(MeasurePopulation.INITIAL_POPULATION).build()));
     boolean output = validator.isValid(groupPopulation, validatorContext);
     assertTrue(output);
   }
-
 }

@@ -13,10 +13,12 @@ import java.util.stream.Collectors;
 
 import static cms.gov.madie.measure.utils.ScoringPopulationDefinition.SCORING_POPULATION_MAP;
 
-public class ScoringPopulationValidator implements ConstraintValidator<ValidScoringPopulation, TestCaseGroupPopulation> {
+public class ScoringPopulationValidator
+    implements ConstraintValidator<ValidScoringPopulation, TestCaseGroupPopulation> {
 
   @Override
-  public boolean isValid(TestCaseGroupPopulation testCaseGroupPopulation, ConstraintValidatorContext context) {
+  public boolean isValid(
+      TestCaseGroupPopulation testCaseGroupPopulation, ConstraintValidatorContext context) {
     if (testCaseGroupPopulation == null) {
       return true;
     }
@@ -28,9 +30,13 @@ public class ScoringPopulationValidator implements ConstraintValidator<ValidScor
     }
 
     List<MeasurePopulation> requiredPopulations = SCORING_POPULATION_MAP.get(scoring);
-    List<MeasurePopulation> receivedPopulations = populationValues.stream().map(TestCasePopulationValue::getName)
-        .distinct().filter(Objects::nonNull).collect(Collectors.toList());
-    return receivedPopulations.size() == requiredPopulations.size() && requiredPopulations.containsAll(receivedPopulations);
+    List<MeasurePopulation> receivedPopulations =
+        populationValues.stream()
+            .map(TestCasePopulationValue::getName)
+            .distinct()
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+    return receivedPopulations.size() == requiredPopulations.size()
+        && requiredPopulations.containsAll(receivedPopulations);
   }
-
 }
