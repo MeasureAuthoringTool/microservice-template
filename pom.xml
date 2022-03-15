@@ -233,7 +233,7 @@
           </execution>
         </executions>
         <configuration>
-          <targetJdk>1.6</targetJdk>
+          <targetJdk>${java.version}</targetJdk>
         </configuration>
       </plugin>
 
@@ -274,7 +274,6 @@
         <version>3.14.0</version>
         <configuration>
           <language>java</language>
-
           <targetJdk>${java.version}</targetJdk>
         </configuration>
       </plugin>
