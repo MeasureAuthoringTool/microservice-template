@@ -23,6 +23,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.ResponseEntity;
 
 import cms.gov.madie.measure.models.Measure;
@@ -70,32 +74,33 @@ class MeasureControllerTest {
 
   @Test
   void getMeasuresWithoutCurrentUserFilter() {
-    List<Measure> measures = List.of(measure);
-    when(repository.findAll()).thenReturn(measures);
+    Page<Measure> measures = new PageImpl<>(List.of(measure));
+    when(repository.findAll(any(Pageable.class))).thenReturn(measures);
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
-    ResponseEntity<List<Measure>> response = controller.getMeasures(principal, false);
-    verify(repository, times(1)).findAll();
+    ResponseEntity<Page<Measure>> response = controller.getMeasures(principal, false, 10, 0);
+    verify(repository, times(1)).findAll(any(Pageable.class));
     verifyNoMoreInteractions(repository);
     assertNotNull(response.getBody());
-    assertNotNull(response.getBody().get(0));
-    assertEquals("IDIDID", response.getBody().get(0).getMeasureSetId());
+    assertNotNull(response.getBody().getContent());
+    assertNotNull(response.getBody().getContent().get(0));
+    assertEquals("IDIDID", response.getBody().getContent().get(0).getMeasureSetId());
   }
 
   @Test
   void getMeasuresWithCurrentUserFilter() {
-    List<Measure> measures = List.of(measure);
-    when(repository.findAllByCreatedBy(anyString())).thenReturn(measures);
+    Page<Measure> measures = new PageImpl<>(List.of(measure));
+    when(repository.findAllByCreatedBy(anyString(), any(Pageable.class))).thenReturn(measures);
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
-    ResponseEntity<List<Measure>> response = controller.getMeasures(principal, true);
-    verify(repository, times(1)).findAllByCreatedBy(eq("test.user"));
+    ResponseEntity<Page<Measure>> response = controller.getMeasures(principal, true, 10, 0);
+    verify(repository, times(1)).findAllByCreatedBy(eq("test.user"), any(Pageable.class));
     verifyNoMoreInteractions(repository);
-    assertNotNull(response.getBody());
-    assertNotNull(response.getBody().get(0));
-    assertEquals("IDIDID", response.getBody().get(0).getMeasureSetId());
+    assertNotNull(response.getBody().getContent());
+    assertNotNull(response.getBody().getContent().get(0));
+    assertEquals("IDIDID", response.getBody().getContent().get(0).getMeasureSetId());
   }
 
   @Test
