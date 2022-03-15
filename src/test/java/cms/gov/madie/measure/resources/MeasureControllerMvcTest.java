@@ -61,7 +61,6 @@ public class MeasureControllerMvcTest {
   @Autowired private MockMvc mockMvc;
   @Captor private ArgumentCaptor<Measure> measureArgumentCaptor;
   private static final String TEST_USER_ID = "test-okta-user-id-123";
-  private static PageRequest INITIAL_PAGE = PageRequest.of(0, 10);
   @Captor ArgumentCaptor<Group> groupCaptor;
   @Captor ArgumentCaptor<String> measureIdCaptor;
   @Captor ArgumentCaptor<String> usernameCaptor;
