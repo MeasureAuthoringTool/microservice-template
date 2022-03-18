@@ -2,7 +2,6 @@ package cms.gov.madie.measure.resources;
 
 import java.security.Principal;
 import java.time.Instant;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -11,6 +10,10 @@ import cms.gov.madie.measure.models.Group;
 import cms.gov.madie.measure.services.MeasureService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -36,13 +39,20 @@ public class MeasureController {
   @Autowired private final MeasureService measureService;
 
   @GetMapping("/measures")
-  public ResponseEntity<List<Measure>> getMeasures(
+  public ResponseEntity<Page<Measure>> getMeasures(
       Principal principal,
       @RequestParam(required = false, defaultValue = "false", name = "currentUser")
-          boolean filterByCurrentUser) {
+          boolean filterByCurrentUser,
+      @RequestParam(required = false, defaultValue = "10", name = "limit") int limit,
+      @RequestParam(required = false, defaultValue = "0", name = "page") int page) {
     final String username = principal.getName();
-    List<Measure> measures =
-        filterByCurrentUser ? repository.findAllByCreatedBy(username) : repository.findAll();
+    final Pageable pageReq = PageRequest.of(page, limit, Sort.by("lastModifiedAt").descending());
+    Page<Measure> measures =
+        filterByCurrentUser
+            ? repository.findAllByCreatedBy(username, pageReq)
+            : repository.findAll(pageReq);
+    // : repository.findAllByIdNotNull(page);
+    // return ResponseEntity;
     return ResponseEntity.ok(measures);
   }
 
