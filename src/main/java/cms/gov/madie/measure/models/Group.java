@@ -20,13 +20,12 @@ public class Group implements GroupScoringPopulation {
 
   @NotNull(
       message = "Scoring is required.",
-      groups = {Measure.ValidationOrder5.class}
-  )
+      groups = {Measure.ValidationOrder5.class})
   @EnumValidator(
       enumClass = MeasureScoring.class,
       message = "Scoring must be a valid MADiE scoring type",
-      groups = {Measure.ValidationOrder5.class}
-  )
+      groups = {Measure.ValidationOrder5.class})
   private String scoring;
+
   private Map<MeasurePopulation, String> population;
 }

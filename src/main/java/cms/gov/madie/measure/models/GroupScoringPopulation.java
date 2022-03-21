@@ -4,5 +4,6 @@ import java.util.Map;
 
 public interface GroupScoringPopulation {
   String getScoring();
+
   Map<MeasurePopulation, ?> getPopulation();
 }

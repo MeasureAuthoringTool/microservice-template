@@ -35,7 +35,8 @@ public class ErrorHandlingControllerAdvice {
     Map<String, String> validationErrors = new HashMap<>();
     ex.getConstraintViolations()
         .forEach(
-            (error) -> validationErrors.put(error.getPropertyPath().toString(), error.getMessage()));
+            (error) ->
+                validationErrors.put(error.getPropertyPath().toString(), error.getMessage()));
     Map<String, Object> errorAttributes = getErrorAttributes(request, HttpStatus.BAD_REQUEST);
     errorAttributes.put("validationErrors", validationErrors);
     return errorAttributes;

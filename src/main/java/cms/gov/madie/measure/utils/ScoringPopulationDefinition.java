@@ -3,7 +3,6 @@ package cms.gov.madie.measure.utils;
 import cms.gov.madie.measure.models.MeasurePopulation;
 import cms.gov.madie.measure.models.MeasurePopulationOption;
 import cms.gov.madie.measure.models.MeasureScoring;
-import org.springframework.data.util.Pair;
 
 import java.util.List;
 import java.util.Map;
@@ -30,9 +29,7 @@ public interface ScoringPopulationDefinition {
           List.of(
               new MeasurePopulationOption(MeasurePopulation.INITIAL_POPULATION, true),
               new MeasurePopulationOption(MeasurePopulation.MEASURE_POPULATION, true),
-              new MeasurePopulationOption(MeasurePopulation.MEASURE_POPULATION_EXCLUSION, false)
-          ),
+              new MeasurePopulationOption(MeasurePopulation.MEASURE_POPULATION_EXCLUSION, false)),
           MeasureScoring.COHORT,
-          List.of(new MeasurePopulationOption(MeasurePopulation.INITIAL_POPULATION, true))
-      );
+          List.of(new MeasurePopulationOption(MeasurePopulation.INITIAL_POPULATION, true)));
 }

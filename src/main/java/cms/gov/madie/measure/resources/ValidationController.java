@@ -16,16 +16,17 @@ import java.util.List;
 public class ValidationController {
 
   @Autowired
-  public ValidationController() {
-  }
+  public ValidationController() {}
 
   @PutMapping("/measures")
-  public Measure validateMeasure(@RequestBody @Validated(Measure.ValidationSequence.class) Measure measure) {
+  public Measure validateMeasure(
+      @RequestBody @Validated(Measure.ValidationSequence.class) Measure measure) {
     return measure;
   }
 
   @PutMapping("/populations")
-  public Object validateGroupPopulations(@RequestBody @Valid List<TestCaseGroupPopulation> groupPopulations) {
+  public Object validateGroupPopulations(
+      @RequestBody @Valid List<TestCaseGroupPopulation> groupPopulations) {
     return groupPopulations;
   }
 
@@ -46,15 +47,12 @@ public class ValidationController {
   }
 
   @PutMapping("/test-cases2")
-  public TestCase validaTestCase(
-      @RequestBody @Valid TestCase testCase) {
+  public TestCase validaTestCase(@RequestBody @Valid TestCase testCase) {
     return testCase;
   }
 
   @Data
   static class TestPojo {
-    @Valid
-    private List<TestCaseGroupPopulation> groupPopulations;
+    @Valid private List<TestCaseGroupPopulation> groupPopulations;
   }
-
 }

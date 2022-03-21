@@ -19,7 +19,8 @@ public class ScoringPopulationValidator
     if (testCaseGroupPopulation == null) {
       return true;
     }
-    if (testCaseGroupPopulation.getScoring() == null || testCaseGroupPopulation.getScoring().trim().isEmpty()) {
+    if (testCaseGroupPopulation.getScoring() == null
+        || testCaseGroupPopulation.getScoring().trim().isEmpty()) {
       return false;
     }
 
@@ -29,8 +30,10 @@ public class ScoringPopulationValidator
       return false;
     }
 
-    List<MeasurePopulation> requiredPopulations = SCORING_POPULATION_MAP.get(scoring).stream()
-        .map(MeasurePopulationOption::getMeasurePopulation).collect(Collectors.toList());
+    List<MeasurePopulation> requiredPopulations =
+        SCORING_POPULATION_MAP.get(scoring).stream()
+            .map(MeasurePopulationOption::getMeasurePopulation)
+            .collect(Collectors.toList());
     List<MeasurePopulation> receivedPopulations =
         populationValues.stream()
             .map(TestCasePopulationValue::getName)
