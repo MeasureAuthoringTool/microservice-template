@@ -75,13 +75,13 @@ class GroupScoringPopulationValidatorTest {
   }
 
   @ParameterizedTest
-  @MethodSource("providePopulationCombinationsForGroupScoring")
+  @MethodSource("groupScoringPopComboProvider")
   void isGroupScoringPopulationCombinationValid(Group group, boolean expected) {
     assertEquals(expected, validator.isValid(group, validatorContext));
   }
 
   // Note: cannot pass null arguments using a generator like this
-  private static Stream<Arguments> providePopulationCombinationsForGroupScoring() {
+  private static Stream<Arguments> groupScoringPopComboProvider() {
     return Stream.of(
         // correct Cohort population combination
         Arguments.of(
