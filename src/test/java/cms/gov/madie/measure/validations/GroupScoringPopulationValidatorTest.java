@@ -83,6 +83,15 @@ class GroupScoringPopulationValidatorTest {
   // Note: cannot pass null arguments using a generator like this
   private static Stream<Arguments> groupScoringPopComboProvider() {
     return Stream.of(
+        cohortProvider(),
+        proportionProvider(),
+        continuousVariableProvider(),
+        ratioProvider()
+    ).flatMap(a -> a);
+  }
+
+  private static Stream<Arguments> cohortProvider() {
+    return Stream.of(
         // correct Cohort population combination
         Arguments.of(
             Group.builder()
@@ -108,8 +117,12 @@ class GroupScoringPopulationValidatorTest {
                 .scoring(MeasureScoring.COHORT.toString())
                 .population(Map.of(MeasurePopulation.INITIAL_POPULATION, ""))
                 .build(),
-            false),
-        // valid Proportion definitions with no optional populations
+            false)
+    );
+  }
+
+  private static Stream<Arguments> proportionProvider() {
+    return Stream.of(// valid Proportion definitions with no optional populations
         Arguments.of(
             Group.builder()
                 .scoring(MeasureScoring.PROPORTION.toString())
@@ -202,7 +215,12 @@ class GroupScoringPopulationValidatorTest {
                         MeasurePopulation.MEASURE_POPULATION,
                         "pop9"))
                 .build(),
-            false),
+            false)
+    );
+  }
+
+  private static Stream<Arguments> continuousVariableProvider() {
+    return Stream.of(
         // invalid CV definitions with mismatched definitions
         Arguments.of(
             Group.builder()
@@ -263,25 +281,95 @@ class GroupScoringPopulationValidatorTest {
                         MeasurePopulation.MEASURE_POPULATION_EXCLUSION,
                         "pop3"))
                 .build(),
-            true),
-        // valid Cohort definitions with required population
+            true)
+    );
+  }
+
+  private static Stream<Arguments> ratioProvider() {
+    return Stream.of(// valid Proportion definitions with no optional populations
         Arguments.of(
             Group.builder()
-                .scoring(MeasureScoring.COHORT.toString())
-                .population(Map.of(MeasurePopulation.INITIAL_POPULATION, "pop1"))
-                .build(),
-            true),
-        // invalid Cohort definitions with required population plus extra population
-        Arguments.of(
-            Group.builder()
-                .scoring(MeasureScoring.COHORT.toString())
+                .scoring(MeasureScoring.RATIO.toString())
                 .population(
                     Map.of(
                         MeasurePopulation.INITIAL_POPULATION,
                         "pop1",
                         MeasurePopulation.NUMERATOR,
-                        "pop2"))
+                        "pop2",
+                        MeasurePopulation.DENOMINATOR,
+                        "pop3"))
                 .build(),
-            false));
+            true),
+        // valid Proportion definitions with all optional populations
+        Arguments.of(
+            Group.builder()
+                .scoring(MeasureScoring.RATIO.toString())
+                .population(
+                    Map.of(
+                        MeasurePopulation.INITIAL_POPULATION,
+                        "pop1",
+                        MeasurePopulation.NUMERATOR,
+                        "pop2",
+                        MeasurePopulation.NUMERATOR_EXCLUSION,
+                        "pop3",
+                        MeasurePopulation.DENOMINATOR,
+                        "pop4",
+                        MeasurePopulation.DENOMINATOR_EXCLUSION,
+                        "pop5"))
+                .build(),
+            true),
+        // invalid Proportion definitions with missing value for optional population
+        Arguments.of(
+            Group.builder()
+                .scoring(MeasureScoring.RATIO.toString())
+                .population(
+                    Map.of(
+                        MeasurePopulation.INITIAL_POPULATION,
+                        "pop1",
+                        MeasurePopulation.NUMERATOR,
+                        "pop2",
+                        MeasurePopulation.NUMERATOR_EXCLUSION,
+                        "pop3",
+                        MeasurePopulation.DENOMINATOR,
+                        "pop4",
+                        MeasurePopulation.DENOMINATOR_EXCLUSION,
+                        ""))
+                .build(),
+            false),
+        // invalid Proportion definitions with missing value for required population
+        Arguments.of(
+            Group.builder()
+                .scoring(MeasureScoring.RATIO.toString())
+                .population(
+                    Map.of(
+                        MeasurePopulation.INITIAL_POPULATION,
+                        "pop1",
+                        MeasurePopulation.NUMERATOR,
+                        "",
+                        MeasurePopulation.NUMERATOR_EXCLUSION,
+                        "pop3",
+                        MeasurePopulation.DENOMINATOR,
+                        "pop4"))
+                .build(),
+            false),
+        // invalid Proportion definitions with all required populations but extra population
+        Arguments.of(
+            Group.builder()
+                .scoring(MeasureScoring.RATIO.toString())
+                .population(
+                    Map.of(
+                        MeasurePopulation.INITIAL_POPULATION,
+                        "pop1",
+                        MeasurePopulation.NUMERATOR,
+                        "pop2",
+                        MeasurePopulation.DENOMINATOR,
+                        "pop4",
+                        MeasurePopulation.DENOMINATOR_EXCLUSION,
+                        "pop5",
+                        MeasurePopulation.DENOMINATOR_EXCEPTION,
+                        "pop6"))
+                .build(),
+            false)
+    );
   }
 }
