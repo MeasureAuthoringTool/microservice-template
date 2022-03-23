@@ -24,7 +24,7 @@ public class ScoringPopulationValidator
       return false;
     }
 
-    MeasureScoring scoring = MeasureScoring.valueOf(testCaseGroupPopulation.getScoring());
+    MeasureScoring scoring = MeasureScoring.valueOfText(testCaseGroupPopulation.getScoring());
     List<TestCasePopulationValue> populationValues = testCaseGroupPopulation.getPopulationValues();
     if (scoring == null || populationValues == null || populationValues.isEmpty()) {
       return false;
