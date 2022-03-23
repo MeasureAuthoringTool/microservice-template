@@ -30,6 +30,8 @@ import cms.gov.madie.measure.repositories.MeasureRepository;
 import io.micrometer.core.instrument.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 
+import javax.validation.Valid;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -116,14 +118,14 @@ public class MeasureController {
 
   @PostMapping("/measures/{measureId}/groups")
   public ResponseEntity<Group> createGroup(
-      @RequestBody Group group, @PathVariable String measureId, Principal principal) {
+      @RequestBody @Valid Group group, @PathVariable String measureId, Principal principal) {
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(measureService.createOrUpdateGroup(group, measureId, principal.getName()));
   }
 
   @PutMapping("/measures/{measureId}/groups")
   public ResponseEntity<Group> updateGroup(
-      @RequestBody Group group, @PathVariable String measureId, Principal principal) {
+      @RequestBody @Valid Group group, @PathVariable String measureId, Principal principal) {
     return ResponseEntity.ok(
         measureService.createOrUpdateGroup(group, measureId, principal.getName()));
   }

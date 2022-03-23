@@ -15,6 +15,11 @@ import java.util.List;
 @ValidScoringPopulation
 public class TestCaseGroupPopulation {
   private String group;
-  private MeasureScoring scoring;
+
+  @EnumValidator(
+      enumClass = MeasureScoring.class,
+      message = "Scoring must be a valid MADiE scoring type")
+  private String scoring;
+
   private List<TestCasePopulationValue> populationValues;
 }
