@@ -39,7 +39,7 @@ class ScoringPopulationValidatorTest {
   @Test
   public void testValidatorReturnsFalseForNullPopulationsList() {
     TestCaseGroupPopulation groupPopulation = new TestCaseGroupPopulation();
-    groupPopulation.setScoring(MeasureScoring.COHORT);
+    groupPopulation.setScoring(MeasureScoring.COHORT.toString());
     groupPopulation.setPopulationValues(null);
     boolean output = validator.isValid(groupPopulation, validatorContext);
     assertFalse(output);
@@ -48,7 +48,7 @@ class ScoringPopulationValidatorTest {
   @Test
   public void testValidatorReturnsFalseForEmptyPopulationsList() {
     TestCaseGroupPopulation groupPopulation = new TestCaseGroupPopulation();
-    groupPopulation.setScoring(MeasureScoring.COHORT);
+    groupPopulation.setScoring(MeasureScoring.COHORT.toString());
     groupPopulation.setPopulationValues(List.of());
     boolean output = validator.isValid(groupPopulation, validatorContext);
     assertFalse(output);
@@ -57,7 +57,7 @@ class ScoringPopulationValidatorTest {
   @Test
   public void testValidatorReturnsFalseForMissingPopulation() {
     TestCaseGroupPopulation groupPopulation = new TestCaseGroupPopulation();
-    groupPopulation.setScoring(MeasureScoring.COHORT);
+    groupPopulation.setScoring(MeasureScoring.COHORT.toString());
     groupPopulation.setPopulationValues(List.of(TestCasePopulationValue.builder().build()));
     boolean output = validator.isValid(groupPopulation, validatorContext);
     assertFalse(output);
@@ -66,7 +66,7 @@ class ScoringPopulationValidatorTest {
   @Test
   public void testValidatorReturnsFalseForIncorrectPopulation() {
     TestCaseGroupPopulation groupPopulation = new TestCaseGroupPopulation();
-    groupPopulation.setScoring(MeasureScoring.COHORT);
+    groupPopulation.setScoring(MeasureScoring.COHORT.toString());
     groupPopulation.setPopulationValues(
         List.of(TestCasePopulationValue.builder().name(MeasurePopulation.DENOMINATOR).build()));
     boolean output = validator.isValid(groupPopulation, validatorContext);
@@ -76,7 +76,7 @@ class ScoringPopulationValidatorTest {
   @Test
   public void testValidatorReturnsTrueForCorrectPopulation() {
     TestCaseGroupPopulation groupPopulation = new TestCaseGroupPopulation();
-    groupPopulation.setScoring(MeasureScoring.COHORT);
+    groupPopulation.setScoring(MeasureScoring.COHORT.toString());
     groupPopulation.setPopulationValues(
         List.of(
             TestCasePopulationValue.builder().name(MeasurePopulation.INITIAL_POPULATION).build()));
