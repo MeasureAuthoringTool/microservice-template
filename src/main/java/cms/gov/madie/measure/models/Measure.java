@@ -61,6 +61,7 @@ public class Measure {
   private String measureName;
 
   private String cql;
+  private String elmJson;
   private List<TestCase> testCases;
   @Valid private List<Group> groups;
   private Instant createdAt;
