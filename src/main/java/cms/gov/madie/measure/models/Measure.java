@@ -9,8 +9,10 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 
 import javax.validation.GroupSequence;
+import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
+import javax.validation.groups.Default;
 import java.time.Instant;
 import java.util.List;
 
@@ -60,7 +62,7 @@ public class Measure {
 
   private String cql;
   private List<TestCase> testCases;
-  private List<Group> groups;
+  @Valid private List<Group> groups;
   private Instant createdAt;
   private String createdBy;
   private Instant lastModifiedAt;
@@ -88,6 +90,7 @@ public class Measure {
     Measure.ValidationOrder3.class,
     Measure.ValidationOrder4.class,
     Measure.ValidationOrder5.class,
+    Default.class
   })
   public interface ValidationSequence {}
 
