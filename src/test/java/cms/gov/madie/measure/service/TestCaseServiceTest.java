@@ -379,7 +379,23 @@ public class TestCaseServiceTest {
   }
 
   @Test
+  public void testUpsertFhirBundleHandlesNullInput() {
+    TestCase output = testCaseService.upsertFhirBundle(null);
+    assertNull(output);
+  }
+
+  @Test
   public void testUpsertFhirPatientHandlesTestCaseWithNullJson() {
+    TestCase testCase = new TestCase();
+    testCase.setJson(null);
+    TestCase output = testCaseService.upsertFhirPatient(testCase);
+    assertNotNull(output);
+    assertNull(output.getJson());
+    Mockito.verifyNoInteractions(hapiFhirRestTemplate);
+  }
+
+  @Test
+  public void testUpsertFhirBundleHandlesTestCaseWithNullJson() {
     TestCase testCase = new TestCase();
     testCase.setJson(null);
     TestCase output = testCaseService.upsertFhirPatient(testCase);
