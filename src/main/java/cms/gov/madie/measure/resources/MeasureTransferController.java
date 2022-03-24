@@ -33,9 +33,7 @@ public class MeasureTransferController {
       @Value("${lambda-api-key}") String apiKey) {
 
     log.info(
-        "Measure [{}] is being transferred over to MADiE by [{}]",
-        measure.getMeasureName(),
-        "lambda");
+        "Measure [{}] is being transferred over to MADiE by lambda", measure.getMeasureName());
     measureService.checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
 
     // TODO: decide on audit records
@@ -43,7 +41,7 @@ public class MeasureTransferController {
     measure.setCreatedAt(now);
     measure.setLastModifiedAt(now);
     Measure savedMeasure = repository.save(measure);
-
+    log.info("Measure [{}] transfer complete", measure.getMeasureName());
     return ResponseEntity.status(HttpStatus.CREATED).body(savedMeasure);
   }
 }
