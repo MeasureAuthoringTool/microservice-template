@@ -50,8 +50,6 @@ public class TestCase {
   @JsonIgnore private String resourceUri;
   @JsonIgnore private boolean isValidResource;
   private String json;
-  private LocalDate measurementPeriodStart;
-  private LocalDate measurementPeriodEnd;
 
   @Transient private HapiOperationOutcome hapiOperationOutcome;
 
