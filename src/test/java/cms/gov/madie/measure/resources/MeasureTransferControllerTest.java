@@ -32,12 +32,10 @@ public class MeasureTransferControllerTest {
 
   private Measure measure;
 
-  @Mock
-  private MeasureService measureService;
+  @Mock private MeasureService measureService;
   @Mock private MeasureRepository repository;
 
-  @InjectMocks
-  private MeasureTransferController controller;
+  @InjectMocks private MeasureTransferController controller;
 
   MockHttpServletRequest request;
 
@@ -45,24 +43,28 @@ public class MeasureTransferControllerTest {
   public void setUp() {
     request = new MockHttpServletRequest();
     MeasureMetaData measureMetaData = new MeasureMetaData();
-    List<Group> groups = List.of(
-      new Group("id-abc", "Cohort",
-        Map.of(MeasurePopulation.INITIAL_POPULATION, "Initial Population")));
+    List<Group> groups =
+        List.of(
+            new Group(
+                "id-abc",
+                "Cohort",
+                Map.of(MeasurePopulation.INITIAL_POPULATION, "Initial Population")));
 
     measureMetaData.setSteward("SB");
     measureMetaData.setCopyright("Copyright@SB");
 
-    measure = Measure.builder()
-      .measureSetId("abc-pqr-xyz")
-      .version("0.000")
-      .measureName("MedicationDispenseTest")
-      .cqlLibraryName("MedicationDispenseTest")
-      .measureScoring("Cohort")
-      .model("QI-Core")
-      .measureMetaData(measureMetaData)
-      .groups(groups)
-      .cql("library MedicationDispenseTest version '0.0.001' using FHIR version '4.0.1'")
-      .build();
+    measure =
+        Measure.builder()
+            .measureSetId("abc-pqr-xyz")
+            .version("0.000")
+            .measureName("MedicationDispenseTest")
+            .cqlLibraryName("MedicationDispenseTest")
+            .measureScoring("Cohort")
+            .model("QI-Core")
+            .measureMetaData(measureMetaData)
+            .groups(groups)
+            .cql("library MedicationDispenseTest version '0.0.001' using FHIR version '4.0.1'")
+            .build();
   }
 
   @Test
@@ -71,7 +73,8 @@ public class MeasureTransferControllerTest {
     doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
     doReturn(measure).when(repository).save(any(Measure.class));
 
-    ResponseEntity<Measure>  response = controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
+    ResponseEntity<Measure> response =
+        controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
 
     verify(repository, times(1)).save(persistedMeasureArgCaptor.capture());
     Measure persistedMeasure = response.getBody();
@@ -88,9 +91,11 @@ public class MeasureTransferControllerTest {
   @Test
   public void createMeasureDuplicateCqlLibraryTest() {
     doThrow(new DuplicateKeyException("cqlLibraryName", "CQL library already exists."))
-      .when(measureService).checkDuplicateCqlLibraryName(any(String.class));
+        .when(measureService)
+        .checkDuplicateCqlLibraryName(any(String.class));
 
     assertThrows(
-      DuplicateKeyException.class, () -> controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY));
+        DuplicateKeyException.class,
+        () -> controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY));
   }
 }

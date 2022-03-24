@@ -83,11 +83,8 @@ class GroupScoringPopulationValidatorTest {
   // Note: cannot pass null arguments using a generator like this
   private static Stream<Arguments> groupScoringPopComboProvider() {
     return Stream.of(
-        cohortProvider(),
-        proportionProvider(),
-        continuousVariableProvider(),
-        ratioProvider()
-    ).flatMap(a -> a);
+            cohortProvider(), proportionProvider(), continuousVariableProvider(), ratioProvider())
+        .flatMap(a -> a);
   }
 
   private static Stream<Arguments> cohortProvider() {
@@ -117,12 +114,11 @@ class GroupScoringPopulationValidatorTest {
                 .scoring(MeasureScoring.COHORT.toString())
                 .population(Map.of(MeasurePopulation.INITIAL_POPULATION, ""))
                 .build(),
-            false)
-    );
+            false));
   }
 
   private static Stream<Arguments> proportionProvider() {
-    return Stream.of(// valid Proportion definitions with no optional populations
+    return Stream.of( // valid Proportion definitions with no optional populations
         Arguments.of(
             Group.builder()
                 .scoring(MeasureScoring.PROPORTION.toString())
@@ -215,8 +211,7 @@ class GroupScoringPopulationValidatorTest {
                         MeasurePopulation.MEASURE_POPULATION,
                         "pop9"))
                 .build(),
-            false)
-    );
+            false));
   }
 
   private static Stream<Arguments> continuousVariableProvider() {
@@ -281,12 +276,11 @@ class GroupScoringPopulationValidatorTest {
                         MeasurePopulation.MEASURE_POPULATION_EXCLUSION,
                         "pop3"))
                 .build(),
-            true)
-    );
+            true));
   }
 
   private static Stream<Arguments> ratioProvider() {
-    return Stream.of(// valid Proportion definitions with no optional populations
+    return Stream.of( // valid Proportion definitions with no optional populations
         Arguments.of(
             Group.builder()
                 .scoring(MeasureScoring.RATIO.toString())
@@ -369,7 +363,6 @@ class GroupScoringPopulationValidatorTest {
                         MeasurePopulation.DENOMINATOR_EXCEPTION,
                         "pop6"))
                 .build(),
-            false)
-    );
+            false));
   }
 }
