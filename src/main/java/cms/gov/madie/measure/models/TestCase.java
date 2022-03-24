@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Transient;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 import javax.validation.GroupSequence;
@@ -49,6 +50,8 @@ public class TestCase {
   @JsonIgnore private String resourceUri;
   @JsonIgnore private boolean isValidResource;
   private String json;
+  private LocalDate measurementPeriodStart;
+  private LocalDate measurementPeriodEnd;
 
   @Transient private HapiOperationOutcome hapiOperationOutcome;
 
