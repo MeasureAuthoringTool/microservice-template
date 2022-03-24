@@ -32,8 +32,7 @@ public class MeasureTransferController {
       @RequestBody @Validated({Measure.ValidationSequence.class}) Measure measure,
       @Value("${lambda-api-key}") String apiKey) {
 
-    log.info(
-        "Measure [{}] is being transferred over to MADiE by lambda", measure.getMeasureName());
+    log.info("Measure [{}] is being transferred over to MADiE by lambda", measure.getMeasureName());
     measureService.checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
 
     // TODO: decide on audit records
