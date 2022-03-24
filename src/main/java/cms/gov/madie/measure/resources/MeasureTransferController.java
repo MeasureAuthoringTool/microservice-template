@@ -21,7 +21,7 @@ import java.time.Instant;
 @RequiredArgsConstructor
 @RequestMapping("/measure-transfer")
 public class MeasureTransferController {
-
+  private static String HARP_ID_HEADER = "harp-id";
   @Autowired private final MeasureRepository repository;
   @Autowired private final MeasureService measureService;
 
@@ -31,8 +31,8 @@ public class MeasureTransferController {
       HttpServletRequest request,
       @RequestBody @Validated({Measure.ValidationSequence.class}) Measure measure,
       @Value("${lambda-api-key}") String apiKey) {
-
-    log.info("Measure [{}] is being transferred over to MADiE by lambda", measure.getMeasureName());
+    String harpId= request.getHeader(HARP_ID_HEADER);
+    log.info("Measure [{}] is being transferred over to MADiE by [{}]", measure.getMeasureName(), harpId);
     measureService.checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
 
     // TODO: decide on audit records

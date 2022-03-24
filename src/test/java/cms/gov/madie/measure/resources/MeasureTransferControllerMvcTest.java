@@ -32,8 +32,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest({MeasureTransferController.class})
 public class MeasureTransferControllerMvcTest {
-  private static final String LAMBDA_TEST_API_KEY = "api-key";
-  private static final String LAMBDA_TEST_API_KEY_VALUE = "9202c9fa";
+  private static final String HARP_ID_HEADER_KEY = "harp-id";
+  private static final String HARP_ID_HEADER_VALUE = "XxYyZz";
+  private static final String LAMBDA_TEST_API_KEY_HEADER = "api-key";
+  private static final String LAMBDA_TEST_API_KEY_HEADER_VALUE = "9202c9fa";
 
   @MockBean private MeasureRepository measureRepository;
   @MockBean private MeasureService measureService;
@@ -83,7 +85,8 @@ public class MeasureTransferControllerMvcTest {
             MockMvcRequestBuilders.post("/measure-transfer/mat-measures")
                 .content(measureJson)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .header(LAMBDA_TEST_API_KEY, LAMBDA_TEST_API_KEY_VALUE))
+                .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
+                .header(HARP_ID_HEADER_KEY, HARP_ID_HEADER_VALUE))
         .andExpect(status().isCreated());
 
     verify(measureRepository, times(1)).save(persistedMeasureArgCaptor.capture());
@@ -111,7 +114,8 @@ public class MeasureTransferControllerMvcTest {
             MockMvcRequestBuilders.post("/measure-transfer/mat-measures")
                 .content(measureJson)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .header(LAMBDA_TEST_API_KEY, LAMBDA_TEST_API_KEY_VALUE))
+                .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
+                .header(HARP_ID_HEADER_KEY, HARP_ID_HEADER_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(
             jsonPath("$.validationErrors.cqlLibraryName").value("CQL library already exists."));
@@ -129,7 +133,8 @@ public class MeasureTransferControllerMvcTest {
                 MockMvcRequestBuilders.post("/measure-transfer/mat-measures")
                     .content(measureJson)
                     .contentType(MediaType.APPLICATION_JSON_VALUE)
-                    .header(LAMBDA_TEST_API_KEY, "invalid-api-key"))
+                    .header(LAMBDA_TEST_API_KEY_HEADER, "invalid-api-key")
+                  .header(HARP_ID_HEADER_KEY, HARP_ID_HEADER_VALUE))
             .andExpect(status().isUnauthorized())
             .andReturn();
 
