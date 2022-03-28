@@ -5,6 +5,7 @@ import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.MeasureService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -39,6 +40,10 @@ public class MeasureTransferController {
     Instant now = Instant.now();
     measure.setCreatedAt(now);
     measure.setLastModifiedAt(now);
+    // set ids for groups
+    measure.getGroups()
+      .stream()
+      .forEach(group -> group.setId(ObjectId.get().toString()));
     Measure savedMeasure = repository.save(measure);
     log.info("Measure [{}] transfer complete", measure.getMeasureName());
     return ResponseEntity.status(HttpStatus.CREATED).body(savedMeasure);
