@@ -29,7 +29,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import cms.gov.madie.measure.models.Measure;
 import cms.gov.madie.measure.repositories.MeasureRepository;
-import io.micrometer.core.instrument.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 
 import javax.validation.Valid;
@@ -74,7 +73,7 @@ public class MeasureController {
       Principal principal) {
     final String username = principal.getName();
     log.info("User [{}] is attempting to create a new measure", username);
-    checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
+    measureService.checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
 
     // Clear ID so that the unique GUID from MongoDB will be applied
     Instant now = Instant.now();
@@ -108,7 +107,7 @@ public class MeasureController {
       Optional<Measure> persistedMeasure = repository.findById(measure.getId());
       if (persistedMeasure.isPresent()) {
         if (isCqlLibraryNameChanged(measure, persistedMeasure)) {
-          checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
+          measureService.checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
         }
         measure.setLastModifiedBy(username);
         measure.setLastModifiedAt(Instant.now());
@@ -138,13 +137,5 @@ public class MeasureController {
 
   private boolean isCqlLibraryNameChanged(Measure measure, Optional<Measure> persistedMeasure) {
     return !Objects.equals(persistedMeasure.get().getCqlLibraryName(), measure.getCqlLibraryName());
-  }
-
-  private void checkDuplicateCqlLibraryName(String cqlLibraryName) {
-    if (StringUtils.isNotEmpty(cqlLibraryName)
-        && repository.findByCqlLibraryName(cqlLibraryName).isPresent()) {
-      throw new DuplicateKeyException(
-          "cqlLibraryName", "CQL library with given name already exists.");
-    }
   }
 }

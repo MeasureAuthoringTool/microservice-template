@@ -42,6 +42,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -275,8 +277,8 @@ public class MeasureControllerMvcTest {
     saved.setCqlLibraryName(libraryName);
     saved.setModel(model);
     saved.setMeasureScoring(scoring);
-    when(measureRepository.findByCqlLibraryName(eq(libraryName))).thenReturn(Optional.empty());
     when(measureRepository.save(any(Measure.class))).thenReturn(saved);
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
 
     final String measureAsJson =
         "{\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\", \"model\": \"%s\", \"measureScoring\": \"%s\" }"
@@ -297,7 +299,6 @@ public class MeasureControllerMvcTest {
         .andExpect(jsonPath("$.id").value(measureId))
         .andExpect(jsonPath("$.measureScoring").value(scoring));
 
-    verify(measureRepository, times(1)).findByCqlLibraryName(eq(libraryName));
     verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
     verifyNoMoreInteractions(measureRepository);
     Measure savedMeasure = measureArgumentCaptor.getValue();
@@ -324,8 +325,11 @@ public class MeasureControllerMvcTest {
     String scoring = MeasureScoring.PROPORTION.toString();
     existing.setMeasureScoring(scoring);
 
-    when(measureRepository.findByCqlLibraryName(eq(cqlLibraryName)))
-        .thenReturn(Optional.of(existing));
+    doThrow(
+            new DuplicateKeyException(
+                "cqlLibraryName", "CQL library with given name already exists."))
+        .when(measureService)
+        .checkDuplicateCqlLibraryName(any(String.class));
 
     final String newMeasureAsJson =
         "{\"measureName\": \"NewMeasure\", \"cqlLibraryName\": \"%s\",\"model\":\"%s\",\"measureScoring\":\"%s\"}"
@@ -342,7 +346,7 @@ public class MeasureControllerMvcTest {
             jsonPath("$.validationErrors.cqlLibraryName")
                 .value("CQL library with given name already exists."));
 
-    verify(measureRepository, times(1)).findByCqlLibraryName(eq(cqlLibraryName));
+    verify(measureService, times(1)).checkDuplicateCqlLibraryName(eq(cqlLibraryName));
     verifyNoMoreInteractions(measureRepository);
   }
 
@@ -361,8 +365,11 @@ public class MeasureControllerMvcTest {
     existingMeasure.setId("id1");
     existingMeasure.setMeasureName("ExistingMeasure");
     existingMeasure.setCqlLibraryName("ExistingMeasureLibrary");
-    when(measureRepository.findByCqlLibraryName(eq(existingMeasure.getCqlLibraryName())))
-        .thenReturn(Optional.of(existingMeasure));
+    doThrow(
+            new DuplicateKeyException(
+                "cqlLibraryName", "CQL library with given name already exists."))
+        .when(measureService)
+        .checkDuplicateCqlLibraryName(any(String.class));
 
     final String updatedMeasureAsJson =
         "{\"id\": \"%s\",\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\", \"model\":\"%s\", \"measureScoring\":\"%s\"}"
@@ -385,8 +392,8 @@ public class MeasureControllerMvcTest {
                 .value("CQL library with given name already exists."));
 
     verify(measureRepository, times(1)).findById(eq(priorMeasure.getId()));
-    verify(measureRepository, times(1))
-        .findByCqlLibraryName(eq(existingMeasure.getCqlLibraryName()));
+    verify(measureService, times(1))
+        .checkDuplicateCqlLibraryName(eq(existingMeasure.getCqlLibraryName()));
     verifyNoMoreInteractions(measureRepository);
   }
 
@@ -492,8 +499,8 @@ public class MeasureControllerMvcTest {
     String scoring = MeasureScoring.CONTINUOUS_VARIABLE.toString();
     saved.setMeasureScoring(scoring);
 
-    when(measureRepository.findByCqlLibraryName(eq(libraryName))).thenReturn(Optional.empty());
     when(measureRepository.save(any(Measure.class))).thenReturn(saved);
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
 
     final String measureAsJson =
         "{ \"measureName\":\"%s\", \"cqlLibraryName\":\"%s\", \"model\":\"%s\", \"measureScoring\":\"%s\" }"
@@ -511,7 +518,6 @@ public class MeasureControllerMvcTest {
         .andExpect(jsonPath("$.model").value(model))
         .andExpect(jsonPath("$.id").value(measureId));
 
-    verify(measureRepository, times(1)).findByCqlLibraryName(eq(libraryName));
     verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
     verifyNoMoreInteractions(measureRepository);
   }

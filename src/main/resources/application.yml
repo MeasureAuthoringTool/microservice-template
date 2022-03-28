@@ -25,6 +25,7 @@ okta:
     issuer: ${OKTA_ISSUER:https://dev-18092578.okta.com/oauth2/default}
     audience: ${OKTA_AUDIENCE:api://default}
 
+lambda-api-key: ${LAMBDA_API_KEY:9202c9fa}
 
 mongock:
   start-system-version: 1
