@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Transient;
 
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.List;
 
 import javax.validation.GroupSequence;

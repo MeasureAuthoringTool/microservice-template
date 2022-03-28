@@ -69,7 +69,6 @@ public class TestCaseServiceTest {
     Mockito.doReturn(measure).when(repository).save(any(Measure.class));
 
     when(hapiFhirConfig.getHapiFhirUrl()).thenReturn("http://test.hapi/fhir");
-    when(hapiFhirConfig.getHapiFhirPatientUri()).thenReturn("/Patient");
     final String json = "{\"resourceType\":\"Patient\"}";
     ResponseEntity<String> response =
         ResponseEntity.ok()
@@ -556,7 +555,6 @@ public class TestCaseServiceTest {
   @Test
   public void testGetTestCaseReturnsTestCaseByIdValidatesByUpsert() {
     when(hapiFhirConfig.getHapiFhirUrl()).thenReturn("http://test.hapi/fhir");
-    when(hapiFhirConfig.getHapiFhirPatientUri()).thenReturn("/Patient");
     final String json = "{\"resourceType\":\"Patient\"}";
     ResponseEntity<String> response =
         ResponseEntity.ok()

@@ -134,7 +134,7 @@ public class MeasureTransferControllerMvcTest {
                     .content(measureJson)
                     .contentType(MediaType.APPLICATION_JSON_VALUE)
                     .header(LAMBDA_TEST_API_KEY_HEADER, "invalid-api-key")
-                  .header(HARP_ID_HEADER_KEY, HARP_ID_HEADER_VALUE))
+                    .header(HARP_ID_HEADER_KEY, HARP_ID_HEADER_VALUE))
             .andExpect(status().isUnauthorized())
             .andReturn();
 

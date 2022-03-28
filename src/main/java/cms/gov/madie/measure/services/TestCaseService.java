@@ -203,8 +203,7 @@ public class TestCaseService {
     return testCase;
   }
 
-  private TestCase handleHapiClientErrorException(
-      TestCase testCase, HttpClientErrorException ex) {
+  private TestCase handleHapiClientErrorException(TestCase testCase, HttpClientErrorException ex) {
     try {
       ObjectMapper mapper = new ObjectMapper();
       testCase.setHapiOperationOutcome(
