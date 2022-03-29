@@ -6,6 +6,8 @@ import cms.gov.madie.measure.models.Measure;
 import cms.gov.madie.measure.models.TestCase;
 import cms.gov.madie.measure.models.TestCaseGroupPopulation;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.resources.DuplicateKeyException;
+import io.micrometer.core.instrument.util.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -76,5 +78,13 @@ public class MeasureService {
               return tc.toBuilder().groupPopulations(groupPopulations).build();
             })
         .collect(Collectors.toList());
+  }
+
+  public void checkDuplicateCqlLibraryName(String cqlLibraryName) {
+    if (StringUtils.isNotEmpty(cqlLibraryName)
+        && measureRepository.findByCqlLibraryName(cqlLibraryName).isPresent()) {
+      throw new DuplicateKeyException(
+          "cqlLibraryName", "CQL library with given name already exists.");
+    }
   }
 }
