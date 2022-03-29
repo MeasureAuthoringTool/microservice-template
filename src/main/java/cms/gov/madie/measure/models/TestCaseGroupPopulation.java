@@ -9,12 +9,12 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @ValidScoringPopulation
 public class TestCaseGroupPopulation {
-  private String group;
+  private String groupId;
 
   @EnumValidator(
       enumClass = MeasureScoring.class,

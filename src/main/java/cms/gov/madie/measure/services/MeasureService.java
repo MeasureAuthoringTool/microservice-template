@@ -3,6 +3,8 @@ package cms.gov.madie.measure.services;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.models.Group;
 import cms.gov.madie.measure.models.Measure;
+import cms.gov.madie.measure.models.TestCase;
+import cms.gov.madie.measure.models.TestCaseGroupPopulation;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
 import io.micrometer.core.instrument.util.StringUtils;
@@ -13,6 +15,7 @@ import org.springframework.util.CollectionUtils;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class MeasureService {
@@ -37,6 +40,13 @@ public class MeasureService {
       // if group already exists, just update it
       if (existingGroupOpt.isPresent()) {
         Group existingGroup = existingGroupOpt.get();
+
+        if (!(existingGroup.getScoring() != null
+                && existingGroup.getScoring().equals(group.getScoring()))
+            || existingGroup.getScoring() == null && group.getScoring() != null) {
+          measure.setTestCases(
+              clearPopulationValuesForGroup(existingGroup.getId(), measure.getTestCases()));
+        }
         existingGroup.setScoring(group.getScoring());
         existingGroup.setPopulation(group.getPopulation());
       } else { // if not present, add into groups collection
@@ -48,6 +58,26 @@ public class MeasureService {
     measure.setLastModifiedAt(Instant.now());
     measureRepository.save(measure);
     return group;
+  }
+
+  public List<TestCase> clearPopulationValuesForGroup(String groupId, List<TestCase> testCases) {
+    if (testCases == null || testCases.isEmpty() || groupId == null || groupId.isEmpty()) {
+      return testCases;
+    }
+
+    return testCases.stream()
+        .map(
+            tc -> {
+              List<TestCaseGroupPopulation> groupPopulations =
+                  tc.getGroupPopulations() != null
+                      ? tc.getGroupPopulations().stream()
+                          .filter(gp -> !groupId.equals(gp.getGroupId()))
+                          .map(gp -> gp.toBuilder().build())
+                          .collect(Collectors.toList())
+                      : tc.getGroupPopulations();
+              return tc.toBuilder().groupPopulations(groupPopulations).build();
+            })
+        .collect(Collectors.toList());
   }
 
   public void checkDuplicateCqlLibraryName(String cqlLibraryName) {
