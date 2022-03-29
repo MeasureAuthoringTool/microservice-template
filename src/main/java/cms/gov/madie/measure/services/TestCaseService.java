@@ -54,7 +54,7 @@ public class TestCaseService {
     testCase.setHapiOperationOutcome(null);
     testCase.setResourceUri(null);
 
-    TestCase upserted = upsertFhirPatient(testCase);
+    TestCase upserted = upsertFhirBundle(testCase);
 
     if (measure.getTestCases() == null) {
       measure.setTestCases(List.of(upserted));
@@ -91,8 +91,8 @@ public class TestCaseService {
       testCase.setCreatedBy(username);
     }
 
-    // try to persist the Patient to HAPI FHIR
-    TestCase upsertedTestCase = upsertFhirPatient(testCase);
+    // try to persist the Patient Bundle to HAPI FHIR
+    TestCase upsertedTestCase = upsertFhirBundle(testCase);
     measure.getTestCases().add(upsertedTestCase);
 
     measureRepository.save(measure);
@@ -109,7 +109,7 @@ public class TestCaseService {
     if (testCase == null) {
       throw new ResourceNotFoundException("Test Case", testCaseId);
     } else if (validate && !testCase.isValidResource()) {
-      testCase = upsertFhirPatient(testCase);
+      testCase = upsertFhirBundle(testCase);
     }
     return testCase;
   }
@@ -138,7 +138,15 @@ public class TestCaseService {
         .collect(Collectors.toList());
   }
 
+  public TestCase upsertFhirBundle(TestCase testCase) {
+    return upsertFhirResource(testCase, hapiFhirConfig.getHapiFhirBundleUri());
+  }
+
   public TestCase upsertFhirPatient(TestCase testCase) {
+    return upsertFhirResource(testCase, hapiFhirConfig.getHapiFhirPatientUri());
+  }
+
+  private TestCase upsertFhirResource(TestCase testCase, String hapiFhirUri) {
     if (testCase != null && testCase.getJson() != null && !testCase.getJson().isEmpty()) {
       HttpHeaders headers = new HttpHeaders();
       headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
@@ -149,7 +157,7 @@ public class TestCaseService {
         ResponseEntity<String> response =
             testCase.getResourceUri() == null
                 ? hapiFhirRestTemplate.exchange(
-                    hapiFhirConfig.getHapiFhirUrl() + hapiFhirConfig.getHapiFhirPatientUri(),
+                    hapiFhirConfig.getHapiFhirUrl() + hapiFhirUri,
                     HttpMethod.POST,
                     patientEntity,
                     String.class)
@@ -181,7 +189,7 @@ public class TestCaseService {
         return testCase;
       } catch (HttpClientErrorException ex) {
         log.warn("HAPI FHIR returned response code [{}]", ex.getRawStatusCode(), ex);
-        return handleHapiPatientClientErrorException(testCase, ex);
+        return handleHapiClientErrorException(testCase, ex);
       } catch (Exception ex) {
         log.error("Exception occurred invoking PUT on HAPI FHIR:", ex);
         testCase.setHapiOperationOutcome(
@@ -195,8 +203,7 @@ public class TestCaseService {
     return testCase;
   }
 
-  private TestCase handleHapiPatientClientErrorException(
-      TestCase testCase, HttpClientErrorException ex) {
+  private TestCase handleHapiClientErrorException(TestCase testCase, HttpClientErrorException ex) {
     try {
       ObjectMapper mapper = new ObjectMapper();
       testCase.setHapiOperationOutcome(

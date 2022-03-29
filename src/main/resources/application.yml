@@ -40,3 +40,5 @@ hapi-fhir:
   url: ${HAPI_FHIR_URL:http://localhost:8087/fhir}
   patient:
     uri: /Patient
+  bundle:
+    uri: /Bundle

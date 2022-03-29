@@ -14,6 +14,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 import javax.validation.groups.Default;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -61,12 +62,15 @@ public class Measure {
   private String measureName;
 
   private String cql;
+  private String elmJson;
   private List<TestCase> testCases;
   @Valid private List<Group> groups;
   private Instant createdAt;
   private String createdBy;
   private Instant lastModifiedAt;
   private String lastModifiedBy;
+  private LocalDate measurementPeriodStart;
+  private LocalDate measurementPeriodEnd;
 
   @EnumValidator(
       enumClass = ModelType.class,
