@@ -1,11 +1,5 @@
 package cms.gov.madie.measure.models;
 
-import java.time.Instant;
-
-import javax.validation.GroupSequence;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,6 +8,13 @@ import org.hibernate.validator.constraints.Length;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 
+import javax.validation.GroupSequence;
+import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Pattern;
+import javax.validation.groups.Default;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -61,11 +62,15 @@ public class Measure {
   private String measureName;
 
   private String cql;
+  private String elmJson;
   private List<TestCase> testCases;
+  @Valid private List<Group> groups;
   private Instant createdAt;
   private String createdBy;
   private Instant lastModifiedAt;
   private String lastModifiedBy;
+  private LocalDate measurementPeriodStart;
+  private LocalDate measurementPeriodEnd;
 
   @EnumValidator(
       enumClass = ModelType.class,
@@ -89,6 +94,7 @@ public class Measure {
     Measure.ValidationOrder3.class,
     Measure.ValidationOrder4.class,
     Measure.ValidationOrder5.class,
+    Default.class
   })
   public interface ValidationSequence {}
 

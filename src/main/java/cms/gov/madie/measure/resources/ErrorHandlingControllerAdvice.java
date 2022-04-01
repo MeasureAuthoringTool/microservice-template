@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.resources;
 
+import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,21 +24,19 @@ import java.util.Objects;
 @ControllerAdvice
 public class ErrorHandlingControllerAdvice {
 
-  @Autowired
-  private final ErrorAttributes errorAttributes;
+  @Autowired private final ErrorAttributes errorAttributes;
 
   @ExceptionHandler(ConstraintViolationException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ResponseBody
   Map<String, Object> onConstraintValidationException(
-          ConstraintViolationException ex, WebRequest request) {
+      ConstraintViolationException ex, WebRequest request) {
     // Collect simplified validation errors
     Map<String, String> validationErrors = new HashMap<>();
     ex.getConstraintViolations()
-            .forEach(
-                    (error) -> {
-                      validationErrors.put(error.getPropertyPath().toString(), error.getMessage());
-                    });
+        .forEach(
+            (error) ->
+                validationErrors.put(error.getPropertyPath().toString(), error.getMessage()));
     Map<String, Object> errorAttributes = getErrorAttributes(request, HttpStatus.BAD_REQUEST);
     errorAttributes.put("validationErrors", validationErrors);
     return errorAttributes;
@@ -47,10 +46,10 @@ public class ErrorHandlingControllerAdvice {
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ResponseBody
   Map<String, Object> onDuplicateKeyExceptionException(
-          DuplicateKeyException ex, WebRequest request) {
+      DuplicateKeyException ex, WebRequest request) {
     Map<String, Object> errorAttributes = getErrorAttributes(request, HttpStatus.BAD_REQUEST);
     errorAttributes.put(
-            "validationErrors", Map.of(ex.getKey(), Objects.requireNonNull(ex.getMessage())));
+        "validationErrors", Map.of(ex.getKey(), Objects.requireNonNull(ex.getMessage())));
     return errorAttributes;
   }
 
@@ -58,17 +57,21 @@ public class ErrorHandlingControllerAdvice {
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ResponseBody
   Map<String, Object> onMethodArgumentNotValidException(
-          MethodArgumentNotValidException ex, WebRequest request) {
+      MethodArgumentNotValidException ex, WebRequest request) {
     // Collect simplified validation errors
     Map<String, String> validationErrors = new HashMap<>();
     ex.getBindingResult()
-            .getAllErrors()
-            .forEach(
-                    (error) -> {
-                      String fieldName = ((FieldError) error).getField();
-                      String errorMessage = error.getDefaultMessage();
-                      validationErrors.put(fieldName, errorMessage);
-                    });
+        .getAllErrors()
+        .forEach(
+            (error) -> {
+              if (error instanceof FieldError) {
+                String fieldName = ((FieldError) error).getField();
+                String errorMessage = error.getDefaultMessage();
+                validationErrors.put(fieldName, errorMessage);
+              } else {
+                validationErrors.put(error.getObjectName(), error.getDefaultMessage());
+              }
+            });
     Map<String, Object> errorAttributes = getErrorAttributes(request, HttpStatus.BAD_REQUEST);
     errorAttributes.put("validationErrors", validationErrors);
     return errorAttributes;
@@ -81,13 +84,20 @@ public class ErrorHandlingControllerAdvice {
     return getErrorAttributes(request, HttpStatus.NOT_FOUND);
   }
 
+  @ExceptionHandler(InvalidIdException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  @ResponseBody
+  Map<String, Object> onInvalidKeyException(WebRequest request) {
+    return getErrorAttributes(request, HttpStatus.BAD_REQUEST);
+  }
+
   private Map<String, Object> getErrorAttributes(WebRequest request, HttpStatus httpStatus) {
     // BINDING_ERRORS and STACK_TRACE are too detailed and confusing to parse
     // Let's just add a list of simplified validation errors
     ErrorAttributeOptions errorOptions =
-            ErrorAttributeOptions.of(ErrorAttributeOptions.Include.MESSAGE);
+        ErrorAttributeOptions.of(ErrorAttributeOptions.Include.MESSAGE);
     Map<String, Object> errorAttributes =
-            this.errorAttributes.getErrorAttributes(request, errorOptions);
+        this.errorAttributes.getErrorAttributes(request, errorOptions);
     errorAttributes.put("status", httpStatus.value());
     errorAttributes.put("error", httpStatus.getReasonPhrase());
     return errorAttributes;
