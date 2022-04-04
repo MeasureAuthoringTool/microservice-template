@@ -49,8 +49,6 @@ public class MeasureService {
         if (!(existingGroup.getScoring() != null
             && existingGroup.getScoring().equals(group.getScoring()))
             || existingGroup.getScoring() == null && group.getScoring() != null) {
-//          measure.setTestCases(
-//              clearPopulationValuesForGroup(existingGroup.getId(), measure.getTestCases()));
           measure.setTestCases(resetPopulationValuesForGroup(group, measure.getTestCases()));
         }
         existingGroup.setScoring(group.getScoring());
@@ -71,13 +69,14 @@ public class MeasureService {
    * If any match, the group population values for that group on the test case will be re-initialized
    * with all the populations for that new scoring type, with all expected and actual values
    * set to false.
+   *
    * @param group
    * @param testCases
    * @return
    */
   public List<TestCase> resetPopulationValuesForGroup(Group group, List<TestCase> testCases) {
     if (testCases == null || testCases.isEmpty() || group == null || group.getId() == null
-        || group.getScoring() == null || group.getScoring().isEmpty()) {
+        || group.getId().isEmpty() || group.getScoring() == null || group.getScoring().isEmpty()) {
       return testCases;
     }
 
@@ -88,8 +87,8 @@ public class MeasureService {
               tc.getGroupPopulations() != null ?
                   tc.getGroupPopulations().stream()
                       .map(gp -> group.getId().equals(gp.getGroupId()) ?
-                            gp.toBuilder().scoring(group.getScoring()).populationValues(getDefaultPopulationValuesForScoring(group.getScoring())).build()
-                            : gp.toBuilder().build())
+                          gp.toBuilder().scoring(group.getScoring()).populationValues(getDefaultPopulationValuesForScoring(group.getScoring())).build()
+                          : gp.toBuilder().build())
                       .collect(Collectors.toList())
                   : tc.getGroupPopulations();
           return tc.toBuilder().groupPopulations(groupPopulations).build();
@@ -108,26 +107,6 @@ public class MeasureService {
                     .name(option.getMeasurePopulation())
                     .build())
             .collect(Collectors.toList());
-  }
-
-  public List<TestCase> clearPopulationValuesForGroup(String groupId, List<TestCase> testCases) {
-    if (testCases == null || testCases.isEmpty() || groupId == null || groupId.isEmpty()) {
-      return testCases;
-    }
-
-    return testCases.stream()
-        .map(
-            tc -> {
-              List<TestCaseGroupPopulation> groupPopulations =
-                  tc.getGroupPopulations() != null
-                      ? tc.getGroupPopulations().stream()
-                      .filter(gp -> !groupId.equals(gp.getGroupId()))
-                      .map(gp -> gp.toBuilder().build())
-                      .collect(Collectors.toList())
-                      : tc.getGroupPopulations();
-              return tc.toBuilder().groupPopulations(groupPopulations).build();
-            })
-        .collect(Collectors.toList());
   }
 
   public void checkDuplicateCqlLibraryName(String cqlLibraryName) {
