@@ -70,9 +70,9 @@ public class MeasureService {
    * with all the populations for that new scoring type, with all expected and actual values
    * set to false.
    *
-   * @param group
-   * @param testCases
-   * @return
+   * @param group Group being changed
+   * @param testCases TestCases to iterate over and update
+   * @return TestCases updated with new scoring type (if any groups matched)
    */
   public List<TestCase> resetPopulationValuesForGroup(Group group, List<TestCase> testCases) {
     if (testCases == null || testCases.isEmpty() || group == null || group.getId() == null

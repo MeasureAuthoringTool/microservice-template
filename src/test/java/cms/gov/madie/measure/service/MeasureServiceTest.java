@@ -216,6 +216,87 @@ public class MeasureServiceTest {
   }
 
   @Test
+  public void testUpdateGroupChangingPopulationsDoesNotResetExpectedValues() {
+    // make both group IDs same, to simulate update to the group
+    group1.setId(group2.getId());
+    group1.setScoring(MeasureScoring.RATIO.toString());
+    group1.setPopulation(Map.of(
+        MeasurePopulation.INITIAL_POPULATION, "Initial Population",
+        MeasurePopulation.NUMERATOR, "Numer",
+        MeasurePopulation.DENOMINATOR, "Denom",
+        MeasurePopulation.DENOMINATOR_EXCLUSION, "DenomExcl"
+    ));
+    // keep same scoring
+    group2.setScoring(MeasureScoring.RATIO.toString());
+    group2.setPopulation(Map.of(
+        MeasurePopulation.INITIAL_POPULATION, "FactorialOfFive",
+        MeasurePopulation.NUMERATOR, "Numer",
+        MeasurePopulation.DENOMINATOR, "Denom"
+    ));
+
+    // existing population referencing the group that exists in the DB
+    final TestCaseGroupPopulation tcGroupPop =
+        TestCaseGroupPopulation.builder()
+            .groupId(group2.getId())
+            .scoring(MeasureScoring.RATIO.toString())
+            .populationValues(
+                List.of(
+                    TestCasePopulationValue.builder()
+                        .name(MeasurePopulation.INITIAL_POPULATION)
+                        .expected(true)
+                        .build(),
+                    TestCasePopulationValue.builder()
+                        .name(MeasurePopulation.NUMERATOR)
+                        .expected(false)
+                        .build(),
+                    TestCasePopulationValue.builder()
+                        .name(MeasurePopulation.DENOMINATOR)
+                        .expected(true)
+                        .build()))
+            .build();
+
+    final List<TestCase> testCases =
+        List.of(TestCase.builder().groupPopulations(List.of(tcGroupPop)).build());
+    measure.setTestCases(testCases);
+
+    ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
+    Optional<Measure> optional = Optional.of(measure);
+    Mockito.doReturn(optional).when(repository).findById(any(String.class));
+
+    Mockito.doReturn(measure).when(repository).save(any(Measure.class));
+
+    // before update
+    assertEquals(
+        "FactorialOfFive",
+        measure.getGroups().get(0).getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
+
+    Group persistedGroup = measureService.createOrUpdateGroup(group1, measure.getId(), "test.user");
+
+    verify(repository, times(1)).save(measureCaptor.capture());
+    assertEquals(group1.getId(), persistedGroup.getId());
+    Measure savedMeasure = measureCaptor.getValue();
+    assertEquals(measure.getLastModifiedBy(), savedMeasure.getLastModifiedBy());
+    assertEquals(measure.getLastModifiedAt(), savedMeasure.getLastModifiedAt());
+    assertNotNull(savedMeasure.getGroups());
+    assertEquals(1, savedMeasure.getGroups().size());
+    assertNotNull(savedMeasure.getTestCases());
+    assertEquals(1, savedMeasure.getTestCases().size());
+    assertNotNull(savedMeasure.getTestCases().get(0));
+    assertNotNull(savedMeasure.getTestCases().get(0).getGroupPopulations());
+    assertFalse(savedMeasure.getTestCases().get(0).getGroupPopulations().isEmpty());
+    assertEquals(1, savedMeasure.getTestCases().get(0).getGroupPopulations().size());
+    TestCaseGroupPopulation outputGroupPopulation = savedMeasure.getTestCases().get(0).getGroupPopulations().get(0);
+    assertEquals(MeasureScoring.RATIO.toString(), outputGroupPopulation.getScoring());
+    assertNotNull(outputGroupPopulation.getPopulationValues());
+    assertEquals(tcGroupPop, outputGroupPopulation);
+    Group capturedGroup = savedMeasure.getGroups().get(0);
+    // after update
+    assertEquals(
+        "Initial Population",
+        capturedGroup.getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
+  }
+
+  @Test
   public void testCreateOrUpdateGroupWhenMeasureDoesNotExist() {
     Optional<Measure> optional = Optional.empty();
     when(repository.findById(anyString())).thenReturn(optional);
@@ -395,4 +476,5 @@ public class MeasureServiceTest {
     assertEquals(1, output.get(0).getGroupPopulations().get(1).getPopulationValues().size());
     assertEquals(MeasurePopulation.INITIAL_POPULATION, output.get(0).getGroupPopulations().get(1).getPopulationValues().get(0).getName());
   }
+
 }
