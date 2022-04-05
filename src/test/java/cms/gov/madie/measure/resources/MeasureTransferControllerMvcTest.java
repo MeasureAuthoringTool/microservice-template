@@ -52,7 +52,8 @@ public class MeasureTransferControllerMvcTest {
             new Group(
                 "id-abc",
                 "Cohort",
-                Map.of(MeasurePopulation.INITIAL_POPULATION, "Initial Population")));
+                Map.of(MeasurePopulation.INITIAL_POPULATION, "Initial Population"),
+                "Description"));
 
     measureMetaData.setSteward("SB");
     measureMetaData.setCopyright("Copyright@SB");

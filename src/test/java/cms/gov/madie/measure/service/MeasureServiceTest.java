@@ -43,12 +43,14 @@ public class MeasureServiceTest {
         Group.builder()
             .scoring("Cohort")
             .population(Map.of(MeasurePopulation.INITIAL_POPULATION, "Initial Population"))
+            .groupDescription("Description")
             .build();
     // Present in DB and has ID
     group2 =
         Group.builder()
             .id("xyz-p12r-12ert")
             .population(Map.of(MeasurePopulation.INITIAL_POPULATION, "FactorialOfFive"))
+            .groupDescription("Description")
             .build();
 
     List<Group> groups = new ArrayList<>();
@@ -93,6 +95,7 @@ public class MeasureServiceTest {
     assertEquals(
         "Initial Population",
         capturedGroup.getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
+    assertEquals("Description", capturedGroup.getGroupDescription());
   }
 
   @Test
@@ -117,6 +120,7 @@ public class MeasureServiceTest {
     assertEquals(
         "Initial Population",
         capturedGroup.getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
+    assertEquals("Description", capturedGroup.getGroupDescription());
   }
 
   @Test
@@ -149,6 +153,7 @@ public class MeasureServiceTest {
     assertEquals(
         "Initial Population",
         capturedGroup.getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
+    assertEquals("Description", capturedGroup.getGroupDescription());
   }
 
   @Test
@@ -208,6 +213,7 @@ public class MeasureServiceTest {
     assertEquals(
         "Initial Population",
         capturedGroup.getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
+    assertEquals("Description", capturedGroup.getGroupDescription());
   }
 
   @Test

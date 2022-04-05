@@ -28,4 +28,6 @@ public class Group implements GroupScoringPopulation {
   private String scoring;
 
   private Map<MeasurePopulation, String> population;
+
+  private String groupDescription;
 }
