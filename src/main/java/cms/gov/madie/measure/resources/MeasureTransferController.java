@@ -44,9 +44,7 @@ public class MeasureTransferController {
     measure.setCreatedAt(now);
     measure.setLastModifiedAt(now);
     // set ids for groups
-    measure.getGroups()
-      .stream()
-      .forEach(group -> group.setId(ObjectId.get().toString()));
+    measure.getGroups().stream().forEach(group -> group.setId(ObjectId.get().toString()));
     Measure savedMeasure = repository.save(measure);
     log.info("Measure [{}] transfer complete", measure.getMeasureName());
     return ResponseEntity.status(HttpStatus.CREATED).body(savedMeasure);
