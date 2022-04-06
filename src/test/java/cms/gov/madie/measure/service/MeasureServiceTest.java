@@ -209,7 +209,8 @@ public class MeasureServiceTest {
     assertNotNull(savedMeasure.getTestCases().get(0).getGroupPopulations());
     assertFalse(savedMeasure.getTestCases().get(0).getGroupPopulations().isEmpty());
     assertEquals(1, savedMeasure.getTestCases().get(0).getGroupPopulations().size());
-    TestCaseGroupPopulation outputGroupPopulation = savedMeasure.getTestCases().get(0).getGroupPopulations().get(0);
+    TestCaseGroupPopulation outputGroupPopulation =
+        savedMeasure.getTestCases().get(0).getGroupPopulations().get(0);
     assertEquals("Cohort", outputGroupPopulation.getScoring());
     assertNotNull(outputGroupPopulation.getPopulationValues());
     assertEquals(1, outputGroupPopulation.getPopulationValues().size());
@@ -225,19 +226,19 @@ public class MeasureServiceTest {
     // make both group IDs same, to simulate update to the group
     group1.setId(group2.getId());
     group1.setScoring(MeasureScoring.RATIO.toString());
-    group1.setPopulation(Map.of(
-        MeasurePopulation.INITIAL_POPULATION, "Initial Population",
-        MeasurePopulation.NUMERATOR, "Numer",
-        MeasurePopulation.DENOMINATOR, "Denom",
-        MeasurePopulation.DENOMINATOR_EXCLUSION, "DenomExcl"
-    ));
+    group1.setPopulation(
+        Map.of(
+            MeasurePopulation.INITIAL_POPULATION, "Initial Population",
+            MeasurePopulation.NUMERATOR, "Numer",
+            MeasurePopulation.DENOMINATOR, "Denom",
+            MeasurePopulation.DENOMINATOR_EXCLUSION, "DenomExcl"));
     // keep same scoring
     group2.setScoring(MeasureScoring.RATIO.toString());
-    group2.setPopulation(Map.of(
-        MeasurePopulation.INITIAL_POPULATION, "FactorialOfFive",
-        MeasurePopulation.NUMERATOR, "Numer",
-        MeasurePopulation.DENOMINATOR, "Denom"
-    ));
+    group2.setPopulation(
+        Map.of(
+            MeasurePopulation.INITIAL_POPULATION, "FactorialOfFive",
+            MeasurePopulation.NUMERATOR, "Numer",
+            MeasurePopulation.DENOMINATOR, "Denom"));
 
     // existing population referencing the group that exists in the DB
     final TestCaseGroupPopulation tcGroupPop =
@@ -290,7 +291,8 @@ public class MeasureServiceTest {
     assertNotNull(savedMeasure.getTestCases().get(0).getGroupPopulations());
     assertFalse(savedMeasure.getTestCases().get(0).getGroupPopulations().isEmpty());
     assertEquals(1, savedMeasure.getTestCases().get(0).getGroupPopulations().size());
-    TestCaseGroupPopulation outputGroupPopulation = savedMeasure.getTestCases().get(0).getGroupPopulations().get(0);
+    TestCaseGroupPopulation outputGroupPopulation =
+        savedMeasure.getTestCases().get(0).getGroupPopulations().get(0);
     assertEquals(MeasureScoring.RATIO.toString(), outputGroupPopulation.getScoring());
     assertNotNull(outputGroupPopulation.getPopulationValues());
     assertEquals(tcGroupPop, outputGroupPopulation);
@@ -401,11 +403,7 @@ public class MeasureServiceTest {
   @Test
   public void testResetPopulationValuesForGroupHandlesNullGroupPopulationList() {
     final Group group = Group.builder().id("Group2_ID").scoring("Cohort").build();
-    final List<TestCase> testCases =
-        List.of(
-            TestCase.builder()
-                .groupPopulations(null)
-                .build());
+    final List<TestCase> testCases = List.of(TestCase.builder().groupPopulations(null).build());
 
     List<TestCase> output = measureService.resetPopulationValuesForGroup(group, testCases);
     assertEquals(testCases, output);
@@ -480,7 +478,8 @@ public class MeasureServiceTest {
     assertNotNull(output.get(0).getGroupPopulations().get(1).getPopulationValues());
     assertEquals("Cohort", output.get(0).getGroupPopulations().get(1).getScoring());
     assertEquals(1, output.get(0).getGroupPopulations().get(1).getPopulationValues().size());
-    assertEquals(MeasurePopulation.INITIAL_POPULATION, output.get(0).getGroupPopulations().get(1).getPopulationValues().get(0).getName());
+    assertEquals(
+        MeasurePopulation.INITIAL_POPULATION,
+        output.get(0).getGroupPopulations().get(1).getPopulationValues().get(0).getName());
   }
-
 }
