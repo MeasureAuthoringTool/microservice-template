@@ -158,6 +158,18 @@ public class MeasureServiceTest {
   }
 
   @Test
+  public void testInvalidDeletionCredentialsThrowsExceptionForDifferentUsers() {
+    assertThrows(
+        InvalidDeletionCredentialsException.class,
+        () -> measureService.checkDeletionCredentials("user1", "user2"));
+  }
+
+  @Test
+  public void testInvalidDeletionCredentialsDoesNotThrowExceptionWhenMatch() {
+    measureService.checkDeletionCredentials("user1", "user1");
+  }
+
+  @Test
   public void testUpdateGroupChangingScoring() {
     // make both group IDs same, to simulate update to the group
     group1.setId(group2.getId());
@@ -315,7 +327,6 @@ public class MeasureServiceTest {
   }
 
   @Test
-<<<<<<< HEAD
   public void testResetPopulationValuesForGroupHandlesNullGroup() {
     final List<TestCase> testCases =
         List.of(
@@ -331,22 +342,6 @@ public class MeasureServiceTest {
   @Test
   public void testResetGroupPopulationValuesForGroupHandlesNullGroupId() {
     final Group group = Group.builder().id(null).scoring("Cohort").build();
-=======
-  public void testInvalidDeletionCredentialsThrowsExceptionForDifferentUsers() {
-    assertThrows(
-        InvalidDeletionCredentialsException.class,
-        () -> measureService.checkDeletionCredentials("user1", "user2"));
-  }
-
-  @Test
-  public void testInvalidDeletionCredentialsDoesNotThrowExceptionWhenMatch() {
-    measureService.checkDeletionCredentials("user1", "user1");
-  }
-
-  @Test
-  public void testClearPopulationValuesForGroupHandlesNullGroupId() {
-    final String groupId = null;
->>>>>>> d7ba830 (Update all references for findAll and findBy to include the active flag permanently true. Add relevant tests for deletion credentials)
     final List<TestCase> testCases =
         List.of(
             TestCase.builder()
