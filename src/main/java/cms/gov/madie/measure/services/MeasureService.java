@@ -9,6 +9,7 @@ import cms.gov.madie.measure.models.TestCase;
 import cms.gov.madie.measure.models.TestCaseGroupPopulation;
 import cms.gov.madie.measure.models.TestCasePopulationValue;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.resources.InvalidDeletionCredentialsException;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
 import io.micrometer.core.instrument.util.StringUtils;
 import org.bson.types.ObjectId;
@@ -130,6 +131,12 @@ public class MeasureService {
         && measureRepository.findByCqlLibraryName(cqlLibraryName).isPresent()) {
       throw new DuplicateKeyException(
           "cqlLibraryName", "CQL library with given name already exists.");
+    }
+  }
+
+  public void checkDeletionCredentials(String username, String createdBy) {
+    if (!username.equals(createdBy)) {
+      throw new InvalidDeletionCredentialsException(username);
     }
   }
 }

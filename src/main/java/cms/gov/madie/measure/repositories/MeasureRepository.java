@@ -13,7 +13,11 @@ import org.springframework.data.mongodb.repository.Query;
 public interface MeasureRepository extends MongoRepository<Measure, String> {
   Optional<Measure> findByCqlLibraryName(String cqlLibraryName);
 
-  Page<Measure> findAllByCreatedBy(String user, Pageable page);
+  Optional<Measure> findByIdAndActive(String id, Boolean active);
+
+  Page<Measure> findAllByActive(Boolean active, Pageable page);
+
+  Page<Measure> findAllByCreatedByAndActive(String user, Boolean active, Pageable page);
 
   @Query(value = "{_id: ?0}", fields = "{'testCases.series': 1, _id: 0}")
   Optional<Measure> findAllTestCaseSeriesByMeasureId(String measureId);

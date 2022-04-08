@@ -3,6 +3,7 @@ package cms.gov.madie.measure.service;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.models.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.resources.InvalidDeletionCredentialsException;
 import cms.gov.madie.measure.services.MeasureService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -314,6 +315,7 @@ public class MeasureServiceTest {
   }
 
   @Test
+<<<<<<< HEAD
   public void testResetPopulationValuesForGroupHandlesNullGroup() {
     final List<TestCase> testCases =
         List.of(
@@ -329,6 +331,22 @@ public class MeasureServiceTest {
   @Test
   public void testResetGroupPopulationValuesForGroupHandlesNullGroupId() {
     final Group group = Group.builder().id(null).scoring("Cohort").build();
+=======
+  public void testInvalidDeletionCredentialsThrowsExceptionForDifferentUsers() {
+    assertThrows(
+        InvalidDeletionCredentialsException.class,
+        () -> measureService.checkDeletionCredentials("user1", "user2"));
+  }
+
+  @Test
+  public void testInvalidDeletionCredentialsDoesNotThrowExceptionWhenMatch() {
+    measureService.checkDeletionCredentials("user1", "user1");
+  }
+
+  @Test
+  public void testClearPopulationValuesForGroupHandlesNullGroupId() {
+    final String groupId = null;
+>>>>>>> d7ba830 (Update all references for findAll and findBy to include the active flag permanently true. Add relevant tests for deletion credentials)
     final List<TestCase> testCases =
         List.of(
             TestCase.builder()
