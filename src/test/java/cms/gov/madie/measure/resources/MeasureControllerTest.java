@@ -133,8 +133,8 @@ class MeasureControllerTest {
     metaData.setCopyright("TestCopyright");
     metaData.setDisclaimer("TestDisclaimer");
     metaData.setRationale("TestRationale");
-    metaData.setAuthor("TestAuthor");
-    metaData.setGuidance("TestGuidance");
+    metaData.setAuthor("Author");
+    metaData.setGuidance("Guidance");
     measure.setMeasureMetaData(metaData);
     Measure originalMeasure =
         measure
@@ -175,8 +175,8 @@ class MeasureControllerTest {
     assertThat(savedMeasure.getMeasureMetaData().getCopyright(), is(equalTo("TestCopyright")));
     assertThat(savedMeasure.getMeasureMetaData().getDisclaimer(), is(equalTo("TestDisclaimer")));
     assertThat(savedMeasure.getMeasureMetaData().getRationale(), is(equalTo("TestRationale")));
-    assertThat(savedMeasure.getMeasureMetaData().getAuthor(), is(equalTo("TestAuthor")));
-    assertThat(savedMeasure.getMeasureMetaData().getGuidance(), is(equalTo("TestGuidance")));
+    assertThat(savedMeasure.getMeasureMetaData().getAuthor(), is(equalTo("Author")));
+    assertThat(savedMeasure.getMeasureMetaData().getGuidance(), is(equalTo("Guidance")));
   }
 
   @Test
