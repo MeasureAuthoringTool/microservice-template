@@ -11,4 +11,6 @@ public class MeasureMetaData {
   private String copyright;
   private String disclaimer;
   private String rationale;
+  private String author;
+  private String guidance;
 }
