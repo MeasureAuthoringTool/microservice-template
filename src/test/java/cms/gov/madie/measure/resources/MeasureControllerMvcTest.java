@@ -77,6 +77,8 @@ public class MeasureControllerMvcTest {
     String copyright = "TestCopyright";
     String disclaimer = "TestDisclaimer";
     String rationale = "TestRationale";
+    String author = "TestAuthor";
+    String guidance = "TestGuidance";
     String libName = "TestLib";
     String model = "QI-Core";
     String scoring = MeasureScoring.COHORT.toString();
@@ -92,7 +94,7 @@ public class MeasureControllerMvcTest {
     when(measureRepository.save(any(Measure.class))).thenReturn(mock(Measure.class));
 
     final String measureAsJson =
-        "{\"id\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"measureMetaData\": { \"steward\" : \"%s\", \"description\" : \"%s\", \"copyright\" : \"%s\", \"disclaimer\" : \"%s\", \"rationale\" : \"%s\"}, \"model\":\"%s\", \"measureScoring\":\"%s\" }"
+        "{\"id\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"measureMetaData\": { \"steward\" : \"%s\", \"description\" : \"%s\", \"copyright\" : \"%s\", \"disclaimer\" : \"%s\", \"rationale\" : \"%s\", \"author\" : \"%s\", \"guidance\" : \"%s\"}, \"model\":\"%s\", \"measureScoring\":\"%s\" }"
             .formatted(
                 measureId,
                 measureName,
@@ -102,6 +104,8 @@ public class MeasureControllerMvcTest {
                 copyright,
                 disclaimer,
                 rationale,
+                author,
+                guidance,
                 model,
                 scoring);
     mockMvc
@@ -125,6 +129,8 @@ public class MeasureControllerMvcTest {
     assertEquals(copyright, savedMeasure.getMeasureMetaData().getCopyright());
     assertEquals(disclaimer, savedMeasure.getMeasureMetaData().getDisclaimer());
     assertEquals(rationale, savedMeasure.getMeasureMetaData().getRationale());
+    assertEquals(author, savedMeasure.getMeasureMetaData().getAuthor());
+    assertEquals(guidance, savedMeasure.getMeasureMetaData().getGuidance());
     assertEquals(model, savedMeasure.getModel());
     assertNotNull(savedMeasure.getLastModifiedAt());
     assertEquals(TEST_USER_ID, savedMeasure.getLastModifiedBy());
