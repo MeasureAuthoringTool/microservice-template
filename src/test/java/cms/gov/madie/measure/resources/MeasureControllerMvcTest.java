@@ -875,7 +875,6 @@ public class MeasureControllerMvcTest {
             .active(true)
             .build();
 
-    // Page<Measure> measures = List.of(m1, m2);
     final Page<Measure> measures = new PageImpl<>(List.of(m1, m2));
 
     when(measureRepository.findAllByCreatedByAndActive(
