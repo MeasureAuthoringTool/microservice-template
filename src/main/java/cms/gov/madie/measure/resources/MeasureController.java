@@ -101,7 +101,7 @@ public class MeasureController {
       log.info("got invalid id [{}] vs measureId: [{}]", id, measure.getId());
       throw new InvalidIdException("Measure", "Update (PUT)", "(PUT [base]/[resource]/[id])");
     }
-    if (username != null && measure.getCreatedBy() != null && !measure.getActive()) {
+    if (username != null && measure.getCreatedBy() != null && !measure.isActive()) {
       log.info("got username [{}] vs createdBy: [{}]", username, measure.getCreatedBy());
       measureService.checkDeletionCredentials(username, measure.getCreatedBy());
     }
