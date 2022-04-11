@@ -55,14 +55,11 @@ public class MeasureController {
         filterByCurrentUser
             ? repository.findAllByCreatedByAndActive(username, true, pageReq)
             : repository.findAllByActive(true, pageReq);
-    // : repository.findAllByIdNotNull(page);
-    // return ResponseEntity;
     return ResponseEntity.ok(measures);
   }
 
   @GetMapping("/measures/{id}")
   public ResponseEntity<Measure> getMeasure(@PathVariable("id") String id) {
-    //    Optional<Measure> measure = repository.findById(id);
     Optional<Measure> measure = repository.findByIdAndActive(id, true);
     return measure
         .map(ResponseEntity::ok)
@@ -104,14 +101,13 @@ public class MeasureController {
       log.info("got invalid id [{}] vs measureId: [{}]", id, measure.getId());
       throw new InvalidIdException("Measure", "Update (PUT)", "(PUT [base]/[resource]/[id])");
     }
-    if (username != null && measure.getCreatedBy() != null && measure.getActive() == false) {
+    if (username != null && measure.getCreatedBy() != null && !measure.getActive()) {
       log.info("got username [{}] vs createdBy: [{}]", username, measure.getCreatedBy());
       measureService.checkDeletionCredentials(username, measure.getCreatedBy());
     }
 
     if (measure.getId() != null) {
       log.info("getMeasureId [{}]", measure.getId());
-      //      measureService.checkDeletionCredentials(username, measure.getCreatedBy());
       Optional<Measure> persistedMeasure = repository.findById(measure.getId());
       if (persistedMeasure.isPresent()) {
         if (isCqlLibraryNameChanged(measure, persistedMeasure)) {
@@ -124,7 +120,6 @@ public class MeasureController {
         measure.setCreatedBy(persistedMeasure.get().getCreatedBy());
         repository.save(measure);
         response = ResponseEntity.ok().body("Measure updated successfully.");
-        //        log.info("Response.entity [{}]", ResponseEntity);
       }
     }
     return response;
