@@ -16,7 +16,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -101,10 +100,9 @@ public class MeasureServiceTest {
             .build();
     Page<Measure> activeMeasures = new PageImpl<>(List.of(measure, m1));
     Page<Measure> inactiveMeasures = new PageImpl<>(List.of(m2));
-    PageRequest initialPage = PageRequest.of(0,10);
+    PageRequest initialPage = PageRequest.of(0, 10);
 
-    when(repository.findAllByActive(eq(true), any(PageRequest.class)))
-        .thenReturn(activeMeasures);
+    when(repository.findAllByActive(eq(true), any(PageRequest.class))).thenReturn(activeMeasures);
     when(repository.findAllByActive(eq(false), any(PageRequest.class)))
         .thenReturn(inactiveMeasures);
 
@@ -210,7 +208,11 @@ public class MeasureServiceTest {
 
   @Test
   public void testInvalidDeletionCredentialsDoesNotThrowExceptionWhenMatch() {
-    measureService.checkDeletionCredentials("user1", "user1");
+    try {
+      measureService.checkDeletionCredentials("user1", "user1");
+    } catch (Exception e) {
+      fail("Unexpected exception was thrown");
+    }
   }
 
   @Test

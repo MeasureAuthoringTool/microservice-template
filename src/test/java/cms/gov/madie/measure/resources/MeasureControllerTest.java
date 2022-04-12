@@ -200,7 +200,7 @@ class MeasureControllerTest {
     testMeasure.setId("testid");
     testMeasure.setMeasureName("MSR01");
     testMeasure.setVersion("0.001");
-    Mockito.doThrow(new InvalidDeletionCredentialsException("invalidUser@gmail.com"))
+    doThrow(new InvalidDeletionCredentialsException("invalidUser@gmail.com"))
         .when(measureService)
         .checkDeletionCredentials(anyString(), anyString());
     assertThrows(
