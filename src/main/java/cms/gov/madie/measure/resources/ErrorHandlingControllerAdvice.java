@@ -53,6 +53,14 @@ public class ErrorHandlingControllerAdvice {
     return errorAttributes;
   }
 
+  @ExceptionHandler(InvalidDeletionCredentialsException.class)
+  @ResponseStatus(HttpStatus.FORBIDDEN)
+  @ResponseBody
+  Map<String, Object> onInvalidDeletionCredentials(
+      InvalidDeletionCredentialsException ex, WebRequest request) {
+    return getErrorAttributes(request, HttpStatus.FORBIDDEN);
+  }
+
   @ExceptionHandler(MethodArgumentNotValidException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ResponseBody

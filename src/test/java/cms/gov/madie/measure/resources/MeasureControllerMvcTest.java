@@ -67,6 +67,7 @@ public class MeasureControllerMvcTest {
   @Captor ArgumentCaptor<String> measureIdCaptor;
   @Captor ArgumentCaptor<String> usernameCaptor;
   @Captor ArgumentCaptor<PageRequest> pageRequestCaptor;
+  @Captor ArgumentCaptor<Boolean> activeCaptor;
 
   @Test
   public void testUpdatePassed() throws Exception {
@@ -695,6 +696,7 @@ public class MeasureControllerMvcTest {
   public void testGetMeasuresNoQueryParams() throws Exception {
     Measure m1 =
         Measure.builder()
+            .active(true)
             .measureName("Measure1")
             .cqlLibraryName("TestLib1")
             .createdBy("test-okta-user-id-123")
@@ -703,6 +705,7 @@ public class MeasureControllerMvcTest {
             .build();
     Measure m2 =
         Measure.builder()
+            .active(true)
             .measureName("Measure2")
             .cqlLibraryName("TestLib2")
             .createdBy("test-okta-user-id-123")
@@ -711,6 +714,7 @@ public class MeasureControllerMvcTest {
             .build();
     Measure m3 =
         Measure.builder()
+            .active(true)
             .measureName("Measure3")
             .cqlLibraryName("TestLib3")
             .createdBy("test-okta-user-id-999")
@@ -719,7 +723,8 @@ public class MeasureControllerMvcTest {
             .build();
 
     Page<Measure> allMeasures = new PageImpl<>(List.of(m1, m2, m3));
-    when(measureRepository.findAll(any(Pageable.class))).thenReturn(allMeasures);
+    when(measureRepository.findAllByActive(any(Boolean.class), any(Pageable.class)))
+        .thenReturn(allMeasures);
 
     MvcResult result =
         mockMvc
@@ -732,7 +737,7 @@ public class MeasureControllerMvcTest {
     String expectedJsonStr = mapper.writeValueAsString(allMeasures);
 
     assertThat(resultStr, is(equalTo(expectedJsonStr)));
-    verify(measureRepository, times(1)).findAll(any(Pageable.class));
+    verify(measureRepository, times(1)).findAllByActive(any(Boolean.class), any(Pageable.class));
     verifyNoMoreInteractions(measureRepository);
   }
 
@@ -740,6 +745,7 @@ public class MeasureControllerMvcTest {
   public void testGetMeasuresWithCurrentUserFalse() throws Exception {
     Measure m1 =
         Measure.builder()
+            .active(true)
             .measureName("Measure1")
             .cqlLibraryName("TestLib1")
             .createdBy("test-okta-user-id-123")
@@ -748,6 +754,7 @@ public class MeasureControllerMvcTest {
             .build();
     Measure m2 =
         Measure.builder()
+            .active(true)
             .measureName("Measure2")
             .cqlLibraryName("TestLib2")
             .createdBy("test-okta-user-id-123")
@@ -756,6 +763,7 @@ public class MeasureControllerMvcTest {
             .build();
     Measure m3 =
         Measure.builder()
+            .active(true)
             .measureName("Measure3")
             .cqlLibraryName("TestLib3")
             .createdBy("test-okta-user-id-999")
@@ -764,7 +772,8 @@ public class MeasureControllerMvcTest {
             .build();
 
     Page<Measure> allMeasures = new PageImpl<>(List.of(m1, m2, m3));
-    when(measureRepository.findAll(any(Pageable.class))).thenReturn(allMeasures);
+    when(measureRepository.findAllByActive(any(Boolean.class), any(Pageable.class)))
+        .thenReturn(allMeasures);
 
     MvcResult result =
         mockMvc
@@ -781,7 +790,7 @@ public class MeasureControllerMvcTest {
     String expectedJsonStr = mapper.writeValueAsString(allMeasures);
 
     assertThat(resultStr, is(equalTo(expectedJsonStr)));
-    verify(measureRepository, times(1)).findAll(any(Pageable.class));
+    verify(measureRepository, times(1)).findAllByActive(any(Boolean.class), any(Pageable.class));
     verifyNoMoreInteractions(measureRepository);
   }
 
@@ -789,6 +798,7 @@ public class MeasureControllerMvcTest {
   public void getMeasuresWithCustomPaging() throws Exception {
     Measure m1 =
         Measure.builder()
+            .active(true)
             .measureName("Measure1")
             .cqlLibraryName("TestLib1")
             .createdBy("test-okta-user-id-123")
@@ -797,6 +807,7 @@ public class MeasureControllerMvcTest {
             .build();
     Measure m2 =
         Measure.builder()
+            .active(true)
             .measureName("Measure2")
             .cqlLibraryName("TestLib2")
             .createdBy("test-okta-user-id-123")
@@ -805,6 +816,7 @@ public class MeasureControllerMvcTest {
             .build();
     Measure m3 =
         Measure.builder()
+            .active(true)
             .measureName("Measure3")
             .cqlLibraryName("TestLib3")
             .createdBy("test-okta-user-id-999")
@@ -813,7 +825,8 @@ public class MeasureControllerMvcTest {
             .build();
 
     Page<Measure> allMeasures = new PageImpl<>(List.of(m1, m2, m3));
-    when(measureRepository.findAll(any(Pageable.class))).thenReturn(allMeasures);
+    when(measureRepository.findAllByActive(any(Boolean.class), any(Pageable.class)))
+        .thenReturn(allMeasures);
 
     MvcResult result =
         mockMvc
@@ -832,7 +845,8 @@ public class MeasureControllerMvcTest {
     String expectedJsonStr = mapper.writeValueAsString(allMeasures);
 
     assertThat(resultStr, is(equalTo(expectedJsonStr)));
-    verify(measureRepository, times(1)).findAll(pageRequestCaptor.capture());
+    verify(measureRepository, times(1))
+        .findAllByActive(activeCaptor.capture(), pageRequestCaptor.capture());
     PageRequest pageRequestValue = pageRequestCaptor.getValue();
     assertEquals(25, pageRequestValue.getPageSize());
     assertEquals(3, pageRequestValue.getPageNumber());
@@ -843,6 +857,7 @@ public class MeasureControllerMvcTest {
   public void testGetMeasuresFilterByCurrentUser() throws Exception {
     Measure m1 =
         Measure.builder()
+            .active(true)
             .measureName("Measure1")
             .cqlLibraryName("TestLib1")
             .createdBy("test-okta-user-id-123")
@@ -851,17 +866,19 @@ public class MeasureControllerMvcTest {
             .build();
     Measure m2 =
         Measure.builder()
+            .active(true)
             .measureName("Measure2")
             .cqlLibraryName("TestLib2")
             .createdBy("test-okta-user-id-123")
             .measureScoring("Proportion")
             .model("QI-Core")
+            .active(true)
             .build();
 
-    // Page<Measure> measures = List.of(m1, m2);
     final Page<Measure> measures = new PageImpl<>(List.of(m1, m2));
 
-    when(measureRepository.findAllByCreatedBy(anyString(), any(PageRequest.class)))
+    when(measureRepository.findAllByCreatedByAndActive(
+            anyString(), any(Boolean.class), any(PageRequest.class)))
         .thenReturn(measures); // fix
 
     MvcResult result =
@@ -880,7 +897,7 @@ public class MeasureControllerMvcTest {
 
     assertThat(resultStr, is(equalTo(expectedJsonStr)));
     verify(measureRepository, times(1))
-        .findAllByCreatedBy(eq(TEST_USER_ID), any(PageRequest.class));
+        .findAllByCreatedByAndActive(eq(TEST_USER_ID), any(Boolean.class), any(PageRequest.class));
     verifyNoMoreInteractions(measureRepository);
   }
 

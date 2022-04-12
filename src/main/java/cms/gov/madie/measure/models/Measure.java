@@ -61,6 +61,7 @@ public class Measure {
       message = "A measure name must contain at least one letter.")
   private String measureName;
 
+  private boolean active = true;
   private String cql;
   private String elmJson;
   private List<TestCase> testCases;

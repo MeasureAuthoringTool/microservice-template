@@ -49,19 +49,18 @@ public class MeasureController {
       @RequestParam(required = false, defaultValue = "10", name = "limit") int limit,
       @RequestParam(required = false, defaultValue = "0", name = "page") int page) {
     final String username = principal.getName();
+    log.info("User [{}] is attempting to create a new measure", username);
     final Pageable pageReq = PageRequest.of(page, limit, Sort.by("lastModifiedAt").descending());
     Page<Measure> measures =
         filterByCurrentUser
-            ? repository.findAllByCreatedBy(username, pageReq)
-            : repository.findAll(pageReq);
-    // : repository.findAllByIdNotNull(page);
-    // return ResponseEntity;
+            ? repository.findAllByCreatedByAndActive(username, true, pageReq)
+            : repository.findAllByActive(true, pageReq);
     return ResponseEntity.ok(measures);
   }
 
   @GetMapping("/measures/{id}")
   public ResponseEntity<Measure> getMeasure(@PathVariable("id") String id) {
-    Optional<Measure> measure = repository.findById(id);
+    Optional<Measure> measure = repository.findByIdAndActive(id, true);
     return measure
         .map(ResponseEntity::ok)
         .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
@@ -102,8 +101,13 @@ public class MeasureController {
       log.info("got invalid id [{}] vs measureId: [{}]", id, measure.getId());
       throw new InvalidIdException("Measure", "Update (PUT)", "(PUT [base]/[resource]/[id])");
     }
+    if (username != null && measure.getCreatedBy() != null && !measure.isActive()) {
+      log.info("got username [{}] vs createdBy: [{}]", username, measure.getCreatedBy());
+      measureService.checkDeletionCredentials(username, measure.getCreatedBy());
+    }
 
     if (measure.getId() != null) {
+      log.info("getMeasureId [{}]", measure.getId());
       Optional<Measure> persistedMeasure = repository.findById(measure.getId());
       if (persistedMeasure.isPresent()) {
         if (isCqlLibraryNameChanged(measure, persistedMeasure)) {

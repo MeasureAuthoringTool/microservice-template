@@ -1,8 +1,9 @@
 package cms.gov.madie.measure.service;
 
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import cms.gov.madie.measure.models.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.models.*;
+import cms.gov.madie.measure.resources.InvalidDeletionCredentialsException;
 import cms.gov.madie.measure.services.MeasureService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,6 +13,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -20,8 +24,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -57,6 +60,7 @@ public class MeasureServiceTest {
     groups.add(group2);
     measure =
         Measure.builder()
+            .active(true)
             .id("xyz-p13r-13ert")
             .cql("test cql")
             .measureScoring("Cohort")
@@ -69,6 +73,45 @@ public class MeasureServiceTest {
             .lastModifiedAt(Instant.now())
             .lastModifiedBy("test user")
             .build();
+  }
+
+  @Test
+  public void testFindAllByActiveOmitsAndRetrievesCorrectly() {
+    Measure m1 =
+        Measure.builder()
+            .active(true)
+            .id("xyz-p13r-459b")
+            .measureName("Measure1")
+            .cqlLibraryName("TestLib1")
+            .createdBy("test-okta-user-id-123")
+            .measureScoring("Proportion")
+            .model("QI-Core")
+            .build();
+    Measure m2 =
+        Measure.builder()
+            .id("xyz-p13r-459a")
+            .active(false)
+            .measureName("Measure2")
+            .cqlLibraryName("TestLib2")
+            .createdBy("test-okta-user-id-123")
+            .measureScoring("Proportion")
+            .model("QI-Core")
+            .active(true)
+            .build();
+    Page<Measure> activeMeasures = new PageImpl<>(List.of(measure, m1));
+    Page<Measure> inactiveMeasures = new PageImpl<>(List.of(m2));
+    PageRequest initialPage = PageRequest.of(0, 10);
+
+    when(repository.findAllByActive(eq(true), any(PageRequest.class))).thenReturn(activeMeasures);
+    when(repository.findAllByActive(eq(false), any(PageRequest.class)))
+        .thenReturn(inactiveMeasures);
+
+    assertEquals(repository.findAllByActive(true, initialPage), activeMeasures);
+    assertEquals(repository.findAllByActive(false, initialPage), inactiveMeasures);
+    // Inactive measure id is not present in active measures
+    assertFalse(activeMeasures.stream().anyMatch(item -> "xyz-p13r-459a".equals(item.getId())));
+    // but is in inactive measures
+    assertTrue(inactiveMeasures.stream().anyMatch(item -> "xyz-p13r-459a".equals(item.getId())));
   }
 
   @Test
@@ -154,6 +197,22 @@ public class MeasureServiceTest {
         "Initial Population",
         capturedGroup.getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
     assertEquals("Description", capturedGroup.getGroupDescription());
+  }
+
+  @Test
+  public void testInvalidDeletionCredentialsThrowsExceptionForDifferentUsers() {
+    assertThrows(
+        InvalidDeletionCredentialsException.class,
+        () -> measureService.checkDeletionCredentials("user1", "user2"));
+  }
+
+  @Test
+  public void testInvalidDeletionCredentialsDoesNotThrowExceptionWhenMatch() {
+    try {
+      measureService.checkDeletionCredentials("user1", "user1");
+    } catch (Exception e) {
+      fail("Unexpected exception was thrown");
+    }
   }
 
   @Test

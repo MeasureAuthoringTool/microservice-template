@@ -46,6 +46,7 @@ class MeasureControllerTest {
   @BeforeEach
   public void setUp() {
     measure = new Measure();
+    measure.setActive(true);
     measure.setMeasureSetId("IDIDID");
     measure.setMeasureName("MSR01");
     measure.setVersion("0.001");
@@ -75,12 +76,12 @@ class MeasureControllerTest {
   @Test
   void getMeasuresWithoutCurrentUserFilter() {
     Page<Measure> measures = new PageImpl<>(List.of(measure));
-    when(repository.findAll(any(Pageable.class))).thenReturn(measures);
+    when(repository.findAllByActive(any(Boolean.class), any(Pageable.class))).thenReturn(measures);
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
     ResponseEntity<Page<Measure>> response = controller.getMeasures(principal, false, 10, 0);
-    verify(repository, times(1)).findAll(any(Pageable.class));
+    verify(repository, times(1)).findAllByActive(any(Boolean.class), any(Pageable.class));
     verifyNoMoreInteractions(repository);
     assertNotNull(response.getBody());
     assertNotNull(response.getBody().getContent());
@@ -91,12 +92,15 @@ class MeasureControllerTest {
   @Test
   void getMeasuresWithCurrentUserFilter() {
     Page<Measure> measures = new PageImpl<>(List.of(measure));
-    when(repository.findAllByCreatedBy(anyString(), any(Pageable.class))).thenReturn(measures);
+    when(repository.findAllByCreatedByAndActive(
+            anyString(), any(Boolean.class), any(Pageable.class)))
+        .thenReturn(measures);
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
     ResponseEntity<Page<Measure>> response = controller.getMeasures(principal, true, 10, 0);
-    verify(repository, times(1)).findAllByCreatedBy(eq("test.user"), any(Pageable.class));
+    verify(repository, times(1))
+        .findAllByCreatedByAndActive(eq("test.user"), any(Boolean.class), any(Pageable.class));
     verifyNoMoreInteractions(repository);
     assertNotNull(response.getBody().getContent());
     assertNotNull(response.getBody().getContent().get(0));
@@ -107,7 +111,7 @@ class MeasureControllerTest {
   void getMeasure() {
     String id = "testid";
     Optional<Measure> optionalMeasure = Optional.of(measure);
-    doReturn(optionalMeasure).when(repository).findById(id);
+    doReturn(optionalMeasure).when(repository).findByIdAndActive(id, true);
     // measure found
     ResponseEntity<Measure> response = controller.getMeasure(id);
     assertEquals(
@@ -115,7 +119,7 @@ class MeasureControllerTest {
 
     // if measure not found
     Optional<Measure> empty = Optional.empty();
-    doReturn(empty).when(repository).findById(id);
+    doReturn(empty).when(repository).findByIdAndActive(id, true);
     response = controller.getMeasure(id);
     assertNull(response.getBody());
     assertEquals(response.getStatusCodeValue(), 404);
@@ -182,6 +186,26 @@ class MeasureControllerTest {
 
     assertThrows(
         InvalidIdException.class, () -> controller.updateMeasure(null, measure, principal));
+  }
+
+  @Test
+  void testUpdateMeasureReturnsExceptionForInvalidCredentials() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("aninvalidUser@gmail.com");
+
+    Measure testMeasure;
+    testMeasure = new Measure();
+    testMeasure.setActive(false);
+    testMeasure.setCreatedBy("anotheruser");
+    testMeasure.setId("testid");
+    testMeasure.setMeasureName("MSR01");
+    testMeasure.setVersion("0.001");
+    doThrow(new InvalidDeletionCredentialsException("invalidUser@gmail.com"))
+        .when(measureService)
+        .checkDeletionCredentials(anyString(), anyString());
+    assertThrows(
+        InvalidDeletionCredentialsException.class,
+        () -> controller.updateMeasure("testid", testMeasure, principal));
   }
 
   @Test
