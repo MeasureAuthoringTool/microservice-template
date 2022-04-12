@@ -49,7 +49,6 @@ public class MeasureController {
       @RequestParam(required = false, defaultValue = "10", name = "limit") int limit,
       @RequestParam(required = false, defaultValue = "0", name = "page") int page) {
     final String username = principal.getName();
-    log.info("User [{}] is attempting to create a new measure", username);
     final Pageable pageReq = PageRequest.of(page, limit, Sort.by("lastModifiedAt").descending());
     Page<Measure> measures =
         filterByCurrentUser
