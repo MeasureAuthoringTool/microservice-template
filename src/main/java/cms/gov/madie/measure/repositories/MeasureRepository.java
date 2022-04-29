@@ -21,4 +21,7 @@ public interface MeasureRepository extends MongoRepository<Measure, String> {
 
   @Query(value = "{_id: ?0}", fields = "{'testCases.series': 1, _id: 0}")
   Optional<Measure> findAllTestCaseSeriesByMeasureId(String measureId);
+
+  @Query(value = "{'groups._id': ?0}")
+  Optional<Measure> findGroupById(String groupId);
 }
