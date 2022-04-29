@@ -3,8 +3,6 @@ package cms.gov.madie.measure.services;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.models.Group;
 import cms.gov.madie.measure.models.Measure;
-import cms.gov.madie.measure.models.MeasurePopulationOption;
-import cms.gov.madie.measure.models.MeasureScoring;
 import cms.gov.madie.measure.models.TestCase;
 import cms.gov.madie.measure.models.TestCaseGroupPopulation;
 import cms.gov.madie.measure.models.TestCasePopulationValue;
@@ -20,8 +18,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import static cms.gov.madie.measure.utils.ScoringPopulationDefinition.SCORING_POPULATION_MAP;
 
 @Service
 public class MeasureService {
@@ -47,11 +43,16 @@ public class MeasureService {
       if (existingGroupOpt.isPresent()) {
         Group existingGroup = existingGroupOpt.get();
 
-        if (!(existingGroup.getScoring() != null
-                && existingGroup.getScoring().equals(group.getScoring()))
-            || existingGroup.getScoring() == null && group.getScoring() != null) {
-          measure.setTestCases(resetPopulationValuesForGroup(group, measure.getTestCases()));
-        }
+        // When a group scoring is not changed, existing population values for all test cases should
+        // be preserved
+        // and only the modified group population should be updated. This will be handled in future
+        // story.
+        //        if (!(existingGroup.getScoring() != null
+        //                && existingGroup.getScoring().equals(group.getScoring()))
+        //            || existingGroup.getScoring() == null && group.getScoring() != null) {
+        //          measure.setTestCases(setPopulationValuesForGroup(group,
+        // measure.getTestCases()));
+        //        }
         existingGroup.setScoring(group.getScoring());
         existingGroup.setPopulation(group.getPopulation());
         existingGroup.setGroupDescription(group.getGroupDescription());
@@ -60,6 +61,7 @@ public class MeasureService {
         measure.getGroups().add(group);
       }
     }
+    measure.setTestCases(setPopulationValuesForGroup(group, measure.getTestCases()));
     measure.setLastModifiedBy(username);
     measure.setLastModifiedAt(Instant.now());
     measureRepository.save(measure);
@@ -68,15 +70,14 @@ public class MeasureService {
 
   /**
    * Loops over the test cases searching for any with groups that match the updating group. If any
-   * match, the group population values for that group on the test case will be re-initialized with
-   * all the populations for that new scoring type, with all expected and actual values set to
-   * false.
+   * match, then the test case group populations will be updated with the measure group populations,
+   * along with expected and actual values set to false.
    *
    * @param group Group being changed
    * @param testCases TestCases to iterate over and update
    * @return TestCases updated with new scoring type (if any groups matched)
    */
-  public List<TestCase> resetPopulationValuesForGroup(Group group, List<TestCase> testCases) {
+  public List<TestCase> setPopulationValuesForGroup(Group group, List<TestCase> testCases) {
     if (testCases == null
         || testCases.isEmpty()
         || group == null
@@ -89,41 +90,47 @@ public class MeasureService {
 
     return testCases.stream()
         .map(
-            tc -> {
-              List<TestCaseGroupPopulation> groupPopulations =
-                  tc.getGroupPopulations() != null
-                      ? tc.getGroupPopulations().stream()
+            testCase -> {
+              List<TestCaseGroupPopulation> testCaseGroupPopulations =
+                  // When a group is not created but test case is created
+                  // then when we add a group, since the testCaseGroupPopulations is null, they will
+                  // never is saved in mongo
+                  testCase.getGroupPopulations() != null
+                      ? testCase.getGroupPopulations().stream()
                           .map(
-                              gp ->
-                                  group.getId().equals(gp.getGroupId())
-                                      ? gp.toBuilder()
+                              testCaseGroupPopulation ->
+                                  group.getId().equals(testCaseGroupPopulation.getGroupId())
+                                      ? testCaseGroupPopulation
+                                          .toBuilder()
                                           .scoring(group.getScoring())
                                           .populationValues(
-                                              getDefaultPopulationValuesForScoring(
-                                                  group.getScoring()))
+                                              getTestCasePopulationsForMeasureGroupPopulations(
+                                                  group))
                                           .build()
-                                      : gp.toBuilder().build())
+                                      : testCaseGroupPopulation.toBuilder().build())
                           .collect(Collectors.toList())
-                      : tc.getGroupPopulations();
-              return tc.toBuilder().groupPopulations(groupPopulations).build();
+                      : testCase.getGroupPopulations();
+              return testCase.toBuilder().groupPopulations(testCaseGroupPopulations).build();
             })
         .collect(Collectors.toList());
   }
 
-  public List<TestCasePopulationValue> getDefaultPopulationValuesForScoring(String scoring) {
-    List<MeasurePopulationOption> options =
-        SCORING_POPULATION_MAP.get(MeasureScoring.valueOfText(scoring));
-    return options == null
-        ? List.of()
-        : options.stream()
-            .map(
-                option ->
-                    TestCasePopulationValue.builder()
-                        .expected(false)
-                        .actual(false)
-                        .name(option.getMeasurePopulation())
-                        .build())
-            .collect(Collectors.toList());
+  /** @return a list of TestCasePopulationValues for those defines are assigned. */
+  private List<TestCasePopulationValue> getTestCasePopulationsForMeasureGroupPopulations(
+      Group group) {
+    if (group.getPopulation() != null && !group.getPopulation().isEmpty()) {
+      return group.getPopulation().keySet().stream()
+          .map(
+              measurePopulation ->
+                  TestCasePopulationValue.builder()
+                      .expected(false)
+                      .actual(false)
+                      .name(measurePopulation)
+                      .build())
+          .collect(Collectors.toList());
+    } else {
+      return List.of();
+    }
   }
 
   public void checkDuplicateCqlLibraryName(String cqlLibraryName) {

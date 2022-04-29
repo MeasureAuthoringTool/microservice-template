@@ -1,18 +1,30 @@
 package cms.gov.madie.measure.validations;
 
 import cms.gov.madie.measure.models.*;
+import cms.gov.madie.measure.repositories.MeasureRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
-
-import static cms.gov.madie.measure.utils.ScoringPopulationDefinition.SCORING_POPULATION_MAP;
 
 public class ScoringPopulationValidator
     implements ConstraintValidator<ValidScoringPopulation, TestCaseGroupPopulation> {
 
+  @Autowired MeasureRepository measureRepository;
+
+  /**
+   * Validates based on measureGroupPopulations If testCaseGroupPopulations contains all
+   * measureGroupPopulations return true
+   *
+   * @param testCaseGroupPopulation
+   * @param context
+   * @return
+   */
   @Override
   public boolean isValid(
       TestCaseGroupPopulation testCaseGroupPopulation, ConstraintValidatorContext context) {
@@ -23,24 +35,34 @@ public class ScoringPopulationValidator
         || testCaseGroupPopulation.getScoring().trim().isEmpty()) {
       return false;
     }
-
     MeasureScoring scoring = MeasureScoring.valueOfText(testCaseGroupPopulation.getScoring());
     List<TestCasePopulationValue> populationValues = testCaseGroupPopulation.getPopulationValues();
+
     if (scoring == null || populationValues == null || populationValues.isEmpty()) {
       return false;
     }
 
-    List<MeasurePopulation> requiredPopulations =
-        SCORING_POPULATION_MAP.get(scoring).stream()
-            .map(MeasurePopulationOption::getMeasurePopulation)
-            .collect(Collectors.toList());
     List<MeasurePopulation> receivedPopulations =
         populationValues.stream()
             .map(TestCasePopulationValue::getName)
             .distinct()
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
-    return receivedPopulations.size() == requiredPopulations.size()
-        && requiredPopulations.containsAll(receivedPopulations);
+
+    Optional<Measure> measure =
+        measureRepository.findGroupById(testCaseGroupPopulation.getGroupId());
+
+    if (measure.isPresent()) {
+      Optional<Group> measureGroup =
+          measure.get().getGroups().stream()
+              .filter(group -> group.getId().equals(testCaseGroupPopulation.getGroupId()))
+              .findFirst();
+      if (measureGroup.isPresent()) {
+        Set<MeasurePopulation> measurePopulationSet = measureGroup.get().getPopulation().keySet();
+        return receivedPopulations.size() == measurePopulationSet.size()
+            && measurePopulationSet.containsAll(receivedPopulations);
+      }
+    }
+    return false;
   }
 }
