@@ -1,9 +1,11 @@
 package cms.gov.madie.measure.service;
 
+import cms.gov.madie.measure.exceptions.BundleOperationException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.models.*;
 import cms.gov.madie.measure.resources.InvalidDeletionCredentialsException;
+import cms.gov.madie.measure.services.FhirServicesClient;
 import cms.gov.madie.measure.services.MeasureService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +18,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -23,6 +27,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.times;
@@ -32,6 +39,8 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class MeasureServiceTest {
   @Mock private MeasureRepository measureRepository;
+
+  @Mock private FhirServicesClient fhirServicesClient;
 
   @InjectMocks private MeasureService measureService;
 
@@ -544,5 +553,24 @@ public class MeasureServiceTest {
     assertNotNull(output.get(0).getGroupPopulations().get(1).getPopulationValues());
     assertEquals("Cohort", output.get(0).getGroupPopulations().get(1).getScoring());
     assertEquals(0, output.get(0).getGroupPopulations().get(1).getPopulationValues().size());
+  }
+
+  @Test
+  void testBundleMeasureThrowsOperationException() {
+    final Measure measure = Measure.builder().createdBy("test.user").build();
+    when(fhirServicesClient.getMeasureBundle(any(Measure.class), anyString()))
+        .thenThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN));
+    assertThrows(BundleOperationException.class,
+        () -> measureService.bundleMeasure(measure, "Bearer TOKEN"));
+  }
+
+  @Test
+  void testBundleMeasureReturnsBundleString() {
+    final String json = "{\"message\": \"GOOD JSON\"}";
+    final Measure measure = Measure.builder().createdBy("test.user").build();
+    when(fhirServicesClient.getMeasureBundle(any(Measure.class), anyString()))
+        .thenReturn(json);
+    String output = measureService.bundleMeasure(measure, "Bearer TOKEN");
+    assertThat(output, is(equalTo(json)));
   }
 }

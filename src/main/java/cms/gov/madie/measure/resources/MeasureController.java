@@ -13,15 +13,12 @@ import cms.gov.madie.measure.exceptions.InvalidResourceBundleStateException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.models.Group;
-import cms.gov.madie.measure.services.FhirServicesClient;
 import cms.gov.madie.measure.services.MeasureService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +28,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -38,7 +36,6 @@ import cms.gov.madie.measure.models.Measure;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import lombok.RequiredArgsConstructor;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 @Slf4j
@@ -48,7 +45,6 @@ public class MeasureController {
 
   private final MeasureRepository repository;
   private final MeasureService measureService;
-  private final FhirServicesClient fhirServicesClient;
 
   @GetMapping("/measures")
   public ResponseEntity<Page<Measure>> getMeasures(
@@ -161,7 +157,7 @@ public class MeasureController {
 
   @GetMapping(path = "/measures/{measureId}/bundle", produces = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<String> getMeasureBundle(
-      @PathVariable String measureId, Principal principal, HttpServletRequest request) {
+      @PathVariable String measureId, Principal principal, @RequestHeader("Authorization") String accessToken) {
     Optional<Measure> measureOptional = repository.findById(measureId);
     if (measureOptional.isEmpty()) {
       throw new ResourceNotFoundException("Measure", measureId);
@@ -173,8 +169,7 @@ public class MeasureController {
     if (measure.isCqlErrors()) {
       throw new InvalidResourceBundleStateException("Measure", measureId);
     }
-    return ResponseEntity.ok(
-        fhirServicesClient.getMeasureBundle(measure, request.getHeader(HttpHeaders.AUTHORIZATION)));
+    return ResponseEntity.ok(measureService.bundleMeasure(measure, accessToken));
   }
 
   private boolean isCqlLibraryNameChanged(Measure measure, Optional<Measure> persistedMeasure) {

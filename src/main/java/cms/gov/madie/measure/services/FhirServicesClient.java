@@ -1,6 +1,6 @@
 package cms.gov.madie.measure.services;
 
-import cms.gov.madie.measure.config.EnvironmentConfig;
+import cms.gov.madie.measure.config.FhirServicesConfig;
 import cms.gov.madie.measure.models.Measure;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,17 +17,19 @@ import java.net.URI;
 @AllArgsConstructor
 public class FhirServicesClient {
 
-  private EnvironmentConfig environmentConfig;
-  private RestTemplate restTemplate;
+  private FhirServicesConfig fhirServicesConfig;
+  private RestTemplate fhirServicesRestTemplate;
 
   public String getMeasureBundle(Measure measure, String accessToken) {
     URI uri =
         URI.create(
-            environmentConfig.getMadieFhirServiceBaseUrl()
-                + environmentConfig.getMadieFhirServiceMeasuresBundleUri());
+            fhirServicesConfig.getMadieFhirServiceBaseUrl()
+                + fhirServicesConfig.getMadieFhirServiceMeasuresBundleUri());
     HttpHeaders headers = new HttpHeaders();
     headers.set(HttpHeaders.AUTHORIZATION, accessToken);
     HttpEntity<Measure> measureEntity = new HttpEntity<>(measure, headers);
-    return restTemplate.exchange(uri, HttpMethod.PUT, measureEntity, String.class).getBody();
+    return fhirServicesRestTemplate
+        .exchange(uri, HttpMethod.PUT, measureEntity, String.class)
+        .getBody();
   }
 }
