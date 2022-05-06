@@ -4,11 +4,16 @@ import java.security.Principal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Month;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 import cms.gov.madie.measure.exceptions.InvalidIdException;
+import cms.gov.madie.measure.exceptions.InvalidResourceBundleStateException;
+import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.models.Group;
+import cms.gov.madie.measure.services.FhirServicesClient;
 import cms.gov.madie.measure.services.MeasureService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +21,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,6 +38,7 @@ import cms.gov.madie.measure.models.Measure;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import lombok.RequiredArgsConstructor;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 @Slf4j
@@ -38,8 +46,9 @@ import javax.validation.Valid;
 @RequiredArgsConstructor
 public class MeasureController {
 
-  @Autowired private final MeasureRepository repository;
-  @Autowired private final MeasureService measureService;
+  private final MeasureRepository repository;
+  private final MeasureService measureService;
+  private final FhirServicesClient fhirServicesClient;
 
   @GetMapping("/measures")
   public ResponseEntity<Page<Measure>> getMeasures(
@@ -124,6 +133,18 @@ public class MeasureController {
     return response;
   }
 
+  @GetMapping("/measures/{measureId}/groups")
+  public ResponseEntity<List<Group>> getGroups(@PathVariable String measureId) {
+    return repository
+        .findById(measureId)
+        .map(
+            measure -> {
+              List<Group> groups = measure.getGroups() == null ? List.of() : measure.getGroups();
+              return ResponseEntity.ok(groups);
+            })
+        .orElseThrow(() -> new ResourceNotFoundException("Measure", measureId));
+  }
+
   @PostMapping("/measures/{measureId}/groups")
   public ResponseEntity<Group> createGroup(
       @RequestBody @Valid Group group, @PathVariable String measureId, Principal principal) {
@@ -136,6 +157,24 @@ public class MeasureController {
       @RequestBody @Valid Group group, @PathVariable String measureId, Principal principal) {
     return ResponseEntity.ok(
         measureService.createOrUpdateGroup(group, measureId, principal.getName()));
+  }
+
+  @GetMapping(path = "/measures/{measureId}/bundle", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<String> getMeasureBundle(
+      @PathVariable String measureId, Principal principal, HttpServletRequest request) {
+    Optional<Measure> measureOptional = repository.findById(measureId);
+    if (measureOptional.isEmpty()) {
+      throw new ResourceNotFoundException("Measure", measureId);
+    }
+    Measure measure = measureOptional.get();
+    if (!principal.getName().equals(measure.getCreatedBy())) {
+      throw new UnauthorizedException("Measure", measureId, principal.getName());
+    }
+    if (measure.isCqlErrors()) {
+      throw new InvalidResourceBundleStateException("Measure", measureId);
+    }
+    return ResponseEntity.ok(
+        fhirServicesClient.getMeasureBundle(measure, request.getHeader(HttpHeaders.AUTHORIZATION)));
   }
 
   private boolean isCqlLibraryNameChanged(Measure measure, Optional<Measure> persistedMeasure) {

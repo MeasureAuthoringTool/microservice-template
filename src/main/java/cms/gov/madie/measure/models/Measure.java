@@ -62,6 +62,9 @@ public class Measure {
   private String measureName;
 
   private boolean active = true;
+  // TODO: determine if theres a way to set this from backend or if we should always trust user
+  // input for this field
+  private boolean cqlErrors;
   private String cql;
   private String elmJson;
   private List<TestCase> testCases;

@@ -11,6 +11,12 @@ server:
 
 madie:
   allowedApi: http://localhost:9000
+  fhir:
+    service:
+      base-url: ${FHIR_SERVICES_URL:http://localhost:8085/api}
+      hapi-fhir:
+        measures:
+          bundle-uri: /hapiFhir/measures/bundles
 
 management:
   endpoints:

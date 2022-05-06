@@ -1,7 +1,9 @@
 package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.exceptions.InvalidIdException;
+import cms.gov.madie.measure.exceptions.InvalidResourceBundleStateException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
@@ -53,11 +55,10 @@ public class ErrorHandlingControllerAdvice {
     return errorAttributes;
   }
 
-  @ExceptionHandler(InvalidDeletionCredentialsException.class)
+  @ExceptionHandler({UnauthorizedException.class, InvalidDeletionCredentialsException.class})
   @ResponseStatus(HttpStatus.FORBIDDEN)
   @ResponseBody
-  Map<String, Object> onInvalidDeletionCredentials(
-      InvalidDeletionCredentialsException ex, WebRequest request) {
+  Map<String, Object> onUserNotAuthorizedExceptions(Exception ex, WebRequest request) {
     return getErrorAttributes(request, HttpStatus.FORBIDDEN);
   }
 
@@ -97,6 +98,13 @@ public class ErrorHandlingControllerAdvice {
   @ResponseBody
   Map<String, Object> onInvalidKeyException(WebRequest request) {
     return getErrorAttributes(request, HttpStatus.BAD_REQUEST);
+  }
+
+  @ExceptionHandler({InvalidResourceBundleStateException.class})
+  @ResponseStatus(HttpStatus.CONFLICT)
+  @ResponseBody
+  Map<String, Object> onResourceNotDraftableException(WebRequest request) {
+    return getErrorAttributes(request, HttpStatus.CONFLICT);
   }
 
   private Map<String, Object> getErrorAttributes(WebRequest request, HttpStatus httpStatus) {
