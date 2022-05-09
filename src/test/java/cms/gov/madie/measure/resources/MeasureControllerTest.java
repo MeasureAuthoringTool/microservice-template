@@ -36,7 +36,6 @@ import org.springframework.http.ResponseEntity;
 import cms.gov.madie.measure.models.Measure;
 import cms.gov.madie.measure.models.MeasureMetaData;
 import cms.gov.madie.measure.repositories.MeasureRepository;
-import org.springframework.web.client.HttpClientErrorException;
 
 @ExtendWith(MockitoExtension.class)
 class MeasureControllerTest {
