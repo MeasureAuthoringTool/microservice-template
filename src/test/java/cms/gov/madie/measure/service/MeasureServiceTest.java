@@ -560,7 +560,8 @@ public class MeasureServiceTest {
     final Measure measure = Measure.builder().createdBy("test.user").build();
     when(fhirServicesClient.getMeasureBundle(any(Measure.class), anyString()))
         .thenThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN));
-    assertThrows(BundleOperationException.class,
+    assertThrows(
+        BundleOperationException.class,
         () -> measureService.bundleMeasure(measure, "Bearer TOKEN"));
   }
 
@@ -568,8 +569,7 @@ public class MeasureServiceTest {
   void testBundleMeasureReturnsBundleString() {
     final String json = "{\"message\": \"GOOD JSON\"}";
     final Measure measure = Measure.builder().createdBy("test.user").build();
-    when(fhirServicesClient.getMeasureBundle(any(Measure.class), anyString()))
-        .thenReturn(json);
+    when(fhirServicesClient.getMeasureBundle(any(Measure.class), anyString())).thenReturn(json);
     String output = measureService.bundleMeasure(measure, "Bearer TOKEN");
     assertThat(output, is(equalTo(json)));
   }

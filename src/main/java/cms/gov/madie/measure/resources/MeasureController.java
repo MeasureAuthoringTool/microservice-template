@@ -157,7 +157,9 @@ public class MeasureController {
 
   @GetMapping(path = "/measures/{measureId}/bundle", produces = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<String> getMeasureBundle(
-      @PathVariable String measureId, Principal principal, @RequestHeader("Authorization") String accessToken) {
+      @PathVariable String measureId,
+      Principal principal,
+      @RequestHeader("Authorization") String accessToken) {
     Optional<Measure> measureOptional = repository.findById(measureId);
     if (measureOptional.isEmpty()) {
       throw new ResourceNotFoundException("Measure", measureId);

@@ -977,7 +977,8 @@ public class MeasureControllerMvcTest {
   @Test
   void getMeasureGroupsReturnsNotFound() throws Exception {
     when(measureRepository.findById(anyString())).thenReturn(Optional.empty());
-    mockMvc.perform(
+    mockMvc
+        .perform(
             get("/measures/1234/groups")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
@@ -993,32 +994,39 @@ public class MeasureControllerMvcTest {
     Measure measure = new Measure();
     measure.setCreatedBy(TEST_USER_ID);
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    mockMvc.perform(
-        get("/measures/1234/groups")
-            .with(user(TEST_USER_ID))
-            .with(csrf())
-            .header("Authorization", "test-okta")
-            .accept(MediaType.APPLICATION_JSON))
+    mockMvc
+        .perform(
+            get("/measures/1234/groups")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .header("Authorization", "test-okta")
+                .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().string("[]"));
     verify(measureRepository, times(1)).findById(eq("1234"));
     verifyNoInteractions(measureService);
   }
 
-
   @Test
   void testGetMeasureBundleReturnsGroupsArray() throws Exception {
-    Measure measure = Measure.builder()
-        .createdBy(TEST_USER_ID)
-        .groups(List.of(Group.builder().groupDescription("Group1").scoring(MeasureScoring.RATIO.toString()).build()))
-        .build();
+    Measure measure =
+        Measure.builder()
+            .createdBy(TEST_USER_ID)
+            .groups(
+                List.of(
+                    Group.builder()
+                        .groupDescription("Group1")
+                        .scoring(MeasureScoring.RATIO.toString())
+                        .build()))
+            .build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    mockMvc.perform(
-        get("/measures/1234/groups")
-            .with(user(TEST_USER_ID))
-            .with(csrf())
-            .header("Authorization", "test-okta")
-            .accept(MediaType.APPLICATION_JSON))
+    mockMvc
+        .perform(
+            get("/measures/1234/groups")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .header("Authorization", "test-okta")
+                .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].groupDescription").value("Group1"))
         .andExpect(jsonPath("$[0].scoring").value("Ratio"));
@@ -1029,7 +1037,8 @@ public class MeasureControllerMvcTest {
   @Test
   void getMeasureBundleReturnsNotFound() throws Exception {
     when(measureRepository.findById(anyString())).thenReturn(Optional.empty());
-    mockMvc.perform(
+    mockMvc
+        .perform(
             get("/measures/1234/bundle")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
@@ -1042,83 +1051,86 @@ public class MeasureControllerMvcTest {
 
   @Test
   void testGetMeasureBundleReturnsForbidden() throws Exception {
-    Measure measure = Measure.builder()
-        .measureName("TestMeasure")
-        .createdBy("OTHER_USER")
-        .build();
+    Measure measure = Measure.builder().measureName("TestMeasure").createdBy("OTHER_USER").build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    mockMvc.perform(
-        get("/measures/1234/bundle")
-            .with(user(TEST_USER_ID))
-            .with(csrf())
-            .header("Authorization", "test-okta")
-            .accept(MediaType.APPLICATION_JSON))
+    mockMvc
+        .perform(
+            get("/measures/1234/bundle")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .header("Authorization", "test-okta")
+                .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isForbidden())
-        .andExpect(jsonPath("$.message").value("User "+TEST_USER_ID+" is not authorized for Measure with ID 1234"));
+        .andExpect(
+            jsonPath("$.message")
+                .value("User " + TEST_USER_ID + " is not authorized for Measure with ID 1234"));
     verify(measureRepository, times(1)).findById(eq("1234"));
     verifyNoInteractions(measureService);
   }
 
   @Test
   void testGetMeasureBundleReturnsConflict() throws Exception {
-    Measure measure = Measure.builder()
-        .measureName("TestMeasure")
-        .createdBy(TEST_USER_ID)
-        .cqlErrors(true)
-        .build();
+    Measure measure =
+        Measure.builder()
+            .measureName("TestMeasure")
+            .createdBy(TEST_USER_ID)
+            .cqlErrors(true)
+            .build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    mockMvc.perform(
-        get("/measures/1234/bundle")
-            .with(user(TEST_USER_ID))
-            .with(csrf())
-            .header("Authorization", "test-okta")
-            .accept(MediaType.APPLICATION_JSON))
+    mockMvc
+        .perform(
+            get("/measures/1234/bundle")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .header("Authorization", "test-okta")
+                .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isConflict())
-        .andExpect(jsonPath("$.message").value("Cannot bundle resource Measure with ID 1234 while CQL errors exist."));
+        .andExpect(
+            jsonPath("$.message")
+                .value("Cannot bundle resource Measure with ID 1234 while CQL errors exist."));
     verify(measureRepository, times(1)).findById(eq("1234"));
     verifyNoInteractions(measureService);
   }
 
   @Test
   void testGetMeasureBundleReturnsMeasureBundle() throws Exception {
-    final String bundleString = "{\n" +
-        "    \"resourceType\": \"Bundle\",\n" +
-        "    \"type\": \"transaction\",\n" +
-        "    \"entry\": [\n" +
-        "        {\n" +
-        "            \"resource\": {\n" +
-        "                \"resourceType\": \"Measure\",\n" +
-        "                \"meta\": {\n" +
-        "                    \"profile\": [\n" +
-        "                        \"http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/proportion-measure-cqfm\"\n" +
-        "                    ]\n" +
-        "                },\n" +
-        "                \"url\": \"http://hl7.org/fhir/us/cqfmeasures/Measure/EXM124\",\n" +
-        "                \"version\": \"9.0.000\",\n" +
-        "                \"name\": \"EXM124\",\n" +
-        "                \"title\": \"Cervical Cancer Screening\",\n" +
-        "                \"experimental\": true,\n" +
-        "                \"effectivePeriod\": {\n" +
-        "                    \"start\": \"2022-05-09\",\n" +
-        "                    \"end\": \"2022-05-09\"\n" +
-        "                }\n" +
-        "            }\n" +
-        "        }\n" +
-        "    ]\n" +
-        "}";
-    Measure measure = Measure.builder()
-        .measureName("EXM124")
-        .createdBy(TEST_USER_ID)
-        .cqlErrors(false)
-        .build();
+    final String bundleString =
+        "{\n"
+            + "    \"resourceType\": \"Bundle\",\n"
+            + "    \"type\": \"transaction\",\n"
+            + "    \"entry\": [\n"
+            + "        {\n"
+            + "            \"resource\": {\n"
+            + "                \"resourceType\": \"Measure\",\n"
+            + "                \"meta\": {\n"
+            + "                    \"profile\": [\n"
+            + "                        \"http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/proportion-measure-cqfm\"\n"
+            + "                    ]\n"
+            + "                },\n"
+            + "                \"url\": \"http://hl7.org/fhir/us/cqfmeasures/Measure/EXM124\",\n"
+            + "                \"version\": \"9.0.000\",\n"
+            + "                \"name\": \"EXM124\",\n"
+            + "                \"title\": \"Cervical Cancer Screening\",\n"
+            + "                \"experimental\": true,\n"
+            + "                \"effectivePeriod\": {\n"
+            + "                    \"start\": \"2022-05-09\",\n"
+            + "                    \"end\": \"2022-05-09\"\n"
+            + "                }\n"
+            + "            }\n"
+            + "        }\n"
+            + "    ]\n"
+            + "}";
+    Measure measure =
+        Measure.builder().measureName("EXM124").createdBy(TEST_USER_ID).cqlErrors(false).build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
     when(measureService.bundleMeasure(any(Measure.class), anyString())).thenReturn(bundleString);
-    mockMvc.perform(
-        get("/measures/1234/bundle")
-            .with(user(TEST_USER_ID))
-            .with(csrf())
-            .header("Authorization", "test-okta")
-            .accept(MediaType.APPLICATION_JSON))
+    mockMvc
+        .perform(
+            get("/measures/1234/bundle")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .header("Authorization", "test-okta")
+                .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.resourceType").value("Bundle"))
         .andExpect(jsonPath("$.type").value("transaction"))
