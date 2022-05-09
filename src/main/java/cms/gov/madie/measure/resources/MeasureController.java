@@ -155,7 +155,7 @@ public class MeasureController {
         measureService.createOrUpdateGroup(group, measureId, principal.getName()));
   }
 
-  @GetMapping(path = "/measures/{measureId}/bundle", produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetMapping(path = "/measures/{measureId}/bundles", produces = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<String> getMeasureBundle(
       @PathVariable String measureId,
       Principal principal,
