@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.exceptions.BundleOperationException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.models.Group;
 import cms.gov.madie.measure.models.Measure;
@@ -10,6 +11,8 @@ import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.resources.InvalidDeletionCredentialsException;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
 import io.micrometer.core.instrument.util.StringUtils;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -19,13 +22,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
+@AllArgsConstructor
 public class MeasureService {
   private final MeasureRepository measureRepository;
-
-  public MeasureService(MeasureRepository measureRepository) {
-    this.measureRepository = measureRepository;
-  }
+  private final FhirServicesClient fhirServicesClient;
 
   public Group createOrUpdateGroup(Group group, String measureId, String username) {
     Measure measure = measureRepository.findById(measureId).orElse(null);
@@ -144,6 +146,18 @@ public class MeasureService {
   public void checkDeletionCredentials(String username, String createdBy) {
     if (!username.equals(createdBy)) {
       throw new InvalidDeletionCredentialsException(username);
+    }
+  }
+
+  public String bundleMeasure(Measure measure, String accessToken) {
+    if (measure == null) {
+      return null;
+    }
+    try {
+      return fhirServicesClient.getMeasureBundle(measure, accessToken);
+    } catch (Exception ex) {
+      log.error("An error occurred while bundling measure {}", measure.getId(), ex);
+      throw new BundleOperationException("Measure", measure.getId(), ex);
     }
   }
 }

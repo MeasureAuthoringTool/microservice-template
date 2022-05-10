@@ -14,7 +14,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import cms.gov.madie.measure.exceptions.BundleOperationException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
+import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.models.Group;
 import cms.gov.madie.measure.models.MeasurePopulation;
 import cms.gov.madie.measure.services.MeasureService;
@@ -27,6 +30,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import cms.gov.madie.measure.models.Measure;
@@ -289,5 +293,54 @@ class MeasureControllerTest {
     assertEquals(group.getId(), response.getBody().getId());
     assertEquals(group.getScoring(), response.getBody().getScoring());
     assertEquals(group.getPopulation(), response.getBody().getPopulation());
+  }
+
+  @Test
+  void testBundleMeasureThrowsNotFoundException() {
+    Principal principal = mock(Principal.class);
+    when(repository.findById(anyString())).thenReturn(Optional.empty());
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> controller.getMeasureBundle("MeasureID", principal, "Bearer TOKEN"));
+  }
+
+  @Test
+  void testBundleMeasureThrowsAccessException() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+    final Measure measure = Measure.builder().createdBy("OtherUser").build();
+    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
+    assertThrows(
+        UnauthorizedException.class,
+        () -> controller.getMeasureBundle("MeasureID", principal, "Bearer TOKEN"));
+  }
+
+  @Test
+  void testBundleMeasureThrowsOperationException() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+    final Measure measure = Measure.builder().createdBy("test.user").build();
+    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(measureService.bundleMeasure(any(Measure.class), anyString()))
+        .thenThrow(
+            new BundleOperationException("Measure", "MeasureID", new RuntimeException("cause")));
+    assertThrows(
+        BundleOperationException.class,
+        () -> controller.getMeasureBundle("MeasureID", principal, "Bearer TOKEN"));
+  }
+
+  @Test
+  void testBundleMeasureReturnsBundleString() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+    final String json = "{\"message\": \"GOOD JSON\"}";
+    final Measure measure = Measure.builder().createdBy("test.user").build();
+    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(measureService.bundleMeasure(any(Measure.class), anyString())).thenReturn(json);
+    ResponseEntity<String> output =
+        controller.getMeasureBundle("MeasureID", principal, "Bearer TOKEN");
+    assertThat(output, is(notNullValue()));
+    assertThat(output.getStatusCode(), is(equalTo(HttpStatus.OK)));
+    assertThat(output.getBody(), is(equalTo(json)));
   }
 }
