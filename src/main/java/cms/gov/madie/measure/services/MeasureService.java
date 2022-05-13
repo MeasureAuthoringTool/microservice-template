@@ -144,11 +144,9 @@ public class MeasureService {
     }
   }
 
-  public void checkMeasurementPeriodValidity(
-      Date measurementPeriodStart, Date measurementPeriodEnd) {
-    if (measurementPeriodEnd == null || measurementPeriodStart == null) {
-      throw new ArgumentCannotBeNullException(
-          "measurementPeriod", "Measurement period dates cannot be empty.");
+  public void validateMeasurementPeriod(Date measurementPeriodStart, Date measurementPeriodEnd) {
+    if (measurementPeriodStart == null || measurementPeriodEnd == null) {
+      throw new InvalidMeasurementPeriodException("Measurement period dates cannot be empty.");
     } else {
       try {
         SimpleDateFormat df = new SimpleDateFormat("MM-dd-yyyy");
@@ -164,14 +162,14 @@ public class MeasureService {
             || checkMeasurementPeriodStart > 2099
             || 1990 > checkMeasurementPeriodEnd
             || checkMeasurementPeriodEnd > 2099) {
-          throw new InvalidDateException("measurementPeriod", "Invalid Date.");
+          throw new InvalidMeasurementPeriodException(
+              "Measurement periods should be between 1990 and 2099.");
         }
         Date measurementPeriodStartDate = df.parse(df.format(measurementPeriodStart));
         Date measurementPeriodEndDate = df.parse(df.format(measurementPeriodEnd));
         if (measurementPeriodEndDate.before(measurementPeriodStartDate)
             || measurementPeriodEndDate.equals(measurementPeriodStartDate)) {
-          throw new ArgumentFailedValidationException(
-              "measurementPeriod",
+          throw new InvalidMeasurementPeriodException(
               "Measurement period start date cannot be greater than measurement period end date.");
         }
       } catch (Exception e) {

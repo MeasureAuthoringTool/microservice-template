@@ -111,17 +111,10 @@ public class ErrorHandlingControllerAdvice {
     return getErrorAttributes(request, HttpStatus.BAD_REQUEST);
   }
 
-  @ExceptionHandler(InvalidDateException.class)
+  @ExceptionHandler(InvalidMeasurementPeriodException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ResponseBody
-  Map<String, Object> onInvalidDateException(WebRequest request) {
-    return getErrorAttributes(request, HttpStatus.BAD_REQUEST);
-  }
-
-  @ExceptionHandler(ArgumentFailedValidationException.class)
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
-  @ResponseBody
-  Map<String, Object> onArgumentFailedValidationException(WebRequest request) {
+  Map<String, Object> onInvalidMeasurementPeriodException(WebRequest request) {
     return getErrorAttributes(request, HttpStatus.BAD_REQUEST);
   }
 

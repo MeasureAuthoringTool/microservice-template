@@ -14,7 +14,6 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 import javax.validation.groups.Default;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 

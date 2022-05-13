@@ -2,8 +2,6 @@ package cms.gov.madie.measure.resources;
 
 import java.security.Principal;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.Month;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -118,7 +116,7 @@ public class MeasureController {
           measureService.checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
         }
         if (isCqlLibraryMeasurementPeriodChanged(measure, persistedMeasure)) {
-          measureService.checkMeasurementPeriodValidity(
+          measureService.validateMeasurementPeriod(
               measure.getMeasurementPeriodStart(), measure.getMeasurementPeriodEnd());
         }
         measure.setLastModifiedBy(username);
