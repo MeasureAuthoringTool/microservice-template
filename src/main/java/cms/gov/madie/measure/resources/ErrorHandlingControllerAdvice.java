@@ -104,13 +104,6 @@ public class ErrorHandlingControllerAdvice {
     return getErrorAttributes(request, HttpStatus.CONFLICT);
   }
 
-  @ExceptionHandler(ArgumentCannotBeNullException.class)
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
-  @ResponseBody
-  Map<String, Object> onArgumentCannotBeNullException(WebRequest request) {
-    return getErrorAttributes(request, HttpStatus.BAD_REQUEST);
-  }
-
   @ExceptionHandler(InvalidMeasurementPeriodException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ResponseBody

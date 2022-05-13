@@ -163,7 +163,7 @@ public class MeasureService {
             || 1990 > checkMeasurementPeriodEnd
             || checkMeasurementPeriodEnd > 2099) {
           throw new InvalidMeasurementPeriodException(
-              "Measurement periods should be between 1990 and 2099.");
+              "Measurement periods should be between the years 1990 and 2099.");
         }
         Date measurementPeriodStartDate = df.parse(df.format(measurementPeriodStart));
         Date measurementPeriodEndDate = df.parse(df.format(measurementPeriodEnd));

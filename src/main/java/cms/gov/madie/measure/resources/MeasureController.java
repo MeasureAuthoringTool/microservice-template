@@ -84,9 +84,6 @@ public class MeasureController {
     measure.setLastModifiedBy(username);
     measure.setLastModifiedAt(now);
 
-    //    int nextCalendarYear = LocalDate.now().plusYears(1).getYear();
-    //    measure.setMeasurementPeriodStart(LocalDate.of(nextCalendarYear, Month.JANUARY, 1));
-    //    measure.setMeasurementPeriodEnd(LocalDate.of(nextCalendarYear, Month.DECEMBER, 31));
     Measure savedMeasure = repository.save(measure);
     log.info("User [{}] successfully created new measure with ID [{}]", username, measure.getId());
     return ResponseEntity.status(HttpStatus.CREATED).body(savedMeasure);
