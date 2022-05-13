@@ -86,9 +86,9 @@ public class MeasureController {
     measure.setLastModifiedBy(username);
     measure.setLastModifiedAt(now);
 
-    int nextCalendarYear = LocalDate.now().plusYears(1).getYear();
-    measure.setMeasurementPeriodStart(LocalDate.of(nextCalendarYear, Month.JANUARY, 1));
-    measure.setMeasurementPeriodEnd(LocalDate.of(nextCalendarYear, Month.DECEMBER, 31));
+    //    int nextCalendarYear = LocalDate.now().plusYears(1).getYear();
+    //    measure.setMeasurementPeriodStart(LocalDate.of(nextCalendarYear, Month.JANUARY, 1));
+    //    measure.setMeasurementPeriodEnd(LocalDate.of(nextCalendarYear, Month.DECEMBER, 31));
     Measure savedMeasure = repository.save(measure);
     log.info("User [{}] successfully created new measure with ID [{}]", username, measure.getId());
     return ResponseEntity.status(HttpStatus.CREATED).body(savedMeasure);
@@ -116,6 +116,10 @@ public class MeasureController {
       if (persistedMeasure.isPresent()) {
         if (isCqlLibraryNameChanged(measure, persistedMeasure)) {
           measureService.checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
+        }
+        if (isCqlLibraryMeasurementPeriodChanged(measure, persistedMeasure)) {
+          measureService.checkMeasurementPeriodValidity(
+              measure.getMeasurementPeriodStart(), measure.getMeasurementPeriodEnd());
         }
         measure.setLastModifiedBy(username);
         measure.setLastModifiedAt(Instant.now());
@@ -176,5 +180,13 @@ public class MeasureController {
 
   private boolean isCqlLibraryNameChanged(Measure measure, Optional<Measure> persistedMeasure) {
     return !Objects.equals(persistedMeasure.get().getCqlLibraryName(), measure.getCqlLibraryName());
+  }
+
+  private boolean isCqlLibraryMeasurementPeriodChanged(
+      Measure measure, Optional<Measure> persistedMeasure) {
+    return !Objects.equals(
+            persistedMeasure.get().getMeasurementPeriodStart(), measure.getMeasurementPeriodStart())
+        || !Objects.equals(
+            persistedMeasure.get().getMeasurementPeriodEnd(), measure.getMeasurementPeriodEnd());
   }
 }

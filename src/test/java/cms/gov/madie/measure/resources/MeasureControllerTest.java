@@ -9,10 +9,7 @@ import static org.mockito.Mockito.*;
 import java.security.Principal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import cms.gov.madie.measure.exceptions.BundleOperationException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
@@ -142,6 +139,8 @@ class MeasureControllerTest {
     metaData.setDisclaimer("TestDisclaimer");
     metaData.setRationale("TestRationale");
     measure.setMeasureMetaData(metaData);
+    measure.setMeasurementPeriodStart(new Date("12/02/2020"));
+    measure.setMeasurementPeriodEnd(new Date("12/02/2021"));
     Measure originalMeasure =
         measure
             .toBuilder()
@@ -177,6 +176,8 @@ class MeasureControllerTest {
     assertThat(savedMeasure.getCreatedBy(), is(equalTo("test.user")));
     assertThat(savedMeasure.getLastModifiedAt(), is(notNullValue()));
     assertThat(savedMeasure.getLastModifiedBy(), is(equalTo("test.user2")));
+    assertThat(savedMeasure.getMeasurementPeriodStart(), is(equalTo(new Date("12/02/2020"))));
+    assertThat(savedMeasure.getMeasurementPeriodEnd(), is(equalTo(new Date("12/02/2021"))));
     assertThat(savedMeasure.getMeasureMetaData().getDescription(), is(equalTo("TestDescription")));
     assertThat(savedMeasure.getMeasureMetaData().getCopyright(), is(equalTo("TestCopyright")));
     assertThat(savedMeasure.getMeasureMetaData().getDisclaimer(), is(equalTo("TestDisclaimer")));

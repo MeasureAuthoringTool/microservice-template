@@ -1,9 +1,6 @@
 package cms.gov.madie.measure.resources;
 
-import cms.gov.madie.measure.exceptions.InvalidIdException;
-import cms.gov.madie.measure.exceptions.InvalidResourceBundleStateException;
-import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import cms.gov.madie.measure.exceptions.UnauthorizedException;
+import cms.gov.madie.measure.exceptions.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
@@ -105,6 +102,34 @@ public class ErrorHandlingControllerAdvice {
   @ResponseBody
   Map<String, Object> onResourceNotDraftableException(WebRequest request) {
     return getErrorAttributes(request, HttpStatus.CONFLICT);
+  }
+
+  @ExceptionHandler(ArgumentCannotBeNullException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  @ResponseBody
+  Map<String, Object> onArgumentCannotBeNullException(WebRequest request) {
+    return getErrorAttributes(request, HttpStatus.BAD_REQUEST);
+  }
+
+  @ExceptionHandler(InvalidDateException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  @ResponseBody
+  Map<String, Object> onInvalidDateException(WebRequest request) {
+    return getErrorAttributes(request, HttpStatus.BAD_REQUEST);
+  }
+
+  @ExceptionHandler(ArgumentFailedValidationException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  @ResponseBody
+  Map<String, Object> onArgumentFailedValidationException(WebRequest request) {
+    return getErrorAttributes(request, HttpStatus.BAD_REQUEST);
+  }
+
+  @ExceptionHandler(IllegalArgumentException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  @ResponseBody
+  Map<String, Object> onIllegalArgumentException(WebRequest request) {
+    return getErrorAttributes(request, HttpStatus.BAD_REQUEST);
   }
 
   private Map<String, Object> getErrorAttributes(WebRequest request, HttpStatus httpStatus) {

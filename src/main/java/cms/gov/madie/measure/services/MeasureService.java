@@ -1,7 +1,6 @@
 package cms.gov.madie.measure.services;
 
-import cms.gov.madie.measure.exceptions.BundleOperationException;
-import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.models.Group;
 import cms.gov.madie.measure.models.Measure;
 import cms.gov.madie.measure.models.TestCase;
@@ -17,7 +16,9 @@ import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -140,6 +141,42 @@ public class MeasureService {
         && measureRepository.findByCqlLibraryName(cqlLibraryName).isPresent()) {
       throw new DuplicateKeyException(
           "cqlLibraryName", "CQL library with given name already exists.");
+    }
+  }
+
+  public void checkMeasurementPeriodValidity(
+      Date measurementPeriodStart, Date measurementPeriodEnd) {
+    if (measurementPeriodEnd == null || measurementPeriodStart == null) {
+      throw new ArgumentCannotBeNullException(
+          "measurementPeriod", "Measurement period dates cannot be empty.");
+    } else {
+      try {
+        SimpleDateFormat df = new SimpleDateFormat("MM-dd-yyyy");
+        df.format(measurementPeriodStart);
+        df.format(measurementPeriodEnd);
+
+        SimpleDateFormat checkYear = new SimpleDateFormat("yyyy");
+        int checkMeasurementPeriodStart =
+            Integer.parseInt(checkYear.format(measurementPeriodStart));
+        int checkMeasurementPeriodEnd = Integer.parseInt(checkYear.format(measurementPeriodEnd));
+
+        if (1990 > checkMeasurementPeriodStart
+            || checkMeasurementPeriodStart > 2099
+            || 1990 > checkMeasurementPeriodEnd
+            || checkMeasurementPeriodEnd > 2099) {
+          throw new InvalidDateException("measurementPeriod", "Invalid Date.");
+        }
+        Date measurementPeriodStartDate = df.parse(df.format(measurementPeriodStart));
+        Date measurementPeriodEndDate = df.parse(df.format(measurementPeriodEnd));
+        if (measurementPeriodEndDate.before(measurementPeriodStartDate)
+            || measurementPeriodEndDate.equals(measurementPeriodStartDate)) {
+          throw new ArgumentFailedValidationException(
+              "measurementPeriod",
+              "Measurement period start date cannot be greater than measurement period end date.");
+        }
+      } catch (Exception e) {
+        throw new IllegalArgumentException(e.getMessage());
+      }
     }
   }
 
