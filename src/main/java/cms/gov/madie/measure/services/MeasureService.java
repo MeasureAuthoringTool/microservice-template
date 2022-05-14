@@ -18,6 +18,8 @@ import org.springframework.util.CollectionUtils;
 
 import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAccessor;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -145,36 +147,29 @@ public class MeasureService {
   }
 
   public void validateMeasurementPeriod(Date measurementPeriodStart, Date measurementPeriodEnd) {
-    if (measurementPeriodStart == null || measurementPeriodEnd == null) {
-      throw new InvalidMeasurementPeriodException("Measurement period dates cannot be empty.");
-    } else {
-      try {
-        SimpleDateFormat df = new SimpleDateFormat("MM-dd-yyyy");
-        df.format(measurementPeriodStart);
-        df.format(measurementPeriodEnd);
+    try {
+      SimpleDateFormat df = new SimpleDateFormat("MM-dd-yyyy");
+      df.format(measurementPeriodStart);
+      df.format(measurementPeriodEnd);
 
-        SimpleDateFormat checkYear = new SimpleDateFormat("yyyy");
-        int checkMeasurementPeriodStart =
-            Integer.parseInt(checkYear.format(measurementPeriodStart));
-        int checkMeasurementPeriodEnd = Integer.parseInt(checkYear.format(measurementPeriodEnd));
+      SimpleDateFormat checkYear = new SimpleDateFormat("yyyy");
+      int checkMeasurementPeriodStart = Integer.parseInt(checkYear.format(measurementPeriodStart));
+      int checkMeasurementPeriodEnd = Integer.parseInt(checkYear.format(measurementPeriodEnd));
 
-        if (1990 > checkMeasurementPeriodStart
-            || checkMeasurementPeriodStart > 2099
-            || 1990 > checkMeasurementPeriodEnd
-            || checkMeasurementPeriodEnd > 2099) {
-          throw new InvalidMeasurementPeriodException(
-              "Measurement periods should be between the years 1990 and 2099.");
-        }
-        Date measurementPeriodStartDate = df.parse(df.format(measurementPeriodStart));
-        Date measurementPeriodEndDate = df.parse(df.format(measurementPeriodEnd));
-        if (measurementPeriodEndDate.before(measurementPeriodStartDate)
-            || measurementPeriodEndDate.equals(measurementPeriodStartDate)) {
-          throw new InvalidMeasurementPeriodException(
-              "Measurement period start date cannot be greater than measurement period end date.");
-        }
-      } catch (Exception e) {
-        throw new IllegalArgumentException(e.getMessage());
+      if (1990 > checkMeasurementPeriodStart
+          || checkMeasurementPeriodStart > 2099
+          || 1990 > checkMeasurementPeriodEnd
+          || checkMeasurementPeriodEnd > 2099) {
+        throw new InvalidMeasurementPeriodException(
+            "Measurement periods should be between the years 1990 and 2099.");
       }
+
+      if (measurementPeriodEnd.compareTo(measurementPeriodStart) < 1) {
+        throw new InvalidMeasurementPeriodException(
+            "Measurement period end date should be greater than measurement period start date.");
+      }
+    } catch (Exception e) {
+      throw new IllegalArgumentException("Measurement period: " + e.getMessage());
     }
   }
 
