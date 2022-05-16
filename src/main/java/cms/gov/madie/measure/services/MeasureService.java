@@ -145,10 +145,11 @@ public class MeasureService {
   }
 
   public void validateMeasurementPeriod(Date measurementPeriodStart, Date measurementPeriodEnd) {
-    try {
-      SimpleDateFormat df = new SimpleDateFormat("MM-dd-yyyy");
-      df.format(measurementPeriodStart);
-      df.format(measurementPeriodEnd);
+
+      if(measurementPeriodStart == null || measurementPeriodEnd == null){
+        throw new InvalidMeasurementPeriodException(
+                "Measurement period date is required and must be valid");
+      }
 
       SimpleDateFormat checkYear = new SimpleDateFormat("yyyy");
       int checkMeasurementPeriodStart = Integer.parseInt(checkYear.format(measurementPeriodStart));
@@ -166,9 +167,6 @@ public class MeasureService {
         throw new InvalidMeasurementPeriodException(
             "Measurement period end date should be greater than measurement period start date.");
       }
-    } catch (Exception e) {
-      throw new IllegalArgumentException("Measurement period: " + e.getMessage());
-    }
   }
 
   public void checkDeletionCredentials(String username, String createdBy) {

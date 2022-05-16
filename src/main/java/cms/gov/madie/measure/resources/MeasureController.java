@@ -112,7 +112,7 @@ public class MeasureController {
         if (isCqlLibraryNameChanged(measure, persistedMeasure)) {
           measureService.checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
         }
-        if (isCqlLibraryMeasurementPeriodChanged(measure, persistedMeasure)) {
+        if (isMeasurementPeriodChanged(measure, persistedMeasure)) {
           measureService.validateMeasurementPeriod(
               measure.getMeasurementPeriodStart(), measure.getMeasurementPeriodEnd());
         }
@@ -177,7 +177,7 @@ public class MeasureController {
     return !Objects.equals(persistedMeasure.get().getCqlLibraryName(), measure.getCqlLibraryName());
   }
 
-  private boolean isCqlLibraryMeasurementPeriodChanged(
+  private boolean isMeasurementPeriodChanged(
       Measure measure, Optional<Measure> persistedMeasure) {
     return !Objects.equals(
             persistedMeasure.get().getMeasurementPeriodStart(), measure.getMeasurementPeriodStart())
