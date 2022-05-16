@@ -155,12 +155,12 @@ public class MeasureService {
       int checkMeasurementPeriodStart = Integer.parseInt(checkYear.format(measurementPeriodStart));
       int checkMeasurementPeriodEnd = Integer.parseInt(checkYear.format(measurementPeriodEnd));
 
-      if (1990 > checkMeasurementPeriodStart
+      if (1900 > checkMeasurementPeriodStart
           || checkMeasurementPeriodStart > 2099
-          || 1990 > checkMeasurementPeriodEnd
+          || 1900 > checkMeasurementPeriodEnd
           || checkMeasurementPeriodEnd > 2099) {
         throw new InvalidMeasurementPeriodException(
-            "Measurement periods should be between the years 1990 and 2099.");
+            "Measurement periods should be between the years 1900 and 2099.");
       }
 
       if (measurementPeriodEnd.compareTo(measurementPeriodStart) < 1) {
