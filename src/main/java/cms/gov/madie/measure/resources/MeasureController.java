@@ -75,6 +75,8 @@ public class MeasureController {
     final String username = principal.getName();
     log.info("User [{}] is attempting to create a new measure", username);
     measureService.checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
+    measureService.validateMeasurementPeriod(
+        measure.getMeasurementPeriodStart(), measure.getMeasurementPeriodEnd());
 
     // Clear ID so that the unique GUID from MongoDB will be applied
     Instant now = Instant.now();
@@ -177,8 +179,7 @@ public class MeasureController {
     return !Objects.equals(persistedMeasure.get().getCqlLibraryName(), measure.getCqlLibraryName());
   }
 
-  private boolean isMeasurementPeriodChanged(
-      Measure measure, Optional<Measure> persistedMeasure) {
+  private boolean isMeasurementPeriodChanged(Measure measure, Optional<Measure> persistedMeasure) {
     return !Objects.equals(
             persistedMeasure.get().getMeasurementPeriodStart(), measure.getMeasurementPeriodStart())
         || !Objects.equals(

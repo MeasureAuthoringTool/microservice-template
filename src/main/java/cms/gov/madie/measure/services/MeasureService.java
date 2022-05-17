@@ -146,27 +146,27 @@ public class MeasureService {
 
   public void validateMeasurementPeriod(Date measurementPeriodStart, Date measurementPeriodEnd) {
 
-      if(measurementPeriodStart == null || measurementPeriodEnd == null){
-        throw new InvalidMeasurementPeriodException(
-                "Measurement period date is required and must be valid");
-      }
+    if (measurementPeriodStart == null || measurementPeriodEnd == null) {
+      throw new InvalidMeasurementPeriodException(
+          "Measurement period date is required and must be valid");
+    }
 
-      SimpleDateFormat checkYear = new SimpleDateFormat("yyyy");
-      int checkMeasurementPeriodStart = Integer.parseInt(checkYear.format(measurementPeriodStart));
-      int checkMeasurementPeriodEnd = Integer.parseInt(checkYear.format(measurementPeriodEnd));
+    SimpleDateFormat checkYear = new SimpleDateFormat("yyyy");
+    int checkMeasurementPeriodStart = Integer.parseInt(checkYear.format(measurementPeriodStart));
+    int checkMeasurementPeriodEnd = Integer.parseInt(checkYear.format(measurementPeriodEnd));
 
-      if (1900 > checkMeasurementPeriodStart
-          || checkMeasurementPeriodStart > 2099
-          || 1900 > checkMeasurementPeriodEnd
-          || checkMeasurementPeriodEnd > 2099) {
-        throw new InvalidMeasurementPeriodException(
-            "Measurement periods should be between the years 1900 and 2099.");
-      }
+    if (1900 > checkMeasurementPeriodStart
+        || checkMeasurementPeriodStart > 2099
+        || 1900 > checkMeasurementPeriodEnd
+        || checkMeasurementPeriodEnd > 2099) {
+      throw new InvalidMeasurementPeriodException(
+          "Measurement periods should be between the years 1900 and 2099.");
+    }
 
-      if (measurementPeriodEnd.compareTo(measurementPeriodStart) < 1) {
-        throw new InvalidMeasurementPeriodException(
-            "Measurement period end date should be greater than measurement period start date.");
-      }
+    if (measurementPeriodEnd.compareTo(measurementPeriodStart) < 1) {
+      throw new InvalidMeasurementPeriodException(
+          "Measurement period end date should be greater than measurement period start date.");
+    }
   }
 
   public void checkDeletionCredentials(String username, String createdBy) {
