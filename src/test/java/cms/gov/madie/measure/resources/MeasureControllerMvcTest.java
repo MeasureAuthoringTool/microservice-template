@@ -1094,12 +1094,12 @@ public class MeasureControllerMvcTest {
   }
 
   @Test
-  void testGetMeasureBundleReturnsConflictWhenNoElmJsonPresent() throws Exception {
+  void testGetMeasureBundleReturnsConflictWhenNoGroupsPresent() throws Exception {
     Measure measure =
         Measure.builder()
             .measureName("TestMeasure")
             .createdBy(TEST_USER_ID)
-            .cqlErrors(true)
+            .cqlErrors(false)
             .build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
     mockMvc
@@ -1113,7 +1113,38 @@ public class MeasureControllerMvcTest {
         .andExpect(
             jsonPath("$.message")
                 .value(
-                    "Response could not be completed for Measure with ID 1234, since CQL errors exist."));
+                    "Response could not be completed for Measure with ID 1234, since there are no associated measure groups."));
+    verify(measureRepository, times(1)).findById(eq("1234"));
+    verifyNoInteractions(measureService);
+  }
+
+  @Test
+  void testGetMeasureBundleReturnsConflictWhenNoElmJsonPresent() throws Exception {
+    Measure measure =
+        Measure.builder()
+            .measureName("TestMeasure")
+            .createdBy(TEST_USER_ID)
+            .cqlErrors(false)
+            .groups(
+                List.of(
+                    Group.builder()
+                        .groupDescription("Group1")
+                        .scoring(MeasureScoring.RATIO.toString())
+                        .build()))
+            .build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    mockMvc
+        .perform(
+            get("/measures/1234/bundles")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .header("Authorization", "test-okta")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isConflict())
+        .andExpect(
+            jsonPath("$.message")
+                .value(
+                    "Response could not be completed for Measure with ID 1234, since there are issues with the CQL."));
     verify(measureRepository, times(1)).findById(eq("1234"));
     verifyNoInteractions(measureService);
   }
