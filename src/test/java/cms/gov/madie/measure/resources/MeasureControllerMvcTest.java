@@ -1127,7 +1127,12 @@ public class MeasureControllerMvcTest {
             .measureName("EXM124")
             .createdBy(TEST_USER_ID)
             .cqlErrors(false)
-            .groups(new ArrayList())
+            .groups(
+                List.of(
+                    Group.builder()
+                        .groupDescription("Group1")
+                        .scoring(MeasureScoring.RATIO.toString())
+                        .build()))
             .elmJson("")
             .build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));

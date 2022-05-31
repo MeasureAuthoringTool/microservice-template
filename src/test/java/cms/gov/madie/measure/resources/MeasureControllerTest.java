@@ -12,8 +12,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import cms.gov.madie.measure.exceptions.*;
-import cms.gov.madie.measure.models.Group;
-import cms.gov.madie.measure.models.MeasurePopulation;
+import cms.gov.madie.measure.models.*;
 import cms.gov.madie.measure.services.MeasureService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,8 +26,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import cms.gov.madie.measure.models.Measure;
-import cms.gov.madie.measure.models.MeasureMetaData;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -318,7 +315,16 @@ class MeasureControllerTest {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
     final Measure measure =
-        Measure.builder().createdBy("test.user").groups(new ArrayList()).elmJson("").build();
+        Measure.builder()
+            .createdBy("test.user")
+            .groups(
+                List.of(
+                    Group.builder()
+                        .groupDescription("Group1")
+                        .scoring(MeasureScoring.RATIO.toString())
+                        .build()))
+            .elmJson("")
+            .build();
     when(repository.findById(anyString())).thenReturn(Optional.of(measure));
     when(measureService.bundleMeasure(any(Measure.class), anyString()))
         .thenThrow(
@@ -334,7 +340,16 @@ class MeasureControllerTest {
     when(principal.getName()).thenReturn("test.user");
     final String json = "{\"message\": \"GOOD JSON\"}";
     final Measure measure =
-        Measure.builder().createdBy("test.user").groups(new ArrayList()).elmJson("").build();
+        Measure.builder()
+            .createdBy("test.user")
+            .groups(
+                List.of(
+                    Group.builder()
+                        .groupDescription("Group1")
+                        .scoring(MeasureScoring.RATIO.toString())
+                        .build()))
+            .elmJson("")
+            .build();
     when(repository.findById(anyString())).thenReturn(Optional.of(measure));
     when(measureService.bundleMeasure(any(Measure.class), anyString())).thenReturn(json);
     ResponseEntity<String> output =
