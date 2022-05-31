@@ -170,13 +170,13 @@ public class MeasureController {
       throw new UnauthorizedException("Measure", measureId, principal.getName());
     }
     if (measure.isCqlErrors()) {
-      throw new InvalidResourceBundleStateException("Measure", measureId, "CQL errors exist.");
+      throw new InvalidResourceBundleStateException("Measure", measureId, "since CQL errors exist.");
     }
     if (CollectionUtils.isEmpty(measure.getGroups())) {
-      throw new InvalidResourceBundleStateException("Measure", measureId, "there are no groups.");
+      throw new InvalidResourceBundleStateException("Measure", measureId, "since there are no associated measure groups.");
     }
     if (measure.getElmJson() == null) {
-      throw new InvalidResourceBundleStateException("Measure", measureId, "there is no ELM Json.");
+      throw new InvalidResourceBundleStateException("Measure", measureId, "since there are issues with the CQL.");
     }
     System.out.println(measure.getElmJson());
     return ResponseEntity.ok(measureService.bundleMeasure(measure, accessToken));
