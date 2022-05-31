@@ -2,7 +2,6 @@ package cms.gov.madie.measure.resources;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -1088,7 +1087,33 @@ public class MeasureControllerMvcTest {
         .andExpect(status().isConflict())
         .andExpect(
             jsonPath("$.message")
-                .value("Cannot bundle resource Measure with ID 1234 while CQL errors exist."));
+                .value(
+                    "Response could not be completed for Measure with ID 1234, since CQL errors exist."));
+    verify(measureRepository, times(1)).findById(eq("1234"));
+    verifyNoInteractions(measureService);
+  }
+
+  @Test
+  void testGetMeasureBundleReturnsConflictWhenNoElmJsonPresent() throws Exception {
+    Measure measure =
+        Measure.builder()
+            .measureName("TestMeasure")
+            .createdBy(TEST_USER_ID)
+            .cqlErrors(true)
+            .build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    mockMvc
+        .perform(
+            get("/measures/1234/bundles")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .header("Authorization", "test-okta")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isConflict())
+        .andExpect(
+            jsonPath("$.message")
+                .value(
+                    "Response could not be completed for Measure with ID 1234, since CQL errors exist."));
     verify(measureRepository, times(1)).findById(eq("1234"));
     verifyNoInteractions(measureService);
   }
