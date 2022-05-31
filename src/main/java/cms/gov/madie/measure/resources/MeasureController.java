@@ -6,10 +6,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import cms.gov.madie.measure.exceptions.InvalidIdException;
-import cms.gov.madie.measure.exceptions.InvalidResourceBundleStateException;
-import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import cms.gov.madie.measure.exceptions.UnauthorizedException;
+import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.models.Group;
 import cms.gov.madie.measure.services.MeasureService;
 import lombok.extern.slf4j.Slf4j;
@@ -57,6 +54,7 @@ public class MeasureController {
         filterByCurrentUser
             ? repository.findAllByCreatedByAndActive(username, true, pageReq)
             : repository.findAllByActive(true, pageReq);
+    System.out.println(measures);
     return ResponseEntity.ok(measures);
   }
 
@@ -170,8 +168,15 @@ public class MeasureController {
       throw new UnauthorizedException("Measure", measureId, principal.getName());
     }
     if (measure.isCqlErrors()) {
-      throw new InvalidResourceBundleStateException("Measure", measureId);
+      throw new InvalidResourceBundleStateException("Measure", measureId, "CQL errors exist.");
     }
+    if (measure.getGroups() == null) {
+      throw new InvalidResourceBundleStateException("Measure", measureId, "there are no groups.");
+    }
+    if (measure.getElmJson() == null) {
+      throw new InvalidResourceBundleStateException("Measure", measureId, "there is no ELM Json.");
+    }
+    System.out.println(measure.getElmJson());
     return ResponseEntity.ok(measureService.bundleMeasure(measure, accessToken));
   }
 

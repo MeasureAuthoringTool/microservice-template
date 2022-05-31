@@ -11,10 +11,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-import cms.gov.madie.measure.exceptions.BundleOperationException;
-import cms.gov.madie.measure.exceptions.InvalidIdException;
-import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import cms.gov.madie.measure.exceptions.UnauthorizedException;
+import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.models.Group;
 import cms.gov.madie.measure.models.MeasurePopulation;
 import cms.gov.madie.measure.services.MeasureService;
@@ -320,7 +317,8 @@ class MeasureControllerTest {
   void testBundleMeasureThrowsOperationException() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
-    final Measure measure = Measure.builder().createdBy("test.user").build();
+    final Measure measure =
+        Measure.builder().createdBy("test.user").groups(new ArrayList()).elmJson("").build();
     when(repository.findById(anyString())).thenReturn(Optional.of(measure));
     when(measureService.bundleMeasure(any(Measure.class), anyString()))
         .thenThrow(
@@ -335,7 +333,8 @@ class MeasureControllerTest {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
     final String json = "{\"message\": \"GOOD JSON\"}";
-    final Measure measure = Measure.builder().createdBy("test.user").build();
+    final Measure measure =
+        Measure.builder().createdBy("test.user").groups(new ArrayList()).elmJson("").build();
     when(repository.findById(anyString())).thenReturn(Optional.of(measure));
     when(measureService.bundleMeasure(any(Measure.class), anyString())).thenReturn(json);
     ResponseEntity<String> output =

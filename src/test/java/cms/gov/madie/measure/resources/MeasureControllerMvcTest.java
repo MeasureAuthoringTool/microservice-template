@@ -2,6 +2,7 @@ package cms.gov.madie.measure.resources;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -1120,8 +1121,15 @@ public class MeasureControllerMvcTest {
             + "        }\n"
             + "    ]\n"
             + "}";
+
     Measure measure =
-        Measure.builder().measureName("EXM124").createdBy(TEST_USER_ID).cqlErrors(false).build();
+        Measure.builder()
+            .measureName("EXM124")
+            .createdBy(TEST_USER_ID)
+            .cqlErrors(false)
+            .groups(new ArrayList())
+            .elmJson("")
+            .build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
     when(measureService.bundleMeasure(any(Measure.class), anyString())).thenReturn(bundleString);
     mockMvc
