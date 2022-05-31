@@ -9,6 +9,7 @@ import java.util.Optional;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.models.Group;
 import cms.gov.madie.measure.services.MeasureService;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -170,7 +172,7 @@ public class MeasureController {
     if (measure.isCqlErrors()) {
       throw new InvalidResourceBundleStateException("Measure", measureId, "CQL errors exist.");
     }
-    if (measure.getGroups() == null) {
+    if (CollectionUtils.isEmpty(measure.getGroups())) {
       throw new InvalidResourceBundleStateException("Measure", measureId, "there are no groups.");
     }
     if (measure.getElmJson() == null) {
