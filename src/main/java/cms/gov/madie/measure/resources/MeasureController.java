@@ -177,7 +177,7 @@ public class MeasureController {
       throw new InvalidResourceBundleStateException(
           "Measure", measureId, "since there are no associated measure groups.");
     }
-    if (measure.getElmJson() == null) {
+    if (measure.getElmJson() == null || measure.getElmJson().isEmpty()) {
       throw new InvalidResourceBundleStateException(
           "Measure", measureId, "since there are issues with the CQL.");
     }

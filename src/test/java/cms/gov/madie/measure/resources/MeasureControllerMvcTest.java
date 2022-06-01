@@ -1177,7 +1177,7 @@ public class MeasureControllerMvcTest {
             + "        }\n"
             + "    ]\n"
             + "}";
-
+    final String elmJson = "{\"text\": \"ELM JSON\"}";
     Measure measure =
         Measure.builder()
             .measureName("EXM124")
@@ -1189,7 +1189,7 @@ public class MeasureControllerMvcTest {
                         .groupDescription("Group1")
                         .scoring(MeasureScoring.RATIO.toString())
                         .build()))
-            .elmJson("")
+            .elmJson(elmJson)
             .build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
     when(measureService.bundleMeasure(any(Measure.class), anyString())).thenReturn(bundleString);

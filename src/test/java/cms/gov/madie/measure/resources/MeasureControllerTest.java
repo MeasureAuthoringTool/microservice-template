@@ -314,6 +314,7 @@ class MeasureControllerTest {
   void testBundleMeasureThrowsOperationException() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
+    final String elmJson = "{\"text\": \"ELM JSON\"}";
     final Measure measure =
         Measure.builder()
             .createdBy("test.user")
@@ -323,7 +324,7 @@ class MeasureControllerTest {
                         .groupDescription("Group1")
                         .scoring(MeasureScoring.RATIO.toString())
                         .build()))
-            .elmJson("")
+            .elmJson(elmJson)
             .build();
     when(repository.findById(anyString())).thenReturn(Optional.of(measure));
     when(measureService.bundleMeasure(any(Measure.class), anyString()))
@@ -339,6 +340,7 @@ class MeasureControllerTest {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
     final String json = "{\"message\": \"GOOD JSON\"}";
+    final String elmJson = "{\"text\": \"ELM JSON\"}";
     final Measure measure =
         Measure.builder()
             .createdBy("test.user")
@@ -348,7 +350,7 @@ class MeasureControllerTest {
                         .groupDescription("Group1")
                         .scoring(MeasureScoring.RATIO.toString())
                         .build()))
-            .elmJson("")
+            .elmJson(elmJson)
             .build();
     when(repository.findById(anyString())).thenReturn(Optional.of(measure));
     when(measureService.bundleMeasure(any(Measure.class), anyString())).thenReturn(json);
