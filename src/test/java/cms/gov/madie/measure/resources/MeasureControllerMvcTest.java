@@ -1151,6 +1151,7 @@ public class MeasureControllerMvcTest {
 
   @Test
   void testGetMeasureBundleReturnsMeasureBundle() throws Exception {
+    final String elmJson = "{\"text\": \"ELM JSON\"}";
     final String bundleString =
         "{\n"
             + "    \"resourceType\": \"Bundle\",\n"
@@ -1177,7 +1178,6 @@ public class MeasureControllerMvcTest {
             + "        }\n"
             + "    ]\n"
             + "}";
-    final String elmJson = "{\"text\": \"ELM JSON\"}";
     Measure measure =
         Measure.builder()
             .measureName("EXM124")

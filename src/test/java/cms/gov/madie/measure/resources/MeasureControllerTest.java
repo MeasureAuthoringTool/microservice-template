@@ -339,8 +339,8 @@ class MeasureControllerTest {
   void testBundleMeasureReturnsBundleString() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
-    final String json = "{\"message\": \"GOOD JSON\"}";
     final String elmJson = "{\"text\": \"ELM JSON\"}";
+    final String json = "{\"message\": \"GOOD JSON\"}";
     final Measure measure =
         Measure.builder()
             .createdBy("test.user")
