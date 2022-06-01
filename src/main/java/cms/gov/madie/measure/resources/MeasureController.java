@@ -56,7 +56,6 @@ public class MeasureController {
         filterByCurrentUser
             ? repository.findAllByCreatedByAndActive(username, true, pageReq)
             : repository.findAllByActive(true, pageReq);
-    System.out.println(measures);
     return ResponseEntity.ok(measures);
   }
 
@@ -181,7 +180,6 @@ public class MeasureController {
       throw new InvalidResourceBundleStateException(
           "Measure", measureId, "since there are issues with the CQL.");
     }
-    System.out.println(measure.getElmJson());
     return ResponseEntity.ok(measureService.bundleMeasure(measure, accessToken));
   }
 
