@@ -104,6 +104,13 @@ public class ErrorHandlingControllerAdvice {
     return getErrorAttributes(request, HttpStatus.CONFLICT);
   }
 
+  @ExceptionHandler(BundleOperationException.class)
+  @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+  @ResponseBody
+  Map<String, Object> onBundleOperationFailedException(WebRequest request) {
+    return getErrorAttributes(request, HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+
   @ExceptionHandler(InvalidMeasurementPeriodException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ResponseBody

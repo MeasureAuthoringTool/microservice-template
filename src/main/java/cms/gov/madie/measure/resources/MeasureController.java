@@ -6,12 +6,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import cms.gov.madie.measure.exceptions.InvalidIdException;
-import cms.gov.madie.measure.exceptions.InvalidResourceBundleStateException;
-import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import cms.gov.madie.measure.exceptions.UnauthorizedException;
+import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.models.Group;
 import cms.gov.madie.measure.services.MeasureService;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -20,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -57,6 +56,7 @@ public class MeasureController {
         filterByCurrentUser
             ? repository.findAllByCreatedByAndActive(username, true, pageReq)
             : repository.findAllByActive(true, pageReq);
+    System.out.println(measures);
     return ResponseEntity.ok(measures);
   }
 
@@ -170,8 +170,18 @@ public class MeasureController {
       throw new UnauthorizedException("Measure", measureId, principal.getName());
     }
     if (measure.isCqlErrors()) {
-      throw new InvalidResourceBundleStateException("Measure", measureId);
+      throw new InvalidResourceBundleStateException(
+          "Measure", measureId, "since CQL errors exist.");
     }
+    if (CollectionUtils.isEmpty(measure.getGroups())) {
+      throw new InvalidResourceBundleStateException(
+          "Measure", measureId, "since there are no associated measure groups.");
+    }
+    if (measure.getElmJson() == null || measure.getElmJson().isEmpty()) {
+      throw new InvalidResourceBundleStateException(
+          "Measure", measureId, "since there are issues with the CQL.");
+    }
+    System.out.println(measure.getElmJson());
     return ResponseEntity.ok(measureService.bundleMeasure(measure, accessToken));
   }
 
