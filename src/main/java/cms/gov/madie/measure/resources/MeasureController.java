@@ -10,6 +10,7 @@ import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.models.Group;
 import cms.gov.madie.measure.services.MeasureService;
 
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -176,7 +177,7 @@ public class MeasureController {
       throw new InvalidResourceBundleStateException(
           "Measure", measureId, "since there are no associated measure groups.");
     }
-    if (measure.getElmJson() == null || measure.getElmJson().isEmpty()) {
+    if (measure.getElmJson() == null || StringUtils.isBlank(measure.getElmJson())) {
       throw new InvalidResourceBundleStateException(
           "Measure", measureId, "since there are issues with the CQL.");
     }
