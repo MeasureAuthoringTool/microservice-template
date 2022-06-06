@@ -336,6 +336,30 @@ class MeasureControllerTest {
   }
 
   @Test
+  void testBundleMeasureThrowsElmTranslationException() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+    final String elmJson = "{\"text\": \"ELM JSON\"}";
+    final Measure measure =
+        Measure.builder()
+            .createdBy("test.user")
+            .groups(
+                List.of(
+                    Group.builder()
+                        .groupDescription("Group1")
+                        .scoring(MeasureScoring.RATIO.toString())
+                        .build()))
+            .elmJson(elmJson)
+            .build();
+    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(measureService.bundleMeasure(any(Measure.class), anyString()))
+        .thenThrow(new CqlElmTranslationErrorException(measure.getMeasureName()));
+    assertThrows(
+        CqlElmTranslationErrorException.class,
+        () -> controller.getMeasureBundle("MeasureID", principal, "Bearer TOKEN"));
+  }
+
+  @Test
   void testBundleMeasureReturnsBundleString() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
