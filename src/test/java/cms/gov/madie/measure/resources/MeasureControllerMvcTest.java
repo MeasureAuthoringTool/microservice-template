@@ -1213,6 +1213,7 @@ public class MeasureControllerMvcTest {
                 .header("Authorization", "test-okta")
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isInternalServerError());
+    verify(measureRepository, times(1)).findById(anyString());
   }
 
   @Test
