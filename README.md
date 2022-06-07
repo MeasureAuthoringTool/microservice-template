@@ -27,3 +27,5 @@ The application can be check for "health" by running Spring actuator endpoints. 
 curl --location --request GET 'http://localhost:8080/api/actuator/health'
 ```
 
+#Coverage
+
