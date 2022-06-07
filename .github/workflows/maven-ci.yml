@@ -15,7 +15,7 @@ jobs:
           distribution: 'adopt'
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots verify
-      - uses: actions/checkout@master
+      #- uses: actions/checkout@master
       - name: List files in the repository
         run: |
           ls ${{ github.workspace }}
