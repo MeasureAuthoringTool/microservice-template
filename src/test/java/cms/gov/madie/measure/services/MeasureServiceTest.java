@@ -1,12 +1,11 @@
-package cms.gov.madie.measure.service;
+package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.exceptions.BundleOperationException;
+import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.models.*;
 import cms.gov.madie.measure.resources.InvalidDeletionCredentialsException;
-import cms.gov.madie.measure.services.FhirServicesClient;
-import cms.gov.madie.measure.services.MeasureService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +28,7 @@ import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -41,6 +41,8 @@ public class MeasureServiceTest {
   @Mock private MeasureRepository measureRepository;
 
   @Mock private FhirServicesClient fhirServicesClient;
+
+  @Mock private ElmTranslatorClient elmTranslatorClient;
 
   @InjectMocks private MeasureService measureService;
 
@@ -556,8 +558,16 @@ public class MeasureServiceTest {
   }
 
   @Test
+  void testBundleMeasureReturnsNullForNullMeasure() {
+    String output = measureService.bundleMeasure(null, "Bearer TOKEN");
+    assertThat(output, is(nullValue()));
+  }
+
+  @Test
   void testBundleMeasureThrowsOperationException() {
-    final Measure measure = Measure.builder().createdBy("test.user").build();
+    final Measure measure = Measure.builder().createdBy("test.user").cql("CQL").build();
+    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+        .thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
     when(fhirServicesClient.getMeasureBundle(any(Measure.class), anyString()))
         .thenThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN));
     assertThrows(
@@ -566,10 +576,23 @@ public class MeasureServiceTest {
   }
 
   @Test
+  void testBundleMeasureThrowsCqlElmTranslatorExceptionWithErrors() {
+    final Measure measure = Measure.builder().createdBy("test.user").cql("CQL").build();
+    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+        .thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
+    when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(true);
+    assertThrows(
+        CqlElmTranslationErrorException.class,
+        () -> measureService.bundleMeasure(measure, "Bearer TOKEN"));
+  }
+
+  @Test
   void testBundleMeasureReturnsBundleString() {
     final String json = "{\"message\": \"GOOD JSON\"}";
-    final Measure measure = Measure.builder().createdBy("test.user").build();
+    final Measure measure = Measure.builder().createdBy("test.user").cql("CQL").build();
     when(fhirServicesClient.getMeasureBundle(any(Measure.class), anyString())).thenReturn(json);
+    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+        .thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
     String output = measureService.bundleMeasure(measure, "Bearer TOKEN");
     assertThat(output, is(equalTo(json)));
   }

@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
+import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
 import cms.gov.madie.measure.models.Group;
 import cms.gov.madie.measure.models.MeasurePopulation;
 import cms.gov.madie.measure.models.MeasureScoring;
@@ -1147,6 +1149,71 @@ public class MeasureControllerMvcTest {
                     "Response could not be completed for Measure with ID 1234, since there are issues with the CQL."));
     verify(measureRepository, times(1)).findById(eq("1234"));
     verifyNoInteractions(measureService);
+  }
+
+  @Test
+  void testGetMeasureBundleReturnsConflictWhenElmJsonContainsErrors() throws Exception {
+    Measure measure =
+        Measure.builder()
+            .measureName("TestMeasure")
+            .createdBy(TEST_USER_ID)
+            .cqlErrors(false)
+            .groups(
+                List.of(
+                    Group.builder()
+                        .groupDescription("Group1")
+                        .scoring(MeasureScoring.RATIO.toString())
+                        .build()))
+            .build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(measureService.bundleMeasure(any(Measure.class), anyString()))
+        .thenThrow(new CqlElmTranslationErrorException(measure.getMeasureName()));
+    mockMvc
+        .perform(
+            get("/measures/1234/bundles")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .header("Authorization", "test-okta")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isConflict())
+        .andExpect(
+            jsonPath("$.message")
+                .value(
+                    "Response could not be completed for Measure with ID 1234, since there are issues with the CQL."));
+    verify(measureRepository, times(1)).findById(eq("1234"));
+    verifyNoInteractions(measureService);
+  }
+
+  @Test
+  void testGetMeasureBundleReturnsServerExceptionForCqlElmTranslationFailure() throws Exception {
+    final String elmJson = "{\"text\": \"ELM JSON\"}";
+    Measure measure =
+        Measure.builder()
+            .measureName("EXM124")
+            .createdBy(TEST_USER_ID)
+            .cqlErrors(false)
+            .groups(
+                List.of(
+                    Group.builder()
+                        .groupDescription("Group1")
+                        .scoring(MeasureScoring.RATIO.toString())
+                        .build()))
+            .elmJson(elmJson)
+            .build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(measureService.bundleMeasure(any(Measure.class), anyString()))
+        .thenThrow(
+            new CqlElmTranslationServiceException(
+                measure.getMeasureName(), new RuntimeException("CAUSE")));
+    mockMvc
+        .perform(
+            get("/measures/1234/bundles")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .header("Authorization", "test-okta")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isInternalServerError());
+    verify(measureRepository, times(1)).findById(anyString());
   }
 
   @Test

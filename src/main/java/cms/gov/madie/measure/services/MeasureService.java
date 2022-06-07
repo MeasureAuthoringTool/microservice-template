@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.exceptions.*;
+import cms.gov.madie.measure.models.ElmJson;
 import cms.gov.madie.measure.models.Group;
 import cms.gov.madie.measure.models.Measure;
 import cms.gov.madie.measure.models.TestCase;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
 public class MeasureService {
   private final MeasureRepository measureRepository;
   private final FhirServicesClient fhirServicesClient;
+  private final ElmTranslatorClient elmTranslatorClient;
 
   public Group createOrUpdateGroup(Group group, String measureId, String username) {
     Measure measure = measureRepository.findById(measureId).orElse(null);
@@ -180,7 +182,16 @@ public class MeasureService {
       return null;
     }
     try {
+      final ElmJson elmJson = elmTranslatorClient.getElmJson(measure.getCql(), accessToken);
+      if (elmTranslatorClient.hasErrors(elmJson)) {
+        throw new CqlElmTranslationErrorException(measure.getMeasureName());
+      }
+      measure.setElmJson(elmJson.getJson());
+      measure.setElmXml(elmJson.getXml());
+
       return fhirServicesClient.getMeasureBundle(measure, accessToken);
+    } catch (CqlElmTranslationServiceException | CqlElmTranslationErrorException e) {
+      throw e;
     } catch (Exception ex) {
       log.error("An error occurred while bundling measure {}", measure.getId(), ex);
       throw new BundleOperationException("Measure", measure.getId(), ex);

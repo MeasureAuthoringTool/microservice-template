@@ -97,14 +97,17 @@ public class ErrorHandlingControllerAdvice {
     return getErrorAttributes(request, HttpStatus.BAD_REQUEST);
   }
 
-  @ExceptionHandler({InvalidResourceBundleStateException.class})
+  @ExceptionHandler({
+    InvalidResourceBundleStateException.class,
+    CqlElmTranslationErrorException.class
+  })
   @ResponseStatus(HttpStatus.CONFLICT)
   @ResponseBody
   Map<String, Object> onResourceNotDraftableException(WebRequest request) {
     return getErrorAttributes(request, HttpStatus.CONFLICT);
   }
 
-  @ExceptionHandler(BundleOperationException.class)
+  @ExceptionHandler({BundleOperationException.class, CqlElmTranslationServiceException.class})
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
   @ResponseBody
   Map<String, Object> onBundleOperationFailedException(WebRequest request) {
