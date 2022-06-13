@@ -150,6 +150,8 @@ class MeasureControllerTest {
             .toBuilder()
             .createdBy("test.user")
             .createdAt(original)
+            .measurementPeriodStart(new Date("12/02/2021"))
+            .measurementPeriodEnd(new Date("12/02/2022"))
             .lastModifiedBy("test.user")
             .lastModifiedAt(original)
             .build();
@@ -170,8 +172,8 @@ class MeasureControllerTest {
     assertThat(savedMeasure.getCreatedBy(), is(equalTo("test.user")));
     assertThat(savedMeasure.getLastModifiedAt(), is(notNullValue()));
     assertThat(savedMeasure.getLastModifiedBy(), is(equalTo("test.user2")));
-    assertThat(savedMeasure.getMeasurementPeriodStart(), is(equalTo(new Date("12/02/2020"))));
-    assertThat(savedMeasure.getMeasurementPeriodEnd(), is(equalTo(new Date("12/02/2021"))));
+    assertThat(savedMeasure.getMeasurementPeriodStart(), is(equalTo(new Date("12/02/2021"))));
+    assertThat(savedMeasure.getMeasurementPeriodEnd(), is(equalTo(new Date("12/02/2022"))));
     assertThat(savedMeasure.getMeasureMetaData().getDescription(), is(equalTo("TestDescription")));
     assertThat(savedMeasure.getMeasureMetaData().getCopyright(), is(equalTo("TestCopyright")));
     assertThat(savedMeasure.getMeasureMetaData().getDisclaimer(), is(equalTo("TestDisclaimer")));
@@ -191,9 +193,11 @@ class MeasureControllerTest {
   void testUpdateMeasureReturnsExceptionForInvalidCredentials() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("aninvalidUser@gmail.com");
+    measure.setCreatedBy("MSR01");
+    measure.setActive(false);
+    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
 
-    Measure testMeasure;
-    testMeasure = new Measure();
+    var testMeasure = new Measure();
     testMeasure.setActive(false);
     testMeasure.setCreatedBy("anotheruser");
     testMeasure.setId("testid");
@@ -242,6 +246,28 @@ class MeasureControllerTest {
 
     ResponseEntity<String> response = controller.updateMeasure(measure.getId(), measure, principal);
     assertEquals("Measure does not exist.", response.getBody());
+  }
+
+  @Test
+  void updateUnAuthorizedMeasure() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("unAuthorizedUser@gmail.com");
+    measure.setCreatedBy("actualOwner@gmail.com");
+    measure.setActive(true);
+    measure.setMeasurementPeriodStart(new Date());
+    measure.setId("testid");
+    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
+
+    var testMeasure = new Measure();
+    testMeasure.setActive(true);
+    testMeasure.setId("testid");
+
+    doThrow(new UnauthorizedException("Measure", measure.getId(), "unAuthorizedUser@gmail.com"))
+        .when(measureService)
+        .verifyAuthorization(anyString(), any());
+    assertThrows(
+        UnauthorizedException.class,
+        () -> controller.updateMeasure("testid", testMeasure, principal));
   }
 
   @Test

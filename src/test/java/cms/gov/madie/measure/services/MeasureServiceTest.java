@@ -3,9 +3,10 @@ package cms.gov.madie.measure.services;
 import cms.gov.madie.measure.exceptions.BundleOperationException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.models.*;
-import cms.gov.madie.measure.resources.InvalidDeletionCredentialsException;
+import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -595,5 +596,11 @@ public class MeasureServiceTest {
         .thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
     String output = measureService.bundleMeasure(measure, "Bearer TOKEN");
     assertThat(output, is(equalTo(json)));
+  }
+
+  @Test
+  public void testVerifyAuthorizationThrowsExceptionForDifferentUsers() {
+    assertThrows(
+        UnauthorizedException.class, () -> measureService.verifyAuthorization("user1", measure));
   }
 }
