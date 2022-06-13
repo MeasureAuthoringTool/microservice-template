@@ -102,30 +102,36 @@ public class MeasureController {
       log.info("got invalid id [{}] vs measureId: [{}]", id, measure.getId());
       throw new InvalidIdException("Measure", "Update (PUT)", "(PUT [base]/[resource]/[id])");
     }
-    if (username != null && measure.getCreatedBy() != null && !measure.isActive()) {
-      log.info("got username [{}] vs createdBy: [{}]", username, measure.getCreatedBy());
-      measureService.checkDeletionCredentials(username, measure.getCreatedBy());
-    }
 
-    if (measure.getId() != null) {
-      log.info("getMeasureId [{}]", measure.getId());
-      Optional<Measure> persistedMeasure = repository.findById(measure.getId());
-      if (persistedMeasure.isPresent()) {
-        if (isCqlLibraryNameChanged(measure, persistedMeasure)) {
-          measureService.checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
-        }
-        if (isMeasurementPeriodChanged(measure, persistedMeasure)) {
-          measureService.validateMeasurementPeriod(
-              measure.getMeasurementPeriodStart(), measure.getMeasurementPeriodEnd());
-        }
-        measure.setLastModifiedBy(username);
-        measure.setLastModifiedAt(Instant.now());
-        // prevent users from overwriting the createdAt/By
-        measure.setCreatedAt(persistedMeasure.get().getCreatedAt());
-        measure.setCreatedBy(persistedMeasure.get().getCreatedBy());
-        repository.save(measure);
-        response = ResponseEntity.ok().body("Measure updated successfully.");
+    log.info("getMeasureId [{}]", id);
+    Optional<Measure> persistedMeasure = repository.findById(id);
+
+    if (persistedMeasure.isPresent()) {
+      if (username != null
+          && persistedMeasure.get().getCreatedBy() != null
+          && !persistedMeasure.get().isActive()) {
+        log.info(
+            "got username [{}] vs createdBy: [{}]",
+            username,
+            persistedMeasure.get().getCreatedBy());
+        measureService.checkDeletionCredentials(username, persistedMeasure.get().getCreatedBy());
       }
+      if (isCqlLibraryNameChanged(measure, persistedMeasure.get())) {
+        measureService.checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
+      }
+
+      if (isMeasurementPeriodChanged(measure, persistedMeasure.get())) {
+        measureService.verifyAuthorization(username, persistedMeasure.get());
+        measureService.validateMeasurementPeriod(
+            measure.getMeasurementPeriodStart(), measure.getMeasurementPeriodEnd());
+      }
+      measure.setLastModifiedBy(username);
+      measure.setLastModifiedAt(Instant.now());
+      // prevent users from overwriting the createdAt/By
+      measure.setCreatedAt(persistedMeasure.get().getCreatedAt());
+      measure.setCreatedBy(persistedMeasure.get().getCreatedBy());
+      repository.save(measure);
+      response = ResponseEntity.ok().body("Measure updated successfully.");
     }
     return response;
   }
@@ -184,14 +190,14 @@ public class MeasureController {
     return ResponseEntity.ok(measureService.bundleMeasure(measure, accessToken));
   }
 
-  private boolean isCqlLibraryNameChanged(Measure measure, Optional<Measure> persistedMeasure) {
-    return !Objects.equals(persistedMeasure.get().getCqlLibraryName(), measure.getCqlLibraryName());
+  private boolean isCqlLibraryNameChanged(Measure measure, Measure persistedMeasure) {
+    return !Objects.equals(persistedMeasure.getCqlLibraryName(), measure.getCqlLibraryName());
   }
 
-  private boolean isMeasurementPeriodChanged(Measure measure, Optional<Measure> persistedMeasure) {
+  private boolean isMeasurementPeriodChanged(Measure measure, Measure persistedMeasure) {
     return !Objects.equals(
-            persistedMeasure.get().getMeasurementPeriodStart(), measure.getMeasurementPeriodStart())
+            persistedMeasure.getMeasurementPeriodStart(), measure.getMeasurementPeriodStart())
         || !Objects.equals(
-            persistedMeasure.get().getMeasurementPeriodEnd(), measure.getMeasurementPeriodEnd());
+            persistedMeasure.getMeasurementPeriodEnd(), measure.getMeasurementPeriodEnd());
   }
 }

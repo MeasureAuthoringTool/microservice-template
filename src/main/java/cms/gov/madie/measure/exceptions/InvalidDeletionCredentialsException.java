@@ -1,4 +1,4 @@
-package cms.gov.madie.measure.resources;
+package cms.gov.madie.measure.exceptions;
 
 import lombok.Getter;
 

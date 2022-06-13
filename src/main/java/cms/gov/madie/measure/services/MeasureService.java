@@ -8,7 +8,7 @@ import cms.gov.madie.measure.models.TestCase;
 import cms.gov.madie.measure.models.TestCaseGroupPopulation;
 import cms.gov.madie.measure.models.TestCasePopulationValue;
 import cms.gov.madie.measure.repositories.MeasureRepository;
-import cms.gov.madie.measure.resources.InvalidDeletionCredentialsException;
+import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
 import io.micrometer.core.instrument.util.StringUtils;
 import lombok.AllArgsConstructor;
@@ -165,15 +165,22 @@ public class MeasureService {
           "Measurement periods should be between the years 1900 and 2099.");
     }
 
-    if (measurementPeriodEnd.compareTo(measurementPeriodStart) < 1) {
+    if (measurementPeriodEnd.compareTo(measurementPeriodStart) < 0) {
       throw new InvalidMeasurementPeriodException(
-          "Measurement period end date should be greater than measurement period start date.");
+          "Measurement period end date should be greater than or"
+              + " equal to measurement period start date.");
     }
   }
 
   public void checkDeletionCredentials(String username, String createdBy) {
     if (!username.equals(createdBy)) {
       throw new InvalidDeletionCredentialsException(username);
+    }
+  }
+
+  public void verifyAuthorization(String username, Measure measure) {
+    if (!measure.getCreatedBy().equals(username)) {
+      throw new UnauthorizedException("Measure", measure.getId(), username);
     }
   }
 
