@@ -64,7 +64,6 @@ public class MeasureTransferControllerMvcTest {
             .version("0.000")
             .measureName("MedicationDispenseTest")
             .cqlLibraryName("MedicationDispenseTest")
-            .measureScoring("Cohort")
             .model("QI-Core")
             .measureMetaData(measureMetaData)
             .groups(groups)
@@ -97,7 +96,6 @@ public class MeasureTransferControllerMvcTest {
     assertEquals(measure.getMeasureSetId(), persistedMeasure.getMeasureSetId());
     assertEquals(measure.getMeasureName(), persistedMeasure.getMeasureName());
     assertEquals(measure.getCqlLibraryName(), persistedMeasure.getCqlLibraryName());
-    assertEquals(measure.getMeasureScoring(), persistedMeasure.getMeasureScoring());
     assertEquals(measure.getCql(), persistedMeasure.getCql());
     assertEquals(measure.getGroups().size(), persistedMeasure.getGroups().size());
   }
