@@ -84,14 +84,6 @@ public class Measure {
       groups = {ValidationOrder5.class})
   private String model;
 
-  @NotBlank(
-      groups = {ValidationOrder5.class},
-      message = "Measure Scoring is required.")
-  @EnumValidator(
-      enumClass = MeasureScoring.class,
-      groups = {ValidationOrder5.class})
-  private String measureScoring;
-
   private MeasureMetaData measureMetaData = new MeasureMetaData();
 
   @GroupSequence({

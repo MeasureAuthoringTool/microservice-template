@@ -84,20 +84,18 @@ public class MeasureControllerMvcTest {
     String guidance = "TestGuidance";
     String libName = "TestLib";
     String model = "QI-Core";
-    String scoring = MeasureScoring.COHORT.toString();
 
     Measure priorMeasure = new Measure();
     priorMeasure.setId(measureId);
     priorMeasure.setMeasureName(measureName);
     priorMeasure.setCqlLibraryName(libName);
     priorMeasure.setModel(model);
-    priorMeasure.setMeasureScoring(scoring);
 
     when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(priorMeasure));
     when(measureRepository.save(any(Measure.class))).thenReturn(mock(Measure.class));
 
     final String measureAsJson =
-        "{\"id\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"measureMetaData\": { \"steward\" : \"%s\", \"description\" : \"%s\", \"copyright\" : \"%s\", \"disclaimer\" : \"%s\", \"rationale\" : \"%s\", \"author\" : \"%s\", \"guidance\" : \"%s\"}, \"model\":\"%s\", \"measureScoring\":\"%s\" }"
+        "{\"id\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"measureMetaData\": { \"steward\" : \"%s\", \"description\" : \"%s\", \"copyright\" : \"%s\", \"disclaimer\" : \"%s\", \"rationale\" : \"%s\", \"author\" : \"%s\", \"guidance\" : \"%s\"}, \"model\":\"%s\"}"
             .formatted(
                 measureId,
                 measureName,
@@ -109,8 +107,7 @@ public class MeasureControllerMvcTest {
                 rationale,
                 author,
                 guidance,
-                model,
-                scoring);
+                model);
     mockMvc
         .perform(
             put("/measures/" + measureId)
@@ -284,17 +281,15 @@ public class MeasureControllerMvcTest {
     String measureName = "SavedMeasure";
     String libraryName = "Lib1";
     String model = "QI-Core";
-    String scoring = MeasureScoring.PROPORTION.toString();
     saved.setMeasureName(measureName);
     saved.setCqlLibraryName(libraryName);
     saved.setModel(model);
-    saved.setMeasureScoring(scoring);
     when(measureRepository.save(any(Measure.class))).thenReturn(saved);
     doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
 
     final String measureAsJson =
-        "{\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\", \"model\": \"%s\", \"measureScoring\": \"%s\" }"
-            .formatted(measureName, libraryName, model, scoring);
+        "{\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\", \"model\": \"%s\"}"
+            .formatted(measureName, libraryName, model);
 
     mockMvc
         .perform(
@@ -308,8 +303,7 @@ public class MeasureControllerMvcTest {
         .andExpect(jsonPath("$.measureName").value(measureName))
         .andExpect(jsonPath("$.cqlLibraryName").value(libraryName))
         .andExpect(jsonPath("$.model").value(model))
-        .andExpect(jsonPath("$.id").value(measureId))
-        .andExpect(jsonPath("$.measureScoring").value(scoring));
+        .andExpect(jsonPath("$.id").value(measureId));
 
     verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
     verifyNoMoreInteractions(measureRepository);
@@ -317,7 +311,6 @@ public class MeasureControllerMvcTest {
     assertEquals(measureName, savedMeasure.getMeasureName());
     assertEquals(libraryName, savedMeasure.getCqlLibraryName());
     assertEquals(model, savedMeasure.getModel());
-    assertEquals(scoring, savedMeasure.getMeasureScoring());
     assertEquals(TEST_USER_ID, savedMeasure.getCreatedBy());
     assertEquals(TEST_USER_ID, savedMeasure.getLastModifiedBy());
     assertNotNull(savedMeasure.getCreatedAt());
@@ -334,8 +327,6 @@ public class MeasureControllerMvcTest {
     existing.setCqlLibraryName(cqlLibraryName);
     String model = "QI-Core";
     existing.setModel(model);
-    String scoring = MeasureScoring.PROPORTION.toString();
-    existing.setMeasureScoring(scoring);
 
     doThrow(
             new DuplicateKeyException(
@@ -344,8 +335,8 @@ public class MeasureControllerMvcTest {
         .checkDuplicateCqlLibraryName(any(String.class));
 
     final String newMeasureAsJson =
-        "{\"measureName\": \"NewMeasure\", \"cqlLibraryName\": \"%s\",\"model\":\"%s\",\"measureScoring\":\"%s\"}"
-            .formatted(cqlLibraryName, model, scoring);
+        "{\"measureName\": \"NewMeasure\", \"cqlLibraryName\": \"%s\",\"model\":\"%s\"}"
+            .formatted(cqlLibraryName, model);
     mockMvc
         .perform(
             post("/measure")
@@ -369,7 +360,6 @@ public class MeasureControllerMvcTest {
     priorMeasure.setMeasureName("TestMeasure");
     priorMeasure.setCqlLibraryName("TestMeasureLibrary");
     priorMeasure.setModel("QI-Core");
-    priorMeasure.setMeasureScoring(MeasureScoring.RATIO.toString());
     when(measureRepository.findById(eq(priorMeasure.getId())))
         .thenReturn(Optional.of(priorMeasure));
 
@@ -384,13 +374,12 @@ public class MeasureControllerMvcTest {
         .checkDuplicateCqlLibraryName(any(String.class));
 
     final String updatedMeasureAsJson =
-        "{\"id\": \"%s\",\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\", \"model\":\"%s\", \"measureScoring\":\"%s\"}"
+        "{\"id\": \"%s\",\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\", \"model\":\"%s\"}"
             .formatted(
                 priorMeasure.getId(),
                 priorMeasure.getMeasureName(),
                 existingMeasure.getCqlLibraryName(),
-                priorMeasure.getModel(),
-                priorMeasure.getMeasureScoring());
+                priorMeasure.getModel());
     mockMvc
         .perform(
             put("/measures/" + priorMeasure.getId())
@@ -508,15 +497,13 @@ public class MeasureControllerMvcTest {
     saved.setCqlLibraryName(libraryName);
     String model = "QI-Core";
     saved.setModel(model);
-    String scoring = MeasureScoring.CONTINUOUS_VARIABLE.toString();
-    saved.setMeasureScoring(scoring);
 
     when(measureRepository.save(any(Measure.class))).thenReturn(saved);
     doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
 
     final String measureAsJson =
-        "{ \"measureName\":\"%s\", \"cqlLibraryName\":\"%s\", \"model\":\"%s\", \"measureScoring\":\"%s\" }"
-            .formatted(measureName, libraryName, model, scoring);
+        "{ \"measureName\":\"%s\", \"cqlLibraryName\":\"%s\", \"model\":\"%s\"}"
+            .formatted(measureName, libraryName, model);
     mockMvc
         .perform(
             post("/measure")
@@ -547,15 +534,13 @@ public class MeasureControllerMvcTest {
     saved.setCqlLibraryName(libraryName);
     String model = "QI-Core";
     saved.setModel(model);
-    String scoring = MeasureScoring.CONTINUOUS_VARIABLE.toString();
-    saved.setMeasureScoring(scoring);
 
     when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(saved));
     when(measureRepository.save(any(Measure.class))).thenReturn(saved);
 
     final String measureAsJson =
-        "{ \"id\": \"%s\", \"measureName\":\"%s\", \"cqlLibraryName\":\"%s\", \"model\":\"%s\", \"measureScoring\":\"%s\"}"
-            .formatted(measureId, measureName, libraryName, model, scoring);
+        "{ \"id\": \"%s\", \"measureName\":\"%s\", \"cqlLibraryName\":\"%s\", \"model\":\"%s\"}"
+            .formatted(measureId, measureName, libraryName, model);
     mockMvc
         .perform(
             put("/measures/" + measureId)
@@ -583,7 +568,6 @@ public class MeasureControllerMvcTest {
     String model = "QI-Core";
     saved.setModel(model);
     String scoring = MeasureScoring.CONTINUOUS_VARIABLE.toString();
-    saved.setMeasureScoring(scoring);
 
     when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(saved));
     when(measureRepository.save(any(Measure.class))).thenReturn(saved);
@@ -615,7 +599,6 @@ public class MeasureControllerMvcTest {
     String model = "QI-Core";
     saved.setModel(model);
     String scoring = MeasureScoring.CONTINUOUS_VARIABLE.toString();
-    saved.setMeasureScoring(scoring);
 
     when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(saved));
     when(measureRepository.save(any(Measure.class))).thenReturn(saved);
@@ -654,24 +637,6 @@ public class MeasureControllerMvcTest {
   }
 
   @Test
-  public void testNewMeasureFailsWithInvalidMeasureScoringType() throws Exception {
-    final String measureAsJson =
-        "{ \"measureName\":\"TestName\", \"cqlLibraryName\":\"TEST1\", \"model\":\"QI-Core\", \"measureScoring\":\"Test\" }";
-    mockMvc
-        .perform(
-            post("/measure")
-                .with(user(TEST_USER_ID))
-                .with(csrf())
-                .content(measureAsJson)
-                .contentType(MediaType.APPLICATION_JSON_VALUE))
-        .andExpect(status().isBadRequest())
-        .andExpect(
-            jsonPath("$.validationErrors.measureScoring")
-                .value("Value provided is not a valid option."));
-    verifyNoInteractions(measureRepository);
-  }
-
-  @Test
   public void testNewMeasureFailedWithoutSecurityToken() throws Exception {
     final String measureAsJson =
         "{\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\", \"model\": \"%s\", \"measureScoring\": \"%s\" }"
@@ -702,7 +667,6 @@ public class MeasureControllerMvcTest {
             .measureName("Measure1")
             .cqlLibraryName("TestLib1")
             .createdBy("test-okta-user-id-123")
-            .measureScoring("Proportion")
             .model("QI-Core")
             .build();
     Measure m2 =
@@ -711,7 +675,6 @@ public class MeasureControllerMvcTest {
             .measureName("Measure2")
             .cqlLibraryName("TestLib2")
             .createdBy("test-okta-user-id-123")
-            .measureScoring("Proportion")
             .model("QI-Core")
             .build();
     Measure m3 =
@@ -720,7 +683,6 @@ public class MeasureControllerMvcTest {
             .measureName("Measure3")
             .cqlLibraryName("TestLib3")
             .createdBy("test-okta-user-id-999")
-            .measureScoring("Proportion")
             .model("QI-Core")
             .build();
 
@@ -751,7 +713,6 @@ public class MeasureControllerMvcTest {
             .measureName("Measure1")
             .cqlLibraryName("TestLib1")
             .createdBy("test-okta-user-id-123")
-            .measureScoring("Proportion")
             .model("QI-Core")
             .build();
     Measure m2 =
@@ -760,7 +721,6 @@ public class MeasureControllerMvcTest {
             .measureName("Measure2")
             .cqlLibraryName("TestLib2")
             .createdBy("test-okta-user-id-123")
-            .measureScoring("Proportion")
             .model("QI-Core")
             .build();
     Measure m3 =
@@ -769,7 +729,6 @@ public class MeasureControllerMvcTest {
             .measureName("Measure3")
             .cqlLibraryName("TestLib3")
             .createdBy("test-okta-user-id-999")
-            .measureScoring("Proportion")
             .model("QI-Core")
             .build();
 
@@ -804,7 +763,6 @@ public class MeasureControllerMvcTest {
             .measureName("Measure1")
             .cqlLibraryName("TestLib1")
             .createdBy("test-okta-user-id-123")
-            .measureScoring("Proportion")
             .model("QI-Core")
             .build();
     Measure m2 =
@@ -813,7 +771,6 @@ public class MeasureControllerMvcTest {
             .measureName("Measure2")
             .cqlLibraryName("TestLib2")
             .createdBy("test-okta-user-id-123")
-            .measureScoring("Proportion")
             .model("QI-Core")
             .build();
     Measure m3 =
@@ -822,7 +779,6 @@ public class MeasureControllerMvcTest {
             .measureName("Measure3")
             .cqlLibraryName("TestLib3")
             .createdBy("test-okta-user-id-999")
-            .measureScoring("Proportion")
             .model("QI-Core")
             .build();
 
@@ -863,7 +819,6 @@ public class MeasureControllerMvcTest {
             .measureName("Measure1")
             .cqlLibraryName("TestLib1")
             .createdBy("test-okta-user-id-123")
-            .measureScoring("Proportion")
             .model("QI-Core")
             .build();
     Measure m2 =
@@ -872,7 +827,6 @@ public class MeasureControllerMvcTest {
             .measureName("Measure2")
             .cqlLibraryName("TestLib2")
             .createdBy("test-okta-user-id-123")
-            .measureScoring("Proportion")
             .model("QI-Core")
             .active(true)
             .build();
