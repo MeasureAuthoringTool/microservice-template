@@ -51,7 +51,7 @@ class FhirServicesClientTest {
         .thenReturn("http://fhir-services");
     lenient()
         .when(fhirServicesConfig.getMadieFhirServiceMeasuresBundleUri())
-        .thenReturn("/api/hapiFhir/measures/bundles");
+        .thenReturn("/api/fhir/measures/bundles");
   }
 
   @Test

@@ -15,7 +15,7 @@ madie:
       base-url: ${FHIR_SERVICES_URL:http://localhost:8085/api}
       hapi-fhir:
         measures:
-          bundle-uri: /hapiFhir/measures/bundles
+          bundle-uri: /fhir/measures/bundles
   cql-elm:
     service:
       base-url: ${ELM_TRANSLATOR_SERVICE_URL:http://localhost:8084/api}
