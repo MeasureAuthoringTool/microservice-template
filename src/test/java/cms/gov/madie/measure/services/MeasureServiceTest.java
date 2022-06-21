@@ -75,7 +75,6 @@ public class MeasureServiceTest {
             .active(true)
             .id("xyz-p13r-13ert")
             .cql("test cql")
-            .measureScoring("Cohort")
             .measureSetId("IDIDID")
             .measureName("MSR01")
             .version("0.001")
@@ -96,7 +95,6 @@ public class MeasureServiceTest {
             .measureName("Measure1")
             .cqlLibraryName("TestLib1")
             .createdBy("test-okta-user-id-123")
-            .measureScoring("Proportion")
             .model("QI-Core")
             .build();
     Measure m2 =
@@ -106,7 +104,6 @@ public class MeasureServiceTest {
             .measureName("Measure2")
             .cqlLibraryName("TestLib2")
             .createdBy("test-okta-user-id-123")
-            .measureScoring("Proportion")
             .model("QI-Core")
             .active(true)
             .build();

@@ -4,7 +4,6 @@ spring:
       database: ${MONGO_DATABASE:madie}
       uri: ${MONGO_URI:mongodb://${DBUSER}:${DBPASS}@localhost:27017/madie}?authSource=admin&maxPoolSize=50&connectTimeoutMS=2000&serverSelectionTimeoutMS=2000
 
-
 server:
   servlet:
     context-path: /api
