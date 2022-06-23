@@ -1,9 +1,9 @@
 package cms.gov.madie.measure.resources;
 
-import gov.cms.madiejavamodels.measure.Group;
-import gov.cms.madiejavamodels.measure.Measure;
-import gov.cms.madiejavamodels.measure.MeasureMetaData;
-import gov.cms.madiejavamodels.measure.MeasurePopulation;
+import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureMetaData;
+import gov.cms.madie.models.measure.MeasurePopulation;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.MeasureService;
 import com.fasterxml.jackson.databind.ObjectMapper;

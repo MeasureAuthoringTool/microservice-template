@@ -1,8 +1,8 @@
 package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import gov.cms.madiejavamodels.measure.Measure;
-import gov.cms.madiejavamodels.measure.TestCase;
+import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.TestCase;
 import cms.gov.madie.measure.services.TestCaseService;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;

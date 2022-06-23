@@ -1,9 +1,9 @@
 package cms.gov.madie.measure.validations;
 
-import gov.cms.madiejavamodels.measure.Group;
-import gov.cms.madiejavamodels.measure.MeasurePopulation;
-import gov.cms.madiejavamodels.measure.MeasureScoring;
-import gov.cms.madiejavamodels.validators.GroupScoringPopulationValidator;
+import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.MeasurePopulation;
+import gov.cms.madie.models.measure.MeasureScoring;
+import gov.cms.madie.models.validators.GroupScoringPopulationValidator;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

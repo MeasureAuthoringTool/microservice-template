@@ -6,7 +6,7 @@ import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
-import gov.cms.madiejavamodels.measure.*;
+import gov.cms.madie.models.measure.*;
 import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

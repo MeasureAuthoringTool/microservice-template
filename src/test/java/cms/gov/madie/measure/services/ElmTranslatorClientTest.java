@@ -2,7 +2,7 @@ package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.config.ElmTranslatorClientConfig;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
-import gov.cms.madiejavamodels.measure.ElmJson;
+import gov.cms.madie.models.measure.ElmJson;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
