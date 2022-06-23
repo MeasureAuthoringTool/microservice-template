@@ -13,16 +13,24 @@ jobs:
         with:
           java-version: '16'
           distribution: 'adopt'
+      
+      # Github Authentication is required to download artifacts from github packages
+      # A secret is created for this repo, so that github actions can fetch it, the secret is named after GH_PAT_FOR_ACTIONS_TOKEN
+      - name: maven-settings
+        uses: s4u/maven-settings-action@v2
+        with:
+          servers: '[{"id": "github", "username": "madieUser", "password": "${GITHUB_TOKEN_REF}"}]'
+          githubServer: false
+
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots verify
-      #- uses: actions/checkout@master
-      - name: List files in the repository
-        run: |
-          ls ${{ github.workspace }}
-      - uses: codecov/codecov-action@v2
+        env:
+          GITHUB_TOKEN_REF: ${{ secrets.GH_PAT_FOR_ACTIONS_TOKEN }}
+
+      - name: Cache local Maven repository
+        uses: actions/cache@v2
         with:
-          files: ./target/site/jacoco-merged-test-coverage-report/jacoco.xml # optional
-          flags: unittests # optional
-          name: codecov-umbrella # optional
-          fail_ci_if_error: true # optional (default = false)
-          verbose: true # optional (default = false) 
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
