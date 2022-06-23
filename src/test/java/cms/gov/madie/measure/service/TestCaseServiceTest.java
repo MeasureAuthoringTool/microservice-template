@@ -2,8 +2,8 @@ package cms.gov.madie.measure.service;
 
 import cms.gov.madie.measure.HapiFhirConfig;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import cms.gov.madie.measure.models.Measure;
-import cms.gov.madie.measure.models.TestCase;
+import gov.cms.madiejavamodels.measure.Measure;
+import gov.cms.madiejavamodels.measure.TestCase;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.TestCaseService;
 import org.assertj.core.util.Lists;

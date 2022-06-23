@@ -1,7 +1,7 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.config.FhirServicesConfig;
-import cms.gov.madie.measure.models.Measure;
+import gov.cms.madiejavamodels.measure.Measure;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;

@@ -1,7 +1,14 @@
 package cms.gov.madie.measure.validations;
 
-import cms.gov.madie.measure.models.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import gov.cms.madiejavamodels.measure.Group;
+import gov.cms.madiejavamodels.measure.Measure;
+import gov.cms.madiejavamodels.measure.MeasurePopulation;
+import gov.cms.madiejavamodels.measure.MeasureScoring;
+import gov.cms.madiejavamodels.measure.TestCaseGroupPopulation;
+import gov.cms.madiejavamodels.measure.TestCasePopulationValue;
+import gov.cms.madiejavamodels.validators.ValidScoringPopulation;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.validation.ConstraintValidator;

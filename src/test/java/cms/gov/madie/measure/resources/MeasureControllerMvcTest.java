@@ -8,10 +8,10 @@ import java.util.Optional;
 
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
-import cms.gov.madie.measure.models.Group;
-import cms.gov.madie.measure.models.MeasurePopulation;
-import cms.gov.madie.measure.models.MeasureScoring;
-import cms.gov.madie.measure.models.ModelType;
+import gov.cms.madiejavamodels.measure.Group;
+import gov.cms.madiejavamodels.measure.MeasurePopulation;
+import gov.cms.madiejavamodels.measure.MeasureScoring;
+import gov.cms.madiejavamodels.common.ModelType;
 
 import cms.gov.madie.measure.services.MeasureService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,7 +31,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import cms.gov.madie.measure.models.Measure;
+import gov.cms.madiejavamodels.measure.Measure;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 
 import static org.hamcrest.CoreMatchers.equalTo;

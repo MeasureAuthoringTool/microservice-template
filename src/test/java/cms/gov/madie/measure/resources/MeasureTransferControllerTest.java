@@ -1,9 +1,9 @@
 package cms.gov.madie.measure.resources;
 
-import cms.gov.madie.measure.models.Group;
-import cms.gov.madie.measure.models.Measure;
-import cms.gov.madie.measure.models.MeasureMetaData;
-import cms.gov.madie.measure.models.MeasurePopulation;
+import gov.cms.madiejavamodels.measure.Group;
+import gov.cms.madiejavamodels.measure.Measure;
+import gov.cms.madiejavamodels.measure.MeasureMetaData;
+import gov.cms.madiejavamodels.measure.MeasurePopulation;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.MeasureService;
 import org.junit.jupiter.api.BeforeEach;

@@ -5,7 +5,8 @@ import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
-import cms.gov.madie.measure.models.*;
+import cms.gov.madie.measure.resources.DuplicateKeyException;
+import gov.cms.madiejavamodels.measure.*;
 import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -599,5 +600,23 @@ public class MeasureServiceTest {
   public void testVerifyAuthorizationThrowsExceptionForDifferentUsers() {
     assertThrows(
         UnauthorizedException.class, () -> measureService.verifyAuthorization("user1", measure));
+  }
+
+  @Test
+  public void testCheckDuplicateCqlLibraryNameDoesNotThrowException() {
+    Optional<Measure> measureOpt = Optional.empty();
+    when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(measureOpt);
+    measureService.checkDuplicateCqlLibraryName("testCQLLibraryName");
+    verify(measureRepository, times(1)).findByCqlLibraryName(eq("testCQLLibraryName"));
+  }
+
+  @Test
+  public void testCheckDuplicateCqlLibraryNameThrowsExceptionForExistingName() {
+    final Measure measure = Measure.builder().cqlLibraryName("testCQLLibraryName").build();
+    Optional<Measure> measureOpt = Optional.of(measure);
+    when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(measureOpt);
+    assertThrows(
+        DuplicateKeyException.class,
+        () -> measureService.checkDuplicateCqlLibraryName("testCQLLibraryName"));
   }
 }

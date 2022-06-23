@@ -12,7 +12,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import cms.gov.madie.measure.exceptions.*;
-import cms.gov.madie.measure.models.*;
+import gov.cms.madiejavamodels.measure.*;
 import cms.gov.madie.measure.services.MeasureService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -1,12 +1,12 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.exceptions.*;
-import cms.gov.madie.measure.models.ElmJson;
-import cms.gov.madie.measure.models.Group;
-import cms.gov.madie.measure.models.Measure;
-import cms.gov.madie.measure.models.TestCase;
-import cms.gov.madie.measure.models.TestCaseGroupPopulation;
-import cms.gov.madie.measure.models.TestCasePopulationValue;
+import gov.cms.madiejavamodels.measure.ElmJson;
+import gov.cms.madiejavamodels.measure.Group;
+import gov.cms.madiejavamodels.measure.Measure;
+import gov.cms.madiejavamodels.measure.TestCase;
+import gov.cms.madiejavamodels.measure.TestCaseGroupPopulation;
+import gov.cms.madiejavamodels.measure.TestCasePopulationValue;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
 import cms.gov.madie.measure.resources.DuplicateKeyException;

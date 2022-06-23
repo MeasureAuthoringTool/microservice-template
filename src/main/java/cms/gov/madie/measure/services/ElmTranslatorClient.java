@@ -2,7 +2,7 @@ package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.config.ElmTranslatorClientConfig;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
-import cms.gov.madie.measure.models.ElmJson;
+import gov.cms.madiejavamodels.measure.ElmJson;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
