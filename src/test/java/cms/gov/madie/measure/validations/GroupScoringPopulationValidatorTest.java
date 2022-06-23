@@ -1,8 +1,10 @@
 package cms.gov.madie.measure.validations;
 
-import cms.gov.madie.measure.models.Group;
-import cms.gov.madie.measure.models.MeasurePopulation;
-import cms.gov.madie.measure.models.MeasureScoring;
+import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.MeasurePopulation;
+import gov.cms.madie.models.measure.MeasureScoring;
+import gov.cms.madie.models.validators.GroupScoringPopulationValidator;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;

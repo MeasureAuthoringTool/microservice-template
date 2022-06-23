@@ -87,6 +87,12 @@
     </dependency>
 
     <dependency>
+      <groupId>gov.cms.madie</groupId>
+      <artifactId>madie-java-models</artifactId>
+      <version>0.1.1-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
@@ -98,6 +104,17 @@
     </dependency>
 
   </dependencies>
+
+  <repositories>
+    <repository>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <id>github</id>
+      <name>MADiE java models</name>
+      <url>https://maven.pkg.github.com/measureauthoringtool/madie-java-models</url>
+    </repository>
+  </repositories>
 
   <build>
     <pluginManagement>
