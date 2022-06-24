@@ -1,11 +1,11 @@
 package cms.gov.madie.measure.validations;
 
-import cms.gov.madie.measure.models.Group;
-import cms.gov.madie.measure.models.Measure;
-import cms.gov.madie.measure.models.MeasurePopulation;
-import cms.gov.madie.measure.models.MeasureScoring;
-import cms.gov.madie.measure.models.TestCaseGroupPopulation;
-import cms.gov.madie.measure.models.TestCasePopulationValue;
+import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasurePopulation;
+import gov.cms.madie.models.measure.MeasureScoring;
+import gov.cms.madie.models.measure.TestCaseGroupPopulation;
+import gov.cms.madie.models.measure.TestCasePopulationValue;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

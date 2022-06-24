@@ -7,7 +7,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import cms.gov.madie.measure.exceptions.*;
-import cms.gov.madie.measure.models.Group;
+import gov.cms.madie.models.measure.Group;
 import cms.gov.madie.measure.services.MeasureService;
 
 import com.nimbusds.oauth2.sdk.util.StringUtils;
@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import cms.gov.madie.measure.models.Measure;
+import gov.cms.madie.models.measure.Measure;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import lombok.RequiredArgsConstructor;
 

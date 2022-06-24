@@ -1,7 +1,7 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.config.FhirServicesConfig;
-import cms.gov.madie.measure.models.Measure;
+import gov.cms.madie.models.measure.Measure;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
