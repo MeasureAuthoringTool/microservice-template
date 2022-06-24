@@ -64,7 +64,11 @@ public class TestCaseService {
 
     measureRepository.save(measure);
 
-    log.info("User [{}] successfully created new test case with ID [{}] for the measure with ID[{}] ", username, testCase.getId(),measureId);
+    log.info(
+        "User [{}] successfully created new test case with ID [{}] for the measure with ID[{}] ",
+        username,
+        testCase.getId(),
+        measureId);
     return upserted;
   }
 
@@ -98,6 +102,12 @@ public class TestCaseService {
     measure.getTestCases().add(upsertedTestCase);
 
     measureRepository.save(measure);
+
+    log.info(
+            "User [{}] successfully updated the test case with ID [{}] for the measure with ID[{}] ",
+            username,
+            testCase.getId(),
+            measureId);
     return testCase;
   }
 
