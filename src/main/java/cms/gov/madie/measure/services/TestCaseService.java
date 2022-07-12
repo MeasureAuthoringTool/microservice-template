@@ -104,10 +104,10 @@ public class TestCaseService {
     measureRepository.save(measure);
 
     log.info(
-            "User [{}] successfully updated the test case with ID [{}] for the measure with ID[{}] ",
-            username,
-            testCase.getId(),
-            measureId);
+        "User [{}] successfully updated the test case with ID [{}] for the measure with ID[{}] ",
+        username,
+        testCase.getId(),
+        measureId);
     return testCase;
   }
 

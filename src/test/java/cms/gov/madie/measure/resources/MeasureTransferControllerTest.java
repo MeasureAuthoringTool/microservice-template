@@ -49,7 +49,9 @@ public class MeasureTransferControllerTest {
                 "id-abc",
                 "Cohort",
                 Map.of(MeasurePopulation.INITIAL_POPULATION, "Initial Population"),
-                "Description"));
+                "Description",
+                "improvmentNotation",
+                "rateAggragation"));
 
     measureMetaData.setSteward("SB");
     measureMetaData.setCopyright("Copyright@SB");
