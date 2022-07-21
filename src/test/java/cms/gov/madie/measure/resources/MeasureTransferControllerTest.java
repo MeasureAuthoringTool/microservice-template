@@ -1,18 +1,22 @@
 package cms.gov.madie.measure.resources;
 
+import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureMetaData;
 import gov.cms.madie.models.measure.MeasurePopulation;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.MeasureService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 
@@ -20,6 +24,9 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -34,6 +41,12 @@ public class MeasureTransferControllerTest {
 
   @Mock private MeasureService measureService;
   @Mock private MeasureRepository repository;
+
+  @MockBean private ActionLogService actionLogService;
+
+  @Captor private ArgumentCaptor<ActionType> actionTypeArgumentCaptor;
+  @Captor private ArgumentCaptor<String> targetIdArgumentCaptor;
+  @Captor private ArgumentCaptor<String> performedByArgumentCaptor;
 
   @InjectMocks private MeasureTransferController controller;
 
@@ -58,6 +71,8 @@ public class MeasureTransferControllerTest {
 
     measure =
         Measure.builder()
+            .id("testId")
+            .createdBy("testCreatedBy")
             .measureSetId("abc-pqr-xyz")
             .version("0.000")
             .measureName("MedicationDispenseTest")
@@ -87,6 +102,15 @@ public class MeasureTransferControllerTest {
     assertEquals(measure.getCqlLibraryName(), persistedMeasure.getCqlLibraryName());
     assertEquals(measure.getCql(), persistedMeasure.getCql());
     assertEquals(measure.getGroups().size(), persistedMeasure.getGroups().size());
+
+    verify(actionLogService, times(1))
+        .logAction(
+            targetIdArgumentCaptor.capture(),
+            actionTypeArgumentCaptor.capture(),
+            performedByArgumentCaptor.capture());
+    assertNotNull(targetIdArgumentCaptor.getValue());
+    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.IMPORTED)));
+    assertThat(performedByArgumentCaptor.getValue(), is(equalTo("testCreatedBy")));
   }
 
   @Test

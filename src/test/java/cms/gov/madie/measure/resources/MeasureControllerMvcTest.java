@@ -11,8 +11,9 @@ import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.MeasurePopulation;
 import gov.cms.madie.models.measure.MeasureScoring;
+import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
-
+import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.MeasureService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -61,15 +62,20 @@ public class MeasureControllerMvcTest {
 
   @MockBean private MeasureRepository measureRepository;
   @MockBean private MeasureService measureService;
+  @MockBean private ActionLogService actionLogService;
 
   @Autowired private MockMvc mockMvc;
   @Captor private ArgumentCaptor<Measure> measureArgumentCaptor;
+
   private static final String TEST_USER_ID = "test-okta-user-id-123";
   @Captor ArgumentCaptor<Group> groupCaptor;
   @Captor ArgumentCaptor<String> measureIdCaptor;
   @Captor ArgumentCaptor<String> usernameCaptor;
   @Captor ArgumentCaptor<PageRequest> pageRequestCaptor;
   @Captor ArgumentCaptor<Boolean> activeCaptor;
+  @Captor private ArgumentCaptor<ActionType> actionTypeArgumentCaptor;
+  @Captor private ArgumentCaptor<String> targetIdArgumentCaptor;
+  @Captor private ArgumentCaptor<String> performedByArgumentCaptor;
 
   @Test
   public void testUpdatePassed() throws Exception {
@@ -137,6 +143,15 @@ public class MeasureControllerMvcTest {
     int lastModCompareTo =
         savedMeasure.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
     assertEquals(1, lastModCompareTo);
+
+    verify(actionLogService, times(1))
+        .logAction(
+            targetIdArgumentCaptor.capture(),
+            actionTypeArgumentCaptor.capture(),
+            performedByArgumentCaptor.capture());
+    assertNotNull(targetIdArgumentCaptor.getValue());
+    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.DELETED)));
+    assertThat(performedByArgumentCaptor.getValue(), is(equalTo(TEST_USER_ID)));
   }
 
   @Test
@@ -315,6 +330,15 @@ public class MeasureControllerMvcTest {
     assertEquals(TEST_USER_ID, savedMeasure.getLastModifiedBy());
     assertNotNull(savedMeasure.getCreatedAt());
     assertNotNull(savedMeasure.getLastModifiedAt());
+
+    verify(actionLogService, times(1))
+        .logAction(
+            targetIdArgumentCaptor.capture(),
+            actionTypeArgumentCaptor.capture(),
+            performedByArgumentCaptor.capture());
+    assertNotNull(targetIdArgumentCaptor.getValue());
+    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.CREATED)));
+    assertThat(performedByArgumentCaptor.getValue(), is(equalTo(TEST_USER_ID)));
   }
 
   @Test

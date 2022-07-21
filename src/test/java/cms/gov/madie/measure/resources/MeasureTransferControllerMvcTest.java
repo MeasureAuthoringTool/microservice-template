@@ -1,15 +1,18 @@
 package cms.gov.madie.measure.resources;
 
+import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureMetaData;
 import gov.cms.madie.models.measure.MeasurePopulation;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.MeasureService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -22,11 +25,13 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.util.List;
 import java.util.Map;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.doReturn;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -39,6 +44,11 @@ public class MeasureTransferControllerMvcTest {
 
   @MockBean private MeasureRepository measureRepository;
   @MockBean private MeasureService measureService;
+  @MockBean private ActionLogService actionLogService;
+
+  @Captor private ArgumentCaptor<ActionType> actionTypeArgumentCaptor;
+  @Captor private ArgumentCaptor<String> targetIdArgumentCaptor;
+  @Captor private ArgumentCaptor<String> performedByArgumentCaptor;
 
   @Autowired private MockMvc mockMvc;
 
@@ -62,6 +72,8 @@ public class MeasureTransferControllerMvcTest {
 
     measure =
         Measure.builder()
+            .id("testId")
+            .createdBy("testCreatedBy")
             .measureSetId("abc-pqr-xyz")
             .version("0.000")
             .measureName("MedicationDispenseTest")
@@ -100,6 +112,15 @@ public class MeasureTransferControllerMvcTest {
     assertEquals(measure.getCqlLibraryName(), persistedMeasure.getCqlLibraryName());
     assertEquals(measure.getCql(), persistedMeasure.getCql());
     assertEquals(measure.getGroups().size(), persistedMeasure.getGroups().size());
+
+    verify(actionLogService, times(1))
+        .logAction(
+            targetIdArgumentCaptor.capture(),
+            actionTypeArgumentCaptor.capture(),
+            performedByArgumentCaptor.capture());
+    assertNotNull(targetIdArgumentCaptor.getValue());
+    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.IMPORTED)));
+    assertThat(performedByArgumentCaptor.getValue(), is(equalTo("testCreatedBy")));
   }
 
   @Test
