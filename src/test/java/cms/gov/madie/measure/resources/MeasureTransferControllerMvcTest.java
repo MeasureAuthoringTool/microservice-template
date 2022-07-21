@@ -2,6 +2,7 @@ package cms.gov.madie.measure.resources;
 
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureGroupTypes;
 import gov.cms.madie.models.measure.MeasureMetaData;
 import gov.cms.madie.models.measure.MeasurePopulation;
 import cms.gov.madie.measure.repositories.MeasureRepository;
@@ -55,7 +56,8 @@ public class MeasureTransferControllerMvcTest {
                 Map.of(MeasurePopulation.INITIAL_POPULATION, "Initial Population"),
                 "Description",
                 "improvmentNotation",
-                "rateAggragation"));
+                "rateAggragation",
+                List.of(MeasureGroupTypes.PROCESS)));
 
     measureMetaData.setSteward("SB");
     measureMetaData.setCopyright("Copyright@SB");
