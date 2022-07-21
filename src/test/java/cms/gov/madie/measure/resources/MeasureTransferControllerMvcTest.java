@@ -3,6 +3,7 @@ package cms.gov.madie.measure.resources;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureGroupTypes;
 import gov.cms.madie.models.measure.MeasureMetaData;
 import gov.cms.madie.models.measure.MeasurePopulation;
 import cms.gov.madie.measure.repositories.MeasureRepository;
@@ -22,8 +23,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -65,7 +69,8 @@ public class MeasureTransferControllerMvcTest {
                 Map.of(MeasurePopulation.INITIAL_POPULATION, "Initial Population"),
                 "Description",
                 "improvmentNotation",
-                "rateAggragation"));
+                "rateAggragation",
+                new ArrayList<MeasureGroupTypes>()));
 
     measureMetaData.setSteward("SB");
     measureMetaData.setCopyright("Copyright@SB");
