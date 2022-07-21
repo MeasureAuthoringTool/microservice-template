@@ -67,7 +67,7 @@ public class MeasureTransferControllerTest {
                 "Description",
                 "improvmentNotation",
                 "rateAggragation",
-                new ArrayList<MeasureGroupTypes>()));
+                List.of(MeasureGroupTypes.PROCESS)));
 
     measureMetaData.setSteward("SB");
     measureMetaData.setCopyright("Copyright@SB");

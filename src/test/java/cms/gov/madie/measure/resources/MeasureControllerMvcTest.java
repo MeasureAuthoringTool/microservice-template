@@ -9,6 +9,7 @@ import java.util.Optional;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
 import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.MeasureGroupTypes;
 import gov.cms.madie.models.measure.MeasurePopulation;
 import gov.cms.madie.models.measure.MeasureScoring;
 import gov.cms.madie.models.common.ActionType;
@@ -888,10 +889,11 @@ public class MeasureControllerMvcTest {
             .scoring("Cohort")
             .id("test-id")
             .population(Map.of(MeasurePopulation.INITIAL_POPULATION, "Initial Population"))
+            .measureGroupTypes(List.of(MeasureGroupTypes.PROCESS))
             .build();
 
     final String groupJson =
-        "{\"scoring\":\"Cohort\",\"population\":{\"initialPopulation\":\"Initial Population\"}}";
+        "{\"scoring\":\"Cohort\",\"population\":{\"initialPopulation\":\"Initial Population\"},\"measureGroupTypes\":[\"Process\"]}";
     when(measureService.createOrUpdateGroup(any(Group.class), any(String.class), any(String.class)))
         .thenReturn(group);
 
@@ -915,6 +917,7 @@ public class MeasureControllerMvcTest {
     assertEquals(
         "Initial Population",
         persistedGroup.getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
+    assertEquals(group.getMeasureGroupTypes().get(0), persistedGroup.getMeasureGroupTypes().get(0));
   }
 
   @Test
@@ -925,10 +928,11 @@ public class MeasureControllerMvcTest {
             .scoring("Cohort")
             .id("test-id")
             .population(Map.of(MeasurePopulation.INITIAL_POPULATION, updateIppDefinition))
+            .measureGroupTypes(List.of(MeasureGroupTypes.PROCESS))
             .build();
 
     final String groupJson =
-        "{\"id\":\"test-id\",\"scoring\":\"Cohort\",\"population\":{\"initialPopulation\":\"FactorialOfFive\"}}";
+        "{\"id\":\"test-id\",\"scoring\":\"Cohort\",\"population\":{\"initialPopulation\":\"FactorialOfFive\"},\"measureGroupTypes\":[\"Process\"]}";
     when(measureService.createOrUpdateGroup(any(Group.class), any(String.class), any(String.class)))
         .thenReturn(group);
 
@@ -952,6 +956,7 @@ public class MeasureControllerMvcTest {
     assertEquals(
         updateIppDefinition,
         persistedGroup.getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
+    assertEquals(group.getMeasureGroupTypes().get(0), persistedGroup.getMeasureGroupTypes().get(0));
   }
 
   @Test
