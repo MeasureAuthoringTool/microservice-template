@@ -43,8 +43,7 @@ public class MeasureTransferControllerTest {
 
   @Mock private MeasureService measureService;
   @Mock private MeasureRepository repository;
-
-  @MockBean private ActionLogService actionLogService;
+  @Mock private ActionLogService actionLogService;
 
   @Captor private ArgumentCaptor<ActionType> actionTypeArgumentCaptor;
   @Captor private ArgumentCaptor<String> targetIdArgumentCaptor;
