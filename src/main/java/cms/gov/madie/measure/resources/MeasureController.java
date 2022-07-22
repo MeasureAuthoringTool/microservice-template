@@ -7,7 +7,9 @@ import java.util.Objects;
 import java.util.Optional;
 
 import cms.gov.madie.measure.exceptions.*;
+import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.Group;
+import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.MeasureService;
 
 import com.nimbusds.oauth2.sdk.util.StringUtils;
@@ -43,6 +45,7 @@ public class MeasureController {
 
   private final MeasureRepository repository;
   private final MeasureService measureService;
+  private final ActionLogService actionLogService;
 
   @GetMapping("/measures")
   public ResponseEntity<Page<Measure>> getMeasures(
@@ -88,6 +91,9 @@ public class MeasureController {
 
     Measure savedMeasure = repository.save(measure);
     log.info("User [{}] successfully created new measure with ID [{}]", username, measure.getId());
+
+    actionLogService.logAction(savedMeasure.getId(), ActionType.CREATED, username);
+
     return ResponseEntity.status(HttpStatus.CREATED).body(savedMeasure);
   }
 
@@ -132,6 +138,8 @@ public class MeasureController {
       measure.setCreatedBy(persistedMeasure.get().getCreatedBy());
       repository.save(measure);
       response = ResponseEntity.ok().body("Measure updated successfully.");
+
+      actionLogService.logAction(measure.getId(), ActionType.DELETED, username);
     }
     return response;
   }
