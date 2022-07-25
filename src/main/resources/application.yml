@@ -2,9 +2,10 @@ spring:
   data:
     mongodb:
       database: ${MONGO_DATABASE:madie}
-      uri: ${MONGO_URI:mongodb://${DBUSER}:${DBPASS}@localhost:27017/madie}?authSource=admin&maxPoolSize=50&connectTimeoutMS=2000&serverSelectionTimeoutMS=2000
+      uri: ${MONGO_URI:mongodb://localhost:27017/madie}?authSource=admin&maxPoolSize=50&connectTimeoutMS=2000&serverSelectionTimeoutMS=2000
 
 server:
+  port: 8086
   servlet:
     context-path: /api
 
@@ -46,7 +47,7 @@ mongock:
   test-enabled: false
 
 hapi-fhir:
-  url: ${HAPI_FHIR_URL:http://localhost:8087/fhir}
+  url: ${HAPI_FHIR_URL:http://localhost:8080/fhir}
   patient:
     uri: /Patient
   bundle:
