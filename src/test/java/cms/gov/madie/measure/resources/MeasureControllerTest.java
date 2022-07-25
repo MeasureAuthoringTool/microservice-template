@@ -42,6 +42,7 @@ class MeasureControllerTest {
   private Measure measure;
 
   @Captor private ArgumentCaptor<ActionType> actionTypeArgumentCaptor;
+  @Captor private ArgumentCaptor<Class> targetClassArgumentCaptor;
   @Captor private ArgumentCaptor<String> targetIdArgumentCaptor;
   @Captor private ArgumentCaptor<String> performedByArgumentCaptor;
 
@@ -78,6 +79,7 @@ class MeasureControllerTest {
     verify(actionLogService, times(1))
         .logAction(
             targetIdArgumentCaptor.capture(),
+            targetClassArgumentCaptor.capture(),
             actionTypeArgumentCaptor.capture(),
             performedByArgumentCaptor.capture());
     assertNotNull(targetIdArgumentCaptor.getValue());
@@ -199,13 +201,14 @@ class MeasureControllerTest {
     verify(actionLogService, times(1))
         .logAction(
             targetIdArgumentCaptor.capture(),
+            targetClassArgumentCaptor.capture(),
             actionTypeArgumentCaptor.capture(),
             performedByArgumentCaptor.capture());
     assertNotNull(targetIdArgumentCaptor.getValue());
     assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.UPDATED)));
     assertThat(performedByArgumentCaptor.getValue(), is(equalTo("test.user2")));
   }
-  
+
   @Test
   void updateMeasureSuccessfullyLogDeleted() {
     ArgumentCaptor<Measure> saveMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
@@ -269,9 +272,11 @@ class MeasureControllerTest {
     verify(actionLogService, times(1))
         .logAction(
             targetIdArgumentCaptor.capture(),
+            targetClassArgumentCaptor.capture(),
             actionTypeArgumentCaptor.capture(),
             performedByArgumentCaptor.capture());
     assertNotNull(targetIdArgumentCaptor.getValue());
+    assertThat(targetClassArgumentCaptor.getValue(), is(equalTo(Measure.class)));
     assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.DELETED)));
     assertThat(performedByArgumentCaptor.getValue(), is(equalTo("test.user2")));
   }

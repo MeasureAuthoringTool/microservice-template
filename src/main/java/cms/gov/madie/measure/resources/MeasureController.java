@@ -92,7 +92,7 @@ public class MeasureController {
     Measure savedMeasure = repository.save(measure);
     log.info("User [{}] successfully created new measure with ID [{}]", username, measure.getId());
 
-    actionLogService.logAction(savedMeasure.getId(), ActionType.CREATED, username);
+    actionLogService.logAction(savedMeasure.getId(), Measure.class, ActionType.CREATED, username);
 
     return ResponseEntity.status(HttpStatus.CREATED).body(savedMeasure);
   }
@@ -139,9 +139,9 @@ public class MeasureController {
       repository.save(measure);
       response = ResponseEntity.ok().body("Measure updated successfully.");
       if (!measure.isActive()) {
-        actionLogService.logAction(measure.getId(), ActionType.DELETED, username);
+        actionLogService.logAction(measure.getId(), Measure.class, ActionType.DELETED, username);
       } else {
-        actionLogService.logAction(measure.getId(), ActionType.UPDATED, username);
+        actionLogService.logAction(measure.getId(), Measure.class, ActionType.UPDATED, username);
       }
     }
     return response;
