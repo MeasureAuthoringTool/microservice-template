@@ -75,6 +75,16 @@ public class MeasureService {
     return group;
   }
 
+  public Measure deleteMeasureGroup(String measureId, String groupId) {
+    Measure measure = measureRepository.findById(measureId).orElse(null);
+
+    List<Group> remainingGroups =
+        measure.getGroups().stream().filter(g -> !g.getId().equals(groupId)).toList();
+    measure.setGroups(remainingGroups);
+    measureRepository.save(measure);
+    return measure;
+  }
+
   /**
    * Loops over the test cases searching for any with groups that match the updating group. If any
    * match, then the test case group populations will be updated with the measure group populations,
