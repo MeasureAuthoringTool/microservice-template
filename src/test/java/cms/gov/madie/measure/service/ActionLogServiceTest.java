@@ -38,11 +38,16 @@ public class ActionLogServiceTest {
 
   @Test
   void testLogActionReturnsTrue() {
-    when(actionLogRepository.pushEvent(anyString(), any(Action.class), anyString())).thenReturn(true);
-    boolean output = actionLogService.logAction("TARGET_ID", Measure.class, ActionType.CREATED, "testUser");
+    when(actionLogRepository.pushEvent(anyString(), any(Action.class), anyString()))
+        .thenReturn(true);
+    boolean output =
+        actionLogService.logAction("TARGET_ID", Measure.class, ActionType.CREATED, "testUser");
     assertThat(output, is(true));
     verify(actionLogRepository, times(1))
-        .pushEvent(targetIdArgumentCaptor.capture(), actionArgumentCaptor.capture(), collectionArgumentCaptor.capture());
+        .pushEvent(
+            targetIdArgumentCaptor.capture(),
+            actionArgumentCaptor.capture(),
+            collectionArgumentCaptor.capture());
     assertThat(targetIdArgumentCaptor.getValue(), is(equalTo("TARGET_ID")));
     Action value = actionArgumentCaptor.getValue();
     assertThat(value, is(notNullValue()));
@@ -52,11 +57,16 @@ public class ActionLogServiceTest {
 
   @Test
   void testLogActionReturnsFalse() {
-    when(actionLogRepository.pushEvent(anyString(), any(Action.class), anyString())).thenReturn(false);
-    boolean output = actionLogService.logAction("TARGET_ID", Measure.class, ActionType.DELETED, "testUser");
+    when(actionLogRepository.pushEvent(anyString(), any(Action.class), anyString()))
+        .thenReturn(false);
+    boolean output =
+        actionLogService.logAction("TARGET_ID", Measure.class, ActionType.DELETED, "testUser");
     assertThat(output, is(false));
     verify(actionLogRepository, times(1))
-        .pushEvent(targetIdArgumentCaptor.capture(), actionArgumentCaptor.capture(), collectionArgumentCaptor.capture());
+        .pushEvent(
+            targetIdArgumentCaptor.capture(),
+            actionArgumentCaptor.capture(),
+            collectionArgumentCaptor.capture());
     assertThat(targetIdArgumentCaptor.getValue(), is(equalTo("TARGET_ID")));
     Action value = actionArgumentCaptor.getValue();
     assertThat(value, is(notNullValue()));
