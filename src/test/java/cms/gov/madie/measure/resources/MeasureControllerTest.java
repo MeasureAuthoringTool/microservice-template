@@ -237,7 +237,7 @@ class MeasureControllerTest {
 
     assertThrows(
         InvalidIdException.class,
-        () -> controller.deleteMeasureGroup("testid", "undefined", principal));
+        () -> controller.deleteMeasureGroup("testid", "", principal));
   }
 
   @Test

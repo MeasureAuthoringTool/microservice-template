@@ -178,9 +178,10 @@ public class MeasureController {
       throw new UnauthorizedException("Measure", measureId, principal.getName());
     }
 
-    if (groupId.equals("undefined")) {
+    if(groupId == null || groupId.trim().isEmpty()){
       throw new InvalidIdException("Measure group Id cannot be undefined ");
     }
+
     return ResponseEntity.ok(measureService.deleteMeasureGroup(measure, groupId));
   }
 
