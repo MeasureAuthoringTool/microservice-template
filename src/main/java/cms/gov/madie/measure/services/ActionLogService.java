@@ -1,27 +1,33 @@
 package cms.gov.madie.measure.services;
 
-import java.time.Instant;
-
-import org.springframework.stereotype.Service;
-
-import cms.gov.madie.measure.repositories.ActionLogRepository;
+import cms.gov.madie.measure.repositories.MeasureActionLogRepository;
+import cms.gov.madie.measure.utils.ActionLogCollectionType;
 import gov.cms.madie.models.common.Action;
 import gov.cms.madie.models.common.ActionType;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
-@RequiredArgsConstructor
+import java.time.Instant;
+
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class ActionLogService {
-  private final ActionLogRepository actionLogRepository;
+
+  private final MeasureActionLogRepository actionLogRepository;
 
   public boolean logAction(
-      final String targetId, final ActionType actionType, final String userId) {
+      final String targetId, Class targetClass, final ActionType actionType, final String userId) {
+    final String collection = ActionLogCollectionType.getCollectionNameForClazz(targetClass);
+
     return actionLogRepository.pushEvent(
         targetId,
         Action.builder()
             .actionType(actionType)
             .performedBy(userId)
             .performedAt(Instant.now())
-            .build());
+            .build(),
+        collection);
   }
 }
