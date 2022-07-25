@@ -216,6 +216,40 @@ class MeasureControllerTest {
   }
 
   @Test
+  void testDeleteMeasureGroupReturnsExceptionThrowsAccessException() {
+    String groupId = "testgroupid";
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+    final Measure measure = Measure.builder().createdBy("OtherUser").build();
+    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
+    assertThrows(
+        UnauthorizedException.class,
+        () -> controller.deleteMeasureGroup("MeasureID", groupId, principal));
+  }
+
+  @Test
+  void testDeleteMeasureGroupReturnsExceptionForResourceNotFound() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+    final Measure measure = Measure.builder().createdBy("test.user").build();
+    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
+
+    assertThrows(
+        InvalidIdException.class,
+        () -> controller.deleteMeasureGroup("testid", "undefined", principal));
+  }
+
+  @Test
+  void testDeleteMeasureGroupReturnsExceptionForNullId() {
+    String groupId = "testgroupid";
+    Principal principal = mock(Principal.class);
+
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> controller.deleteMeasureGroup("measure1", groupId, principal));
+  }
+
+  @Test
   void testUpdateMeasureReturnsExceptionForInvalidCredentials() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("aninvalidUser@gmail.com");

@@ -165,7 +165,9 @@ public class MeasureController {
 
   @DeleteMapping("/measures/{measureId}/groups/{groupId}")
   public ResponseEntity<Measure> deleteMeasureGroup(
-      @RequestBody @PathVariable String measureId, @PathVariable String groupId, Principal principal) {
+      @RequestBody @PathVariable String measureId,
+      @PathVariable String groupId,
+      Principal principal) {
 
     Optional<Measure> measureOptional = repository.findById(measureId);
     if (measureOptional.isEmpty()) {
