@@ -182,7 +182,7 @@ public class MeasureController {
     }
 
     if (groupId == null || groupId.trim().isEmpty()) {
-      throw new InvalidIdException("Measure group Id cannot be undefined ");
+      throw new InvalidIdException("Measure group Id cannot be null");
     }
 
     log.info("User [{}] is attempting to delete a group with Id [{}] from measure [{}]",
