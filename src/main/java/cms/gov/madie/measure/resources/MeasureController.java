@@ -178,11 +178,14 @@ public class MeasureController {
       throw new UnauthorizedException("Measure", measureId, principal.getName());
     }
 
-    if(groupId == null || groupId.trim().isEmpty()){
+    if (groupId == null || groupId.trim().isEmpty()) {
       throw new InvalidIdException("Measure group Id cannot be undefined ");
     }
 
-    return ResponseEntity.ok(measureService.deleteMeasureGroup(measure, groupId));
+    log.info("User [{}] is attempting to delete a group with Id [{}] from measure [{}]",
+            principal.getName(),groupId,measureId);
+
+    return ResponseEntity.ok(measureService.deleteMeasureGroup(measure, groupId,principal.getName()));
   }
 
   @GetMapping(path = "/measures/{measureId}/bundles", produces = MediaType.APPLICATION_JSON_VALUE)

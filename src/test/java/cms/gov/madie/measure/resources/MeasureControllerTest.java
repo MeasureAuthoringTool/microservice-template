@@ -236,8 +236,7 @@ class MeasureControllerTest {
     when(repository.findById(anyString())).thenReturn(Optional.of(measure));
 
     assertThrows(
-        InvalidIdException.class,
-        () -> controller.deleteMeasureGroup("testid", "", principal));
+        InvalidIdException.class, () -> controller.deleteMeasureGroup("testid", "", principal));
   }
 
   @Test
@@ -374,7 +373,7 @@ class MeasureControllerTest {
         Measure.builder().id("measure-id").createdBy("test.user").groups(null).build();
     doReturn(updatedMeasure)
         .when(measureService)
-        .deleteMeasureGroup(any(Measure.class), any(String.class));
+        .deleteMeasureGroup(any(Measure.class), any(String.class),any(String.class));
 
     ResponseEntity<Measure> output =
         controller.deleteMeasureGroup("measure-id", "testgroupid", principal);

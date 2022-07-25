@@ -76,7 +76,7 @@ public class MeasureService {
     return group;
   }
 
-  public Measure deleteMeasureGroup(Measure measure, String groupId) {
+  public Measure deleteMeasureGroup(Measure measure, String groupId, String username) {
 
     List<Group> remainingGroups =
         measure.getGroups().stream().filter(g -> !g.getId().equals(groupId)).toList();
@@ -87,8 +87,10 @@ public class MeasureService {
     }
 
     measure.setGroups(remainingGroups);
-    measureRepository.save(measure);
-    return measure;
+
+    log.info("User [{}] has successfully deleted a group with Id [{}] from measure [{}]",
+            username,groupId,measure.getId());
+    return measureRepository.save(measure);
   }
 
   /**
