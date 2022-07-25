@@ -12,6 +12,7 @@ public interface ActionLogRepository {
    *
    * @param targetId field to search on
    * @param action action to push into the list of actions for the given targetId
+   * @param collection name of collection to write to
    * @return true if upsert is successful, false otherwise
    */
   boolean pushEvent(String targetId, Action action, String collection);

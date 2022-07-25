@@ -11,8 +11,8 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 
 @Slf4j
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class ActionLogService {
 
   private final MeasureActionLogRepository actionLogRepository;

@@ -12,7 +12,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import cms.gov.madie.measure.exceptions.*;
+import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.*;
+import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.MeasureService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,10 +35,16 @@ class MeasureControllerTest {
 
   @Mock private MeasureRepository repository;
   @Mock private MeasureService measureService;
+  @Mock private ActionLogService actionLogService;
 
   @InjectMocks private MeasureController controller;
 
   private Measure measure;
+
+  @Captor private ArgumentCaptor<ActionType> actionTypeArgumentCaptor;
+  @Captor private ArgumentCaptor<Class> targetClassArgumentCaptor;
+  @Captor private ArgumentCaptor<String> targetIdArgumentCaptor;
+  @Captor private ArgumentCaptor<String> performedByArgumentCaptor;
 
   @BeforeEach
   public void setUp() {
@@ -50,6 +58,7 @@ class MeasureControllerTest {
   @Test
   void saveMeasure() {
     ArgumentCaptor<Measure> saveMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
+    measure.setId("testId");
     doReturn(measure).when(repository).save(ArgumentMatchers.any());
 
     Measure measures = new Measure();
@@ -66,6 +75,16 @@ class MeasureControllerTest {
     assertThat(savedMeasure.getLastModifiedBy(), is(equalTo("test.user")));
     assertThat(savedMeasure.getCreatedAt(), is(notNullValue()));
     assertThat(savedMeasure.getLastModifiedAt(), is(notNullValue()));
+
+    verify(actionLogService, times(1))
+        .logAction(
+            targetIdArgumentCaptor.capture(),
+            targetClassArgumentCaptor.capture(),
+            actionTypeArgumentCaptor.capture(),
+            performedByArgumentCaptor.capture());
+    assertNotNull(targetIdArgumentCaptor.getValue());
+    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.CREATED)));
+    assertThat(performedByArgumentCaptor.getValue(), is(equalTo("test.user")));
   }
 
   @Test
@@ -178,6 +197,16 @@ class MeasureControllerTest {
     assertThat(savedMeasure.getMeasureMetaData().getCopyright(), is(equalTo("TestCopyright")));
     assertThat(savedMeasure.getMeasureMetaData().getDisclaimer(), is(equalTo("TestDisclaimer")));
     assertThat(savedMeasure.getMeasureMetaData().getRationale(), is(equalTo("TestRationale")));
+
+    verify(actionLogService, times(1))
+        .logAction(
+            targetIdArgumentCaptor.capture(),
+            targetClassArgumentCaptor.capture(),
+            actionTypeArgumentCaptor.capture(),
+            performedByArgumentCaptor.capture());
+    assertNotNull(targetIdArgumentCaptor.getValue());
+    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.DELETED)));
+    assertThat(performedByArgumentCaptor.getValue(), is(equalTo("test.user2")));
   }
 
   @Test
