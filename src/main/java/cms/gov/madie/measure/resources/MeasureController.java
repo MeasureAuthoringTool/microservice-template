@@ -138,8 +138,11 @@ public class MeasureController {
       measure.setCreatedBy(persistedMeasure.get().getCreatedBy());
       repository.save(measure);
       response = ResponseEntity.ok().body("Measure updated successfully.");
-
-      actionLogService.logAction(measure.getId(), ActionType.DELETED, username);
+      if (!measure.isActive()) {
+        actionLogService.logAction(measure.getId(), ActionType.DELETED, username);
+      } else {
+        actionLogService.logAction(measure.getId(), ActionType.UPDATED, username);
+      }
     }
     return response;
   }
