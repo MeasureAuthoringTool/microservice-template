@@ -202,6 +202,76 @@ class MeasureControllerTest {
             actionTypeArgumentCaptor.capture(),
             performedByArgumentCaptor.capture());
     assertNotNull(targetIdArgumentCaptor.getValue());
+    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.UPDATED)));
+    assertThat(performedByArgumentCaptor.getValue(), is(equalTo("test.user2")));
+  }
+  
+  @Test
+  void updateMeasureSuccessfullyLogDeleted() {
+    ArgumentCaptor<Measure> saveMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user2");
+
+    Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
+    MeasureMetaData metaData = new MeasureMetaData();
+    metaData.setDescription("TestDescription");
+    metaData.setCopyright("TestCopyright");
+    metaData.setDisclaimer("TestDisclaimer");
+    metaData.setRationale("TestRationale");
+    measure.setMeasureMetaData(metaData);
+    measure.setMeasurementPeriodStart(new Date("12/02/2020"));
+    measure.setMeasurementPeriodEnd(new Date("12/02/2021"));
+    Measure originalMeasure =
+        measure
+            .toBuilder()
+            .id("5399aba6e4b0ae375bfdca88")
+            .active(false)
+            .createdAt(createdAt)
+            .createdBy("test.user")
+            .build();
+
+    Instant original = Instant.now().minus(140, ChronoUnit.HOURS);
+
+    Measure m1 =
+        originalMeasure
+            .toBuilder()
+            .createdBy("test.user")
+            .createdAt(original)
+            .measurementPeriodStart(new Date("12/02/2021"))
+            .measurementPeriodEnd(new Date("12/02/2022"))
+            .lastModifiedBy("test.user")
+            .lastModifiedAt(original)
+            .build();
+
+    doReturn(Optional.of(originalMeasure))
+        .when(repository)
+        .findById(ArgumentMatchers.eq(originalMeasure.getId()));
+
+    doAnswer((args) -> args.getArgument(0))
+        .when(repository)
+        .save(ArgumentMatchers.any(Measure.class));
+
+    ResponseEntity<String> response = controller.updateMeasure(m1.getId(), m1, principal);
+    assertEquals("Measure updated successfully.", response.getBody());
+    verify(repository, times(1)).save(saveMeasureArgCaptor.capture());
+    Measure savedMeasure = saveMeasureArgCaptor.getValue();
+    assertThat(savedMeasure.getCreatedAt(), is(notNullValue()));
+    assertThat(savedMeasure.getCreatedBy(), is(equalTo("test.user")));
+    assertThat(savedMeasure.getLastModifiedAt(), is(notNullValue()));
+    assertThat(savedMeasure.getLastModifiedBy(), is(equalTo("test.user2")));
+    assertThat(savedMeasure.getMeasurementPeriodStart(), is(equalTo(new Date("12/02/2021"))));
+    assertThat(savedMeasure.getMeasurementPeriodEnd(), is(equalTo(new Date("12/02/2022"))));
+    assertThat(savedMeasure.getMeasureMetaData().getDescription(), is(equalTo("TestDescription")));
+    assertThat(savedMeasure.getMeasureMetaData().getCopyright(), is(equalTo("TestCopyright")));
+    assertThat(savedMeasure.getMeasureMetaData().getDisclaimer(), is(equalTo("TestDisclaimer")));
+    assertThat(savedMeasure.getMeasureMetaData().getRationale(), is(equalTo("TestRationale")));
+
+    verify(actionLogService, times(1))
+        .logAction(
+            targetIdArgumentCaptor.capture(),
+            actionTypeArgumentCaptor.capture(),
+            performedByArgumentCaptor.capture());
+    assertNotNull(targetIdArgumentCaptor.getValue());
     assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.DELETED)));
     assertThat(performedByArgumentCaptor.getValue(), is(equalTo("test.user2")));
   }
