@@ -170,7 +170,7 @@ public class MeasureController {
       Principal principal) {
 
     Optional<Measure> measureOptional = repository.findById(measureId);
-    if (measureOptional.isEmpty()) {
+    if (!measureOptional.isPresent()) {
       throw new ResourceNotFoundException("Measure", measureId);
     }
     Measure measure = measureOptional.get();
@@ -181,7 +181,7 @@ public class MeasureController {
     if (groupId.equals("undefined")) {
       throw new InvalidIdException("Measure group Id cannot be undefined ");
     }
-    return ResponseEntity.ok(measureService.deleteMeasureGroup(measureId, groupId));
+    return ResponseEntity.ok(measureService.deleteMeasureGroup(measure, groupId));
   }
 
   @GetMapping(path = "/measures/{measureId}/bundles", produces = MediaType.APPLICATION_JSON_VALUE)

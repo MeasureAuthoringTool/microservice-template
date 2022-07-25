@@ -76,11 +76,16 @@ public class MeasureService {
     return group;
   }
 
-  public Measure deleteMeasureGroup(String measureId, String groupId) {
-    Measure measure = measureRepository.findById(measureId).orElse(null);
+  public Measure deleteMeasureGroup(Measure measure, String groupId) {
 
     List<Group> remainingGroups =
         measure.getGroups().stream().filter(g -> !g.getId().equals(groupId)).toList();
+
+    // to check if given group id is present
+    if (remainingGroups.size() == measure.getGroups().size()) {
+      throw new ResourceNotFoundException("Group", groupId);
+    }
+
     measure.setGroups(remainingGroups);
     measureRepository.save(measure);
     return measure;
