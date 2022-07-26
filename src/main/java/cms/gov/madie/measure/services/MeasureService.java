@@ -78,6 +78,9 @@ public class MeasureService {
 
   public Measure deleteMeasureGroup(String measureId, String groupId, String username) {
 
+    if (measureId == null || measureId.trim().isEmpty()) {
+      throw new InvalidIdException("Measure Id cannot be null");
+    }
     Measure measure = measureRepository.findById(measureId).orElse(null);
     if (measure == null) {
       throw new ResourceNotFoundException("Measure", measureId);

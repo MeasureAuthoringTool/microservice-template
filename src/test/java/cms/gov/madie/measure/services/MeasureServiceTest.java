@@ -225,7 +225,13 @@ public class MeasureServiceTest {
     assertEquals(0, output.getGroups().size());
   }
 
-    @Test
+  @Test
+  void testDeleteMeasureGroupReturnsExceptionForNullMeasureId() {
+    assertThrows(
+            InvalidIdException.class, () -> measureService.deleteMeasureGroup("", "grouptestid", "OtherUser"));
+  }
+
+  @Test
   void testDeleteMeasureGroupReturnsExceptionThrowsAccessException() {
     String groupId = "testgroupid";
     final Measure measure = Measure.builder().id("measure-id").createdBy("OtherUser").build();
@@ -235,20 +241,37 @@ public class MeasureServiceTest {
         () -> measureService.deleteMeasureGroup("measure-id", groupId,"user2"));
   }
 
-    @Test
+  @Test
   void testDeleteMeasureGroupReturnsExceptionForResourceNotFound() {
     assertThrows(
             ResourceNotFoundException.class,
             () -> measureService.deleteMeasureGroup("testid", "testgroupid", "user2"));
   }
 
-    @Test
+  @Test
   void testDeleteMeasureGroupReturnsExceptionForNullId() {
       final Measure measure = Measure.builder().id("measure-id").createdBy("OtherUser").build();
       when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
 
     assertThrows(
         InvalidIdException.class, () -> measureService.deleteMeasureGroup("measure-id", "", "OtherUser"));
+  }
+
+  @Test
+  void testDeleteMeasureGroupReturnsExceptionForGroupNotFoundInMeasure() {
+    Group group =
+            Group.builder()
+                    .id("testgroupid")
+                    .scoring("Cohort")
+                    .population(Map.of(MeasurePopulation.INITIAL_POPULATION, "Initial Population"))
+                    .build();
+
+    Measure existingMeasure =
+            Measure.builder().id("measure-id").createdBy("test.user").groups(List.of(group)).build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+
+    assertThrows(
+            ResourceNotFoundException.class, () -> measureService.deleteMeasureGroup("measure-id", "grouptestid1", "test.user"));
   }
 
   @Test
