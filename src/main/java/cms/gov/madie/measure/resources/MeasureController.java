@@ -185,9 +185,13 @@ public class MeasureController {
       throw new InvalidIdException("Measure group Id cannot be null");
     }
 
-    log.info("User [{}] is attempting to delete a group with Id [{}] from measure [{}]",
-            principal.getName(),groupId,measureId);
-    return ResponseEntity.ok(measureService.deleteMeasureGroup(measure, groupId,principal.getName()));
+    log.info(
+        "User [{}] is attempting to delete a group with Id [{}] from measure [{}]",
+        principal.getName(),
+        groupId,
+        measureId);
+    return ResponseEntity.ok(
+        measureService.deleteMeasureGroup(measure, groupId, principal.getName()));
   }
 
   @GetMapping(path = "/measures/{measureId}/bundles", produces = MediaType.APPLICATION_JSON_VALUE)

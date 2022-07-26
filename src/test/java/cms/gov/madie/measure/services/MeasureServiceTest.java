@@ -130,9 +130,9 @@ public class MeasureServiceTest {
     measure.setGroups(null);
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     Optional<Measure> optional = Optional.of(measure);
-    Mockito.doReturn(optional).when(measureRepository).findById(any(String.class));
+    doReturn(optional).when(measureRepository).findById(any(String.class));
 
-    Mockito.doReturn(measure).when(measureRepository).save(any(Measure.class));
+    doReturn(measure).when(measureRepository).save(any(Measure.class));
 
     Group persistedGroup = measureService.createOrUpdateGroup(group1, measure.getId(), "test.user");
 
@@ -155,9 +155,9 @@ public class MeasureServiceTest {
   public void testCreateGroupWhenMeasureGroupsAreMultiple() {
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     Optional<Measure> optional = Optional.of(measure);
-    Mockito.doReturn(optional).when(measureRepository).findById(any(String.class));
+    doReturn(optional).when(measureRepository).findById(any(String.class));
 
-    Mockito.doReturn(measure).when(measureRepository).save(any(Measure.class));
+    doReturn(measure).when(measureRepository).save(any(Measure.class));
 
     Group persistedGroup = measureService.createOrUpdateGroup(group1, measure.getId(), "test.user");
 
@@ -183,9 +183,9 @@ public class MeasureServiceTest {
 
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     Optional<Measure> optional = Optional.of(measure);
-    Mockito.doReturn(optional).when(measureRepository).findById(any(String.class));
+    doReturn(optional).when(measureRepository).findById(any(String.class));
 
-    Mockito.doReturn(measure).when(measureRepository).save(any(Measure.class));
+    doReturn(measure).when(measureRepository).save(any(Measure.class));
 
     // before update
     assertEquals(
@@ -224,9 +224,10 @@ public class MeasureServiceTest {
         Measure.builder().id("measure-id").createdBy("test.user").groups(List.of(group)).build();
 
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
-    Mockito.doReturn(existingMeasure).when(measureRepository).save(any(Measure.class));
+    doReturn(existingMeasure).when(measureRepository).save(any(Measure.class));
 
-    Measure output = measureService.deleteMeasureGroup(existingMeasure, "testgroupid",principal.getName());
+    Measure output =
+        measureService.deleteMeasureGroup(existingMeasure, "testgroupid", principal.getName());
     verify(measureRepository, times(1)).save(measureCaptor.capture());
 
     assertEquals(0, output.getGroups().size());
@@ -249,7 +250,9 @@ public class MeasureServiceTest {
 
     assertThrows(
         ResourceNotFoundException.class,
-        () -> measureService.deleteMeasureGroup(existingMeasure, "testgroupid1",principal.getName()));
+        () ->
+            measureService.deleteMeasureGroup(
+                existingMeasure, "testgroupid1", principal.getName()));
   }
 
   @Test
@@ -297,9 +300,9 @@ public class MeasureServiceTest {
 
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     Optional<Measure> optional = Optional.of(measure);
-    Mockito.doReturn(optional).when(measureRepository).findById(any(String.class));
+    doReturn(optional).when(measureRepository).findById(any(String.class));
 
-    Mockito.doReturn(measure).when(measureRepository).save(any(Measure.class));
+    doReturn(measure).when(measureRepository).save(any(Measure.class));
 
     // before update
     assertEquals(

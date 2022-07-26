@@ -87,8 +87,11 @@ public class MeasureService {
     }
 
     measure.setGroups(remainingGroups);
-    log.info("User [{}] has successfully deleted a group with Id [{}] from measure [{}]",
-            username,groupId,measure.getId());
+    log.info(
+        "User [{}] has successfully deleted a group with Id [{}] from measure [{}]",
+        username,
+        groupId,
+        measure.getId());
     return measureRepository.save(measure);
   }
 
