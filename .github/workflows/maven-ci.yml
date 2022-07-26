@@ -26,6 +26,9 @@ jobs:
         run: mvn --batch-mode --update-snapshots verify
         env:
           GITHUB_TOKEN_REF: ${{ secrets.GH_PAT_FOR_ACTIONS_TOKEN }}
+          
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
 
       - name: Cache local Maven repository
         uses: actions/cache@v2

@@ -15,7 +15,6 @@ services:
       
   madie-mongo:
     image: mongo:4.4
-    tmpfs: /data/db
     restart: always
     container_name: 'madie-mongo'
     ports:
@@ -25,6 +24,7 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=E5press0
       - MONGO_INITDB_DATABASE=admin
     volumes:
+      - ./madie-data/data:/data/db
       - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
 
     
