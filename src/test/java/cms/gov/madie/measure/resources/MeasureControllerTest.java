@@ -3,6 +3,7 @@ package cms.gov.madie.measure.resources;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -290,6 +291,8 @@ class MeasureControllerTest {
         InvalidIdException.class, () -> controller.updateMeasure(null, measure, principal));
   }
 
+
+
   @Test
   void testUpdateMeasureReturnsExceptionForInvalidCredentials() {
     Principal principal = mock(Principal.class);
@@ -392,6 +395,24 @@ class MeasureControllerTest {
     assertEquals(group.getId(), response.getBody().getId());
     assertEquals(group.getScoring(), response.getBody().getScoring());
     assertEquals(group.getPopulation(), response.getBody().getPopulation());
+  }
+
+  @Test
+  void deleteGroup() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    Measure updatedMeasure =
+        Measure.builder().id("measure-id").createdBy("test.user").groups(null).build();
+    doReturn(updatedMeasure)
+        .when(measureService)
+        .deleteMeasureGroup(any(String.class), any(String.class), any(String.class));
+
+    ResponseEntity<Measure> output =
+        controller.deleteMeasureGroup("measure-id", "testgroupid", principal);
+
+    assertThat(output.getStatusCode(), is(equalTo(HttpStatus.OK)));
+    assertNull(output.getBody().getGroups());
   }
 
   @Test

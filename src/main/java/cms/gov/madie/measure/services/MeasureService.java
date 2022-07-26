@@ -76,6 +76,41 @@ public class MeasureService {
     return group;
   }
 
+  public Measure deleteMeasureGroup(String measureId, String groupId, String username) {
+
+    if (measureId == null || measureId.trim().isEmpty()) {
+      throw new InvalidIdException("Measure Id cannot be null");
+    }
+    Measure measure = measureRepository.findById(measureId).orElse(null);
+    if (measure == null) {
+      throw new ResourceNotFoundException("Measure", measureId);
+    }
+
+    if (!username.equals(measure.getCreatedBy())) {
+      throw new UnauthorizedException("Measure", measureId, username);
+    }
+
+    if (groupId == null || groupId.trim().isEmpty()) {
+      throw new InvalidIdException("Measure group Id cannot be null");
+    }
+
+    List<Group> remainingGroups =
+        measure.getGroups().stream().filter(g -> !g.getId().equals(groupId)).toList();
+
+    // to check if given group id is present
+    if (remainingGroups.size() == measure.getGroups().size()) {
+      throw new ResourceNotFoundException("Group", groupId);
+    }
+
+    measure.setGroups(remainingGroups);
+    log.info(
+        "User [{}] has successfully deleted a group with Id [{}] from measure [{}]",
+        username,
+        groupId,
+        measure.getId());
+    return measureRepository.save(measure);
+  }
+
   /**
    * Loops over the test cases searching for any with groups that match the updating group. If any
    * match, then the test case group populations will be updated with the measure group populations,

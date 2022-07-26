@@ -1,20 +1,15 @@
 package cms.gov.madie.measure.services;
 
-import cms.gov.madie.measure.exceptions.BundleOperationException;
-import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
-import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import cms.gov.madie.measure.exceptions.UnauthorizedException;
+import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
 import gov.cms.madie.models.measure.*;
-import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -34,9 +29,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class MeasureServiceTest {
@@ -131,9 +124,9 @@ public class MeasureServiceTest {
     measure.setGroups(null);
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     Optional<Measure> optional = Optional.of(measure);
-    Mockito.doReturn(optional).when(measureRepository).findById(any(String.class));
+    doReturn(optional).when(measureRepository).findById(any(String.class));
 
-    Mockito.doReturn(measure).when(measureRepository).save(any(Measure.class));
+    doReturn(measure).when(measureRepository).save(any(Measure.class));
 
     Group persistedGroup = measureService.createOrUpdateGroup(group1, measure.getId(), "test.user");
 
@@ -156,9 +149,9 @@ public class MeasureServiceTest {
   public void testCreateGroupWhenMeasureGroupsAreMultiple() {
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     Optional<Measure> optional = Optional.of(measure);
-    Mockito.doReturn(optional).when(measureRepository).findById(any(String.class));
+    doReturn(optional).when(measureRepository).findById(any(String.class));
 
-    Mockito.doReturn(measure).when(measureRepository).save(any(Measure.class));
+    doReturn(measure).when(measureRepository).save(any(Measure.class));
 
     Group persistedGroup = measureService.createOrUpdateGroup(group1, measure.getId(), "test.user");
 
@@ -184,9 +177,9 @@ public class MeasureServiceTest {
 
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     Optional<Measure> optional = Optional.of(measure);
-    Mockito.doReturn(optional).when(measureRepository).findById(any(String.class));
+    doReturn(optional).when(measureRepository).findById(any(String.class));
 
-    Mockito.doReturn(measure).when(measureRepository).save(any(Measure.class));
+    doReturn(measure).when(measureRepository).save(any(Measure.class));
 
     // before update
     assertEquals(
@@ -208,6 +201,76 @@ public class MeasureServiceTest {
         "Initial Population",
         capturedGroup.getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
     assertEquals("Description", capturedGroup.getGroupDescription());
+  }
+
+  @Test
+  void testDeleteGroup() {
+    Group group =
+        Group.builder()
+            .id("testgroupid")
+            .scoring("Cohort")
+            .population(Map.of(MeasurePopulation.INITIAL_POPULATION, "Initial Population"))
+            .build();
+
+    Measure existingMeasure =
+        Measure.builder().id("measure-id").createdBy("test.user").groups(List.of(group)).build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+
+    doReturn(existingMeasure).when(measureRepository).save(any(Measure.class));
+
+    Measure output =
+        measureService.deleteMeasureGroup("measure-id", "testgroupid", "test.user");
+
+    assertEquals(0, output.getGroups().size());
+  }
+
+  @Test
+  void testDeleteMeasureGroupReturnsExceptionForNullMeasureId() {
+    assertThrows(
+            InvalidIdException.class, () -> measureService.deleteMeasureGroup("", "grouptestid", "OtherUser"));
+  }
+
+  @Test
+  void testDeleteMeasureGroupReturnsExceptionThrowsAccessException() {
+    String groupId = "testgroupid";
+    final Measure measure = Measure.builder().id("measure-id").createdBy("OtherUser").build();
+        when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    assertThrows(
+        UnauthorizedException.class,
+        () -> measureService.deleteMeasureGroup("measure-id", groupId,"user2"));
+  }
+
+  @Test
+  void testDeleteMeasureGroupReturnsExceptionForResourceNotFound() {
+    assertThrows(
+            ResourceNotFoundException.class,
+            () -> measureService.deleteMeasureGroup("testid", "testgroupid", "user2"));
+  }
+
+  @Test
+  void testDeleteMeasureGroupReturnsExceptionForNullId() {
+      final Measure measure = Measure.builder().id("measure-id").createdBy("OtherUser").build();
+      when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+
+    assertThrows(
+        InvalidIdException.class, () -> measureService.deleteMeasureGroup("measure-id", "", "OtherUser"));
+  }
+
+  @Test
+  void testDeleteMeasureGroupReturnsExceptionForGroupNotFoundInMeasure() {
+    Group group =
+            Group.builder()
+                    .id("testgroupid")
+                    .scoring("Cohort")
+                    .population(Map.of(MeasurePopulation.INITIAL_POPULATION, "Initial Population"))
+                    .build();
+
+    Measure existingMeasure =
+            Measure.builder().id("measure-id").createdBy("test.user").groups(List.of(group)).build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+
+    assertThrows(
+            ResourceNotFoundException.class, () -> measureService.deleteMeasureGroup("measure-id", "grouptestid1", "test.user"));
   }
 
   @Test
@@ -255,9 +318,9 @@ public class MeasureServiceTest {
 
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     Optional<Measure> optional = Optional.of(measure);
-    Mockito.doReturn(optional).when(measureRepository).findById(any(String.class));
+    doReturn(optional).when(measureRepository).findById(any(String.class));
 
-    Mockito.doReturn(measure).when(measureRepository).save(any(Measure.class));
+    doReturn(measure).when(measureRepository).save(any(Measure.class));
 
     // before update
     assertEquals(
