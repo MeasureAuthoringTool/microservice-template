@@ -291,38 +291,7 @@ class MeasureControllerTest {
         InvalidIdException.class, () -> controller.updateMeasure(null, measure, principal));
   }
 
-  @Test
-  void testDeleteMeasureGroupReturnsExceptionThrowsAccessException() {
-    String groupId = "testgroupid";
-    Principal principal = mock(Principal.class);
-    when(principal.getName()).thenReturn("test.user");
-    final Measure measure = Measure.builder().createdBy("OtherUser").build();
-    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
-    assertThrows(
-        UnauthorizedException.class,
-        () -> controller.deleteMeasureGroup("MeasureID", groupId, principal));
-  }
 
-  @Test
-  void testDeleteMeasureGroupReturnsExceptionForResourceNotFound() {
-    Principal principal = mock(Principal.class);
-    when(principal.getName()).thenReturn("test.user");
-    final Measure measure = Measure.builder().createdBy("test.user").build();
-    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
-
-    assertThrows(
-        InvalidIdException.class, () -> controller.deleteMeasureGroup("testid", "", principal));
-  }
-
-  @Test
-  void testDeleteMeasureGroupReturnsExceptionForNullId() {
-    String groupId = "testgroupid";
-    Principal principal = mock(Principal.class);
-
-    assertThrows(
-        ResourceNotFoundException.class,
-        () -> controller.deleteMeasureGroup("measure1", groupId, principal));
-  }
 
   @Test
   void testUpdateMeasureReturnsExceptionForInvalidCredentials() {
@@ -433,22 +402,11 @@ class MeasureControllerTest {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
-    Group group =
-        Group.builder()
-            .id("testgroupid")
-            .scoring("Cohort")
-            .population(Map.of(MeasurePopulation.INITIAL_POPULATION, "Initial Population"))
-            .build();
-
-    Measure existingMeasure =
-        Measure.builder().id("measure-id").createdBy("test.user").groups(List.of(group)).build();
-
-    when(repository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
     Measure updatedMeasure =
         Measure.builder().id("measure-id").createdBy("test.user").groups(null).build();
     doReturn(updatedMeasure)
         .when(measureService)
-        .deleteMeasureGroup(any(Measure.class), any(String.class),any(String.class));
+        .deleteMeasureGroup(any(String.class), any(String.class), any(String.class));
 
     ResponseEntity<Measure> output =
         controller.deleteMeasureGroup("measure-id", "testgroupid", principal);

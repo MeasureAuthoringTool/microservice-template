@@ -1,20 +1,15 @@
 package cms.gov.madie.measure.services;
 
-import cms.gov.madie.measure.exceptions.BundleOperationException;
-import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
-import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import cms.gov.madie.measure.exceptions.UnauthorizedException;
+import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
 import gov.cms.madie.models.measure.*;
-import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -22,7 +17,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpClientErrorException;
 
-import java.security.Principal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -211,8 +205,6 @@ public class MeasureServiceTest {
 
   @Test
   void testDeleteGroup() {
-    Principal principal = mock(Principal.class);
-    when(principal.getName()).thenReturn("test.user");
     Group group =
         Group.builder()
             .id("testgroupid")
@@ -222,37 +214,41 @@ public class MeasureServiceTest {
 
     Measure existingMeasure =
         Measure.builder().id("measure-id").createdBy("test.user").groups(List.of(group)).build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
 
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     doReturn(existingMeasure).when(measureRepository).save(any(Measure.class));
 
     Measure output =
-        measureService.deleteMeasureGroup(existingMeasure, "testgroupid", principal.getName());
-    verify(measureRepository, times(1)).save(measureCaptor.capture());
+        measureService.deleteMeasureGroup("measure-id", "testgroupid", "test.user");
 
     assertEquals(0, output.getGroups().size());
   }
 
-  @Test
-  void testDeleteGroupWhenGroupIdIsNotValid() {
-    Principal principal = mock(Principal.class);
-    when(principal.getName()).thenReturn("test.user");
+    @Test
+  void testDeleteMeasureGroupReturnsExceptionThrowsAccessException() {
+    String groupId = "testgroupid";
+    final Measure measure = Measure.builder().id("measure-id").createdBy("OtherUser").build();
+        when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    assertThrows(
+        UnauthorizedException.class,
+        () -> measureService.deleteMeasureGroup("measure-id", groupId,"user2"));
+  }
 
-    Group group =
-        Group.builder()
-            .id("testgroupid")
-            .scoring("Cohort")
-            .population(Map.of(MeasurePopulation.INITIAL_POPULATION, "Initial Population"))
-            .build();
+    @Test
+  void testDeleteMeasureGroupReturnsExceptionForResourceNotFound() {
+    assertThrows(
+            ResourceNotFoundException.class,
+            () -> measureService.deleteMeasureGroup("testid", "testgroupid", "user2"));
+  }
 
-    Measure existingMeasure =
-        Measure.builder().id("measure-id").createdBy("test.user").groups(List.of(group)).build();
+    @Test
+  void testDeleteMeasureGroupReturnsExceptionForNullId() {
+      final Measure measure = Measure.builder().id("measure-id").createdBy("OtherUser").build();
+      when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
 
     assertThrows(
-        ResourceNotFoundException.class,
-        () ->
-            measureService.deleteMeasureGroup(
-                existingMeasure, "testgroupid1", principal.getName()));
+        InvalidIdException.class, () -> measureService.deleteMeasureGroup("measure-id", "", "OtherUser"));
   }
 
   @Test

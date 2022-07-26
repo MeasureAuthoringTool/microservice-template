@@ -76,7 +76,20 @@ public class MeasureService {
     return group;
   }
 
-  public Measure deleteMeasureGroup(Measure measure, String groupId, String username) {
+  public Measure deleteMeasureGroup(String measureId, String groupId, String username) {
+
+    Measure measure = measureRepository.findById(measureId).orElse(null);
+    if (measure == null) {
+      throw new ResourceNotFoundException("Measure", measureId);
+    }
+
+    if (!username.equals(measure.getCreatedBy())) {
+      throw new UnauthorizedException("Measure", measureId, username);
+    }
+
+    if (groupId == null || groupId.trim().isEmpty()) {
+      throw new InvalidIdException("Measure group Id cannot be null");
+    }
 
     List<Group> remainingGroups =
         measure.getGroups().stream().filter(g -> !g.getId().equals(groupId)).toList();

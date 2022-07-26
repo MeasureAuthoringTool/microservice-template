@@ -172,26 +172,13 @@ public class MeasureController {
       @PathVariable String groupId,
       Principal principal) {
 
-    Optional<Measure> measureOptional = repository.findById(measureId);
-    if (!measureOptional.isPresent()) {
-      throw new ResourceNotFoundException("Measure", measureId);
-    }
-    Measure measure = measureOptional.get();
-    if (!principal.getName().equals(measure.getCreatedBy())) {
-      throw new UnauthorizedException("Measure", measureId, principal.getName());
-    }
-
-    if (groupId == null || groupId.trim().isEmpty()) {
-      throw new InvalidIdException("Measure group Id cannot be null");
-    }
-
     log.info(
         "User [{}] is attempting to delete a group with Id [{}] from measure [{}]",
         principal.getName(),
         groupId,
         measureId);
     return ResponseEntity.ok(
-        measureService.deleteMeasureGroup(measure, groupId, principal.getName()));
+        measureService.deleteMeasureGroup(measureId, groupId, principal.getName()));
   }
 
   @GetMapping(path = "/measures/{measureId}/bundles", produces = MediaType.APPLICATION_JSON_VALUE)
