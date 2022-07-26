@@ -150,7 +150,7 @@ class GroupScoringPopulationValidatorTest {
                         new Population("id-9", PopulationType.DENOMINATOR_EXCEPTION, "pop6")))
                 .build(),
             true),
-        // invalid Proportion definitions with missing value for optional population
+        //  Proportion definitions with missing value for optional population is valid
         Arguments.of(
             Group.builder()
                 .scoring(MeasureScoring.PROPORTION.toString())
@@ -163,7 +163,7 @@ class GroupScoringPopulationValidatorTest {
                         new Population("id-13", PopulationType.DENOMINATOR_EXCLUSION, ""),
                         new Population("id-14", PopulationType.DENOMINATOR_EXCEPTION, "pop6")))
                 .build(),
-            false),
+            true),
         // invalid Proportion definitions with missing value for required population
         Arguments.of(
             Group.builder()
@@ -275,7 +275,7 @@ class GroupScoringPopulationValidatorTest {
                         new Population("id-47", PopulationType.DENOMINATOR_EXCLUSION, "pop5")))
                 .build(),
             true),
-        // invalid Proportion definitions with missing value for optional population
+        // Proportion definitions with missing value for optional population is valid
         Arguments.of(
             Group.builder()
                 .scoring(MeasureScoring.RATIO.toString())
@@ -287,7 +287,7 @@ class GroupScoringPopulationValidatorTest {
                         new Population("id-51", PopulationType.DENOMINATOR, "pop4"),
                         new Population("id-52", PopulationType.DENOMINATOR_EXCLUSION, "")))
                 .build(),
-            false),
+            true),
         // invalid Proportion definitions with missing value for required population
         Arguments.of(
             Group.builder()
