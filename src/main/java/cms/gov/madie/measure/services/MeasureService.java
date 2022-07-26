@@ -64,6 +64,7 @@ public class MeasureService {
         existingGroup.setImprovementNotation(group.getImprovementNotation());
         existingGroup.setRateAggregation(group.getRateAggregation());
         existingGroup.setMeasureGroupTypes(group.getMeasureGroupTypes());
+        existingGroup.setScoringUnit(group.getScoringUnit());
       } else { // if not present, add into groups collection
         group.setId(ObjectId.get().toString());
         measure.getGroups().add(group);

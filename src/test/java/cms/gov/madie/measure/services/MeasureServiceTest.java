@@ -60,6 +60,7 @@ public class MeasureServiceTest {
             .scoring("Cohort")
             .population(Map.of(MeasurePopulation.INITIAL_POPULATION, "Initial Population"))
             .groupDescription("Description")
+            .scoringUnit("test-scoring-unit")
             .build();
     // Present in DB and has ID
     group2 =
@@ -67,6 +68,7 @@ public class MeasureServiceTest {
             .id("xyz-p12r-12ert")
             .population(Map.of(MeasurePopulation.INITIAL_POPULATION, "FactorialOfFive"))
             .groupDescription("Description")
+            .scoringUnit("test-scoring-unit")
             .build();
 
     List<Group> groups = new ArrayList<>();
@@ -150,6 +152,7 @@ public class MeasureServiceTest {
         "Initial Population",
         capturedGroup.getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
     assertEquals("Description", capturedGroup.getGroupDescription());
+    assertEquals("test-scoring-unit", capturedGroup.getScoringUnit());
   }
 
   @Test
@@ -175,6 +178,7 @@ public class MeasureServiceTest {
         "Initial Population",
         capturedGroup.getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
     assertEquals("Description", capturedGroup.getGroupDescription());
+    assertEquals("test-scoring-unit", capturedGroup.getScoringUnit());
   }
 
   @Test
@@ -208,6 +212,7 @@ public class MeasureServiceTest {
         "Initial Population",
         capturedGroup.getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
     assertEquals("Description", capturedGroup.getGroupDescription());
+    assertEquals("test-scoring-unit", capturedGroup.getScoringUnit());
   }
 
   @Test
@@ -618,5 +623,41 @@ public class MeasureServiceTest {
     assertThrows(
         DuplicateKeyException.class,
         () -> measureService.checkDuplicateCqlLibraryName("testCQLLibraryName"));
+  }
+
+  @Test
+  public void testUpdateGroupChangingScoringUnit() {
+    // make both group IDs same, to simulate update to the group
+    group1.setId(group2.getId());
+    group1.setScoringUnit("new scoring unit");
+
+    ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
+    Optional<Measure> optional = Optional.of(measure);
+    Mockito.doReturn(optional).when(measureRepository).findById(any(String.class));
+
+    Mockito.doReturn(measure).when(measureRepository).save(any(Measure.class));
+
+    // before update
+    assertEquals(
+        "FactorialOfFive",
+        measure.getGroups().get(0).getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
+
+    Group persistedGroup = measureService.createOrUpdateGroup(group1, measure.getId(), "test.user");
+
+    verify(measureRepository, times(1)).save(measureCaptor.capture());
+    assertEquals(group1.getId(), persistedGroup.getId());
+    Measure savedMeasure = measureCaptor.getValue();
+    assertEquals(measure.getLastModifiedBy(), savedMeasure.getLastModifiedBy());
+    assertEquals(measure.getLastModifiedAt(), savedMeasure.getLastModifiedAt());
+    assertNotNull(savedMeasure.getGroups());
+    assertEquals(1, savedMeasure.getGroups().size());
+    Group capturedGroup = savedMeasure.getGroups().get(0);
+    // after update
+    assertEquals(
+        "Initial Population",
+        capturedGroup.getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
+    assertEquals("Description", capturedGroup.getGroupDescription());
+    assertNotEquals("test-scoring-unit", capturedGroup.getScoringUnit());
+    assertEquals("new scoring unit", capturedGroup.getScoringUnit());
   }
 }
