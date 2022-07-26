@@ -216,7 +216,6 @@ public class MeasureServiceTest {
         Measure.builder().id("measure-id").createdBy("test.user").groups(List.of(group)).build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
 
-    ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     doReturn(existingMeasure).when(measureRepository).save(any(Measure.class));
 
     Measure output =
