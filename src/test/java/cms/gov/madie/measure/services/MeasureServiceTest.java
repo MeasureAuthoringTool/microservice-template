@@ -10,7 +10,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -699,9 +698,9 @@ public class MeasureServiceTest {
 
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     Optional<Measure> optional = Optional.of(measure);
-    Mockito.doReturn(optional).when(measureRepository).findById(any(String.class));
+    doReturn(optional).when(measureRepository).findById(any(String.class));
 
-    Mockito.doReturn(measure).when(measureRepository).save(any(Measure.class));
+    doReturn(measure).when(measureRepository).save(any(Measure.class));
 
     // before update
     assertEquals(
