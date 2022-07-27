@@ -1,23 +1,68 @@
 package cms.gov.madie.measure.validations;
 
-import cms.gov.madie.measure.models.MeasurePopulation;
-import cms.gov.madie.measure.models.MeasureScoring;
-import cms.gov.madie.measure.models.TestCaseGroupPopulation;
-import cms.gov.madie.measure.models.TestCasePopulationValue;
+import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasurePopulation;
+import gov.cms.madie.models.measure.MeasureScoring;
+import gov.cms.madie.models.measure.TestCaseGroupPopulation;
+import gov.cms.madie.models.measure.TestCasePopulationValue;
+import cms.gov.madie.measure.repositories.MeasureRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import javax.validation.ConstraintValidatorContext;
 
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
+@ExtendWith(SpringExtension.class)
 class ScoringPopulationValidatorTest {
 
   @Mock private ConstraintValidatorContext validatorContext;
+  @Mock private MeasureRepository measureRepository;
+  private final ScoringPopulationValidator validator = new ScoringPopulationValidator();
 
-  private ScoringPopulationValidator validator = new ScoringPopulationValidator();
+  private Measure measure;
+
+  @BeforeEach
+  public void setUp() {
+    ReflectionTestUtils.setField(validator, "measureRepository", measureRepository);
+
+    Group group1 =
+        Group.builder()
+            .id("GroupId")
+            .scoring("Cohort")
+            .population(Map.of(MeasurePopulation.INITIAL_POPULATION, "Initial Population"))
+            .groupDescription("Description")
+            .build();
+    List<Group> groups = new ArrayList<>();
+    groups.add(group1);
+    measure =
+        Measure.builder()
+            .active(true)
+            .id("xyz-p13r-13ert")
+            .cql("test cql")
+            .measureSetId("IDIDID")
+            .measureName("MSR01")
+            .version("0.001")
+            .groups(groups)
+            .createdAt(Instant.now())
+            .createdBy("test user")
+            .lastModifiedAt(Instant.now())
+            .lastModifiedBy("test user")
+            .build();
+  }
 
   @Test
   public void testValidatorReturnsTrueForNull() {
@@ -27,60 +72,83 @@ class ScoringPopulationValidatorTest {
 
   @Test
   public void testValidatorReturnsFalseForMissingScoring() {
-    TestCaseGroupPopulation groupPopulation = new TestCaseGroupPopulation();
-    groupPopulation.setScoring(null);
-    groupPopulation.setPopulationValues(
-        List.of(
-            TestCasePopulationValue.builder().name(MeasurePopulation.INITIAL_POPULATION).build()));
-    boolean output = validator.isValid(groupPopulation, validatorContext);
+    var testCaseGroupPopulation =
+        TestCaseGroupPopulation.builder()
+            .scoring(null)
+            .populationValues(
+                List.of(
+                    TestCasePopulationValue.builder()
+                        .name(MeasurePopulation.INITIAL_POPULATION)
+                        .build()))
+            .build();
+    boolean output = validator.isValid(testCaseGroupPopulation, validatorContext);
     assertFalse(output);
   }
 
   @Test
   public void testValidatorReturnsFalseForNullPopulationsList() {
-    TestCaseGroupPopulation groupPopulation = new TestCaseGroupPopulation();
-    groupPopulation.setScoring(MeasureScoring.COHORT.toString());
-    groupPopulation.setPopulationValues(null);
-    boolean output = validator.isValid(groupPopulation, validatorContext);
+    var testCaseGroupPopulation =
+        TestCaseGroupPopulation.builder()
+            .populationValues(null)
+            .scoring(MeasureScoring.COHORT.toString())
+            .build();
+    boolean output = validator.isValid(testCaseGroupPopulation, validatorContext);
     assertFalse(output);
   }
 
   @Test
   public void testValidatorReturnsFalseForEmptyPopulationsList() {
-    TestCaseGroupPopulation groupPopulation = new TestCaseGroupPopulation();
-    groupPopulation.setScoring(MeasureScoring.COHORT.toString());
-    groupPopulation.setPopulationValues(List.of());
-    boolean output = validator.isValid(groupPopulation, validatorContext);
+    var testCaseGroupPopulation =
+        TestCaseGroupPopulation.builder()
+            .populationValues(List.of())
+            .scoring(MeasureScoring.COHORT.toString())
+            .build();
+    boolean output = validator.isValid(testCaseGroupPopulation, validatorContext);
     assertFalse(output);
   }
 
   @Test
   public void testValidatorReturnsFalseForMissingPopulation() {
-    TestCaseGroupPopulation groupPopulation = new TestCaseGroupPopulation();
-    groupPopulation.setScoring(MeasureScoring.COHORT.toString());
-    groupPopulation.setPopulationValues(List.of(TestCasePopulationValue.builder().build()));
-    boolean output = validator.isValid(groupPopulation, validatorContext);
+    when(measureRepository.findGroupById(anyString())).thenReturn(Optional.of(measure));
+    var testCaseGroupPopulation =
+        TestCaseGroupPopulation.builder()
+            .groupId("GroupId")
+            .populationValues(List.of(TestCasePopulationValue.builder().build()))
+            .scoring(MeasureScoring.COHORT.toString())
+            .build();
+    boolean output = validator.isValid(testCaseGroupPopulation, validatorContext);
     assertFalse(output);
   }
 
   @Test
   public void testValidatorReturnsFalseForIncorrectPopulation() {
-    TestCaseGroupPopulation groupPopulation = new TestCaseGroupPopulation();
-    groupPopulation.setScoring(MeasureScoring.COHORT.toString());
-    groupPopulation.setPopulationValues(
-        List.of(TestCasePopulationValue.builder().name(MeasurePopulation.DENOMINATOR).build()));
-    boolean output = validator.isValid(groupPopulation, validatorContext);
+    when(measureRepository.findGroupById(anyString())).thenReturn(Optional.of(measure));
+    var testCaseGroupPopulation =
+        TestCaseGroupPopulation.builder()
+            .groupId("GroupId")
+            .populationValues(
+                List.of(
+                    TestCasePopulationValue.builder().name(MeasurePopulation.DENOMINATOR).build()))
+            .scoring(MeasureScoring.COHORT.toString())
+            .build();
+    boolean output = validator.isValid(testCaseGroupPopulation, validatorContext);
     assertFalse(output);
   }
 
   @Test
   public void testValidatorReturnsTrueForCorrectPopulation() {
-    TestCaseGroupPopulation groupPopulation = new TestCaseGroupPopulation();
-    groupPopulation.setScoring(MeasureScoring.COHORT.toString());
-    groupPopulation.setPopulationValues(
-        List.of(
-            TestCasePopulationValue.builder().name(MeasurePopulation.INITIAL_POPULATION).build()));
-    boolean output = validator.isValid(groupPopulation, validatorContext);
+    when(measureRepository.findGroupById(anyString())).thenReturn(Optional.of(measure));
+    var testCaseGroupPopulation =
+        TestCaseGroupPopulation.builder()
+            .groupId("GroupId")
+            .populationValues(
+                List.of(
+                    TestCasePopulationValue.builder()
+                        .name(MeasurePopulation.INITIAL_POPULATION)
+                        .build()))
+            .scoring(MeasureScoring.COHORT.toString())
+            .build();
+    boolean output = validator.isValid(testCaseGroupPopulation, validatorContext);
     assertTrue(output);
   }
 }

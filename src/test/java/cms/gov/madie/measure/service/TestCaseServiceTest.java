@@ -2,8 +2,10 @@ package cms.gov.madie.measure.service;
 
 import cms.gov.madie.measure.HapiFhirConfig;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import cms.gov.madie.measure.models.Measure;
-import cms.gov.madie.measure.models.TestCase;
+import cms.gov.madie.measure.services.ActionLogService;
+import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.TestCase;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.TestCaseService;
 import org.assertj.core.util.Lists;
@@ -12,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -37,8 +40,13 @@ public class TestCaseServiceTest {
   @Mock private MeasureRepository repository;
   @Mock private HapiFhirConfig hapiFhirConfig;
   @Mock private RestTemplate hapiFhirRestTemplate;
+  @Mock private ActionLogService actionLogService;
 
   @InjectMocks private TestCaseService testCaseService;
+
+  @Captor private ArgumentCaptor<ActionType> actionTypeArgumentCaptor;
+  @Captor private ArgumentCaptor<String> targetIdArgumentCaptor;
+  @Captor private ArgumentCaptor<Class> targetClassArgumentCaptor;
 
   private TestCase testCase;
   private Measure measure;
@@ -97,6 +105,16 @@ public class TestCaseServiceTest {
 
     assertNotNull(persistTestCase.getHapiOperationOutcome());
     assertEquals(200, persistTestCase.getHapiOperationOutcome().getCode());
+
+    verify(actionLogService, times(1))
+        .logAction(
+            targetIdArgumentCaptor.capture(),
+            targetClassArgumentCaptor.capture(),
+            actionTypeArgumentCaptor.capture(),
+            anyString());
+    assertEquals(persistTestCase.getId(), targetIdArgumentCaptor.getValue());
+    assertEquals(TestCase.class, targetClassArgumentCaptor.getValue());
+    assertEquals(ActionType.CREATED, actionTypeArgumentCaptor.getValue());
   }
 
   @Test

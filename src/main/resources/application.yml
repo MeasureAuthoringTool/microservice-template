@@ -4,13 +4,22 @@ spring:
       database: ${MONGO_DATABASE:madie}
       uri: ${MONGO_URI:mongodb://${DBUSER}:${DBPASS}@localhost:27017/madie}?authSource=admin&maxPoolSize=50&connectTimeoutMS=2000&serverSelectionTimeoutMS=2000
 
-
 server:
   servlet:
     context-path: /api
 
 madie:
   allowedApi: http://localhost:9000
+  fhir:
+    service:
+      base-url: ${FHIR_SERVICES_URL:http://localhost:8085/api}
+      hapi-fhir:
+        measures:
+          bundle-uri: /fhir/measures/bundles
+  cql-elm:
+    service:
+      base-url: ${ELM_TRANSLATOR_SERVICE_URL:http://localhost:8084/api}
+      elm-json-uri: /cql/translator/cql
 
 management:
   endpoints:

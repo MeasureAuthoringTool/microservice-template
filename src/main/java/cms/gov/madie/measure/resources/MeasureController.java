@@ -2,32 +2,30 @@ package cms.gov.madie.measure.resources;
 
 import java.security.Principal;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.Month;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import cms.gov.madie.measure.exceptions.InvalidIdException;
-import cms.gov.madie.measure.models.Group;
+import cms.gov.madie.measure.exceptions.*;
+import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.measure.Group;
+import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.MeasureService;
+
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import cms.gov.madie.measure.models.Measure;
+import gov.cms.madie.models.measure.Measure;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -38,8 +36,9 @@ import javax.validation.Valid;
 @RequiredArgsConstructor
 public class MeasureController {
 
-  @Autowired private final MeasureRepository repository;
-  @Autowired private final MeasureService measureService;
+  private final MeasureRepository repository;
+  private final MeasureService measureService;
+  private final ActionLogService actionLogService;
 
   @GetMapping("/measures")
   public ResponseEntity<Page<Measure>> getMeasures(
@@ -52,16 +51,14 @@ public class MeasureController {
     final Pageable pageReq = PageRequest.of(page, limit, Sort.by("lastModifiedAt").descending());
     Page<Measure> measures =
         filterByCurrentUser
-            ? repository.findAllByCreatedBy(username, pageReq)
-            : repository.findAll(pageReq);
-    // : repository.findAllByIdNotNull(page);
-    // return ResponseEntity;
+            ? repository.findAllByCreatedByAndActive(username, true, pageReq)
+            : repository.findAllByActive(true, pageReq);
     return ResponseEntity.ok(measures);
   }
 
   @GetMapping("/measures/{id}")
   public ResponseEntity<Measure> getMeasure(@PathVariable("id") String id) {
-    Optional<Measure> measure = repository.findById(id);
+    Optional<Measure> measure = repository.findByIdAndActive(id, true);
     return measure
         .map(ResponseEntity::ok)
         .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
@@ -74,6 +71,8 @@ public class MeasureController {
     final String username = principal.getName();
     log.info("User [{}] is attempting to create a new measure", username);
     measureService.checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
+    measureService.validateMeasurementPeriod(
+        measure.getMeasurementPeriodStart(), measure.getMeasurementPeriodEnd());
 
     // Clear ID so that the unique GUID from MongoDB will be applied
     Instant now = Instant.now();
@@ -83,11 +82,11 @@ public class MeasureController {
     measure.setLastModifiedBy(username);
     measure.setLastModifiedAt(now);
 
-    int nextCalendarYear = LocalDate.now().plusYears(1).getYear();
-    measure.setMeasurementPeriodStart(LocalDate.of(nextCalendarYear, Month.JANUARY, 1));
-    measure.setMeasurementPeriodEnd(LocalDate.of(nextCalendarYear, Month.DECEMBER, 31));
     Measure savedMeasure = repository.save(measure);
     log.info("User [{}] successfully created new measure with ID [{}]", username, measure.getId());
+
+    actionLogService.logAction(savedMeasure.getId(), Measure.class, ActionType.CREATED, username);
+
     return ResponseEntity.status(HttpStatus.CREATED).body(savedMeasure);
   }
 
@@ -103,22 +102,54 @@ public class MeasureController {
       throw new InvalidIdException("Measure", "Update (PUT)", "(PUT [base]/[resource]/[id])");
     }
 
-    if (measure.getId() != null) {
-      Optional<Measure> persistedMeasure = repository.findById(measure.getId());
-      if (persistedMeasure.isPresent()) {
-        if (isCqlLibraryNameChanged(measure, persistedMeasure)) {
-          measureService.checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
-        }
-        measure.setLastModifiedBy(username);
-        measure.setLastModifiedAt(Instant.now());
-        // prevent users from overwriting the createdAt/By
-        measure.setCreatedAt(persistedMeasure.get().getCreatedAt());
-        measure.setCreatedBy(persistedMeasure.get().getCreatedBy());
-        repository.save(measure);
-        response = ResponseEntity.ok().body("Measure updated successfully.");
+    log.info("getMeasureId [{}]", id);
+    Optional<Measure> persistedMeasure = repository.findById(id);
+
+    if (persistedMeasure.isPresent()) {
+      if (username != null
+          && persistedMeasure.get().getCreatedBy() != null
+          && !persistedMeasure.get().isActive()) {
+        log.info(
+            "got username [{}] vs createdBy: [{}]",
+            username,
+            persistedMeasure.get().getCreatedBy());
+        measureService.checkDeletionCredentials(username, persistedMeasure.get().getCreatedBy());
+      }
+      if (isCqlLibraryNameChanged(measure, persistedMeasure.get())) {
+        measureService.checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
+      }
+
+      if (isMeasurementPeriodChanged(measure, persistedMeasure.get())) {
+        measureService.verifyAuthorization(username, persistedMeasure.get());
+        measureService.validateMeasurementPeriod(
+            measure.getMeasurementPeriodStart(), measure.getMeasurementPeriodEnd());
+      }
+      measure.setLastModifiedBy(username);
+      measure.setLastModifiedAt(Instant.now());
+      // prevent users from overwriting the createdAt/By
+      measure.setCreatedAt(persistedMeasure.get().getCreatedAt());
+      measure.setCreatedBy(persistedMeasure.get().getCreatedBy());
+      repository.save(measure);
+      response = ResponseEntity.ok().body("Measure updated successfully.");
+      if (!measure.isActive()) {
+        actionLogService.logAction(measure.getId(), Measure.class, ActionType.DELETED, username);
+      } else {
+        actionLogService.logAction(measure.getId(), Measure.class, ActionType.UPDATED, username);
       }
     }
     return response;
+  }
+
+  @GetMapping("/measures/{measureId}/groups")
+  public ResponseEntity<List<Group>> getGroups(@PathVariable String measureId) {
+    return repository
+        .findById(measureId)
+        .map(
+            measure -> {
+              List<Group> groups = measure.getGroups() == null ? List.of() : measure.getGroups();
+              return ResponseEntity.ok(groups);
+            })
+        .orElseThrow(() -> new ResourceNotFoundException("Measure", measureId));
   }
 
   @PostMapping("/measures/{measureId}/groups")
@@ -135,7 +166,57 @@ public class MeasureController {
         measureService.createOrUpdateGroup(group, measureId, principal.getName()));
   }
 
-  private boolean isCqlLibraryNameChanged(Measure measure, Optional<Measure> persistedMeasure) {
-    return !Objects.equals(persistedMeasure.get().getCqlLibraryName(), measure.getCqlLibraryName());
+  @DeleteMapping("/measures/{measureId}/groups/{groupId}")
+  public ResponseEntity<Measure> deleteMeasureGroup(
+      @RequestBody @PathVariable String measureId,
+      @PathVariable String groupId,
+      Principal principal) {
+
+    log.info(
+        "User [{}] is attempting to delete a group with Id [{}] from measure [{}]",
+        principal.getName(),
+        groupId,
+        measureId);
+    return ResponseEntity.ok(
+        measureService.deleteMeasureGroup(measureId, groupId, principal.getName()));
+  }
+
+  @GetMapping(path = "/measures/{measureId}/bundles", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<String> getMeasureBundle(
+      @PathVariable String measureId,
+      Principal principal,
+      @RequestHeader("Authorization") String accessToken) {
+    Optional<Measure> measureOptional = repository.findById(measureId);
+    if (measureOptional.isEmpty()) {
+      throw new ResourceNotFoundException("Measure", measureId);
+    }
+    Measure measure = measureOptional.get();
+    if (!principal.getName().equals(measure.getCreatedBy())) {
+      throw new UnauthorizedException("Measure", measureId, principal.getName());
+    }
+    if (measure.isCqlErrors()) {
+      throw new InvalidResourceBundleStateException(
+          "Measure", measureId, "since CQL errors exist.");
+    }
+    if (CollectionUtils.isEmpty(measure.getGroups())) {
+      throw new InvalidResourceBundleStateException(
+          "Measure", measureId, "since there are no associated measure groups.");
+    }
+    if (measure.getElmJson() == null || StringUtils.isBlank(measure.getElmJson())) {
+      throw new InvalidResourceBundleStateException(
+          "Measure", measureId, "since there are issues with the CQL.");
+    }
+    return ResponseEntity.ok(measureService.bundleMeasure(measure, accessToken));
+  }
+
+  private boolean isCqlLibraryNameChanged(Measure measure, Measure persistedMeasure) {
+    return !Objects.equals(persistedMeasure.getCqlLibraryName(), measure.getCqlLibraryName());
+  }
+
+  private boolean isMeasurementPeriodChanged(Measure measure, Measure persistedMeasure) {
+    return !Objects.equals(
+            persistedMeasure.getMeasurementPeriodStart(), measure.getMeasurementPeriodStart())
+        || !Objects.equals(
+            persistedMeasure.getMeasurementPeriodEnd(), measure.getMeasurementPeriodEnd());
   }
 }

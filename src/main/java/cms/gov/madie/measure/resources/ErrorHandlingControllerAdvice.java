@@ -1,7 +1,6 @@
 package cms.gov.madie.measure.resources;
 
-import cms.gov.madie.measure.exceptions.InvalidIdException;
-import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.exceptions.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
@@ -53,6 +52,13 @@ public class ErrorHandlingControllerAdvice {
     return errorAttributes;
   }
 
+  @ExceptionHandler({UnauthorizedException.class, InvalidDeletionCredentialsException.class})
+  @ResponseStatus(HttpStatus.FORBIDDEN)
+  @ResponseBody
+  Map<String, Object> onUserNotAuthorizedExceptions(Exception ex, WebRequest request) {
+    return getErrorAttributes(request, HttpStatus.FORBIDDEN);
+  }
+
   @ExceptionHandler(MethodArgumentNotValidException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ResponseBody
@@ -88,6 +94,30 @@ public class ErrorHandlingControllerAdvice {
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ResponseBody
   Map<String, Object> onInvalidKeyException(WebRequest request) {
+    return getErrorAttributes(request, HttpStatus.BAD_REQUEST);
+  }
+
+  @ExceptionHandler({
+    InvalidResourceBundleStateException.class,
+    CqlElmTranslationErrorException.class
+  })
+  @ResponseStatus(HttpStatus.CONFLICT)
+  @ResponseBody
+  Map<String, Object> onResourceNotDraftableException(WebRequest request) {
+    return getErrorAttributes(request, HttpStatus.CONFLICT);
+  }
+
+  @ExceptionHandler({BundleOperationException.class, CqlElmTranslationServiceException.class})
+  @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+  @ResponseBody
+  Map<String, Object> onBundleOperationFailedException(WebRequest request) {
+    return getErrorAttributes(request, HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+
+  @ExceptionHandler(InvalidMeasurementPeriodException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  @ResponseBody
+  Map<String, Object> onInvalidMeasurementPeriodException(WebRequest request) {
     return getErrorAttributes(request, HttpStatus.BAD_REQUEST);
   }
 

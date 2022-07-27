@@ -2,9 +2,10 @@ package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.HapiFhirConfig;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import cms.gov.madie.measure.models.HapiOperationOutcome;
-import cms.gov.madie.measure.models.Measure;
-import cms.gov.madie.measure.models.TestCase;
+import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.measure.HapiOperationOutcome;
+import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.TestCase;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,15 +31,18 @@ public class TestCaseService {
   private final MeasureRepository measureRepository;
   private HapiFhirConfig hapiFhirConfig;
   private RestTemplate hapiFhirRestTemplate;
+  private ActionLogService actionLogService;
 
   @Autowired
   public TestCaseService(
       MeasureRepository measureRepository,
       HapiFhirConfig hapiFhirConfig,
-      @Qualifier("hapiFhirRestTemplate") RestTemplate hapiFhirRestTemplate) {
+      @Qualifier("hapiFhirRestTemplate") RestTemplate hapiFhirRestTemplate,
+      ActionLogService actionLogService) {
     this.measureRepository = measureRepository;
     this.hapiFhirConfig = hapiFhirConfig;
     this.hapiFhirRestTemplate = hapiFhirRestTemplate;
+    this.actionLogService = actionLogService;
   }
 
   public TestCase persistTestCase(TestCase testCase, String measureId, String username) {
@@ -63,6 +67,14 @@ public class TestCaseService {
     }
 
     measureRepository.save(measure);
+
+    actionLogService.logAction(upserted.getId(), TestCase.class, ActionType.CREATED, username);
+
+    log.info(
+        "User [{}] successfully created new test case with ID [{}] for the measure with ID[{}] ",
+        username,
+        testCase.getId(),
+        measureId);
     return upserted;
   }
 
@@ -96,6 +108,12 @@ public class TestCaseService {
     measure.getTestCases().add(upsertedTestCase);
 
     measureRepository.save(measure);
+
+    log.info(
+        "User [{}] successfully updated the test case with ID [{}] for the measure with ID[{}] ",
+        username,
+        testCase.getId(),
+        measureId);
     return testCase;
   }
 
