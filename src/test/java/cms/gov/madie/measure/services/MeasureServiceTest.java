@@ -223,8 +223,7 @@ public class MeasureServiceTest {
 
     doReturn(existingMeasure).when(measureRepository).save(any(Measure.class));
 
-    Measure output =
-        measureService.deleteMeasureGroup("measure-id", "testgroupid", "test.user");
+    Measure output = measureService.deleteMeasureGroup("measure-id", "testgroupid", "test.user");
 
     assertEquals(0, output.getGroups().size());
   }
@@ -232,50 +231,53 @@ public class MeasureServiceTest {
   @Test
   void testDeleteMeasureGroupReturnsExceptionForNullMeasureId() {
     assertThrows(
-            InvalidIdException.class, () -> measureService.deleteMeasureGroup("", "grouptestid", "OtherUser"));
+        InvalidIdException.class,
+        () -> measureService.deleteMeasureGroup("", "grouptestid", "OtherUser"));
   }
 
   @Test
   void testDeleteMeasureGroupReturnsExceptionThrowsAccessException() {
     String groupId = "testgroupid";
     final Measure measure = Measure.builder().id("measure-id").createdBy("OtherUser").build();
-        when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
     assertThrows(
         UnauthorizedException.class,
-        () -> measureService.deleteMeasureGroup("measure-id", groupId,"user2"));
+        () -> measureService.deleteMeasureGroup("measure-id", groupId, "user2"));
   }
 
   @Test
   void testDeleteMeasureGroupReturnsExceptionForResourceNotFound() {
     assertThrows(
-            ResourceNotFoundException.class,
-            () -> measureService.deleteMeasureGroup("testid", "testgroupid", "user2"));
+        ResourceNotFoundException.class,
+        () -> measureService.deleteMeasureGroup("testid", "testgroupid", "user2"));
   }
 
   @Test
   void testDeleteMeasureGroupReturnsExceptionForNullId() {
-      final Measure measure = Measure.builder().id("measure-id").createdBy("OtherUser").build();
-      when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    final Measure measure = Measure.builder().id("measure-id").createdBy("OtherUser").build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
 
     assertThrows(
-        InvalidIdException.class, () -> measureService.deleteMeasureGroup("measure-id", "", "OtherUser"));
+        InvalidIdException.class,
+        () -> measureService.deleteMeasureGroup("measure-id", "", "OtherUser"));
   }
 
   @Test
   void testDeleteMeasureGroupReturnsExceptionForGroupNotFoundInMeasure() {
     Group group =
-            Group.builder()
-                    .id("testgroupid")
-                    .scoring("Cohort")
-                    .population(Map.of(MeasurePopulation.INITIAL_POPULATION, "Initial Population"))
-                    .build();
+        Group.builder()
+            .id("testgroupid")
+            .scoring("Cohort")
+            .population(Map.of(MeasurePopulation.INITIAL_POPULATION, "Initial Population"))
+            .build();
 
     Measure existingMeasure =
-            Measure.builder().id("measure-id").createdBy("test.user").groups(List.of(group)).build();
+        Measure.builder().id("measure-id").createdBy("test.user").groups(List.of(group)).build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
 
     assertThrows(
-            ResourceNotFoundException.class, () -> measureService.deleteMeasureGroup("measure-id", "grouptestid1", "test.user"));
+        ResourceNotFoundException.class,
+        () -> measureService.deleteMeasureGroup("measure-id", "grouptestid1", "test.user"));
   }
 
   @Test
