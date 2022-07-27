@@ -48,6 +48,7 @@ public class MeasureTransferControllerTest {
   @Mock private ActionLogService actionLogService;
 
   @Captor private ArgumentCaptor<ActionType> actionTypeArgumentCaptor;
+  @Captor private ArgumentCaptor<Class> targetClassArgumentCaptor;
   @Captor private ArgumentCaptor<String> targetIdArgumentCaptor;
   @Captor private ArgumentCaptor<String> performedByArgumentCaptor;
 
@@ -112,9 +113,11 @@ public class MeasureTransferControllerTest {
     verify(actionLogService, times(1))
         .logAction(
             targetIdArgumentCaptor.capture(),
+            targetClassArgumentCaptor.capture(),
             actionTypeArgumentCaptor.capture(),
             performedByArgumentCaptor.capture());
     assertNotNull(targetIdArgumentCaptor.getValue());
+    assertThat(targetClassArgumentCaptor.getValue(), is(equalTo(Measure.class)));
     assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.IMPORTED)));
     assertThat(performedByArgumentCaptor.getValue(), is(equalTo("testCreatedBy")));
   }

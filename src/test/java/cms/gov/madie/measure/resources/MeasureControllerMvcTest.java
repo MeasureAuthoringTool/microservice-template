@@ -76,6 +76,7 @@ public class MeasureControllerMvcTest {
   @Captor ArgumentCaptor<PageRequest> pageRequestCaptor;
   @Captor ArgumentCaptor<Boolean> activeCaptor;
   @Captor private ArgumentCaptor<ActionType> actionTypeArgumentCaptor;
+  @Captor private ArgumentCaptor<Class> targetClassArgumentCaptor;
   @Captor private ArgumentCaptor<String> targetIdArgumentCaptor;
   @Captor private ArgumentCaptor<String> performedByArgumentCaptor;
 
@@ -149,9 +150,90 @@ public class MeasureControllerMvcTest {
     verify(actionLogService, times(1))
         .logAction(
             targetIdArgumentCaptor.capture(),
+            targetClassArgumentCaptor.capture(),
             actionTypeArgumentCaptor.capture(),
             performedByArgumentCaptor.capture());
     assertNotNull(targetIdArgumentCaptor.getValue());
+    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.UPDATED)));
+    assertThat(performedByArgumentCaptor.getValue(), is(equalTo(TEST_USER_ID)));
+  }
+
+  @Test
+  public void testUpdatePassedLogDeleted() throws Exception {
+    String measureId = "f225481c-921e-4015-9e14-e5046bfac9ff";
+    String measureName = "TestMeasure";
+    String steward = "d0cc18ce-63fd-4b94-b713-c1d9fd6b2329";
+    String description = "TestDescription";
+    String copyright = "TestCopyright";
+    String disclaimer = "TestDisclaimer";
+    String rationale = "TestRationale";
+    String author = "TestAuthor";
+    String guidance = "TestGuidance";
+    String libName = "TestLib";
+    String model = "QI-Core";
+
+    Measure priorMeasure = new Measure();
+    priorMeasure.setId(measureId);
+    priorMeasure.setMeasureName(measureName);
+    priorMeasure.setCqlLibraryName(libName);
+    priorMeasure.setModel(model);
+
+    when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(priorMeasure));
+    when(measureRepository.save(any(Measure.class))).thenReturn(mock(Measure.class));
+
+    final String measureAsJson =
+        "{\"id\": \"%s\", \"active\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"measureMetaData\": { \"steward\" : \"%s\", \"description\" : \"%s\", \"copyright\" : \"%s\", \"disclaimer\" : \"%s\", \"rationale\" : \"%s\", \"author\" : \"%s\", \"guidance\" : \"%s\"}, \"model\":\"%s\"}"
+            .formatted(
+                measureId,
+                false,
+                measureName,
+                libName,
+                steward,
+                description,
+                copyright,
+                disclaimer,
+                rationale,
+                author,
+                guidance,
+                model);
+    mockMvc
+        .perform(
+            put("/measures/" + measureId)
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Measure updated successfully."));
+
+    verify(measureRepository, times(1)).findById(eq(measureId));
+    verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
+    verifyNoMoreInteractions(measureRepository);
+    Measure savedMeasure = measureArgumentCaptor.getValue();
+    assertNotNull(savedMeasure.getMeasureMetaData());
+    assertEquals(measureName, savedMeasure.getMeasureName());
+    assertEquals(steward, savedMeasure.getMeasureMetaData().getSteward());
+    assertEquals(description, savedMeasure.getMeasureMetaData().getDescription());
+    assertEquals(copyright, savedMeasure.getMeasureMetaData().getCopyright());
+    assertEquals(disclaimer, savedMeasure.getMeasureMetaData().getDisclaimer());
+    assertEquals(rationale, savedMeasure.getMeasureMetaData().getRationale());
+    assertEquals(author, savedMeasure.getMeasureMetaData().getAuthor());
+    assertEquals(guidance, savedMeasure.getMeasureMetaData().getGuidance());
+    assertEquals(model, savedMeasure.getModel());
+    assertNotNull(savedMeasure.getLastModifiedAt());
+    assertEquals(TEST_USER_ID, savedMeasure.getLastModifiedBy());
+    int lastModCompareTo =
+        savedMeasure.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
+    assertEquals(1, lastModCompareTo);
+
+    verify(actionLogService, times(1))
+        .logAction(
+            targetIdArgumentCaptor.capture(),
+            targetClassArgumentCaptor.capture(),
+            actionTypeArgumentCaptor.capture(),
+            performedByArgumentCaptor.capture());
+    assertNotNull(targetIdArgumentCaptor.getValue());
+    assertThat(targetClassArgumentCaptor.getValue(), is(equalTo(Measure.class)));
     assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.DELETED)));
     assertThat(performedByArgumentCaptor.getValue(), is(equalTo(TEST_USER_ID)));
   }
@@ -336,6 +418,7 @@ public class MeasureControllerMvcTest {
     verify(actionLogService, times(1))
         .logAction(
             targetIdArgumentCaptor.capture(),
+            targetClassArgumentCaptor.capture(),
             actionTypeArgumentCaptor.capture(),
             performedByArgumentCaptor.capture());
     assertNotNull(targetIdArgumentCaptor.getValue());

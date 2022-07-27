@@ -51,7 +51,7 @@ public class MeasureTransferController {
     log.info("Measure [{}] transfer complete", measure.getMeasureName());
 
     actionLogService.logAction(
-        savedMeasure.getId(), ActionType.IMPORTED, savedMeasure.getCreatedBy());
+        savedMeasure.getId(), Measure.class, ActionType.IMPORTED, savedMeasure.getCreatedBy());
 
     return ResponseEntity.status(HttpStatus.CREATED).body(savedMeasure);
   }
