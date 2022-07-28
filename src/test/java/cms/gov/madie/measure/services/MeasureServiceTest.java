@@ -1,9 +1,22 @@
 package cms.gov.madie.measure.services;
 
-import cms.gov.madie.measure.exceptions.*;
+import cms.gov.madie.measure.exceptions.BundleOperationException;
+import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
+import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
+import cms.gov.madie.measure.exceptions.InvalidIdException;
+import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
-import gov.cms.madie.models.measure.*;
+import gov.cms.madie.models.measure.ElmJson;
+import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureScoring;
+import gov.cms.madie.models.measure.Population;
+import gov.cms.madie.models.measure.PopulationType;
+import gov.cms.madie.models.measure.TestCase;
+import gov.cms.madie.models.measure.TestCaseGroupPopulation;
+import gov.cms.madie.models.measure.TestCasePopulationValue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,16 +33,27 @@ import org.springframework.web.client.HttpClientErrorException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class MeasureServiceTest {
@@ -51,7 +75,10 @@ public class MeasureServiceTest {
     group1 =
         Group.builder()
             .scoring("Cohort")
-            .population(Map.of(MeasurePopulation.INITIAL_POPULATION, "Initial Population"))
+            .populations(
+                List.of(
+                    new Population(
+                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population")))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .build();
@@ -59,7 +86,9 @@ public class MeasureServiceTest {
     group2 =
         Group.builder()
             .id("xyz-p12r-12ert")
-            .population(Map.of(MeasurePopulation.INITIAL_POPULATION, "FactorialOfFive"))
+            .populations(
+                List.of(
+                    new Population("id-1", PopulationType.INITIAL_POPULATION, "FactorialOfFive")))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .build();
@@ -142,8 +171,8 @@ public class MeasureServiceTest {
     Group capturedGroup = savedMeasure.getGroups().get(0);
     assertEquals("Cohort", capturedGroup.getScoring());
     assertEquals(
-        "Initial Population",
-        capturedGroup.getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
+        PopulationType.INITIAL_POPULATION, capturedGroup.getPopulations().get(0).getName());
+    assertEquals("Initial Population", capturedGroup.getPopulations().get(0).getDefinition());
     assertEquals("Description", capturedGroup.getGroupDescription());
     assertEquals("test-scoring-unit", capturedGroup.getScoringUnit());
   }
@@ -167,9 +196,9 @@ public class MeasureServiceTest {
     assertEquals(2, savedMeasure.getGroups().size());
     Group capturedGroup = savedMeasure.getGroups().get(1);
     assertEquals("Cohort", capturedGroup.getScoring());
+    assertEquals("Initial Population", capturedGroup.getPopulations().get(0).getDefinition());
     assertEquals(
-        "Initial Population",
-        capturedGroup.getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
+        PopulationType.INITIAL_POPULATION, capturedGroup.getPopulations().get(0).getName());
     assertEquals("Description", capturedGroup.getGroupDescription());
     assertEquals("test-scoring-unit", capturedGroup.getScoringUnit());
   }
@@ -187,8 +216,7 @@ public class MeasureServiceTest {
 
     // before update
     assertEquals(
-        "FactorialOfFive",
-        measure.getGroups().get(0).getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
+        "FactorialOfFive", measure.getGroups().get(0).getPopulations().get(0).getDefinition());
 
     Group persistedGroup = measureService.createOrUpdateGroup(group1, measure.getId(), "test.user");
 
@@ -201,9 +229,7 @@ public class MeasureServiceTest {
     assertEquals(1, savedMeasure.getGroups().size());
     Group capturedGroup = savedMeasure.getGroups().get(0);
     // after update
-    assertEquals(
-        "Initial Population",
-        capturedGroup.getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
+    assertEquals("Initial Population", capturedGroup.getPopulations().get(0).getDefinition());
     assertEquals("Description", capturedGroup.getGroupDescription());
     assertEquals("test-scoring-unit", capturedGroup.getScoringUnit());
   }
@@ -214,7 +240,10 @@ public class MeasureServiceTest {
         Group.builder()
             .id("testgroupid")
             .scoring("Cohort")
-            .population(Map.of(MeasurePopulation.INITIAL_POPULATION, "Initial Population"))
+            .populations(
+                List.of(
+                    new Population(
+                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population")))
             .build();
 
     Measure existingMeasure =
@@ -268,7 +297,10 @@ public class MeasureServiceTest {
         Group.builder()
             .id("testgroupid")
             .scoring("Cohort")
-            .population(Map.of(MeasurePopulation.INITIAL_POPULATION, "Initial Population"))
+            .populations(
+                List.of(
+                    new Population(
+                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population")))
             .build();
 
     Measure existingMeasure =
@@ -310,11 +342,11 @@ public class MeasureServiceTest {
             .populationValues(
                 List.of(
                     TestCasePopulationValue.builder()
-                        .name(MeasurePopulation.INITIAL_POPULATION)
+                        .name(PopulationType.INITIAL_POPULATION)
                         .expected(true)
                         .build(),
                     TestCasePopulationValue.builder()
-                        .name(MeasurePopulation.MEASURE_POPULATION)
+                        .name(PopulationType.MEASURE_POPULATION)
                         .expected(true)
                         .build()))
             .build();
@@ -331,8 +363,7 @@ public class MeasureServiceTest {
 
     // before update
     assertEquals(
-        "FactorialOfFive",
-        measure.getGroups().get(0).getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
+        "FactorialOfFive", measure.getGroups().get(0).getPopulations().get(0).getDefinition());
 
     Group persistedGroup = measureService.createOrUpdateGroup(group1, measure.getId(), "test.user");
 
@@ -356,9 +387,7 @@ public class MeasureServiceTest {
     assertEquals(1, outputGroupPopulation.getPopulationValues().size());
     Group capturedGroup = savedMeasure.getGroups().get(0);
     // after update
-    assertEquals(
-        "Initial Population",
-        capturedGroup.getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
+    assertEquals("Initial Population", capturedGroup.getPopulations().get(0).getDefinition());
   }
 
   // Todo test case populations do reset on change of a group, Will be handled in a future story.
@@ -528,10 +557,9 @@ public class MeasureServiceTest {
   @Test
   public void testResetPopulationValuesForGroupHandlesNullTestCaseList() {
     final Group group = Group.builder().id("Group1_ID").scoring("Cohort").build();
-    final List<TestCase> testCases = null;
 
-    List<TestCase> output = measureService.setPopulationValuesForGroup(group, testCases);
-    assertEquals(testCases, output);
+    List<TestCase> output = measureService.setPopulationValuesForGroup(group, null);
+    assertNull(output);
   }
 
   @Test
@@ -566,7 +594,7 @@ public class MeasureServiceTest {
                             .populationValues(
                                 List.of(
                                     TestCasePopulationValue.builder()
-                                        .name(MeasurePopulation.INITIAL_POPULATION)
+                                        .name(PopulationType.INITIAL_POPULATION)
                                         .expected(true)
                                         .build()))
                             .build()))
@@ -586,7 +614,7 @@ public class MeasureServiceTest {
             .populationValues(
                 List.of(
                     TestCasePopulationValue.builder()
-                        .name(MeasurePopulation.INITIAL_POPULATION)
+                        .name(PopulationType.INITIAL_POPULATION)
                         .expected(true)
                         .build()))
             .build();
@@ -598,11 +626,11 @@ public class MeasureServiceTest {
             .populationValues(
                 List.of(
                     TestCasePopulationValue.builder()
-                        .name(MeasurePopulation.INITIAL_POPULATION)
+                        .name(PopulationType.INITIAL_POPULATION)
                         .expected(true)
                         .build(),
                     TestCasePopulationValue.builder()
-                        .name(MeasurePopulation.MEASURE_POPULATION)
+                        .name(PopulationType.MEASURE_POPULATION)
                         .expected(true)
                         .build()))
             .build();
@@ -704,8 +732,7 @@ public class MeasureServiceTest {
 
     // before update
     assertEquals(
-        "FactorialOfFive",
-        measure.getGroups().get(0).getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
+        "FactorialOfFive", measure.getGroups().get(0).getPopulations().get(0).getDefinition());
 
     Group persistedGroup = measureService.createOrUpdateGroup(group1, measure.getId(), "test.user");
 
@@ -718,9 +745,7 @@ public class MeasureServiceTest {
     assertEquals(1, savedMeasure.getGroups().size());
     Group capturedGroup = savedMeasure.getGroups().get(0);
     // after update
-    assertEquals(
-        "Initial Population",
-        capturedGroup.getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
+    assertEquals("Initial Population", capturedGroup.getPopulations().get(0).getDefinition());
     assertEquals("Description", capturedGroup.getGroupDescription());
     assertNotEquals("test-scoring-unit", capturedGroup.getScoringUnit());
     assertEquals("new scoring unit", capturedGroup.getScoringUnit());

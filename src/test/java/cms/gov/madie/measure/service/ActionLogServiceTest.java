@@ -12,7 +12,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import cms.gov.madie.measure.repositories.ActionLogRepository;
 import cms.gov.madie.measure.services.ActionLogService;
 
 import static org.hamcrest.CoreMatchers.equalTo;
