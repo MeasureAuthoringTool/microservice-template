@@ -291,8 +291,6 @@ class MeasureControllerTest {
         InvalidIdException.class, () -> controller.updateMeasure(null, measure, principal));
   }
 
-
-
   @Test
   void testUpdateMeasureReturnsExceptionForInvalidCredentials() {
     Principal principal = mock(Principal.class);
