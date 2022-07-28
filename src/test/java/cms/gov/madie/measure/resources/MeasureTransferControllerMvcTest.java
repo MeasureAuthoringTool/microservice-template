@@ -75,7 +75,8 @@ public class MeasureTransferControllerMvcTest {
                 "Description",
                 "improvmentNotation",
                 "rateAggragation",
-                List.of(MeasureGroupTypes.PROCESS)));
+                List.of(MeasureGroupTypes.PROCESS),
+                "testScoringUnit"));
 
     measureMetaData.setSteward("SB");
     measureMetaData.setCopyright("Copyright@SB");
