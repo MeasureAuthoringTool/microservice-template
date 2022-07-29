@@ -11,6 +11,8 @@ import gov.cms.madie.models.measure.MeasureGroupTypes;
 import gov.cms.madie.models.measure.MeasureMetaData;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
+import gov.cms.madie.models.measure.Stratification;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -76,7 +78,8 @@ public class MeasureTransferControllerMvcTest {
                 "improvmentNotation",
                 "rateAggragation",
                 List.of(MeasureGroupTypes.PROCESS),
-                "testScoringUnit"));
+                "testScoringUnit",
+                List.of(new Stratification())));
 
     measureMetaData.setSteward("SB");
     measureMetaData.setCopyright("Copyright@SB");
