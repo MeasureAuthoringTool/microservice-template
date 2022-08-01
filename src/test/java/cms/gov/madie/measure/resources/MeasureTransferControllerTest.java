@@ -75,7 +75,9 @@ public class MeasureTransferControllerTest {
                 "rateAggragation",
                 List.of(MeasureGroupTypes.PROCESS),
                 "testScoringUnit",
-                List.of(new Stratification())));
+                List.of(new Stratification()),
+                "populationBasis"));
+
 
     measureMetaData.setSteward("SB");
     measureMetaData.setCopyright("Copyright@SB");
