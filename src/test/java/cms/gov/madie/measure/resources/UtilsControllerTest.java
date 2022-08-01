@@ -18,11 +18,9 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class UtilsControllerTest {
 
-  @Mock
-  private PopulationBasisRepository populationBasisRepository;
+  @Mock private PopulationBasisRepository populationBasisRepository;
 
-  @InjectMocks
-  private UtilsController utilsController;
+  @InjectMocks private UtilsController utilsController;
 
   @Test
   void getAllPopulationBasisValues() {
