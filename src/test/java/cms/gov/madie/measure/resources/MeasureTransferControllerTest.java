@@ -78,7 +78,6 @@ public class MeasureTransferControllerTest {
                 List.of(new Stratification()),
                 "populationBasis"));
 
-
     measureMetaData.setSteward("SB");
     measureMetaData.setCopyright("Copyright@SB");
 
