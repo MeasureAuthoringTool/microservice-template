@@ -6,26 +6,15 @@ import gov.cms.madie.models.common.PopulationBasis;
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Query;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@ChangeUnit(id = "add_population_basis_values-initializer", order = "1", author = "madie_dev")
+@ChangeUnit(id = "add_population_basis_values_initializer", order = "1", author = "madie_dev")
 public class AddPopulationBasisChangeUnit {
 
-  private final MongoTemplate mongoTemplate;
-  private final PopulationBasisRepository populationBasisRepository;
-
-  public AddPopulationBasisChangeUnit(
-      MongoTemplate mongoTemplate, PopulationBasisRepository populationBasisRepository) {
-    this.mongoTemplate = mongoTemplate;
-    this.populationBasisRepository = populationBasisRepository;
-  }
-
   @Execution
-  public void addPopulationBasisValues() {
+  public void addPopulationBasisValues(PopulationBasisRepository populationBasisRepository) {
     List<PopulationBasis> populationBasisList = new ArrayList<>();
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Boolean").build());
     populationBasisList.add(
@@ -208,7 +197,7 @@ public class AddPopulationBasisChangeUnit {
   }
 
   @RollbackExecution
-  public void rollback() {
-    mongoTemplate.findAllAndRemove(new Query(), PopulationBasis.class);
+  public void rollbackExecution(PopulationBasisRepository populationBasisRepository) {
+    populationBasisRepository.deleteAll();
   }
 }
