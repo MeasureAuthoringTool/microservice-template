@@ -12,10 +12,6 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-/**
- * Using @EnableMongock with minimal configuration only requires changeLog package to scan in
- * property file
- */
 @SpringBootApplication
 @EnableMongock
 @EnableCaching
