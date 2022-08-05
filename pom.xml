@@ -21,6 +21,7 @@
     <mvnsite.version>3.9.1</mvnsite.version>
     <springboot.version>2.5.7</springboot.version>
     <springfox.version>3.0.0</springfox.version>
+    <junit-jupiter.version>5.7.2</junit-jupiter.version>
   </properties>
 
   <!--  https://docs.mongock.io/index.html  -->
@@ -34,6 +35,23 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+      <!-- START: needed to fix mismatched versions coming from above mongock -->
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-api</artifactId>
+        <version>${junit-jupiter.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter</artifactId>
+        <version>${junit-jupiter.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-engine</artifactId>
+        <version>${junit-jupiter.version}</version>
+      </dependency>
+      <!-- END: needed to fix mismatched versions coming from above mongock -->
     </dependencies>
   </dependencyManagement>
 
