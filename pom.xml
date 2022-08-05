@@ -15,26 +15,19 @@
   <description>Measure Service for MADiE</description>
   <properties>
     <java.version>16</java.version>
+    <junit-jupiter.version>5.7.2</junit-jupiter.version>
     <mvn.checkstyle.file>madie-checkstyle.xml</mvn.checkstyle.file>
     <mvn.checkstyle.version>3.1.2</mvn.checkstyle.version>
     <mvnreports.version>3.1.1</mvnreports.version>
     <mvnsite.version>3.9.1</mvnsite.version>
     <springboot.version>2.5.7</springboot.version>
     <springfox.version>3.0.0</springfox.version>
-    <junit-jupiter.version>5.7.2</junit-jupiter.version>
   </properties>
 
   <!--  https://docs.mongock.io/index.html  -->
   <!--  https://github.com/mongock/mongock-examples -->
   <dependencyManagement>
     <dependencies>
-      <dependency>
-        <groupId>io.mongock</groupId>
-        <artifactId>mongock-bom</artifactId>
-        <version>5.1.2</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
       <!-- START: needed to fix mismatched versions coming from above mongock -->
       <dependency>
         <groupId>org.junit.jupiter</groupId>
@@ -50,6 +43,13 @@
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter-engine</artifactId>
         <version>${junit-jupiter.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.mongock</groupId>
+        <artifactId>mongock-bom</artifactId>
+        <version>5.1.2</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <!-- END: needed to fix mismatched versions coming from above mongock -->
     </dependencies>
