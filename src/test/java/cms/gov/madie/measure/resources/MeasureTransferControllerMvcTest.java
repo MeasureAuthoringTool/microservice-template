@@ -12,7 +12,6 @@ import gov.cms.madie.models.measure.MeasureMetaData;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
 import gov.cms.madie.models.measure.Stratification;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -22,6 +21,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -34,16 +34,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest({MeasureTransferController.class})
+@ActiveProfiles("test")
 public class MeasureTransferControllerMvcTest {
   private static final String HARP_ID_HEADER_KEY = "harp-id";
   private static final String HARP_ID_HEADER_VALUE = "XxYyZz";
@@ -79,7 +75,8 @@ public class MeasureTransferControllerMvcTest {
                 "rateAggragation",
                 List.of(MeasureGroupTypes.PROCESS),
                 "testScoringUnit",
-                List.of(new Stratification())));
+                List.of(new Stratification()),
+                "populationBasis"));
 
     measureMetaData.setSteward("SB");
     measureMetaData.setCopyright("Copyright@SB");

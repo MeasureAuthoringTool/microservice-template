@@ -62,6 +62,7 @@ public class MeasureService {
         existingGroup.setMeasureGroupTypes(group.getMeasureGroupTypes());
         existingGroup.setScoringUnit(group.getScoringUnit());
         existingGroup.setStratifications(group.getStratifications());
+        existingGroup.setPopulationBasis(group.getPopulationBasis());
       } else { // if not present, add into groups collection
         group.setId(ObjectId.get().toString());
         measure.getGroups().add(group);
