@@ -56,6 +56,7 @@ public class MeasureService {
         Group existingGroup = existingGroupOpt.get();
         existingGroup.setScoring(group.getScoring());
         existingGroup.setPopulations(group.getPopulations());
+        existingGroup.setMeasureObservations(group.getMeasureObservations());
         existingGroup.setGroupDescription(group.getGroupDescription());
         existingGroup.setImprovementNotation(group.getImprovementNotation());
         existingGroup.setRateAggregation(group.getRateAggregation());

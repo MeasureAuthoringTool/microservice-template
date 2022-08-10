@@ -5,10 +5,12 @@ import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.MeasureService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.measure.AggregateMethodType;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureGroupTypes;
 import gov.cms.madie.models.measure.MeasureMetaData;
+import gov.cms.madie.models.measure.MeasureObservation;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
 import gov.cms.madie.models.measure.Stratification;
@@ -70,6 +72,9 @@ public class MeasureTransferControllerMvcTest {
                 List.of(
                     new Population(
                         "id-1", PopulationType.INITIAL_POPULATION, "Initial Population")),
+                List.of(
+                    new MeasureObservation(
+                        "mo-id-1", "ipp", null, AggregateMethodType.AVERAGE.getValue())),
                 "Description",
                 "improvmentNotation",
                 "rateAggragation",
