@@ -8,15 +8,7 @@ import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
-import gov.cms.madie.models.measure.ElmJson;
-import gov.cms.madie.models.measure.Group;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.MeasureScoring;
-import gov.cms.madie.models.measure.Population;
-import gov.cms.madie.models.measure.PopulationType;
-import gov.cms.madie.models.measure.TestCase;
-import gov.cms.madie.models.measure.TestCaseGroupPopulation;
-import gov.cms.madie.models.measure.TestCasePopulationValue;
+import gov.cms.madie.models.measure.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -67,6 +59,7 @@ public class MeasureServiceTest {
 
   private Group group1;
   private Group group2;
+  private Group group3;
   private Measure measure;
 
   @BeforeEach
@@ -89,6 +82,21 @@ public class MeasureServiceTest {
             .populations(
                 List.of(
                     new Population("id-1", PopulationType.INITIAL_POPULATION, "FactorialOfFive")))
+            .groupDescription("Description")
+            .scoringUnit("test-scoring-unit")
+            .build();
+
+    group3 =
+        Group.builder()
+            .scoring("Ratio")
+            .populations(
+                List.of(
+                    new Population(
+                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population")))
+            .measureObservations(
+                List.of(
+                    new MeasureObservation(
+                        "mo-id-1", "ipp", "id-1", AggregateMethodType.MAXIMUM.getValue())))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .build();
@@ -201,6 +209,34 @@ public class MeasureServiceTest {
         PopulationType.INITIAL_POPULATION, capturedGroup.getPopulations().get(0).getName());
     assertEquals("Description", capturedGroup.getGroupDescription());
     assertEquals("test-scoring-unit", capturedGroup.getScoringUnit());
+  }
+
+  @Test
+  public void testCreateGroupWithObservationWhenMeasureGroupsAreMultiple() {
+    ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+
+    doReturn(measure).when(measureRepository).save(any(Measure.class));
+
+    Group persistedGroup = measureService.createOrUpdateGroup(group3, measure.getId(), "test.user");
+
+    verify(measureRepository, times(1)).save(measureCaptor.capture());
+    assertEquals(group3.getId(), persistedGroup.getId());
+    Measure savedMeasure = measureCaptor.getValue();
+    assertEquals(measure.getLastModifiedBy(), savedMeasure.getLastModifiedBy());
+    assertEquals(measure.getLastModifiedAt(), savedMeasure.getLastModifiedAt());
+    assertNotNull(savedMeasure.getGroups());
+    assertEquals(2, savedMeasure.getGroups().size());
+    Group capturedGroup = savedMeasure.getGroups().get(1);
+    assertEquals("Ratio", capturedGroup.getScoring());
+    assertEquals("Initial Population", capturedGroup.getPopulations().get(0).getDefinition());
+    assertEquals(
+        PopulationType.INITIAL_POPULATION, capturedGroup.getPopulations().get(0).getName());
+    assertEquals("Description", capturedGroup.getGroupDescription());
+    assertEquals("test-scoring-unit", capturedGroup.getScoringUnit());
+    assertNotNull(capturedGroup.getMeasureObservations());
+    assertEquals(1, capturedGroup.getMeasureObservations().size());
   }
 
   @Test
