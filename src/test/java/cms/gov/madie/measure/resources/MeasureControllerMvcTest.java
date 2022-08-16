@@ -967,7 +967,6 @@ public class MeasureControllerMvcTest {
                         "id-1", PopulationType.INITIAL_POPULATION, "Initial Population", null)))
             .measureGroupTypes(List.of(MeasureGroupTypes.PROCESS))
             .build();
-
     final String groupJson =
         "{\"scoring\":\"Cohort\",\"populations\":[{\"id\":\"id-1\",\"name\":\"initialPopulation\",\"definition\":\"Initial Population\"}],\"measureGroupTypes\":[\"Process\"],\"populationBasis\": \"Boolean\"}";
     when(measureService.createOrUpdateGroup(any(Group.class), any(String.class), any(String.class)))
