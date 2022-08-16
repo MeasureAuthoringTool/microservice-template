@@ -71,7 +71,7 @@ public class MeasureServiceTest {
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population")))
+                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population", null)))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .build();
@@ -81,7 +81,8 @@ public class MeasureServiceTest {
             .id("xyz-p12r-12ert")
             .populations(
                 List.of(
-                    new Population("id-1", PopulationType.INITIAL_POPULATION, "FactorialOfFive")))
+                    new Population(
+                        "id-1", PopulationType.INITIAL_POPULATION, "FactorialOfFive", null)))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .build();
@@ -92,7 +93,7 @@ public class MeasureServiceTest {
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population")))
+                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population", null)))
             .measureObservations(
                 List.of(
                     new MeasureObservation(
@@ -279,7 +280,7 @@ public class MeasureServiceTest {
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population")))
+                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population", null)))
             .build();
 
     Measure existingMeasure =
@@ -336,7 +337,7 @@ public class MeasureServiceTest {
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population")))
+                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population", null)))
             .build();
 
     Measure existingMeasure =

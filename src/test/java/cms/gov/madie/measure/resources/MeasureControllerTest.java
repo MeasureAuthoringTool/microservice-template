@@ -380,7 +380,7 @@ class MeasureControllerTest {
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population")))
+                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population", null)))
             .build();
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
@@ -424,7 +424,7 @@ class MeasureControllerTest {
             .populations(
                 List.of(
                     new Population(
-                        "id-2", PopulationType.INITIAL_POPULATION, "Initial Population")))
+                        "id-2", PopulationType.INITIAL_POPULATION, "Initial Population", null)))
             .build();
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
