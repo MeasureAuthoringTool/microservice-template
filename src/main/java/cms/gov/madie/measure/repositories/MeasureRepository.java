@@ -12,6 +12,7 @@ import gov.cms.madie.models.measure.Measure;
 import org.springframework.data.mongodb.repository.Query;
 
 public interface MeasureRepository extends MongoRepository<Measure, String> {
+  @Query("{cqlLibraryName : ?0, active : true}")
   Optional<Measure> findByCqlLibraryName(String cqlLibraryName);
 
   Optional<Measure> findByIdAndActive(String id, Boolean active);
