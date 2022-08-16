@@ -72,9 +72,7 @@ public class MeasureTransferControllerMvcTest {
                 List.of(
                     new Population(
                         "id-1", PopulationType.INITIAL_POPULATION, "Initial Population", null)),
-                List.of(
-                    new MeasureObservation(
-                        "mo-id-1", "ipp", null, AggregateMethodType.AVERAGE.getValue())),
+                List.of(),
                 "Description",
                 "improvmentNotation",
                 "rateAggragation",
