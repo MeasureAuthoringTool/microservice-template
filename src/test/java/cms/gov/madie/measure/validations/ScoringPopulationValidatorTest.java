@@ -46,7 +46,7 @@ class ScoringPopulationValidatorTest {
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population")))
+                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population", null)))
             .groupDescription("Description")
             .build();
     List<Group> groups = new ArrayList<>();

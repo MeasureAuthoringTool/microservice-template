@@ -102,7 +102,10 @@ class GroupScoringPopulationValidatorTest {
                 .populations(
                     List.of(
                         new Population(
-                            "id-11", PopulationType.INITIAL_POPULATION, "initial population")))
+                            "id-11",
+                            PopulationType.INITIAL_POPULATION,
+                            "initial population",
+                            null)))
                 .build(),
             true),
         // correct Cohort initial population but with an extra, invalid population
@@ -111,15 +114,17 @@ class GroupScoringPopulationValidatorTest {
                 .scoring(MeasureScoring.COHORT.toString())
                 .populations(
                     List.of(
-                        new Population("id-1", PopulationType.INITIAL_POPULATION, ""),
-                        new Population("id-2", PopulationType.MEASURE_POPULATION, "Something")))
+                        new Population("id-1", PopulationType.INITIAL_POPULATION, "", null),
+                        new Population(
+                            "id-2", PopulationType.MEASURE_POPULATION, "Something", null)))
                 .build(),
             false),
         // invalid, Cohort population
         Arguments.of(
             Group.builder()
                 .scoring(MeasureScoring.COHORT.toString())
-                .populations(List.of(new Population("id-3", PopulationType.INITIAL_POPULATION, "")))
+                .populations(
+                    List.of(new Population("id-3", PopulationType.INITIAL_POPULATION, "", null)))
                 .build(),
             false));
   }
@@ -131,9 +136,9 @@ class GroupScoringPopulationValidatorTest {
                 .scoring(MeasureScoring.PROPORTION.toString())
                 .populations(
                     List.of(
-                        new Population("id-1", PopulationType.INITIAL_POPULATION, "pop1"),
-                        new Population("id-2", PopulationType.NUMERATOR, "pop2"),
-                        new Population("id-3", PopulationType.DENOMINATOR, "pop3")))
+                        new Population("id-1", PopulationType.INITIAL_POPULATION, "pop1", null),
+                        new Population("id-2", PopulationType.NUMERATOR, "pop2", null),
+                        new Population("id-3", PopulationType.DENOMINATOR, "pop3", null)))
                 .build(),
             true),
         // valid Proportion definitions with all optional populations
@@ -142,12 +147,12 @@ class GroupScoringPopulationValidatorTest {
                 .scoring(MeasureScoring.PROPORTION.toString())
                 .populations(
                     List.of(
-                        new Population("id-4", PopulationType.INITIAL_POPULATION, "pop1"),
-                        new Population("id-5", PopulationType.NUMERATOR, "pop2"),
-                        new Population("id-6", PopulationType.NUMERATOR_EXCLUSION, "pop3"),
-                        new Population("id-7", PopulationType.DENOMINATOR, "pop4"),
-                        new Population("id-8", PopulationType.DENOMINATOR_EXCLUSION, "pop5"),
-                        new Population("id-9", PopulationType.DENOMINATOR_EXCEPTION, "pop6")))
+                        new Population("id-4", PopulationType.INITIAL_POPULATION, "pop1", null),
+                        new Population("id-5", PopulationType.NUMERATOR, "pop2", null),
+                        new Population("id-6", PopulationType.NUMERATOR_EXCLUSION, "pop3", null),
+                        new Population("id-7", PopulationType.DENOMINATOR, "pop4", null),
+                        new Population("id-8", PopulationType.DENOMINATOR_EXCLUSION, "pop5", null),
+                        new Population("id-9", PopulationType.DENOMINATOR_EXCEPTION, "pop6", null)))
                 .build(),
             true),
         //  Proportion definitions with missing value for optional population is valid
@@ -156,12 +161,13 @@ class GroupScoringPopulationValidatorTest {
                 .scoring(MeasureScoring.PROPORTION.toString())
                 .populations(
                     List.of(
-                        new Population("id-15", PopulationType.INITIAL_POPULATION, "pop1"),
-                        new Population("id-10", PopulationType.NUMERATOR, "pop2"),
-                        new Population("id-11", PopulationType.NUMERATOR_EXCLUSION, "pop3"),
-                        new Population("id-12", PopulationType.DENOMINATOR, "pop4"),
-                        new Population("id-13", PopulationType.DENOMINATOR_EXCLUSION, ""),
-                        new Population("id-14", PopulationType.DENOMINATOR_EXCEPTION, "pop6")))
+                        new Population("id-15", PopulationType.INITIAL_POPULATION, "pop1", null),
+                        new Population("id-10", PopulationType.NUMERATOR, "pop2", null),
+                        new Population("id-11", PopulationType.NUMERATOR_EXCLUSION, "pop3", null),
+                        new Population("id-12", PopulationType.DENOMINATOR, "pop4", null),
+                        new Population("id-13", PopulationType.DENOMINATOR_EXCLUSION, "", null),
+                        new Population(
+                            "id-14", PopulationType.DENOMINATOR_EXCEPTION, "pop6", null)))
                 .build(),
             true),
         // invalid Proportion definitions with missing value for required population
@@ -170,12 +176,13 @@ class GroupScoringPopulationValidatorTest {
                 .scoring(MeasureScoring.PROPORTION.toString())
                 .populations(
                     List.of(
-                        new Population("id-16", PopulationType.INITIAL_POPULATION, "pop1"),
-                        new Population("id-17", PopulationType.NUMERATOR, ""),
-                        new Population("id-18", PopulationType.NUMERATOR_EXCLUSION, "pop3"),
-                        new Population("id-19", PopulationType.DENOMINATOR, "pop4"),
-                        new Population("id-20", PopulationType.DENOMINATOR_EXCLUSION, "pop5"),
-                        new Population("id-21", PopulationType.DENOMINATOR_EXCEPTION, "pop6")))
+                        new Population("id-16", PopulationType.INITIAL_POPULATION, "pop1", null),
+                        new Population("id-17", PopulationType.NUMERATOR, "", null),
+                        new Population("id-18", PopulationType.NUMERATOR_EXCLUSION, "pop3", null),
+                        new Population("id-19", PopulationType.DENOMINATOR, "pop4", null),
+                        new Population("id-20", PopulationType.DENOMINATOR_EXCLUSION, "pop5", null),
+                        new Population(
+                            "id-21", PopulationType.DENOMINATOR_EXCEPTION, "pop6", null)))
                 .build(),
             false),
         // invalid Proportion definitions with all required populations but extra population
@@ -184,12 +191,12 @@ class GroupScoringPopulationValidatorTest {
                 .scoring(MeasureScoring.PROPORTION.toString())
                 .populations(
                     List.of(
-                        new Population("id-22", PopulationType.INITIAL_POPULATION, "pop1"),
-                        new Population("id-23", PopulationType.NUMERATOR, "pop2"),
-                        new Population("id-24", PopulationType.DENOMINATOR, "pop4"),
-                        new Population("id-25", PopulationType.DENOMINATOR_EXCLUSION, "pop5"),
-                        new Population("id-26", PopulationType.DENOMINATOR_EXCEPTION, "pop6"),
-                        new Population("id-27", PopulationType.MEASURE_POPULATION, "pop9")))
+                        new Population("id-22", PopulationType.INITIAL_POPULATION, "pop1", null),
+                        new Population("id-23", PopulationType.NUMERATOR, "pop2", null),
+                        new Population("id-24", PopulationType.DENOMINATOR, "pop4", null),
+                        new Population("id-25", PopulationType.DENOMINATOR_EXCLUSION, "pop5", null),
+                        new Population("id-26", PopulationType.DENOMINATOR_EXCEPTION, "pop6", null),
+                        new Population("id-27", PopulationType.MEASURE_POPULATION, "pop9", null)))
                 .build(),
             false));
   }
@@ -202,9 +209,9 @@ class GroupScoringPopulationValidatorTest {
                 .scoring(MeasureScoring.CONTINUOUS_VARIABLE.toString())
                 .populations(
                     List.of(
-                        new Population("id-28", PopulationType.INITIAL_POPULATION, "pop1"),
-                        new Population("id-29", PopulationType.NUMERATOR, "pop2"),
-                        new Population("id-30", PopulationType.DENOMINATOR, "pop4")))
+                        new Population("id-28", PopulationType.INITIAL_POPULATION, "pop1", null),
+                        new Population("id-29", PopulationType.NUMERATOR, "pop2", null),
+                        new Population("id-30", PopulationType.DENOMINATOR, "pop4", null)))
                 .build(),
             false),
         // invalid CV definitions missing required populations
@@ -212,7 +219,8 @@ class GroupScoringPopulationValidatorTest {
             Group.builder()
                 .scoring(MeasureScoring.CONTINUOUS_VARIABLE.toString())
                 .populations(
-                    List.of(new Population("id-31", PopulationType.INITIAL_POPULATION, "pop1")))
+                    List.of(
+                        new Population("id-31", PopulationType.INITIAL_POPULATION, "pop1", null)))
                 .build(),
             false),
         // invalid CV definitions with mismatched definitions
@@ -221,9 +229,9 @@ class GroupScoringPopulationValidatorTest {
                 .scoring(MeasureScoring.CONTINUOUS_VARIABLE.toString())
                 .populations(
                     List.of(
-                        new Population("id-32", PopulationType.INITIAL_POPULATION, "pop1"),
-                        new Population("id-34", PopulationType.NUMERATOR, "pop2"),
-                        new Population("id-33", PopulationType.DENOMINATOR, "pop4")))
+                        new Population("id-32", PopulationType.INITIAL_POPULATION, "pop1", null),
+                        new Population("id-34", PopulationType.NUMERATOR, "pop2", null),
+                        new Population("id-33", PopulationType.DENOMINATOR, "pop4", null)))
                 .build(),
             false),
         // valid CV definitions with required populations
@@ -232,8 +240,8 @@ class GroupScoringPopulationValidatorTest {
                 .scoring(MeasureScoring.CONTINUOUS_VARIABLE.toString())
                 .populations(
                     List.of(
-                        new Population("id-35", PopulationType.INITIAL_POPULATION, "pop1"),
-                        new Population("id-36", PopulationType.MEASURE_POPULATION, "pop2")))
+                        new Population("id-35", PopulationType.INITIAL_POPULATION, "pop1", null),
+                        new Population("id-36", PopulationType.MEASURE_POPULATION, "pop2", null)))
                 .build(),
             true),
         // valid CV definitions with required and optional populations
@@ -242,10 +250,10 @@ class GroupScoringPopulationValidatorTest {
                 .scoring(MeasureScoring.CONTINUOUS_VARIABLE.toString())
                 .populations(
                     List.of(
-                        new Population("id-37", PopulationType.INITIAL_POPULATION, "pop1"),
-                        new Population("id-38", PopulationType.MEASURE_POPULATION, "pop2"),
+                        new Population("id-37", PopulationType.INITIAL_POPULATION, "pop1", null),
+                        new Population("id-38", PopulationType.MEASURE_POPULATION, "pop2", null),
                         new Population(
-                            "id-39", PopulationType.MEASURE_POPULATION_EXCLUSION, "pop3")))
+                            "id-39", PopulationType.MEASURE_POPULATION_EXCLUSION, "pop3", null)))
                 .build(),
             true));
   }
@@ -257,9 +265,9 @@ class GroupScoringPopulationValidatorTest {
                 .scoring(MeasureScoring.RATIO.toString())
                 .populations(
                     List.of(
-                        new Population("id-40", PopulationType.INITIAL_POPULATION, "pop1"),
-                        new Population("id-41", PopulationType.NUMERATOR, "pop2"),
-                        new Population("id-42", PopulationType.DENOMINATOR, "pop3")))
+                        new Population("id-40", PopulationType.INITIAL_POPULATION, "pop1", null),
+                        new Population("id-41", PopulationType.NUMERATOR, "pop2", null),
+                        new Population("id-42", PopulationType.DENOMINATOR, "pop3", null)))
                 .build(),
             true),
         // valid Proportion definitions with all optional populations
@@ -268,11 +276,12 @@ class GroupScoringPopulationValidatorTest {
                 .scoring(MeasureScoring.RATIO.toString())
                 .populations(
                     List.of(
-                        new Population("id-43", PopulationType.INITIAL_POPULATION, "pop1"),
-                        new Population("id-44", PopulationType.NUMERATOR, "pop2"),
-                        new Population("id-45", PopulationType.NUMERATOR_EXCLUSION, "pop3"),
-                        new Population("id-46", PopulationType.DENOMINATOR, "pop4"),
-                        new Population("id-47", PopulationType.DENOMINATOR_EXCLUSION, "pop5")))
+                        new Population("id-43", PopulationType.INITIAL_POPULATION, "pop1", null),
+                        new Population("id-44", PopulationType.NUMERATOR, "pop2", null),
+                        new Population("id-45", PopulationType.NUMERATOR_EXCLUSION, "pop3", null),
+                        new Population("id-46", PopulationType.DENOMINATOR, "pop4", null),
+                        new Population(
+                            "id-47", PopulationType.DENOMINATOR_EXCLUSION, "pop5", null)))
                 .build(),
             true),
         // Proportion definitions with missing value for optional population is valid
@@ -281,11 +290,11 @@ class GroupScoringPopulationValidatorTest {
                 .scoring(MeasureScoring.RATIO.toString())
                 .populations(
                     List.of(
-                        new Population("id-48", PopulationType.INITIAL_POPULATION, "pop1"),
-                        new Population("id-49", PopulationType.NUMERATOR, "pop2"),
-                        new Population("id-50", PopulationType.NUMERATOR_EXCLUSION, "pop3"),
-                        new Population("id-51", PopulationType.DENOMINATOR, "pop4"),
-                        new Population("id-52", PopulationType.DENOMINATOR_EXCLUSION, "")))
+                        new Population("id-48", PopulationType.INITIAL_POPULATION, "pop1", null),
+                        new Population("id-49", PopulationType.NUMERATOR, "pop2", null),
+                        new Population("id-50", PopulationType.NUMERATOR_EXCLUSION, "pop3", null),
+                        new Population("id-51", PopulationType.DENOMINATOR, "pop4", null),
+                        new Population("id-52", PopulationType.DENOMINATOR_EXCLUSION, "", null)))
                 .build(),
             true),
         // invalid Proportion definitions with missing value for required population
@@ -294,10 +303,10 @@ class GroupScoringPopulationValidatorTest {
                 .scoring(MeasureScoring.RATIO.toString())
                 .populations(
                     List.of(
-                        new Population("id-53", PopulationType.INITIAL_POPULATION, "pop1"),
-                        new Population("id-54", PopulationType.NUMERATOR, ""),
-                        new Population("id-55", PopulationType.NUMERATOR_EXCLUSION, "pop3"),
-                        new Population("id-56", PopulationType.DENOMINATOR, "pop4")))
+                        new Population("id-53", PopulationType.INITIAL_POPULATION, "pop1", null),
+                        new Population("id-54", PopulationType.NUMERATOR, "", null),
+                        new Population("id-55", PopulationType.NUMERATOR_EXCLUSION, "pop3", null),
+                        new Population("id-56", PopulationType.DENOMINATOR, "pop4", null)))
                 .build(),
             false),
         // invalid Proportion definitions with all required populations but extra population
@@ -306,11 +315,12 @@ class GroupScoringPopulationValidatorTest {
                 .scoring(MeasureScoring.RATIO.toString())
                 .populations(
                     List.of(
-                        new Population("id-57", PopulationType.INITIAL_POPULATION, "pop1"),
-                        new Population("id-58", PopulationType.NUMERATOR, "pop2"),
-                        new Population("id-59", PopulationType.DENOMINATOR, "pop4"),
-                        new Population("id-60", PopulationType.DENOMINATOR_EXCLUSION, "pop5"),
-                        new Population("id-61", PopulationType.DENOMINATOR_EXCEPTION, "pop6")))
+                        new Population("id-57", PopulationType.INITIAL_POPULATION, "pop1", null),
+                        new Population("id-58", PopulationType.NUMERATOR, "pop2", null),
+                        new Population("id-59", PopulationType.DENOMINATOR, "pop4", null),
+                        new Population("id-60", PopulationType.DENOMINATOR_EXCLUSION, "pop5", null),
+                        new Population(
+                            "id-61", PopulationType.DENOMINATOR_EXCEPTION, "pop6", null)))
                 .build(),
             false));
   }

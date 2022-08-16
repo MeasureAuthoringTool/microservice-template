@@ -71,7 +71,7 @@ public class MeasureTransferControllerTest {
                 "Cohort",
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population")),
+                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population", null)),
                 List.of(
                     new MeasureObservation(
                         "mo-id-1", "ipp", null, AggregateMethodType.AVERAGE.getValue())),

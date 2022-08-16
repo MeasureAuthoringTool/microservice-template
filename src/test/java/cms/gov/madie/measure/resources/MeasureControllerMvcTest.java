@@ -964,7 +964,7 @@ public class MeasureControllerMvcTest {
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population")))
+                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population", null)))
             .measureGroupTypes(List.of(MeasureGroupTypes.PROCESS))
             .build();
 
@@ -1005,7 +1005,8 @@ public class MeasureControllerMvcTest {
             .id("test-id")
             .populations(
                 List.of(
-                    new Population("id-1", PopulationType.INITIAL_POPULATION, updateIppDefinition)))
+                    new Population(
+                        "id-1", PopulationType.INITIAL_POPULATION, updateIppDefinition, null)))
             .measureGroupTypes(List.of(MeasureGroupTypes.PROCESS))
             .build();
 
