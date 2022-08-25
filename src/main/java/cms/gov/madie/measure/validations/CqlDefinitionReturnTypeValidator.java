@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.validations;
 
+import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -20,7 +21,11 @@ public class CqlDefinitionReturnTypeValidator {
       throws JsonProcessingException {
     List<Population> populations = group.getPopulations();
     Map<String, String> cqlDefinitionReturnTypes = getCqlDefinitionReturnTypes(elmJson);
-    if (populations != null && !cqlDefinitionReturnTypes.isEmpty()) {
+    if (cqlDefinitionReturnTypes.isEmpty()) {
+      throw new InvalidIdException("No elm json available");
+    }
+
+    if (populations != null) {
       String populationBasis = group.getPopulationBasis().replaceAll("\\s", "");
       populations.stream()
           .forEach(

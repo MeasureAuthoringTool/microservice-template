@@ -98,7 +98,8 @@ public class MeasureServiceTest implements ResourceUtil {
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population", null)))
+                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population", null),
+                    new Population("id-12", PopulationType.DENOMINATOR_EXCLUSION, "", null)))
             .measureObservations(
                 List.of(
                     new MeasureObservation(
@@ -808,6 +809,17 @@ public class MeasureServiceTest implements ResourceUtil {
   @Test
   public void testUpdateGroupWhenElmJsonIsInvalid() {
     measure.setElmJson("UnpardonableElmJson");
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+
+    assertThrows(
+        InvalidIdException.class,
+        () -> measureService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+  }
+
+  @Test
+  public void testUpdateGroupWhenElmJsonIsNull() {
+    measure.setElmJson(null);
     Optional<Measure> optional = Optional.of(measure);
     doReturn(optional).when(measureRepository).findById(any(String.class));
 
