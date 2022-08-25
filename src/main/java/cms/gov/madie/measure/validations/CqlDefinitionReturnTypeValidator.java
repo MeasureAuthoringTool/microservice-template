@@ -19,8 +19,8 @@ public class CqlDefinitionReturnTypeValidator {
   public void validatePopulationDefinitionReturnTypes(Group group, String elmJson)
       throws JsonProcessingException {
     List<Population> populations = group.getPopulations();
-    if (populations != null && StringUtils.isNotBlank(elmJson)) {
-      Map<String, String> cqlDefinitionReturnTypes = getCqlDefinitionReturnTypes(elmJson);
+    Map<String, String> cqlDefinitionReturnTypes = getCqlDefinitionReturnTypes(elmJson);
+    if (populations != null && !cqlDefinitionReturnTypes.isEmpty()) {
       String populationBasis = group.getPopulationBasis().replaceAll("\\s", "");
       populations.stream()
           .forEach(
@@ -44,15 +44,15 @@ public class CqlDefinitionReturnTypeValidator {
    */
   private Map<String, String> getCqlDefinitionReturnTypes(String elmJson)
       throws JsonProcessingException {
+    Map<String, String> returnTypes = new HashMap<>();
     if (StringUtils.isEmpty(elmJson)) {
-      return null;
+      return returnTypes;
     }
 
     ObjectMapper objectMapper = new ObjectMapper();
     JsonNode rootNode = objectMapper.readTree(elmJson);
     ArrayNode allDefinitions = (ArrayNode) rootNode.get("library").get("statements").get("def");
     Iterator<JsonNode> nodeIterator = allDefinitions.iterator();
-    Map<String, String> returnTypes = new HashMap<>();
     while (nodeIterator.hasNext()) {
       JsonNode node = nodeIterator.next();
       if (node.get("resultTypeName") != null) {
