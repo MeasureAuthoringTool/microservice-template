@@ -92,6 +92,7 @@ public class MeasureTransferControllerMvcTest {
             .version("0.000")
             .measureName("MedicationDispenseTest")
             .cqlLibraryName("MedicationDispenseTest")
+            .ecqmTitle("ecqmTitle")
             .model("QI-Core")
             .measureMetaData(measureMetaData)
             .groups(groups)
