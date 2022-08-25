@@ -27,7 +27,7 @@ public class CqlDefinitionReturnTypeValidator {
               population -> {
                 if (StringUtils.isNotBlank(population.getDefinition())) {
                   String returnType = cqlDefinitionReturnTypes.get(population.getDefinition());
-                  if (StringUtils.equals(returnType, populationBasis) == false) {
+                  if (!StringUtils.equals(returnType, populationBasis)) {
                     throw new InvalidReturnTypeException(population.getName().getDisplay());
                   }
                 }
