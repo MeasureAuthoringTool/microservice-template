@@ -121,6 +121,13 @@ public class ErrorHandlingControllerAdvice {
     return getErrorAttributes(request, HttpStatus.BAD_REQUEST);
   }
 
+  @ExceptionHandler(InvalidReturnTypeException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  @ResponseBody
+  Map<String, Object> onInvalidReturnTypeException(WebRequest request) {
+    return getErrorAttributes(request, HttpStatus.BAD_REQUEST);
+  }
+
   private Map<String, Object> getErrorAttributes(WebRequest request, HttpStatus httpStatus) {
     // BINDING_ERRORS and STACK_TRACE are too detailed and confusing to parse
     // Let's just add a list of simplified validation errors

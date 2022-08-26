@@ -10,6 +10,8 @@ import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
+import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeValidator;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
@@ -17,9 +19,9 @@ import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import gov.cms.madie.models.measure.TestCasePopulationValue;
-import io.micrometer.core.instrument.util.StringUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -44,6 +46,19 @@ public class MeasureService {
     if (measure == null) {
       throw new ResourceNotFoundException("Measure", measureId);
     }
+
+    try {
+      new CqlDefinitionReturnTypeValidator()
+          .validatePopulationDefinitionReturnTypes(group, measure.getElmJson());
+    } catch (JsonProcessingException ex) {
+      log.error(
+          "An error occurred while validating population "
+              + "definition return types for measure {}",
+          measure.getId(),
+          ex);
+      throw new InvalidIdException("Invalid elm json");
+    }
+
     // no group present, this is the first group
     if (CollectionUtils.isEmpty(measure.getGroups())) {
       group.setId(ObjectId.get().toString());
