@@ -52,6 +52,9 @@ class FhirServicesClientTest {
     lenient()
         .when(fhirServicesConfig.getMadieFhirServiceMeasuresBundleUri())
         .thenReturn("/api/fhir/measures/bundles");
+    lenient()
+        .when(fhirServicesConfig.getMadieFhirServiceValidateBundleUri())
+        .thenReturn("/api/fhir/validations/bundles");
   }
 
   @Test
@@ -86,6 +89,52 @@ class FhirServicesClientTest {
     assertThat(output, is(equalTo(json)));
     verify(restTemplate, times(1))
         .exchange(any(URI.class), eq(HttpMethod.PUT), httpEntityCaptor.capture(), any(Class.class));
+    HttpEntity httpEntity = httpEntityCaptor.getValue();
+    assertThat(httpEntity.getHeaders(), is(notNullValue()));
+    List<String> authorization = httpEntity.getHeaders().get(HttpHeaders.AUTHORIZATION);
+    assertThat(authorization, is(notNullValue()));
+    assertThat(authorization.size(), is(equalTo(1)));
+    assertThat(authorization.get(0), is(equalTo(accessToken)));
+  }
+
+  @Test
+  void testValidateBundleThrowsException() {
+    final String testCaseJson = "{ \"resourceType\": \"foo\" }";
+
+    final String accessToken = "Bearer TOKEN";
+    when(restTemplate.exchange(
+            any(URI.class), eq(HttpMethod.POST), any(HttpEntity.class), any(Class.class)))
+        .thenThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN));
+    assertThrows(
+        HttpClientErrorException.class,
+        () -> fhirServicesClient.validateBundle(testCaseJson, accessToken));
+    verify(restTemplate, times(1))
+        .exchange(
+            any(URI.class), eq(HttpMethod.POST), httpEntityCaptor.capture(), any(Class.class));
+    HttpEntity httpEntity = httpEntityCaptor.getValue();
+    assertThat(httpEntity.getHeaders(), is(notNullValue()));
+    List<String> authorization = httpEntity.getHeaders().get(HttpHeaders.AUTHORIZATION);
+    assertThat(authorization, is(notNullValue()));
+    assertThat(authorization.size(), is(equalTo(1)));
+    assertThat(authorization.get(0), is(equalTo(accessToken)));
+  }
+
+  @Test
+  void testValidateBundleReturnsStringData() {
+    final String accessToken = "Bearer TOKEN";
+    final String testCaseJson = "{ \"resourceType\": \"GOOD JSON\" }";
+    final String goodOutcomeJson = "{ \"code\": 200, \"successful\": true }";
+
+    when(restTemplate.exchange(
+            any(URI.class), eq(HttpMethod.POST), any(HttpEntity.class), any(Class.class)))
+        .thenReturn(ResponseEntity.ok(goodOutcomeJson));
+    ResponseEntity<String> output = fhirServicesClient.validateBundle(testCaseJson, accessToken);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.getBody(), is(notNullValue()));
+    assertThat(output.getBody(), is(equalTo(goodOutcomeJson)));
+    verify(restTemplate, times(1))
+        .exchange(
+            any(URI.class), eq(HttpMethod.POST), httpEntityCaptor.capture(), any(Class.class));
     HttpEntity httpEntity = httpEntityCaptor.getValue();
     assertThat(httpEntity.getHeaders(), is(notNullValue()));
     List<String> authorization = httpEntity.getHeaders().get(HttpHeaders.AUTHORIZATION);

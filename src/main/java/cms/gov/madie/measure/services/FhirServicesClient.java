@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -31,5 +33,18 @@ public class FhirServicesClient {
     return fhirServicesRestTemplate
         .exchange(uri, HttpMethod.PUT, measureEntity, String.class)
         .getBody();
+  }
+
+  public ResponseEntity<String> validateBundle(String testCaseJson, String accessToken) {
+    URI uri =
+        URI.create(
+            fhirServicesConfig.getMadieFhirServiceBaseUrl()
+                + fhirServicesConfig.getMadieFhirServiceValidateBundleUri());
+    HttpHeaders headers = new HttpHeaders();
+    headers.set(HttpHeaders.AUTHORIZATION, accessToken);
+    headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+    headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+    HttpEntity<String> measureEntity = new HttpEntity<>(testCaseJson, headers);
+    return fhirServicesRestTemplate.exchange(uri, HttpMethod.POST, measureEntity, String.class);
   }
 }
