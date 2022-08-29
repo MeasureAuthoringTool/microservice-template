@@ -5,12 +5,11 @@ import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.MeasureService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cms.madie.models.common.ActionType;
-import gov.cms.madie.models.measure.AggregateMethodType;
+import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureGroupTypes;
 import gov.cms.madie.models.measure.MeasureMetaData;
-import gov.cms.madie.models.measure.MeasureObservation;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
 import gov.cms.madie.models.measure.Stratification;
@@ -93,7 +92,7 @@ public class MeasureTransferControllerMvcTest {
             .measureName("MedicationDispenseTest")
             .cqlLibraryName("MedicationDispenseTest")
             .ecqmTitle("ecqmTitle")
-            .model("QI-Core")
+            .model(ModelType.QI_CORE.toString())
             .measureMetaData(measureMetaData)
             .groups(groups)
             .cql("library MedicationDispenseTest version '0.0.001' using FHIR version '4.0.1'")
