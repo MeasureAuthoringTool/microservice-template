@@ -2,6 +2,7 @@ package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
+import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.MeasureService;
@@ -1089,6 +1090,33 @@ public class MeasureControllerMvcTest {
     assertEquals(
         PopulationType.INITIAL_POPULATION, persistedGroup.getPopulations().get(0).getName());
     assertEquals(group.getMeasureGroupTypes().get(0), persistedGroup.getMeasureGroupTypes().get(0));
+  }
+
+  @Test
+  public void testUpdateGroupIfPopulationDefinitionReturnTypesAreInvalid() throws Exception {
+    final String groupJson =
+        "{\"id\":\"test-id\",\"scoring\":\"Cohort\",\"populations\":[{\"id\":\"id-2\",\"name\":\"initialPopulation\",\"definition\":\"FactorialOfFive\"}],\"measureGroupTypes\":[\"Process\"], \"populationBasis\": \"Boolean\"}";
+    when(measureService.createOrUpdateGroup(any(Group.class), any(String.class), any(String.class)))
+        .thenThrow(new InvalidReturnTypeException("Initial Population"));
+
+    mockMvc
+        .perform(
+            put("/measures/1234/groups")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(groupJson)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isBadRequest())
+        .andExpect(
+            jsonPath("$.message")
+                .value(
+                    "Return type for the CQL definition selected for the Initial Population does not match with population basis."));
+
+    verify(measureService, times(1))
+        .createOrUpdateGroup(
+            groupCaptor.capture(), measureIdCaptor.capture(), usernameCaptor.capture());
   }
 
   @Test

@@ -4,10 +4,12 @@ import cms.gov.madie.measure.exceptions.BundleOperationException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
+import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
+import cms.gov.madie.measure.utils.ResourceUtil;
 import gov.cms.madie.models.measure.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,7 +50,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class MeasureServiceTest {
+public class MeasureServiceTest implements ResourceUtil {
   @Mock private MeasureRepository measureRepository;
 
   @Mock private FhirServicesClient fhirServicesClient;
@@ -68,6 +70,7 @@ public class MeasureServiceTest {
     group1 =
         Group.builder()
             .scoring("Cohort")
+            .populationBasis("Encounter")
             .populations(
                 List.of(
                     new Population(
@@ -79,6 +82,7 @@ public class MeasureServiceTest {
     group2 =
         Group.builder()
             .id("xyz-p12r-12ert")
+            .populationBasis("Encounter")
             .populations(
                 List.of(
                     new Population(
@@ -90,10 +94,12 @@ public class MeasureServiceTest {
     group3 =
         Group.builder()
             .scoring("Ratio")
+            .populationBasis("Encounter")
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population", null)))
+                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population", null),
+                    new Population("id-12", PopulationType.DENOMINATOR_EXCLUSION, "", null)))
             .measureObservations(
                 List.of(
                     new MeasureObservation(
@@ -104,11 +110,13 @@ public class MeasureServiceTest {
 
     List<Group> groups = new ArrayList<>();
     groups.add(group2);
+    String elmJson = getData("/test_elm.json");
     measure =
         Measure.builder()
             .active(true)
             .id("xyz-p13r-13ert")
             .cql("test cql")
+            .elmJson(elmJson)
             .measureSetId("IDIDID")
             .measureName("MSR01")
             .version("0.001")
@@ -786,5 +794,37 @@ public class MeasureServiceTest {
     assertEquals("Description", capturedGroup.getGroupDescription());
     assertNotEquals("test-scoring-unit", capturedGroup.getScoringUnit());
     assertEquals("new scoring unit", capturedGroup.getScoringUnit());
+  }
+
+  @Test
+  public void testUpdateGroupWhenPopulationDefinitionReturnTypeNotMatchingWithPopulationBasis() {
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+
+    assertThrows(
+        InvalidReturnTypeException.class,
+        () -> measureService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+  }
+
+  @Test
+  public void testUpdateGroupWhenElmJsonIsInvalid() {
+    measure.setElmJson("UnpardonableElmJson");
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+
+    assertThrows(
+        InvalidIdException.class,
+        () -> measureService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+  }
+
+  @Test
+  public void testUpdateGroupWhenElmJsonIsNull() {
+    measure.setElmJson(null);
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+
+    assertThrows(
+        InvalidIdException.class,
+        () -> measureService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
   }
 }
