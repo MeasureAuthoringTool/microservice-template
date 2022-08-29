@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Population;
+import gov.cms.madie.models.measure.Stratification;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
@@ -19,14 +20,14 @@ public class CqlDefinitionReturnTypeValidator {
 
   public void validatePopulationDefinitionReturnTypes(Group group, String elmJson)
       throws JsonProcessingException {
-    List<Population> populations = group.getPopulations();
     Map<String, String> cqlDefinitionReturnTypes = getCqlDefinitionReturnTypes(elmJson);
     if (cqlDefinitionReturnTypes.isEmpty()) {
       throw new InvalidIdException("No elm json available");
     }
 
+    List<Population> populations = group.getPopulations();
+    String populationBasis = group.getPopulationBasis().replaceAll("\\s", "");
     if (populations != null) {
-      String populationBasis = group.getPopulationBasis().replaceAll("\\s", "");
       populations.stream()
           .forEach(
               population -> {
@@ -34,6 +35,21 @@ public class CqlDefinitionReturnTypeValidator {
                   String returnType = cqlDefinitionReturnTypes.get(population.getDefinition());
                   if (!StringUtils.equals(returnType, populationBasis)) {
                     throw new InvalidReturnTypeException(population.getName().getDisplay());
+                  }
+                }
+              });
+    }
+
+    List<Stratification> stratifications = group.getStratifications();
+    if (stratifications != null) {
+      stratifications.stream()
+          .forEach(
+              stratification -> {
+                if (StringUtils.isNotBlank(stratification.getCqlDefinition())) {
+                  String returnType =
+                      cqlDefinitionReturnTypes.get(stratification.getCqlDefinition());
+                  if (!StringUtils.equals(returnType, populationBasis)) {
+                    throw new InvalidReturnTypeException("Stratification(s)");
                   }
                 }
               });

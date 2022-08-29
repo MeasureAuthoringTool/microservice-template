@@ -66,6 +66,10 @@ public class MeasureServiceTest implements ResourceUtil {
 
   @BeforeEach
   public void setUp() {
+    Stratification stratification = new Stratification();
+    stratification.setId("strat-1");
+    stratification.setCqlDefinition("Initial Population");
+    stratification.setAssociation("Initial Population");
     // new group, not in DB, so no ID
     group1 =
         Group.builder()
@@ -87,6 +91,7 @@ public class MeasureServiceTest implements ResourceUtil {
                 List.of(
                     new Population(
                         "id-1", PopulationType.INITIAL_POPULATION, "FactorialOfFive", null)))
+            .stratifications(List.of(stratification))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .build();
@@ -825,6 +830,18 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertThrows(
         InvalidIdException.class,
+        () -> measureService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+  }
+
+  @Test
+  public void testUpdateGroupWhenStratificationReturnTypeIsInvalid() {
+    group2.setPopulations(null);
+    group2.setPopulationBasis("Boolean");
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+
+    assertThrows(
+        InvalidReturnTypeException.class,
         () -> measureService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
   }
 }
