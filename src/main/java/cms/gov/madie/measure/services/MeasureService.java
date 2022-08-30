@@ -49,7 +49,7 @@ public class MeasureService {
 
     try {
       new CqlDefinitionReturnTypeValidator()
-          .validatePopulationDefinitionReturnTypes(group, measure.getElmJson());
+          .validateCqlDefinitionReturnTypes(group, measure.getElmJson());
     } catch (JsonProcessingException ex) {
       log.error(
           "An error occurred while validating population "
