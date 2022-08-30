@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Population;
+import gov.cms.madie.models.measure.Stratification;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
@@ -17,26 +18,42 @@ import java.util.Map;
 
 public class CqlDefinitionReturnTypeValidator {
 
-  public void validatePopulationDefinitionReturnTypes(Group group, String elmJson)
+  /**
+   * Validate cql definition return types of a group against population basis. Group can have cql
+   * definitions for populations, stratifications and observations
+   */
+  public void validateCqlDefinitionReturnTypes(Group group, String elmJson)
       throws JsonProcessingException {
-    List<Population> populations = group.getPopulations();
     Map<String, String> cqlDefinitionReturnTypes = getCqlDefinitionReturnTypes(elmJson);
     if (cqlDefinitionReturnTypes.isEmpty()) {
       throw new InvalidIdException("No elm json available");
     }
 
+    List<Population> populations = group.getPopulations();
+    String populationBasis = group.getPopulationBasis().replaceAll("\\s", "");
     if (populations != null) {
-      String populationBasis = group.getPopulationBasis().replaceAll("\\s", "");
-      populations.stream()
-          .forEach(
-              population -> {
-                if (StringUtils.isNotBlank(population.getDefinition())) {
-                  String returnType = cqlDefinitionReturnTypes.get(population.getDefinition());
-                  if (!StringUtils.equals(returnType, populationBasis)) {
-                    throw new InvalidReturnTypeException(population.getName().getDisplay());
-                  }
-                }
-              });
+      populations.forEach(
+          population -> {
+            if (StringUtils.isNotBlank(population.getDefinition())) {
+              String returnType = cqlDefinitionReturnTypes.get(population.getDefinition());
+              if (!StringUtils.equals(returnType, populationBasis)) {
+                throw new InvalidReturnTypeException(population.getName().getDisplay());
+              }
+            }
+          });
+    }
+
+    List<Stratification> stratifications = group.getStratifications();
+    if (stratifications != null) {
+      stratifications.forEach(
+          stratification -> {
+            if (StringUtils.isNotBlank(stratification.getCqlDefinition())) {
+              String returnType = cqlDefinitionReturnTypes.get(stratification.getCqlDefinition());
+              if (!StringUtils.equals(returnType, populationBasis)) {
+                throw new InvalidReturnTypeException("Stratification(s)");
+              }
+            }
+          });
     }
   }
 

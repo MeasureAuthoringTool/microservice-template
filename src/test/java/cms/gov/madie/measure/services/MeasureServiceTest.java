@@ -66,6 +66,15 @@ public class MeasureServiceTest implements ResourceUtil {
 
   @BeforeEach
   public void setUp() {
+    Stratification strat1 = new Stratification();
+    strat1.setId("strat-1");
+    strat1.setCqlDefinition("Initial Population");
+    strat1.setAssociation("Initial Population");
+    Stratification strat2 = new Stratification();
+    strat2.setCqlDefinition("denominator_define");
+    strat2.setAssociation("Denom");
+
+    Stratification emptyStrat = new Stratification();
     // new group, not in DB, so no ID
     group1 =
         Group.builder()
@@ -87,6 +96,7 @@ public class MeasureServiceTest implements ResourceUtil {
                 List.of(
                     new Population(
                         "id-1", PopulationType.INITIAL_POPULATION, "FactorialOfFive", null)))
+            .stratifications(List.of(strat1, emptyStrat))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .build();
@@ -825,6 +835,32 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertThrows(
         InvalidIdException.class,
+        () -> measureService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+  }
+
+  @Test
+  public void testUpdateGroupWithValidStratification() {
+    group2.setPopulations(null);
+    Optional<Measure> optional = Optional.of(measure);
+    ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+    doReturn(measure).when(measureRepository).save(any(Measure.class));
+
+    Group group = measureService.createOrUpdateGroup(group2, measure.getId(), "test.user");
+    assertEquals(group.getStratifications().size(), group2.getStratifications().size());
+    verify(measureRepository, times(1)).save(measureCaptor.capture());
+  }
+
+  @Test
+  public void testUpdateGroupWithStratificationWhenReturnTypeNotEqualToPopulationBasis() {
+    group2.setPopulations(null);
+    // non-boolean define for strat cql definition
+    group2.getStratifications().get(1).setCqlDefinition("SDE Race");
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+
+    assertThrows(
+        InvalidReturnTypeException.class,
         () -> measureService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
   }
 }
