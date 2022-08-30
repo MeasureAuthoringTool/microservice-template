@@ -180,10 +180,11 @@ public class TestCaseService {
             .outcomeResponse(mapper.readValue(ex.getResponseBodyAsString(), Object.class))
             .build();
       } catch (JsonProcessingException e) {
-        return handleJsonProcessingException(e);
+        return handleJsonProcessingException();
       }
     } catch (JsonProcessingException e) {
-      return handleJsonProcessingException(e);
+      log.error("An error occurred while processing test case JSON validation outcome", e);
+      return handleJsonProcessingException();
     } catch (Exception ex) {
       log.error("Exception occurred validating bundle with FHIR Service:", ex);
       return HapiOperationOutcome.builder()
@@ -193,7 +194,7 @@ public class TestCaseService {
     }
   }
 
-  private HapiOperationOutcome handleJsonProcessingException(JsonProcessingException e) {
+  private HapiOperationOutcome handleJsonProcessingException() {
     return HapiOperationOutcome.builder()
         .code(500)
         .message(
