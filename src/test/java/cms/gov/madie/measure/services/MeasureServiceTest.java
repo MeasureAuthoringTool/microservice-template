@@ -854,7 +854,7 @@ public class MeasureServiceTest implements ResourceUtil {
   @Test
   public void testUpdateGroupWithStratificationWhenReturnTypeNotEqualToPopulationBasis() {
     group2.setPopulations(null);
-    // non boolean define fot start cql define
+    // non-boolean define for strat cql definition
     group2.getStratifications().get(1).setCqlDefinition("SDE Race");
     Optional<Measure> optional = Optional.of(measure);
     doReturn(optional).when(measureRepository).findById(any(String.class));
