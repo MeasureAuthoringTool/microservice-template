@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -32,12 +33,14 @@ public class TestCaseController {
   public ResponseEntity<TestCase> addTestCase(
       @RequestBody @Validated(TestCase.ValidationSequence.class) TestCase testCase,
       @PathVariable String measureId,
+      @RequestHeader("Authorization") String accessToken,
       Principal principal) {
 
     sanitizeTestCase(testCase);
 
     return ResponseEntity.status(HttpStatus.CREATED)
-        .body(testCaseService.persistTestCase(testCase, measureId, principal.getName()));
+        .body(
+            testCaseService.persistTestCase(testCase, measureId, principal.getName(), accessToken));
   }
 
   @GetMapping(ControllerUtil.TEST_CASES)
@@ -49,8 +52,10 @@ public class TestCaseController {
   public ResponseEntity<TestCase> getTestCase(
       @PathVariable String measureId,
       @PathVariable String testCaseId,
-      @RequestParam(name = "validate", defaultValue = "true") boolean validate) {
-    return ResponseEntity.ok(testCaseService.getTestCase(measureId, testCaseId, validate));
+      @RequestParam(name = "validate", defaultValue = "true") boolean validate,
+      @RequestHeader("Authorization") String accessToken) {
+    return ResponseEntity.ok(
+        testCaseService.getTestCase(measureId, testCaseId, validate, accessToken));
   }
 
   @PutMapping(ControllerUtil.TEST_CASES + "/{testCaseId}")
@@ -58,6 +63,7 @@ public class TestCaseController {
       @RequestBody @Validated(TestCase.ValidationSequence.class) TestCase testCase,
       @PathVariable String measureId,
       @PathVariable String testCaseId,
+      @RequestHeader("Authorization") String accessToken,
       Principal principal) {
     if (testCase.getId() == null || !testCase.getId().equals(testCaseId)) {
       throw new ResourceNotFoundException("Test Case", testCaseId);
@@ -65,7 +71,7 @@ public class TestCaseController {
     sanitizeTestCase(testCase);
 
     return ResponseEntity.ok(
-        testCaseService.updateTestCase(testCase, measureId, principal.getName()));
+        testCaseService.updateTestCase(testCase, measureId, principal.getName(), accessToken));
   }
 
   @GetMapping(ControllerUtil.TEST_CASES + "/series")

@@ -16,10 +16,6 @@ public class HapiFhirConfig {
   @Value("${hapi-fhir.patient.uri}")
   private String hapiFhirPatientUri;
 
-  @Getter
-  @Value("${hapi-fhir.bundle.uri}")
-  private String hapiFhirBundleUri;
-
   @Bean(name = "hapiFhirRestTemplate")
   public RestTemplate restTemplate() {
     // ToDo: add configuration like certs for HAPI FHIR
