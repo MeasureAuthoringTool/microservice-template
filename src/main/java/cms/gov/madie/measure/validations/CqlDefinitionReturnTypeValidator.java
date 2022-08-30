@@ -19,7 +19,7 @@ import java.util.Map;
 public class CqlDefinitionReturnTypeValidator {
 
   /**
-   * Validate cql definition return types of a group against population basis Group can have cql
+   * Validate cql definition return types of a group against population basis. Group can have cql
    * definitions for populations, stratifications and observations
    */
   public void validateCqlDefinitionReturnTypes(Group group, String elmJson)
