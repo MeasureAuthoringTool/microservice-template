@@ -86,6 +86,7 @@ public class MeasureTransferControllerMvcTest {
     measure =
         Measure.builder()
             .id("testId")
+            .versionId("testId")
             .createdBy("testCreatedBy")
             .measureSetId("abc-pqr-xyz")
             .version("0.000")

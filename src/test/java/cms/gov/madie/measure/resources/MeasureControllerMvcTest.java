@@ -91,12 +91,13 @@ public class MeasureControllerMvcTest {
     priorMeasure.setMeasureName(measureName);
     priorMeasure.setCqlLibraryName(libName);
     priorMeasure.setModel(MODEL);
+    priorMeasure.setVersionId(measureId);
 
     when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(priorMeasure));
     when(measureRepository.save(any(Measure.class))).thenReturn(mock(Measure.class));
 
     final String measureAsJson =
-        "{\"id\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"ecqmTitle\":\"%s\", \"measureMetaData\": { \"steward\" : \"%s\", \"description\" : \"%s\", \"copyright\" : \"%s\", \"disclaimer\" : \"%s\", \"rationale\" : \"%s\", \"author\" : \"%s\", \"guidance\" : \"%s\"}, \"model\":\"%s\"}"
+        "{\"id\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"ecqmTitle\":\"%s\", \"measureMetaData\": { \"steward\" : \"%s\", \"description\" : \"%s\", \"copyright\" : \"%s\", \"disclaimer\" : \"%s\", \"rationale\" : \"%s\", \"author\" : \"%s\", \"guidance\" : \"%s\"}, \"model\":\"%s\", \"versionId\":\"%s\"}"
             .formatted(
                 measureId,
                 measureName,
@@ -109,7 +110,8 @@ public class MeasureControllerMvcTest {
                 rationale,
                 author,
                 guidance,
-                MODEL);
+                MODEL,
+                measureId);
     mockMvc
         .perform(
             put("/measures/" + measureId)
@@ -134,6 +136,7 @@ public class MeasureControllerMvcTest {
     assertEquals(author, savedMeasure.getMeasureMetaData().getAuthor());
     assertEquals(guidance, savedMeasure.getMeasureMetaData().getGuidance());
     assertEquals(MODEL, savedMeasure.getModel());
+    assertEquals(measureId, savedMeasure.getVersionId());
     assertNotNull(savedMeasure.getLastModifiedAt());
     assertEquals(TEST_USER_ID, savedMeasure.getLastModifiedBy());
     int lastModCompareTo =
@@ -171,12 +174,13 @@ public class MeasureControllerMvcTest {
     priorMeasure.setCqlLibraryName(libName);
     priorMeasure.setEcqmTitle(ecqmTitle);
     priorMeasure.setModel(MODEL);
+    priorMeasure.setVersionId(measureId);
 
     when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(priorMeasure));
     when(measureRepository.save(any(Measure.class))).thenReturn(mock(Measure.class));
 
     final String measureAsJson =
-        "{\"id\": \"%s\", \"active\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"ecqmTitle\":\"%s\", \"measureMetaData\": { \"steward\" : \"%s\", \"description\" : \"%s\", \"copyright\" : \"%s\", \"disclaimer\" : \"%s\", \"rationale\" : \"%s\", \"author\" : \"%s\", \"guidance\" : \"%s\"}, \"model\":\"%s\"}"
+        "{\"id\": \"%s\", \"active\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"ecqmTitle\":\"%s\", \"measureMetaData\": { \"steward\" : \"%s\", \"description\" : \"%s\", \"copyright\" : \"%s\", \"disclaimer\" : \"%s\", \"rationale\" : \"%s\", \"author\" : \"%s\", \"guidance\" : \"%s\"}, \"model\":\"%s\", \"versionId\":\"%s\"}"
             .formatted(
                 measureId,
                 false,
@@ -190,7 +194,8 @@ public class MeasureControllerMvcTest {
                 rationale,
                 author,
                 guidance,
-                MODEL);
+                MODEL,
+                measureId);
     mockMvc
         .perform(
             put("/measures/" + measureId)
@@ -295,7 +300,8 @@ public class MeasureControllerMvcTest {
 
   @Test
   public void testNewMeasureFailsIfUnderscoreInMeasureName() throws Exception {
-    final String measureAsJson = "{ \"measureName\":\"A_Name\", \"cqlLibraryName\":\"ALib\" }";
+    final String measureAsJson =
+        "{ \"measureName\":\"A_Name\", \"cqlLibraryName\":\"ALib\" , \"versionId\":\"versionId\"}";
     mockMvc
         .perform(
             post("/measure")
@@ -313,7 +319,7 @@ public class MeasureControllerMvcTest {
   @Test
   public void testUpdateMeasureFailsIfUnderscoreInMeasureName() throws Exception {
     final String measureAsJson =
-        "{ \"id\": \"m1234\", \"measureName\":\"A_Name\", \"cqlLibraryName\":\"ALib\" }";
+        "{ \"id\": \"m1234\", \"measureName\":\"A_Name\", \"cqlLibraryName\":\"ALib\", \"versionId\":\"versionId\" }";
     mockMvc
         .perform(
             put("/measures/m1234")
@@ -332,7 +338,8 @@ public class MeasureControllerMvcTest {
   public void testNewMeasureNameMaxLengthFailed() throws Exception {
     final String measureName = "A".repeat(501);
     final String measureAsJson =
-        "{ \"measureName\":\"%s\", \"cqlLibraryName\":\"ALib\"  }".formatted(measureName);
+        "{ \"measureName\":\"%s\", \"cqlLibraryName\":\"ALib\", \"versionId\":\"versionId\"  }"
+            .formatted(measureName);
     verifyNoInteractions(measureRepository);
     mockMvc
         .perform(
@@ -351,7 +358,7 @@ public class MeasureControllerMvcTest {
   public void testUpdateMeasureNameMaxLengthFailed() throws Exception {
     final String measureName = "A".repeat(501);
     final String measureAsJson =
-        "{ \"id\": \"m1234\", \"measureName\":\"%s\", \"cqlLibraryName\":\"ALib\" }"
+        "{ \"id\": \"m1234\", \"measureName\":\"%s\", \"cqlLibraryName\":\"ALib\", \"versionId\":\"versionId\" }"
             .formatted(measureName);
     mockMvc
         .perform(
@@ -370,7 +377,7 @@ public class MeasureControllerMvcTest {
   @Test
   public void testUpdateMeasureECQMTitleNullFailed() throws Exception {
     final String measureAsJson =
-        "{ \"id\": \"m1234\", \"measureName\":\"TestMeasure\", \"cqlLibraryName\":\"ALib\",\"model\": \"%s\" }"
+        "{ \"id\": \"m1234\", \"measureName\":\"TestMeasure\", \"cqlLibraryName\":\"ALib\",\"model\": \"%s\", \"versionId\":\"versionId\" }"
             .formatted(MODEL);
     mockMvc
         .perform(
@@ -389,7 +396,7 @@ public class MeasureControllerMvcTest {
   public void testUpdateMeasureECQMTitleMaxLengthFailed() throws Exception {
     final String ecqmTitle = "A".repeat(33);
     final String measureAsJson =
-        "{ \"id\": \"m1234\", \"measureName\":\"TestMeasure\", \"cqlLibraryName\":\"ALib\", \"ecqmTitle\":\"%s\", \"model\":\"%s\" }"
+        "{ \"id\": \"m1234\", \"measureName\":\"TestMeasure\", \"cqlLibraryName\":\"ALib\", \"ecqmTitle\":\"%s\", \"model\":\"%s\", \"versionId\":\"versionId\" }"
             .formatted(ecqmTitle, MODEL);
     mockMvc
         .perform(
@@ -417,12 +424,13 @@ public class MeasureControllerMvcTest {
     saved.setCqlLibraryName(libraryName);
     saved.setModel(MODEL);
     saved.setEcqmTitle(ecqmTitle);
+    saved.setVersionId(measureId);
     when(measureRepository.save(any(Measure.class))).thenReturn(saved);
     doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
 
     final String measureAsJson =
-        "{\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\" , \"ecqmTitle\": \"%s\", \"model\": \"%s\"}"
-            .formatted(measureName, libraryName, ecqmTitle, MODEL);
+        "{\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\" , \"ecqmTitle\": \"%s\", \"model\": \"%s\", \"versionId\":\"%s\"}"
+            .formatted(measureName, libraryName, ecqmTitle, MODEL, measureId);
 
     mockMvc
         .perform(
@@ -437,7 +445,8 @@ public class MeasureControllerMvcTest {
         .andExpect(jsonPath("$.cqlLibraryName").value(libraryName))
         .andExpect(jsonPath("$.ecqmTitle").value(ecqmTitle))
         .andExpect(jsonPath("$.model").value(MODEL))
-        .andExpect(jsonPath("$.id").value(measureId));
+        .andExpect(jsonPath("$.id").value(measureId))
+        .andExpect(jsonPath("$.versionId").value(measureId));
 
     verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
     verifyNoMoreInteractions(measureRepository);
@@ -448,6 +457,7 @@ public class MeasureControllerMvcTest {
     assertEquals(MODEL, savedMeasure.getModel());
     assertEquals(TEST_USER_ID, savedMeasure.getCreatedBy());
     assertEquals(TEST_USER_ID, savedMeasure.getLastModifiedBy());
+    assertEquals(measureId, savedMeasure.getVersionId());
     assertNotNull(savedMeasure.getCreatedAt());
     assertNotNull(savedMeasure.getLastModifiedAt());
 
@@ -473,6 +483,7 @@ public class MeasureControllerMvcTest {
     existing.setModel(MODEL);
     String ecqmTitle = "ecqmTitle";
     existing.setEcqmTitle(ecqmTitle);
+    existing.setVersionId(measureId);
 
     doThrow(
             new DuplicateKeyException(
@@ -481,8 +492,8 @@ public class MeasureControllerMvcTest {
         .checkDuplicateCqlLibraryName(any(String.class));
 
     final String newMeasureAsJson =
-        "{\"measureName\": \"NewMeasure\", \"cqlLibraryName\": \"%s\", \"ecqmTitle\": \"%s\",\"model\":\"%s\"}"
-            .formatted(cqlLibraryName, ecqmTitle, MODEL);
+        "{\"measureName\": \"NewMeasure\", \"cqlLibraryName\": \"%s\", \"ecqmTitle\": \"%s\",\"model\":\"%s\",\"versionId\":\"%s\"}"
+            .formatted(cqlLibraryName, ecqmTitle, MODEL, measureId);
     mockMvc
         .perform(
             post("/measure")
@@ -507,6 +518,7 @@ public class MeasureControllerMvcTest {
     priorMeasure.setCqlLibraryName("TestMeasureLibrary");
     priorMeasure.setModel(MODEL);
     priorMeasure.setEcqmTitle("ecqmTitle");
+    priorMeasure.setVersionId(priorMeasure.getId());
     when(measureRepository.findById(eq(priorMeasure.getId())))
         .thenReturn(Optional.of(priorMeasure));
 
@@ -515,6 +527,7 @@ public class MeasureControllerMvcTest {
     existingMeasure.setMeasureName("ExistingMeasure");
     existingMeasure.setCqlLibraryName("ExistingMeasureLibrary");
     existingMeasure.setEcqmTitle("ecqmTitle");
+    existingMeasure.setVersionId(existingMeasure.getId());
     doThrow(
             new DuplicateKeyException(
                 "cqlLibraryName", "CQL library with given name already exists."))
@@ -522,13 +535,14 @@ public class MeasureControllerMvcTest {
         .checkDuplicateCqlLibraryName(any(String.class));
 
     final String updatedMeasureAsJson =
-        "{\"id\": \"%s\",\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\", \"ecqmTitle\": \"%s\", \"model\":\"%s\"}"
+        "{\"id\": \"%s\",\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\", \"ecqmTitle\": \"%s\", \"model\":\"%s\",\"versionId\":\"%s\"}"
             .formatted(
                 priorMeasure.getId(),
                 priorMeasure.getMeasureName(),
                 existingMeasure.getCqlLibraryName(),
                 priorMeasure.getEcqmTitle(),
-                priorMeasure.getModel());
+                priorMeasure.getModel(),
+                priorMeasure.getVersionId());
     mockMvc
         .perform(
             put("/measures/" + priorMeasure.getId())
@@ -550,7 +564,7 @@ public class MeasureControllerMvcTest {
   @Test
   public void testNewMeasureNoUnderscore() throws Exception {
     final String measureAsJson =
-        "{ \"id\": \"m1234\", \"measureName\":\"A_Name\", \"cqlLibraryName\":\"ALib\" }";
+        "{ \"id\": \"m1234\", \"measureName\":\"A_Name\", \"cqlLibraryName\":\"ALib\", \"versionId\":\"versionId\" }";
     mockMvc
         .perform(
             put("/measures/m1234")
@@ -568,7 +582,7 @@ public class MeasureControllerMvcTest {
   @Test
   public void testNewMeasureFailsIfCqlLibaryNameStartsWithLowerCase() throws Exception {
     final String measureAsJson =
-        "{ \"measureName\":\"AName\", \"cqlLibraryName\":\"aLib\", \"ecqmTitle\":\"ecqmTitle\" }";
+        "{ \"measureName\":\"AName\", \"cqlLibraryName\":\"aLib\", \"ecqmTitle\":\"ecqmTitle\", \"versionId\":\"versionId\" }";
     mockMvc
         .perform(
             post("/measure")
@@ -586,7 +600,7 @@ public class MeasureControllerMvcTest {
   @Test
   public void testUpdateMeasureFailsIfCqlLibaryNameStartsWithLowerCase() throws Exception {
     final String measureAsJson =
-        "{ \"id\": \"m1234\", \"measureName\":\"AName\", \"cqlLibraryName\":\"aLib\", \"ecqmTitle\":\"ecqmTitle\" }";
+        "{ \"id\": \"m1234\", \"measureName\":\"AName\", \"cqlLibraryName\":\"aLib\", \"ecqmTitle\":\"ecqmTitle\", \"versionId\":\"versionId\" }";
     mockMvc
         .perform(
             put("/measures/m1234")
@@ -604,7 +618,7 @@ public class MeasureControllerMvcTest {
   @Test
   public void testNewMeasureFailsIfCqlLibraryNameHasQuotes() throws Exception {
     final String measureAsJson =
-        "{ \"measureName\":\"AName\", \"cqlLibraryName\":\"ALi''b\", \"ecqmTitle\":\"ecqmTitle\" }";
+        "{ \"measureName\":\"AName\", \"cqlLibraryName\":\"ALi''b\", \"ecqmTitle\":\"ecqmTitle\", \"versionId\":\"versionId\" }";
     mockMvc
         .perform(
             post("/measure")
@@ -622,7 +636,7 @@ public class MeasureControllerMvcTest {
   @Test
   public void testNewMeasureFailsIfCqlLibraryNameHasUnderscore() throws Exception {
     final String measureAsJson =
-        "{ \"measureName\":\"AName\", \"cqlLibraryName\":\"ALi_'b\", \"ecqmTitle\":\"ecqmTitle\" }";
+        "{ \"measureName\":\"AName\", \"cqlLibraryName\":\"ALi_'b\", \"ecqmTitle\":\"ecqmTitle\", \"versionId\":\"versionId\" }";
     mockMvc
         .perform(
             post("/measure")
@@ -650,13 +664,14 @@ public class MeasureControllerMvcTest {
     saved.setCqlLibraryName(libraryName);
     saved.setEcqmTitle(ecqmTitle);
     saved.setModel(MODEL);
+    saved.setVersionId(measureId);
 
     when(measureRepository.save(any(Measure.class))).thenReturn(saved);
     doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
 
     final String measureAsJson =
-        "{ \"measureName\":\"%s\", \"cqlLibraryName\":\"%s\", \"ecqmTitle\":\"%s\", \"model\":\"%s\"}"
-            .formatted(measureName, libraryName, ecqmTitle, MODEL);
+        "{ \"measureName\":\"%s\", \"cqlLibraryName\":\"%s\", \"ecqmTitle\":\"%s\", \"model\":\"%s\", \"versionId\":\"%s\"}"
+            .formatted(measureName, libraryName, ecqmTitle, MODEL, measureId);
     mockMvc
         .perform(
             post("/measure")
@@ -669,7 +684,8 @@ public class MeasureControllerMvcTest {
         .andExpect(jsonPath("$.cqlLibraryName").value(libraryName))
         .andExpect(jsonPath("$.ecqmTitle").value(ecqmTitle))
         .andExpect(jsonPath("$.model").value(MODEL))
-        .andExpect(jsonPath("$.id").value(measureId));
+        .andExpect(jsonPath("$.id").value(measureId))
+        .andExpect(jsonPath("$.versionId").value(measureId));
 
     verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
     verifyNoMoreInteractions(measureRepository);
@@ -689,13 +705,14 @@ public class MeasureControllerMvcTest {
     saved.setCqlLibraryName(libraryName);
     saved.setEcqmTitle(ecqmTitle);
     saved.setModel(MODEL);
+    saved.setVersionId(measureId);
 
     when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(saved));
     when(measureRepository.save(any(Measure.class))).thenReturn(saved);
 
     final String measureAsJson =
-        "{ \"id\": \"%s\", \"measureName\":\"%s\", \"cqlLibraryName\":\"%s\" , \"ecqmTitle\":\"%s\", \"model\":\"%s\"}"
-            .formatted(measureId, measureName, libraryName, ecqmTitle, MODEL);
+        "{ \"id\": \"%s\", \"measureName\":\"%s\", \"cqlLibraryName\":\"%s\" , \"ecqmTitle\":\"%s\", \"model\":\"%s\", \"versionId\":\"%s\"}"
+            .formatted(measureId, measureName, libraryName, ecqmTitle, MODEL, measureId);
     mockMvc
         .perform(
             put("/measures/" + measureId)
@@ -774,7 +791,7 @@ public class MeasureControllerMvcTest {
   @Test
   public void testNewMeasureFailsWithInvalidModelType() throws Exception {
     final String measureAsJson =
-        "{ \"measureName\":\"TestName\", \"cqlLibraryName\":\"TEST1\", \"model\":\"Test\" }";
+        "{ \"measureName\":\"TestName\", \"cqlLibraryName\":\"TEST1\", \"model\":\"Test\", \"versionId\":\"versionId\" }";
     mockMvc
         .perform(
             post("/measure")
