@@ -57,12 +57,12 @@ public class TestCaseControllerTest {
 
     doReturn(testCase)
         .when(testCaseService)
-        .persistTestCase(any(TestCase.class), any(String.class), any(String.class));
+        .persistTestCase(any(TestCase.class), any(String.class), any(String.class), anyString());
 
     TestCase newTestCase = new TestCase();
 
     ResponseEntity<TestCase> response =
-        controller.addTestCase(newTestCase, measure.getId(), principal);
+        controller.addTestCase(newTestCase, measure.getId(), "TOKEN", principal);
     assertNotNull(response.getBody());
     assertNotNull(response.getBody());
     assertEquals("TESTID", response.getBody().getId());
@@ -82,9 +82,9 @@ public class TestCaseControllerTest {
   void getTestCase() {
     doReturn(testCase)
         .when(testCaseService)
-        .getTestCase(any(String.class), any(String.class), anyBoolean());
+        .getTestCase(any(String.class), any(String.class), anyBoolean(), anyString());
     ResponseEntity<TestCase> response =
-        controller.getTestCase(measure.getId(), testCase.getId(), true);
+        controller.getTestCase(measure.getId(), testCase.getId(), true, "TOKEN");
     assertNotNull(response.getBody());
     assertNotNull(response.getBody());
     assertEquals("IPPPass", response.getBody().getName());
@@ -98,10 +98,10 @@ public class TestCaseControllerTest {
 
     doReturn(testCase)
         .when(testCaseService)
-        .updateTestCase(any(TestCase.class), any(String.class), any(String.class));
+        .updateTestCase(any(TestCase.class), any(String.class), any(String.class), anyString());
 
     ResponseEntity<TestCase> response =
-        controller.updateTestCase(testCase, measure.getId(), testCase.getId(), principal);
+        controller.updateTestCase(testCase, measure.getId(), testCase.getId(), "TOKEN", principal);
     assertNotNull(response.getBody());
     assertNotNull(response.getBody());
     assertEquals("IPPPass", response.getBody().getName());
@@ -109,7 +109,7 @@ public class TestCaseControllerTest {
 
     ArgumentCaptor<String> usernameCaptor = ArgumentCaptor.forClass(String.class);
     verify(testCaseService, times(1))
-        .updateTestCase(any(TestCase.class), anyString(), usernameCaptor.capture());
+        .updateTestCase(any(TestCase.class), anyString(), usernameCaptor.capture(), anyString());
     assertEquals("test.user2", usernameCaptor.getValue());
   }
 
@@ -147,13 +147,13 @@ public class TestCaseControllerTest {
 
     doReturn(testCase)
         .when(testCaseService)
-        .persistTestCase(any(TestCase.class), any(String.class), any(String.class));
+        .persistTestCase(any(TestCase.class), any(String.class), any(String.class), anyString());
 
     TestCase newTestCase = new TestCase();
     newTestCase.setDescription("TESTCASEDESCRIPTION<script>alert('Wufff!')</script>");
 
     ResponseEntity<TestCase> response =
-        controller.addTestCase(newTestCase, measure.getId(), principal);
+        controller.addTestCase(newTestCase, measure.getId(), "TOKEN", principal);
     assertEquals("TESTID", response.getBody().getId());
     assertEquals("TESTCASEDESCRIPTION", response.getBody().getDescription());
   }
@@ -165,12 +165,12 @@ public class TestCaseControllerTest {
 
     doReturn(testCase)
         .when(testCaseService)
-        .updateTestCase(any(TestCase.class), any(String.class), any(String.class));
+        .updateTestCase(any(TestCase.class), any(String.class), any(String.class), anyString());
 
     testCase.setDescription("TESTCASEDESCRIPTION<script>alert('Wufff!')</script>");
 
     ResponseEntity<TestCase> response =
-        controller.updateTestCase(testCase, measure.getId(), testCase.getId(), principal);
+        controller.updateTestCase(testCase, measure.getId(), testCase.getId(), "TOKEN", principal);
     assertNotNull(response.getBody());
     assertEquals("IPPPass", response.getBody().getName());
     assertEquals("BloodPressure>124", response.getBody().getSeries());
@@ -178,7 +178,7 @@ public class TestCaseControllerTest {
 
     ArgumentCaptor<String> usernameCaptor = ArgumentCaptor.forClass(String.class);
     verify(testCaseService, times(1))
-        .updateTestCase(any(TestCase.class), anyString(), usernameCaptor.capture());
+        .updateTestCase(any(TestCase.class), anyString(), usernameCaptor.capture(), anyString());
     assertEquals("test.user2", usernameCaptor.getValue());
   }
 }
