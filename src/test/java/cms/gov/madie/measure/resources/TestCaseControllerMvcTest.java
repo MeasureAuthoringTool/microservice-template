@@ -67,7 +67,8 @@ public class TestCaseControllerMvcTest {
 
   @Test
   public void testNewTestCase() throws Exception {
-    when(testCaseService.persistTestCase(any(TestCase.class), any(String.class), any(String.class)))
+    when(testCaseService.persistTestCase(
+            any(TestCase.class), any(String.class), any(String.class), anyString()))
         .thenReturn(testCase);
 
     mockMvc
@@ -75,6 +76,7 @@ public class TestCaseControllerMvcTest {
             MockMvcRequestBuilders.post("/measures/1234/test-cases")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
+                .header("Authorization", "test-okta")
                 .content(asJsonString(testCase))
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON))
@@ -87,7 +89,10 @@ public class TestCaseControllerMvcTest {
         .andExpect(jsonPath("$.json").value(TEST_JSON));
     verify(testCaseService, times(1))
         .persistTestCase(
-            testCaseCaptor.capture(), measureIdCaptor.capture(), usernameCaptor.capture());
+            testCaseCaptor.capture(),
+            measureIdCaptor.capture(),
+            usernameCaptor.capture(),
+            anyString());
     TestCase persistedTestCase = testCaseCaptor.getValue();
     assertEquals(TEST_DESCRIPTION, persistedTestCase.getDescription());
     assertEquals(TEST_JSON, persistedTestCase.getJson());
@@ -135,11 +140,16 @@ public class TestCaseControllerMvcTest {
 
   @Test
   public void getTestCase() throws Exception {
-    when(testCaseService.getTestCase(any(String.class), any(String.class), anyBoolean()))
+    when(testCaseService.getTestCase(
+            any(String.class), any(String.class), anyBoolean(), anyString()))
         .thenReturn(testCase, null);
 
     mockMvc
-        .perform(get("/measures/1234/test-cases/TESTID").with(user(TEST_USER_ID)).with(csrf()))
+        .perform(
+            get("/measures/1234/test-cases/TESTID")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .header("Authorization", "test-okta"))
         .andExpect(status().isOk())
         .andExpect(
             content()
@@ -151,7 +161,8 @@ public class TestCaseControllerMvcTest {
                         + "\"json\":\"{\\\"test\\\":\\\"test\\\"}\",\"hapiOperationOutcome\":null,"
                         + "\"groupPopulations\":null}"));
     verify(testCaseService, times(1))
-        .getTestCase(measureIdCaptor.capture(), testCaseIdCaptor.capture(), anyBoolean());
+        .getTestCase(
+            measureIdCaptor.capture(), testCaseIdCaptor.capture(), anyBoolean(), anyString());
     assertEquals("1234", measureIdCaptor.getValue());
     assertEquals("TESTID", testCaseIdCaptor.getValue());
   }
@@ -161,7 +172,8 @@ public class TestCaseControllerMvcTest {
     String modifiedDescription = "New Description";
     testCase.setDescription(modifiedDescription);
     testCase.setJson("{\"new\":\"json\"}");
-    when(testCaseService.updateTestCase(any(TestCase.class), any(String.class), any(String.class)))
+    when(testCaseService.updateTestCase(
+            any(TestCase.class), any(String.class), any(String.class), anyString()))
         .thenReturn(testCase);
 
     mockMvc
@@ -176,6 +188,7 @@ public class TestCaseControllerMvcTest {
                         + "\"lastModifiedBy\":\"TestUser2\","
                         + "\"json\":\"{\\\"new\\\":\\\"json\\\"}\"}")
                 .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "test-okta")
                 .with(user(TEST_USER_ID))
                 .with(csrf()))
         .andExpect(status().isOk())
@@ -192,7 +205,10 @@ public class TestCaseControllerMvcTest {
                         + "\"groupPopulations\":null}"));
     verify(testCaseService, times(1))
         .updateTestCase(
-            testCaseCaptor.capture(), measureIdCaptor.capture(), usernameCaptor.capture());
+            testCaseCaptor.capture(),
+            measureIdCaptor.capture(),
+            usernameCaptor.capture(),
+            anyString());
     assertEquals("1234", measureIdCaptor.getValue());
     assertEquals("TESTID", testCaseCaptor.getValue().getId());
     assertEquals(modifiedDescription, testCaseCaptor.getValue().getDescription());
