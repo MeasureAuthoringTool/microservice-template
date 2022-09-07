@@ -298,6 +298,50 @@ public class TestCaseControllerMvcTest {
   }
 
   @Test
+  public void testNewTestCaseTitleRequiredNull() throws Exception {
+    testCase.setTitle(null);
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.post("/measures/1234/test-cases")
+                    .with(user(TEST_USER_ID))
+                    .with(csrf())
+                    .content(asJsonString(testCase))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.validationErrors.title").value("Test Case Title is required."))
+            .andReturn();
+
+    String response = result.getResponse().getContentAsString();
+    assertTrue(response.contains("Test Case Title is required."));
+  }
+
+  @Test
+  public void testNewTestCaseTitleRequiredBlank() throws Exception {
+    testCase.setTitle("");
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.post("/measures/1234/test-cases")
+                    .with(user(TEST_USER_ID))
+                    .with(csrf())
+                    .content(asJsonString(testCase))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.validationErrors.title").value("Test Case Title is required."))
+            .andReturn();
+
+    String response = result.getResponse().getContentAsString();
+    assertTrue(response.contains("Test Case Title is required."));
+  }
+
+  @Test
   public void testNewTestCaseSeries251Characters() throws Exception {
     testCase.setSeries(TEXT_251_CHARACTORS);
 
@@ -367,6 +411,50 @@ public class TestCaseControllerMvcTest {
 
     String response = result.getResponse().getContentAsString();
     assertTrue(response.contains("Test Case Title can not be more than 250 characters."));
+  }
+
+  @Test
+  public void testUpdateTestCaseTitleRequiredNull() throws Exception {
+    testCase.setTitle(null);
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.put("/measures/1234/test-cases/TESTID")
+                    .with(user(TEST_USER_ID))
+                    .with(csrf())
+                    .content(asJsonString(testCase))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.validationErrors.title").value("Test Case Title is required."))
+            .andReturn();
+
+    String response = result.getResponse().getContentAsString();
+    assertTrue(response.contains("Test Case Title is required."));
+  }
+
+  @Test
+  public void testUpdateTestCaseTitleRequiredBlank() throws Exception {
+    testCase.setTitle("");
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.put("/measures/1234/test-cases/TESTID")
+                    .with(user(TEST_USER_ID))
+                    .with(csrf())
+                    .content(asJsonString(testCase))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.validationErrors.title").value("Test Case Title is required."))
+            .andReturn();
+
+    String response = result.getResponse().getContentAsString();
+    assertTrue(response.contains("Test Case Title is required."));
   }
 
   @Test
