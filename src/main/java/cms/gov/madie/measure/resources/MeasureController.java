@@ -127,6 +127,9 @@ public class MeasureController {
         measureService.checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
       }
 
+      measureService.checkVersionIdChanged(
+          measure.getVersionId(), persistedMeasure.get().getVersionId());
+
       if (isMeasurementPeriodChanged(measure, persistedMeasure.get())) {
         measureService.verifyAuthorization(username, persistedMeasure.get());
         measureService.validateMeasurementPeriod(

@@ -5,6 +5,7 @@ import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
+import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
@@ -862,5 +863,21 @@ public class MeasureServiceTest implements ResourceUtil {
     assertThrows(
         InvalidReturnTypeException.class,
         () -> measureService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+  }
+
+  @Test
+  public void testInvalidVersionIdThrowsExceptionForDifferentVersionIds() {
+    assertThrows(
+        InvalidVersionIdException.class,
+        () -> measureService.checkVersionIdChanged("versionId1", "versionId2"));
+  }
+
+  @Test
+  public void testInvalidVersionIdDoesNotThrowExceptionWhenMatch() {
+    try {
+      measureService.checkVersionIdChanged("versionId1", "versionId1");
+    } catch (Exception e) {
+      fail("Should not throw unexpected exception");
+    }
   }
 }

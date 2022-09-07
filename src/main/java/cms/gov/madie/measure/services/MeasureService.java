@@ -6,6 +6,7 @@ import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
 import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.InvalidMeasurementPeriodException;
+import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
@@ -256,6 +257,12 @@ public class MeasureService {
     } catch (Exception ex) {
       log.error("An error occurred while bundling measure {}", measure.getId(), ex);
       throw new BundleOperationException("Measure", measure.getId(), ex);
+    }
+  }
+
+  public void checkVersionIdChanged(String changedVersionId, String originalVersionId) {
+    if (!changedVersionId.equalsIgnoreCase(originalVersionId)) {
+      throw new InvalidVersionIdException(changedVersionId);
     }
   }
 }
