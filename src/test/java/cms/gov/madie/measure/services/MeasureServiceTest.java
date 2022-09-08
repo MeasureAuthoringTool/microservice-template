@@ -873,9 +873,34 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
+  public void testInvalidVersionThrowsExceptionWhenPassedInVersionIsNull() {
+    assertThrows(
+        InvalidVersionIdException.class,
+        () -> measureService.checkVersionIdChanged("", "versionId1"));
+  }
+
+  @Test
   public void testInvalidVersionIdDoesNotThrowExceptionWhenMatch() {
     try {
       measureService.checkVersionIdChanged("versionId1", "versionId1");
+    } catch (Exception e) {
+      fail("Should not throw unexpected exception");
+    }
+  }
+
+  @Test
+  public void testInvalidVersionIdDoesNotThrowExceptionWhenBothAreNull() {
+    try {
+      measureService.checkVersionIdChanged(null, null);
+    } catch (Exception e) {
+      fail("Should not throw unexpected exception");
+    }
+  }
+
+  @Test
+  public void testInvalidVersionIdDoesNotThrowExceptionWhenVersionIdFromDBIsNull() {
+    try {
+      measureService.checkVersionIdChanged("versionId1", null);
     } catch (Exception e) {
       fail("Should not throw unexpected exception");
     }

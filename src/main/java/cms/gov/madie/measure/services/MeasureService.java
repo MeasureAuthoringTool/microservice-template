@@ -261,8 +261,12 @@ public class MeasureService {
   }
 
   public void checkVersionIdChanged(String changedVersionId, String originalVersionId) {
-    if (!changedVersionId.equalsIgnoreCase(originalVersionId)) {
+    if (StringUtils.isBlank(changedVersionId) && !StringUtils.isBlank(originalVersionId)) {
       throw new InvalidVersionIdException(changedVersionId);
+    } else if (!StringUtils.isBlank(changedVersionId) && !StringUtils.isBlank(originalVersionId)) {
+      if (!changedVersionId.equalsIgnoreCase(originalVersionId)) {
+        throw new InvalidVersionIdException(changedVersionId);
+      }
     }
   }
 }
