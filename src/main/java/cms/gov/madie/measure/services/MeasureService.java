@@ -3,6 +3,7 @@ package cms.gov.madie.measure.services;
 import cms.gov.madie.measure.exceptions.BundleOperationException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
+import cms.gov.madie.measure.exceptions.InvalidCmsIdException;
 import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.InvalidMeasurementPeriodException;
@@ -263,6 +264,16 @@ public class MeasureService {
   public void checkVersionIdChanged(String changedVersionId, String originalVersionId) {
     if (!changedVersionId.equalsIgnoreCase(originalVersionId)) {
       throw new InvalidVersionIdException(changedVersionId);
+    }
+  }
+
+  public void checkCmsIdChanged(String changedCmsId, String originalCmsId) {
+    if (StringUtils.isBlank(changedCmsId) && !StringUtils.isBlank(originalCmsId)) {
+      throw new InvalidCmsIdException(changedCmsId);
+    } else if (!StringUtils.isBlank(changedCmsId) && !StringUtils.isBlank(originalCmsId)) {
+      if (!changedCmsId.equalsIgnoreCase(originalCmsId)) {
+        throw new InvalidCmsIdException(changedCmsId);
+      }
     }
   }
 }

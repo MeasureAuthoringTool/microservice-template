@@ -129,6 +129,7 @@ public class MeasureController {
 
       measureService.checkVersionIdChanged(
           measure.getVersionId(), persistedMeasure.get().getVersionId());
+      measureService.checkCmsIdChanged(measure.getCmsId(), persistedMeasure.get().getCmsId());
 
       if (isMeasurementPeriodChanged(measure, persistedMeasure.get())) {
         measureService.verifyAuthorization(username, persistedMeasure.get());
