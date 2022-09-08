@@ -274,10 +274,10 @@ public class MeasureService {
   public void checkCmsIdChanged(String changedCmsId, String originalCmsId) {
     if (StringUtils.isBlank(changedCmsId) && !StringUtils.isBlank(originalCmsId)) {
       throw new InvalidCmsIdException(changedCmsId);
-    } else if (!StringUtils.isBlank(changedCmsId) && !StringUtils.isBlank(originalCmsId)) {
-      if (!changedCmsId.equalsIgnoreCase(originalCmsId)) {
-        throw new InvalidCmsIdException(changedCmsId);
-      }
+    } else if (!StringUtils.isBlank(changedCmsId)
+        && !StringUtils.isBlank(originalCmsId)
+        && !changedCmsId.equalsIgnoreCase(originalCmsId)) {
+      throw new InvalidCmsIdException(changedCmsId);
     }
   }
 }
