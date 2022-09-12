@@ -2,6 +2,7 @@ package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.exceptions.BundleOperationException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
+import cms.gov.madie.measure.exceptions.InvalidCmsIdException;
 import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
@@ -901,6 +902,46 @@ public class MeasureServiceTest implements ResourceUtil {
   public void testInvalidVersionIdDoesNotThrowExceptionWhenVersionIdFromDBIsNull() {
     try {
       measureService.checkVersionIdChanged("versionId1", null);
+    } catch (Exception e) {
+      fail("Should not throw unexpected exception");
+    }
+  }
+
+  @Test
+  public void testInvalidCmsIdThrowsExceptionForDifferentCmsIds() {
+    assertThrows(
+        InvalidCmsIdException.class, () -> measureService.checkCmsIdChanged("cmsId1", "cmsId2"));
+  }
+
+  @Test
+  public void testInvalidCmsIdThrowsExceptionWhenPassedInCmsIdIsNull() {
+    assertThrows(InvalidCmsIdException.class, () -> measureService.checkCmsIdChanged("", "cmsId1"));
+  }
+
+  @Test
+  public void testInvalidCmsIdDoesNotThrowExceptionWhenMatch() {
+    try {
+      measureService.checkCmsIdChanged("cmsId1", "cmsId1");
+    } catch (Exception e) {
+      fail("Should not throw unexpected exception");
+    }
+  }
+
+  @Test
+  public void testInvalidCmsIdDoesNotThrowExceptionWhenBothAreNull() {
+    try {
+      measureService.checkCmsIdChanged(null, null);
+
+    } catch (Exception e) {
+      fail("Should not throw unexpected exception");
+    }
+  }
+
+  @Test
+  public void testInvalidCmsIdDoesNotThrowExceptionWhenCmsIdFromDBIsNull() {
+    try {
+      measureService.checkCmsIdChanged("cmsId1", null);
+
     } catch (Exception e) {
       fail("Should not throw unexpected exception");
     }
