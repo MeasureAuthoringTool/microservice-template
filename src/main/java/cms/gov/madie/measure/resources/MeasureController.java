@@ -5,7 +5,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.CollectionUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -154,19 +157,22 @@ public class MeasureController {
   }
 
   @PutMapping("/measures/{id}/grant")
+  @PreAuthorize("#request.getHeader('api-key') == #apiKey")
   public ResponseEntity<String> grantAccess(
+      HttpServletRequest request,
       @PathVariable("id") String id,
       @RequestParam(required = true, name = "userid") String userid,
+      @Value("${lambda-api-key}") String apiKey,
       Principal principal) {
     ResponseEntity<String> response = ResponseEntity.badRequest().body("Measure does not exist.");
-    final String username = principal.getName();
-    log.info("getMeasureId [{}] by user [{}]", id, username);
 
-    if (measureService.grantAccess(id, userid, username)) {
+    log.info("getMeasureId [{}] using apiKey ", id, "apikey");
+
+    if (measureService.grantAccess(id, userid, apiKey)) {
       response =
           ResponseEntity.ok()
               .body(String.format("%s granted access to Measure successfully.", userid));
-      actionLogService.logAction(id, Measure.class, ActionType.UPDATED, username);
+      actionLogService.logAction(id, Measure.class, ActionType.UPDATED, "apiKey");
     }
 
     return response;

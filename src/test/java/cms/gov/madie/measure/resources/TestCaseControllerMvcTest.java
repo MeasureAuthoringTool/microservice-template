@@ -38,18 +38,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 public class TestCaseControllerMvcTest {
 
-  @MockBean
-  private TestCaseService testCaseService;
-  @Autowired
-  private MockMvc mockMvc;
-  @Captor
-  ArgumentCaptor<TestCase> testCaseCaptor;
-  @Captor
-  ArgumentCaptor<String> measureIdCaptor;
-  @Captor
-  ArgumentCaptor<String> testCaseIdCaptor;
-  @Captor
-  ArgumentCaptor<String> usernameCaptor;
+  @MockBean private TestCaseService testCaseService;
+  @Autowired private MockMvc mockMvc;
+  @Captor ArgumentCaptor<TestCase> testCaseCaptor;
+  @Captor ArgumentCaptor<String> measureIdCaptor;
+  @Captor ArgumentCaptor<String> testCaseIdCaptor;
+  @Captor ArgumentCaptor<String> usernameCaptor;
 
   private TestCase testCase;
   private static final String TEST_ID = "TESTID";
@@ -78,7 +72,7 @@ public class TestCaseControllerMvcTest {
   @Test
   public void testNewTestCase() throws Exception {
     when(testCaseService.persistTestCase(
-        any(TestCase.class), any(String.class), any(String.class), anyString()))
+            any(TestCase.class), any(String.class), any(String.class), anyString()))
         .thenReturn(testCase);
 
     mockMvc
@@ -151,7 +145,7 @@ public class TestCaseControllerMvcTest {
   @Test
   public void getTestCase() throws Exception {
     when(testCaseService.getTestCase(
-        any(String.class), any(String.class), anyBoolean(), anyString()))
+            any(String.class), any(String.class), anyBoolean(), anyString()))
         .thenReturn(testCase, null);
 
     mockMvc
@@ -183,7 +177,7 @@ public class TestCaseControllerMvcTest {
     testCase.setDescription(modifiedDescription);
     testCase.setJson("{\"new\":\"json\"}");
     when(testCaseService.updateTestCase(
-        any(TestCase.class), any(String.class), any(String.class), anyString()))
+            any(TestCase.class), any(String.class), any(String.class), anyString()))
         .thenReturn(testCase);
 
     mockMvc
@@ -470,21 +464,23 @@ public class TestCaseControllerMvcTest {
   @Test
   public void testNewTestCaseAcceptsBooleanExpectedValues() throws Exception {
     testCase.setTitle("TC1");
-    testCase.setGroupPopulations(List.of(
-        TestCaseGroupPopulation.builder()
-            .scoring(MeasureScoring.COHORT.toString())
-            .populationBasis("Boolean")
-            .groupId("G123")
-            .populationValues(
-                List.of(
-                    TestCasePopulationValue.builder().name(PopulationType.INITIAL_POPULATION).expected(true).build()
-                )
-            )
-            .build()
-    ));
+
+    testCase.setGroupPopulations(
+        List.of(
+            TestCaseGroupPopulation.builder()
+                .scoring(MeasureScoring.COHORT.toString())
+                .populationBasis("Boolean")
+                .groupId("G123")
+                .populationValues(
+                    List.of(
+                        TestCasePopulationValue.builder()
+                            .name(PopulationType.INITIAL_POPULATION)
+                            .expected(true)
+                            .build()))
+                .build()));
 
     when(testCaseService.persistTestCase(
-        any(TestCase.class), any(String.class), any(String.class), anyString()))
+            any(TestCase.class), any(String.class), any(String.class), anyString()))
         .thenReturn(testCase);
 
     mockMvc
@@ -513,21 +509,23 @@ public class TestCaseControllerMvcTest {
   @Test
   public void testNewTestCaseAcceptsStringExpectedValues() throws Exception {
     testCase.setTitle("TC1");
-    testCase.setGroupPopulations(List.of(
-        TestCaseGroupPopulation.builder()
-            .scoring(MeasureScoring.COHORT.toString())
-            .populationBasis("Encounter")
-            .groupId("G123")
-            .populationValues(
-                List.of(
-                    TestCasePopulationValue.builder().name(PopulationType.INITIAL_POPULATION).expected("3").build()
-                )
-            )
-            .build()
-    ));
+
+    testCase.setGroupPopulations(
+        List.of(
+            TestCaseGroupPopulation.builder()
+                .scoring(MeasureScoring.COHORT.toString())
+                .populationBasis("Encounter")
+                .groupId("G123")
+                .populationValues(
+                    List.of(
+                        TestCasePopulationValue.builder()
+                            .name(PopulationType.INITIAL_POPULATION)
+                            .expected("3")
+                            .build()))
+                .build()));
 
     when(testCaseService.persistTestCase(
-        any(TestCase.class), any(String.class), any(String.class), anyString()))
+            any(TestCase.class), any(String.class), any(String.class), anyString()))
         .thenReturn(testCase);
 
     mockMvc

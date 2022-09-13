@@ -1,23 +1,35 @@
 package cms.gov.madie.measure.resources;
 
-import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
-import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
-import cms.gov.madie.measure.exceptions.InvalidCmsIdException;
-import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
-import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
-import cms.gov.madie.measure.repositories.MeasureRepository;
-import cms.gov.madie.measure.services.ActionLogService;
-import cms.gov.madie.measure.services.GroupService;
-import cms.gov.madie.measure.services.MeasureService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import gov.cms.madie.models.common.ActionType;
-import gov.cms.madie.models.common.ModelType;
-import gov.cms.madie.models.measure.Group;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.MeasureGroupTypes;
-import gov.cms.madie.models.measure.MeasureScoring;
-import gov.cms.madie.models.measure.Population;
-import gov.cms.madie.models.measure.PopulationType;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -32,24 +44,24 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Optional;
-
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
+import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
+import cms.gov.madie.measure.exceptions.InvalidCmsIdException;
+import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
+import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
+import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.services.ActionLogService;
+import cms.gov.madie.measure.services.GroupService;
+import cms.gov.madie.measure.services.MeasureService;
+import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.common.ModelType;
+import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureGroupTypes;
+import gov.cms.madie.models.measure.MeasureScoring;
+import gov.cms.madie.models.measure.Population;
+import gov.cms.madie.models.measure.PopulationType;
 
 @WebMvcTest({MeasureController.class})
 @ActiveProfiles("test")
@@ -64,6 +76,10 @@ public class MeasureControllerMvcTest {
   @Captor private ArgumentCaptor<Measure> measureArgumentCaptor;
 
   private static final String TEST_USER_ID = "test-okta-user-id-123";
+
+  private static final String TEST_API_KEY_HEADER = "api-key";
+  private static final String TEST_API_KEY_HEADER_VALUE = "9202c9fa";
+
   @Captor ArgumentCaptor<Group> groupCaptor;
   @Captor ArgumentCaptor<String> measureIdCaptor;
   @Captor ArgumentCaptor<String> usernameCaptor;
@@ -82,16 +98,17 @@ public class MeasureControllerMvcTest {
 
     doReturn(true)
         .when(measureService)
-        .grantAccess(eq(measureId), eq("akinsgre"), eq(TEST_USER_ID));
+        .grantAccess(eq(measureId), eq("akinsgre"), eq(TEST_API_KEY_HEADER_VALUE));
+
     mockMvc
         .perform(
             put("/measures/" + measureId + "/grant/?userid=akinsgre")
-                .with(user(TEST_USER_ID))
-                .with(csrf()))
+                .header(TEST_API_KEY_HEADER, TEST_API_KEY_HEADER_VALUE))
         .andExpect(status().isOk())
         .andExpect(content().string("akinsgre granted access to Measure successfully."));
 
-    verify(measureService, times(1)).grantAccess(eq(measureId), eq("akinsgre"), eq(TEST_USER_ID));
+    verify(measureService, times(1))
+        .grantAccess(eq(measureId), eq("akinsgre"), eq(TEST_API_KEY_HEADER_VALUE));
 
     verify(actionLogService, times(1))
         .logAction(
@@ -101,7 +118,7 @@ public class MeasureControllerMvcTest {
             performedByArgumentCaptor.capture());
     assertNotNull(targetIdArgumentCaptor.getValue());
     assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.UPDATED)));
-    assertThat(performedByArgumentCaptor.getValue(), is(equalTo(TEST_USER_ID)));
+    assertThat(performedByArgumentCaptor.getValue(), is(equalTo("apiKey")));
   }
 
   @Test
