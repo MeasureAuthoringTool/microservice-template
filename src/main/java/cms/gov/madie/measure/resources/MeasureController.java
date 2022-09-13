@@ -166,7 +166,7 @@ public class MeasureController {
       Principal principal) {
     ResponseEntity<String> response = ResponseEntity.badRequest().body("Measure does not exist.");
 
-    log.info("getMeasureId [{}] using apiKey ", id, apiKey);
+    log.info("getMeasureId [{}] using apiKey ", id, "apikey");
 
     if (measureService.grantAccess(id, userid, apiKey)) {
       response =

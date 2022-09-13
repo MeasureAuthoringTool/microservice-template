@@ -77,10 +77,8 @@ public class MeasureControllerMvcTest {
 
   private static final String TEST_USER_ID = "test-okta-user-id-123";
 
-  private static final String HARP_ID_HEADER_KEY = "harp-id";
-  private static final String HARP_ID_HEADER_VALUE = "XxYyZz";
-  private static final String LAMBDA_TEST_API_KEY_HEADER = "api-key";
-  private static final String LAMBDA_TEST_API_KEY_HEADER_VALUE = "9202c9fa";
+  private static final String TEST_API_KEY_HEADER = "api-key";
+  private static final String TEST_API_KEY_HEADER_VALUE = "9202c9fa";
 
   @Captor ArgumentCaptor<Group> groupCaptor;
   @Captor ArgumentCaptor<String> measureIdCaptor;
@@ -100,18 +98,17 @@ public class MeasureControllerMvcTest {
 
     doReturn(true)
         .when(measureService)
-        .grantAccess(eq(measureId), eq("akinsgre"), eq(LAMBDA_TEST_API_KEY_HEADER_VALUE));
+        .grantAccess(eq(measureId), eq("akinsgre"), eq(TEST_API_KEY_HEADER_VALUE));
 
     mockMvc
         .perform(
             put("/measures/" + measureId + "/grant/?userid=akinsgre")
-                .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
-                .header(HARP_ID_HEADER_KEY, HARP_ID_HEADER_VALUE))
+                .header(TEST_API_KEY_HEADER, TEST_API_KEY_HEADER_VALUE))
         .andExpect(status().isOk())
         .andExpect(content().string("akinsgre granted access to Measure successfully."));
 
     verify(measureService, times(1))
-        .grantAccess(eq(measureId), eq("akinsgre"), eq(LAMBDA_TEST_API_KEY_HEADER_VALUE));
+        .grantAccess(eq(measureId), eq("akinsgre"), eq(TEST_API_KEY_HEADER_VALUE));
 
     verify(actionLogService, times(1))
         .logAction(
@@ -121,7 +118,7 @@ public class MeasureControllerMvcTest {
             performedByArgumentCaptor.capture());
     assertNotNull(targetIdArgumentCaptor.getValue());
     assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.UPDATED)));
-    assertThat(performedByArgumentCaptor.getValue(), is(equalTo(LAMBDA_TEST_API_KEY_HEADER_VALUE)));
+    assertThat(performedByArgumentCaptor.getValue(), is(equalTo(TEST_API_KEY_HEADER_VALUE)));
   }
 
   @Test
