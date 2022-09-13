@@ -172,7 +172,7 @@ public class MeasureController {
       response =
           ResponseEntity.ok()
               .body(String.format("%s granted access to Measure successfully.", userid));
-      actionLogService.logAction(id, Measure.class, ActionType.UPDATED, apiKey);
+      actionLogService.logAction(id, Measure.class, ActionType.UPDATED, "apiKey");
     }
 
     return response;
