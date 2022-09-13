@@ -16,6 +16,7 @@ import cms.gov.madie.measure.exceptions.*;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.*;
 import cms.gov.madie.measure.services.ActionLogService;
+import cms.gov.madie.measure.services.GroupService;
 import cms.gov.madie.measure.services.MeasureService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,6 +37,7 @@ class MeasureControllerTest {
 
   @Mock private MeasureRepository repository;
   @Mock private MeasureService measureService;
+  @Mock private GroupService groupService;
   @Mock private ActionLogService actionLogService;
 
   @InjectMocks private MeasureController controller;
@@ -386,7 +388,7 @@ class MeasureControllerTest {
     when(principal.getName()).thenReturn("test.user");
 
     doReturn(group)
-        .when(measureService)
+        .when(groupService)
         .createOrUpdateGroup(any(Group.class), any(String.class), any(String.class));
 
     Group newGroup = new Group();
@@ -406,7 +408,7 @@ class MeasureControllerTest {
     Measure updatedMeasure =
         Measure.builder().id("measure-id").createdBy("test.user").groups(null).build();
     doReturn(updatedMeasure)
-        .when(measureService)
+        .when(groupService)
         .deleteMeasureGroup(any(String.class), any(String.class), any(String.class));
 
     ResponseEntity<Measure> output =
@@ -430,7 +432,7 @@ class MeasureControllerTest {
     when(principal.getName()).thenReturn("test.user");
 
     doReturn(group)
-        .when(measureService)
+        .when(groupService)
         .createOrUpdateGroup(any(Group.class), any(String.class), any(String.class));
 
     Group newGroup = new Group();
