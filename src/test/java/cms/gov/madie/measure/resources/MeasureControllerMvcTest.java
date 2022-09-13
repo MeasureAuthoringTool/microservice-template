@@ -48,7 +48,9 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
+import cms.gov.madie.measure.exceptions.InvalidCmsIdException;
 import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
+import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.GroupService;
@@ -609,6 +611,101 @@ public class MeasureControllerMvcTest {
     verify(measureRepository, times(1)).findById(eq(priorMeasure.getId()));
     verify(measureService, times(1))
         .checkDuplicateCqlLibraryName(eq(existingMeasure.getCqlLibraryName()));
+    verifyNoMoreInteractions(measureRepository);
+  }
+
+  @Test
+  public void testUpdateMeasureFailsIfInvalidVersionId() throws Exception {
+    Measure priorMeasure = new Measure();
+    priorMeasure.setId("id0");
+    priorMeasure.setMeasureName("TestMeasure");
+    priorMeasure.setCqlLibraryName("TestMeasureLibrary");
+    priorMeasure.setModel(MODEL);
+    priorMeasure.setEcqmTitle("ecqmTitle");
+    priorMeasure.setVersionId(priorMeasure.getId());
+    when(measureRepository.findById(eq(priorMeasure.getId())))
+        .thenReturn(Optional.of(priorMeasure));
+
+    Measure existingMeasure = new Measure();
+    existingMeasure.setId("id0");
+    existingMeasure.setMeasureName("ExistingMeasure");
+    existingMeasure.setCqlLibraryName("ExistingMeasureLibrary");
+    existingMeasure.setEcqmTitle("ecqmTitle");
+    existingMeasure.setVersionId("newVersionID");
+    doThrow(new InvalidVersionIdException("newVersionId"))
+        .when(measureService)
+        .checkVersionIdChanged(existingMeasure.getVersionId(), priorMeasure.getVersionId());
+
+    final String updatedMeasureAsJson =
+        "{\"id\": \"%s\",\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\", \"ecqmTitle\": \"%s\", \"model\":\"%s\",\"versionId\":\"%s\"}"
+            .formatted(
+                priorMeasure.getId(),
+                priorMeasure.getMeasureName(),
+                priorMeasure.getCqlLibraryName(),
+                priorMeasure.getEcqmTitle(),
+                priorMeasure.getModel(),
+                existingMeasure.getVersionId());
+    mockMvc
+        .perform(
+            put("/measures/" + priorMeasure.getId())
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(updatedMeasureAsJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+        .andExpect(status().isBadRequest());
+
+    verify(measureRepository, times(1)).findById(eq(priorMeasure.getId()));
+    verify(measureService, times(1))
+        .checkVersionIdChanged(existingMeasure.getVersionId(), priorMeasure.getVersionId());
+    verifyNoMoreInteractions(measureRepository);
+  }
+
+  @Test
+  public void testUpdateMeasureFailsIfInvalidCMSId() throws Exception {
+    Measure priorMeasure = new Measure();
+    priorMeasure.setId("id0");
+    priorMeasure.setMeasureName("TestMeasure");
+    priorMeasure.setCqlLibraryName("TestMeasureLibrary");
+    priorMeasure.setModel(MODEL);
+    priorMeasure.setEcqmTitle("ecqmTitle");
+    priorMeasure.setVersionId(priorMeasure.getId());
+    priorMeasure.setCmsId("testCmsId");
+    when(measureRepository.findById(eq(priorMeasure.getId())))
+        .thenReturn(Optional.of(priorMeasure));
+
+    Measure existingMeasure = new Measure();
+    existingMeasure.setId("id0");
+    existingMeasure.setMeasureName("ExistingMeasure");
+    existingMeasure.setCqlLibraryName("ExistingMeasureLibrary");
+    existingMeasure.setEcqmTitle("ecqmTitle");
+    existingMeasure.setVersionId(priorMeasure.getVersionId());
+    existingMeasure.setCmsId("newCmsId");
+    doThrow(new InvalidCmsIdException(existingMeasure.getCmsId()))
+        .when(measureService)
+        .checkCmsIdChanged(existingMeasure.getCmsId(), priorMeasure.getCmsId());
+
+    final String updatedMeasureAsJson =
+        "{\"id\": \"%s\",\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\", \"ecqmTitle\": \"%s\", \"model\":\"%s\",\"versionId\":\"%s\",\"cmsId\":\"%s\"}"
+            .formatted(
+                priorMeasure.getId(),
+                priorMeasure.getMeasureName(),
+                priorMeasure.getCqlLibraryName(),
+                priorMeasure.getEcqmTitle(),
+                priorMeasure.getModel(),
+                priorMeasure.getVersionId(),
+                existingMeasure.getCmsId());
+    mockMvc
+        .perform(
+            put("/measures/" + priorMeasure.getId())
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(updatedMeasureAsJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+        .andExpect(status().isBadRequest());
+
+    verify(measureRepository, times(1)).findById(eq(priorMeasure.getId()));
+    verify(measureService, times(1))
+        .checkCmsIdChanged(existingMeasure.getCmsId(), priorMeasure.getCmsId());
     verifyNoMoreInteractions(measureRepository);
   }
 
