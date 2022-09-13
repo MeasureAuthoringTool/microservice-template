@@ -16,7 +16,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +37,7 @@ import cms.gov.madie.measure.exceptions.BundleOperationException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.InvalidCmsIdException;
 import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
+import cms.gov.madie.measure.exceptions.InvalidMeasurementPeriodException;
 import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
@@ -157,6 +161,88 @@ public class MeasureServiceTest implements ResourceUtil {
       measureService.checkDeletionCredentials("user1", "user1");
     } catch (Exception e) {
       fail("Unexpected exception was thrown");
+    }
+  }
+
+  @Test
+  public void testValidateMeasureMeasurementPeriodWithNullStartDate() {
+    try {
+
+      LocalDate endDate = LocalDate.parse("2022-12-31");
+
+      assertThrows(
+          InvalidMeasurementPeriodException.class,
+          () ->
+              measureService.validateMeasurementPeriod(
+                  null,
+                  Date.from(endDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant())));
+
+    } catch (Exception e) {
+    }
+  }
+
+  @Test
+  public void testValidateMeasureMeasurementPeriodWithNullEndDate() {
+    try {
+      LocalDate startDate = LocalDate.parse("2022-01-01");
+
+      assertThrows(
+          InvalidMeasurementPeriodException.class,
+          () ->
+              measureService.validateMeasurementPeriod(
+                  Date.from(startDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant()),
+                  null));
+
+    } catch (Exception e) {
+    }
+  }
+
+  @Test
+  public void testValidateMeasureMeasurementPeriodTooEarlyDate() {
+    try {
+      LocalDate startDate = LocalDate.parse("0001-01-01");
+      LocalDate endDate = LocalDate.parse("2022-12-31");
+
+      assertThrows(
+          InvalidMeasurementPeriodException.class,
+          () ->
+              measureService.validateMeasurementPeriod(
+                  Date.from(startDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant()),
+                  Date.from(endDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant())));
+
+    } catch (Exception e) {
+    }
+  }
+
+  @Test
+  public void testValidateMeasureMeasurementPeriodFlippedDates() {
+    try {
+      LocalDate startDate = LocalDate.parse("2022-01-01");
+      LocalDate endDate = LocalDate.parse("2022-12-31");
+
+      assertThrows(
+          InvalidMeasurementPeriodException.class,
+          () ->
+              measureService.validateMeasurementPeriod(
+                  Date.from(endDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant()),
+                  Date.from(startDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant())));
+
+    } catch (Exception e) {
+    }
+  }
+
+  @Test
+  public void testValidateMeasureMeasurementPeriod() {
+    try {
+      LocalDate startDate = LocalDate.parse("2022-01-01");
+      LocalDate endDate = LocalDate.parse("2022-01-01");
+
+      measureService.validateMeasurementPeriod(
+          Date.from(startDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant()),
+          Date.from(endDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant()));
+
+    } catch (Exception e) {
+      fail(e.getMessage());
     }
   }
 
