@@ -118,7 +118,7 @@ public class MeasureControllerMvcTest {
             performedByArgumentCaptor.capture());
     assertNotNull(targetIdArgumentCaptor.getValue());
     assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.UPDATED)));
-    assertThat(performedByArgumentCaptor.getValue(), is(equalTo(TEST_API_KEY_HEADER_VALUE)));
+    assertThat(performedByArgumentCaptor.getValue(), is(equalTo("apiKey")));
   }
 
   @Test
