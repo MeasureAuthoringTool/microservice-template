@@ -30,7 +30,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.web.context.WebApplicationContext;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -62,6 +63,12 @@ public class MeasureControllerMvcTest {
   @Captor private ArgumentCaptor<Measure> measureArgumentCaptor;
 
   private static final String TEST_USER_ID = "test-okta-user-id-123";
+
+  private static final String HARP_ID_HEADER_KEY = "harp-id";
+  private static final String HARP_ID_HEADER_VALUE = "XxYyZz";
+  private static final String LAMBDA_TEST_API_KEY_HEADER = "api-key";
+  private static final String LAMBDA_TEST_API_KEY_HEADER_VALUE = "9202c9fa";
+
   @Captor ArgumentCaptor<Group> groupCaptor;
   @Captor ArgumentCaptor<String> measureIdCaptor;
   @Captor ArgumentCaptor<String> usernameCaptor;
@@ -80,16 +87,18 @@ public class MeasureControllerMvcTest {
 
     doReturn(true)
         .when(measureService)
-        .grantAccess(eq(measureId), eq("akinsgre"), eq(TEST_USER_ID));
+        .grantAccess(eq(measureId), eq("akinsgre"), eq(LAMBDA_TEST_API_KEY_HEADER_VALUE));
+
     mockMvc
         .perform(
-            put("/measures/" + measureId + "/grant/?userid=akinsgre")
-                .with(user(TEST_USER_ID))
-                .with(csrf()))
+            MockMvcRequestBuilders.put("/measures/" + measureId + "/grant/?userid=akinsgre")
+                .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
+                .header(HARP_ID_HEADER_KEY, HARP_ID_HEADER_VALUE))
         .andExpect(status().isOk())
         .andExpect(content().string("akinsgre granted access to Measure successfully."));
 
-    verify(measureService, times(1)).grantAccess(eq(measureId), eq("akinsgre"), eq(TEST_USER_ID));
+    verify(measureService, times(1))
+        .grantAccess(eq(measureId), eq("akinsgre"), eq(LAMBDA_TEST_API_KEY_HEADER_VALUE));
 
     verify(actionLogService, times(1))
         .logAction(
@@ -99,7 +108,7 @@ public class MeasureControllerMvcTest {
             performedByArgumentCaptor.capture());
     assertNotNull(targetIdArgumentCaptor.getValue());
     assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.UPDATED)));
-    assertThat(performedByArgumentCaptor.getValue(), is(equalTo(TEST_USER_ID)));
+    assertThat(performedByArgumentCaptor.getValue(), is(equalTo(LAMBDA_TEST_API_KEY_HEADER_VALUE)));
   }
 
   @Test

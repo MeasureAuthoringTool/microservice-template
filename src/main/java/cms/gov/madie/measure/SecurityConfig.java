@@ -10,9 +10,11 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-  private static final String[] CSRF_WHITELIST = {"/measure-transfer/**", "/log/**"};
+  private static final String[] CSRF_WHITELIST = {
+    "/measure-transfer/**", "/log/**", "/measures/**/grant"
+  };
   private static final String[] AUTH_WHITELIST = {
-    "/measure-transfer/**", "/actuator/**", "/log/**"
+    "/measure-transfer/**", "/actuator/**", "/log/**", "/measures/**/grant"
   };
 
   @Override
