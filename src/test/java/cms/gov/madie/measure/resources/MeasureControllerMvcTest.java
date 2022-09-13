@@ -5,6 +5,7 @@ import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
 import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.ActionLogService;
+import cms.gov.madie.measure.services.GroupService;
 import cms.gov.madie.measure.services.MeasureService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cms.madie.models.common.ActionType;
@@ -54,6 +55,7 @@ public class MeasureControllerMvcTest {
 
   @MockBean private MeasureRepository measureRepository;
   @MockBean private MeasureService measureService;
+  @MockBean private GroupService groupService;
   @MockBean private ActionLogService actionLogService;
 
   @Autowired private MockMvc mockMvc;
@@ -71,6 +73,34 @@ public class MeasureControllerMvcTest {
   @Captor private ArgumentCaptor<String> performedByArgumentCaptor;
 
   private static final String MODEL = ModelType.QI_CORE.toString();
+
+  @Test
+  public void testGrantAccess() throws Exception {
+    String measureId = "f225481c-921e-4015-9e14-e5046bfac9ff";
+
+    doReturn(true)
+        .when(measureService)
+        .grantAccess(eq(measureId), eq("akinsgre"), eq(TEST_USER_ID));
+    mockMvc
+        .perform(
+            put("/measures/" + measureId + "/grant/?userid=akinsgre")
+                .with(user(TEST_USER_ID))
+                .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(content().string("akinsgre granted access to Measure successfully."));
+
+    verify(measureService, times(1)).grantAccess(eq(measureId), eq("akinsgre"), eq(TEST_USER_ID));
+
+    verify(actionLogService, times(1))
+        .logAction(
+            targetIdArgumentCaptor.capture(),
+            targetClassArgumentCaptor.capture(),
+            actionTypeArgumentCaptor.capture(),
+            performedByArgumentCaptor.capture());
+    assertNotNull(targetIdArgumentCaptor.getValue());
+    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.UPDATED)));
+    assertThat(performedByArgumentCaptor.getValue(), is(equalTo(TEST_USER_ID)));
+  }
 
   @Test
   public void testUpdatePassed() throws Exception {
@@ -1041,7 +1071,7 @@ public class MeasureControllerMvcTest {
             .build();
     final String groupJson =
         "{\"scoring\":\"Cohort\",\"populations\":[{\"id\":\"id-1\",\"name\":\"initialPopulation\",\"definition\":\"Initial Population\"}],\"measureGroupTypes\":[\"Process\"],\"populationBasis\": \"Boolean\"}";
-    when(measureService.createOrUpdateGroup(any(Group.class), any(String.class), any(String.class)))
+    when(groupService.createOrUpdateGroup(any(Group.class), any(String.class), any(String.class)))
         .thenReturn(group);
 
     mockMvc
@@ -1055,7 +1085,7 @@ public class MeasureControllerMvcTest {
         .andDo(print())
         .andExpect(status().isCreated());
 
-    verify(measureService, times(1))
+    verify(groupService, times(1))
         .createOrUpdateGroup(
             groupCaptor.capture(), measureIdCaptor.capture(), usernameCaptor.capture());
 
@@ -1083,7 +1113,7 @@ public class MeasureControllerMvcTest {
 
     final String groupJson =
         "{\"id\":\"test-id\",\"scoring\":\"Cohort\",\"populations\":[{\"id\":\"id-2\",\"name\":\"initialPopulation\",\"definition\":\"FactorialOfFive\"}],\"measureGroupTypes\":[\"Process\"], \"populationBasis\": \"Boolean\"}";
-    when(measureService.createOrUpdateGroup(any(Group.class), any(String.class), any(String.class)))
+    when(groupService.createOrUpdateGroup(any(Group.class), any(String.class), any(String.class)))
         .thenReturn(group);
 
     mockMvc
@@ -1097,7 +1127,7 @@ public class MeasureControllerMvcTest {
         .andDo(print())
         .andExpect(status().isOk());
 
-    verify(measureService, times(1))
+    verify(groupService, times(1))
         .createOrUpdateGroup(
             groupCaptor.capture(), measureIdCaptor.capture(), usernameCaptor.capture());
 
@@ -1113,7 +1143,7 @@ public class MeasureControllerMvcTest {
   public void testUpdateGroupIfPopulationDefinitionReturnTypesAreInvalid() throws Exception {
     final String groupJson =
         "{\"id\":\"test-id\",\"scoring\":\"Cohort\",\"populations\":[{\"id\":\"id-2\",\"name\":\"initialPopulation\",\"definition\":\"FactorialOfFive\"}],\"measureGroupTypes\":[\"Process\"], \"populationBasis\": \"Boolean\"}";
-    when(measureService.createOrUpdateGroup(any(Group.class), any(String.class), any(String.class)))
+    when(groupService.createOrUpdateGroup(any(Group.class), any(String.class), any(String.class)))
         .thenThrow(new InvalidReturnTypeException("Initial Population"));
 
     mockMvc
@@ -1131,7 +1161,7 @@ public class MeasureControllerMvcTest {
                 .value(
                     "Return type for the CQL definition selected for the Initial Population does not match with population basis."));
 
-    verify(measureService, times(1))
+    verify(groupService, times(1))
         .createOrUpdateGroup(
             groupCaptor.capture(), measureIdCaptor.capture(), usernameCaptor.capture());
   }

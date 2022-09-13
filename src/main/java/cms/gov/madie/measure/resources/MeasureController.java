@@ -1,18 +1,11 @@
 package cms.gov.madie.measure.resources;
 
-import cms.gov.madie.measure.exceptions.InvalidIdException;
-import cms.gov.madie.measure.exceptions.InvalidResourceBundleStateException;
-import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import cms.gov.madie.measure.exceptions.UnauthorizedException;
-import cms.gov.madie.measure.repositories.MeasureRepository;
-import cms.gov.madie.measure.services.ActionLogService;
-import cms.gov.madie.measure.services.MeasureService;
-import com.nimbusds.oauth2.sdk.util.StringUtils;
-import gov.cms.madie.models.common.ActionType;
-import gov.cms.madie.models.measure.Group;
-import gov.cms.madie.models.measure.Measure;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.security.Principal;
+import java.time.Instant;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import javax.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,13 +24,20 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import javax.validation.Valid;
-import java.security.Principal;
-import java.time.Instant;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
+import cms.gov.madie.measure.exceptions.InvalidIdException;
+import cms.gov.madie.measure.exceptions.InvalidResourceBundleStateException;
+import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.exceptions.UnauthorizedException;
+import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.services.ActionLogService;
+import cms.gov.madie.measure.services.GroupService;
+import cms.gov.madie.measure.services.MeasureService;
+import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.Measure;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
@@ -46,6 +46,7 @@ public class MeasureController {
 
   private final MeasureRepository repository;
   private final MeasureService measureService;
+  private final GroupService groupService;
   private final ActionLogService actionLogService;
 
   @GetMapping("/measures")
@@ -152,6 +153,25 @@ public class MeasureController {
     return response;
   }
 
+  @PutMapping("/measures/{id}/grant")
+  public ResponseEntity<String> grantAccess(
+      @PathVariable("id") String id,
+      @RequestParam(required = true, name = "userid") String userid,
+      Principal principal) {
+    ResponseEntity<String> response = ResponseEntity.badRequest().body("Measure does not exist.");
+    final String username = principal.getName();
+    log.info("getMeasureId [{}] by user [{}]", id, username);
+
+    if (measureService.grantAccess(id, userid, username)) {
+      response =
+          ResponseEntity.ok()
+              .body(String.format("%s granted access to Measure successfully.", userid));
+      actionLogService.logAction(id, Measure.class, ActionType.UPDATED, username);
+    }
+
+    return response;
+  }
+
   @GetMapping("/measures/{measureId}/groups")
   public ResponseEntity<List<Group>> getGroups(@PathVariable String measureId) {
     return repository
@@ -168,14 +188,14 @@ public class MeasureController {
   public ResponseEntity<Group> createGroup(
       @RequestBody @Valid Group group, @PathVariable String measureId, Principal principal) {
     return ResponseEntity.status(HttpStatus.CREATED)
-        .body(measureService.createOrUpdateGroup(group, measureId, principal.getName()));
+        .body(groupService.createOrUpdateGroup(group, measureId, principal.getName()));
   }
 
   @PutMapping("/measures/{measureId}/groups")
   public ResponseEntity<Group> updateGroup(
       @RequestBody @Valid Group group, @PathVariable String measureId, Principal principal) {
     return ResponseEntity.ok(
-        measureService.createOrUpdateGroup(group, measureId, principal.getName()));
+        groupService.createOrUpdateGroup(group, measureId, principal.getName()));
   }
 
   @DeleteMapping("/measures/{measureId}/groups/{groupId}")
@@ -190,7 +210,7 @@ public class MeasureController {
         groupId,
         measureId);
     return ResponseEntity.ok(
-        measureService.deleteMeasureGroup(measureId, groupId, principal.getName()));
+        groupService.deleteMeasureGroup(measureId, groupId, principal.getName()));
   }
 
   @GetMapping(path = "/measures/{measureId}/bundles", produces = MediaType.APPLICATION_JSON_VALUE)
