@@ -146,9 +146,9 @@ public class MeasureControllerMvcTest {
     when(measureRepository.save(any(Measure.class))).thenReturn(mock(Measure.class));
 
     final String measureAsJson =
-        ("{\"id\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"ecqmTitle\":\"%s\", \"measureMetaData\": " +
-            "{ \"steward\" : \"%s\", \"description\" : \"%s\", \"copyright\" : \"%s\", \"disclaimer\" : \"%s\", \"rationale\" : \"%s\"," +
-            " \"developers\" : [\"%s\"], \"guidance\" : \"%s\"}, \"model\":\"%s\", \"versionId\":\"%s\"}")
+        ("{\"id\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"ecqmTitle\":\"%s\", \"measureMetaData\": "
+                + "{ \"steward\" : \"%s\", \"description\" : \"%s\", \"copyright\" : \"%s\", \"disclaimer\" : \"%s\", \"rationale\" : \"%s\","
+                + " \"developers\" : [\"%s\"], \"guidance\" : \"%s\"}, \"model\":\"%s\", \"versionId\":\"%s\"}")
             .formatted(
                 measureId,
                 measureName,
@@ -231,9 +231,9 @@ public class MeasureControllerMvcTest {
     when(measureRepository.save(any(Measure.class))).thenReturn(mock(Measure.class));
 
     final String measureAsJson =
-        ("{\"id\": \"%s\", \"active\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"ecqmTitle\":\"%s\", " +
-            "\"measureMetaData\": { \"steward\" : \"%s\", \"description\" : \"%s\", \"copyright\" : \"%s\", \"disclaimer\" : \"%s\", " +
-            "\"rationale\" : \"%s\", \"developers\" : [\"%s\"], \"guidance\" : \"%s\"}, \"model\":\"%s\", \"versionId\":\"%s\"}")
+        ("{\"id\": \"%s\", \"active\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"ecqmTitle\":\"%s\", "
+                + "\"measureMetaData\": { \"steward\" : \"%s\", \"description\" : \"%s\", \"copyright\" : \"%s\", \"disclaimer\" : \"%s\", "
+                + "\"rationale\" : \"%s\", \"developers\" : [\"%s\"], \"guidance\" : \"%s\"}, \"model\":\"%s\", \"versionId\":\"%s\"}")
             .formatted(
                 measureId,
                 false,
