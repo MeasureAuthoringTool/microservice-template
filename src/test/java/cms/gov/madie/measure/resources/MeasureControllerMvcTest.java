@@ -130,7 +130,7 @@ public class MeasureControllerMvcTest {
     String copyright = "TestCopyright";
     String disclaimer = "TestDisclaimer";
     String rationale = "TestRationale";
-    String author = "TestAuthor";
+    List<String> developers = List.of("TestDeveloper");
     String guidance = "TestGuidance";
     String libName = "TestLib";
     String ecqmTitle = "ecqmTitle";
@@ -157,7 +157,7 @@ public class MeasureControllerMvcTest {
                 copyright,
                 disclaimer,
                 rationale,
-                author,
+                developers,
                 guidance,
                 MODEL,
                 measureId);
@@ -182,7 +182,7 @@ public class MeasureControllerMvcTest {
     assertEquals(copyright, savedMeasure.getMeasureMetaData().getCopyright());
     assertEquals(disclaimer, savedMeasure.getMeasureMetaData().getDisclaimer());
     assertEquals(rationale, savedMeasure.getMeasureMetaData().getRationale());
-    assertEquals(author, savedMeasure.getMeasureMetaData().getAuthor());
+    assertEquals(developers, savedMeasure.getMeasureMetaData().getDevelopers());
     assertEquals(guidance, savedMeasure.getMeasureMetaData().getGuidance());
     assertEquals(MODEL, savedMeasure.getModel());
     assertEquals(measureId, savedMeasure.getVersionId());
@@ -212,7 +212,7 @@ public class MeasureControllerMvcTest {
     String copyright = "TestCopyright";
     String disclaimer = "TestDisclaimer";
     String rationale = "TestRationale";
-    String author = "TestAuthor";
+    List<String> developers = List.of("TestDeveloper");
     String guidance = "TestGuidance";
     String libName = "TestLib";
     String ecqmTitle = "ecqmTitle";
@@ -241,7 +241,7 @@ public class MeasureControllerMvcTest {
                 copyright,
                 disclaimer,
                 rationale,
-                author,
+                developers,
                 guidance,
                 MODEL,
                 measureId);
@@ -266,7 +266,7 @@ public class MeasureControllerMvcTest {
     assertEquals(copyright, savedMeasure.getMeasureMetaData().getCopyright());
     assertEquals(disclaimer, savedMeasure.getMeasureMetaData().getDisclaimer());
     assertEquals(rationale, savedMeasure.getMeasureMetaData().getRationale());
-    assertEquals(author, savedMeasure.getMeasureMetaData().getAuthor());
+    assertEquals(developers, savedMeasure.getMeasureMetaData().getDevelopers());
     assertEquals(guidance, savedMeasure.getMeasureMetaData().getGuidance());
     assertEquals(MODEL, savedMeasure.getModel());
     assertNotNull(savedMeasure.getLastModifiedAt());
@@ -533,6 +533,8 @@ public class MeasureControllerMvcTest {
     String ecqmTitle = "ecqmTitle";
     existing.setEcqmTitle(ecqmTitle);
     existing.setVersionId(measureId);
+    existing.getMeasureMetaData().setSteward("TestSteward");
+    existing.getMeasureMetaData().setDevelopers(List.of("TestDeveloper"));
 
     doThrow(
             new DuplicateKeyException(
