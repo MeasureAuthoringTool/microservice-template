@@ -130,7 +130,7 @@ public class MeasureControllerMvcTest {
     String copyright = "TestCopyright";
     String disclaimer = "TestDisclaimer";
     String rationale = "TestRationale";
-    String author = "TestAuthor";
+    List<String> developers = List.of("TestDeveloper");
     String guidance = "TestGuidance";
     String libName = "TestLib";
     String ecqmTitle = "ecqmTitle";
@@ -146,7 +146,9 @@ public class MeasureControllerMvcTest {
     when(measureRepository.save(any(Measure.class))).thenReturn(mock(Measure.class));
 
     final String measureAsJson =
-        "{\"id\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"ecqmTitle\":\"%s\", \"measureMetaData\": { \"steward\" : \"%s\", \"description\" : \"%s\", \"copyright\" : \"%s\", \"disclaimer\" : \"%s\", \"rationale\" : \"%s\", \"author\" : \"%s\", \"guidance\" : \"%s\"}, \"model\":\"%s\", \"versionId\":\"%s\"}"
+        ("{\"id\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"ecqmTitle\":\"%s\", \"measureMetaData\": "
+                + "{ \"steward\" : \"%s\", \"description\" : \"%s\", \"copyright\" : \"%s\", \"disclaimer\" : \"%s\", \"rationale\" : \"%s\","
+                + " \"developers\" : [\"%s\"], \"guidance\" : \"%s\"}, \"model\":\"%s\", \"versionId\":\"%s\"}")
             .formatted(
                 measureId,
                 measureName,
@@ -157,7 +159,7 @@ public class MeasureControllerMvcTest {
                 copyright,
                 disclaimer,
                 rationale,
-                author,
+                developers.get(0),
                 guidance,
                 MODEL,
                 measureId);
@@ -182,7 +184,7 @@ public class MeasureControllerMvcTest {
     assertEquals(copyright, savedMeasure.getMeasureMetaData().getCopyright());
     assertEquals(disclaimer, savedMeasure.getMeasureMetaData().getDisclaimer());
     assertEquals(rationale, savedMeasure.getMeasureMetaData().getRationale());
-    assertEquals(author, savedMeasure.getMeasureMetaData().getAuthor());
+    assertEquals(developers.get(0), savedMeasure.getMeasureMetaData().getDevelopers().get(0));
     assertEquals(guidance, savedMeasure.getMeasureMetaData().getGuidance());
     assertEquals(MODEL, savedMeasure.getModel());
     assertEquals(measureId, savedMeasure.getVersionId());
@@ -212,7 +214,7 @@ public class MeasureControllerMvcTest {
     String copyright = "TestCopyright";
     String disclaimer = "TestDisclaimer";
     String rationale = "TestRationale";
-    String author = "TestAuthor";
+    List<String> developers = List.of("TestDeveloper");
     String guidance = "TestGuidance";
     String libName = "TestLib";
     String ecqmTitle = "ecqmTitle";
@@ -229,7 +231,9 @@ public class MeasureControllerMvcTest {
     when(measureRepository.save(any(Measure.class))).thenReturn(mock(Measure.class));
 
     final String measureAsJson =
-        "{\"id\": \"%s\", \"active\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"ecqmTitle\":\"%s\", \"measureMetaData\": { \"steward\" : \"%s\", \"description\" : \"%s\", \"copyright\" : \"%s\", \"disclaimer\" : \"%s\", \"rationale\" : \"%s\", \"author\" : \"%s\", \"guidance\" : \"%s\"}, \"model\":\"%s\", \"versionId\":\"%s\"}"
+        ("{\"id\": \"%s\", \"active\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"ecqmTitle\":\"%s\", "
+                + "\"measureMetaData\": { \"steward\" : \"%s\", \"description\" : \"%s\", \"copyright\" : \"%s\", \"disclaimer\" : \"%s\", "
+                + "\"rationale\" : \"%s\", \"developers\" : [\"%s\"], \"guidance\" : \"%s\"}, \"model\":\"%s\", \"versionId\":\"%s\"}")
             .formatted(
                 measureId,
                 false,
@@ -241,7 +245,7 @@ public class MeasureControllerMvcTest {
                 copyright,
                 disclaimer,
                 rationale,
-                author,
+                developers.get(0),
                 guidance,
                 MODEL,
                 measureId);
@@ -266,7 +270,7 @@ public class MeasureControllerMvcTest {
     assertEquals(copyright, savedMeasure.getMeasureMetaData().getCopyright());
     assertEquals(disclaimer, savedMeasure.getMeasureMetaData().getDisclaimer());
     assertEquals(rationale, savedMeasure.getMeasureMetaData().getRationale());
-    assertEquals(author, savedMeasure.getMeasureMetaData().getAuthor());
+    assertEquals(developers.get(0), savedMeasure.getMeasureMetaData().getDevelopers().get(0));
     assertEquals(guidance, savedMeasure.getMeasureMetaData().getGuidance());
     assertEquals(MODEL, savedMeasure.getModel());
     assertNotNull(savedMeasure.getLastModifiedAt());
@@ -533,6 +537,8 @@ public class MeasureControllerMvcTest {
     String ecqmTitle = "ecqmTitle";
     existing.setEcqmTitle(ecqmTitle);
     existing.setVersionId(measureId);
+    existing.getMeasureMetaData().setSteward("TestSteward");
+    existing.getMeasureMetaData().setDevelopers(List.of("TestDeveloper"));
 
     doThrow(
             new DuplicateKeyException(
