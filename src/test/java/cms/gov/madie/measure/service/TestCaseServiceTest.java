@@ -800,12 +800,8 @@ public class TestCaseServiceTest {
                                     .id("Pop1")
                                     .expected("3")
                                     .name(PopulationType.INITIAL_POPULATION)
-                                    .build()
-                            )
-                        )
-                        .build()
-                )
-            )
+                                    .build()))
+                        .build()))
             .build();
     List<TestCase> testCases = new ArrayList<>();
     testCases.add(originalTestCase);
@@ -831,17 +827,15 @@ public class TestCaseServiceTest {
                                     .id("Pop1")
                                     .expected("5")
                                     .name(PopulationType.INITIAL_POPULATION)
-                                    .build()
-                            )
-                        )
-                        .build()
-                )
-            )
+                                    .build()))
+                        .build()))
             .build();
 
-    assertThrows(UnauthorizedException.class, () ->
-        testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user", "TOKEN")
-    );
+    assertThrows(
+        UnauthorizedException.class,
+        () ->
+            testCaseService.updateTestCase(
+                updatingTestCase, measure.getId(), "test.user", "TOKEN"));
   }
 
   @Test
@@ -867,16 +861,13 @@ public class TestCaseServiceTest {
                                     .id("Pop1")
                                     .expected("5")
                                     .name(PopulationType.INITIAL_POPULATION)
-                                    .build()
-                            )
-                        )
-                        .build()
-                )
-            )
+                                    .build()))
+                        .build()))
             .build();
 
-    boolean output = testCaseService.validateUserPermissions(originalTestCase,
-        updatingTestCase, "test.user5", "test.user6");
+    boolean output =
+        testCaseService.validateUserPermissions(
+            originalTestCase, updatingTestCase, "test.user5", "test.user6");
     assertThat(output, is(true));
   }
 
@@ -901,18 +892,15 @@ public class TestCaseServiceTest {
                                     .id("Pop1")
                                     .expected("5")
                                     .name(PopulationType.INITIAL_POPULATION)
-                                    .build()
-                            )
-                        )
-                        .build()
-                )
-            )
+                                    .build()))
+                        .build()))
             .build();
 
     TestCase updatingTestCase = null;
 
-    boolean output = testCaseService.validateUserPermissions(originalTestCase,
-        updatingTestCase, "test.user5", "test.user6");
+    boolean output =
+        testCaseService.validateUserPermissions(
+            originalTestCase, updatingTestCase, "test.user5", "test.user6");
     assertThat(output, is(true));
   }
 
@@ -948,16 +936,13 @@ public class TestCaseServiceTest {
                                     .id("Pop1")
                                     .expected("5")
                                     .name(PopulationType.INITIAL_POPULATION)
-                                    .build()
-                            )
-                        )
-                        .build()
-                )
-            )
+                                    .build()))
+                        .build()))
             .build();
 
-    boolean output = testCaseService.validateUserPermissions(originalTestCase,
-        updatingTestCase, "test.user5", "test.user5");
+    boolean output =
+        testCaseService.validateUserPermissions(
+            originalTestCase, updatingTestCase, "test.user5", "test.user5");
     assertThat(output, is(true));
   }
 
@@ -993,16 +978,13 @@ public class TestCaseServiceTest {
                                     .id("Pop1")
                                     .expected("5")
                                     .name(PopulationType.INITIAL_POPULATION)
-                                    .build()
-                            )
-                        )
-                        .build()
-                )
-            )
+                                    .build()))
+                        .build()))
             .build();
 
-    boolean output = testCaseService.validateUserPermissions(originalTestCase,
-        updatingTestCase, "test.user5", "test.user5");
+    boolean output =
+        testCaseService.validateUserPermissions(
+            originalTestCase, updatingTestCase, "test.user5", "test.user5");
     assertThat(output, is(true));
   }
 
@@ -1028,12 +1010,8 @@ public class TestCaseServiceTest {
                                     .id("Pop1")
                                     .expected("3")
                                     .name(PopulationType.INITIAL_POPULATION)
-                                    .build()
-                            )
-                        )
-                        .build()
-                )
-            )
+                                    .build()))
+                        .build()))
             .build();
 
     TestCase updatingTestCase =
@@ -1046,8 +1024,9 @@ public class TestCaseServiceTest {
             .groupPopulations(null)
             .build();
 
-    boolean output = testCaseService.validateUserPermissions(originalTestCase,
-        updatingTestCase, "test.user5", "test.user5");
+    boolean output =
+        testCaseService.validateUserPermissions(
+            originalTestCase, updatingTestCase, "test.user5", "test.user5");
     assertThat(output, is(true));
   }
 
@@ -1073,12 +1052,8 @@ public class TestCaseServiceTest {
                                     .id("Pop1")
                                     .expected("3")
                                     .name(PopulationType.INITIAL_POPULATION)
-                                    .build()
-                            )
-                        )
-                        .build()
-                )
-            )
+                                    .build()))
+                        .build()))
             .build();
 
     TestCase updatingTestCase =
@@ -1091,8 +1066,9 @@ public class TestCaseServiceTest {
             .groupPopulations(List.of())
             .build();
 
-    boolean output = testCaseService.validateUserPermissions(originalTestCase,
-        updatingTestCase, "test.user5", "test.user5");
+    boolean output =
+        testCaseService.validateUserPermissions(
+            originalTestCase, updatingTestCase, "test.user5", "test.user5");
     assertThat(output, is(true));
   }
 
@@ -1118,12 +1094,8 @@ public class TestCaseServiceTest {
                                     .id("Pop1")
                                     .expected("3")
                                     .name(PopulationType.INITIAL_POPULATION)
-                                    .build()
-                            )
-                        )
-                        .build()
-                )
-            )
+                                    .build()))
+                        .build()))
             .build();
 
     TestCase updatingTestCase =
@@ -1145,16 +1117,13 @@ public class TestCaseServiceTest {
                                     .id("Pop1")
                                     .expected("5")
                                     .name(PopulationType.INITIAL_POPULATION)
-                                    .build()
-                            )
-                        )
-                        .build()
-                )
-            )
+                                    .build()))
+                        .build()))
             .build();
 
-    boolean output = testCaseService.validateUserPermissions(originalTestCase,
-        updatingTestCase, "test.user5", "test.user5");
+    boolean output =
+        testCaseService.validateUserPermissions(
+            originalTestCase, updatingTestCase, "test.user5", "test.user5");
     assertThat(output, is(true));
   }
 
@@ -1180,12 +1149,8 @@ public class TestCaseServiceTest {
                                     .id("Pop1")
                                     .expected("3")
                                     .name(PopulationType.INITIAL_POPULATION)
-                                    .build()
-                            )
-                        )
-                        .build()
-                )
-            )
+                                    .build()))
+                        .build()))
             .build();
 
     TestCase updatingTestCase =
@@ -1202,13 +1167,12 @@ public class TestCaseServiceTest {
                         .populationBasis("Encounter")
                         .scoring("Cohort")
                         .populationValues(List.of())
-                        .build()
-                )
-            )
+                        .build()))
             .build();
 
-    boolean output = testCaseService.validateUserPermissions(originalTestCase,
-        updatingTestCase, "original.user", "test.user5");
+    boolean output =
+        testCaseService.validateUserPermissions(
+            originalTestCase, updatingTestCase, "original.user", "test.user5");
     assertThat(output, is(false));
   }
 
@@ -1241,13 +1205,12 @@ public class TestCaseServiceTest {
                         .populationBasis("Encounter")
                         .scoring("Cohort")
                         .populationValues(List.of())
-                        .build()
-                )
-            )
+                        .build()))
             .build();
 
-    boolean output = testCaseService.validateUserPermissions(originalTestCase,
-        updatingTestCase, "original.user", "test.user5");
+    boolean output =
+        testCaseService.validateUserPermissions(
+            originalTestCase, updatingTestCase, "original.user", "test.user5");
     assertThat(output, is(true));
   }
 
@@ -1273,12 +1236,8 @@ public class TestCaseServiceTest {
                                     .id("Pop1")
                                     .expected("3")
                                     .name(PopulationType.INITIAL_POPULATION)
-                                    .build()
-                            )
-                        )
-                        .build()
-                )
-            )
+                                    .build()))
+                        .build()))
             .build();
 
     TestCase updatingTestCase =
@@ -1300,16 +1259,13 @@ public class TestCaseServiceTest {
                                     .id("Pop1")
                                     .expected("3")
                                     .name(PopulationType.INITIAL_POPULATION)
-                                    .build()
-                            )
-                        )
-                        .build()
-                )
-            )
+                                    .build()))
+                        .build()))
             .build();
 
-    boolean output = testCaseService.validateUserPermissions(originalTestCase,
-        updatingTestCase, "original.user", "test.user5");
+    boolean output =
+        testCaseService.validateUserPermissions(
+            originalTestCase, updatingTestCase, "original.user", "test.user5");
     assertThat(output, is(true));
   }
 
@@ -1345,12 +1301,8 @@ public class TestCaseServiceTest {
                                     .id("Pop1")
                                     .expected("2")
                                     .name(PopulationType.NUMERATOR)
-                                    .build()
-                            )
-                        )
-                        .build()
-                )
-            )
+                                    .build()))
+                        .build()))
             .build();
 
     TestCase updatingTestCase =
@@ -1387,16 +1339,13 @@ public class TestCaseServiceTest {
                                     .id("Pop1")
                                     .expected("1")
                                     .name(PopulationType.NUMERATOR_EXCLUSION)
-                                    .build()
-                            )
-                        )
-                        .build()
-                )
-            )
+                                    .build()))
+                        .build()))
             .build();
 
-    boolean output = testCaseService.validateUserPermissions(originalTestCase,
-        updatingTestCase, "original.user", "test.user5");
+    boolean output =
+        testCaseService.validateUserPermissions(
+            originalTestCase, updatingTestCase, "original.user", "test.user5");
     assertThat(output, is(false));
   }
 
@@ -1422,12 +1371,8 @@ public class TestCaseServiceTest {
                                     .id("Pop1")
                                     .expected("3")
                                     .name(PopulationType.INITIAL_POPULATION)
-                                    .build()
-                            )
-                        )
-                        .build()
-                )
-            )
+                                    .build()))
+                        .build()))
             .build();
 
     TestCase updatingTestCase =
@@ -1449,16 +1394,13 @@ public class TestCaseServiceTest {
                                     .id("Pop1")
                                     .expected("3")
                                     .name(PopulationType.INITIAL_POPULATION)
-                                    .build()
-                            )
-                        )
-                        .build()
-                )
-            )
+                                    .build()))
+                        .build()))
             .build();
 
-    boolean output = testCaseService.validateUserPermissions(originalTestCase,
-        updatingTestCase, "original.user", "test.user5");
+    boolean output =
+        testCaseService.validateUserPermissions(
+            originalTestCase, updatingTestCase, "original.user", "test.user5");
     assertThat(output, is(true));
   }
 }
