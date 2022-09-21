@@ -33,13 +33,13 @@ public class OrganizationController {
     return ResponseEntity.status(HttpStatus.OK).body(organizationList);
   }
 
-  @PostMapping("/organizations")
-  public ResponseEntity<List<Organization>> addOrganizations(
-      @RequestBody List<Organization> organizations, Principal principal) {
-    final String userName = principal.getName();
-    log.info("User [{}] is attempting to add new organizations", organizations);
-    List<Organization> organizationList = organizationRepository.saveAll(organizations);
-    log.info("User [{}] successfully added new organizations", userName);
-    return ResponseEntity.status(HttpStatus.CREATED).body(organizationList);
-  }
+  //  @PostMapping("/organizations")
+  //  public ResponseEntity<List<Organization>> addOrganizations(
+  //      @RequestBody List<Organization> organizations, Principal principal) {
+  //    final String userName = principal.getName();
+  //    log.info("User [{}] is attempting to add new organizations", organizations);
+  //    List<Organization> organizationList = organizationRepository.saveAll(organizations);
+  //    log.info("User [{}] successfully added new organizations", userName);
+  //    return ResponseEntity.status(HttpStatus.CREATED).body(organizationList);
+  //  }
 }
