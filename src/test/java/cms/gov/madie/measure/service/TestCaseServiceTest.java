@@ -635,6 +635,36 @@ public class TestCaseServiceTest {
   }
 
   @Test
+  public void testValidateTestCaseJsonHandlesNullTestCase() {
+    HapiOperationOutcome output =
+        testCaseService.validateTestCaseJson(null, "TOKEN");
+    assertThat(output, is(nullValue()));
+  }
+
+  @Test
+  public void testValidateTestCaseJsonHandlesNullJson() {
+    TestCase tc = new TestCase();
+    tc.setJson(null);
+    HapiOperationOutcome output =
+        testCaseService.validateTestCaseJson(tc, "TOKEN");
+    assertThat(output, is(nullValue()));
+  }
+
+  @Test
+  public void testValidateTestCaseJsonHandlesEmptyJson() {
+    HapiOperationOutcome output =
+        testCaseService.validateTestCaseJson(TestCase.builder().json("").build(), "TOKEN");
+    assertThat(output, is(nullValue()));
+  }
+
+  @Test
+  public void testValidateTestCaseJsonHandlesWhitespaceJson() {
+    HapiOperationOutcome output =
+        testCaseService.validateTestCaseJson(TestCase.builder().json("   ").build(), "TOKEN");
+    assertThat(output, is(nullValue()));
+  }
+
+  @Test
   public void testValidateTestCaseJsonHandlesGenericException() {
     when(fhirServicesClient.validateBundle(anyString(), anyString()))
         .thenThrow(new RuntimeException("something bad happened!"));
