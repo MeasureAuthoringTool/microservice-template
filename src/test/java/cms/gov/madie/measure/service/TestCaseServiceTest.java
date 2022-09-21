@@ -2,6 +2,7 @@ package cms.gov.madie.measure.service;
 
 import cms.gov.madie.measure.HapiFhirConfig;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.FhirServicesClient;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -10,9 +11,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.HapiOperationOutcome;
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.PopulationType;
 import gov.cms.madie.models.measure.TestCase;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.TestCaseService;
+import gov.cms.madie.models.measure.TestCaseGroupPopulation;
+import gov.cms.madie.models.measure.TestCasePopulationValue;
 import org.assertj.core.util.Lists;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
@@ -772,5 +776,689 @@ public class TestCaseServiceTest {
     assertThat(output.getCode(), is(equalTo(200)));
     assertThat(output.getMessage(), is(nullValue()));
     assertThat(output.isSuccessful(), is(true));
+  }
+
+  @Test
+  public void testUpdateTestCaseThrowsAccessPermissionViolation() {
+    Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
+    TestCase originalTestCase =
+        testCase
+            .toBuilder()
+            .createdAt(createdAt)
+            .createdBy("test.user5")
+            .lastModifiedAt(createdAt)
+            .lastModifiedBy("test.user5")
+            .groupPopulations(
+                List.of(
+                    TestCaseGroupPopulation.builder()
+                        .groupId("Group1ID")
+                        .populationBasis("Encounter")
+                        .scoring("Cohort")
+                        .populationValues(
+                            List.of(
+                                TestCasePopulationValue.builder()
+                                    .id("Pop1")
+                                    .expected("3")
+                                    .name(PopulationType.INITIAL_POPULATION)
+                                    .build()
+                            )
+                        )
+                        .build()
+                )
+            )
+            .build();
+    List<TestCase> testCases = new ArrayList<>();
+    testCases.add(originalTestCase);
+    Measure originalMeasure = measure.toBuilder().testCases(testCases).build();
+    Mockito.doReturn(Optional.of(originalMeasure)).when(repository).findById(any(String.class));
+
+    TestCase updatingTestCase =
+        testCase
+            .toBuilder()
+            .createdBy(originalTestCase.getCreatedBy())
+            .createdAt(Instant.now())
+            .title("UpdatedTitle")
+            .series("UpdatedSeries")
+            .groupPopulations(
+                List.of(
+                    TestCaseGroupPopulation.builder()
+                        .groupId("Group1ID")
+                        .populationBasis("Encounter")
+                        .scoring("Cohort")
+                        .populationValues(
+                            List.of(
+                                TestCasePopulationValue.builder()
+                                    .id("Pop1")
+                                    .expected("5")
+                                    .name(PopulationType.INITIAL_POPULATION)
+                                    .build()
+                            )
+                        )
+                        .build()
+                )
+            )
+            .build();
+
+    assertThrows(UnauthorizedException.class, () ->
+        testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user", "TOKEN")
+    );
+  }
+
+  @Test
+  public void testValidateUserPermissionsReturnsTrueForNewTestCase() {
+    TestCase originalTestCase = null;
+
+    TestCase updatingTestCase =
+        testCase
+            .toBuilder()
+            .createdBy("test.user5")
+            .createdAt(Instant.now())
+            .title("UpdatedTitle")
+            .series("UpdatedSeries")
+            .groupPopulations(
+                List.of(
+                    TestCaseGroupPopulation.builder()
+                        .groupId("Group1ID")
+                        .populationBasis("Encounter")
+                        .scoring("Cohort")
+                        .populationValues(
+                            List.of(
+                                TestCasePopulationValue.builder()
+                                    .id("Pop1")
+                                    .expected("5")
+                                    .name(PopulationType.INITIAL_POPULATION)
+                                    .build()
+                            )
+                        )
+                        .build()
+                )
+            )
+            .build();
+
+    boolean output = testCaseService.validateUserPermissions(originalTestCase,
+        updatingTestCase, "test.user5", "test.user6");
+    assertThat(output, is(true));
+  }
+
+  @Test
+  public void testValidateUserPermissionsReturnsTrueForRemovingTestCase() {
+    TestCase originalTestCase =
+        testCase
+            .toBuilder()
+            .createdBy("test.user5")
+            .createdAt(Instant.now())
+            .title("UpdatedTitle")
+            .series("UpdatedSeries")
+            .groupPopulations(
+                List.of(
+                    TestCaseGroupPopulation.builder()
+                        .groupId("Group1ID")
+                        .populationBasis("Encounter")
+                        .scoring("Cohort")
+                        .populationValues(
+                            List.of(
+                                TestCasePopulationValue.builder()
+                                    .id("Pop1")
+                                    .expected("5")
+                                    .name(PopulationType.INITIAL_POPULATION)
+                                    .build()
+                            )
+                        )
+                        .build()
+                )
+            )
+            .build();
+
+    TestCase updatingTestCase = null;
+
+    boolean output = testCaseService.validateUserPermissions(originalTestCase,
+        updatingTestCase, "test.user5", "test.user6");
+    assertThat(output, is(true));
+  }
+
+  @Test
+  public void testValidateUserPermissionsReturnsTrueForNullExistingPopulations() {
+    Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
+    TestCase originalTestCase =
+        testCase
+            .toBuilder()
+            .createdAt(createdAt)
+            .createdBy("test.user5")
+            .lastModifiedAt(createdAt)
+            .lastModifiedBy("test.user5")
+            .groupPopulations(null)
+            .build();
+
+    TestCase updatingTestCase =
+        testCase
+            .toBuilder()
+            .createdBy(originalTestCase.getCreatedBy())
+            .createdAt(Instant.now())
+            .title("UpdatedTitle")
+            .series("UpdatedSeries")
+            .groupPopulations(
+                List.of(
+                    TestCaseGroupPopulation.builder()
+                        .groupId("Group1ID")
+                        .populationBasis("Encounter")
+                        .scoring("Cohort")
+                        .populationValues(
+                            List.of(
+                                TestCasePopulationValue.builder()
+                                    .id("Pop1")
+                                    .expected("5")
+                                    .name(PopulationType.INITIAL_POPULATION)
+                                    .build()
+                            )
+                        )
+                        .build()
+                )
+            )
+            .build();
+
+    boolean output = testCaseService.validateUserPermissions(originalTestCase,
+        updatingTestCase, "test.user5", "test.user5");
+    assertThat(output, is(true));
+  }
+
+  @Test
+  public void testValidateUserPermissionsReturnsTrueForEmptyExistingPopulations() {
+    Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
+    TestCase originalTestCase =
+        testCase
+            .toBuilder()
+            .createdAt(createdAt)
+            .createdBy("test.user5")
+            .lastModifiedAt(createdAt)
+            .lastModifiedBy("test.user5")
+            .groupPopulations(List.of())
+            .build();
+
+    TestCase updatingTestCase =
+        testCase
+            .toBuilder()
+            .createdBy(originalTestCase.getCreatedBy())
+            .createdAt(Instant.now())
+            .title("UpdatedTitle")
+            .series("UpdatedSeries")
+            .groupPopulations(
+                List.of(
+                    TestCaseGroupPopulation.builder()
+                        .groupId("Group1ID")
+                        .populationBasis("Encounter")
+                        .scoring("Cohort")
+                        .populationValues(
+                            List.of(
+                                TestCasePopulationValue.builder()
+                                    .id("Pop1")
+                                    .expected("5")
+                                    .name(PopulationType.INITIAL_POPULATION)
+                                    .build()
+                            )
+                        )
+                        .build()
+                )
+            )
+            .build();
+
+    boolean output = testCaseService.validateUserPermissions(originalTestCase,
+        updatingTestCase, "test.user5", "test.user5");
+    assertThat(output, is(true));
+  }
+
+  @Test
+  public void testValidateUserPermissionsReturnsTrueForNullUpdatingPopulations() {
+    Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
+    TestCase originalTestCase =
+        testCase
+            .toBuilder()
+            .createdAt(createdAt)
+            .createdBy("test.user5")
+            .lastModifiedAt(createdAt)
+            .lastModifiedBy("test.user5")
+            .groupPopulations(
+                List.of(
+                    TestCaseGroupPopulation.builder()
+                        .groupId("Group1ID")
+                        .populationBasis("Encounter")
+                        .scoring("Cohort")
+                        .populationValues(
+                            List.of(
+                                TestCasePopulationValue.builder()
+                                    .id("Pop1")
+                                    .expected("3")
+                                    .name(PopulationType.INITIAL_POPULATION)
+                                    .build()
+                            )
+                        )
+                        .build()
+                )
+            )
+            .build();
+
+    TestCase updatingTestCase =
+        testCase
+            .toBuilder()
+            .createdBy(originalTestCase.getCreatedBy())
+            .createdAt(Instant.now())
+            .title("UpdatedTitle")
+            .series("UpdatedSeries")
+            .groupPopulations(null)
+            .build();
+
+    boolean output = testCaseService.validateUserPermissions(originalTestCase,
+        updatingTestCase, "test.user5", "test.user5");
+    assertThat(output, is(true));
+  }
+
+  @Test
+  public void testValidateUserPermissionsReturnsTrueForEmptyUpdatingPopulations() {
+    Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
+    TestCase originalTestCase =
+        testCase
+            .toBuilder()
+            .createdAt(createdAt)
+            .createdBy("test.user5")
+            .lastModifiedAt(createdAt)
+            .lastModifiedBy("test.user5")
+            .groupPopulations(
+                List.of(
+                    TestCaseGroupPopulation.builder()
+                        .groupId("Group1ID")
+                        .populationBasis("Encounter")
+                        .scoring("Cohort")
+                        .populationValues(
+                            List.of(
+                                TestCasePopulationValue.builder()
+                                    .id("Pop1")
+                                    .expected("3")
+                                    .name(PopulationType.INITIAL_POPULATION)
+                                    .build()
+                            )
+                        )
+                        .build()
+                )
+            )
+            .build();
+
+    TestCase updatingTestCase =
+        testCase
+            .toBuilder()
+            .createdBy(originalTestCase.getCreatedBy())
+            .createdAt(Instant.now())
+            .title("UpdatedTitle")
+            .series("UpdatedSeries")
+            .groupPopulations(List.of())
+            .build();
+
+    boolean output = testCaseService.validateUserPermissions(originalTestCase,
+        updatingTestCase, "test.user5", "test.user5");
+    assertThat(output, is(true));
+  }
+
+  @Test
+  public void testValidateUserPermissionsReturnsTrueForOwner() {
+    Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
+    TestCase originalTestCase =
+        testCase
+            .toBuilder()
+            .createdAt(createdAt)
+            .createdBy("test.user5")
+            .lastModifiedAt(createdAt)
+            .lastModifiedBy("test.user5")
+            .groupPopulations(
+                List.of(
+                    TestCaseGroupPopulation.builder()
+                        .groupId("Group1ID")
+                        .populationBasis("Encounter")
+                        .scoring("Cohort")
+                        .populationValues(
+                            List.of(
+                                TestCasePopulationValue.builder()
+                                    .id("Pop1")
+                                    .expected("3")
+                                    .name(PopulationType.INITIAL_POPULATION)
+                                    .build()
+                            )
+                        )
+                        .build()
+                )
+            )
+            .build();
+
+    TestCase updatingTestCase =
+        testCase
+            .toBuilder()
+            .createdBy(originalTestCase.getCreatedBy())
+            .createdAt(Instant.now())
+            .title("UpdatedTitle")
+            .series("UpdatedSeries")
+            .groupPopulations(
+                List.of(
+                    TestCaseGroupPopulation.builder()
+                        .groupId("Group1ID")
+                        .populationBasis("Encounter")
+                        .scoring("Cohort")
+                        .populationValues(
+                            List.of(
+                                TestCasePopulationValue.builder()
+                                    .id("Pop1")
+                                    .expected("5")
+                                    .name(PopulationType.INITIAL_POPULATION)
+                                    .build()
+                            )
+                        )
+                        .build()
+                )
+            )
+            .build();
+
+    boolean output = testCaseService.validateUserPermissions(originalTestCase,
+        updatingTestCase, "test.user5", "test.user5");
+    assertThat(output, is(true));
+  }
+
+  @Test
+  public void testValidateUserPermissionsReturnsFalseForNonOwnerRemovingValues() {
+    Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
+    TestCase originalTestCase =
+        testCase
+            .toBuilder()
+            .createdAt(createdAt)
+            .createdBy("test.user5")
+            .lastModifiedAt(createdAt)
+            .lastModifiedBy("test.user5")
+            .groupPopulations(
+                List.of(
+                    TestCaseGroupPopulation.builder()
+                        .groupId("Group1ID")
+                        .populationBasis("Encounter")
+                        .scoring("Cohort")
+                        .populationValues(
+                            List.of(
+                                TestCasePopulationValue.builder()
+                                    .id("Pop1")
+                                    .expected("3")
+                                    .name(PopulationType.INITIAL_POPULATION)
+                                    .build()
+                            )
+                        )
+                        .build()
+                )
+            )
+            .build();
+
+    TestCase updatingTestCase =
+        testCase
+            .toBuilder()
+            .createdBy(originalTestCase.getCreatedBy())
+            .createdAt(Instant.now())
+            .title("UpdatedTitle")
+            .series("UpdatedSeries")
+            .groupPopulations(
+                List.of(
+                    TestCaseGroupPopulation.builder()
+                        .groupId("Group1ID")
+                        .populationBasis("Encounter")
+                        .scoring("Cohort")
+                        .populationValues(List.of())
+                        .build()
+                )
+            )
+            .build();
+
+    boolean output = testCaseService.validateUserPermissions(originalTestCase,
+        updatingTestCase, "original.user", "test.user5");
+    assertThat(output, is(false));
+  }
+
+  @Test
+  public void testValidateUserPermissionsReturnsFalseForNullGroupInList() {
+    Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
+    var pops = new ArrayList<TestCaseGroupPopulation>();
+    pops.add(null);
+    TestCase originalTestCase =
+        testCase
+            .toBuilder()
+            .createdAt(createdAt)
+            .createdBy("test.user5")
+            .lastModifiedAt(createdAt)
+            .lastModifiedBy("test.user5")
+            .groupPopulations(pops)
+            .build();
+
+    TestCase updatingTestCase =
+        testCase
+            .toBuilder()
+            .createdBy(originalTestCase.getCreatedBy())
+            .createdAt(Instant.now())
+            .title("UpdatedTitle")
+            .series("UpdatedSeries")
+            .groupPopulations(
+                List.of(
+                    TestCaseGroupPopulation.builder()
+                        .groupId("Group1ID")
+                        .populationBasis("Encounter")
+                        .scoring("Cohort")
+                        .populationValues(List.of())
+                        .build()
+                )
+            )
+            .build();
+
+    boolean output = testCaseService.validateUserPermissions(originalTestCase,
+        updatingTestCase, "original.user", "test.user5");
+    assertThat(output, is(true));
+  }
+
+  @Test
+  public void testValidateUserPermissionsReturnsTrueForNonOwnerNoUpdatingPopMatch() {
+    Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
+    TestCase originalTestCase =
+        testCase
+            .toBuilder()
+            .createdAt(createdAt)
+            .createdBy("test.user5")
+            .lastModifiedAt(createdAt)
+            .lastModifiedBy("test.user5")
+            .groupPopulations(
+                List.of(
+                    TestCaseGroupPopulation.builder()
+                        .groupId("Group1ID")
+                        .populationBasis("Encounter")
+                        .scoring("Cohort")
+                        .populationValues(
+                            List.of(
+                                TestCasePopulationValue.builder()
+                                    .id("Pop1")
+                                    .expected("3")
+                                    .name(PopulationType.INITIAL_POPULATION)
+                                    .build()
+                            )
+                        )
+                        .build()
+                )
+            )
+            .build();
+
+    TestCase updatingTestCase =
+        testCase
+            .toBuilder()
+            .createdBy(originalTestCase.getCreatedBy())
+            .createdAt(Instant.now())
+            .title("UpdatedTitle")
+            .series("UpdatedSeries")
+            .groupPopulations(
+                List.of(
+                    TestCaseGroupPopulation.builder()
+                        .groupId("Group2ID")
+                        .populationBasis("Encounter")
+                        .scoring("Cohort")
+                        .populationValues(
+                            List.of(
+                                TestCasePopulationValue.builder()
+                                    .id("Pop1")
+                                    .expected("3")
+                                    .name(PopulationType.INITIAL_POPULATION)
+                                    .build()
+                            )
+                        )
+                        .build()
+                )
+            )
+            .build();
+
+    boolean output = testCaseService.validateUserPermissions(originalTestCase,
+        updatingTestCase, "original.user", "test.user5");
+    assertThat(output, is(true));
+  }
+
+  @Test
+  public void testValidateUserPermissionsReturnsTrueForNonOwnerNewPop() {
+    Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
+    TestCase originalTestCase =
+        testCase
+            .toBuilder()
+            .createdAt(createdAt)
+            .createdBy("test.user5")
+            .lastModifiedAt(createdAt)
+            .lastModifiedBy("test.user5")
+            .groupPopulations(
+                List.of(
+                    TestCaseGroupPopulation.builder()
+                        .groupId("Group1ID")
+                        .populationBasis("Encounter")
+                        .scoring("Ratio")
+                        .populationValues(
+                            List.of(
+                                TestCasePopulationValue.builder()
+                                    .id("Pop1")
+                                    .expected("3")
+                                    .name(PopulationType.INITIAL_POPULATION)
+                                    .build(),
+                                TestCasePopulationValue.builder()
+                                    .id("Pop1")
+                                    .expected("1")
+                                    .name(PopulationType.DENOMINATOR)
+                                    .build(),
+                                TestCasePopulationValue.builder()
+                                    .id("Pop1")
+                                    .expected("2")
+                                    .name(PopulationType.NUMERATOR)
+                                    .build()
+                            )
+                        )
+                        .build()
+                )
+            )
+            .build();
+
+    TestCase updatingTestCase =
+        testCase
+            .toBuilder()
+            .createdBy(originalTestCase.getCreatedBy())
+            .createdAt(Instant.now())
+            .title("UpdatedTitle")
+            .series("UpdatedSeries")
+            .groupPopulations(
+                List.of(
+                    TestCaseGroupPopulation.builder()
+                        .groupId("Group1ID")
+                        .populationBasis("Encounter")
+                        .scoring("Cohort")
+                        .populationValues(
+                            List.of(
+                                TestCasePopulationValue.builder()
+                                    .id("Pop1")
+                                    .expected("3")
+                                    .name(PopulationType.INITIAL_POPULATION)
+                                    .build(),
+                                TestCasePopulationValue.builder()
+                                    .id("Pop1")
+                                    .expected("1")
+                                    .name(PopulationType.DENOMINATOR)
+                                    .build(),
+                                TestCasePopulationValue.builder()
+                                    .id("Pop1")
+                                    .expected("2")
+                                    .name(PopulationType.NUMERATOR)
+                                    .build(),
+                                TestCasePopulationValue.builder()
+                                    .id("Pop1")
+                                    .expected("1")
+                                    .name(PopulationType.NUMERATOR_EXCLUSION)
+                                    .build()
+                            )
+                        )
+                        .build()
+                )
+            )
+            .build();
+
+    boolean output = testCaseService.validateUserPermissions(originalTestCase,
+        updatingTestCase, "original.user", "test.user5");
+    assertThat(output, is(false));
+  }
+
+  @Test
+  public void testValidateUserPermissionsReturnsTrueForNonOwnerUnchanged() {
+    Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
+    TestCase originalTestCase =
+        testCase
+            .toBuilder()
+            .createdAt(createdAt)
+            .createdBy("test.user5")
+            .lastModifiedAt(createdAt)
+            .lastModifiedBy("test.user5")
+            .groupPopulations(
+                List.of(
+                    TestCaseGroupPopulation.builder()
+                        .groupId("Group1ID")
+                        .populationBasis("Encounter")
+                        .scoring("Cohort")
+                        .populationValues(
+                            List.of(
+                                TestCasePopulationValue.builder()
+                                    .id("Pop1")
+                                    .expected("3")
+                                    .name(PopulationType.INITIAL_POPULATION)
+                                    .build()
+                            )
+                        )
+                        .build()
+                )
+            )
+            .build();
+
+    TestCase updatingTestCase =
+        testCase
+            .toBuilder()
+            .createdBy(originalTestCase.getCreatedBy())
+            .createdAt(Instant.now())
+            .title("UpdatedTitle")
+            .series("UpdatedSeries")
+            .groupPopulations(
+                List.of(
+                    TestCaseGroupPopulation.builder()
+                        .groupId("Group1ID")
+                        .populationBasis("Encounter")
+                        .scoring("Cohort")
+                        .populationValues(
+                            List.of(
+                                TestCasePopulationValue.builder()
+                                    .id("Pop1")
+                                    .expected("3")
+                                    .name(PopulationType.INITIAL_POPULATION)
+                                    .build()
+                            )
+                        )
+                        .build()
+                )
+            )
+            .build();
+
+    boolean output = testCaseService.validateUserPermissions(originalTestCase,
+        updatingTestCase, "original.user", "test.user5");
+    assertThat(output, is(true));
   }
 }

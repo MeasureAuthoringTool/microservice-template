@@ -2,6 +2,7 @@ package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.HapiFhirConfig;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.HapiOperationOutcome;
 import gov.cms.madie.models.measure.Measure;
@@ -9,7 +10,9 @@ import gov.cms.madie.models.measure.TestCase;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -101,6 +104,9 @@ public class TestCaseService {
         measure.getTestCases().stream().filter(p -> p.getId().equals(testCase.getId())).findFirst();
     if (existingOpt.isPresent()) {
       TestCase existing = existingOpt.get();
+      if(!validateUserPermissions(existing, testCase, measure.getCreatedBy(), username)) {
+        throw new UnauthorizedException("TestCase", testCase.getId(), username);
+      }
       testCase.setCreatedAt(existing.getCreatedAt());
       testCase.setCreatedBy(existing.getCreatedBy());
       testCase.setResourceUri(existing.getResourceUri());
@@ -124,6 +130,51 @@ public class TestCaseService {
         testCase.getId(),
         measureId);
     return testCase;
+  }
+
+  /**
+   * Returns false if any of the following are detected:
+   *  - non-owner tries to modify test case expected values
+   * @param existingTestCase Current state of test case to update, pulled from the database
+   * @param updatingTestCase Test case with updated values
+   * @param measureCreator Owner/Creator of measure
+   * @param username User attempting to update the test case
+   * @return true if user permissions are valid, false otherwise
+   */
+  public boolean validateUserPermissions(TestCase existingTestCase, TestCase updatingTestCase,
+                                         final String measureCreator, final String username) {
+    // TODO: check how strict the permission validation should be. Currently in line with ACs from MAT-4666
+    if (existingTestCase == null || updatingTestCase == null ||
+        existingTestCase.getGroupPopulations() == null || existingTestCase.getGroupPopulations().isEmpty() ||
+        updatingTestCase.getGroupPopulations() == null || updatingTestCase.getGroupPopulations().isEmpty()) {
+      return true;
+    }
+    // Owner can change anything - separated out for clarity
+    if (StringUtils.equals(measureCreator, username)) {
+      return true;
+    }
+    // verify that expected values are not changing
+    List<TestCaseGroupPopulation> existingGroupPopulations = existingTestCase.getGroupPopulations();
+    for (var existingGroupPop : existingGroupPopulations) {
+      if (existingGroupPop == null) {
+        continue;
+      }
+      TestCaseGroupPopulation updatingGroupPop = updatingTestCase.getGroupPopulations()
+          .stream()
+          .filter(tcgp -> StringUtils.equals(existingGroupPop.getGroupId(), tcgp.getGroupId()))
+          .findFirst()
+          .orElse(null);
+      if (updatingGroupPop != null) {
+        if ((updatingGroupPop.getPopulationValues() == null && existingGroupPop.getPopulationValues() != null) ||
+            (updatingGroupPop.getPopulationValues() != null && existingGroupPop.getPopulationValues() == null) ||
+            (updatingGroupPop.getPopulationValues().size() != existingGroupPop.getPopulationValues().size()) ||
+            !updatingGroupPop.getPopulationValues().containsAll(existingGroupPop.getPopulationValues())
+        ) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   public TestCase getTestCase(
@@ -167,6 +218,10 @@ public class TestCaseService {
   }
 
   public HapiOperationOutcome validateTestCaseJson(TestCase testCase, String accessToken) {
+    if (testCase == null || StringUtils.isBlank(testCase.getJson())) {
+      return null;
+    }
+
     try {
       ResponseEntity<String> output =
           fhirServicesClient.validateBundle(testCase.getJson(), accessToken);
