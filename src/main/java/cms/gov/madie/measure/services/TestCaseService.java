@@ -172,14 +172,14 @@ public class TestCaseService {
               .filter(tcgp -> StringUtils.equals(existingGroupPop.getGroupId(), tcgp.getGroupId()))
               .findFirst()
               .orElse(null);
-      if (valuesChanged(existingGroupPop, updatingGroupPop)) {
+      if (testCaseGroupPopulationValuesChanged(existingGroupPop, updatingGroupPop)) {
         return false;
       }
     }
     return true;
   }
 
-  private boolean valuesChanged(
+  private boolean testCaseGroupPopulationValuesChanged(
       TestCaseGroupPopulation existingGroupPop, TestCaseGroupPopulation updatingGroupPop) {
     return (updatingGroupPop != null
         && ((updatingGroupPop.getPopulationValues() == null

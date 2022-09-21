@@ -1350,6 +1350,54 @@ public class TestCaseServiceTest {
   }
 
   @Test
+  public void testValidateUserPermissionsReturnsTrueForNullUpdatingGroupPopValues() {
+    Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
+    TestCase originalTestCase =
+        testCase
+            .toBuilder()
+            .createdAt(createdAt)
+            .createdBy("test.user5")
+            .lastModifiedAt(createdAt)
+            .lastModifiedBy("test.user5")
+            .groupPopulations(
+                List.of(
+                    TestCaseGroupPopulation.builder()
+                        .groupId("Group1ID")
+                        .populationBasis("Encounter")
+                        .scoring("Cohort")
+                        .populationValues(
+                            List.of(
+                                TestCasePopulationValue.builder()
+                                    .id("Pop1")
+                                    .expected("3")
+                                    .name(PopulationType.INITIAL_POPULATION)
+                                    .build()))
+                        .build()))
+            .build();
+
+    TestCaseGroupPopulation groupPop = TestCaseGroupPopulation.builder()
+        .groupId("Group1ID")
+        .populationBasis("Encounter")
+        .scoring("Cohort")
+        .build();
+    groupPop.setPopulationValues(null);
+    TestCase updatingTestCase =
+        testCase
+            .toBuilder()
+            .createdBy(originalTestCase.getCreatedBy())
+            .createdAt(Instant.now())
+            .title("UpdatedTitle")
+            .series("UpdatedSeries")
+            .groupPopulations(List.of(groupPop))
+            .build();
+
+    boolean output =
+        testCaseService.validateUserPermissions(
+            originalTestCase, updatingTestCase, "original.user", "test.user5");
+    assertThat(output, is(false));
+  }
+
+  @Test
   public void testValidateUserPermissionsReturnsTrueForNonOwnerUnchanged() {
     Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
     TestCase originalTestCase =
