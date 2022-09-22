@@ -6,10 +6,8 @@ import gov.cms.madie.models.common.Organization;
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
-import org.springframework.util.ResourceUtils;
-
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 
@@ -24,10 +22,9 @@ public class AddOrganizationsChangeUnit {
 
   @Execution
   public void addOrganizations(OrganizationRepository organizationRepository) throws IOException {
-    File organizationsData = ResourceUtils.getFile("classpath:data/organizations.json");
-
+    InputStream inputStream = getClass().getResourceAsStream("/data/organizations.json");
     List<Organization> organizationList =
-        Arrays.asList(objectMapper.readValue(organizationsData, Organization[].class));
+        Arrays.asList(objectMapper.readValue(inputStream, Organization[].class));
     organizationRepository.insert(organizationList);
   }
 
