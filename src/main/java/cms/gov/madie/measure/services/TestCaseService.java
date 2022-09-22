@@ -162,17 +162,18 @@ public class TestCaseService {
       return true;
     }
     // verify that expected values are not changing
-    List<TestCaseGroupPopulation> existingGroupPopulations = existingTestCase.getGroupPopulations();
+    List<TestCaseGroupPopulation> existingGroupPopulations = existingTestCase.getGroupPopulations()
+        .stream().filter(p -> p != null).collect(Collectors.toList());
     for (var existingGroupPop : existingGroupPopulations) {
       if (existingGroupPop == null) {
         continue;
       }
       TestCaseGroupPopulation updatingGroupPop =
           updatingTestCase.getGroupPopulations().stream()
-              .filter(tcgp -> StringUtils.equals(existingGroupPop.getGroupId(), tcgp.getGroupId()))
+              .filter(tcgp -> tcgp != null && StringUtils.equals(existingGroupPop.getGroupId(), tcgp.getGroupId()))
               .findFirst()
               .orElse(null);
-      if (testCaseGroupPopulationValuesChanged(existingGroupPop, updatingGroupPop)) {
+      if (updatingGroupPop == null || testCaseGroupPopulationValuesChanged(existingGroupPop, updatingGroupPop)) {
         return false;
       }
     }
@@ -181,14 +182,21 @@ public class TestCaseService {
 
   private boolean testCaseGroupPopulationValuesChanged(
       TestCaseGroupPopulation existingGroupPop, TestCaseGroupPopulation updatingGroupPop) {
-    return (updatingGroupPop != null
-        && ((updatingGroupPop.getPopulationValues() == null
+    if (updatingGroupPop != null) {
+      log.info("updatingGroupPop.getPopValues: {}", updatingGroupPop.getPopulationValues());
+      log.info("existingGroupPop.getPopValues: {}", existingGroupPop.getPopulationValues());
+    }
+    return (
+        ((updatingGroupPop.getPopulationValues() == null
                 && existingGroupPop.getPopulationValues() != null)
-            || (updatingGroupPop.getPopulationValues() != null
+            ||
+        (updatingGroupPop.getPopulationValues() != null
                 && existingGroupPop.getPopulationValues() == null)
-            || (updatingGroupPop.getPopulationValues().size()
+            ||
+        (updatingGroupPop.getPopulationValues().size()
                 != existingGroupPop.getPopulationValues().size())
-            || !updatingGroupPop
+            ||
+        !updatingGroupPop
                 .getPopulationValues()
                 .containsAll(existingGroupPop.getPopulationValues())));
   }
