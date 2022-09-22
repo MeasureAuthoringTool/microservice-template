@@ -2,7 +2,6 @@ package cms.gov.madie.measure.service;
 
 import cms.gov.madie.measure.HapiFhirConfig;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.FhirServicesClient;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -11,16 +10,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.HapiOperationOutcome;
 import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.PopulationType;
 import gov.cms.madie.models.measure.TestCase;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.TestCaseService;
-import gov.cms.madie.models.measure.TestCaseGroupPopulation;
-import gov.cms.madie.models.measure.TestCasePopulationValue;
 import org.assertj.core.util.Lists;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -401,181 +396,6 @@ public class TestCaseServiceTest {
     assertEquals(otherExistingTC, savedMeasure.getTestCases().get(0));
     assertEquals(updatedTestCase, savedMeasure.getTestCases().get(1));
   }
-
-  //  @Test
-  //  public void testUpsertFhirPatientHandlesNullInput() {
-  //    TestCase output = testCaseService.upsertFhirPatient(null);
-  //    assertNull(output);
-  //  }
-  //
-  //  @Test
-  //  public void testUpsertFhirBundleHandlesNullInput() {
-  //    TestCase output = testCaseService.upsertFhirBundle(null);
-  //    assertNull(output);
-  //  }
-  //
-  //  @Test
-  //  public void testUpsertFhirPatientHandlesTestCaseWithNullJson() {
-  //    TestCase testCase = new TestCase();
-  //    testCase.setJson(null);
-  //    TestCase output = testCaseService.upsertFhirPatient(testCase);
-  //    assertNotNull(output);
-  //    assertNull(output.getJson());
-  //    Mockito.verifyNoInteractions(hapiFhirRestTemplate);
-  //  }
-  //
-  //  @Test
-  //  public void testUpsertFhirBundleHandlesTestCaseWithNullJson() {
-  //    TestCase testCase = new TestCase();
-  //    testCase.setJson(null);
-  //    TestCase output = testCaseService.upsertFhirPatient(testCase);
-  //    assertNotNull(output);
-  //    assertNull(output.getJson());
-  //    Mockito.verifyNoInteractions(hapiFhirRestTemplate);
-  //  }
-  //
-  //  @Test
-  //  public void testUpsertFhirPatientCreatesPatient() {
-  //    final String json = "{\"resourceType\":\"Patient\"}";
-  //    final String createdJson = "{\"resourceType\":\"Patient\", \"id\": \"511\"}";
-  //    ResponseEntity<String> response =
-  //        ResponseEntity.created(URI.create("http://test.hapi/fhir/Patient/511/_history/1"))
-  //            .header(HttpHeaders.CONTENT_LOCATION,
-  // "http://test.hapi/fhir/Patient/511/_history/1")
-  //            .body(createdJson);
-  //
-  //    when(hapiFhirConfig.getHapiFhirUrl()).thenReturn("http://test.hapi/fhir");
-  //    when(hapiFhirConfig.getHapiFhirPatientUri()).thenReturn("/Patient");
-  //
-  //    when(hapiFhirRestTemplate.exchange(
-  //            anyString(), eq(HttpMethod.POST), any(HttpEntity.class), any(Class.class)))
-  //        .thenReturn(response);
-  //
-  //    TestCase testCase = TestCase.builder().json(json).build();
-  //    TestCase output = testCaseService.upsertFhirPatient(testCase);
-  //    assertNotNull(output);
-  //    assertEquals(createdJson, output.getJson());
-  //    assertNotNull(output.getHapiOperationOutcome());
-  //    assertEquals(201, output.getHapiOperationOutcome().getCode());
-  //    assertEquals("/Patient/511", output.getResourceUri());
-  //  }
-  //
-  //  @Test
-  //  public void testUpsertFhirPatientUpdatesPatientWithExistingResource() {
-  //    final String json = "{\"resourceType\":\"Patient\", \"id\": \"511\"}";
-  //    ResponseEntity<String> response =
-  //        ResponseEntity.ok()
-  //            .header(HttpHeaders.CONTENT_LOCATION,
-  // "http://test.hapi/fhir/Patient/511/_history/1")
-  //            .body(json);
-  //
-  //    when(hapiFhirConfig.getHapiFhirUrl()).thenReturn("http://test.hapi/fhir");
-  //
-  //    when(hapiFhirRestTemplate.exchange(
-  //            anyString(), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
-  //        .thenReturn(response);
-  //
-  //    TestCase testCase = TestCase.builder().json(json).resourceUri("/Patient/511").build();
-  //    TestCase output = testCaseService.upsertFhirPatient(testCase);
-  //    assertNotNull(output);
-  //    assertEquals(json, output.getJson());
-  //    assertNotNull(output.getHapiOperationOutcome());
-  //    assertEquals(200, output.getHapiOperationOutcome().getCode());
-  //  }
-  //
-  //  @Test
-  //  public void testUpsertFhirPatientHandlesMissingContentLocationHeader() {
-  //    final String json = "{\"resourceType\":\"Patient\", \"id\": \"511\"}";
-  //    ResponseEntity<String> response = ResponseEntity.ok().body(json);
-  //
-  //    when(hapiFhirConfig.getHapiFhirUrl()).thenReturn("http://test.hapi/fhir");
-  //
-  //    when(hapiFhirRestTemplate.exchange(
-  //            anyString(), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
-  //        .thenReturn(response);
-  //
-  //    TestCase testCase = TestCase.builder().json(json).resourceUri("/Patient/511").build();
-  //    TestCase output = testCaseService.upsertFhirPatient(testCase);
-  //    assertNotNull(output);
-  //    assertEquals(json, output.getJson());
-  //    assertNotNull(output.getHapiOperationOutcome());
-  //    assertEquals(500, output.getHapiOperationOutcome().getCode());
-  //  }
-  //
-  //  @Test
-  //  public void testUpsertFhirPatientHandlesHttpClientErrorException() {
-  //    final String json = "{\"resourceType\":\"Patient\", \"id\": \"511\"}";
-  //
-  //    when(hapiFhirConfig.getHapiFhirUrl()).thenReturn("http://test.hapi/fhir");
-  //
-  //    final String exceptionJson =
-  //        "{\"resourceType\": \"OperationOutcome\", \"text\": {}, \"issue\": []}";
-  //    when(hapiFhirRestTemplate.exchange(
-  //            anyString(), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
-  //        .thenThrow(
-  //            new HttpClientErrorException(
-  //                HttpStatus.BAD_REQUEST,
-  //                "Bad Request",
-  //                exceptionJson.getBytes(),
-  //                Charset.defaultCharset()));
-  //
-  //    TestCase testCase = TestCase.builder().json(json).resourceUri("/Patient/511").build();
-  //    TestCase output = testCaseService.upsertFhirPatient(testCase);
-  //    assertNotNull(output);
-  //    assertEquals(json, output.getJson());
-  //    assertNotNull(output.getHapiOperationOutcome());
-  //    assertEquals(400, output.getHapiOperationOutcome().getCode());
-  //  }
-  //
-  //  @Test
-  //  public void testUpsertFhirPatientHandlesJsonExceptionWhileHandlingHttpClientErrorException() {
-  //    final String json = "{\"resourceType\":\"Patient\", \"id\": \"511\"}";
-  //
-  //    when(hapiFhirConfig.getHapiFhirUrl()).thenReturn("http://test.hapi/fhir");
-  //
-  //    final String malformedExceptionJson =
-  //        "{\"resourceType\": \"OperationOutcome\", \"text\": {}, \"issue\": [}";
-  //    when(hapiFhirRestTemplate.exchange(
-  //            anyString(), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
-  //        .thenThrow(
-  //            new HttpClientErrorException(
-  //                HttpStatus.BAD_REQUEST,
-  //                "Bad Request",
-  //                malformedExceptionJson.getBytes(),
-  //                Charset.defaultCharset()));
-  //
-  //    TestCase testCase = TestCase.builder().json(json).resourceUri("/Patient/511").build();
-  //    TestCase output = testCaseService.upsertFhirPatient(testCase);
-  //    assertNotNull(output);
-  //    assertEquals(json, output.getJson());
-  //    assertNotNull(output.getHapiOperationOutcome());
-  //    assertEquals(500, output.getHapiOperationOutcome().getCode());
-  //    assertEquals(
-  //        output.getHapiOperationOutcome().getMessage(),
-  //        "Unable to persist to HAPI FHIR due to errors, but HAPI outcome not able to be
-  // interpreted!");
-  //  }
-  //
-  //  @Test
-  //  public void testUpsertFhirPatientHandlesOtherExceptions() {
-  //    final String json = "{\"resourceType\":\"Patient\", \"id\": \"511\"}";
-  //
-  //    when(hapiFhirConfig.getHapiFhirUrl()).thenReturn("http://test.hapi/fhir");
-  //
-  //    when(hapiFhirRestTemplate.exchange(
-  //            anyString(), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
-  //        .thenThrow(new RuntimeException("Test exception"));
-  //
-  //    TestCase testCase = TestCase.builder().json(json).resourceUri("/Patient/511").build();
-  //    TestCase output = testCaseService.upsertFhirPatient(testCase);
-  //    assertNotNull(output);
-  //    assertEquals(json, output.getJson());
-  //    assertNotNull(output.getHapiOperationOutcome());
-  //    assertEquals(500, output.getHapiOperationOutcome().getCode());
-  //    assertEquals(
-  //        output.getHapiOperationOutcome().getMessage(),
-  //        "An unknown exception occurred with the HAPI FHIR server");
-  //  }
 
   @Test
   public void testGetTestCaseReturnsTestCaseById() {
