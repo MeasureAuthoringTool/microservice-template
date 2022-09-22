@@ -104,9 +104,6 @@ public class TestCaseService {
         measure.getTestCases().stream().filter(p -> p.getId().equals(testCase.getId())).findFirst();
     if (existingOpt.isPresent()) {
       TestCase existing = existingOpt.get();
-      if (!validateUserPermissions(existing, testCase, measure.getCreatedBy(), username)) {
-        throw new UnauthorizedException("TestCase", testCase.getId(), username);
-      }
       testCase.setCreatedAt(existing.getCreatedAt());
       testCase.setCreatedBy(existing.getCreatedBy());
       testCase.setResourceUri(existing.getResourceUri());
@@ -130,75 +127,6 @@ public class TestCaseService {
         testCase.getId(),
         measureId);
     return testCase;
-  }
-
-  /**
-   * Returns false if any of the following are detected: - non-owner tries to modify test case
-   * expected values
-   *
-   * @param existingTestCase Current state of test case to update, pulled from the database
-   * @param updatingTestCase Test case with updated values
-   * @param measureCreator Owner/Creator of measure
-   * @param username User attempting to update the test case
-   * @return true if user permissions are valid, false otherwise
-   */
-  public boolean validateUserPermissions(
-      TestCase existingTestCase,
-      TestCase updatingTestCase,
-      final String measureCreator,
-      final String username) {
-    // TODO: check how strict the permission validation should be. Currently in line with ACs from
-    // MAT-4666
-    if (existingTestCase == null
-        || updatingTestCase == null
-        || existingTestCase.getGroupPopulations() == null
-        || existingTestCase.getGroupPopulations().isEmpty()
-        || updatingTestCase.getGroupPopulations() == null
-        || updatingTestCase.getGroupPopulations().isEmpty()) {
-      return true;
-    }
-    // Owner can change anything - separated out for clarity
-    if (StringUtils.equals(measureCreator, username)) {
-      return true;
-    }
-    // verify that expected values are not changing
-    List<TestCaseGroupPopulation> existingGroupPopulations = existingTestCase.getGroupPopulations()
-        .stream().filter(p -> p != null).collect(Collectors.toList());
-    for (var existingGroupPop : existingGroupPopulations) {
-      if (existingGroupPop == null) {
-        continue;
-      }
-      TestCaseGroupPopulation updatingGroupPop =
-          updatingTestCase.getGroupPopulations().stream()
-              .filter(tcgp -> tcgp != null && StringUtils.equals(existingGroupPop.getGroupId(), tcgp.getGroupId()))
-              .findFirst()
-              .orElse(null);
-      if (updatingGroupPop == null || testCaseGroupPopulationValuesChanged(existingGroupPop, updatingGroupPop)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  private boolean testCaseGroupPopulationValuesChanged(
-      TestCaseGroupPopulation existingGroupPop, TestCaseGroupPopulation updatingGroupPop) {
-    if (updatingGroupPop != null) {
-      log.info("updatingGroupPop.getPopValues: {}", updatingGroupPop.getPopulationValues());
-      log.info("existingGroupPop.getPopValues: {}", existingGroupPop.getPopulationValues());
-    }
-    return (
-        ((updatingGroupPop.getPopulationValues() == null
-                && existingGroupPop.getPopulationValues() != null)
-            ||
-        (updatingGroupPop.getPopulationValues() != null
-                && existingGroupPop.getPopulationValues() == null)
-            ||
-        (updatingGroupPop.getPopulationValues().size()
-                != existingGroupPop.getPopulationValues().size())
-            ||
-        !updatingGroupPop
-                .getPopulationValues()
-                .containsAll(existingGroupPop.getPopulationValues())));
   }
 
   public TestCase getTestCase(
