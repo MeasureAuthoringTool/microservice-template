@@ -626,5 +626,4 @@ public class TestCaseServiceTest {
     assertThat(output.getMessage(), is(nullValue()));
     assertThat(output.isSuccessful(), is(true));
   }
-
 }
