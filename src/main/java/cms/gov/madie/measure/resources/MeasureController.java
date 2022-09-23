@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.resources;
 
+import gov.cms.madie.models.access.RoleEnum;
 import java.security.Principal;
 import java.time.Instant;
 import java.util.List;
@@ -63,7 +64,8 @@ public class MeasureController {
     final Pageable pageReq = PageRequest.of(page, limit, Sort.by("lastModifiedAt").descending());
     Page<Measure> measures =
         filterByCurrentUser
-            ? repository.findAllByCreatedByAndActive(username, true, pageReq)
+            ? repository.findAllByCreatedByAndActiveOrShared(
+                username, true, RoleEnum.SHARED_WITH.toString(), pageReq)
             : repository.findAllByActive(true, pageReq);
     return ResponseEntity.ok(measures);
   }
