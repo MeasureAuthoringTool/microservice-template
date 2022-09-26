@@ -10,6 +10,7 @@ import cms.gov.madie.measure.repositories.MeasureRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -167,6 +168,10 @@ public class TestCaseService {
   }
 
   public HapiOperationOutcome validateTestCaseJson(TestCase testCase, String accessToken) {
+    if (testCase == null || StringUtils.isBlank(testCase.getJson())) {
+      return null;
+    }
+
     try {
       ResponseEntity<String> output =
           fhirServicesClient.validateBundle(testCase.getJson(), accessToken);
