@@ -49,14 +49,10 @@ public class OrganizationController {
       List<Organization> savedOrganizations = organizationRepository.saveAll(organizations);
       log.info("User {} successfully added new organizations", userName);
       return ResponseEntity.status(HttpStatus.CREATED).body(savedOrganizations);
-    } catch (Exception exception) {
-      if (exception instanceof org.springframework.dao.DuplicateKeyException) {
-        log.error("One of the organizations is already available with same OID");
-        throw new DuplicateKeyException(exception.getLocalizedMessage(), "Duplicate oid found");
-      } else {
-        log.error("Error saving organizations");
-        throw new RuntimeException("Error saving organizations");
-      }
+    } catch (org.springframework.dao.DuplicateKeyException duplicateKeyException) {
+      log.error("One of the organizations is already available with same OID");
+      throw new DuplicateKeyException(
+          duplicateKeyException.getLocalizedMessage(), "Duplicate oid found");
     }
   }
 }

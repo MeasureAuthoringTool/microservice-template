@@ -91,15 +91,4 @@ class OrganizationControllerTest {
             organizationController.addOrganizations(
                 request, List.of(), ORGANIZATIONS_TEST_API_KEY));
   }
-
-  @Test
-  void addOrganizationsThrowsException() {
-    doThrow(new RuntimeException("Run time exception")).when(organizationRepository).saveAll(any());
-
-    assertThrows(
-        RuntimeException.class,
-        () ->
-            organizationController.addOrganizations(
-                request, List.of(), ORGANIZATIONS_TEST_API_KEY));
-  }
 }
