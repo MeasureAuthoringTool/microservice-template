@@ -1,6 +1,7 @@
 package cms.gov.madie.measure;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -11,7 +12,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
   private static final String[] CSRF_WHITELIST = {
-    "/measure-transfer/**", "/log/**", "/measures/**/grant"
+    "/measure-transfer/**", "/log/**", "/measures/**/grant", "/organizations/**"
   };
   private static final String[] AUTH_WHITELIST = {
     "/measure-transfer/**", "/actuator/**", "/log/**", "/measures/**/grant"
@@ -25,6 +26,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .ignoringAntMatchers(CSRF_WHITELIST)
         .and()
         .authorizeRequests()
+        .antMatchers(HttpMethod.POST, "/organizations/**")
+        .permitAll()
         .antMatchers(AUTH_WHITELIST)
         .permitAll()
         .and()

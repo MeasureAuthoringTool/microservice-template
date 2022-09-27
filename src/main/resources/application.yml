@@ -3,6 +3,7 @@ spring:
     mongodb:
       database: ${MONGO_DATABASE:madie}
       uri: ${MONGO_URI:mongodb://${DBUSER}:${DBPASS}@localhost:27017/madie}?authSource=admin&maxPoolSize=50&connectTimeoutMS=2000&serverSelectionTimeoutMS=2000
+      auto-index-creation: true
 
 server:
   servlet:
@@ -36,6 +37,7 @@ okta:
     audience: ${OKTA_AUDIENCE:api://default}
 
 lambda-api-key: ${LAMBDA_API_KEY:9202c9fa}
+organizations-api-key: ${ORGANIZATIONS_API_KEY:fa9c193c}
 
 mongock:
   migration-scan-package:
