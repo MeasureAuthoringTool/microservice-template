@@ -1192,7 +1192,11 @@ public class MeasureControllerMvcTest {
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population", null)))
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        "Initial Population",
+                        null,
+                        null)))
             .measureGroupTypes(List.of(MeasureGroupTypes.PROCESS))
             .build();
     final String groupJson =
@@ -1233,7 +1237,11 @@ public class MeasureControllerMvcTest {
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, updateIppDefinition, null)))
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        updateIppDefinition,
+                        null,
+                        null)))
             .measureGroupTypes(List.of(MeasureGroupTypes.PROCESS))
             .build();
 

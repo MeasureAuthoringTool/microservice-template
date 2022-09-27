@@ -84,7 +84,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "FactorialOfFive", null)))
+                        "id-1", PopulationType.INITIAL_POPULATION, "FactorialOfFive", null, null)))
             .stratifications(List.of(strat1, emptyStrat))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")

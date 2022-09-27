@@ -80,7 +80,11 @@ public class GroupServiceTest implements ResourceUtil {
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population", null)))
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        "Initial Population",
+                        null,
+                        null)))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .build();
@@ -92,7 +96,7 @@ public class GroupServiceTest implements ResourceUtil {
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "FactorialOfFive", null)))
+                        "id-1", PopulationType.INITIAL_POPULATION, "FactorialOfFive", null, null)))
             .stratifications(List.of(strat1, emptyStrat))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
@@ -105,8 +109,12 @@ public class GroupServiceTest implements ResourceUtil {
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population", null),
-                    new Population("id-12", PopulationType.DENOMINATOR_EXCLUSION, "", null)))
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        "Initial Population",
+                        null,
+                        null),
+                    new Population("id-12", PopulationType.DENOMINATOR_EXCLUSION, "", null, null)))
             .measureObservations(
                 List.of(
                     new MeasureObservation(
@@ -295,7 +303,11 @@ public class GroupServiceTest implements ResourceUtil {
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population", null)))
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        "Initial Population",
+                        null,
+                        null)))
             .build();
 
     Measure existingMeasure =
@@ -352,7 +364,11 @@ public class GroupServiceTest implements ResourceUtil {
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population", null)))
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        "Initial Population",
+                        null,
+                        null)))
             .build();
 
     Measure existingMeasure =
