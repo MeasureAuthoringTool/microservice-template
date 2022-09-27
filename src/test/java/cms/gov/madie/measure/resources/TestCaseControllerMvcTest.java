@@ -574,4 +574,48 @@ public class TestCaseControllerMvcTest {
     String response = result.getResponse().getContentAsString();
     assertTrue(response.contains("Test Case Series can not be more than 250 characters."));
   }
+
+  @Test
+  public void testUpdateTestCaseReturnsBadRequestForMismatchExpectedValuesAgainstPopulationBasis()
+      throws Exception {
+    String modifiedDescription = "New Description";
+    testCase.setDescription(modifiedDescription);
+    testCase.setJson("{\"new\":\"json\"}");
+    when(testCaseService.updateTestCase(
+            any(TestCase.class), any(String.class), any(String.class), anyString()))
+        .thenReturn(testCase);
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.put("/measures/1234/test-cases/TESTID")
+                .content(
+                    "{\"id\":\"TESTID\",\"name\":\"TestName\",\"title\":\"TestTitle\",\"series\":null,"
+                        + "\"description\":\""
+                        + modifiedDescription
+                        + "\",\"createdAt\":null,"
+                        + "\"createdBy\":\"TestUser\",\"lastModifiedAt\":null,"
+                        + "\"lastModifiedBy\":\"TestUser2\","
+                        + "\"groupPopulations\": ["
+                        + "{"
+                        + "  \"groupId\": \"631f64812c5b7a4c2554b1c4\","
+                        + "  \"scoring\": \"Cohort\","
+                        + "  \"populationBasis\": \"Encounter\","
+                        + "  \"populationValues\": ["
+                        + "    {"
+                        + "      \"id\": null,"
+                        + "      \"name\": \"initialPopulation\","
+                        + "      \"expected\": \"BAD\""
+                        + "    }"
+                        + "  ]"
+                        + "}"
+                        + "],"
+                        + "\"json\":\"{\\\"new\\\":\\\"json\\\"}\"}")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "test-okta")
+                .with(user(TEST_USER_ID))
+                .with(csrf()))
+        .andExpect(status().isBadRequest());
+    verify(testCaseService, never())
+        .updateTestCase(any(TestCase.class), anyString(), anyString(), anyString());
+  }
 }

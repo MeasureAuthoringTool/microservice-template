@@ -26,6 +26,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import gov.cms.madie.models.access.RoleEnum;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -1153,8 +1155,8 @@ public class MeasureControllerMvcTest {
 
     final Page<Measure> measures = new PageImpl<>(List.of(m1, m2));
 
-    when(measureRepository.findAllByCreatedByAndActive(
-            anyString(), any(Boolean.class), any(PageRequest.class)))
+    when(measureRepository.findAllByCreatedByAndActiveOrShared(
+            anyString(), any(Boolean.class), anyString(), any(PageRequest.class)))
         .thenReturn(measures); // fix
 
     MvcResult result =
@@ -1173,7 +1175,11 @@ public class MeasureControllerMvcTest {
 
     assertThat(resultStr, is(equalTo(expectedJsonStr)));
     verify(measureRepository, times(1))
-        .findAllByCreatedByAndActive(eq(TEST_USER_ID), any(Boolean.class), any(PageRequest.class));
+        .findAllByCreatedByAndActiveOrShared(
+            eq(TEST_USER_ID),
+            any(Boolean.class),
+            eq(RoleEnum.SHARED_WITH.toString()),
+            any(PageRequest.class));
     verifyNoMoreInteractions(measureRepository);
   }
 
@@ -1186,7 +1192,11 @@ public class MeasureControllerMvcTest {
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population", null)))
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        "Initial Population",
+                        null,
+                        null)))
             .measureGroupTypes(List.of(MeasureGroupTypes.PROCESS))
             .build();
     final String groupJson =
@@ -1227,7 +1237,11 @@ public class MeasureControllerMvcTest {
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, updateIppDefinition, null)))
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        updateIppDefinition,
+                        null,
+                        null)))
             .measureGroupTypes(List.of(MeasureGroupTypes.PROCESS))
             .build();
 

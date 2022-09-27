@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import gov.cms.madie.models.access.RoleEnum;
 import java.security.Principal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -109,15 +110,19 @@ class MeasureControllerTest {
   @Test
   void getMeasuresWithCurrentUserFilter() {
     Page<Measure> measures = new PageImpl<>(List.of(measure));
-    when(repository.findAllByCreatedByAndActive(
-            anyString(), any(Boolean.class), any(Pageable.class)))
+    when(repository.findAllByCreatedByAndActiveOrShared(
+            anyString(), any(Boolean.class), anyString(), any(Pageable.class)))
         .thenReturn(measures);
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
     ResponseEntity<Page<Measure>> response = controller.getMeasures(principal, true, 10, 0);
     verify(repository, times(1))
-        .findAllByCreatedByAndActive(eq("test.user"), any(Boolean.class), any(Pageable.class));
+        .findAllByCreatedByAndActiveOrShared(
+            eq("test.user"),
+            any(Boolean.class),
+            eq(RoleEnum.SHARED_WITH.toString()),
+            any(Pageable.class));
     verifyNoMoreInteractions(repository);
     assertNotNull(response.getBody().getContent());
     assertNotNull(response.getBody().getContent().get(0));
@@ -382,7 +387,11 @@ class MeasureControllerTest {
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population", null)))
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        "Initial Population",
+                        null,
+                        null)))
             .build();
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
@@ -426,7 +435,11 @@ class MeasureControllerTest {
             .populations(
                 List.of(
                     new Population(
-                        "id-2", PopulationType.INITIAL_POPULATION, "Initial Population", null)))
+                        "id-2",
+                        PopulationType.INITIAL_POPULATION,
+                        "Initial Population",
+                        null,
+                        null)))
             .build();
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");

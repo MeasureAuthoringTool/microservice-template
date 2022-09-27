@@ -5,6 +5,7 @@ import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.MeasureService;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.AggregateMethodType;
+import gov.cms.madie.models.measure.Endorsement;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureGroupTypes;
@@ -12,6 +13,7 @@ import gov.cms.madie.models.measure.MeasureMetaData;
 import gov.cms.madie.models.measure.MeasureObservation;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
+import gov.cms.madie.models.measure.Reference;
 import gov.cms.madie.models.measure.Stratification;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -71,7 +73,11 @@ public class MeasureTransferControllerTest {
                 "Cohort",
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "Initial Population", null)),
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        "Initial Population",
+                        null,
+                        "test description")),
                 List.of(
                     new MeasureObservation(
                         "mo-id-1", "ipp", null, AggregateMethodType.AVERAGE.getValue())),
@@ -82,9 +88,31 @@ public class MeasureTransferControllerTest {
                 "testScoringUnit",
                 List.of(new Stratification()),
                 "populationBasis"));
+    List<Reference> references =
+        List.of(
+            Reference.builder()
+                .id("test reference id")
+                .referenceText("test reference text")
+                .referenceType("DOCUMENT")
+                .build());
+    List<Endorsement> endorsements =
+        List.of(
+            Endorsement.builder()
+                .id("test endorsement id")
+                .endorser("test endorser")
+                .endorsementId("NQF")
+                .build());
 
     measureMetaData.setSteward("SB");
     measureMetaData.setCopyright("Copyright@SB");
+    measureMetaData.setReferences(references);
+    measureMetaData.setDraft(true);
+    measureMetaData.setEndorsements(endorsements);
+    measureMetaData.setRiskAdjustment("test risk adjustment");
+    measureMetaData.setDefinition("test definition");
+    measureMetaData.setExperimental(false);
+    measureMetaData.setTransmissionFormat("test transmission format");
+    measureMetaData.setSupplementalDataElements("test supplemental data elements");
 
     measure =
         Measure.builder()
@@ -119,6 +147,32 @@ public class MeasureTransferControllerTest {
     assertEquals(measure.getCqlLibraryName(), persistedMeasure.getCqlLibraryName());
     assertEquals(measure.getCql(), persistedMeasure.getCql());
     assertEquals(measure.getGroups().size(), persistedMeasure.getGroups().size());
+    assertEquals(
+        measure.getGroups().get(0).getPopulations().get(0).getDescription(),
+        persistedMeasure.getGroups().get(0).getPopulations().get(0).getDescription());
+    assertEquals(
+        measure.getMeasureMetaData().getReferences().get(0).getReferenceText(),
+        persistedMeasure.getMeasureMetaData().getReferences().get(0).getReferenceText());
+    assertEquals(
+        measure.getMeasureMetaData().getEndorsements().get(0).getEndorser(),
+        persistedMeasure.getMeasureMetaData().getEndorsements().get(0).getEndorser());
+    assertEquals(
+        measure.getMeasureMetaData().isDraft(), persistedMeasure.getMeasureMetaData().isDraft());
+    assertEquals(
+        measure.getMeasureMetaData().getRiskAdjustment(),
+        persistedMeasure.getMeasureMetaData().getRiskAdjustment());
+    assertEquals(
+        measure.getMeasureMetaData().getDefinition(),
+        persistedMeasure.getMeasureMetaData().getDefinition());
+    assertEquals(
+        measure.getMeasureMetaData().isExperimental(),
+        persistedMeasure.getMeasureMetaData().isExperimental());
+    assertEquals(
+        measure.getMeasureMetaData().getTransmissionFormat(),
+        persistedMeasure.getMeasureMetaData().getTransmissionFormat());
+    assertEquals(
+        measure.getMeasureMetaData().getSupplementalDataElements(),
+        persistedMeasure.getMeasureMetaData().getSupplementalDataElements());
 
     verify(actionLogService, times(1))
         .logAction(

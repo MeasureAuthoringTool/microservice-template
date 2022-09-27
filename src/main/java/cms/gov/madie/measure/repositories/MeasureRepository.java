@@ -21,6 +21,10 @@ public interface MeasureRepository extends MongoRepository<Measure, String> {
 
   Page<Measure> findAllByCreatedByAndActive(String user, Boolean active, Pageable page);
 
+  @Query("{$or: [{createdBy: ?0, active : ?1}, {'acls.userId' : ?0, 'acls.roles' : ?2}]}")
+  Page<Measure> findAllByCreatedByAndActiveOrShared(
+      String user, Boolean active, String shared, Pageable page);
+
   @Query(value = "{_id: ?0}", fields = "{'testCases.series': 1, _id: 0}")
   Optional<Measure> findAllTestCaseSeriesByMeasureId(String measureId);
 
