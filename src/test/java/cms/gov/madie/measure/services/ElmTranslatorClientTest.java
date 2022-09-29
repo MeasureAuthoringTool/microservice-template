@@ -3,6 +3,7 @@ package cms.gov.madie.measure.services;
 import cms.gov.madie.measure.config.ElmTranslatorClientConfig;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
 import gov.cms.madie.models.measure.ElmJson;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -125,5 +126,32 @@ class ElmTranslatorClientTest {
     ElmJson elmJson = ElmJson.builder().json(json).build();
     boolean output = elmTranslatorClient.hasErrors(elmJson);
     assertThat(output, is(false));
+  }
+
+  @Test
+  void testRestTemplateReturnsElmJsonForMatMeasure() {
+    ElmJson elmJson = ElmJson.builder().json("{}").xml("<></>").build();
+    when(restTemplate.exchange(
+            any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+        .thenReturn(ResponseEntity.ok(elmJson));
+    ElmJson output =
+        elmTranslatorClient.getElmJsonForMatMeasure("TEST_CQL", "TEST_API_KEY", "TEST_HARP_ID");
+    assertThat(output, is(equalTo(elmJson)));
+  }
+
+  @Test
+  public void testRestTemplateException() {
+    CqlElmTranslationServiceException exception =
+        assertThrows(
+            CqlElmTranslationServiceException.class,
+            () ->
+                elmTranslatorClient.getElmJsonForMatMeasure(
+                    "TEST_CQL", "TEST_API_KEY", "TEST_HARP_ID"));
+
+    assertThat(
+        exception.getMessage(),
+        is(
+            equalTo(
+                "There was an error calling CQL-ELM translation service for MAT transferred measure")));
   }
 }
