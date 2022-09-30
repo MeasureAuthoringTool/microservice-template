@@ -257,14 +257,18 @@ public class MeasureTransferControllerMvcTest {
     when(elmTranslatorClient.hasErrors(elmJson)).thenReturn(false);
     doReturn(measure).when(measureRepository).save(any(Measure.class));
 
-    mockMvc
-        .perform(
-            MockMvcRequestBuilders.post("/measure-transfer/mat-measures")
-                .content(measureJson)
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
-                .header(HARP_ID_HEADER_KEY, HARP_ID_HEADER_VALUE))
-        .andExpect(status().isCreated());
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.post("/measure-transfer/mat-measures")
+                    .content(measureJson)
+                    .contentType(MediaType.APPLICATION_JSON_VALUE)
+                    .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
+                    .header(HARP_ID_HEADER_KEY, HARP_ID_HEADER_VALUE))
+            .andExpect(status().isCreated())
+            .andReturn();
+
+    assertEquals(HttpStatus.CREATED.value(), result.getResponse().getStatus());
   }
 
   @Test
@@ -279,14 +283,18 @@ public class MeasureTransferControllerMvcTest {
     when(elmTranslatorClient.hasErrors(elmJson)).thenReturn(true);
     doReturn(measure).when(measureRepository).save(any(Measure.class));
 
-    mockMvc
-        .perform(
-            MockMvcRequestBuilders.post("/measure-transfer/mat-measures")
-                .content(measureJson)
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
-                .header(HARP_ID_HEADER_KEY, HARP_ID_HEADER_VALUE))
-        .andExpect(status().isCreated());
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.post("/measure-transfer/mat-measures")
+                    .content(measureJson)
+                    .contentType(MediaType.APPLICATION_JSON_VALUE)
+                    .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
+                    .header(HARP_ID_HEADER_KEY, HARP_ID_HEADER_VALUE))
+            .andExpect(status().isCreated())
+            .andReturn();
+
+    assertEquals(HttpStatus.CREATED.value(), result.getResponse().getStatus());
   }
 
   @Test
@@ -302,13 +310,17 @@ public class MeasureTransferControllerMvcTest {
         .getElmJsonForMatMeasure(any(String.class), any(String.class), any(String.class));
     doReturn(measure).when(measureRepository).save(any(Measure.class));
 
-    mockMvc
-        .perform(
-            MockMvcRequestBuilders.post("/measure-transfer/mat-measures")
-                .content(measureJson)
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
-                .header(HARP_ID_HEADER_KEY, HARP_ID_HEADER_VALUE))
-        .andExpect(status().isCreated());
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.post("/measure-transfer/mat-measures")
+                    .content(measureJson)
+                    .contentType(MediaType.APPLICATION_JSON_VALUE)
+                    .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
+                    .header(HARP_ID_HEADER_KEY, HARP_ID_HEADER_VALUE))
+            .andExpect(status().isCreated())
+            .andReturn();
+
+    assertEquals(HttpStatus.CREATED.value(), result.getResponse().getStatus());
   }
 }

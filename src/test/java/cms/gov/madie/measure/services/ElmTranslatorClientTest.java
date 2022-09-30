@@ -135,7 +135,7 @@ class ElmTranslatorClientTest {
             any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
         .thenReturn(ResponseEntity.ok(elmJson));
     ElmJson output =
-        elmTranslatorClient.getElmJsonForMatMeasure("TEST_CQL", "API_KEY", "TEST_HARP_ID");
+        elmTranslatorClient.getElmJsonForMatMeasure("TEST_CQL", "KEY_4_API", "TEST_HARP_ID");
     assertThat(output, is(equalTo(elmJson)));
   }
 
@@ -146,7 +146,7 @@ class ElmTranslatorClientTest {
             CqlElmTranslationServiceException.class,
             () ->
                 elmTranslatorClient.getElmJsonForMatMeasure(
-                    "TEST_CQL", "API_KEY", "TEST_HARP_ID"));
+                    "TEST_CQL", "KEY_4_API", "TEST_HARP_ID"));
 
     assertThat(
         exception.getMessage(),
