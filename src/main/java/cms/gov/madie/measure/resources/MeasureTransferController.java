@@ -1,9 +1,13 @@
 package cms.gov.madie.measure.resources;
 
 import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Measure;
+import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
+import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.ActionLogService;
+import cms.gov.madie.measure.services.ElmTranslatorClient;
 import cms.gov.madie.measure.services.MeasureService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +31,7 @@ public class MeasureTransferController {
   private final MeasureRepository repository;
   private final MeasureService measureService;
   private final ActionLogService actionLogService;
+  private final ElmTranslatorClient elmTranslatorClient;
 
   @PostMapping("/mat-measures")
   @PreAuthorize("#request.getHeader('api-key') == #apiKey")
@@ -41,6 +46,8 @@ public class MeasureTransferController {
         harpId);
     measureService.checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
 
+    setMeasureElmJsonAndErrors(measure, apiKey, harpId);
+
     // TODO: decide on audit records
     Instant now = Instant.now();
     measure.setCreatedAt(now);
@@ -54,5 +61,29 @@ public class MeasureTransferController {
         savedMeasure.getId(), Measure.class, ActionType.IMPORTED, savedMeasure.getCreatedBy());
 
     return ResponseEntity.status(HttpStatus.CREATED).body(savedMeasure);
+  }
+
+  protected void setMeasureElmJsonAndErrors(Measure measure, String apiKey, String harpId) {
+    try {
+      final ElmJson elmJson =
+          elmTranslatorClient.getElmJsonForMatMeasure(measure.getCql(), apiKey, harpId);
+      if (elmTranslatorClient.hasErrors(elmJson)) {
+        measure.setCqlErrors(true);
+      }
+      measure.setElmJson(elmJson.getJson());
+      measure.setElmXml(elmJson.getXml());
+    } catch (CqlElmTranslationServiceException | CqlElmTranslationErrorException e) {
+      log.error(
+          "CqlElmTranslationServiceException for transferred measure {} ",
+          measure.getMeasureName(),
+          e);
+      measure.setCqlErrors(true);
+    } catch (Exception ex) {
+      log.error(
+          "An error occurred while getting ELM Json for transferred measure {}",
+          measure.getMeasureName(),
+          ex);
+      measure.setCqlErrors(true);
+    }
   }
 }

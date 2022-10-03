@@ -26,14 +26,8 @@ public class ElmTranslatorClient {
 
   public ElmJson getElmJson(final String cql, String accessToken) {
     try {
-      URI uri =
-          URI.create(
-              elmTranslatorClientConfig.getCqlElmServiceBaseUrl()
-                  + elmTranslatorClientConfig.getCqlElmServiceElmJsonUri());
-      HttpHeaders headers = new HttpHeaders();
-      headers.setContentType(MediaType.TEXT_PLAIN);
-      headers.set(HttpHeaders.AUTHORIZATION, accessToken);
-      HttpEntity<String> cqlEntity = new HttpEntity<>(cql, headers);
+      URI uri = getElmJsonURI(false);
+      HttpEntity<String> cqlEntity = getCqlHttpEntity(cql, accessToken, null, null);
       return elmTranslatorRestTemplate
           .exchange(uri, HttpMethod.PUT, cqlEntity, ElmJson.class)
           .getBody();
@@ -57,5 +51,40 @@ public class ElmTranslatorClient {
       throw new CqlElmTranslationServiceException(
           "There was an error calling CQL-ELM translation service", ex);
     }
+  }
+
+  public ElmJson getElmJsonForMatMeasure(final String cql, String apiKey, String harpId) {
+    try {
+      URI uri = getElmJsonURI(true);
+      HttpEntity<String> cqlEntity = getCqlHttpEntity(cql, null, apiKey, harpId);
+
+      return elmTranslatorRestTemplate
+          .exchange(uri, HttpMethod.PUT, cqlEntity, ElmJson.class)
+          .getBody();
+    } catch (Exception ex) {
+      throw new CqlElmTranslationServiceException(
+          "There was an error calling CQL-ELM translation service for MAT transferred measure", ex);
+    }
+  }
+
+  protected URI getElmJsonURI(boolean isForMatTransferred) {
+    return URI.create(
+        elmTranslatorClientConfig.getCqlElmServiceBaseUrl()
+            + (isForMatTransferred
+                ? elmTranslatorClientConfig.getCqlElmServiceUriForMatTransferredMeasure()
+                : elmTranslatorClientConfig.getCqlElmServiceElmJsonUri()));
+  }
+
+  protected HttpEntity<String> getCqlHttpEntity(
+      final String cql, String accessToken, String apiKey, String harpId) {
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.TEXT_PLAIN);
+    if (accessToken != null) {
+      headers.set(HttpHeaders.AUTHORIZATION, accessToken);
+    } else if (apiKey != null && harpId != null) {
+      headers.set("api-key", apiKey);
+      headers.set("harp-id", harpId);
+    }
+    return new HttpEntity<>(cql, headers);
   }
 }

@@ -23,6 +23,7 @@ madie:
     service:
       base-url: ${ELM_TRANSLATOR_SERVICE_URL:http://localhost:8084/api}
       elm-json-uri: /cql/translator/cql
+      elm-json-uri-for-mat-transferred-measure: /mat/translator/cqlToElm
 
 management:
   endpoints:
