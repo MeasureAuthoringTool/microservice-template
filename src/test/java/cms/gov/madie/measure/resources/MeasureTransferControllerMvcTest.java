@@ -1,11 +1,14 @@
 package cms.gov.madie.measure.resources;
 
+import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.ActionLogService;
+import cms.gov.madie.measure.services.ElmTranslatorClient;
 import cms.gov.madie.measure.services.MeasureService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
+import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Endorsement;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
@@ -19,6 +22,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -52,6 +56,13 @@ public class MeasureTransferControllerMvcTest {
   @MockBean private MeasureRepository measureRepository;
   @MockBean private MeasureService measureService;
   @MockBean private ActionLogService actionLogService;
+  @MockBean private ElmTranslatorClient elmTranslatorClient;
+  @Mock private ElmJson elmJson;
+  private static final String ELM_JSON_SUCCESS = "{\"result\":\"success\"}";
+  private static final String ELM_JSON_FAIL =
+      "{\"errorExceptions\": [{\"Error\":\"UNAUTHORIZED\"}]}";
+  private static final String CQL =
+      "library MedicationDispenseTest version '0.0.001' using FHIR version '4.0.1'";
 
   @Captor private ArgumentCaptor<ActionType> actionTypeArgumentCaptor;
   @Captor private ArgumentCaptor<Class> targetClassArgumentCaptor;
@@ -232,5 +243,84 @@ public class MeasureTransferControllerMvcTest {
             .andReturn();
 
     assertEquals(HttpStatus.UNAUTHORIZED.value(), result.getResponse().getStatus());
+  }
+
+  @Test
+  public void testCreateMeasureSuccessWithNoElmJsonError() throws Exception {
+    String measureJson = new ObjectMapper().writeValueAsString(measure);
+
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
+    when(elmJson.getJson()).thenReturn(ELM_JSON_SUCCESS);
+    when(elmTranslatorClient.getElmJsonForMatMeasure(
+            CQL, LAMBDA_TEST_API_KEY_HEADER_VALUE, HARP_ID_HEADER_VALUE))
+        .thenReturn(elmJson);
+    when(elmTranslatorClient.hasErrors(elmJson)).thenReturn(false);
+    doReturn(measure).when(measureRepository).save(any(Measure.class));
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.post("/measure-transfer/mat-measures")
+                    .content(measureJson)
+                    .contentType(MediaType.APPLICATION_JSON_VALUE)
+                    .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
+                    .header(HARP_ID_HEADER_KEY, HARP_ID_HEADER_VALUE))
+            .andExpect(status().isCreated())
+            .andReturn();
+
+    assertEquals(HttpStatus.CREATED.value(), result.getResponse().getStatus());
+  }
+
+  @Test
+  public void testCreateMeasureSuccessWithElmJsonError() throws Exception {
+    String measureJson = new ObjectMapper().writeValueAsString(measure);
+
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
+    when(elmJson.getJson()).thenReturn(ELM_JSON_FAIL);
+    when(elmTranslatorClient.getElmJsonForMatMeasure(
+            CQL, LAMBDA_TEST_API_KEY_HEADER_VALUE, HARP_ID_HEADER_VALUE))
+        .thenReturn(elmJson);
+    when(elmTranslatorClient.hasErrors(elmJson)).thenReturn(true);
+    doReturn(measure).when(measureRepository).save(any(Measure.class));
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.post("/measure-transfer/mat-measures")
+                    .content(measureJson)
+                    .contentType(MediaType.APPLICATION_JSON_VALUE)
+                    .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
+                    .header(HARP_ID_HEADER_KEY, HARP_ID_HEADER_VALUE))
+            .andExpect(status().isCreated())
+            .andReturn();
+
+    assertEquals(HttpStatus.CREATED.value(), result.getResponse().getStatus());
+  }
+
+  @Test
+  public void testCreateMeasureSuccessWithElmTranslatorException() throws Exception {
+    String measureJson = new ObjectMapper().writeValueAsString(measure);
+
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
+    doThrow(
+            new CqlElmTranslationServiceException(
+                "There was an error calling CQL-ELM translation service for MAT transferred measure",
+                null))
+        .when(elmTranslatorClient)
+        .getElmJsonForMatMeasure(any(String.class), any(String.class), any(String.class));
+    doReturn(measure).when(measureRepository).save(any(Measure.class));
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.post("/measure-transfer/mat-measures")
+                    .content(measureJson)
+                    .contentType(MediaType.APPLICATION_JSON_VALUE)
+                    .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
+                    .header(HARP_ID_HEADER_KEY, HARP_ID_HEADER_VALUE))
+            .andExpect(status().isCreated())
+            .andReturn();
+
+    assertEquals(HttpStatus.CREATED.value(), result.getResponse().getStatus());
   }
 }

@@ -1,10 +1,13 @@
 package cms.gov.madie.measure.resources;
 
+import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.ActionLogService;
+import cms.gov.madie.measure.services.ElmTranslatorClient;
 import cms.gov.madie.measure.services.MeasureService;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.AggregateMethodType;
+import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Endorsement;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
@@ -33,14 +36,17 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class MeasureTransferControllerTest {
@@ -52,6 +58,13 @@ public class MeasureTransferControllerTest {
   @Mock private MeasureService measureService;
   @Mock private MeasureRepository repository;
   @Mock private ActionLogService actionLogService;
+  @Mock private ElmTranslatorClient elmTranslatorClient;
+  @Mock private ElmJson elmJson;
+  private static final String CQL =
+      "library MedicationDispenseTest version '0.0.001' using FHIR version '4.0.1'";
+  private static final String ELM_JSON_SUCCESS = "{\"result\":\"success\"}";
+  private static final String ELM_JSON_FAIL =
+      "{\"errorExceptions\": [{\"Error\":\"UNAUTHORIZED\"}]}";
 
   @Captor private ArgumentCaptor<ActionType> actionTypeArgumentCaptor;
   @Captor private ArgumentCaptor<Class> targetClassArgumentCaptor;
@@ -125,7 +138,9 @@ public class MeasureTransferControllerTest {
             .model("QI-Core")
             .measureMetaData(measureMetaData)
             .groups(groups)
-            .cql("library MedicationDispenseTest version '0.0.001' using FHIR version '4.0.1'")
+            .cql(CQL)
+            .cqlErrors(false)
+            .elmJson(ELM_JSON_SUCCESS)
             .build();
   }
 
@@ -195,5 +210,71 @@ public class MeasureTransferControllerTest {
     assertThrows(
         DuplicateKeyException.class,
         () -> controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY));
+  }
+
+  @Test
+  public void createMeasureNoElmJsonErrorTest() {
+    ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
+
+    when(elmJson.getJson()).thenReturn(ELM_JSON_SUCCESS);
+    doReturn(elmJson)
+        .when(elmTranslatorClient)
+        .getElmJsonForMatMeasure(CQL, LAMBDA_TEST_API_KEY, null);
+    doReturn(false).when(elmTranslatorClient).hasErrors(elmJson);
+    doReturn(measure).when(repository).save(any(Measure.class));
+
+    ResponseEntity<Measure> response =
+        controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
+
+    verify(repository, times(1)).save(persistedMeasureArgCaptor.capture());
+    Measure persistedMeasure = response.getBody();
+    assertNotNull(persistedMeasure);
+
+    assertFalse(measure.isCqlErrors());
+    assertEquals(measure.getElmJson(), ELM_JSON_SUCCESS);
+
+    verify(actionLogService, times(1))
+        .logAction(
+            targetIdArgumentCaptor.capture(),
+            targetClassArgumentCaptor.capture(),
+            actionTypeArgumentCaptor.capture(),
+            performedByArgumentCaptor.capture());
+    assertNotNull(targetIdArgumentCaptor.getValue());
+    assertThat(targetClassArgumentCaptor.getValue(), is(equalTo(Measure.class)));
+  }
+
+  @Test
+  public void createMeasureElmJsonExceptionTest() {
+    ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
+    doThrow(
+            new CqlElmTranslationServiceException(
+                "There was an error calling CQL-ELM translation service for MAT transferred measure",
+                null))
+        .when(elmTranslatorClient)
+        .getElmJsonForMatMeasure(any(String.class), any(String.class), any(String.class));
+
+    measure.setCqlErrors(true);
+    measure.setElmJson(ELM_JSON_FAIL);
+    doReturn(measure).when(repository).save(any(Measure.class));
+
+    ResponseEntity<Measure> response =
+        controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
+
+    verify(repository, times(1)).save(persistedMeasureArgCaptor.capture());
+    Measure persistedMeasure = response.getBody();
+    assertNotNull(persistedMeasure);
+    assertTrue(measure.isCqlErrors());
+    assertEquals(measure.getElmJson(), ELM_JSON_FAIL);
+
+    verify(actionLogService, times(1))
+        .logAction(
+            targetIdArgumentCaptor.capture(),
+            targetClassArgumentCaptor.capture(),
+            actionTypeArgumentCaptor.capture(),
+            performedByArgumentCaptor.capture());
+    assertNotNull(targetIdArgumentCaptor.getValue());
+    assertThat(targetClassArgumentCaptor.getValue(), is(equalTo(Measure.class)));
   }
 }
