@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.services;
 
+import com.okta.commons.lang.Collections;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -74,7 +75,9 @@ public class MeasureService {
   }
 
   public void verifyAuthorization(String username, Measure measure) {
-    if (!measure.getCreatedBy().equals(username)) {
+    if (!measure.getCreatedBy().equals(username)
+        && (Collections.isEmpty(measure.getAcls())
+            || !measure.getAcls().stream().anyMatch(acl -> acl.getUserId().equals(username)))) {
       throw new UnauthorizedException("Measure", measure.getId(), username);
     }
   }

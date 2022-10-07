@@ -4,6 +4,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -15,6 +16,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import gov.cms.madie.models.access.AclSpecification;
+import gov.cms.madie.models.access.RoleEnum;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -376,6 +380,15 @@ public class MeasureServiceTest implements ResourceUtil {
   public void testVerifyAuthorizationThrowsExceptionForDifferentUsers() {
     assertThrows(
         UnauthorizedException.class, () -> measureService.verifyAuthorization("user1", measure));
+  }
+
+  @Test
+  public void testVerifyAuthorizationPassesForSharedUser() throws Exception {
+    AclSpecification acl = new AclSpecification();
+    acl.setUserId("userTest");
+    acl.setRoles(List.of(RoleEnum.SHARED_WITH));
+    measure.setAcls(List.of(acl));
+    assertDoesNotThrow(() -> measureService.verifyAuthorization("userTest", measure));
   }
 
   @Test
