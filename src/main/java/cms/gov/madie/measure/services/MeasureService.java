@@ -1,14 +1,5 @@
 package cms.gov.madie.measure.services;
 
-import com.okta.commons.lang.Collections;
-import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Service;
 import cms.gov.madie.measure.exceptions.BundleOperationException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
@@ -23,8 +14,17 @@ import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Measure;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 @Slf4j
 @Service
@@ -76,7 +76,7 @@ public class MeasureService {
 
   public void verifyAuthorization(String username, Measure measure) {
     if (!measure.getCreatedBy().equals(username)
-        && (Collections.isEmpty(measure.getAcls())
+        && (CollectionUtils.isEmpty(measure.getAcls())
             || !measure.getAcls().stream().anyMatch(acl -> acl.getUserId().equals(username)))) {
       throw new UnauthorizedException("Measure", measure.getId(), username);
     }
