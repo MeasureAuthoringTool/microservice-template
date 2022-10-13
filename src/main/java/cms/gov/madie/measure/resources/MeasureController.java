@@ -234,7 +234,11 @@ public class MeasureController {
     if (!principal.getName().equals(measure.getCreatedBy())
         && (CollectionUtils.isEmpty(measure.getAcls())
             || !measure.getAcls().stream()
-                .anyMatch(acl -> acl.getUserId().equals(principal.getName())))) {
+                .anyMatch(
+                    acl ->
+                        acl.getUserId().equals(principal.getName())
+                            && acl.getRoles().stream()
+                                .anyMatch(role -> role.equals(RoleEnum.SHARED_WITH))))) {
       throw new UnauthorizedException("Measure", measureId, principal.getName());
     }
     if (measure.isCqlErrors()) {

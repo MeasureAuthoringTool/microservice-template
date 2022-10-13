@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.services;
 
+import gov.cms.madie.models.access.RoleEnum;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -136,7 +137,12 @@ public class GroupService {
 
     if (!username.equals(measure.getCreatedBy())
         && (CollectionUtils.isEmpty(measure.getAcls())
-            || !measure.getAcls().stream().anyMatch(acl -> acl.getUserId().equals(username)))) {
+            || !measure.getAcls().stream()
+                .anyMatch(
+                    acl ->
+                        acl.getUserId().equals(username)
+                            && acl.getRoles().stream()
+                                .anyMatch(role -> role.equals(RoleEnum.SHARED_WITH))))) {
       throw new UnauthorizedException("Measure", measureId, username);
     }
 
