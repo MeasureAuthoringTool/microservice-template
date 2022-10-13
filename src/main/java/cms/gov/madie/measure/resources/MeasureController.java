@@ -231,7 +231,10 @@ public class MeasureController {
       throw new ResourceNotFoundException("Measure", measureId);
     }
     Measure measure = measureOptional.get();
-    if (!principal.getName().equals(measure.getCreatedBy())) {
+    if (!principal.getName().equals(measure.getCreatedBy())
+        && (CollectionUtils.isEmpty(measure.getAcls())
+            || !measure.getAcls().stream()
+                .anyMatch(acl -> acl.getUserId().equals(principal.getName())))) {
       throw new UnauthorizedException("Measure", measureId, principal.getName());
     }
     if (measure.isCqlErrors()) {
