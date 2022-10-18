@@ -77,7 +77,7 @@ public class MeasureTransferControllerMvcTest {
   public void setUp() {
     MeasureMetaData measureMetaData = new MeasureMetaData();
     Stratification strat = new Stratification();
-    strat.setAssociation(PopulationType.INITIAL_POPULATION.toString());
+    strat.setAssociation(PopulationType.INITIAL_POPULATION);
     List<Group> groups =
         List.of(
             new Group(
