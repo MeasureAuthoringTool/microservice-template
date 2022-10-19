@@ -63,6 +63,7 @@ public class TestCaseService {
     testCase.setCreatedBy(username);
     testCase.setLastModifiedAt(now);
     testCase.setLastModifiedBy(username);
+    testCase.setValidResource(false);
     testCase.setHapiOperationOutcome(null);
     testCase.setResourceUri(null);
 
