@@ -76,6 +76,8 @@ public class MeasureTransferControllerMvcTest {
   @BeforeEach
   public void setUp() {
     MeasureMetaData measureMetaData = new MeasureMetaData();
+    Stratification strat = new Stratification();
+    strat.setAssociation(PopulationType.INITIAL_POPULATION);
     List<Group> groups =
         List.of(
             new Group(
@@ -94,7 +96,7 @@ public class MeasureTransferControllerMvcTest {
                 "rateAggragation",
                 List.of(MeasureGroupTypes.PROCESS),
                 "testScoringUnit",
-                List.of(new Stratification()),
+                List.of(strat),
                 "populationBasis"));
     List<Reference> references =
         List.of(

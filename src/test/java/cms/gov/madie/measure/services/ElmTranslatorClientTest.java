@@ -144,9 +144,7 @@ class ElmTranslatorClientTest {
     CqlElmTranslationServiceException exception =
         assertThrows(
             CqlElmTranslationServiceException.class,
-            () ->
-                elmTranslatorClient.getElmJsonForMatMeasure(
-                    "TEST_CQL", "ABCDE", "TEST_HARP_ID"));
+            () -> elmTranslatorClient.getElmJsonForMatMeasure("TEST_CQL", "ABCDE", "TEST_HARP_ID"));
 
     assertThat(
         exception.getMessage(),

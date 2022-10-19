@@ -66,10 +66,10 @@ public class GroupServiceTest implements ResourceUtil {
     Stratification strat1 = new Stratification();
     strat1.setId("strat-1");
     strat1.setCqlDefinition("Initial Population");
-    strat1.setAssociation("Initial Population");
+    strat1.setAssociation(PopulationType.INITIAL_POPULATION);
     Stratification strat2 = new Stratification();
     strat2.setCqlDefinition("denominator_define");
-    strat2.setAssociation("Denom");
+    strat2.setAssociation(PopulationType.DENOMINATOR);
 
     Stratification emptyStrat = new Stratification();
     // new group, not in DB, so no ID

@@ -194,14 +194,18 @@ public class MeasureController {
 
   @PostMapping("/measures/{measureId}/groups")
   public ResponseEntity<Group> createGroup(
-      @RequestBody @Valid Group group, @PathVariable String measureId, Principal principal) {
+      @RequestBody @Validated(Measure.ValidationSequence.class) Group group,
+      @PathVariable String measureId,
+      Principal principal) {
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(groupService.createOrUpdateGroup(group, measureId, principal.getName()));
   }
 
   @PutMapping("/measures/{measureId}/groups")
   public ResponseEntity<Group> updateGroup(
-      @RequestBody @Valid Group group, @PathVariable String measureId, Principal principal) {
+      @RequestBody @Validated(Measure.ValidationSequence.class) Group group,
+      @PathVariable String measureId,
+      Principal principal) {
     return ResponseEntity.ok(
         groupService.createOrUpdateGroup(group, measureId, principal.getName()));
   }
