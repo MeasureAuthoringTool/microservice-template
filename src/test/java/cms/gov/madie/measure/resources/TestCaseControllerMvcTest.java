@@ -67,6 +67,7 @@ public class TestCaseControllerMvcTest {
     testCase.setName(TEST_NAME);
     testCase.setTitle(TEST_TITLE);
     testCase.setJson(TEST_JSON);
+    testCase.setValidResource(false);
   }
 
   @Test
@@ -118,7 +119,7 @@ public class TestCaseControllerMvcTest {
                         + "\"createdBy\":\"TestUser\",\"lastModifiedAt\":null,"
                         + "\"lastModifiedBy\":\"TestUser2\","
                         + "\"json\":\"{\\\"test\\\":\\\"test\\\"}\",\"hapiOperationOutcome\":null,"
-                        + "\"groupPopulations\":null}]"));
+                        + "\"groupPopulations\":null,\"validResource\":false}]"));
     verify(testCaseService, times(1)).findTestCasesByMeasureId(measureIdCaptor.capture());
     String measureId = measureIdCaptor.getValue();
     assertEquals("1234", measureId);
@@ -163,7 +164,7 @@ public class TestCaseControllerMvcTest {
                         + "\"createdBy\":\"TestUser\",\"lastModifiedAt\":null,"
                         + "\"lastModifiedBy\":\"TestUser2\","
                         + "\"json\":\"{\\\"test\\\":\\\"test\\\"}\",\"hapiOperationOutcome\":null,"
-                        + "\"groupPopulations\":null}"));
+                        + "\"groupPopulations\":null,\"validResource\":false}"));
     verify(testCaseService, times(1))
         .getTestCase(
             measureIdCaptor.capture(), testCaseIdCaptor.capture(), anyBoolean(), anyString());
@@ -206,7 +207,7 @@ public class TestCaseControllerMvcTest {
                         + "\"createdBy\":\"TestUser\",\"lastModifiedAt\":null,"
                         + "\"lastModifiedBy\":\"TestUser2\","
                         + "\"json\":\"{\\\"new\\\":\\\"json\\\"}\",\"hapiOperationOutcome\":null,"
-                        + "\"groupPopulations\":null}"));
+                        + "\"groupPopulations\":null,\"validResource\":false}"));
     verify(testCaseService, times(1))
         .updateTestCase(
             testCaseCaptor.capture(),

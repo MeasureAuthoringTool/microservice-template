@@ -114,7 +114,19 @@ public class TestCaseService {
     }
 
     // try to persist the Patient Bundle to HAPI FHIR
-    testCase.setHapiOperationOutcome(validateTestCaseJson(testCase, accessToken));
+    if (testCase == null || StringUtils.isBlank(testCase.getJson())) {
+      testCase.setValidResource(false);
+    } else {
+      HapiOperationOutcome hapiOperationOutcome = validateTestCaseJson(testCase, accessToken);
+      testCase.setHapiOperationOutcome(hapiOperationOutcome);
+      if ((hapiOperationOutcome.getCode() >= 200 || hapiOperationOutcome.getCode() <= 299)
+          && hapiOperationOutcome.isSuccessful()) {
+        testCase.setValidResource(true);
+      } else {
+        testCase.setValidResource(false);
+      }
+    }
+
     measure.getTestCases().add(testCase);
 
     measureRepository.save(measure);
