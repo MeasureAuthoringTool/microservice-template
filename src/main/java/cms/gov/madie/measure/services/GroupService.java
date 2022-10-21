@@ -1,27 +1,33 @@
 package cms.gov.madie.measure.services;
 
-import gov.cms.madie.models.access.RoleEnum;
-import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import org.bson.types.ObjectId;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeValidator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.Population;
+import gov.cms.madie.models.measure.Stratification;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import gov.cms.madie.models.measure.TestCasePopulationValue;
+import gov.cms.madie.models.measure.TestCaseStratificationValue;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.bson.types.ObjectId;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -71,7 +77,7 @@ public class GroupService {
         measure.getGroups().add(group);
       }
     }
-    measure.setTestCases(setPopulationValuesForGroup(group, measure.getTestCases()));
+    updateGroupForTestCases(group, measure.getTestCases());
     measure.setLastModifiedBy(username);
     measure.setLastModifiedAt(Instant.now());
     measureRepository.save(measure);
@@ -81,48 +87,49 @@ public class GroupService {
   /**
    * Loops over the test cases searching for any with groups that match the updating group. If any
    * match, then the test case group populations will be updated with the measure group populations,
-   * along with expected and actual values set to false.
+   * along with expected and actual values set to false. New group will not be added to the test
+   * case group. If group scoring changed, remove the group from test case group and treat it as new
+   * group
    *
    * @param group Group being changed
    * @param testCases TestCases to iterate over and update
-   * @return TestCases updated with new scoring type (if any groups matched)
+   * @return TestCases
    */
-  public List<TestCase> setPopulationValuesForGroup(Group group, List<TestCase> testCases) {
-    if (testCases == null
-        || testCases.isEmpty()
-        || group == null
-        || group.getId() == null
-        || group.getId().isEmpty()
-        || group.getScoring() == null
-        || group.getScoring().isEmpty()) {
+  public List<TestCase> updateGroupForTestCases(Group group, List<TestCase> testCases) {
+    if (group == null
+        || CollectionUtils.isEmpty(testCases)
+        || StringUtils.isBlank(group.getId())
+        || StringUtils.isBlank(group.getScoring())) {
       return testCases;
     }
+    testCases.forEach(
+        testCase -> {
+          List<TestCaseGroupPopulation> testCaseGroups = testCase.getGroupPopulations();
+          // if test case has groups
+          if (!CollectionUtils.isEmpty(testCaseGroups)) {
+            TestCaseGroupPopulation testCaseGroupPopulation =
+                testCaseGroups.stream()
+                    .filter(
+                        testCaseGroup ->
+                            StringUtils.equals(group.getId(), testCaseGroup.getGroupId()))
+                    .findAny()
+                    .orElse(null);
 
-    return testCases.stream()
-        .map(
-            testCase -> {
-              List<TestCaseGroupPopulation> testCaseGroupPopulations =
-                  // When a group is not created but test case is created
-                  // then when we add a group, since the testCaseGroupPopulations is null, they will
-                  // never is saved in mongo
-                  testCase.getGroupPopulations() != null
-                      ? testCase.getGroupPopulations().stream()
-                          .map(
-                              testCaseGroupPopulation ->
-                                  group.getId().equals(testCaseGroupPopulation.getGroupId())
-                                      ? testCaseGroupPopulation
-                                          .toBuilder()
-                                          .scoring(group.getScoring())
-                                          .populationValues(
-                                              getTestCasePopulationsForMeasureGroupPopulations(
-                                                  group))
-                                          .build()
-                                      : testCaseGroupPopulation.toBuilder().build())
-                          .collect(Collectors.toList())
-                      : testCase.getGroupPopulations();
-              return testCase.toBuilder().groupPopulations(testCaseGroupPopulations).build();
-            })
-        .collect(Collectors.toList());
+            // if this is not new group
+            if (testCaseGroupPopulation != null) {
+              // if scoring & population basis not changed, merge the updates
+              if (StringUtils.equals(testCaseGroupPopulation.getScoring(), group.getScoring())
+                  && StringUtils.equals(
+                      testCaseGroupPopulation.getPopulationBasis(), group.getPopulationBasis())) {
+                updateTestCaseGroupWithMeasureGroup(testCaseGroupPopulation, group);
+              } else {
+                // remove the group from test case if scoring changed
+                removeGroupFromTestCase(group.getId(), testCase);
+              }
+            }
+          }
+        });
+    return testCases;
   }
 
   public Measure deleteMeasureGroup(String measureId, String groupId, String username) {
@@ -164,25 +171,114 @@ public class GroupService {
         username,
         groupId,
         measure.getId());
+    List<TestCase> testCases = measure.getTestCases();
+    removeGroupFromTestCases(groupId, testCases);
     return measureRepository.save(measure);
   }
 
-  /** @return a list of TestCasePopulationValues for those defines are assigned. */
-  private List<TestCasePopulationValue> getTestCasePopulationsForMeasureGroupPopulations(
-      Group group) {
-    List<Population> groupPopulations = group.getPopulations();
-    if (CollectionUtils.isEmpty(groupPopulations)) {
-      return List.of();
+  public void updateTestCaseGroupWithMeasureGroup(
+      TestCaseGroupPopulation testCaseGroup, Group measureGroup) {
+    // update test case populations based on measure group population
+    List<TestCasePopulationValue> populations =
+        measureGroup.getPopulations().stream()
+            .map(measurePopulation -> updateTestCasePopulation(measurePopulation, testCaseGroup))
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+    testCaseGroup.setPopulationValues(populations);
+
+    // update test case stratification based on measure group stratification
+    if (CollectionUtils.isEmpty(measureGroup.getStratifications())) {
+      testCaseGroup.setStratificationValues(List.of());
     } else {
-      return groupPopulations.stream()
-          .map(
-              groupPopulation ->
-                  TestCasePopulationValue.builder()
-                      .expected(false)
-                      .actual(false)
-                      .name(groupPopulation.getName())
-                      .build())
-          .collect(Collectors.toList());
+      AtomicInteger count = new AtomicInteger(1);
+      List<TestCaseStratificationValue> stratification =
+          measureGroup.getStratifications().stream()
+              .map(
+                  measureStrata -> {
+                    String strataName =
+                        String.format(
+                            "Strata-%d %s",
+                            count.getAndIncrement(), measureStrata.getAssociation().getDisplay());
+                    return updateTestCaseStratification(measureStrata, testCaseGroup, strataName);
+                  })
+              .filter(Objects::nonNull)
+              .toList();
+      testCaseGroup.setStratificationValues(stratification);
     }
+  }
+
+  // update test case population
+  private TestCasePopulationValue updateTestCasePopulation(
+      Population population, TestCaseGroupPopulation testCaseGroup) {
+    // if no cql definition(optional pop or unselected), no need to consider population
+    if (StringUtils.isEmpty(population.getDefinition())) {
+      return null;
+    }
+    // find matching population
+    TestCasePopulationValue testCasePopulation =
+        findTestCasePopulation(population.getId(), testCaseGroup);
+    // if population did not find, create new one
+    if (testCasePopulation == null) {
+      testCasePopulation =
+          TestCasePopulationValue.builder()
+              .id(population.getId())
+              .expected(null)
+              .actual(null)
+              .name(population.getName())
+              .build();
+    }
+    return testCasePopulation;
+  }
+
+  // update test case stratification
+  private TestCaseStratificationValue updateTestCaseStratification(
+      Stratification stratification, TestCaseGroupPopulation testCaseGroup, String strataName) {
+    // if no cql definition(optional), no need to consider stratification
+    if (StringUtils.isEmpty(stratification.getCqlDefinition())) {
+      return null;
+    }
+
+    TestCaseStratificationValue testCaseStrata = null;
+    if (!CollectionUtils.isEmpty(testCaseGroup.getStratificationValues())) {
+      // find matching strata
+      testCaseStrata =
+          testCaseGroup.getStratificationValues().stream()
+              .filter(testStrata -> StringUtils.equals(testStrata.getId(), stratification.getId()))
+              .findAny()
+              .orElse(null);
+    }
+    // if population did not find, create new one
+    if (testCaseStrata == null) {
+      testCaseStrata =
+          TestCaseStratificationValue.builder()
+              .id(stratification.getId())
+              .expected(null)
+              .actual(null)
+              .build();
+    }
+    testCaseStrata.setName(strataName);
+    return testCaseStrata;
+  }
+
+  private TestCasePopulationValue findTestCasePopulation(
+      String populationId, TestCaseGroupPopulation testCaseGroup) {
+    return testCaseGroup.getPopulationValues().stream()
+        .filter(testPopulation -> StringUtils.equals(testPopulation.getId(), populationId))
+        .findAny()
+        .orElse(null);
+  }
+
+  private void removeGroupFromTestCases(String groupId, List<TestCase> testCases) {
+    if (StringUtils.isNotBlank(groupId) && !CollectionUtils.isEmpty(testCases)) {
+      testCases.forEach(testCase -> removeGroupFromTestCase(groupId, testCase));
+    }
+  }
+
+  private void removeGroupFromTestCase(String groupId, TestCase testCase) {
+    List<TestCaseGroupPopulation> remainingGroups =
+        testCase.getGroupPopulations().stream()
+            .filter(group -> !groupId.equals(group.getGroupId()))
+            .toList();
+    testCase.setGroupPopulations(remainingGroups);
   }
 }
