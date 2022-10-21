@@ -9,7 +9,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureObservation;
+import gov.cms.madie.models.measure.MeasureScoring;
 import gov.cms.madie.models.measure.Population;
+import gov.cms.madie.models.measure.PopulationType;
 import gov.cms.madie.models.measure.Stratification;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
@@ -183,6 +186,30 @@ public class GroupService {
             .map(measurePopulation -> updateTestCasePopulation(measurePopulation, testCaseGroup))
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
+
+    // retain observations for CV group if there are any
+    if (StringUtils.equals(
+        measureGroup.getScoring(), MeasureScoring.CONTINUOUS_VARIABLE.toString())) {
+      populations.addAll(findTestCaseObservations(testCaseGroup));
+    } else if (StringUtils.equals(measureGroup.getScoring(), MeasureScoring.RATIO.toString())
+        && !CollectionUtils.isEmpty(measureGroup.getMeasureObservations())) {
+      //  retain all observations if both denominator and numerator observations present
+      if (measureGroup.getMeasureObservations().size() == 2) {
+        populations.addAll(findTestCaseObservations(testCaseGroup));
+      } else {
+        MeasureObservation observation = measureGroup.getMeasureObservations().get(0);
+        Population population =
+            findMeasurePopulation(observation.getCriteriaReference(), measureGroup);
+        List<TestCasePopulationValue> observations;
+        if (population.getName() == PopulationType.DENOMINATOR) {
+          observations =
+              findTestCasePopulationsContainingId(testCaseGroup, "denominatorObservation");
+        } else {
+          observations = findTestCasePopulationsContainingId(testCaseGroup, "numeratorObservation");
+        }
+        populations.addAll(observations);
+      }
+    }
     testCaseGroup.setPopulationValues(populations);
 
     // update test case stratification based on measure group stratification
@@ -206,7 +233,6 @@ public class GroupService {
     }
   }
 
-  // update test case population
   private TestCasePopulationValue updateTestCasePopulation(
       Population population, TestCaseGroupPopulation testCaseGroup) {
     // if no cql definition(optional pop or unselected), no need to consider population
@@ -229,7 +255,6 @@ public class GroupService {
     return testCasePopulation;
   }
 
-  // update test case stratification
   private TestCaseStratificationValue updateTestCaseStratification(
       Stratification stratification, TestCaseGroupPopulation testCaseGroup, String strataName) {
     // if no cql definition(optional), no need to consider stratification
@@ -265,6 +290,27 @@ public class GroupService {
         .filter(testPopulation -> StringUtils.equals(testPopulation.getId(), populationId))
         .findAny()
         .orElse(null);
+  }
+
+  private Population findMeasurePopulation(String populationId, Group group) {
+    return group.getPopulations().stream()
+        .filter(testPopulation -> StringUtils.equals(testPopulation.getId(), populationId))
+        .findAny()
+        .orElse(null);
+  }
+
+  private List<TestCasePopulationValue> findTestCaseObservations(
+      TestCaseGroupPopulation testCaseGroup) {
+    return testCaseGroup.getPopulationValues().stream()
+        .filter(p -> p.getName() == PopulationType.MEASURE_OBSERVATION)
+        .collect(Collectors.toList());
+  }
+
+  private List<TestCasePopulationValue> findTestCasePopulationsContainingId(
+      TestCaseGroupPopulation testCaseGroup, String id) {
+    return testCaseGroup.getPopulationValues().stream()
+        .filter(p -> StringUtils.contains(p.getId(), id))
+        .collect(Collectors.toList());
   }
 
   private void removeGroupFromTestCases(String groupId, List<TestCase> testCases) {

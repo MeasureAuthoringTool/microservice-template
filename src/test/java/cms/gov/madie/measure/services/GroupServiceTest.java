@@ -62,9 +62,9 @@ public class GroupServiceTest implements ResourceUtil {
   private Group group1;
   private Group group2;
   private Group group3;
+  private Group group4;
   private Measure measure;
   private Stratification strata1;
-  private Stratification strata2;
 
   @BeforeEach
   public void setUp() {
@@ -72,9 +72,9 @@ public class GroupServiceTest implements ResourceUtil {
     strata1.setId("strat-1");
     strata1.setCqlDefinition("Initial Population");
     strata1.setAssociation(PopulationType.INITIAL_POPULATION);
-    strata2 = new Stratification();
+    Stratification strata2 = new Stratification();
     strata2.setId("strat-2");
-    strata2.setCqlDefinition("denominator_define");
+    strata2.setCqlDefinition("Denominator");
     strata2.setAssociation(PopulationType.DENOMINATOR);
 
     Stratification emptyStrat = new Stratification();
@@ -99,15 +99,21 @@ public class GroupServiceTest implements ResourceUtil {
         Group.builder()
             .id("xyz-p12r-12ert")
             .populationBasis("Encounter")
+            .scoring("Continuous Variable")
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "FactorialOfFive", null, null)))
+                        "id-1", PopulationType.INITIAL_POPULATION, "FactorialOfFive", null, null),
+                  new Population(
+                    "id-2", PopulationType.MEASURE_POPULATION, "Measure Population", null, null)))
+          .measureObservations(List.of(
+            new MeasureObservation(
+              "id-1", "ObservationFunction", "id-2", AggregateMethodType.MAXIMUM.getValue())))
             .stratifications(List.of(strata1, emptyStrat))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .build();
-
+    // Ratio group
     group3 =
         Group.builder()
             .scoring("Ratio")
@@ -120,14 +126,32 @@ public class GroupServiceTest implements ResourceUtil {
                         "Initial Population",
                         null,
                         null),
-                    new Population("id-12", PopulationType.DENOMINATOR_EXCLUSION, "", null, null)))
+                    new Population("id-2", PopulationType.DENOMINATOR, "Denominator", null, null),
+                    new Population("id-3", PopulationType.DENOMINATOR_EXCLUSION, "Denominator", null, null),
+                    new Population("id-4", PopulationType.NUMERATOR, "Numerator", null, null)))
             .measureObservations(
                 List.of(
                     new MeasureObservation(
-                        "mo-id-1", "ipp", "id-1", AggregateMethodType.MAXIMUM.getValue())))
+                        "mo-id-1", "Denominator MO", "id-2", AggregateMethodType.MAXIMUM.getValue()),
+                  new MeasureObservation(
+                    "mo-id-2", "Numerator MO", "id-4", AggregateMethodType.MAXIMUM.getValue())))
+            .stratifications(List.of(strata1, strata2))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .build();
+    // Proportion group
+    group4 = Group.builder()
+      .id("group-1")
+      .scoring(MeasureScoring.PROPORTION.toString())
+      .populationBasis("Boolean")
+      .populations(
+        List.of(
+          new Population("id-1", PopulationType.INITIAL_POPULATION, "pop1", null, null),
+          new Population("id-2", PopulationType.DENOMINATOR, "pop2", null, null),
+          new Population("id-3", PopulationType.DENOMINATOR_EXCLUSION, "pop3", null, null),
+          new Population("id-4", PopulationType.NUMERATOR, "pop4", null, null)))
+      .stratifications(List.of(strata1, strata2))
+      .build();
 
     List<Group> groups = new ArrayList<>();
     groups.add(group2);
@@ -266,7 +290,7 @@ public class GroupServiceTest implements ResourceUtil {
     assertEquals("Description", capturedGroup.getGroupDescription());
     assertEquals("test-scoring-unit", capturedGroup.getScoringUnit());
     assertNotNull(capturedGroup.getMeasureObservations());
-    assertEquals(1, capturedGroup.getMeasureObservations().size());
+    assertEquals(2, capturedGroup.getMeasureObservations().size());
   }
 
   @Test
@@ -757,33 +781,35 @@ public class GroupServiceTest implements ResourceUtil {
 
   @Test
   public void updateTestCaseGroupToAddMeasurePopulationsAndStratification() {
-    Group measureGroup = buildProportionMeasureGroup();
-    TestCaseGroupPopulation testCaseGroup = buildProportionTestCaseGroup();
+    // measure group with 4 populations and 2 stratification
+    Group measureGroup = group3;
+    TestCaseGroupPopulation testCaseGroup = buildTestCaseRatioGroup();
     // no testcase stratification
     testCaseGroup.setStratificationValues(null);
 
     // before updates
-    assertEquals(3, testCaseGroup.getPopulationValues().size());
+    assertEquals(5, testCaseGroup.getPopulationValues().size());
     assertNull(testCaseGroup.getStratificationValues());
     groupService.updateTestCaseGroupWithMeasureGroup(testCaseGroup, measureGroup);
     // after updates
-    assertEquals(4, testCaseGroup.getPopulationValues().size());
+    assertEquals(6, testCaseGroup.getPopulationValues().size());
     assertEquals(2, testCaseGroup.getStratificationValues().size());
   }
 
   @Test
   public void updateTestCaseGroupToRemoveMeasurePopulationsAndStratification() {
     // measure group with 4 populations and 2 stratification
-    Group measureGroup = buildProportionMeasureGroup();
+    Group measureGroup = group3;
 
-    // test case group with 4 populations and 2 stratification
-    TestCaseGroupPopulation testCaseGroup = buildProportionTestCaseGroup();
+    // test case group with 3 populations, 2 observations and 2 stratification
+    TestCaseGroupPopulation testCaseGroup = buildTestCaseRatioGroup();
+    // add one more optional population so that it can be removed
     testCaseGroup
         .getPopulationValues()
         .add(buildTestCasePopulation("id-3", PopulationType.DENOMINATOR_EXCLUSION));
 
     // before updates
-    assertEquals(4, testCaseGroup.getPopulationValues().size());
+    assertEquals(6, testCaseGroup.getPopulationValues().size());
     assertEquals(2, testCaseGroup.getStratificationValues().size());
 
     // unselect 1 population and 1 stratification from measure group
@@ -791,7 +817,7 @@ public class GroupServiceTest implements ResourceUtil {
     measureGroup.getStratifications().get(1).setCqlDefinition(null);
     groupService.updateTestCaseGroupWithMeasureGroup(testCaseGroup, measureGroup);
     // after updates
-    assertEquals(3, testCaseGroup.getPopulationValues().size());
+    assertEquals(5, testCaseGroup.getPopulationValues().size());
     assertEquals(1, testCaseGroup.getStratificationValues().size());
     // removed population DENOMINATOR_EXCLUSION is no longer in testCaseGroup
     TestCasePopulationValue testPopulation =
@@ -814,12 +840,12 @@ public class GroupServiceTest implements ResourceUtil {
 
   @Test
   public void updateTestCaseGroupToRemoveAllStratification() {
-    // measure group with 4 populations and 2 stratification
-    Group measureGroup = buildProportionMeasureGroup();
-    TestCaseGroupPopulation testCaseGroup = buildProportionTestCaseGroup();
+    // measure group with 4 populations, 2 observations and 2 stratification
+    Group measureGroup = group3;
+    TestCaseGroupPopulation testCaseGroup = buildTestCaseRatioGroup();
 
     // before updates
-    assertEquals(3, testCaseGroup.getPopulationValues().size());
+    assertEquals(5, testCaseGroup.getPopulationValues().size());
     assertEquals(2, testCaseGroup.getStratificationValues().size());
 
     // update measure group to have no stratification
@@ -829,40 +855,42 @@ public class GroupServiceTest implements ResourceUtil {
     assertEquals(0, testCaseGroup.getStratificationValues().size());
   }
 
-  private Group buildProportionMeasureGroup() {
-    return Group.builder()
-        .id("group-1")
-        .scoring(MeasureScoring.PROPORTION.toString())
-        .populationBasis("Boolean")
-        .populations(
-            List.of(
-                new Population("id-1", PopulationType.INITIAL_POPULATION, "pop1", null, null),
-                new Population("id-2", PopulationType.DENOMINATOR, "pop2", null, null),
-                new Population("id-3", PopulationType.DENOMINATOR_EXCLUSION, "pop3", null, null),
-                new Population("id-4", PopulationType.NUMERATOR, "pop4", null, null)))
-        .stratifications(List.of(strata1, strata2))
-        .build();
-  }
-
-  private TestCaseGroupPopulation buildProportionTestCaseGroup() {
+  private TestCaseGroupPopulation buildTestCaseRatioGroup() {
     List<TestCasePopulationValue> populations =
         List.of(
             buildTestCasePopulation("id-1", PopulationType.INITIAL_POPULATION),
             buildTestCasePopulation("id-2", PopulationType.DENOMINATOR),
-            buildTestCasePopulation("id-4", PopulationType.NUMERATOR));
+            buildTestCasePopulation("id-4", PopulationType.NUMERATOR),
+            buildTestCasePopulation("denominatorObservation1", PopulationType.MEASURE_OBSERVATION),
+            buildTestCasePopulation("numeratorObservation1", PopulationType.MEASURE_OBSERVATION));
     TestCaseStratificationValue testStrata1 = buildTestCaseStrata();
     testStrata1.setId(strata1.getId());
     TestCaseStratificationValue testStrata2 = buildTestCaseStrata();
     testStrata2.setId(strata1.getId());
+    List<TestCaseStratificationValue> stratification = new ArrayList<>(List.of(testStrata1, testStrata2));
+    // test case group with 3 populations and 2 stratification
+    return buildTestCaseGroup(populations, stratification);
+  }
 
+  private TestCaseGroupPopulation buildTestCaseCVGroup() {
+    List<TestCasePopulationValue> populations =
+      List.of(
+        buildTestCasePopulation("id-1", PopulationType.INITIAL_POPULATION),
+        buildTestCasePopulation("id-2", PopulationType.MEASURE_POPULATION),
+        buildTestCasePopulation("id-4", PopulationType.MEASURE_OBSERVATION));
+    // test case group with 3 populations and no stratification
+    return buildTestCaseGroup(populations, null);
+  }
+
+  private TestCaseGroupPopulation buildTestCaseGroup(List<TestCasePopulationValue> populations, List<TestCaseStratificationValue> stratification) {
     // test case group with 3 populations and 2 stratification
     return TestCaseGroupPopulation.builder()
-        .groupId("group-1")
-        .scoring(MeasureScoring.PROPORTION.toString())
-        .populationBasis("Boolean")
-        .populationValues(new ArrayList<>(populations))
-        .stratificationValues(new ArrayList<>(List.of(testStrata1, testStrata2)))
-        .build();
+      .groupId("group-1")
+      .scoring(MeasureScoring.RATIO.toString())
+      .populationBasis("Boolean")
+      .populationValues(new ArrayList<>(populations))
+      .stratificationValues(stratification)
+      .build();
   }
 
   private TestCaseStratificationValue buildTestCaseStrata() {
