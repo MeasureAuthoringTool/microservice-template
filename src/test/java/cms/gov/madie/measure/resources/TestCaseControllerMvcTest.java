@@ -118,8 +118,9 @@ public class TestCaseControllerMvcTest {
                         + "\"description\":\"Test Description\",\"createdAt\":null,"
                         + "\"createdBy\":\"TestUser\",\"lastModifiedAt\":null,"
                         + "\"lastModifiedBy\":\"TestUser2\","
+                        + "\"validResource\":false,"
                         + "\"json\":\"{\\\"test\\\":\\\"test\\\"}\",\"hapiOperationOutcome\":null,"
-                        + "\"groupPopulations\":null,\"validResource\":false}]"));
+                        + "\"groupPopulations\":null}]"));
     verify(testCaseService, times(1)).findTestCasesByMeasureId(measureIdCaptor.capture());
     String measureId = measureIdCaptor.getValue();
     assertEquals("1234", measureId);
@@ -163,8 +164,9 @@ public class TestCaseControllerMvcTest {
                         + "\"description\":\"Test Description\",\"createdAt\":null,"
                         + "\"createdBy\":\"TestUser\",\"lastModifiedAt\":null,"
                         + "\"lastModifiedBy\":\"TestUser2\","
+                        + "\"validResource\":false,"
                         + "\"json\":\"{\\\"test\\\":\\\"test\\\"}\",\"hapiOperationOutcome\":null,"
-                        + "\"groupPopulations\":null,\"validResource\":false}"));
+                        + "\"groupPopulations\":null}"));
     verify(testCaseService, times(1))
         .getTestCase(
             measureIdCaptor.capture(), testCaseIdCaptor.capture(), anyBoolean(), anyString());
@@ -206,8 +208,9 @@ public class TestCaseControllerMvcTest {
                         + "\",\"createdAt\":null,"
                         + "\"createdBy\":\"TestUser\",\"lastModifiedAt\":null,"
                         + "\"lastModifiedBy\":\"TestUser2\","
+                        + "\"validResource\":false,"
                         + "\"json\":\"{\\\"new\\\":\\\"json\\\"}\",\"hapiOperationOutcome\":null,"
-                        + "\"groupPopulations\":null,\"validResource\":false}"));
+                        + "\"groupPopulations\":null}"));
     verify(testCaseService, times(1))
         .updateTestCase(
             testCaseCaptor.capture(),
