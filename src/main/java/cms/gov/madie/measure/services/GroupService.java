@@ -123,7 +123,6 @@ public class GroupService {
                       testCaseGroupPopulation.getPopulationBasis(), group.getPopulationBasis())) {
                 updateTestCaseGroupWithMeasureGroup(testCaseGroupPopulation, group);
               } else {
-                // remove the group from test case if scoring changed
                 removeGroupFromTestCase(group.getId(), testCase);
               }
             }
