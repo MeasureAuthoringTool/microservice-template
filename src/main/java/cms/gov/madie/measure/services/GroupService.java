@@ -88,12 +88,12 @@ public class GroupService {
   }
 
   /**
-   * Update test case group if there are changes to the measure group as:
-   * 1. if population/stratification added to the measure group, add it to the test case group
-   * 2. If population/stratification removed from the measure group, add it to the test case group
-   * 3. if Observation is removed from the measure group(for Ratio),
-   * remove it's all associated observations from test case group
-   * 4. If group scoring or population basis changed, remove the group from test case groups
+   * Update test case group if there are changes to the measure group as: 1. if
+   * population/stratification added to the measure group, add it to the test case group 2. If
+   * population/stratification removed from the measure group, add it to the test case group 3. if
+   * Observation is removed from the measure group(for Ratio), remove it's all associated
+   * observations from test case group 4. If group scoring or population basis changed, remove the
+   * group from test case groups
    *
    * @param group Group being changed
    * @param testCases TestCases to iterate over and update

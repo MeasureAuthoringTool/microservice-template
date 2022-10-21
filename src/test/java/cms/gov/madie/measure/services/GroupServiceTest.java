@@ -103,11 +103,19 @@ public class GroupServiceTest implements ResourceUtil {
                 List.of(
                     new Population(
                         "id-1", PopulationType.INITIAL_POPULATION, "FactorialOfFive", null, null),
-                  new Population(
-                    "id-2", PopulationType.MEASURE_POPULATION, "Measure Population", null, null)))
-          .measureObservations(List.of(
-            new MeasureObservation(
-              "id-1", "ObservationFunction", "id-2", AggregateMethodType.MAXIMUM.getValue())))
+                    new Population(
+                        "id-2",
+                        PopulationType.MEASURE_POPULATION,
+                        "Measure Population",
+                        null,
+                        null)))
+            .measureObservations(
+                List.of(
+                    new MeasureObservation(
+                        "id-1",
+                        "ObservationFunction",
+                        "id-2",
+                        AggregateMethodType.MAXIMUM.getValue())))
             .stratifications(List.of(strata1, emptyStrat))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
@@ -126,14 +134,23 @@ public class GroupServiceTest implements ResourceUtil {
                         null,
                         null),
                     new Population("id-2", PopulationType.DENOMINATOR, "Denominator", null, null),
-                    new Population("id-3", PopulationType.DENOMINATOR_EXCLUSION, "Denominator", null, null),
-                    new Population("id-4", PopulationType.NUMERATOR, "Numerator", null, null)))
+                    new Population(
+                        "id-3", PopulationType.DENOMINATOR_EXCLUSION, "Denominator", null, null),
+                    new Population("id-4", PopulationType.NUMERATOR, "Numerator", null, null),
+                    new Population("id-4", PopulationType.NUMERATOR_EXCLUSION, "", null, null)))
             .measureObservations(
-                new ArrayList<>(List.of(
-                    new MeasureObservation(
-                        "mo-id-1", "Denominator MO", "id-2", AggregateMethodType.MAXIMUM.getValue()),
-                  new MeasureObservation(
-                    "mo-id-2", "Numerator MO", "id-4", AggregateMethodType.MAXIMUM.getValue()))))
+                new ArrayList<>(
+                    List.of(
+                        new MeasureObservation(
+                            "mo-id-1",
+                            "Denominator MO",
+                            "id-2",
+                            AggregateMethodType.MAXIMUM.getValue()),
+                        new MeasureObservation(
+                            "mo-id-2",
+                            "Numerator MO",
+                            "id-4",
+                            AggregateMethodType.MAXIMUM.getValue()))))
             .stratifications(List.of(strata1, strata2))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
@@ -894,31 +911,33 @@ public class GroupServiceTest implements ResourceUtil {
     testStrata1.setId(strata1.getId());
     TestCaseStratificationValue testStrata2 = buildTestCaseStrata();
     testStrata2.setId(strata1.getId());
-    List<TestCaseStratificationValue> stratification = new ArrayList<>(List.of(testStrata1, testStrata2));
+    List<TestCaseStratificationValue> stratification =
+        new ArrayList<>(List.of(testStrata1, testStrata2));
     // test case group with 3 populations and 2 stratification
     return buildTestCaseGroup(populations, stratification);
   }
 
   private TestCaseGroupPopulation buildTestCaseCVGroup() {
     List<TestCasePopulationValue> populations =
-      List.of(
-        buildTestCasePopulation("id-1", PopulationType.INITIAL_POPULATION),
-        buildTestCasePopulation("id-2", PopulationType.MEASURE_POPULATION),
-        buildTestCasePopulation("id-4", PopulationType.MEASURE_OBSERVATION),
-        buildTestCasePopulation("id-5", PopulationType.MEASURE_OBSERVATION));
+        List.of(
+            buildTestCasePopulation("id-1", PopulationType.INITIAL_POPULATION),
+            buildTestCasePopulation("id-2", PopulationType.MEASURE_POPULATION),
+            buildTestCasePopulation("id-4", PopulationType.MEASURE_OBSERVATION),
+            buildTestCasePopulation("id-5", PopulationType.MEASURE_OBSERVATION));
     // test case group with 3 populations and no stratification
     return buildTestCaseGroup(populations, null);
   }
 
-  private TestCaseGroupPopulation buildTestCaseGroup(List<TestCasePopulationValue> populations, List<TestCaseStratificationValue> stratification) {
+  private TestCaseGroupPopulation buildTestCaseGroup(
+      List<TestCasePopulationValue> populations, List<TestCaseStratificationValue> stratification) {
     // test case group with 3 populations and 2 stratification
     return TestCaseGroupPopulation.builder()
-      .groupId("group-1")
-      .scoring(MeasureScoring.RATIO.toString())
-      .populationBasis("Boolean")
-      .populationValues(new ArrayList<>(populations))
-      .stratificationValues(stratification)
-      .build();
+        .groupId("group-1")
+        .scoring(MeasureScoring.RATIO.toString())
+        .populationBasis("Boolean")
+        .populationValues(new ArrayList<>(populations))
+        .stratificationValues(stratification)
+        .build();
   }
 
   private TestCaseStratificationValue buildTestCaseStrata() {
