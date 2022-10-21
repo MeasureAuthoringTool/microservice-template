@@ -88,11 +88,12 @@ public class GroupService {
   }
 
   /**
-   * Loops over the test cases searching for any with groups that match the updating group. If any
-   * match, then the test case group populations will be updated with the measure group populations,
-   * along with expected and actual values set to false. New group will not be added to the test
-   * case group. If group scoring changed, remove the group from test case group and treat it as new
-   * group
+   * Update test case group if there are changes to the measure group as:
+   * 1. if population/stratification added to the measure group, add it to the test case group
+   * 2. If population/stratification removed from the measure group, add it to the test case group
+   * 3. if Observation is removed from the measure group(for Ratio),
+   * remove it's all associated observations from test case group
+   * 4. If group scoring or population basis changed, remove the group from test case groups
    *
    * @param group Group being changed
    * @param testCases TestCases to iterate over and update
