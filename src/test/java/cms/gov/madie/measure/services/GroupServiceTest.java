@@ -481,71 +481,14 @@ public class GroupServiceTest implements ResourceUtil {
 
   @Test
   public void testResetPopulationValuesForGroupHandlesNullGroup() {
+    TestCaseGroupPopulation testPopulation =
+        TestCaseGroupPopulation.builder().groupId("Group1_ID").build();
     final List<TestCase> testCases =
-        List.of(
-            TestCase.builder()
-                .groupPopulations(
-                    List.of(TestCaseGroupPopulation.builder().groupId("Group1_ID").build()))
-                .build());
+        List.of(TestCase.builder().groupPopulations(List.of(testPopulation)).build());
 
-    List<TestCase> output = groupService.updateGroupForTestCases(null, testCases);
-    assertEquals(testCases, output);
-  }
-
-  @Test
-  public void testResetGroupPopulationValuesForGroupHandlesNullGroupId() {
-    final Group group = Group.builder().id(null).scoring("Cohort").build();
-    final List<TestCase> testCases =
-        List.of(
-            TestCase.builder()
-                .groupPopulations(
-                    List.of(TestCaseGroupPopulation.builder().groupId("Group1_ID").build()))
-                .build());
-
-    List<TestCase> output = groupService.updateGroupForTestCases(group, testCases);
-    assertEquals(testCases, output);
-  }
-
-  @Test
-  public void testResetGroupPopulationValuesForGroupHandlesEmptyGroupId() {
-    final Group group = Group.builder().id("").scoring("Cohort").build();
-    final List<TestCase> testCases =
-        List.of(
-            TestCase.builder()
-                .groupPopulations(
-                    List.of(TestCaseGroupPopulation.builder().groupId("Group1_ID").build()))
-                .build());
-
-    List<TestCase> output = groupService.updateGroupForTestCases(group, testCases);
-    assertEquals(testCases, output);
-  }
-
-  @Test
-  public void testResetGroupPopulationValuesForGroupHandlesNullGroupScoring() {
-    final Group group = Group.builder().id("Group1_ID").scoring(null).build();
-    final List<TestCase> testCases =
-        List.of(
-            TestCase.builder()
-                .groupPopulations(
-                    List.of(TestCaseGroupPopulation.builder().groupId("Group1_ID").build()))
-                .build());
-
-    List<TestCase> output = groupService.updateGroupForTestCases(group, testCases);
-    assertEquals(testCases, output);
-  }
-
-  @Test
-  public void testResetGroupPopulationValuesForGroupHandlesEmptyGroupScoring() {
-    final Group group = Group.builder().id("Group1_ID").scoring("").build();
-    final List<TestCase> testCases =
-        List.of(
-            TestCase.builder()
-                .groupPopulations(
-                    List.of(TestCaseGroupPopulation.builder().groupId("Group1_ID").build()))
-                .build());
-
-    List<TestCase> output = groupService.updateGroupForTestCases(group, testCases);
-    assertEquals(testCases, output);
+    groupService.updateGroupForTestCases(null, testCases);
+    // unchanged test case populations
+    assertEquals(testCases.get(0).getGroupPopulations(), List.of(testPopulation));
   }
 
   @Test
@@ -593,33 +536,30 @@ public class GroupServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testResetPopulationValuesForGroupHandlesNullTestCaseList() {
-    final Group group = Group.builder().id("Group1_ID").scoring("Cohort").build();
-
-    List<TestCase> output = groupService.updateGroupForTestCases(group, null);
-    assertNull(output);
-  }
-
-  @Test
   public void testResetPopulationValuesForGroupHandlesEmptyTestCaseList() {
     final Group group = Group.builder().id("Group1_ID").scoring("Cohort").build();
     final List<TestCase> testCases = List.of();
-
-    List<TestCase> output = groupService.updateGroupForTestCases(group, testCases);
-    assertEquals(testCases, output);
+    // before updates
+    assertEquals(0, testCases.size());
+    groupService.updateGroupForTestCases(group, testCases);
+    // after updates, no change to the test case list
+    assertEquals(0, testCases.size());
   }
 
   @Test
   public void testResetPopulationValuesForGroupHandlesNullGroupPopulationList() {
     final Group group = Group.builder().id("Group2_ID").scoring("Cohort").build();
     final List<TestCase> testCases = List.of(TestCase.builder().groupPopulations(null).build());
-
-    List<TestCase> output = groupService.updateGroupForTestCases(group, testCases);
-    assertEquals(testCases, output);
+    // before updates
+    assertNull(testCases.get(0).getGroupPopulations());
+    groupService.updateGroupForTestCases(group, testCases);
+    // after updates, no population added to the group
+    assertNull(testCases.get(0).getGroupPopulations());
   }
 
   @Test
-  public void testResetPopulationValuesForGroupHandlesNonMatchingID() {
+  public void testResetPopulationValuesForNewGroup() {
+    // group with id that does not exist in test case
     final Group group = Group.builder().id("Group2_ID").scoring("Cohort").build();
     final List<TestCase> testCases =
         List.of(
@@ -637,58 +577,11 @@ public class GroupServiceTest implements ResourceUtil {
                                         .build()))
                             .build()))
                 .build());
-
-    List<TestCase> output = groupService.updateGroupForTestCases(group, testCases);
-    assertEquals(testCases, output);
-  }
-
-  @Test
-  public void testResetPopulationValuesForGroupHandlesMatchingID() {
-    final Group group = Group.builder().id("Group2_ID").scoring("Cohort").build();
-    TestCaseGroupPopulation testCaseGroupPopulation1 =
-        TestCaseGroupPopulation.builder()
-            .groupId("Group1_ID")
-            .scoring(MeasureScoring.COHORT.toString())
-            .populationValues(
-                List.of(
-                    TestCasePopulationValue.builder()
-                        .name(PopulationType.INITIAL_POPULATION)
-                        .expected(true)
-                        .build()))
-            .build();
-
-    final TestCaseGroupPopulation testCaseGroupPopulation2 =
-        TestCaseGroupPopulation.builder()
-            .groupId("Group2_ID")
-            .scoring(MeasureScoring.CONTINUOUS_VARIABLE.toString())
-            .populationValues(
-                List.of(
-                    TestCasePopulationValue.builder()
-                        .name(PopulationType.INITIAL_POPULATION)
-                        .expected(true)
-                        .build(),
-                    TestCasePopulationValue.builder()
-                        .name(PopulationType.MEASURE_POPULATION)
-                        .expected(true)
-                        .build()))
-            .build();
-
-    final List<TestCase> testCases =
-        List.of(
-            TestCase.builder()
-                .groupPopulations(List.of(testCaseGroupPopulation1, testCaseGroupPopulation2))
-                .build());
-
-    List<TestCase> output = groupService.updateGroupForTestCases(group, testCases);
-    assertNotNull(output);
-    assertEquals(1, output.size());
-    assertNotNull(output.get(0));
-    assertNotNull(output.get(0).getGroupPopulations());
-    assertEquals(1, output.get(0).getGroupPopulations().size());
-    assertEquals(testCaseGroupPopulation1, output.get(0).getGroupPopulations().get(0));
-    assertNotNull(output.get(0).getGroupPopulations().get(0).getPopulationValues());
-    assertEquals("Cohort", output.get(0).getGroupPopulations().get(0).getScoring());
-    assertEquals(1, output.get(0).getGroupPopulations().get(0).getPopulationValues().size());
+    // before updates
+    assertEquals(1, testCases.get(0).getGroupPopulations().size());
+    groupService.updateGroupForTestCases(group, testCases);
+    // after update call, do nothing for new group
+    assertEquals(1, testCases.get(0).getGroupPopulations().size());
   }
 
   @Test

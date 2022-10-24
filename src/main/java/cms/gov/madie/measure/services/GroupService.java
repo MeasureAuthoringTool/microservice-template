@@ -97,42 +97,35 @@ public class GroupService {
    *
    * @param group Group being changed
    * @param testCases TestCases to iterate over and update
-   * @return TestCases
    */
-  public List<TestCase> updateGroupForTestCases(Group group, List<TestCase> testCases) {
-    if (group == null
-        || CollectionUtils.isEmpty(testCases)
-        || StringUtils.isBlank(group.getId())
-        || StringUtils.isBlank(group.getScoring())) {
-      return testCases;
-    }
-    testCases.forEach(
-        testCase -> {
-          List<TestCaseGroupPopulation> testCaseGroups = testCase.getGroupPopulations();
-          // if test case has groups
-          if (!CollectionUtils.isEmpty(testCaseGroups)) {
-            TestCaseGroupPopulation testCaseGroupPopulation =
-                testCaseGroups.stream()
-                    .filter(
-                        testCaseGroup ->
-                            StringUtils.equals(group.getId(), testCaseGroup.getGroupId()))
-                    .findAny()
-                    .orElse(null);
-
-            // if this is not new group
-            if (testCaseGroupPopulation != null) {
-              // if scoring & population basis not changed, merge the updates
-              if (StringUtils.equals(testCaseGroupPopulation.getScoring(), group.getScoring())
-                  && StringUtils.equals(
-                      testCaseGroupPopulation.getPopulationBasis(), group.getPopulationBasis())) {
-                updateTestCaseGroupWithMeasureGroup(testCaseGroupPopulation, group);
-              } else {
-                removeGroupFromTestCase(group.getId(), testCase);
+  public void updateGroupForTestCases(Group group, List<TestCase> testCases) {
+    if (group != null && !CollectionUtils.isEmpty(testCases)) {
+      testCases.forEach(
+          testCase -> {
+            List<TestCaseGroupPopulation> testCaseGroups = testCase.getGroupPopulations();
+            // if test case has groups
+            if (!CollectionUtils.isEmpty(testCaseGroups)) {
+              TestCaseGroupPopulation testCaseGroupPopulation =
+                  testCaseGroups.stream()
+                      .filter(
+                          testCaseGroup ->
+                              StringUtils.equals(group.getId(), testCaseGroup.getGroupId()))
+                      .findAny()
+                      .orElse(null);
+              // if this is not new group
+              if (testCaseGroupPopulation != null) {
+                // if scoring & population basis not changed, merge the updates
+                if (StringUtils.equals(testCaseGroupPopulation.getScoring(), group.getScoring())
+                    && StringUtils.equals(
+                        testCaseGroupPopulation.getPopulationBasis(), group.getPopulationBasis())) {
+                  updateTestCaseGroupWithMeasureGroup(testCaseGroupPopulation, group);
+                } else {
+                  removeGroupFromTestCase(group.getId(), testCase);
+                }
               }
             }
-          }
-        });
-    return testCases;
+          });
+    }
   }
 
   public Measure deleteMeasureGroup(String measureId, String groupId, String username) {
