@@ -792,6 +792,37 @@ public class GroupServiceTest implements ResourceUtil {
     assertEquals(4, testCaseGroup.getPopulationValues().size());
   }
 
+  @Test
+  public void testRemoveGroupFromTestCases() {
+    TestCaseGroupPopulation cvGroup = buildTestCaseCVGroup();
+    TestCaseGroupPopulation ratioGroup = buildTestCaseRatioGroup();
+    ratioGroup.setGroupId("id-2");
+    List<TestCase> testCases =
+        List.of(TestCase.builder().groupPopulations(List.of(cvGroup, ratioGroup)).build());
+    measure.setTestCases(testCases);
+    // before removal
+    assertEquals(2, testCases.get(0).getGroupPopulations().size());
+    groupService.removeGroupFromTestCases(ratioGroup.getGroupId(), testCases);
+    // after removal
+    assertEquals(1, testCases.get(0).getGroupPopulations().size());
+    assertEquals(cvGroup.getGroupId(), testCases.get(0).getGroupPopulations().get(0).getGroupId());
+  }
+
+  @Test
+  public void testRemoveGroupFromTestCasesNoGroupIdOrTestCaseProvided() {
+    TestCaseGroupPopulation cvGroup = buildTestCaseCVGroup();
+    TestCaseGroupPopulation ratioGroup = buildTestCaseRatioGroup();
+    ratioGroup.setGroupId("id-2");
+    List<TestCase> testCases =
+        List.of(TestCase.builder().groupPopulations(List.of(cvGroup, ratioGroup)).build());
+    measure.setTestCases(testCases);
+    // before removal
+    assertEquals(2, testCases.get(0).getGroupPopulations().size());
+    groupService.removeGroupFromTestCases(null, List.of());
+    // after removal
+    assertEquals(2, testCases.get(0).getGroupPopulations().size());
+  }
+
   private TestCaseGroupPopulation buildTestCaseRatioGroup() {
     List<TestCasePopulationValue> populations =
         List.of(

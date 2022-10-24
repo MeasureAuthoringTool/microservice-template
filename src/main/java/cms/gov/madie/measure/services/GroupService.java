@@ -227,6 +227,12 @@ public class GroupService {
     }
   }
 
+  public void removeGroupFromTestCases(String groupId, List<TestCase> testCases) {
+    if (StringUtils.isNotBlank(groupId) && !CollectionUtils.isEmpty(testCases)) {
+      testCases.forEach(testCase -> removeGroupFromTestCase(groupId, testCase));
+    }
+  }
+
   private TestCasePopulationValue updateTestCasePopulation(
       Population population, TestCaseGroupPopulation testCaseGroup) {
     // if no cql definition(optional pop or unselected), no need to consider population
@@ -305,12 +311,6 @@ public class GroupService {
     return testCaseGroup.getPopulationValues().stream()
         .filter(p -> StringUtils.contains(p.getId(), id))
         .collect(Collectors.toList());
-  }
-
-  private void removeGroupFromTestCases(String groupId, List<TestCase> testCases) {
-    if (StringUtils.isNotBlank(groupId) && !CollectionUtils.isEmpty(testCases)) {
-      testCases.forEach(testCase -> removeGroupFromTestCase(groupId, testCase));
-    }
   }
 
   private void removeGroupFromTestCase(String groupId, TestCase testCase) {
