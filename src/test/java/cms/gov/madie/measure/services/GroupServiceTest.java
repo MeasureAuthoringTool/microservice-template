@@ -18,6 +18,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import gov.cms.madie.models.measure.TestCaseStratificationValue;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -60,16 +63,18 @@ public class GroupServiceTest implements ResourceUtil {
   private Group group2;
   private Group group3;
   private Measure measure;
+  private Stratification strata1;
 
   @BeforeEach
   public void setUp() {
-    Stratification strat1 = new Stratification();
-    strat1.setId("strat-1");
-    strat1.setCqlDefinition("Initial Population");
-    strat1.setAssociation(PopulationType.INITIAL_POPULATION);
-    Stratification strat2 = new Stratification();
-    strat2.setCqlDefinition("denominator_define");
-    strat2.setAssociation(PopulationType.DENOMINATOR);
+    strata1 = new Stratification();
+    strata1.setId("strat-1");
+    strata1.setCqlDefinition("Initial Population");
+    strata1.setAssociation(PopulationType.INITIAL_POPULATION);
+    Stratification strata2 = new Stratification();
+    strata2.setId("strat-2");
+    strata2.setCqlDefinition("Denominator");
+    strata2.setAssociation(PopulationType.DENOMINATOR);
 
     Stratification emptyStrat = new Stratification();
     // new group, not in DB, so no ID
@@ -93,15 +98,29 @@ public class GroupServiceTest implements ResourceUtil {
         Group.builder()
             .id("xyz-p12r-12ert")
             .populationBasis("Encounter")
+            .scoring("Continuous Variable")
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "FactorialOfFive", null, null)))
-            .stratifications(List.of(strat1, emptyStrat))
+                        "id-1", PopulationType.INITIAL_POPULATION, "FactorialOfFive", null, null),
+                    new Population(
+                        "id-2",
+                        PopulationType.MEASURE_POPULATION,
+                        "Measure Population",
+                        null,
+                        null)))
+            .measureObservations(
+                List.of(
+                    new MeasureObservation(
+                        "id-1",
+                        "ObservationFunction",
+                        "id-2",
+                        AggregateMethodType.MAXIMUM.getValue())))
+            .stratifications(List.of(strata1, emptyStrat))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .build();
-
+    // Ratio group
     group3 =
         Group.builder()
             .scoring("Ratio")
@@ -114,11 +133,25 @@ public class GroupServiceTest implements ResourceUtil {
                         "Initial Population",
                         null,
                         null),
-                    new Population("id-12", PopulationType.DENOMINATOR_EXCLUSION, "", null, null)))
+                    new Population("id-2", PopulationType.DENOMINATOR, "Denominator", null, null),
+                    new Population(
+                        "id-3", PopulationType.DENOMINATOR_EXCLUSION, "Denominator", null, null),
+                    new Population("id-4", PopulationType.NUMERATOR, "Numerator", null, null),
+                    new Population("id-4", PopulationType.NUMERATOR_EXCLUSION, "", null, null)))
             .measureObservations(
-                List.of(
-                    new MeasureObservation(
-                        "mo-id-1", "ipp", "id-1", AggregateMethodType.MAXIMUM.getValue())))
+                new ArrayList<>(
+                    List.of(
+                        new MeasureObservation(
+                            "mo-id-1",
+                            "Denominator MO",
+                            "id-2",
+                            AggregateMethodType.MAXIMUM.getValue()),
+                        new MeasureObservation(
+                            "mo-id-2",
+                            "Numerator MO",
+                            "id-4",
+                            AggregateMethodType.MAXIMUM.getValue()))))
+            .stratifications(List.of(strata1, strata2))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .build();
@@ -260,7 +293,7 @@ public class GroupServiceTest implements ResourceUtil {
     assertEquals("Description", capturedGroup.getGroupDescription());
     assertEquals("test-scoring-unit", capturedGroup.getScoringUnit());
     assertNotNull(capturedGroup.getMeasureObservations());
-    assertEquals(1, capturedGroup.getMeasureObservations().size());
+    assertEquals(2, capturedGroup.getMeasureObservations().size());
   }
 
   @Test
@@ -430,13 +463,8 @@ public class GroupServiceTest implements ResourceUtil {
     assertEquals(1, savedMeasure.getTestCases().size());
     assertNotNull(savedMeasure.getTestCases().get(0));
     assertNotNull(savedMeasure.getTestCases().get(0).getGroupPopulations());
-    assertFalse(savedMeasure.getTestCases().get(0).getGroupPopulations().isEmpty());
-    assertEquals(1, savedMeasure.getTestCases().get(0).getGroupPopulations().size());
-    TestCaseGroupPopulation outputGroupPopulation =
-        savedMeasure.getTestCases().get(0).getGroupPopulations().get(0);
-    assertEquals("Cohort", outputGroupPopulation.getScoring());
-    assertNotNull(outputGroupPopulation.getPopulationValues());
-    assertEquals(1, outputGroupPopulation.getPopulationValues().size());
+    assertTrue(savedMeasure.getTestCases().get(0).getGroupPopulations().isEmpty());
+    assertEquals(0, savedMeasure.getTestCases().get(0).getGroupPopulations().size());
     Group capturedGroup = savedMeasure.getGroups().get(0);
     // after update
     assertEquals("Initial Population", capturedGroup.getPopulations().get(0).getDefinition());
@@ -453,101 +481,85 @@ public class GroupServiceTest implements ResourceUtil {
 
   @Test
   public void testResetPopulationValuesForGroupHandlesNullGroup() {
+    TestCaseGroupPopulation testPopulation =
+        TestCaseGroupPopulation.builder().groupId("Group1_ID").build();
+    final List<TestCase> testCases =
+        List.of(TestCase.builder().groupPopulations(List.of(testPopulation)).build());
+
+    groupService.updateGroupForTestCases(null, testCases);
+    // unchanged test case populations
+    assertEquals(testCases.get(0).getGroupPopulations(), List.of(testPopulation));
+  }
+
+  @Test
+  public void testUpdateTestCaseGroupGroupScoringChanged() {
+    final Group group =
+        Group.builder().id("Group1_ID").scoring("Cohort").populationBasis("Encounter").build();
     final List<TestCase> testCases =
         List.of(
             TestCase.builder()
                 .groupPopulations(
-                    List.of(TestCaseGroupPopulation.builder().groupId("Group1_ID").build()))
+                    List.of(
+                        TestCaseGroupPopulation.builder()
+                            .groupId("Group1_ID")
+                            .scoring("Proportion")
+                            .populationBasis("Encounter")
+                            .build()))
                 .build());
-
-    List<TestCase> output = groupService.setPopulationValuesForGroup(null, testCases);
-    assertEquals(testCases, output);
+    // before updates
+    assertEquals(1, testCases.get(0).getGroupPopulations().size());
+    groupService.updateGroupForTestCases(group, testCases);
+    // group should be removed from test case as  measure group scoring was changed
+    assertEquals(0, testCases.get(0).getGroupPopulations().size());
   }
 
   @Test
-  public void testResetGroupPopulationValuesForGroupHandlesNullGroupId() {
-    final Group group = Group.builder().id(null).scoring("Cohort").build();
+  public void testUpdateTestCaseGroupGroupPopulationBasisChanged() {
+    final Group group =
+        Group.builder().id("Group1_ID").scoring("Cohort").populationBasis("Encounter").build();
     final List<TestCase> testCases =
         List.of(
             TestCase.builder()
                 .groupPopulations(
-                    List.of(TestCaseGroupPopulation.builder().groupId("Group1_ID").build()))
+                    List.of(
+                        TestCaseGroupPopulation.builder()
+                            .groupId("Group1_ID")
+                            .scoring("Cohort")
+                            .populationBasis("boolean")
+                            .build()))
                 .build());
-
-    List<TestCase> output = groupService.setPopulationValuesForGroup(group, testCases);
-    assertEquals(testCases, output);
-  }
-
-  @Test
-  public void testResetGroupPopulationValuesForGroupHandlesEmptyGroupId() {
-    final Group group = Group.builder().id("").scoring("Cohort").build();
-    final List<TestCase> testCases =
-        List.of(
-            TestCase.builder()
-                .groupPopulations(
-                    List.of(TestCaseGroupPopulation.builder().groupId("Group1_ID").build()))
-                .build());
-
-    List<TestCase> output = groupService.setPopulationValuesForGroup(group, testCases);
-    assertEquals(testCases, output);
-  }
-
-  @Test
-  public void testResetGroupPopulationValuesForGroupHandlesNullGroupScoring() {
-    final Group group = Group.builder().id("Group1_ID").scoring(null).build();
-    final List<TestCase> testCases =
-        List.of(
-            TestCase.builder()
-                .groupPopulations(
-                    List.of(TestCaseGroupPopulation.builder().groupId("Group1_ID").build()))
-                .build());
-
-    List<TestCase> output = groupService.setPopulationValuesForGroup(group, testCases);
-    assertEquals(testCases, output);
-  }
-
-  @Test
-  public void testResetGroupPopulationValuesForGroupHandlesEmptyGroupScoring() {
-    final Group group = Group.builder().id("Group1_ID").scoring("").build();
-    final List<TestCase> testCases =
-        List.of(
-            TestCase.builder()
-                .groupPopulations(
-                    List.of(TestCaseGroupPopulation.builder().groupId("Group1_ID").build()))
-                .build());
-
-    List<TestCase> output = groupService.setPopulationValuesForGroup(group, testCases);
-    assertEquals(testCases, output);
-  }
-
-  @Test
-  public void testResetPopulationValuesForGroupHandlesNullTestCaseList() {
-    final Group group = Group.builder().id("Group1_ID").scoring("Cohort").build();
-
-    List<TestCase> output = groupService.setPopulationValuesForGroup(group, null);
-    assertNull(output);
+    // before updates
+    assertEquals(1, testCases.get(0).getGroupPopulations().size());
+    groupService.updateGroupForTestCases(group, testCases);
+    // group should be removed from test case as populationBasis for measure group was changed
+    assertEquals(0, testCases.get(0).getGroupPopulations().size());
   }
 
   @Test
   public void testResetPopulationValuesForGroupHandlesEmptyTestCaseList() {
     final Group group = Group.builder().id("Group1_ID").scoring("Cohort").build();
     final List<TestCase> testCases = List.of();
-
-    List<TestCase> output = groupService.setPopulationValuesForGroup(group, testCases);
-    assertEquals(testCases, output);
+    // before updates
+    assertEquals(0, testCases.size());
+    groupService.updateGroupForTestCases(group, testCases);
+    // after updates, no change to the test case list
+    assertEquals(0, testCases.size());
   }
 
   @Test
   public void testResetPopulationValuesForGroupHandlesNullGroupPopulationList() {
     final Group group = Group.builder().id("Group2_ID").scoring("Cohort").build();
     final List<TestCase> testCases = List.of(TestCase.builder().groupPopulations(null).build());
-
-    List<TestCase> output = groupService.setPopulationValuesForGroup(group, testCases);
-    assertEquals(testCases, output);
+    // before updates
+    assertNull(testCases.get(0).getGroupPopulations());
+    groupService.updateGroupForTestCases(group, testCases);
+    // after updates, no population added to the group
+    assertNull(testCases.get(0).getGroupPopulations());
   }
 
   @Test
-  public void testResetPopulationValuesForGroupHandlesNonMatchingID() {
+  public void testResetPopulationValuesForNewGroup() {
+    // group with id that does not exist in test case
     final Group group = Group.builder().id("Group2_ID").scoring("Cohort").build();
     final List<TestCase> testCases =
         List.of(
@@ -565,59 +577,11 @@ public class GroupServiceTest implements ResourceUtil {
                                         .build()))
                             .build()))
                 .build());
-
-    List<TestCase> output = groupService.setPopulationValuesForGroup(group, testCases);
-    assertEquals(testCases, output);
-  }
-
-  @Test
-  public void testResetPopulationValuesForGroupHandlesMatchingID() {
-    final Group group = Group.builder().id("Group2_ID").scoring("Cohort").build();
-    TestCaseGroupPopulation testCaseGroupPopulation1 =
-        TestCaseGroupPopulation.builder()
-            .groupId("Group1_ID")
-            .scoring(MeasureScoring.COHORT.toString())
-            .populationValues(
-                List.of(
-                    TestCasePopulationValue.builder()
-                        .name(PopulationType.INITIAL_POPULATION)
-                        .expected(true)
-                        .build()))
-            .build();
-
-    final TestCaseGroupPopulation testCaseGroupPopulation2 =
-        TestCaseGroupPopulation.builder()
-            .groupId("Group2_ID")
-            .scoring(MeasureScoring.CONTINUOUS_VARIABLE.toString())
-            .populationValues(
-                List.of(
-                    TestCasePopulationValue.builder()
-                        .name(PopulationType.INITIAL_POPULATION)
-                        .expected(true)
-                        .build(),
-                    TestCasePopulationValue.builder()
-                        .name(PopulationType.MEASURE_POPULATION)
-                        .expected(true)
-                        .build()))
-            .build();
-
-    final List<TestCase> testCases =
-        List.of(
-            TestCase.builder()
-                .groupPopulations(List.of(testCaseGroupPopulation1, testCaseGroupPopulation2))
-                .build());
-
-    List<TestCase> output = groupService.setPopulationValuesForGroup(group, testCases);
-    assertNotNull(output);
-    assertNotEquals(testCases, output);
-    assertEquals(1, output.size());
-    assertNotNull(output.get(0));
-    assertNotNull(output.get(0).getGroupPopulations());
-    assertEquals(2, output.get(0).getGroupPopulations().size());
-    assertEquals(testCaseGroupPopulation1, output.get(0).getGroupPopulations().get(0));
-    assertNotNull(output.get(0).getGroupPopulations().get(1).getPopulationValues());
-    assertEquals("Cohort", output.get(0).getGroupPopulations().get(1).getScoring());
-    assertEquals(0, output.get(0).getGroupPopulations().get(1).getPopulationValues().size());
+    // before updates
+    assertEquals(1, testCases.get(0).getGroupPopulations().size());
+    groupService.updateGroupForTestCases(group, testCases);
+    // after update call, do nothing for new group
+    assertEquals(1, testCases.get(0).getGroupPopulations().size());
   }
 
   @Test
@@ -709,5 +673,203 @@ public class GroupServiceTest implements ResourceUtil {
     assertThrows(
         InvalidReturnTypeException.class,
         () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+  }
+
+  @Test
+  public void updateTestCaseGroupToAddMeasurePopulationsAndStratification() {
+    // measure group with 4 populations and 2 stratification
+    Group measureGroup = group3;
+    TestCaseGroupPopulation testCaseGroup = buildTestCaseRatioGroup();
+    // no testcase stratification
+    testCaseGroup.setStratificationValues(null);
+
+    // before updates
+    assertEquals(5, testCaseGroup.getPopulationValues().size());
+    assertNull(testCaseGroup.getStratificationValues());
+    groupService.updateTestCaseGroupWithMeasureGroup(testCaseGroup, measureGroup);
+    // after updates
+    assertEquals(6, testCaseGroup.getPopulationValues().size());
+    assertEquals(2, testCaseGroup.getStratificationValues().size());
+  }
+
+  @Test
+  public void updateTestCaseGroupToRemoveMeasurePopulationsAndStratification() {
+    // measure group with 4 populations and 2 stratification
+    Group measureGroup = group3;
+
+    // test case group with 3 populations, 2 observations and 2 stratification
+    TestCaseGroupPopulation testCaseGroup = buildTestCaseRatioGroup();
+    // add one more optional population so that it can be removed
+    testCaseGroup
+        .getPopulationValues()
+        .add(buildTestCasePopulation("id-3", PopulationType.DENOMINATOR_EXCLUSION));
+
+    // before updates
+    assertEquals(6, testCaseGroup.getPopulationValues().size());
+    assertEquals(2, testCaseGroup.getStratificationValues().size());
+
+    // unselect 1 population and 1 stratification from measure group
+    measureGroup.getPopulations().get(2).setDefinition(null);
+    measureGroup.getStratifications().get(1).setCqlDefinition(null);
+    groupService.updateTestCaseGroupWithMeasureGroup(testCaseGroup, measureGroup);
+    // after updates
+    assertEquals(5, testCaseGroup.getPopulationValues().size());
+    assertEquals(1, testCaseGroup.getStratificationValues().size());
+    // removed population DENOMINATOR_EXCLUSION is no longer in testCaseGroup
+    TestCasePopulationValue testPopulation =
+        testCaseGroup.getPopulationValues().stream()
+            .filter(
+                p -> StringUtils.equals(p.getId(), measureGroup.getPopulations().get(2).getId()))
+            .findAny()
+            .orElse(null);
+    assertNull(testPopulation);
+    // removed stratification is no longer in testCaseGroup
+    TestCaseStratificationValue testStrata =
+        testCaseGroup.getStratificationValues().stream()
+            .filter(
+                s ->
+                    StringUtils.equals(s.getId(), measureGroup.getStratifications().get(1).getId()))
+            .findAny()
+            .orElse(null);
+    assertNull(testStrata);
+  }
+
+  @Test
+  public void updateTestCaseGroupToRemoveAllStratificationAndAnObservations() {
+    // measure group with 4 populations, 2 observations and 2 stratification
+    Group measureGroup = group3;
+    TestCaseGroupPopulation testCaseGroup = buildTestCaseRatioGroup();
+
+    // before updates
+    assertEquals(5, testCaseGroup.getPopulationValues().size());
+    assertEquals(2, testCaseGroup.getStratificationValues().size());
+
+    // update measure group to remove stratification and observations
+    measureGroup.setStratifications(null);
+    measureGroup.setMeasureObservations(null);
+    groupService.updateTestCaseGroupWithMeasureGroup(testCaseGroup, measureGroup);
+    // after updates
+    assertEquals(4, testCaseGroup.getPopulationValues().size());
+    assertEquals(0, testCaseGroup.getStratificationValues().size());
+  }
+
+  @Test
+  public void updateTestCaseGroupToRemoveDenominatorObservation() {
+    // measure group with 4 populations and 2 stratification
+    Group measureGroup = group3;
+    TestCaseGroupPopulation testCaseGroup = buildTestCaseRatioGroup();
+    // before updates
+    assertEquals(5, testCaseGroup.getPopulationValues().size());
+    // remove denominator observation from measure group
+    measureGroup.getMeasureObservations().remove(0);
+    groupService.updateTestCaseGroupWithMeasureGroup(testCaseGroup, measureGroup);
+    // after updates
+    assertEquals(5, testCaseGroup.getPopulationValues().size());
+  }
+
+  @Test
+  public void updateTestCaseGroupToRemoveNumeratorObservation() {
+    // measure group with 4 populations and 2 stratification
+    Group measureGroup = group3;
+    TestCaseGroupPopulation testCaseGroup = buildTestCaseRatioGroup();
+    // before updates
+    assertEquals(5, testCaseGroup.getPopulationValues().size());
+    // remove denominator observation from measure group
+    measureGroup.getMeasureObservations().remove(1);
+    groupService.updateTestCaseGroupWithMeasureGroup(testCaseGroup, measureGroup);
+    // after updates
+    assertEquals(5, testCaseGroup.getPopulationValues().size());
+  }
+
+  @Test
+  public void testCVObservationsAreUnchangedOnPopulationChange() {
+    group2.setStratifications(null);
+    TestCaseGroupPopulation testCaseGroup = buildTestCaseCVGroup();
+    // before updates
+    assertEquals(4, testCaseGroup.getPopulationValues().size());
+    groupService.updateTestCaseGroupWithMeasureGroup(testCaseGroup, group2);
+    // after updates
+    assertEquals(4, testCaseGroup.getPopulationValues().size());
+  }
+
+  @Test
+  public void testRemoveGroupFromTestCases() {
+    TestCaseGroupPopulation cvGroup = buildTestCaseCVGroup();
+    TestCaseGroupPopulation ratioGroup = buildTestCaseRatioGroup();
+    ratioGroup.setGroupId("id-2");
+    List<TestCase> testCases =
+        List.of(TestCase.builder().groupPopulations(List.of(cvGroup, ratioGroup)).build());
+    measure.setTestCases(testCases);
+    // before removal
+    assertEquals(2, testCases.get(0).getGroupPopulations().size());
+    groupService.removeGroupFromTestCases(ratioGroup.getGroupId(), testCases);
+    // after removal
+    assertEquals(1, testCases.get(0).getGroupPopulations().size());
+    assertEquals(cvGroup.getGroupId(), testCases.get(0).getGroupPopulations().get(0).getGroupId());
+  }
+
+  @Test
+  public void testRemoveGroupFromTestCasesNoGroupIdOrTestCaseProvided() {
+    TestCaseGroupPopulation cvGroup = buildTestCaseCVGroup();
+    TestCaseGroupPopulation ratioGroup = buildTestCaseRatioGroup();
+    ratioGroup.setGroupId("id-2");
+    List<TestCase> testCases =
+        List.of(TestCase.builder().groupPopulations(List.of(cvGroup, ratioGroup)).build());
+    measure.setTestCases(testCases);
+    // before removal
+    assertEquals(2, testCases.get(0).getGroupPopulations().size());
+    groupService.removeGroupFromTestCases(null, List.of());
+    // after removal
+    assertEquals(2, testCases.get(0).getGroupPopulations().size());
+  }
+
+  private TestCaseGroupPopulation buildTestCaseRatioGroup() {
+    List<TestCasePopulationValue> populations =
+        List.of(
+            buildTestCasePopulation("id-1", PopulationType.INITIAL_POPULATION),
+            buildTestCasePopulation("id-2", PopulationType.DENOMINATOR),
+            buildTestCasePopulation("id-4", PopulationType.NUMERATOR),
+            buildTestCasePopulation("denominatorObservation1", PopulationType.MEASURE_OBSERVATION),
+            buildTestCasePopulation("numeratorObservation1", PopulationType.MEASURE_OBSERVATION));
+    TestCaseStratificationValue testStrata1 = buildTestCaseStrata();
+    testStrata1.setId(strata1.getId());
+    TestCaseStratificationValue testStrata2 = buildTestCaseStrata();
+    testStrata2.setId(strata1.getId());
+    List<TestCaseStratificationValue> stratification =
+        new ArrayList<>(List.of(testStrata1, testStrata2));
+    // test case group with 3 populations and 2 stratification
+    return buildTestCaseGroup(populations, stratification);
+  }
+
+  private TestCaseGroupPopulation buildTestCaseCVGroup() {
+    List<TestCasePopulationValue> populations =
+        List.of(
+            buildTestCasePopulation("id-1", PopulationType.INITIAL_POPULATION),
+            buildTestCasePopulation("id-2", PopulationType.MEASURE_POPULATION),
+            buildTestCasePopulation("id-4", PopulationType.MEASURE_OBSERVATION),
+            buildTestCasePopulation("id-5", PopulationType.MEASURE_OBSERVATION));
+    // test case group with 3 populations and no stratification
+    return buildTestCaseGroup(populations, null);
+  }
+
+  private TestCaseGroupPopulation buildTestCaseGroup(
+      List<TestCasePopulationValue> populations, List<TestCaseStratificationValue> stratification) {
+    // test case group with 3 populations and 2 stratification
+    return TestCaseGroupPopulation.builder()
+        .groupId("group-1")
+        .scoring(MeasureScoring.RATIO.toString())
+        .populationBasis("Boolean")
+        .populationValues(new ArrayList<>(populations))
+        .stratificationValues(stratification)
+        .build();
+  }
+
+  private TestCaseStratificationValue buildTestCaseStrata() {
+    return TestCaseStratificationValue.builder().expected(null).actual(null).build();
+  }
+
+  private TestCasePopulationValue buildTestCasePopulation(
+      String id, PopulationType populationType) {
+    return TestCasePopulationValue.builder().id(id).name(populationType).expected(true).build();
   }
 }
