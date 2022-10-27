@@ -16,183 +16,178 @@ public class AddPopulationBasisChangeUnit {
   @Execution
   public void addPopulationBasisValues(PopulationBasisRepository populationBasisRepository) {
     List<PopulationBasis> populationBasisList = new ArrayList<>();
-    populationBasisList.add(PopulationBasis.builder().populationBasisValue("Boolean").build());
-    populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Condition (Problem)").build());
+    populationBasisList.add(PopulationBasis.builder().populationBasisValue("boolean").build());
+    populationBasisList.add(PopulationBasis.builder().populationBasisValue("Condition").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Encounter").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Procedure").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Account").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Activity Definition").build());
+        PopulationBasis.builder().populationBasisValue("ActivityDefinition").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Administrable Product Definition").build());
+        PopulationBasis.builder().populationBasisValue("AdministrableProductDefinition").build());
+    populationBasisList.add(PopulationBasis.builder().populationBasisValue("AdverseEvent").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Adverse Event").build());
-    populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Allergy Intolerance").build());
+        PopulationBasis.builder().populationBasisValue("AllergyIntolerance").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Appointment").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Appointment Response").build());
+        PopulationBasis.builder().populationBasisValue("AppointmentResponse").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Biologically Derived Product").build());
+        PopulationBasis.builder().populationBasisValue("BiologicallyDerivedProduct").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Body Structure").build());
-    populationBasisList.add(PopulationBasis.builder().populationBasisValue("Care Plan").build());
-    populationBasisList.add(PopulationBasis.builder().populationBasisValue("Care Team").build());
-    populationBasisList.add(PopulationBasis.builder().populationBasisValue("Charge Item").build());
+        PopulationBasis.builder().populationBasisValue("BodyStructure").build());
+    populationBasisList.add(PopulationBasis.builder().populationBasisValue("CarePlan").build());
+    populationBasisList.add(PopulationBasis.builder().populationBasisValue("CareTeam").build());
+    populationBasisList.add(PopulationBasis.builder().populationBasisValue("ChargeItem").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Charge Item Definition").build());
+        PopulationBasis.builder().populationBasisValue("ChargeItemDefinition").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Citation").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Claim").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Claim Response").build());
+        PopulationBasis.builder().populationBasisValue("ClaimResponse").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Clinical Impression").build());
+        PopulationBasis.builder().populationBasisValue("ClinicalImpression").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Clinical Use Definition").build());
+        PopulationBasis.builder().populationBasisValue("ClinicalUseDefinition").build());
     populationBasisList.add(
         PopulationBasis.builder().populationBasisValue("Communication").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Communication Request").build());
+        PopulationBasis.builder().populationBasisValue("CommunicationRequest").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Contract").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Coverage").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Coverage Eligibility Request").build());
+        PopulationBasis.builder().populationBasisValue("CoverageEligibilityRequest").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Coverage Eligibility Response").build());
+        PopulationBasis.builder().populationBasisValue("CoverageEligibilityResponse").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Detected Issue").build());
+        PopulationBasis.builder().populationBasisValue("DetectedIssue").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Device").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Device Definition").build());
+        PopulationBasis.builder().populationBasisValue("DeviceDefinition").build());
+    populationBasisList.add(PopulationBasis.builder().populationBasisValue("DeviceMetric").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Device Metric").build());
+        PopulationBasis.builder().populationBasisValue("DeviceRequest").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Device Request").build());
+        PopulationBasis.builder().populationBasisValue("DeviceUseStatement").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Device Use Statement").build());
-    populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Diagnostic Report").build());
+        PopulationBasis.builder().populationBasisValue("DiagnosticReport").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Endpoint").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Enrollment Request").build());
+        PopulationBasis.builder().populationBasisValue("EnrollmentRequest").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Enrollment Response").build());
+        PopulationBasis.builder().populationBasisValue("EnrollmentResponse").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Episode Of Care").build());
+        PopulationBasis.builder().populationBasisValue("EpisodeOfCare").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Event Definition").build());
+        PopulationBasis.builder().populationBasisValue("EventDefinition").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Evidence").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Evidence Report").build());
+        PopulationBasis.builder().populationBasisValue("EvidenceReport").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Evidence Variable").build());
+        PopulationBasis.builder().populationBasisValue("EvidenceVariable").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Explanation Of Benefit").build());
+        PopulationBasis.builder().populationBasisValue("ExplanationOfBenefit").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Family Member History").build());
+        PopulationBasis.builder().populationBasisValue("FamilyMemberHistory").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Flag").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Goal").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Group").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Guidance Response").build());
+        PopulationBasis.builder().populationBasisValue("GuidanceResponse").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Healthcare Service").build());
-    populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Imaging Study").build());
+        PopulationBasis.builder().populationBasisValue("HealthcareService").build());
+    populationBasisList.add(PopulationBasis.builder().populationBasisValue("ImagingStudy").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Immunization").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Immunization Evaluation").build());
+        PopulationBasis.builder().populationBasisValue("ImmunizationEvaluation").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Immunization Recommendation").build());
+        PopulationBasis.builder().populationBasisValue("ImmunizationRecommendation").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Ingredient").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Insurance Plan").build());
+        PopulationBasis.builder().populationBasisValue("InsurancePlan").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Invoice").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Library").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("List").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Location").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Manufactured Item Definition").build());
+        PopulationBasis.builder().populationBasisValue("ManufacturedItemDefinition").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Measure").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Measure Report").build());
+        PopulationBasis.builder().populationBasisValue("MeasureReport").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Media").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Medication").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Medication Administration").build());
+        PopulationBasis.builder().populationBasisValue("MedicationAdministration").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Medication Dispense").build());
+        PopulationBasis.builder().populationBasisValue("MedicationDispense").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Medication Knowledge").build());
+        PopulationBasis.builder().populationBasisValue("MedicationKnowledge").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Medication Request").build());
+        PopulationBasis.builder().populationBasisValue("MedicationRequest").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Medication Statement").build());
+        PopulationBasis.builder().populationBasisValue("MedicationStatement").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Medicinal Product Definition").build());
+        PopulationBasis.builder().populationBasisValue("MedicinalProductDefinition").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Molecular Sequence").build());
+        PopulationBasis.builder().populationBasisValue("MolecularSequence").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Nutrition Order").build());
+        PopulationBasis.builder().populationBasisValue("NutritionOrder").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Nutrition Product").build());
+        PopulationBasis.builder().populationBasisValue("NutritionProduct").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Observation").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Observation Definition").build());
+        PopulationBasis.builder().populationBasisValue("ObservationDefinition").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Organization").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Organization Affiliation").build());
+        PopulationBasis.builder().populationBasisValue("OrganizationAffiliation").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Packaged Product Definition").build());
+        PopulationBasis.builder().populationBasisValue("PackagedProductDefinition").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Patient").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Payment Notice").build());
+        PopulationBasis.builder().populationBasisValue("PaymentNotice").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Payment Reconciliation").build());
+        PopulationBasis.builder().populationBasisValue("PaymentReconciliation").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Person").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Plan Definition").build());
+        PopulationBasis.builder().populationBasisValue("PlanDefinition").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Practitioner").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Practitioner Role").build());
+        PopulationBasis.builder().populationBasisValue("PractitionerRole").build());
     populationBasisList.add(
         PopulationBasis.builder().populationBasisValue("Questionnaire").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Questionnaire Response").build());
+        PopulationBasis.builder().populationBasisValue("QuestionnaireResponse").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Regulated Authorization").build());
+        PopulationBasis.builder().populationBasisValue("RegulatedAuthorization").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Related Person").build());
+        PopulationBasis.builder().populationBasisValue("RelatedPerson").build());
+    populationBasisList.add(PopulationBasis.builder().populationBasisValue("RequestGroup").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Request Group").build());
+        PopulationBasis.builder().populationBasisValue("ResearchStudy").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Research Study").build());
+        PopulationBasis.builder().populationBasisValue("ResearchSubject").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Research Subject").build());
-    populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Risk Assessment").build());
+        PopulationBasis.builder().populationBasisValue("RiskAssessment").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Schedule").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Service Request").build());
+        PopulationBasis.builder().populationBasisValue("ServiceRequest").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Slot").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Specimen").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Specimen Definition").build());
+        PopulationBasis.builder().populationBasisValue("SpecimenDefinition").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Substance").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Substance Definition").build());
+        PopulationBasis.builder().populationBasisValue("SubstanceDefinition").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Supply Delivery").build());
+        PopulationBasis.builder().populationBasisValue("SupplyDelivery").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Supply Request").build());
+        PopulationBasis.builder().populationBasisValue("SupplyRequest").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Task").build());
-    populationBasisList.add(PopulationBasis.builder().populationBasisValue("Test Report").build());
-    populationBasisList.add(PopulationBasis.builder().populationBasisValue("Test Script").build());
+    populationBasisList.add(PopulationBasis.builder().populationBasisValue("TestReport").build());
+    populationBasisList.add(PopulationBasis.builder().populationBasisValue("TestScript").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Verification Result").build());
+        PopulationBasis.builder().populationBasisValue("VerificationResult").build());
     populationBasisList.add(
-        PopulationBasis.builder().populationBasisValue("Vision Prescription").build());
+        PopulationBasis.builder().populationBasisValue("VisionPrescription").build());
     populationBasisRepository.insert(populationBasisList);
   }
 

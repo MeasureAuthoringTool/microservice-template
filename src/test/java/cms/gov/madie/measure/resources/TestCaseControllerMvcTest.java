@@ -473,7 +473,7 @@ public class TestCaseControllerMvcTest {
         List.of(
             TestCaseGroupPopulation.builder()
                 .scoring(MeasureScoring.COHORT.toString())
-                .populationBasis("Boolean")
+                .populationBasis("boolean")
                 .groupId("G123")
                 .populationValues(
                     List.of(
