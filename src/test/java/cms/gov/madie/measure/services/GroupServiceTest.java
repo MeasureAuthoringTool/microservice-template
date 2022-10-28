@@ -858,7 +858,7 @@ public class GroupServiceTest implements ResourceUtil {
     return TestCaseGroupPopulation.builder()
         .groupId("group-1")
         .scoring(MeasureScoring.RATIO.toString())
-        .populationBasis("Boolean")
+        .populationBasis("boolean")
         .populationValues(new ArrayList<>(populations))
         .stratificationValues(stratification)
         .build();

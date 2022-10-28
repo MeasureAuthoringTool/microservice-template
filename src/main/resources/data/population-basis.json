@@ -1,0 +1,326 @@
+[
+  {
+    "populationBasisValue": "Account"
+  },
+  {
+    "populationBasisValue": "ActivityDefinition"
+  },
+  {
+    "populationBasisValue": "AdministrableProductDefinition"
+  },
+  {
+    "populationBasisValue": "AdverseEvent"
+  },
+  {
+    "populationBasisValue": "AllergyIntolerance"
+  },
+  {
+    "populationBasisValue": "Appointment"
+  },
+  {
+    "populationBasisValue": "AppointmentResponse"
+  },
+  {
+    "populationBasisValue": "BiologicallyDerivedProduct"
+  },
+  {
+    "populationBasisValue": "BodyStructure"
+  },
+  {
+    "populationBasisValue": "boolean"
+  },
+  {
+    "populationBasisValue": "CarePlan"
+  },
+  {
+    "populationBasisValue": "CareTeam"
+  },
+  {
+    "populationBasisValue": "ChargeItem"
+  },
+  {
+    "populationBasisValue": "ChargeItemDefinition"
+  },
+  {
+    "populationBasisValue": "Citation"
+  },
+  {
+    "populationBasisValue": "Claim"
+  },
+  {
+    "populationBasisValue": "ClaimResponse"
+  },
+  {
+    "populationBasisValue": "ClinicalImpression"
+  },
+  {
+    "populationBasisValue": "ClinicalUseDefinition"
+  },
+  {
+    "populationBasisValue": "Communication"
+  },
+  {
+    "populationBasisValue": "CommunicationRequest"
+  },
+  {
+    "populationBasisValue": "Condition"
+  },
+  {
+    "populationBasisValue": "Contract"
+  },
+  {
+    "populationBasisValue": "Coverage"
+  },
+  {
+    "populationBasisValue": "CoverageEligibilityRequest"
+  },
+  {
+    "populationBasisValue": "CoverageEligibilityResponse"
+  },
+  {
+    "populationBasisValue": "DetectedIssue"
+  },
+  {
+    "populationBasisValue": "Device"
+  },
+  {
+    "populationBasisValue": "DeviceDefinition"
+  },
+  {
+    "populationBasisValue": "DeviceMetric"
+  },
+  {
+    "populationBasisValue": "DeviceRequest"
+  },
+  {
+    "populationBasisValue": "DeviceUseStatement"
+  },
+  {
+    "populationBasisValue": "DiagnosticReport"
+  },
+  {
+    "populationBasisValue": "Encounter"
+  },
+  {
+    "populationBasisValue": "Endpoint"
+  },
+  {
+    "populationBasisValue": "EnrollmentRequest"
+  },
+  {
+    "populationBasisValue": "EnrollmentResponse"
+  },
+  {
+    "populationBasisValue": "EpisodeOfCare"
+  },
+  {
+    "populationBasisValue": "EventDefinition"
+  },
+  {
+    "populationBasisValue": "Evidence"
+  },
+  {
+    "populationBasisValue": "EvidenceReport"
+  },
+  {
+    "populationBasisValue": "EvidenceVariable"
+  },
+  {
+    "populationBasisValue": "ExplanationOfBenefit"
+  },
+  {
+    "populationBasisValue": "FamilyMemberHistory"
+  },
+  {
+    "populationBasisValue": "Flag"
+  },
+  {
+    "populationBasisValue": "Goal"
+  },
+  {
+    "populationBasisValue": "Group"
+  },
+  {
+    "populationBasisValue": "GuidanceResponse"
+  },
+  {
+    "populationBasisValue": "HealthcareService"
+  },
+  {
+    "populationBasisValue": "ImagingStudy"
+  },
+  {
+    "populationBasisValue": "Immunization"
+  },
+  {
+    "populationBasisValue": "ImmunizationEvaluation"
+  },
+  {
+    "populationBasisValue": "ImmunizationRecommendation"
+  },
+  {
+    "populationBasisValue": "Ingredient"
+  },
+  {
+    "populationBasisValue": "InsurancePlan"
+  },
+  {
+    "populationBasisValue": "Invoice"
+  },
+  {
+    "populationBasisValue": "Library"
+  },
+  {
+    "populationBasisValue": "List"
+  },
+  {
+    "populationBasisValue": "Location"
+  },
+  {
+    "populationBasisValue": "ManufacturedItemDefinition"
+  },
+  {
+    "populationBasisValue": "Measure"
+  },
+  {
+    "populationBasisValue": "MeasureReport"
+  },
+  {
+    "populationBasisValue": "Media"
+  },
+  {
+    "populationBasisValue": "Medication"
+  },
+  {
+    "populationBasisValue": "MedicationAdministration"
+  },
+  {
+    "populationBasisValue": "MedicationDispense"
+  },
+  {
+    "populationBasisValue": "MedicationKnowledge"
+  },
+  {
+    "populationBasisValue": "MedicationRequest"
+  },
+  {
+    "populationBasisValue": "MedicationStatement"
+  },
+  {
+    "populationBasisValue": "MedicinalProductDefinition"
+  },
+  {
+    "populationBasisValue": "MolecularSequence"
+  },
+  {
+    "populationBasisValue": "NutritionOrder"
+  },
+  {
+    "populationBasisValue": "NutritionProduct"
+  },
+  {
+    "populationBasisValue": "Observation"
+  },
+  {
+    "populationBasisValue": "ObservationDefinition"
+  },
+  {
+    "populationBasisValue": "Organization"
+  },
+  {
+    "populationBasisValue": "OrganizationAffiliation"
+  },
+  {
+    "populationBasisValue": "PackagedProductDefinition"
+  },
+  {
+    "populationBasisValue": "Patient"
+  },
+  {
+    "populationBasisValue": "PaymentNotice"
+  },
+  {
+    "populationBasisValue": "PaymentReconciliation"
+  },
+  {
+    "populationBasisValue": "Person"
+  },
+  {
+    "populationBasisValue": "PlanDefinition"
+  },
+  {
+    "populationBasisValue": "Practitioner"
+  },
+  {
+    "populationBasisValue": "PractitionerRole"
+  },
+  {
+    "populationBasisValue": "Procedure"
+  },
+  {
+    "populationBasisValue": "Questionnaire"
+  },
+  {
+    "populationBasisValue": "QuestionnaireResponse"
+  },
+  {
+    "populationBasisValue": "RegulatedAuthorization"
+  },
+  {
+    "populationBasisValue": "RelatedPerson"
+  },
+  {
+    "populationBasisValue": "RequestGroup"
+  },
+  {
+    "populationBasisValue": "ResearchStudy"
+  },
+  {
+    "populationBasisValue": "ResearchSubject"
+  },
+  {
+    "populationBasisValue": "RiskAssessment"
+  },
+  {
+    "populationBasisValue": "Schedule"
+  },
+  {
+    "populationBasisValue": "ServiceRequest"
+  },
+  {
+    "populationBasisValue": "Slot"
+  },
+  {
+    "populationBasisValue": "Specimen"
+  },
+  {
+    "populationBasisValue": "SpecimenDefinition"
+  },
+  {
+    "populationBasisValue": "Substance"
+  },
+  {
+    "populationBasisValue": "SubstanceDefinition"
+  },
+  {
+    "populationBasisValue": "SupplyDelivery"
+  },
+  {
+    "populationBasisValue": "SupplyRequest"
+  },
+  {
+    "populationBasisValue": "Task"
+  },
+  {
+    "populationBasisValue": "TestReport"
+  },
+  {
+    "populationBasisValue": "TestScript"
+  },
+  {
+    "populationBasisValue": "VerificationResult"
+  },
+  {
+    "populationBasisValue": "VisionPrescription"
+  }
+]
