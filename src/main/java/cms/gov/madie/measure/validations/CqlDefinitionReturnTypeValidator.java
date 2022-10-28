@@ -49,7 +49,7 @@ public class CqlDefinitionReturnTypeValidator {
           stratification -> {
             if (StringUtils.isNotBlank(stratification.getCqlDefinition())) {
               String returnType = cqlDefinitionReturnTypes.get(stratification.getCqlDefinition());
-              if (!StringUtils.equals(returnType, populationBasis)) {
+              if (!StringUtils.equalsIgnoreCase(returnType, populationBasis)) {
                 throw new InvalidReturnTypeException("Stratification(s)");
               }
             }
