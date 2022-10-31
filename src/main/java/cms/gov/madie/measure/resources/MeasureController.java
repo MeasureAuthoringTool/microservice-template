@@ -95,6 +95,7 @@ public class MeasureController {
     measure.setCreatedAt(now);
     measure.setLastModifiedBy(username);
     measure.setLastModifiedAt(now);
+    measure.setVersion("0.0.000");
 
     Measure savedMeasure = repository.save(measure);
     log.info("User [{}] successfully created new measure with ID [{}]", username, measure.getId());
