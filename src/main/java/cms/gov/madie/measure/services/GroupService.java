@@ -314,10 +314,12 @@ public class GroupService {
   }
 
   private void removeGroupFromTestCase(String groupId, TestCase testCase) {
-    List<TestCaseGroupPopulation> remainingGroups =
-        testCase.getGroupPopulations().stream()
-            .filter(group -> !groupId.equals(group.getGroupId()))
-            .toList();
-    testCase.setGroupPopulations(remainingGroups);
+    if (testCase.getGroupPopulations() != null) {
+      List<TestCaseGroupPopulation> remainingGroups =
+              testCase.getGroupPopulations().stream()
+                      .filter(group -> !groupId.equals(group.getGroupId()))
+                      .toList();
+      testCase.setGroupPopulations(remainingGroups);
+    }
   }
 }
