@@ -551,4 +551,43 @@ class MeasureControllerTest {
     assertThat(output.getStatusCode(), is(equalTo(HttpStatus.OK)));
     assertThat(output.getBody(), is(equalTo(json)));
   }
+
+  @Test
+  void searchMeasuresByNameOrEcqmTitleWithoutCurrentUserFilter() {
+    Page<Measure> measures = new PageImpl<>(List.of(measure));
+    when(repository.findAllByMeasureNameOrEcqmTitle(any(String.class), any(Pageable.class)))
+        .thenReturn(measures);
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    ResponseEntity<Page<Measure>> response =
+        controller.findAllByMeasureNameOrEcqmTitle(principal, false, "test criteria", 10, 0);
+    verify(repository, times(1))
+        .findAllByMeasureNameOrEcqmTitle(any(String.class), any(Pageable.class));
+    verifyNoMoreInteractions(repository);
+    assertNotNull(response.getBody());
+    assertNotNull(response.getBody().getContent());
+    assertNotNull(response.getBody().getContent().get(0));
+    assertEquals("IDIDID", response.getBody().getContent().get(0).getMeasureSetId());
+  }
+
+  @Test
+  void searchMeasuresByNameOrEcqmTitleWithCurrentUserFilter() {
+    Page<Measure> measures = new PageImpl<>(List.of(measure));
+    when(repository.findAllByMeasureNameOrEcqmTitleForCurrentUser(
+            any(String.class), any(Pageable.class), anyString()))
+        .thenReturn(measures);
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    ResponseEntity<Page<Measure>> response =
+        controller.findAllByMeasureNameOrEcqmTitle(principal, true, "test criteria", 10, 0);
+    verify(repository, times(1))
+        .findAllByMeasureNameOrEcqmTitleForCurrentUser(
+            eq("test criteria"), any(Pageable.class), eq("test.user"));
+    verifyNoMoreInteractions(repository);
+    assertNotNull(response.getBody().getContent());
+    assertNotNull(response.getBody().getContent().get(0));
+    assertEquals("IDIDID", response.getBody().getContent().get(0).getMeasureSetId());
+  }
 }

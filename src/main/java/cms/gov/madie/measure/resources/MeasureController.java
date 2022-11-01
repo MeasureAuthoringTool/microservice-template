@@ -270,4 +270,24 @@ public class MeasureController {
         || !Objects.equals(
             persistedMeasure.getMeasurementPeriodEnd(), measure.getMeasurementPeriodEnd());
   }
+
+  @GetMapping("/measures/search/{criteria}")
+  public ResponseEntity<Page<Measure>> findAllByMeasureNameOrEcqmTitle(
+      Principal principal,
+      @RequestParam(required = false, defaultValue = "false", name = "currentUser")
+          boolean filterByCurrentUser,
+      @PathVariable("criteria") String criteria,
+      @RequestParam(required = false, defaultValue = "10", name = "limit") int limit,
+      @RequestParam(required = false, defaultValue = "0", name = "page") int page) {
+
+    final String username = principal.getName();
+    final Pageable pageReq = PageRequest.of(page, limit, Sort.by("lastModifiedAt").descending());
+
+    Page<Measure> measures =
+        filterByCurrentUser
+            ? repository.findAllByMeasureNameOrEcqmTitleForCurrentUser(criteria, pageReq, username)
+            : repository.findAllByMeasureNameOrEcqmTitle(criteria, pageReq);
+
+    return ResponseEntity.ok(measures);
+  }
 }
