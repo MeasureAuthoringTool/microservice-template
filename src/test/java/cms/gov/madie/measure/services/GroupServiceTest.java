@@ -355,6 +355,36 @@ public class GroupServiceTest implements ResourceUtil {
   }
 
   @Test
+  void testDeleteGroupWhenTestCaseHasNoGroups() {
+    Group group =
+            Group.builder()
+                    .id("testgroupid")
+                    .scoring("Cohort")
+                    .populations(
+                            List.of(
+                                    new Population(
+                                            "id-1",
+                                            PopulationType.INITIAL_POPULATION,
+                                            "Initial Population",
+                                            null,
+                                            null)))
+                    .build();
+    List<TestCase> testCases =
+            List.of(TestCase.builder().groupPopulations(null).build());
+
+    Measure existingMeasure =
+            Measure.builder().id("measure-id").createdBy("test.user").groups(List.of(group)).testCases(testCases).build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+
+    doReturn(existingMeasure).when(measureRepository).save(any(Measure.class));
+    // before deletion
+    assertEquals(1, existingMeasure.getGroups().size());
+    groupService.deleteMeasureGroup("measure-id", "testgroupid", "test.user");
+    // after deletion
+    assertEquals(0, existingMeasure.getGroups().size());
+  }
+
+  @Test
   void testDeleteMeasureGroupReturnsExceptionForNullMeasureId() {
     assertThrows(
         InvalidIdException.class,
@@ -858,7 +888,7 @@ public class GroupServiceTest implements ResourceUtil {
     return TestCaseGroupPopulation.builder()
         .groupId("group-1")
         .scoring(MeasureScoring.RATIO.toString())
-        .populationBasis("Boolean")
+        .populationBasis("boolean")
         .populationValues(new ArrayList<>(populations))
         .stratificationValues(stratification)
         .build();

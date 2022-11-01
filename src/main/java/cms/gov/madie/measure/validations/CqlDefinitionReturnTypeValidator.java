@@ -36,7 +36,7 @@ public class CqlDefinitionReturnTypeValidator {
           population -> {
             if (StringUtils.isNotBlank(population.getDefinition())) {
               String returnType = cqlDefinitionReturnTypes.get(population.getDefinition());
-              if (!StringUtils.equals(returnType, populationBasis)) {
+              if (!StringUtils.equalsIgnoreCase(returnType, populationBasis)) {
                 throw new InvalidReturnTypeException(population.getName().getDisplay());
               }
             }
@@ -49,7 +49,7 @@ public class CqlDefinitionReturnTypeValidator {
           stratification -> {
             if (StringUtils.isNotBlank(stratification.getCqlDefinition())) {
               String returnType = cqlDefinitionReturnTypes.get(stratification.getCqlDefinition());
-              if (!StringUtils.equals(returnType, populationBasis)) {
+              if (!StringUtils.equalsIgnoreCase(returnType, populationBasis)) {
                 throw new InvalidReturnTypeException("Stratification(s)");
               }
             }

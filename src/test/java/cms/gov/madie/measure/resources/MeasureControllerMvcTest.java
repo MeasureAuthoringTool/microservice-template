@@ -1200,7 +1200,7 @@ public class MeasureControllerMvcTest {
             .measureGroupTypes(List.of(MeasureGroupTypes.PROCESS))
             .build();
     final String groupJson =
-        "{\"scoring\":\"Cohort\",\"populations\":[{\"id\":\"id-1\",\"name\":\"initialPopulation\",\"definition\":\"Initial Population\"}],\"measureGroupTypes\":[\"Process\"],\"populationBasis\": \"Boolean\"}";
+        "{\"scoring\":\"Cohort\",\"populations\":[{\"id\":\"id-1\",\"name\":\"initialPopulation\",\"definition\":\"Initial Population\"}],\"measureGroupTypes\":[\"Process\"],\"populationBasis\": \"boolean\"}";
     when(groupService.createOrUpdateGroup(any(Group.class), any(String.class), any(String.class)))
         .thenReturn(group);
 
@@ -1246,7 +1246,7 @@ public class MeasureControllerMvcTest {
             .build();
 
     final String groupJson =
-        "{\"id\":\"test-id\",\"scoring\":\"Cohort\",\"populations\":[{\"id\":\"id-2\",\"name\":\"initialPopulation\",\"definition\":\"FactorialOfFive\"}],\"measureGroupTypes\":[\"Process\"], \"populationBasis\": \"Boolean\"}";
+        "{\"id\":\"test-id\",\"scoring\":\"Cohort\",\"populations\":[{\"id\":\"id-2\",\"name\":\"initialPopulation\",\"definition\":\"FactorialOfFive\"}],\"measureGroupTypes\":[\"Process\"], \"populationBasis\": \"boolean\"}";
     when(groupService.createOrUpdateGroup(any(Group.class), any(String.class), any(String.class)))
         .thenReturn(group);
 
@@ -1276,7 +1276,7 @@ public class MeasureControllerMvcTest {
   @Test
   public void testUpdateGroupIfPopulationDefinitionReturnTypesAreInvalid() throws Exception {
     final String groupJson =
-        "{\"id\":\"test-id\",\"scoring\":\"Cohort\",\"populations\":[{\"id\":\"id-2\",\"name\":\"initialPopulation\",\"definition\":\"FactorialOfFive\"}],\"measureGroupTypes\":[\"Process\"], \"populationBasis\": \"Boolean\"}";
+        "{\"id\":\"test-id\",\"scoring\":\"Cohort\",\"populations\":[{\"id\":\"id-2\",\"name\":\"initialPopulation\",\"definition\":\"FactorialOfFive\"}],\"measureGroupTypes\":[\"Process\"], \"populationBasis\": \"boolean\"}";
     when(groupService.createOrUpdateGroup(any(Group.class), any(String.class), any(String.class)))
         .thenThrow(new InvalidReturnTypeException("Initial Population"));
 
