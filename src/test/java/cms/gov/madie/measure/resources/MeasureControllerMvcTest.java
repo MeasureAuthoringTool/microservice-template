@@ -1599,4 +1599,145 @@ public class MeasureControllerMvcTest {
         .andExpect(jsonPath("$.entry[0].resource.version").value("9.0.000"));
     verify(measureRepository, times(1)).findById(eq("1234"));
   }
+
+  @Test
+  public void testSearchMeasuresByMeasureNameOrEcqmTitleNoQueryParams() throws Exception {
+    Measure m1 =
+        Measure.builder()
+            .measureName("measure-1")
+            .ecqmTitle("test-ecqm-title-1")
+            .createdBy("test-user-1")
+            .build();
+    Measure m2 =
+        Measure.builder()
+            .measureName("measure-2")
+            .ecqmTitle("test-ecqm-title-1")
+            .createdBy("test-user-2")
+            .build();
+    Measure m3 =
+        Measure.builder()
+            .measureName("measure-3")
+            .ecqmTitle("test-ecqm-title-3")
+            .createdBy("test-user-1")
+            .build();
+
+    Page<Measure> allMeasures = new PageImpl<>(List.of(m1, m2, m3));
+    when(measureRepository.findAllByMeasureNameOrEcqmTitle(any(String.class), any(Pageable.class)))
+        .thenReturn(allMeasures);
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                get("/measures/search/measure")
+                    .with(user(TEST_USER_ID))
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+    String resultStr = result.getResponse().getContentAsString();
+
+    ObjectMapper mapper = new ObjectMapper();
+    String expectedJsonStr = mapper.writeValueAsString(allMeasures);
+
+    assertThat(resultStr, is(equalTo(expectedJsonStr)));
+    verify(measureRepository, times(1))
+        .findAllByMeasureNameOrEcqmTitle(any(String.class), any(Pageable.class));
+    verifyNoMoreInteractions(measureRepository);
+  }
+
+  @Test
+  public void testSearchMeasuresByMeasureNameOrEcqmTitleWithCurrentUserFalse() throws Exception {
+    Measure m1 =
+        Measure.builder()
+            .measureName("measure-1")
+            .ecqmTitle("test-ecqm-title-1")
+            .createdBy("test-user-1")
+            .build();
+    Measure m2 =
+        Measure.builder()
+            .measureName("measure-2")
+            .ecqmTitle("test-ecqm-title-1")
+            .createdBy("test-user-2")
+            .build();
+    Measure m3 =
+        Measure.builder()
+            .measureName("measure-3")
+            .ecqmTitle("test-ecqm-title-3")
+            .createdBy("test-user-1")
+            .build();
+
+    Page<Measure> allMeasures = new PageImpl<>(List.of(m1, m2, m3));
+    when(measureRepository.findAllByMeasureNameOrEcqmTitle(any(String.class), any(Pageable.class)))
+        .thenReturn(allMeasures);
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                get("/measures/search/ecqm")
+                    .with(user(TEST_USER_ID))
+                    .queryParam("currentUser", "false")
+                    .queryParam("limit", "8")
+                    .queryParam("page", "1")
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+    String resultStr = result.getResponse().getContentAsString();
+
+    ObjectMapper mapper = new ObjectMapper();
+    String expectedJsonStr = mapper.writeValueAsString(allMeasures);
+
+    assertThat(resultStr, is(equalTo(expectedJsonStr)));
+    verify(measureRepository, times(1))
+        .findAllByMeasureNameOrEcqmTitle(any(String.class), any(Pageable.class));
+    verifyNoMoreInteractions(measureRepository);
+  }
+
+  @Test
+  public void testSearchMeasuresByMeasureNameOrEcqmTitleFilterByCurrentUser() throws Exception {
+    Measure m1 =
+        Measure.builder()
+            .measureName("measure-1")
+            .ecqmTitle("test-ecqm-title-1")
+            .createdBy(TEST_USER_ID)
+            .build();
+    Measure m2 =
+        Measure.builder()
+            .measureName("measure-2")
+            .ecqmTitle("test-ecqm-title-1")
+            .createdBy(TEST_USER_ID)
+            .build();
+    Measure m3 =
+        Measure.builder()
+            .measureName("measure-3")
+            .ecqmTitle("test-ecqm-title-3")
+            .createdBy(TEST_USER_ID)
+            .build();
+
+    final Page<Measure> measures = new PageImpl<>(List.of(m1, m2, m3));
+
+    when(measureRepository.findAllByMeasureNameOrEcqmTitleForCurrentUser(
+            any(String.class), any(Pageable.class), any(String.class)))
+        .thenReturn(measures);
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                get("/measures/search/measure")
+                    .with(user(TEST_USER_ID))
+                    .queryParam("currentUser", "true")
+                    .queryParam("limit", "8")
+                    .queryParam("page", "1")
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+    String resultStr = result.getResponse().getContentAsString();
+
+    ObjectMapper mapper = new ObjectMapper();
+    String expectedJsonStr = mapper.writeValueAsString(measures);
+
+    assertThat(resultStr, is(equalTo(expectedJsonStr)));
+    verify(measureRepository, times(1))
+        .findAllByMeasureNameOrEcqmTitleForCurrentUser(
+            eq("measure"), any(PageRequest.class), eq(TEST_USER_ID));
+    verifyNoMoreInteractions(measureRepository);
+  }
 }
