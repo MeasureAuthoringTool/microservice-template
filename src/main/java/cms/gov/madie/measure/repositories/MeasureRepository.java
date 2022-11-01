@@ -30,4 +30,17 @@ public interface MeasureRepository extends MongoRepository<Measure, String> {
 
   @Query(value = "{'groups._id': ?0}")
   Optional<Measure> findGroupById(String groupId);
+
+  @Query(
+      "{$or: [{'measureName' : { $regex : ?0, $options: 'i' } }, "
+          + "{'ecqmTitle' : { $regex : ?0, $options: 'i' } }]}")
+  Page<Measure> findAllByMeasureNameOrEcqmTitle(String criteria, Pageable page);
+
+  @Query(
+      " {$and: [{'createdBy' : ?1} ,  "
+          + "{$or: [{'measureName' : { $regex : ?0, $options: 'i' } },"
+          + "{'ecqmTitle' : { $regex : ?0, $options: 'i' }}]} "
+          + "]}")
+  Page<Measure> findAllByMeasureNameOrEcqmTitleForCurrentUser(
+      String criteria, Pageable page, String user);
 }
