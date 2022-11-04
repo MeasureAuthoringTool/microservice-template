@@ -32,12 +32,14 @@ public interface MeasureRepository extends MongoRepository<Measure, String> {
   Optional<Measure> findGroupById(String groupId);
 
   @Query(
-      "{$or: [{'measureName' : { $regex : ?0, $options: 'i' } }, "
-          + "{'ecqmTitle' : { $regex : ?0, $options: 'i' } }]}")
+      " {$and: [{active : true} ,  "
+          + "{$or: [{'measureName' : { $regex : ?0, $options: 'i' } },"
+          + "{'ecqmTitle' : { $regex : ?0, $options: 'i' }}]} "
+          + "]}")
   Page<Measure> findAllByMeasureNameOrEcqmTitle(String criteria, Pageable page);
 
   @Query(
-      " {$and: [{'createdBy' : ?1} ,  "
+      " {$and: [{'createdBy' : ?1, active : true} ,  "
           + "{$or: [{'measureName' : { $regex : ?0, $options: 'i' } },"
           + "{'ecqmTitle' : { $regex : ?0, $options: 'i' }}]} "
           + "]}")
