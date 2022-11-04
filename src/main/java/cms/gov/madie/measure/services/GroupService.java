@@ -302,7 +302,12 @@ public class GroupService {
   private List<TestCasePopulationValue> findTestCaseObservations(
       TestCaseGroupPopulation testCaseGroup) {
     return testCaseGroup.getPopulationValues().stream()
-        .filter(p -> p.getName() == PopulationType.MEASURE_OBSERVATION)
+        .filter(
+            p ->
+                p.getName() == PopulationType.MEASURE_OBSERVATION
+                    || p.getName() == PopulationType.MEASURE_POPULATION_OBSERVATION
+                    || p.getName() == PopulationType.DENOMINATOR_OBSERVATION
+                    || p.getName() == PopulationType.NUMERATOR_OBSERVATION)
         .collect(Collectors.toList());
   }
 
@@ -314,10 +319,12 @@ public class GroupService {
   }
 
   private void removeGroupFromTestCase(String groupId, TestCase testCase) {
-    List<TestCaseGroupPopulation> remainingGroups =
-        testCase.getGroupPopulations().stream()
-            .filter(group -> !groupId.equals(group.getGroupId()))
-            .toList();
-    testCase.setGroupPopulations(remainingGroups);
+    if (testCase.getGroupPopulations() != null) {
+      List<TestCaseGroupPopulation> remainingGroups =
+          testCase.getGroupPopulations().stream()
+              .filter(group -> !groupId.equals(group.getGroupId()))
+              .toList();
+      testCase.setGroupPopulations(remainingGroups);
+    }
   }
 }

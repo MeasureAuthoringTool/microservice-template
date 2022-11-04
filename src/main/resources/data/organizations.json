@@ -24,16 +24,8 @@
         "oid": "2.16.840.1.113883.3.2066"
     },
     {
-        "name": "American Academy of Neurology",
-        "oid": "2.16.840.1.113883.1544"
-    },
-    {
         "name": "Dental Quality Alliance",
         "oid": "2.16.840.1.113883.17.77"
-    },
-    {
-        "name": "American Academy of Neurology",
-        "oid": "2.16.840.1.113883.3"
     },
     {
         "name": "Lantana Consulting Group",
@@ -136,10 +128,6 @@
         "oid": "2.16.840.1.113883.3.3628"
     },
     {
-        "name": "MITRE",
-        "oid": "2.16.840.1.113883.3.400"
-    },
-    {
         "name": "ONC",
         "oid": "2.16.840.1.113883.3.4295"
     },
@@ -158,10 +146,6 @@
     {
         "name": "Quality Insights of Pennsylvania",
         "oid": "2.16.840.1.113883.3.600"
-    },
-    {
-        "name": "Quality Insights of Pennsylvania",
-        "oid": "2.16.840.1.113883.3.600.0001"
     },
     {
         "name": "Oklahoma Foundation for Medical Quality",
@@ -190,10 +174,6 @@
     {
         "name": "Minnesota Community Measurement (invalid)",
         "oid": "2.16.840.1.133883.3.3114"
-    },
-    {
-        "name": "Telligen",
-        "oid": "2.16.840.113883.3.67"
     },
     {
         "name": "Valence Health",
@@ -822,10 +802,6 @@
     {
         "name": "Family Medicine Residency of Idaho",
         "oid": "49f5f9fa-75b8-4095-ab59-33597c75bce4"
-    },
-    {
-        "name": "Arbormetrix",
-        "oid": "aee0c57c-7170-464a-b7ae-264f9ca05b4e"
     },
     {
         "name": "Meridios",

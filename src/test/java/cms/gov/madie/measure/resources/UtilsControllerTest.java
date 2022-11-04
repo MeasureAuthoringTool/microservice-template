@@ -25,7 +25,7 @@ class UtilsControllerTest {
   @Test
   void getAllPopulationBasisValues() {
     List<PopulationBasis> populationBasisList = new ArrayList<>();
-    populationBasisList.add(PopulationBasis.builder().populationBasisValue("Boolean").build());
+    populationBasisList.add(PopulationBasis.builder().populationBasisValue("boolean").build());
     populationBasisList.add(
         PopulationBasis.builder().populationBasisValue("Condition (Problem)").build());
     populationBasisList.add(PopulationBasis.builder().populationBasisValue("Encounter").build());
