@@ -1,7 +1,10 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.HapiFhirConfig;
+import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.exceptions.UnauthorizedException;
+import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.HapiOperationOutcome;
 import gov.cms.madie.models.measure.Measure;
@@ -16,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
@@ -160,12 +164,56 @@ public class TestCaseService {
     return findMeasureById(measureId).getTestCases();
   }
 
+  public List<TestCase> deleteTestCase(String measureId, String testCaseId, String username) {
+    if (StringUtils.isBlank(testCaseId)) {
+      throw new InvalidIdException("Test Case Id cannot be null");
+    }
+    if (StringUtils.isBlank(measureId)) {
+      throw new InvalidIdException("Measure Id cannot be null");
+    }
+
+    Measure measure = findMeasureById(measureId);
+    if (hasPermissionToDelete(measureId, username, measure)) {
+      List<TestCase> remainingTestCases =
+          measure.getTestCases().stream().filter(g -> !g.getId().equals(testCaseId)).toList();
+      // to check if given test case id is present
+      if (remainingTestCases.size() == measure.getTestCases().size()) {
+        throw new ResourceNotFoundException("Test Case", testCaseId);
+      }
+      measure.setTestCases(remainingTestCases);
+      log.info(
+          "User [{}] has successfully deleted a test case with Id [{}] from measure [{}]",
+          username,
+          testCaseId,
+          measureId);
+
+      measureRepository.save(measure);
+      return remainingTestCases;
+    } else {
+      return null;
+    }
+  }
+
   public Measure findMeasureById(String measureId) {
     Measure measure = measureRepository.findById(measureId).orElse(null);
     if (measure == null) {
       throw new ResourceNotFoundException("Measure", measureId);
     }
     return measure;
+  }
+
+  public Boolean hasPermissionToDelete(String measureId, String username, Measure measure) {
+    if (!username.equals(measure.getCreatedBy())
+            && (CollectionUtils.isEmpty(measure.getAcls())
+            || !measure.getAcls().stream()
+            .anyMatch(
+                    acl ->
+                            acl.getUserId().equals(username)
+                                    && acl.getRoles().stream()
+                                    .anyMatch(role -> role.equals(RoleEnum.SHARED_WITH))))) {
+      throw new UnauthorizedException("Measure", measureId, username);
+    }
+    return true;
   }
 
   public List<String> findTestCaseSeriesByMeasureId(String measureId) {

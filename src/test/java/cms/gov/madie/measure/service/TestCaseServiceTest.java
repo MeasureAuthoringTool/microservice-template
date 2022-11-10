@@ -1,16 +1,16 @@
 package cms.gov.madie.measure.service;
 
 import cms.gov.madie.measure.HapiFhirConfig;
+import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.FhirServicesClient;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cms.madie.models.common.ActionType;
-import gov.cms.madie.models.measure.HapiOperationOutcome;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.TestCase;
+import gov.cms.madie.models.measure.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.TestCaseService;
 import org.assertj.core.util.Lists;
@@ -41,10 +41,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class TestCaseServiceTest {
@@ -453,6 +450,70 @@ public class TestCaseServiceTest {
     assertThrows(
         ResourceNotFoundException.class,
         () -> testCaseService.getTestCase(measure.getId(), testCase.getId(), false, "TOKEN"));
+  }
+
+  @Test
+  void testDeleteTestCase() {
+    List<TestCase> testCases =
+        List.of(
+            TestCase.builder().id("TC1_ID").title("TC1").build(),
+            TestCase.builder().id("TC2_ID").title("TC2").build());
+
+    Measure existingMeasure =
+        Measure.builder().id("measure-id").createdBy("test.user").testCases(testCases).build();
+    when(repository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+
+    doReturn(existingMeasure).when(repository).save(any(Measure.class));
+
+    List<TestCase> output = testCaseService.deleteTestCase("measure-id", "TC2_ID", "test.user");
+
+    assertEquals(1, output.size());
+  }
+
+  @Test
+  void testDeleteTestCaseReturnsExceptionForNullMeasureId() {
+    assertThrows(
+        InvalidIdException.class,
+        () -> testCaseService.deleteTestCase("", "testCaseId", "OtherUser"));
+  }
+
+  @Test
+  void testDeleteTestCaseReturnsExceptionForResourceNotFound() {
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> testCaseService.deleteTestCase("testid", "testCaseId", "user2"));
+  }
+
+  @Test
+  void testDeleteTestCaseReturnsExceptionForNullTestCaseId() {
+    assertThrows(
+        InvalidIdException.class,
+        () -> testCaseService.deleteTestCase("measure-id", "", "OtherUser"));
+  }
+
+  @Test
+  void testDeleteTestCaseReturnsExceptionThrowsAccessException() {
+    final Measure measure = Measure.builder().id("measure-id").createdBy("OtherUser").build();
+    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
+    assertThrows(
+        UnauthorizedException.class,
+        () -> testCaseService.deleteTestCase("measure-id", "testCaseId", "user2"));
+  }
+
+  @Test
+  void testDeleteTestCasReturnsExceptionForGroupNotFoundInMeasure() {
+    List<TestCase> testCases =
+        List.of(
+            TestCase.builder().id("TC1_ID").title("TC1").build(),
+            TestCase.builder().id("TC2_ID").title("TC2").build());
+
+    Measure existingMeasure =
+        Measure.builder().id("measure-id").createdBy("test.user").testCases(testCases).build();
+    when(repository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> testCaseService.deleteTestCase("measure-id", "testCaseId", "test.user"));
   }
 
   @Test
