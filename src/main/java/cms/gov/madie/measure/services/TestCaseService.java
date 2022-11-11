@@ -166,35 +166,41 @@ public class TestCaseService {
 
   public List<TestCase> deleteTestCase(String measureId, String testCaseId, String username) {
     if (StringUtils.isBlank(testCaseId)) {
-      throw new InvalidIdException("Test Case Id cannot be null");
+      log.info("Test case Id cannot be null");
+      throw new InvalidIdException("Test case cannot be deleted, please contact the helpdesk");
     }
     if (StringUtils.isBlank(measureId)) {
-      throw new InvalidIdException("Measure Id cannot be null");
+      log.info("Measure Id cannot be null");
+      throw new InvalidIdException("Test case cannot be deleted, please contact the helpdesk");
     }
 
     Measure measure = findMeasureById(measureId);
-    if (hasPermissionToDelete(measureId, username, measure)) {
-      if (measure.getTestCases() == null) {
-        throw new ResourceNotFoundException("Test Case", testCaseId);
-      }
-      List<TestCase> remainingTestCases =
-          measure.getTestCases().stream().filter(g -> !g.getId().equals(testCaseId)).toList();
-      // to check if given test case id is present
-      if (remainingTestCases.size() == measure.getTestCases().size()) {
-        throw new ResourceNotFoundException("Test Case", testCaseId);
-      }
-      measure.setTestCases(remainingTestCases);
+    if (!hasPermissionToDelete(measureId, username, measure)) {
       log.info(
-          "User [{}] has successfully deleted a test case with Id [{}] from measure [{}]",
-          username,
-          testCaseId,
-          measureId);
-
-      measureRepository.save(measure);
-      return remainingTestCases;
-    } else {
-      return null;
+          "User [{}] is not authorized to delete the test case with ID [{}] from measure [{}]",
+          username, testCaseId);
+      throw new UnauthorizedException("Measure", measureId, username);
     }
+    if (measure.getTestCases() == null) {
+      log.info("Measure with ID [{}] doesn't have any test cases", measureId);
+      throw new ResourceNotFoundException("Test Case", testCaseId);
+    }
+    List<TestCase> remainingTestCases =
+        measure.getTestCases().stream().filter(g -> !g.getId().equals(testCaseId)).toList();
+    // to check if given test case id is present
+    if (remainingTestCases.size() == measure.getTestCases().size()) {
+      log.info("Measure with ID [{}] doesn't have any test case with ID [{}]", measureId,testCaseId);
+      throw new ResourceNotFoundException("Test Case", testCaseId);
+    }
+    measure.setTestCases(remainingTestCases);
+    log.info(
+        "User [{}] has successfully deleted a test case with Id [{}] from measure [{}]",
+        username,
+        testCaseId,
+        measureId);
+
+    measureRepository.save(measure);
+    return remainingTestCases;
   }
 
   public Measure findMeasureById(String measureId) {
@@ -205,19 +211,15 @@ public class TestCaseService {
     return measure;
   }
 
-  public Boolean hasPermissionToDelete(String measureId, String username, Measure measure) {
-
-    if (!username.equals(measure.getCreatedBy())
-            && (CollectionUtils.isEmpty(measure.getAcls())
-            || !measure.getAcls().stream()
-            .anyMatch(
+  private Boolean hasPermissionToDelete(String measureId, String username, Measure measure) {
+    return username.equals(measure.getCreatedBy())
+        || (!CollectionUtils.isEmpty(measure.getAcls())
+            && measure.getAcls().stream()
+                .anyMatch(
                     acl ->
-                            acl.getUserId().equals(username)
-                                    && acl.getRoles().stream()
-                                    .anyMatch(role -> role.equals(RoleEnum.SHARED_WITH))))) {
-      throw new UnauthorizedException("Measure", measureId, username);
-    }
-    return true;
+                        acl.getUserId().equals(username)
+                            && acl.getRoles().stream()
+                                .anyMatch(role -> role.equals(RoleEnum.SHARED_WITH))));
   }
 
   public List<String> findTestCaseSeriesByMeasureId(String measureId) {

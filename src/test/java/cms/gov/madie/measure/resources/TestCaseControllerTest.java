@@ -12,12 +12,16 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.security.Principal;
 import java.util.List;
 import java.util.Objects;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -111,6 +115,21 @@ public class TestCaseControllerTest {
     verify(testCaseService, times(1))
         .updateTestCase(any(TestCase.class), anyString(), usernameCaptor.capture(), anyString());
     assertEquals("test.user2", usernameCaptor.getValue());
+  }
+
+  @Test
+  void deleteTestCase() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    doReturn(List.of(testCase))
+        .when(testCaseService)
+        .deleteTestCase(any(String.class), any(String.class), any(String.class));
+
+    ResponseEntity<List<TestCase>> output =
+        controller.deleteTestCase("measure-id", "TC1_ID", principal);
+
+    assertThat(output.getStatusCode(), is(equalTo(HttpStatus.OK)));
   }
 
   @Test
