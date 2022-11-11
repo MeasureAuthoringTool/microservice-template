@@ -75,7 +75,7 @@ public class TestCaseController {
   }
 
   @DeleteMapping(ControllerUtil.TEST_CASES + "/{testCaseId}")
-  public ResponseEntity<List<TestCase>> deleteTestCase(
+  public ResponseEntity<String> deleteTestCase(
       @RequestBody @PathVariable String measureId,
       @PathVariable String testCaseId,
       Principal principal) {

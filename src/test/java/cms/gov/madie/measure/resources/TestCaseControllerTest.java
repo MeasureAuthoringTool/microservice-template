@@ -118,17 +118,18 @@ public class TestCaseControllerTest {
   }
 
   @Test
-  void deleteTestCase() {
+  void testSuccessfulDeleteTestCase() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
-    doReturn(List.of(testCase))
+    String returnOutput = "Test case deleted successfully: TC1_ID";
+    doReturn(returnOutput)
         .when(testCaseService)
         .deleteTestCase(any(String.class), any(String.class), any(String.class));
 
-    ResponseEntity<List<TestCase>> output =
-        controller.deleteTestCase("measure-id", "TC1_ID", principal);
+    ResponseEntity<String> output = controller.deleteTestCase("measure-id", "TC1_ID", principal);
 
+    assertThat(output.getBody(), is(equalTo("Test case deleted successfully: TC1_ID")));
     assertThat(output.getStatusCode(), is(equalTo(HttpStatus.OK)));
   }
 

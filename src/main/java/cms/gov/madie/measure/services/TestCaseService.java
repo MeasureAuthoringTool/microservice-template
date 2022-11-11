@@ -164,7 +164,7 @@ public class TestCaseService {
     return findMeasureById(measureId).getTestCases();
   }
 
-  public List<TestCase> deleteTestCase(String measureId, String testCaseId, String username) {
+  public String deleteTestCase(String measureId, String testCaseId, String username) {
     if (StringUtils.isBlank(testCaseId) || StringUtils.isBlank(measureId)) {
       log.info("Test case/Measure Id cannot be null");
       throw new InvalidIdException("Test case cannot be deleted, please contact the helpdesk");
@@ -174,7 +174,9 @@ public class TestCaseService {
     if (!hasPermissionToDelete(username, measure)) {
       log.info(
           "User [{}] is not authorized to delete the test case with ID [{}] from measure [{}]",
-          username, testCaseId);
+          username,
+          testCaseId,
+          measureId);
       throw new UnauthorizedException("Measure", measureId, username);
     }
     if (measure.getTestCases() == null) {
@@ -185,7 +187,8 @@ public class TestCaseService {
         measure.getTestCases().stream().filter(g -> !g.getId().equals(testCaseId)).toList();
     // to check if given test case id is present
     if (remainingTestCases.size() == measure.getTestCases().size()) {
-      log.info("Measure with ID [{}] doesn't have any test case with ID [{}]", measureId,testCaseId);
+      log.info(
+          "Measure with ID [{}] doesn't have any test case with ID [{}]", measureId, testCaseId);
       throw new InvalidIdException("Test case cannot be deleted, please contact the helpdesk");
     }
     measure.setTestCases(remainingTestCases);
@@ -196,7 +199,7 @@ public class TestCaseService {
         measureId);
 
     measureRepository.save(measure);
-    return remainingTestCases;
+    return "Test case deleted successfully: " + testCaseId;
   }
 
   public Measure findMeasureById(String measureId) {

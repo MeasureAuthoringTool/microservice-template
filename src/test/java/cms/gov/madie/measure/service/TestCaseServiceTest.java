@@ -465,9 +465,8 @@ public class TestCaseServiceTest {
 
     doReturn(existingMeasure).when(repository).save(any(Measure.class));
 
-    List<TestCase> output = testCaseService.deleteTestCase("measure-id", "TC2_ID", "test.user");
-
-    assertEquals(1, output.size());
+    String output = testCaseService.deleteTestCase("measure-id", "TC2_ID", "test.user");
+    assertThat(output, is(equalTo("Test case deleted successfully: TC2_ID")));
   }
 
   @Test
@@ -489,6 +488,20 @@ public class TestCaseServiceTest {
     assertThrows(
         InvalidIdException.class,
         () -> testCaseService.deleteTestCase("measure-id", "", "OtherUser"));
+  }
+
+  @Test
+  void testDeleteTestCaseReturnsExceptionForTestCaseNotFound() {
+    List<TestCase> testCases =
+        List.of(
+            TestCase.builder().id("TC1_ID").title("TC1").build(),
+            TestCase.builder().id("TC2_ID").title("TC2").build());
+    final Measure measure =
+        Measure.builder().id("measure-id").createdBy("OtherUser").testCases(testCases).build();
+    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
+    assertThrows(
+        InvalidIdException.class,
+        () -> testCaseService.deleteTestCase("measure-id", "testCaseId", "OtherUser"));
   }
 
   @Test
