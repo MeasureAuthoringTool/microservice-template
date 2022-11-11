@@ -179,7 +179,7 @@ public class TestCaseService {
           measureId);
       throw new UnauthorizedException("Measure", measureId, username);
     }
-    if (measure.getTestCases() == null) {
+    if (CollectionUtils.isEmpty(measure.getTestCases())) {
       log.info("Measure with ID [{}] doesn't have any test cases", measureId);
       throw new InvalidIdException("Test case cannot be deleted, please contact the helpdesk");
     }
