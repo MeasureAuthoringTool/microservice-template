@@ -501,6 +501,14 @@ public class TestCaseServiceTest {
   }
 
   @Test
+  void testHasPermissionToDeleteReturnsExceptionThrowsAccessException() {
+    final Measure measure = Measure.builder().id("measure-id").createdBy("OtherUser").build();
+    assertThrows(
+            UnauthorizedException.class,
+            () -> testCaseService.hasPermissionToDelete("measure-id", "user2", measure));
+  }
+
+  @Test
   void testDeleteTestCasReturnsExceptionForGroupNotFoundInMeasure() {
     List<TestCase> testCases =
         List.of(
