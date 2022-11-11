@@ -514,7 +514,7 @@ public class TestCaseServiceTest {
     when(repository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
 
     assertThrows(
-        ResourceNotFoundException.class,
+        InvalidIdException.class,
         () -> testCaseService.deleteTestCase("measure-id", "testCaseId", "test.user"));
   }
 
