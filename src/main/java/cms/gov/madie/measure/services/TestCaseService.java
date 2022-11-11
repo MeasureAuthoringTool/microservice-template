@@ -179,14 +179,14 @@ public class TestCaseService {
     }
     if (measure.getTestCases() == null) {
       log.info("Measure with ID [{}] doesn't have any test cases", measureId);
-      throw new ResourceNotFoundException("Test Case", testCaseId);
+      throw new InvalidIdException("Test case cannot be deleted, please contact the helpdesk");
     }
     List<TestCase> remainingTestCases =
         measure.getTestCases().stream().filter(g -> !g.getId().equals(testCaseId)).toList();
     // to check if given test case id is present
     if (remainingTestCases.size() == measure.getTestCases().size()) {
       log.info("Measure with ID [{}] doesn't have any test case with ID [{}]", measureId,testCaseId);
-      throw new ResourceNotFoundException("Test Case", testCaseId);
+      throw new InvalidIdException("Test case cannot be deleted, please contact the helpdesk");
     }
     measure.setTestCases(remainingTestCases);
     log.info(
