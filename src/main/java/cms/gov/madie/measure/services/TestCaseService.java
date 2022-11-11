@@ -206,6 +206,7 @@ public class TestCaseService {
   }
 
   public Boolean hasPermissionToDelete(String measureId, String username, Measure measure) {
+
     if (!username.equals(measure.getCreatedBy())
             && (CollectionUtils.isEmpty(measure.getAcls())
             || !measure.getAcls().stream()
