@@ -165,12 +165,8 @@ public class TestCaseService {
   }
 
   public List<TestCase> deleteTestCase(String measureId, String testCaseId, String username) {
-    if (StringUtils.isBlank(testCaseId)) {
+    if (StringUtils.isBlank(testCaseId) || StringUtils.isBlank(measureId)) {
       log.info("Test case Id cannot be null");
-      throw new InvalidIdException("Test case cannot be deleted, please contact the helpdesk");
-    }
-    if (StringUtils.isBlank(measureId)) {
-      log.info("Measure Id cannot be null");
       throw new InvalidIdException("Test case cannot be deleted, please contact the helpdesk");
     }
 
