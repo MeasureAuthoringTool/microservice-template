@@ -171,7 +171,7 @@ public class TestCaseService {
     }
 
     Measure measure = findMeasureById(measureId);
-    if (!hasPermissionToDelete(measureId, username, measure)) {
+    if (!hasPermissionToDelete(username, measure)) {
       log.info(
           "User [{}] is not authorized to delete the test case with ID [{}] from measure [{}]",
           username, testCaseId);
@@ -207,7 +207,7 @@ public class TestCaseService {
     return measure;
   }
 
-  private Boolean hasPermissionToDelete(String measureId, String username, Measure measure) {
+  private Boolean hasPermissionToDelete(String username, Measure measure) {
     return username.equals(measure.getCreatedBy())
         || (!CollectionUtils.isEmpty(measure.getAcls())
             && measure.getAcls().stream()
