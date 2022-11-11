@@ -517,6 +517,22 @@ public class TestCaseServiceTest {
   }
 
   @Test
+  void testDeleteTestCasReturnsExceptionForNullTestCasesinMeasure() {
+    List<TestCase> testCases =
+        List.of(
+            TestCase.builder().id("TC1_ID").title("TC1").build(),
+            TestCase.builder().id("TC2_ID").title("TC2").build());
+
+    Measure existingMeasure =
+        Measure.builder().id("measure-id").createdBy("test.user").testCases(null).build();
+    when(repository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> testCaseService.deleteTestCase("measure-id", "testCaseId", "test.user"));
+  }
+
+  @Test
   public void testValidateTestCaseJsonHandlesNullTestCase() {
     HapiOperationOutcome output = testCaseService.validateTestCaseJson(null, "TOKEN");
     assertThat(output, is(nullValue()));

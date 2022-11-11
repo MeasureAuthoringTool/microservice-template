@@ -174,6 +174,9 @@ public class TestCaseService {
 
     Measure measure = findMeasureById(measureId);
     if (hasPermissionToDelete(measureId, username, measure)) {
+      if (measure.getTestCases() == null) {
+        throw new ResourceNotFoundException("Test Case", testCaseId);
+      }
       List<TestCase> remainingTestCases =
           measure.getTestCases().stream().filter(g -> !g.getId().equals(testCaseId)).toList();
       // to check if given test case id is present
