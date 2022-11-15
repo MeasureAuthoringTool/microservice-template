@@ -39,9 +39,10 @@ public class MeasureServiceApplication {
             .allowedMethods("PUT", "POST", "GET", "DELETE")
             .allowedOrigins(
                 "http://localhost:9000",
-                "https://dev-madie.hcqis.org",
+                "https://dev-madie.hcqis.o\"https://impl-madie.hcqis.org\"rg",
                 "https://test-madie.hcqis.org",
-                "https://impl-madie.hcqis.org");
+                "https://impl-madie.hcqis.org",
+                "https://madie.cms.gov");
       }
     };
   }
