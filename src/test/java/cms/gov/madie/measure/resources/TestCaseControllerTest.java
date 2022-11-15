@@ -12,12 +12,16 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.security.Principal;
 import java.util.List;
 import java.util.Objects;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -111,6 +115,22 @@ public class TestCaseControllerTest {
     verify(testCaseService, times(1))
         .updateTestCase(any(TestCase.class), anyString(), usernameCaptor.capture(), anyString());
     assertEquals("test.user2", usernameCaptor.getValue());
+  }
+
+  @Test
+  void testSuccessfulDeleteTestCase() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    String returnOutput = "Test case deleted successfully: TC1_ID";
+    doReturn(returnOutput)
+        .when(testCaseService)
+        .deleteTestCase(any(String.class), any(String.class), any(String.class));
+
+    ResponseEntity<String> output = controller.deleteTestCase("measure-id", "TC1_ID", principal);
+
+    assertThat(output.getBody(), is(equalTo("Test case deleted successfully: TC1_ID")));
+    assertThat(output.getStatusCode(), is(equalTo(HttpStatus.OK)));
   }
 
   @Test
