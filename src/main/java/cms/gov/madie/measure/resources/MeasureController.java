@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -121,14 +120,23 @@ public class MeasureController {
     Optional<Measure> persistedMeasure = repository.findById(id);
 
     if (persistedMeasure.isPresent()) {
-      if (username != null
-          && persistedMeasure.get().getCreatedBy() != null
-          && !persistedMeasure.get().isActive()) {
+      if (username != null && persistedMeasure.get().getCreatedBy() != null) {
         log.info(
             "got username [{}] vs createdBy: [{}]",
             username,
             persistedMeasure.get().getCreatedBy());
-        measureService.checkDeletionCredentials(username, persistedMeasure.get().getCreatedBy());
+        // either owner or shared-with role
+        measureService.verifyAuthorization(username, persistedMeasure.get());
+
+        // no user can update a soft-deleted measure
+        if (!persistedMeasure.get().isActive()) {
+          throw new UnauthorizedException(
+              "Measure", persistedMeasure.get().getId(), principal.getName());
+        }
+        // shared user should be able to edit Measure but won’t have delete access
+        if (!measure.isActive()) {
+          measureService.checkDeletionCredentials(username, persistedMeasure.get().getCreatedBy());
+        }
       }
       if (isCqlLibraryNameChanged(measure, persistedMeasure.get())) {
         measureService.checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
@@ -139,7 +147,6 @@ public class MeasureController {
       measureService.checkCmsIdChanged(measure.getCmsId(), persistedMeasure.get().getCmsId());
 
       if (isMeasurementPeriodChanged(measure, persistedMeasure.get())) {
-        measureService.verifyAuthorization(username, persistedMeasure.get());
         measureService.validateMeasurementPeriod(
             measure.getMeasurementPeriodStart(), measure.getMeasurementPeriodEnd());
       }

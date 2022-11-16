@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
 import java.security.Principal;
 import java.time.Instant;
@@ -167,7 +168,7 @@ class MeasureControllerTest {
             .toBuilder()
             .id("5399aba6e4b0ae375bfdca88")
             .createdAt(createdAt)
-            .createdBy("test.user")
+            .createdBy("test.user2")
             .build();
 
     Instant original = Instant.now().minus(140, ChronoUnit.HOURS);
@@ -196,7 +197,7 @@ class MeasureControllerTest {
     verify(repository, times(1)).save(saveMeasureArgCaptor.capture());
     Measure savedMeasure = saveMeasureArgCaptor.getValue();
     assertThat(savedMeasure.getCreatedAt(), is(notNullValue()));
-    assertThat(savedMeasure.getCreatedBy(), is(equalTo("test.user")));
+    assertThat(savedMeasure.getCreatedBy(), is(equalTo("test.user2")));
     assertThat(savedMeasure.getLastModifiedAt(), is(notNullValue()));
     assertThat(savedMeasure.getLastModifiedBy(), is(equalTo("test.user2")));
     assertThat(savedMeasure.getMeasurementPeriodStart(), is(equalTo(new Date("12/02/2021"))));
@@ -236,9 +237,9 @@ class MeasureControllerTest {
         measure
             .toBuilder()
             .id("5399aba6e4b0ae375bfdca88")
-            .active(false)
+            .active(true)
             .createdAt(createdAt)
-            .createdBy("test.user")
+            .createdBy("test.user2")
             .build();
 
     Instant original = Instant.now().minus(140, ChronoUnit.HOURS);
@@ -252,6 +253,7 @@ class MeasureControllerTest {
             .measurementPeriodEnd(new Date("12/02/2022"))
             .lastModifiedBy("test.user")
             .lastModifiedAt(original)
+            .active(false)
             .build();
 
     doReturn(Optional.of(originalMeasure))
@@ -267,7 +269,7 @@ class MeasureControllerTest {
     verify(repository, times(1)).save(saveMeasureArgCaptor.capture());
     Measure savedMeasure = saveMeasureArgCaptor.getValue();
     assertThat(savedMeasure.getCreatedAt(), is(notNullValue()));
-    assertThat(savedMeasure.getCreatedBy(), is(equalTo("test.user")));
+    assertThat(savedMeasure.getCreatedBy(), is(equalTo("test.user2")));
     assertThat(savedMeasure.getLastModifiedAt(), is(notNullValue()));
     assertThat(savedMeasure.getLastModifiedBy(), is(equalTo("test.user2")));
     assertThat(savedMeasure.getMeasurementPeriodStart(), is(equalTo(new Date("12/02/2021"))));
@@ -303,7 +305,8 @@ class MeasureControllerTest {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("aninvalidUser@gmail.com");
     measure.setCreatedBy("MSR01");
-    measure.setActive(false);
+    measure.setActive(true);
+    measure.setAcls(null);
     when(repository.findById(anyString())).thenReturn(Optional.of(measure));
 
     var testMeasure = new Measure();
@@ -312,6 +315,54 @@ class MeasureControllerTest {
     testMeasure.setId("testid");
     testMeasure.setMeasureName("MSR01");
     testMeasure.setVersion("0.001");
+
+    doThrow(new UnauthorizedException("Measure", measure.getId(), "aninvalidUser@gmail.com"))
+        .when(measureService)
+        .verifyAuthorization(anyString(), any());
+    assertThrows(
+        UnauthorizedException.class,
+        () -> controller.updateMeasure("testid", testMeasure, principal));
+  }
+
+  @Test
+  void testUpdateMeasureReturnsExceptionForSoftDeletedMeasure() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("validUser@gmail.com");
+    measure.setCreatedBy("MSR01");
+    measure.setActive(false);
+    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
+
+    var testMeasure = new Measure();
+    testMeasure.setActive(true);
+    testMeasure.setCreatedBy("validUser@gmail.com");
+    testMeasure.setId("testid");
+    testMeasure.setMeasureName("MSR01");
+    testMeasure.setVersion("0.001");
+
+    assertThrows(
+        UnauthorizedException.class,
+        () -> controller.updateMeasure("testid", testMeasure, principal));
+  }
+
+  @Test
+  void testUpdateMeasureReturnsInvalidDeletionCredentialsException() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("anInvalidUser@gmail.com");
+    measure.setCreatedBy("MSR01");
+    measure.setActive(true);
+    AclSpecification acl = new AclSpecification();
+    acl.setUserId("invalidUser@gmail.com");
+    acl.setRoles(List.of(RoleEnum.SHARED_WITH));
+    measure.setAcls(List.of(acl));
+    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
+
+    var testMeasure = new Measure();
+    testMeasure.setActive(false);
+    testMeasure.setCreatedBy("anotheruser");
+    testMeasure.setId("testid");
+    testMeasure.setMeasureName("MSR01");
+    testMeasure.setVersion("0.001");
+    testMeasure.setActive(false);
     doThrow(new InvalidDeletionCredentialsException("invalidUser@gmail.com"))
         .when(measureService)
         .checkDeletionCredentials(anyString(), anyString());
@@ -374,6 +425,7 @@ class MeasureControllerTest {
     doThrow(new UnauthorizedException("Measure", measure.getId(), "unAuthorizedUser@gmail.com"))
         .when(measureService)
         .verifyAuthorization(anyString(), any());
+
     assertThrows(
         UnauthorizedException.class,
         () -> controller.updateMeasure("testid", testMeasure, principal));
