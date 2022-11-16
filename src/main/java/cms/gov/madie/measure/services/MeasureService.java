@@ -63,7 +63,7 @@ public class MeasureService {
 
     if (measurementPeriodEnd.compareTo(measurementPeriodStart) < 1) {
       throw new InvalidMeasurementPeriodException(
-          "Measurement period end date should be greater" + " than measurement period start date.");
+          "Measurement period end date should be greater than measurement period start date.");
     }
   }
 
