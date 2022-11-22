@@ -154,7 +154,7 @@ public class TestCaseService {
             .orElse(null);
     if (testCase == null) {
       throw new ResourceNotFoundException("Test Case", testCaseId);
-    } else if (validate && !testCase.isValidResource()) {
+    } else if (validate) {
       testCase.setHapiOperationOutcome(validateTestCaseJson(testCase, accessToken));
     }
     return testCase;
