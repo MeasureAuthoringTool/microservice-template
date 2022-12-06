@@ -1,0 +1,6 @@
+spring:
+   data:
+      database: ${MONGO_DATABASE}
+      mongodb:
+         uri: mongodb+srv://${MONGO_DBUSER}:${MONGO_DBPASS}@${MONGO_HOST}/${MONGO_DATABASE}${MONGO_OPTIONS}
+
