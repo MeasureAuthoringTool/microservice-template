@@ -1,6 +1,9 @@
 package cms.gov.madie.measure.resources;
 
 import gov.cms.madie.models.access.RoleEnum;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.security.Principal;
 import java.time.Instant;
 import java.util.List;
@@ -286,15 +289,18 @@ public class MeasureController {
           boolean filterByCurrentUser,
       @PathVariable("criteria") String criteria,
       @RequestParam(required = false, defaultValue = "10", name = "limit") int limit,
-      @RequestParam(required = false, defaultValue = "0", name = "page") int page) {
+      @RequestParam(required = false, defaultValue = "0", name = "page") int page)
+      throws UnsupportedEncodingException {
 
     final String username = principal.getName();
     final Pageable pageReq = PageRequest.of(page, limit, Sort.by("lastModifiedAt").descending());
 
     Page<Measure> measures =
         filterByCurrentUser
-            ? repository.findAllByMeasureNameOrEcqmTitleForCurrentUser(criteria, pageReq, username)
-            : repository.findAllByMeasureNameOrEcqmTitle(criteria, pageReq);
+            ? repository.findAllByMeasureNameOrEcqmTitleForCurrentUser(
+                URLDecoder.decode(criteria, "UTF-8"), pageReq, username)
+            : repository.findAllByMeasureNameOrEcqmTitle(
+                URLDecoder.decode(criteria, "UTF-8"), pageReq);
 
     return ResponseEntity.ok(measures);
   }
