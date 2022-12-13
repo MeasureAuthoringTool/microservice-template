@@ -1,8 +1,11 @@
-## Use whatever base image
-FROM adoptopenjdk/openjdk16:jre-16_36
+## Use AWS AL2 + Corretto base image
+FROM amazoncorretto:17-al2-jdk
 
 ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} app.jar
+
+#Update Packages
+RUN yum update -y --security
 
 ## Add the wait script to the image
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.7.3/wait /wait
