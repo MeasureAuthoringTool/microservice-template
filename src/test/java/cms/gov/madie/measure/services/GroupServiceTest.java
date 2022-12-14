@@ -654,6 +654,16 @@ public class GroupServiceTest implements ResourceUtil {
   }
 
   @Test
+  public void testUpdateGroupWhenPopulationFunctionReturnTypeNotMatchingWithPopulationBasis() {
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+    group2.setPopulationBasis("boolean");
+    assertThrows(
+        InvalidReturnTypeException.class,
+        () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+  }
+
+  @Test
   public void testUpdateGroupWhenElmJsonIsInvalid() {
     measure.setElmJson("UnpardonableElmJson");
     Optional<Measure> optional = Optional.of(measure);

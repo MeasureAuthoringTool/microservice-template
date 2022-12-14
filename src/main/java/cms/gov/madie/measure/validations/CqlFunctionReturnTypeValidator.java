@@ -30,11 +30,11 @@ public class CqlFunctionReturnTypeValidator {
               if (!StringUtils.equalsIgnoreCase(returnType, populationBasis)) {
                 if ("boolean".equalsIgnoreCase(populationBasis)) {
                   throw new InvalidReturnTypeException(
-                      "Selected function '%s' can not have parameters",
+                      "Selected observation function '%s' can not have parameters",
                       observation.getDefinition());
                 }
                 throw new InvalidReturnTypeException(
-                    "Selected function must have exactly one parameter of type '%s'",
+                    "Selected observation function must have exactly one parameter of type '%s'",
                     populationBasis);
               }
             }
