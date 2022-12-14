@@ -655,9 +655,11 @@ public class GroupServiceTest implements ResourceUtil {
 
   @Test
   public void testUpdateGroupWhenPopulationFunctionReturnTypeNotMatchingWithPopulationBasis() {
+    group2.setPopulations(null);
+    group2.setPopulationBasis("Boolean");
     Optional<Measure> optional = Optional.of(measure);
     doReturn(optional).when(measureRepository).findById(any(String.class));
-    group2.setPopulationBasis("boolean");
+
     assertThrows(
         InvalidReturnTypeException.class,
         () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
@@ -696,6 +698,31 @@ public class GroupServiceTest implements ResourceUtil {
     Group group = groupService.createOrUpdateGroup(group2, measure.getId(), "test.user");
     assertEquals(group.getStratifications().size(), group2.getStratifications().size());
     verify(measureRepository, times(1)).save(measureCaptor.capture());
+  }
+
+  @Test
+  public void testUpdateGroupWhenPopulationFunctionReturnTypeMatchingWithPopulationBasis() {
+    group2.setPopulations(null);
+    Optional<Measure> optional = Optional.of(measure);
+    ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+    doReturn(measure).when(measureRepository).save(any(Measure.class));
+
+    Group group = groupService.createOrUpdateGroup(group2, measure.getId(), "test.user");
+    verify(measureRepository, times(1)).save(measureCaptor.capture());
+  }
+
+  @Test
+  public void testUpdateGroupWhenPopulationFunctionReturnTypeMatchingWithPopulationBasi() {
+    group2.setPopulations(null);
+    group2.setPopulationBasis("Boolean");
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+
+    measure.setElmJson("sampleElmJson");
+    assertThrows(
+        InvalidIdException.class,
+        () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
   }
 
   @Test

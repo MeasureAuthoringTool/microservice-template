@@ -1373,7 +1373,9 @@ public class MeasureControllerMvcTest {
                 .accept(MediaType.APPLICATION_JSON))
         .andDo(print())
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.message").value("Selected observation function 'fun' can not have parameters"));
+        .andExpect(
+            jsonPath("$.message")
+                .value("Selected observation function 'fun' can not have parameters"));
 
     verify(groupService, times(1))
         .createOrUpdateGroup(
