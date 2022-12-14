@@ -236,10 +236,27 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
+  public void testValidateMeasureMeasurementPeriodEndDateEqualStartDate() {
+    try {
+      LocalDate startDate = LocalDate.parse("2022-12-31");
+      LocalDate endDate = LocalDate.parse("2022-12-31");
+
+      assertThrows(
+          InvalidMeasurementPeriodException.class,
+          () ->
+              measureService.validateMeasurementPeriod(
+                  Date.from(startDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant()),
+                  Date.from(endDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant())));
+
+    } catch (Exception e) {
+    }
+  }
+
+  @Test
   public void testValidateMeasureMeasurementPeriod() {
     try {
       LocalDate startDate = LocalDate.parse("2022-01-01");
-      LocalDate endDate = LocalDate.parse("2022-01-01");
+      LocalDate endDate = LocalDate.parse("2023-01-01");
 
       measureService.validateMeasurementPeriod(
           Date.from(startDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant()),

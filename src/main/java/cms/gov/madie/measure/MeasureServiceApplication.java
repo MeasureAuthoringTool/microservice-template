@@ -41,7 +41,8 @@ public class MeasureServiceApplication {
                 "http://localhost:9000",
                 "https://dev-madie.hcqis.org",
                 "https://test-madie.hcqis.org",
-                "https://impl-madie.hcqis.org");
+                "https://impl-madie.hcqis.org",
+                "https://madie.cms.gov");
       }
     };
   }

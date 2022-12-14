@@ -61,10 +61,9 @@ public class MeasureService {
           "Measurement periods should be between the years 1900 and 2099.");
     }
 
-    if (measurementPeriodEnd.compareTo(measurementPeriodStart) < 0) {
+    if (measurementPeriodEnd.compareTo(measurementPeriodStart) < 1) {
       throw new InvalidMeasurementPeriodException(
-          "Measurement period end date should be greater than or"
-              + " equal to measurement period start date.");
+          "Measurement period end date should be greater than measurement period start date.");
     }
   }
 
