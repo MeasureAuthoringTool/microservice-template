@@ -138,12 +138,12 @@ public class GroupService {
       throw new ResourceNotFoundException("Measure", measureId);
     }
 
-    if (!username.equals(measure.getCreatedBy())
+    if (!username.equalsIgnoreCase(measure.getCreatedBy())
         && (CollectionUtils.isEmpty(measure.getAcls())
             || !measure.getAcls().stream()
                 .anyMatch(
                     acl ->
-                        acl.getUserId().equals(username)
+                        acl.getUserId().equalsIgnoreCase(username)
                             && acl.getRoles().stream()
                                 .anyMatch(role -> role.equals(RoleEnum.SHARED_WITH))))) {
       throw new UnauthorizedException("Measure", measureId, username);

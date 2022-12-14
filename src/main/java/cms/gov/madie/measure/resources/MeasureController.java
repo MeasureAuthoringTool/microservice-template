@@ -243,12 +243,12 @@ public class MeasureController {
       throw new ResourceNotFoundException("Measure", measureId);
     }
     Measure measure = measureOptional.get();
-    if (!principal.getName().equals(measure.getCreatedBy())
+    if (!principal.getName().equalsIgnoreCase(measure.getCreatedBy())
         && (CollectionUtils.isEmpty(measure.getAcls())
             || !measure.getAcls().stream()
                 .anyMatch(
                     acl ->
-                        acl.getUserId().equals(principal.getName())
+                        acl.getUserId().equalsIgnoreCase(principal.getName())
                             && acl.getRoles().stream()
                                 .anyMatch(role -> role.equals(RoleEnum.SHARED_WITH))))) {
       throw new UnauthorizedException("Measure", measureId, principal.getName());
