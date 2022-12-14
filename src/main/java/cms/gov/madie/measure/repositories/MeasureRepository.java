@@ -19,9 +19,9 @@ public interface MeasureRepository extends MongoRepository<Measure, String> {
 
   Page<Measure> findAllByActive(Boolean active, Pageable page);
 
-  Page<Measure> findAllByCreatedByAndActive(String user, Boolean active, Pageable page);
-
-  @Query("{$or: [{createdBy: ?0, active : ?1}, {'acls.userId' : ?0, 'acls.roles' : ?2}]}")
+  @Query(
+      "{$or: [{createdBy: { $regex : ?0, $options: 'i' }, active : ?1}, "
+          + "{'acls.userId' : { $regex : ?0, $options: 'i' } , 'acls.roles' : ?2}]}")
   Page<Measure> findAllByCreatedByAndActiveOrShared(
       String user, Boolean active, String shared, Pageable page);
 
@@ -39,7 +39,7 @@ public interface MeasureRepository extends MongoRepository<Measure, String> {
   Page<Measure> findAllByMeasureNameOrEcqmTitle(String criteria, Pageable page);
 
   @Query(
-      " {$and: [{'createdBy' : ?1, active : true} ,  "
+      " {$and: [{'createdBy' :  { $regex : ?1, $options: 'i' }, active : true} ,  "
           + "{$or: [{'measureName' : { $regex : ?0, $options: 'i' } },"
           + "{'ecqmTitle' : { $regex : ?0, $options: 'i' }}]} "
           + "]}")
