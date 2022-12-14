@@ -112,10 +112,7 @@ public class GroupServiceTest implements ResourceUtil {
             .measureObservations(
                 List.of(
                     new MeasureObservation(
-                        "id-1",
-                        "ObservationFunction",
-                        "id-2",
-                        AggregateMethodType.MAXIMUM.getValue())))
+                        "id-1", "fun", "id-2", AggregateMethodType.MAXIMUM.getValue())))
             .stratifications(List.of(strata1, emptyStrat))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
@@ -142,15 +139,9 @@ public class GroupServiceTest implements ResourceUtil {
                 new ArrayList<>(
                     List.of(
                         new MeasureObservation(
-                            "mo-id-1",
-                            "Denominator MO",
-                            "id-2",
-                            AggregateMethodType.MAXIMUM.getValue()),
+                            "mo-id-1", "fun", "id-2", AggregateMethodType.MAXIMUM.getValue()),
                         new MeasureObservation(
-                            "mo-id-2",
-                            "Numerator MO",
-                            "id-4",
-                            AggregateMethodType.MAXIMUM.getValue()))))
+                            "mo-id-2", "fun", "id-4", AggregateMethodType.MAXIMUM.getValue()))))
             .stratifications(List.of(strata1, strata2))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
