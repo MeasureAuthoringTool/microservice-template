@@ -709,7 +709,15 @@ public class GroupServiceTest implements ResourceUtil {
     doReturn(measure).when(measureRepository).save(any(Measure.class));
 
     Group group = groupService.createOrUpdateGroup(group2, measure.getId(), "test.user");
+    assertEquals(group.getMeasureObservations().size(), group2.getMeasureObservations().size());
     verify(measureRepository, times(1)).save(measureCaptor.capture());
+  }
+
+  @Test
+  void testUpdateGroupReturnsExceptionForResourceNotFound() {
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> groupService.createOrUpdateGroup(group2, "testid", "test.user"));
   }
 
   @Test
