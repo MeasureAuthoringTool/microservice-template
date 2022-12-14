@@ -211,12 +211,12 @@ public class TestCaseService {
   }
 
   private Boolean hasPermissionToDelete(String username, Measure measure) {
-    return username.equals(measure.getCreatedBy())
+    return username.equalsIgnoreCase(measure.getCreatedBy())
         || (!CollectionUtils.isEmpty(measure.getAcls())
             && measure.getAcls().stream()
                 .anyMatch(
                     acl ->
-                        acl.getUserId().equals(username)
+                        acl.getUserId().equalsIgnoreCase(username)
                             && acl.getRoles().stream()
                                 .anyMatch(role -> role.equals(RoleEnum.SHARED_WITH))));
   }
