@@ -48,7 +48,6 @@ public class GroupService {
     try {
       new CqlDefinitionReturnTypeValidator()
           .validateCqlDefinitionReturnTypes(group, measure.getElmJson());
-
       new CqlFunctionReturnTypeValidator()
           .validateCqlFunctionReturnTypes(group, measure.getElmJson());
     } catch (JsonProcessingException ex) {
