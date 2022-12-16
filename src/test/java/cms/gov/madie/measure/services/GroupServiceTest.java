@@ -112,10 +112,7 @@ public class GroupServiceTest implements ResourceUtil {
             .measureObservations(
                 List.of(
                     new MeasureObservation(
-                        "id-1",
-                        "ObservationFunction",
-                        "id-2",
-                        AggregateMethodType.MAXIMUM.getValue())))
+                        "id-1", "fun", "id-2", AggregateMethodType.MAXIMUM.getValue())))
             .stratifications(List.of(strata1, emptyStrat))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
@@ -142,15 +139,9 @@ public class GroupServiceTest implements ResourceUtil {
                 new ArrayList<>(
                     List.of(
                         new MeasureObservation(
-                            "mo-id-1",
-                            "Denominator MO",
-                            "id-2",
-                            AggregateMethodType.MAXIMUM.getValue()),
+                            "mo-id-1", "fun", "id-2", AggregateMethodType.MAXIMUM.getValue()),
                         new MeasureObservation(
-                            "mo-id-2",
-                            "Numerator MO",
-                            "id-4",
-                            AggregateMethodType.MAXIMUM.getValue()))))
+                            "mo-id-2", "fun", "id-4", AggregateMethodType.MAXIMUM.getValue()))))
             .stratifications(List.of(strata1, strata2))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
@@ -652,8 +643,21 @@ public class GroupServiceTest implements ResourceUtil {
     assertEquals("new scoring unit", capturedGroup.getScoringUnit());
   }
 
+    @Test
+    public void testUpdateGroupWhenPopulationDefinitionReturnTypeNotMatchingWithPopulationBasis()
+   {
+      Optional<Measure> optional = Optional.of(measure);
+      doReturn(optional).when(measureRepository).findById(any(String.class));
+
+      assertThrows(
+          InvalidReturnTypeException.class,
+          () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+    }
+
   @Test
-  public void testUpdateGroupWhenPopulationDefinitionReturnTypeNotMatchingWithPopulationBasis() {
+  public void testUpdateGroupWhenPopulationFunctionReturnTypeNotMatchingWithPopulationBasis() {
+    group2.setPopulations(null);
+    group2.setPopulationBasis("Boolean");
     Optional<Measure> optional = Optional.of(measure);
     doReturn(optional).when(measureRepository).findById(any(String.class));
 
@@ -698,17 +702,49 @@ public class GroupServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testUpdateGroupWithStratificationWhenReturnTypeNotEqualToPopulationBasis() {
+  public void testUpdateGroupWhenPopulationFunctionReturnTypeMatchingWithPopulationBasis() {
     group2.setPopulations(null);
-    // non-boolean define for strat cql definition
-    group2.getStratifications().get(1).setCqlDefinition("SDE Race");
+    Optional<Measure> optional = Optional.of(measure);
+    ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+    doReturn(measure).when(measureRepository).save(any(Measure.class));
+
+    Group group = groupService.createOrUpdateGroup(group2, measure.getId(), "test.user");
+    assertEquals(group.getMeasureObservations().size(), group2.getMeasureObservations().size());
+    verify(measureRepository, times(1)).save(measureCaptor.capture());
+  }
+
+  @Test
+  void testUpdateGroupReturnsExceptionForResourceNotFound() {
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> groupService.createOrUpdateGroup(group2, "testid", "test.user"));
+  }
+
+  @Test
+  public void testUpdateGroupWhenPopulationFunctionReturnTypeMatchingWithPopulationBasi() {
+    group2.setPopulations(null);
+    group2.setPopulationBasis("Boolean");
     Optional<Measure> optional = Optional.of(measure);
     doReturn(optional).when(measureRepository).findById(any(String.class));
 
+    measure.setElmJson("sampleElmJson");
     assertThrows(
-        InvalidReturnTypeException.class,
+        InvalidIdException.class,
         () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
   }
+
+    @Test
+    public void testUpdateGroupWithStratificationWhenReturnTypeNotEqualToPopulationBasis() {
+      group2.setPopulations(null);
+      // non-boolean define for strat cql definition
+      group2.getStratifications().get(1).setCqlDefinition("SDE Race");
+      Optional<Measure> optional = Optional.of(measure);
+      doReturn(optional).when(measureRepository).findById(any(String.class));
+      assertThrows(
+          InvalidReturnTypeException.class,
+          () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+    }
 
   @Test
   public void updateTestCaseGroupToAddMeasurePopulationsAndStratification() {

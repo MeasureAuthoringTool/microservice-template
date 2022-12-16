@@ -1,6 +1,8 @@
 package cms.gov.madie.measure.validations;
 
+import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureScoring;
@@ -21,8 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -33,13 +34,17 @@ class ScoringPopulationValidatorTest {
   @Mock private MeasureRepository measureRepository;
   private final ScoringPopulationValidator validator = new ScoringPopulationValidator();
 
+  private final CqlFunctionReturnTypeValidator returnTypeValidator =
+      new CqlFunctionReturnTypeValidator();
+
+  private Group group1;
   private Measure measure;
 
   @BeforeEach
   public void setUp() {
     ReflectionTestUtils.setField(validator, "measureRepository", measureRepository);
 
-    Group group1 =
+    group1 =
         Group.builder()
             .id("GroupId")
             .scoring("Cohort")
@@ -156,5 +161,12 @@ class ScoringPopulationValidatorTest {
             .build();
     boolean output = validator.isValid(testCaseGroupPopulation, validatorContext);
     assertTrue(output);
+  }
+
+  @Test
+  public void testUpdateGroupReturnsExceptionWhenElmJsonIsNull() throws JsonProcessingException {
+    assertThrows(
+            InvalidIdException.class,
+            () -> returnTypeValidator.validateCqlFunctionReturnTypes(group1, null));
   }
 }
