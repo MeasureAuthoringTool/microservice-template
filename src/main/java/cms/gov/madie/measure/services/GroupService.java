@@ -5,6 +5,7 @@ import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeValidator;
+import cms.gov.madie.measure.validations.CqlFunctionReturnTypeValidator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.measure.Group;
@@ -47,6 +48,8 @@ public class GroupService {
     try {
       new CqlDefinitionReturnTypeValidator()
           .validateCqlDefinitionReturnTypes(group, measure.getElmJson());
+      new CqlFunctionReturnTypeValidator()
+          .validateCqlFunctionReturnTypes(group, measure.getElmJson());
     } catch (JsonProcessingException ex) {
       log.error(
           "An error occurred while validating population "
@@ -138,12 +141,12 @@ public class GroupService {
       throw new ResourceNotFoundException("Measure", measureId);
     }
 
-    if (!username.equals(measure.getCreatedBy())
+    if (!username.equalsIgnoreCase(measure.getCreatedBy())
         && (CollectionUtils.isEmpty(measure.getAcls())
             || !measure.getAcls().stream()
                 .anyMatch(
                     acl ->
-                        acl.getUserId().equals(username)
+                        acl.getUserId().equalsIgnoreCase(username)
                             && acl.getRoles().stream()
                                 .anyMatch(role -> role.equals(RoleEnum.SHARED_WITH))))) {
       throw new UnauthorizedException("Measure", measureId, username);

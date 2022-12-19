@@ -74,23 +74,20 @@ public class CqlDefinitionReturnTypeValidator {
     ObjectMapper objectMapper = new ObjectMapper();
     JsonNode rootNode = objectMapper.readTree(elmJson);
     ArrayNode allDefinitions = (ArrayNode) rootNode.get("library").get("statements").get("def");
-    Iterator<JsonNode> nodeIterator = allDefinitions.iterator();
-    while (nodeIterator.hasNext()) {
-      JsonNode node = nodeIterator.next();
+    for (JsonNode node : allDefinitions) {
       if (node.get("resultTypeName") != null) {
         String dataType = node.get("resultTypeName").asText();
         returnTypes.put(node.get("name").asText(), dataType.split("}")[1]);
       } else if (node.get("resultTypeSpecifier") != null) {
-        String type = node.get("resultTypeSpecifier").get("elementType").get("type").asText();
-        if ("NamedTypeSpecifier".equals(type)) {
-          String dataType = node.get("resultTypeSpecifier").get("elementType").get("name").asText();
-          returnTypes.put(node.get("name").asText(), dataType.split("}")[1]);
-        } else {
-          returnTypes.put(node.get("name").asText(), "NA");
+        Iterator<JsonNode> typeSpecifierIterator = node.get("resultTypeSpecifier").elements();
+        while (typeSpecifierIterator.hasNext()) {
+          JsonNode current = typeSpecifierIterator.next();
+          if (current.has("type") && current.get("type").asText().equals("NamedTypeSpecifier")) {
+            returnTypes.put(node.get("name").asText(), current.get("name").asText().split("}")[1]);
+          }
         }
-      } else {
-        returnTypes.put(node.get("name").asText(), "NA");
       }
+      returnTypes.putIfAbsent(node.get("name").asText(), "NA");
     }
     return returnTypes;
   }

@@ -1355,6 +1355,34 @@ public class MeasureControllerMvcTest {
   }
 
   @Test
+  public void testUpdateGroupIfPopulationFunctionReturnTypesAreInvalid() throws Exception {
+    final String groupJson =
+        "{\"scoring\":\"Cohort\",\"populations\":[{\"id\":\"id-1\",\"name\":\"initialPopulation\",\"definition\":\"Initial Population\"}],\"measureGroupTypes\":[\"Process\"],\"populationBasis\": \"boolean\"}";
+    when(groupService.createOrUpdateGroup(any(Group.class), any(String.class), any(String.class)))
+        .thenThrow(
+            new InvalidReturnTypeException(
+                "Selected observation function '%s' can not have parameters", "fun"));
+
+    mockMvc
+        .perform(
+            put("/measures/1234/groups")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(groupJson)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isBadRequest())
+        .andExpect(
+            jsonPath("$.message")
+                .value("Selected observation function 'fun' can not have parameters"));
+
+    verify(groupService, times(1))
+        .createOrUpdateGroup(
+            groupCaptor.capture(), measureIdCaptor.capture(), usernameCaptor.capture());
+  }
+
+  @Test
   void getMeasureGroupsReturnsNotFound() throws Exception {
     when(measureRepository.findById(anyString())).thenReturn(Optional.empty());
     mockMvc
