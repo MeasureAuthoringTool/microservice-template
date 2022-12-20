@@ -33,15 +33,15 @@ public interface MeasureRepository extends MongoRepository<Measure, String> {
 
   @Query(
       " {$and: [{active : true} ,  "
-          + "{$or: [{'measureName' : { $regex : ?0, $options: 'i' } },"
-          + "{'ecqmTitle' : { $regex : ?0, $options: 'i' }}]} "
+          + "{$or: [{'measureName' : { $regex : /\\Q?0\\E/, $options: 'i' } },"
+          + "{'ecqmTitle' : { $regex : /\\Q?0\\E/, $options: 'i' }}]} "
           + "]}")
   Page<Measure> findAllByMeasureNameOrEcqmTitle(String criteria, Pageable page);
 
   @Query(
       " {$and: [{'createdBy' :  { $regex : ?1, $options: 'i' }, active : true} ,  "
-          + "{$or: [{'measureName' : { $regex : ?0, $options: 'i' } },"
-          + "{'ecqmTitle' : { $regex : ?0, $options: 'i' }}]} "
+          + "{$or: [{'measureName' : { $regex : /\\Q?0\\E/, $options: 'i' } },"
+          + "{'ecqmTitle' : { $regex : /\\Q?0\\E/, $options: 'i' }}]} "
           + "]}")
   Page<Measure> findAllByMeasureNameOrEcqmTitleForCurrentUser(
       String criteria, Pageable page, String user);
