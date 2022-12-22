@@ -1,6 +1,5 @@
 package cms.gov.madie.measure.validations;
 
-import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -12,30 +11,32 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 
-public class CqlFunctionReturnTypeValidator {
+public class CqlObservationFunctionValidator {
 
-  public void validateCqlFunctionReturnTypes(Group group, String elmJson)
+  public void validateObservationFunctions(Group group, String elmJson)
       throws JsonProcessingException {
-    Map<String, String> cqlFunctionReturnTypes = getCqlFunctionReturnTypes(elmJson);
-    if (cqlFunctionReturnTypes.isEmpty()) {
-      throw new InvalidIdException("No elm json available");
+    Map<String, String> observationsToValidPopBasis = mapObservationsToValidPopBasis(elmJson);
+    if (observationsToValidPopBasis.isEmpty()) {
+      return; // observations are optional for scoring types other than Continuous Variable.
     }
+
+    String groupPopulationBasis = group.getPopulationBasis().replaceAll("\\s", "");
     List<MeasureObservation> observations = group.getMeasureObservations();
-    String populationBasis = group.getPopulationBasis().replaceAll("\\s", "");
     if (observations != null) {
       observations.forEach(
           observation -> {
             if (StringUtils.isNotBlank(observation.getDefinition())) {
-              String returnType = cqlFunctionReturnTypes.get(observation.getDefinition());
-              if (!StringUtils.equalsIgnoreCase(returnType, populationBasis)) {
-                if ("boolean".equalsIgnoreCase(populationBasis)) {
+              String observationValidPopBasis =
+                  observationsToValidPopBasis.get(observation.getDefinition());
+              if (!StringUtils.equalsIgnoreCase(observationValidPopBasis, groupPopulationBasis)) {
+                if ("boolean".equalsIgnoreCase(groupPopulationBasis)) {
                   throw new InvalidReturnTypeException(
                       "Selected observation function '%s' can not have parameters",
                       observation.getDefinition());
                 }
                 throw new InvalidReturnTypeException(
                     "Selected observation function must have exactly one parameter of type '%s'",
-                    populationBasis);
+                    groupPopulationBasis);
               }
             }
           });
@@ -49,33 +50,37 @@ public class CqlFunctionReturnTypeValidator {
    * @return
    * @throws JsonProcessingException
    */
-  private Map<String, String> getCqlFunctionReturnTypes(String elmJson)
+  private Map<String, String> mapObservationsToValidPopBasis(String elmJson)
       throws JsonProcessingException {
-    Map<String, String> returnTypes = new HashMap<>();
+    // Determine which Population Basis the MO would be valid against.
+    Map<String, String> observationPopBasis = new HashMap<>();
     if (StringUtils.isEmpty(elmJson)) {
-      return returnTypes;
+      return observationPopBasis;
     }
 
     ObjectMapper objectMapper = new ObjectMapper();
     JsonNode rootNode = objectMapper.readTree(elmJson);
     ArrayNode allDefinitions = (ArrayNode) rootNode.get("library").get("statements").get("def");
-    Iterator<JsonNode> nodeIterator = allDefinitions.iterator();
-    while (nodeIterator.hasNext()) {
-      JsonNode node = nodeIterator.next();
+    for (JsonNode node : allDefinitions) {
       if (node.get("type") != null && "FunctionDef".equals(node.get("type").asText())) {
         int numberOfOperands = node.get("operand").size();
         Iterator<JsonNode> operandIterator = node.get("operand").iterator();
-        if (numberOfOperands > 0 && numberOfOperands < 2) {
+        // Non-Boolean Population Basis require MO's with exactly one parameter matching the Pop
+        // Basis.
+        if (numberOfOperands == 1) {
           String operandTypeSpecifierName =
               operandIterator.next().get("operandTypeSpecifier").get("name").asText();
-          returnTypes.put(node.get("name").asText(), operandTypeSpecifierName.split("}")[1]);
+          observationPopBasis.put(
+              node.get("name").asText(), operandTypeSpecifierName.split("}")[1]);
+          // Boolean Population Basis require MO's with no parameters
         } else if (numberOfOperands < 1) {
-          returnTypes.put(node.get("name").asText(), "Boolean");
+          observationPopBasis.put(node.get("name").asText(), "Boolean");
+          // Not a valid MO against any Population Basis
         } else {
-          returnTypes.put(node.get("name").asText(), "NA");
+          observationPopBasis.put(node.get("name").asText(), "NA");
         }
       }
     }
-    return returnTypes;
+    return observationPopBasis;
   }
 }

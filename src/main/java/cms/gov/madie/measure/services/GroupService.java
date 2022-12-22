@@ -5,7 +5,7 @@ import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeValidator;
-import cms.gov.madie.measure.validations.CqlFunctionReturnTypeValidator;
+import cms.gov.madie.measure.validations.CqlObservationFunctionValidator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.measure.Group;
@@ -48,15 +48,15 @@ public class GroupService {
     try {
       new CqlDefinitionReturnTypeValidator()
           .validateCqlDefinitionReturnTypes(group, measure.getElmJson());
-      new CqlFunctionReturnTypeValidator()
-          .validateCqlFunctionReturnTypes(group, measure.getElmJson());
+      new CqlObservationFunctionValidator()
+          .validateObservationFunctions(group, measure.getElmJson());
     } catch (JsonProcessingException ex) {
       log.error(
           "An error occurred while validating population "
               + "definition return types for measure {}",
           measure.getId(),
           ex);
-      throw new InvalidIdException("Invalid elm json");
+      throw new IllegalArgumentException("Invalid elm json");
     }
     // no group present, this is the first group
     if (CollectionUtils.isEmpty(measure.getGroups())) {
