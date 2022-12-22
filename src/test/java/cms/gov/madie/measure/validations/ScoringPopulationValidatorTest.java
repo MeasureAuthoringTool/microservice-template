@@ -34,8 +34,8 @@ class ScoringPopulationValidatorTest {
   @Mock private MeasureRepository measureRepository;
   private final ScoringPopulationValidator validator = new ScoringPopulationValidator();
 
-  private final CqlFunctionReturnTypeValidator returnTypeValidator =
-      new CqlFunctionReturnTypeValidator();
+  private final CqlObservationFunctionValidator returnTypeValidator =
+      new CqlObservationFunctionValidator();
 
   private Group group1;
   private Measure measure;
@@ -161,12 +161,5 @@ class ScoringPopulationValidatorTest {
             .build();
     boolean output = validator.isValid(testCaseGroupPopulation, validatorContext);
     assertTrue(output);
-  }
-
-  @Test
-  public void testUpdateGroupReturnsExceptionWhenElmJsonIsNull() throws JsonProcessingException {
-    assertThrows(
-            InvalidIdException.class,
-            () -> returnTypeValidator.validateCqlFunctionReturnTypes(group1, null));
   }
 }
