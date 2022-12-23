@@ -58,10 +58,6 @@ import gov.cms.madie.models.measure.Stratification;
 public class MeasureServiceTest implements ResourceUtil {
   @Mock private MeasureRepository measureRepository;
 
-  @Mock private FhirServicesClient fhirServicesClient;
-
-  @Mock private ElmTranslatorClient elmTranslatorClient;
-
   @InjectMocks private MeasureService measureService;
 
   private Group group2;
@@ -353,45 +349,6 @@ public class MeasureServiceTest implements ResourceUtil {
   //    assertEquals("Description", capturedGroup.getGroupDescription());
   //  }
 
-  @Test
-  void testBundleMeasureReturnsNullForNullMeasure() {
-    String output = measureService.bundleMeasure(null, "Bearer TOKEN");
-    assertThat(output, is(nullValue()));
-  }
-
-  @Test
-  void testBundleMeasureThrowsOperationException() {
-    final Measure measure = Measure.builder().createdBy("test.user").cql("CQL").build();
-    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
-        .thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
-    when(fhirServicesClient.getMeasureBundle(any(Measure.class), anyString()))
-        .thenThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN));
-    assertThrows(
-        BundleOperationException.class,
-        () -> measureService.bundleMeasure(measure, "Bearer TOKEN"));
-  }
-
-  @Test
-  void testBundleMeasureThrowsCqlElmTranslatorExceptionWithErrors() {
-    final Measure measure = Measure.builder().createdBy("test.user").cql("CQL").build();
-    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
-        .thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
-    when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(true);
-    assertThrows(
-        CqlElmTranslationErrorException.class,
-        () -> measureService.bundleMeasure(measure, "Bearer TOKEN"));
-  }
-
-  @Test
-  void testBundleMeasureReturnsBundleString() {
-    final String json = "{\"message\": \"GOOD JSON\"}";
-    final Measure measure = Measure.builder().createdBy("test.user").cql("CQL").build();
-    when(fhirServicesClient.getMeasureBundle(any(Measure.class), anyString())).thenReturn(json);
-    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
-        .thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
-    String output = measureService.bundleMeasure(measure, "Bearer TOKEN");
-    assertThat(output, is(equalTo(json)));
-  }
 
   @Test
   public void testVerifyAuthorizationThrowsExceptionForDifferentUsers() {

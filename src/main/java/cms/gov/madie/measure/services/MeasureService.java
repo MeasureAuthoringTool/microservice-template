@@ -1,8 +1,5 @@
 package cms.gov.madie.measure.services;
 
-import cms.gov.madie.measure.exceptions.BundleOperationException;
-import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
-import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
 import cms.gov.madie.measure.exceptions.InvalidCmsIdException;
 import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
 import cms.gov.madie.measure.exceptions.InvalidMeasurementPeriodException;
@@ -12,7 +9,6 @@ import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
-import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Measure;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -31,8 +27,6 @@ import org.springframework.util.CollectionUtils;
 @AllArgsConstructor
 public class MeasureService {
   private final MeasureRepository measureRepository;
-  private final FhirServicesClient fhirServicesClient;
-  private final ElmTranslatorClient elmTranslatorClient;
 
   public void checkDuplicateCqlLibraryName(String cqlLibraryName) {
     if (StringUtils.isNotEmpty(cqlLibraryName)
@@ -83,27 +77,6 @@ public class MeasureService {
                             && acl.getRoles().stream()
                                 .anyMatch(role -> role.equals(RoleEnum.SHARED_WITH))))) {
       throw new UnauthorizedException("Measure", measure.getId(), username);
-    }
-  }
-
-  public String bundleMeasure(Measure measure, String accessToken) {
-    if (measure == null) {
-      return null;
-    }
-    try {
-      final ElmJson elmJson = elmTranslatorClient.getElmJson(measure.getCql(), accessToken);
-      if (elmTranslatorClient.hasErrors(elmJson)) {
-        throw new CqlElmTranslationErrorException(measure.getMeasureName());
-      }
-      measure.setElmJson(elmJson.getJson());
-      measure.setElmXml(elmJson.getXml());
-
-      return fhirServicesClient.getMeasureBundle(measure, accessToken);
-    } catch (CqlElmTranslationServiceException | CqlElmTranslationErrorException e) {
-      throw e;
-    } catch (Exception ex) {
-      log.error("An error occurred while bundling measure {}", measure.getId(), ex);
-      throw new BundleOperationException("Measure", measure.getId(), ex);
     }
   }
 

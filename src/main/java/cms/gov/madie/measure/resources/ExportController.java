@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.security.Principal;
 import java.util.Optional;
 
+import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,31 +22,31 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/measure-bundle")
-public class MeasureBundleController {
+public class ExportController {
 
   private final MeasureRepository measureRepository;
   private final MeasureBundleService measureBundleService;
 
   @PostMapping("/measures/{id}")
-  public ResponseEntity<String> createMeasureBundle(
+  public ResponseEntity<String> generateExports(
       Principal principal, @PathVariable("id") String id) {
     final String username = principal.getName();
-    log.info("User [{}] is attempting to create a measure bundle", username);
+    log.info("User [{}] is attempting to export measure [{}]", username, id);
 
-    Optional<Measure> measure = measureRepository.findByIdAndActive(id, true);
-    if (!measure.isPresent()) {
-      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    Optional<Measure> measureOptional = measureRepository.findById(id);
+    if (measureOptional.isEmpty()) {
+      throw new ResourceNotFoundException("Measure", id);
     }
     //{eCQM Abbreviated Title}v{MeasureVersion}-{Modelfamily}.json (FHIR Bundle)
     String zipFileName =
-        measure.get().getEcqmTitle()
+        measureOptional.get().getEcqmTitle()
             + "-v"
-            + measure.get().getVersion()
+            + measureOptional.get().getVersion()
             + "-"
-            + measure.get().getModel();
+            + measureOptional.get().getModel();
 
     try {
-      measureBundleService.zipFile(zipFileName, measure.get());
+      measureBundleService.zipFile(zipFileName, measureOptional.get());
     } catch (IOException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
