@@ -643,16 +643,15 @@ public class GroupServiceTest implements ResourceUtil {
     assertEquals("new scoring unit", capturedGroup.getScoringUnit());
   }
 
-    @Test
-    public void testUpdateGroupWhenPopulationDefinitionReturnTypeNotMatchingWithPopulationBasis()
-   {
-      Optional<Measure> optional = Optional.of(measure);
-      doReturn(optional).when(measureRepository).findById(any(String.class));
+  @Test
+  public void testUpdateGroupWhenPopulationDefinitionReturnTypeNotMatchingWithPopulationBasis() {
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
 
-      assertThrows(
-          InvalidReturnTypeException.class,
-          () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
-    }
+    assertThrows(
+        InvalidReturnTypeException.class,
+        () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+  }
 
   @Test
   public void testUpdateGroupWhenPopulationFunctionReturnTypeNotMatchingWithPopulationBasis() {
@@ -673,7 +672,7 @@ public class GroupServiceTest implements ResourceUtil {
     doReturn(optional).when(measureRepository).findById(any(String.class));
 
     assertThrows(
-        InvalidIdException.class,
+        IllegalArgumentException.class,
         () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
   }
 
@@ -684,7 +683,7 @@ public class GroupServiceTest implements ResourceUtil {
     doReturn(optional).when(measureRepository).findById(any(String.class));
 
     assertThrows(
-        InvalidIdException.class,
+        IllegalArgumentException.class,
         () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
   }
 
@@ -722,29 +721,39 @@ public class GroupServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testUpdateGroupWhenPopulationFunctionReturnTypeMatchingWithPopulationBasi() {
+  public void testCreateGroupWithEmptyElm() {
     group2.setPopulations(null);
     group2.setPopulationBasis("Boolean");
     Optional<Measure> optional = Optional.of(measure);
     doReturn(optional).when(measureRepository).findById(any(String.class));
 
-    measure.setElmJson("sampleElmJson");
+    measure.setElmJson("");
     assertThrows(
-        InvalidIdException.class,
+        IllegalArgumentException.class,
         () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
   }
 
-    @Test
-    public void testUpdateGroupWithStratificationWhenReturnTypeNotEqualToPopulationBasis() {
-      group2.setPopulations(null);
-      // non-boolean define for strat cql definition
-      group2.getStratifications().get(1).setCqlDefinition("SDE Race");
-      Optional<Measure> optional = Optional.of(measure);
-      doReturn(optional).when(measureRepository).findById(any(String.class));
-      assertThrows(
-          InvalidReturnTypeException.class,
-          () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
-    }
+  @Test
+  public void testUpdateGroupWithNoFunctions() {
+    measure.setElmJson(getData("/test_elm_no_functions.json"));
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+
+    Group group = groupService.createOrUpdateGroup(group1, measure.getId(), "test.user");
+    assertNotNull(group);
+  }
+
+  @Test
+  public void testUpdateGroupWithStratificationWhenReturnTypeNotEqualToPopulationBasis() {
+    group2.setPopulations(null);
+    // non-boolean define for strat cql definition
+    group2.getStratifications().get(1).setCqlDefinition("SDE Race");
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+    assertThrows(
+        InvalidReturnTypeException.class,
+        () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+  }
 
   @Test
   public void updateTestCaseGroupToAddMeasurePopulationsAndStratification() {

@@ -26,7 +26,7 @@ public class CqlDefinitionReturnTypeValidator {
       throws JsonProcessingException {
     Map<String, String> cqlDefinitionReturnTypes = getCqlDefinitionReturnTypes(elmJson);
     if (cqlDefinitionReturnTypes.isEmpty()) {
-      throw new InvalidIdException("No elm json available");
+      throw new IllegalArgumentException("No definitions found.");
     }
 
     List<Population> populations = group.getPopulations();
