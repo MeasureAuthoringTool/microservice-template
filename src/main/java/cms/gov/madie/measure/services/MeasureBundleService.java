@@ -57,7 +57,7 @@ public class MeasureBundleService {
   }
 
   protected String getData(String filePath, Measure measure) {
-  	//test data for .json
+    // test data for .json
     String data = "Test data \n123\n456\n789";
     if (filePath.contains(".cql")) {
       return measure.getCql();

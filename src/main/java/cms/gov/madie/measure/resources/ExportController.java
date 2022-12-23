@@ -37,7 +37,7 @@ public class ExportController {
     if (measureOptional.isEmpty()) {
       throw new ResourceNotFoundException("Measure", id);
     }
-    //{eCQM Abbreviated Title}v{MeasureVersion}-{Modelfamily}.json (FHIR Bundle)
+    // {eCQM Abbreviated Title}v{MeasureVersion}-{Modelfamily}.json (FHIR Bundle)
     String zipFileName =
         measureOptional.get().getEcqmTitle()
             + "-v"

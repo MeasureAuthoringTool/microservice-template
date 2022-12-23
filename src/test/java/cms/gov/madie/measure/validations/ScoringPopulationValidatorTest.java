@@ -166,7 +166,7 @@ class ScoringPopulationValidatorTest {
   @Test
   public void testUpdateGroupReturnsExceptionWhenElmJsonIsNull() throws JsonProcessingException {
     assertThrows(
-            InvalidIdException.class,
-            () -> returnTypeValidator.validateCqlFunctionReturnTypes(group1, null));
+        InvalidIdException.class,
+        () -> returnTypeValidator.validateCqlFunctionReturnTypes(group1, null));
   }
 }

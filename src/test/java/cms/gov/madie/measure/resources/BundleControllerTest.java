@@ -32,14 +32,11 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class BundleControllerTest {
 
-  @Mock
-  private MeasureRepository measureRepository;
+  @Mock private MeasureRepository measureRepository;
 
-  @Mock
-  private BundleService bundleService;
+  @Mock private BundleService bundleService;
 
-  @InjectMocks
-  private BundleController bundleController;
+  @InjectMocks private BundleController bundleController;
 
   @Test
   void testBundleMeasureThrowsNotFoundException() {
@@ -135,5 +132,4 @@ class BundleControllerTest {
     assertThat(output.getStatusCode(), is(equalTo(HttpStatus.OK)));
     assertThat(output.getBody(), is(equalTo(json)));
   }
-
 }

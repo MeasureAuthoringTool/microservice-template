@@ -42,12 +42,12 @@ public class BundleController {
     Measure measure = measureOptional.get();
     if (!principal.getName().equalsIgnoreCase(measure.getCreatedBy())
         && (CollectionUtils.isEmpty(measure.getAcls())
-        || !measure.getAcls().stream()
-        .anyMatch(
-            acl ->
-                acl.getUserId().equalsIgnoreCase(principal.getName())
-                    && acl.getRoles().stream()
-                    .anyMatch(role -> role.equals(RoleEnum.SHARED_WITH))))) {
+            || !measure.getAcls().stream()
+                .anyMatch(
+                    acl ->
+                        acl.getUserId().equalsIgnoreCase(principal.getName())
+                            && acl.getRoles().stream()
+                                .anyMatch(role -> role.equals(RoleEnum.SHARED_WITH))))) {
       throw new UnauthorizedException("Measure", measureId, principal.getName());
     }
     if (measure.isCqlErrors()) {

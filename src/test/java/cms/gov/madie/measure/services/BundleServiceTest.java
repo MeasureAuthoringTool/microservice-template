@@ -22,13 +22,11 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class BundleServiceTest {
 
-  @Mock
-  private FhirServicesClient fhirServicesClient;
+  @Mock private FhirServicesClient fhirServicesClient;
 
   @Mock private ElmTranslatorClient elmTranslatorClient;
 
-  @InjectMocks
-  private BundleService bundleService;
+  @InjectMocks private BundleService bundleService;
 
   @Test
   void testBundleMeasureReturnsNullForNullMeasure() {
@@ -44,8 +42,7 @@ class BundleServiceTest {
     when(fhirServicesClient.getMeasureBundle(any(Measure.class), anyString()))
         .thenThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN));
     assertThrows(
-        BundleOperationException.class,
-        () -> bundleService.bundleMeasure(measure, "Bearer TOKEN"));
+        BundleOperationException.class, () -> bundleService.bundleMeasure(measure, "Bearer TOKEN"));
   }
 
   @Test
@@ -69,5 +66,4 @@ class BundleServiceTest {
     String output = bundleService.bundleMeasure(measure, "Bearer TOKEN");
     assertThat(output, is(equalTo(json)));
   }
-
 }

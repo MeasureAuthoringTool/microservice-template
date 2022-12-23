@@ -643,16 +643,15 @@ public class GroupServiceTest implements ResourceUtil {
     assertEquals("new scoring unit", capturedGroup.getScoringUnit());
   }
 
-    @Test
-    public void testUpdateGroupWhenPopulationDefinitionReturnTypeNotMatchingWithPopulationBasis()
-   {
-      Optional<Measure> optional = Optional.of(measure);
-      doReturn(optional).when(measureRepository).findById(any(String.class));
+  @Test
+  public void testUpdateGroupWhenPopulationDefinitionReturnTypeNotMatchingWithPopulationBasis() {
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
 
-      assertThrows(
-          InvalidReturnTypeException.class,
-          () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
-    }
+    assertThrows(
+        InvalidReturnTypeException.class,
+        () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+  }
 
   @Test
   public void testUpdateGroupWhenPopulationFunctionReturnTypeNotMatchingWithPopulationBasis() {
@@ -734,17 +733,17 @@ public class GroupServiceTest implements ResourceUtil {
         () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
   }
 
-    @Test
-    public void testUpdateGroupWithStratificationWhenReturnTypeNotEqualToPopulationBasis() {
-      group2.setPopulations(null);
-      // non-boolean define for strat cql definition
-      group2.getStratifications().get(1).setCqlDefinition("SDE Race");
-      Optional<Measure> optional = Optional.of(measure);
-      doReturn(optional).when(measureRepository).findById(any(String.class));
-      assertThrows(
-          InvalidReturnTypeException.class,
-          () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
-    }
+  @Test
+  public void testUpdateGroupWithStratificationWhenReturnTypeNotEqualToPopulationBasis() {
+    group2.setPopulations(null);
+    // non-boolean define for strat cql definition
+    group2.getStratifications().get(1).setCqlDefinition("SDE Race");
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+    assertThrows(
+        InvalidReturnTypeException.class,
+        () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+  }
 
   @Test
   public void updateTestCaseGroupToAddMeasurePopulationsAndStratification() {

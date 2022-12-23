@@ -33,11 +33,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 public class BundleControllerMvcTest {
 
-  @MockBean
-  private MeasureRepository measureRepository;
+  @MockBean private MeasureRepository measureRepository;
 
-  @Autowired
-  private MockMvc mockMvc;
+  @Autowired private MockMvc mockMvc;
 
   @MockBean private BundleService bundleService;
 
@@ -282,5 +280,4 @@ public class BundleControllerMvcTest {
         .andExpect(jsonPath("$.entry[0].resource.version").value("9.0.000"));
     verify(measureRepository, times(1)).findById(eq("1234"));
   }
-
 }

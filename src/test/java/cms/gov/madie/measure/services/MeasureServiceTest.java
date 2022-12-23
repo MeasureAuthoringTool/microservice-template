@@ -349,22 +349,6 @@ public class MeasureServiceTest implements ResourceUtil {
   //    assertEquals("Description", capturedGroup.getGroupDescription());
   //  }
 
-
-  @Test
-  public void testVerifyAuthorizationThrowsExceptionForDifferentUsers() {
-    assertThrows(
-        UnauthorizedException.class, () -> measureService.verifyAuthorization("user1", measure));
-  }
-
-  @Test
-  public void testVerifyAuthorizationPassesForSharedUser() throws Exception {
-    AclSpecification acl = new AclSpecification();
-    acl.setUserId("userTest");
-    acl.setRoles(List.of(RoleEnum.SHARED_WITH));
-    measure.setAcls(List.of(acl));
-    assertDoesNotThrow(() -> measureService.verifyAuthorization("userTest", measure));
-  }
-
   @Test
   public void testCheckDuplicateCqlLibraryNameDoesNotThrowException() {
     Optional<Measure> measureOpt = Optional.empty();
