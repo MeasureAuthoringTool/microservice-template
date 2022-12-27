@@ -3,11 +3,14 @@ package cms.gov.madie.measure.services;
 import cms.gov.madie.measure.exceptions.BundleOperationException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
+import cms.gov.madie.measure.exceptions.InvalidResourceBundleStateException;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Measure;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 @Slf4j
 @Service
@@ -22,6 +25,22 @@ public class BundleService {
     if (measure == null) {
       return null;
     }
+
+    if (measure.isCqlErrors()) {
+      throw new InvalidResourceBundleStateException(
+          "Measure", measure.getId(), "since CQL errors exist.");
+    }
+
+    if (CollectionUtils.isEmpty(measure.getGroups())) {
+      throw new InvalidResourceBundleStateException(
+          "Measure", measure.getId(), "since there are no associated measure groups.");
+    }
+
+    if (measure.getElmJson() == null || StringUtils.isBlank(measure.getElmJson())) {
+      throw new InvalidResourceBundleStateException(
+          "Measure", measure.getId(), "since there are issues with the CQL.");
+    }
+
     try {
       final ElmJson elmJson = elmTranslatorClient.getElmJson(measure.getCql(), accessToken);
       if (elmTranslatorClient.hasErrors(elmJson)) {

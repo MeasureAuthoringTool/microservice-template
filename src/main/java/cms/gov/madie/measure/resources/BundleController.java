@@ -5,7 +5,6 @@ import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.BundleService;
-import com.nimbusds.oauth2.sdk.util.StringUtils;
 import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.measure.Measure;
 import lombok.RequiredArgsConstructor;
@@ -50,18 +49,7 @@ public class BundleController {
                                 .anyMatch(role -> role.equals(RoleEnum.SHARED_WITH))))) {
       throw new UnauthorizedException("Measure", measureId, principal.getName());
     }
-    if (measure.isCqlErrors()) {
-      throw new InvalidResourceBundleStateException(
-          "Measure", measureId, "since CQL errors exist.");
-    }
-    if (CollectionUtils.isEmpty(measure.getGroups())) {
-      throw new InvalidResourceBundleStateException(
-          "Measure", measureId, "since there are no associated measure groups.");
-    }
-    if (measure.getElmJson() == null || StringUtils.isBlank(measure.getElmJson())) {
-      throw new InvalidResourceBundleStateException(
-          "Measure", measureId, "since there are issues with the CQL.");
-    }
+
     return ResponseEntity.ok(bundleService.bundleMeasure(measure, accessToken));
   }
 }

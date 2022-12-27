@@ -11,12 +11,12 @@ public class ControllerUtil {
   public static void verifyAuthorization(String username, Measure measure) {
     if (!measure.getCreatedBy().equalsIgnoreCase(username)
         && (CollectionUtils.isEmpty(measure.getAcls())
-        || !measure.getAcls().stream()
-        .anyMatch(
-            acl ->
-                acl.getUserId().equalsIgnoreCase(username)
-                    && acl.getRoles().stream()
-                    .anyMatch(role -> role.equals(RoleEnum.SHARED_WITH))))) {
+            || !measure.getAcls().stream()
+                .anyMatch(
+                    acl ->
+                        acl.getUserId().equalsIgnoreCase(username)
+                            && acl.getRoles().stream()
+                                .anyMatch(role -> role.equals(RoleEnum.SHARED_WITH))))) {
       throw new UnauthorizedException("Measure", measure.getId(), username);
     }
   }

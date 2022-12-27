@@ -6,6 +6,8 @@ import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.BundleService;
+import gov.cms.madie.models.access.AclSpecification;
+import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureScoring;
@@ -18,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -56,6 +59,37 @@ class BundleControllerTest {
     assertThrows(
         UnauthorizedException.class,
         () -> bundleController.getMeasureBundle("MeasureID", principal, "Bearer TOKEN"));
+  }
+
+  @Test
+  void testBundleMeasureThrowsAccessExceptionForSharedUsers() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user3");
+    var acl = new AclSpecification();
+    acl.setUserId("test.user2");
+    acl.setRoles(List.of(RoleEnum.SHARED_WITH));
+    final Measure measure = Measure.builder().createdBy("test.user").acls(List.of(acl)).build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    assertThrows(
+        UnauthorizedException.class,
+        () -> bundleController.getMeasureBundle("MeasureID", principal, "Bearer TOKEN"));
+  }
+
+  @Test
+  void testBundleMeasureForSharedUsers() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user2");
+    final String json = "{\"message\": \"GOOD JSON\"}";
+    var acl = new AclSpecification();
+    acl.setUserId("test.user2");
+    acl.setRoles(List.of(RoleEnum.SHARED_WITH));
+    final Measure measure = Measure.builder().createdBy("test.user").acls(List.of(acl)).build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(bundleService.bundleMeasure(any(Measure.class), anyString())).thenReturn(json);
+    ResponseEntity<String> output =
+        bundleController.getMeasureBundle("MeasureID", principal, "Bearer TOKEN");
+    assertThat(output.getStatusCode(), is(equalTo(HttpStatus.OK)));
+    assertThat(output.getBody(), is(equalTo(json)));
   }
 
   @Test
