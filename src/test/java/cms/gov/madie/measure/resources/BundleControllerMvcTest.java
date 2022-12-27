@@ -57,7 +57,7 @@ public class BundleControllerMvcTest {
 
   @Test
   void testGetMeasureBundleReturnsForbidden() throws Exception {
-    Measure measure = Measure.builder().measureName("TestMeasure").createdBy("OTHER_USER").build();
+    Measure measure = Measure.builder().id("1234").measureName("TestMeasure").createdBy("OTHER_USER").build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
     mockMvc
         .perform(
