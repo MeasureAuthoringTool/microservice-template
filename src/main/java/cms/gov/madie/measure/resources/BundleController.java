@@ -1,17 +1,14 @@
 package cms.gov.madie.measure.resources;
 
-import cms.gov.madie.measure.exceptions.InvalidResourceBundleStateException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.BundleService;
-import gov.cms.madie.models.access.RoleEnum;
+import cms.gov.madie.measure.utils.ControllerUtil;
 import gov.cms.madie.models.measure.Measure;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -39,16 +36,7 @@ public class BundleController {
       throw new ResourceNotFoundException("Measure", measureId);
     }
     Measure measure = measureOptional.get();
-    if (!principal.getName().equalsIgnoreCase(measure.getCreatedBy())
-        && (CollectionUtils.isEmpty(measure.getAcls())
-            || !measure.getAcls().stream()
-                .anyMatch(
-                    acl ->
-                        acl.getUserId().equalsIgnoreCase(principal.getName())
-                            && acl.getRoles().stream()
-                                .anyMatch(role -> role.equals(RoleEnum.SHARED_WITH))))) {
-      throw new UnauthorizedException("Measure", measureId, principal.getName());
-    }
+    ControllerUtil.verifyAuthorization(principal.getName(), measure);
 
     return ResponseEntity.ok(bundleService.bundleMeasure(measure, accessToken));
   }
