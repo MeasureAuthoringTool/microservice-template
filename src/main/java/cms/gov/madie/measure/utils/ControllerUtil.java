@@ -8,11 +8,12 @@ import org.springframework.util.CollectionUtils;
 public class ControllerUtil {
   public static final String TEST_CASES = "/measures/{measureId}/test-cases";
 
+  /** returns true, if the measure is owned by the user or if the measure is shared with the user */
   public static void verifyAuthorization(String username, Measure measure) {
     if (!measure.getCreatedBy().equalsIgnoreCase(username)
         && (CollectionUtils.isEmpty(measure.getAcls())
-            || !measure.getAcls().stream()
-                .anyMatch(
+            || measure.getAcls().stream()
+                .noneMatch(
                     acl ->
                         acl.getUserId().equalsIgnoreCase(username)
                             && acl.getRoles().stream()

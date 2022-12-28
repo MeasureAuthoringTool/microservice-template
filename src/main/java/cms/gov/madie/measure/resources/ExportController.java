@@ -5,15 +5,17 @@ import java.security.Principal;
 import java.util.Optional;
 
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.utils.ControllerUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import cms.gov.madie.measure.repositories.MeasureRepository;
-import cms.gov.madie.measure.services.MeasureBundleService;
+import cms.gov.madie.measure.services.ExportService;
 import gov.cms.madie.models.measure.Measure;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,28 +27,28 @@ import lombok.extern.slf4j.Slf4j;
 public class ExportController {
 
   private final MeasureRepository measureRepository;
-  private final MeasureBundleService measureBundleService;
+  private final ExportService measureBundleService;
 
   @PostMapping("/measures/{id}")
   public ResponseEntity<String> generateExports(
-      Principal principal, @PathVariable("id") String id) {
+      Principal principal,
+      @PathVariable("id") String id,
+      @RequestHeader("Authorization") String accessToken) {
+
     final String username = principal.getName();
     log.info("User [{}] is attempting to export measure [{}]", username, id);
 
     Optional<Measure> measureOptional = measureRepository.findById(id);
+
     if (measureOptional.isEmpty()) {
       throw new ResourceNotFoundException("Measure", id);
     }
-    // {eCQM Abbreviated Title}v{MeasureVersion}-{Modelfamily}.json (FHIR Bundle)
-    String zipFileName =
-        measureOptional.get().getEcqmTitle()
-            + "-v"
-            + measureOptional.get().getVersion()
-            + "-"
-            + measureOptional.get().getModel();
+
+    Measure measure = measureOptional.get();
+    ControllerUtil.verifyAuthorization(username, measure);
 
     try {
-      measureBundleService.zipFile(zipFileName, measureOptional.get());
+      measureBundleService.zipFile(measureOptional.get(), accessToken);
     } catch (IOException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();

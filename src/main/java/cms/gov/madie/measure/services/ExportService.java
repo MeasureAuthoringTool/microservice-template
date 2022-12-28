@@ -19,11 +19,20 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @AllArgsConstructor
-public class MeasureBundleService {
+public class ExportService {
 
   private List<String> bundleFiles = new ArrayList<String>();
 
-  public void zipFile(String zipFileName, Measure measure) throws IOException {
+  private final BundleService bundleService;
+
+  public void zipFile(Measure measure, String accessToken) throws IOException {
+
+    String measureBundleJson = bundleService.bundleMeasure(measure, accessToken);
+
+    // {eCQM Abbreviated Title}v{MeasureVersion}-{Modelfamily}.json (FHIR Bundle)
+    String zipFileName =
+        measure.getEcqmTitle() + "-v" + measure.getVersion() + "-" + measure.getModel();
+
     log.info("Entering of zipFile(): zipFileName = " + zipFileName);
     String fhirBundleJson = zipFileName + ".json";
     bundleFiles.add(fhirBundleJson);

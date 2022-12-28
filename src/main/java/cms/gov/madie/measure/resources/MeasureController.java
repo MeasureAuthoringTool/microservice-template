@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.resources;
 
+import cms.gov.madie.measure.utils.ControllerUtil;
 import gov.cms.madie.models.access.RoleEnum;
 import java.security.Principal;
 import java.time.Instant;
@@ -121,7 +122,7 @@ public class MeasureController {
             username,
             persistedMeasure.get().getCreatedBy());
         // either owner or shared-with role
-        measureService.verifyAuthorization(username, persistedMeasure.get());
+        ControllerUtil.verifyAuthorization(username, persistedMeasure.get());
 
         // no user can update a soft-deleted measure
         if (!persistedMeasure.get().isActive()) {

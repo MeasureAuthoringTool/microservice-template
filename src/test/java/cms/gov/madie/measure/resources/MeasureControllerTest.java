@@ -315,10 +315,6 @@ class MeasureControllerTest {
     testMeasure.setId("testid");
     testMeasure.setMeasureName("MSR01");
     testMeasure.setVersion("0.001");
-
-    doThrow(new UnauthorizedException("Measure", measure.getId(), "aninvalidUser@gmail.com"))
-        .when(measureService)
-        .verifyAuthorization(anyString(), any());
     assertThrows(
         UnauthorizedException.class,
         () -> controller.updateMeasure("testid", testMeasure, principal));
@@ -347,11 +343,11 @@ class MeasureControllerTest {
   @Test
   void testUpdateMeasureReturnsInvalidDeletionCredentialsException() {
     Principal principal = mock(Principal.class);
-    when(principal.getName()).thenReturn("anInvalidUser@gmail.com");
+    when(principal.getName()).thenReturn("sharedUser@gmail.com");
     measure.setCreatedBy("MSR01");
     measure.setActive(true);
     AclSpecification acl = new AclSpecification();
-    acl.setUserId("invalidUser@gmail.com");
+    acl.setUserId("sharedUser@gmail.com");
     acl.setRoles(List.of(RoleEnum.SHARED_WITH));
     measure.setAcls(List.of(acl));
     when(repository.findById(anyString())).thenReturn(Optional.of(measure));
@@ -421,11 +417,6 @@ class MeasureControllerTest {
     var testMeasure = new Measure();
     testMeasure.setActive(true);
     testMeasure.setId("testid");
-
-    doThrow(new UnauthorizedException("Measure", measure.getId(), "unAuthorizedUser@gmail.com"))
-        .when(measureService)
-        .verifyAuthorization(anyString(), any());
-
     assertThrows(
         UnauthorizedException.class,
         () -> controller.updateMeasure("testid", testMeasure, principal));

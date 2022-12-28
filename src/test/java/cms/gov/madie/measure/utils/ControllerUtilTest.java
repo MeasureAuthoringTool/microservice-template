@@ -3,18 +3,13 @@ package cms.gov.madie.measure.utils;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
-import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.Population;
-import gov.cms.madie.models.measure.PopulationType;
-import gov.cms.madie.models.measure.Stratification;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -48,7 +43,7 @@ class ControllerUtilTest {
   }
 
   @Test
-  public void testVerifyAuthorizationPassesForSharedUser() throws Exception {
+  public void testVerifyAuthorizationPassesForSharedUser() {
     AclSpecification acl = new AclSpecification();
     acl.setUserId("userTest");
     acl.setRoles(List.of(RoleEnum.SHARED_WITH));

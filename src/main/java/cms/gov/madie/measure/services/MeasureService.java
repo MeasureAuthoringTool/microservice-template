@@ -67,19 +67,6 @@ public class MeasureService {
     }
   }
 
-  public void verifyAuthorization(String username, Measure measure) {
-    if (!measure.getCreatedBy().equalsIgnoreCase(username)
-        && (CollectionUtils.isEmpty(measure.getAcls())
-            || !measure.getAcls().stream()
-                .anyMatch(
-                    acl ->
-                        acl.getUserId().equalsIgnoreCase(username)
-                            && acl.getRoles().stream()
-                                .anyMatch(role -> role.equals(RoleEnum.SHARED_WITH))))) {
-      throw new UnauthorizedException("Measure", measure.getId(), username);
-    }
-  }
-
   public void checkVersionIdChanged(String changedVersionId, String originalVersionId) {
     if (StringUtils.isBlank(changedVersionId) && !StringUtils.isBlank(originalVersionId)) {
       throw new InvalidVersionIdException(changedVersionId);
