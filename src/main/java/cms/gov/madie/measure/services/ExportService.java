@@ -31,7 +31,7 @@ public class ExportService {
     log.info("Entering of zipFile(): zipFileName = " + zipFileName);
     String fhirBundleJson = zipFileName + ".json";
     List<String> exportFiles = new ArrayList<>(Collections.singleton(fhirBundleJson));
-    String cql = "\\cql\\" + measure.getMeasureName() + ".cql";
+    String cql = "/cql/" + measure.getMeasureName() + ".cql";
     exportFiles.add(cql);
 
     try (ZipOutputStream zos = new ZipOutputStream(outputStream)) {
