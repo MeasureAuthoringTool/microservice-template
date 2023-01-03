@@ -1,17 +1,15 @@
 package cms.gov.madie.measure.resources;
 
-import java.io.IOException;
 import java.security.Principal;
 import java.util.Optional;
 
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.utils.ControllerUtil;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import cms.gov.madie.measure.repositories.MeasureRepository;
@@ -19,18 +17,21 @@ import cms.gov.madie.measure.services.ExportService;
 import gov.cms.madie.models.measure.Measure;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/measure-bundle")
 public class ExportController {
 
   private final MeasureRepository measureRepository;
-  private final ExportService measureBundleService;
 
-  @PostMapping("/measures/{id}")
-  public ResponseEntity<String> generateExports(
+  private final ExportService exportService;
+
+  private static final String CONTENT_DISPOSITION = "Content-Disposition";
+
+  @GetMapping(path = "/measures/{id}/exports", produces = "application/zip")
+  public ResponseEntity<StreamingResponseBody> generateExports(
       Principal principal,
       @PathVariable("id") String id,
       @RequestHeader("Authorization") String accessToken) {
@@ -47,13 +48,9 @@ public class ExportController {
     Measure measure = measureOptional.get();
     ControllerUtil.verifyAuthorization(username, measure);
 
-    try {
-      measureBundleService.zipFile(measureOptional.get(), accessToken);
-    } catch (IOException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-      return new ResponseEntity<>(HttpStatus.GATEWAY_TIMEOUT);
-    }
-    return new ResponseEntity<>(HttpStatus.OK);
+    return ResponseEntity.ok()
+        .header(CONTENT_DISPOSITION, "attachment;filename=\"" + "CompressedFile" + ".zip\"")
+        .contentType(MediaType.valueOf("application/zip"))
+        .body(out -> exportService.zipFile(measureOptional.get(), accessToken, out));
   }
 }
