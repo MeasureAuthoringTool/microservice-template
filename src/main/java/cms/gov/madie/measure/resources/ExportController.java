@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.utils.ControllerUtil;
+import cms.gov.madie.measure.utils.ExportFileNamesUtil;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -49,7 +50,8 @@ public class ExportController {
     ControllerUtil.verifyAuthorization(username, measure);
 
     return ResponseEntity.ok()
-        .header(CONTENT_DISPOSITION, "attachment;filename=\"" + "CompressedFile" + ".zip\"")
+        .header(CONTENT_DISPOSITION, "attachment;filename=\""
+            + ExportFileNamesUtil.getExportZipName(measure) + ".zip\"")
         .contentType(MediaType.valueOf("application/zip"))
         .body(out -> exportService.zipFile(measureOptional.get(), accessToken, out));
   }

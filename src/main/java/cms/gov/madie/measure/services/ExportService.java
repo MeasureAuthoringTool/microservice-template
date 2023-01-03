@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import cms.gov.madie.measure.utils.ExportFileNamesUtil;
 import org.springframework.stereotype.Service;
 
 import com.nimbusds.oauth2.sdk.util.StringUtils;
@@ -25,13 +26,12 @@ public class ExportService {
   private final BundleService bundleService;
 
   public void zipFile(Measure measure, String accessToken, OutputStream outputStream) {
-    String zipFileName =
-        measure.getEcqmTitle() + "-v" + measure.getVersion() + "-" + measure.getModel();
+    String zipFileName = ExportFileNamesUtil.getExportFileName(measure);
 
     log.info("Entering of zipFile(): zipFileName = " + zipFileName);
     String fhirBundleJson = zipFileName + ".json";
     List<String> exportFiles = new ArrayList<>(Collections.singleton(fhirBundleJson));
-    String cql = "/cql/" + measure.getMeasureName() + ".cql";
+    String cql = "/cql/" + measure.getCqlLibraryName() + ".cql";
     exportFiles.add(cql);
 
     try (ZipOutputStream zos = new ZipOutputStream(outputStream)) {
@@ -54,7 +54,7 @@ public class ExportService {
    * @param zipOutputStream the zip
    * @throws Exception the exception
    */
-  public void addBytesToZip(String path, byte[] input, ZipOutputStream zipOutputStream) throws IOException {
+  private void addBytesToZip(String path, byte[] input, ZipOutputStream zipOutputStream) throws IOException {
     ZipEntry entry = new ZipEntry(path);
     entry.setSize(input.length);
     zipOutputStream.putNextEntry(entry);
@@ -63,7 +63,7 @@ public class ExportService {
   }
 
 
-  protected String getData(String filePath, Measure measure, String accessToken) {
+  private String getData(String filePath, Measure measure, String accessToken) {
 
     String measureBundleJson = bundleService.bundleMeasure(measure, accessToken);
     if (filePath.contains(".cql")) {
