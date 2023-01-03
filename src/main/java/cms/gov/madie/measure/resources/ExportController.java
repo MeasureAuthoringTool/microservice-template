@@ -51,7 +51,7 @@ public class ExportController {
 
     return ResponseEntity.ok()
         .header(CONTENT_DISPOSITION, "attachment;filename=\""
-            + ExportFileNamesUtil.getExportZipName(measure) + ".zip\"")
+            + ExportFileNamesUtil.getExportFileName(measure) + ".zip\"")
         .contentType(MediaType.valueOf("application/zip"))
         .body(out -> exportService.zipFile(measureOptional.get(), accessToken, out));
   }
