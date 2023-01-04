@@ -32,7 +32,7 @@ public class ExportController {
   private static final String CONTENT_DISPOSITION = "Content-Disposition";
 
   @GetMapping(path = "/measures/{id}/exports", produces = "application/zip")
-  public ResponseEntity<StreamingResponseBody> generateExports(
+  public ResponseEntity<StreamingResponseBody> getZip(
       Principal principal,
       @PathVariable("id") String id,
       @RequestHeader("Authorization") String accessToken) {
@@ -47,12 +47,14 @@ public class ExportController {
     }
 
     Measure measure = measureOptional.get();
+    // We may not want to have this check, Confirm with Stan.
     ControllerUtil.verifyAuthorization(username, measure);
 
     return ResponseEntity.ok()
-        .header(CONTENT_DISPOSITION, "attachment;filename=\""
-            + ExportFileNamesUtil.getExportFileName(measure) + ".zip\"")
+        .header(
+            CONTENT_DISPOSITION,
+            "attachment;filename=\"" + ExportFileNamesUtil.getExportFileName(measure) + ".zip\"")
         .contentType(MediaType.valueOf("application/zip"))
-        .body(out -> exportService.zipFile(measureOptional.get(), accessToken, out));
+        .body(out -> exportService.generateExports(measure, accessToken, out));
   }
 }

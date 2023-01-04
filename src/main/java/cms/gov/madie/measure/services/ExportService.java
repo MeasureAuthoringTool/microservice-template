@@ -1,10 +1,8 @@
 package cms.gov.madie.measure.services;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -25,14 +23,13 @@ public class ExportService {
 
   private final BundleService bundleService;
 
-  public void zipFile(Measure measure, String accessToken, OutputStream outputStream) {
-    String zipFileName = ExportFileNamesUtil.getExportFileName(measure);
+  public void generateExports(Measure measure, String accessToken, OutputStream outputStream) {
+    String fileName = ExportFileNamesUtil.getExportFileName(measure);
+    log.info("Generating exports for " + fileName);
 
-    log.info("Entering of zipFile(): zipFileName = " + zipFileName);
-    String fhirBundleJson = zipFileName + ".json";
-    List<String> exportFiles = new ArrayList<>(Collections.singleton(fhirBundleJson));
-    String cql = "/cql/" + measure.getCqlLibraryName() + ".cql";
-    exportFiles.add(cql);
+    List<String> exportFiles = new ArrayList<>();
+    exportFiles.add(fileName + ".json");
+    exportFiles.add("/cql/" + measure.getCqlLibraryName() + ".cql");
 
     try (ZipOutputStream zos = new ZipOutputStream(outputStream)) {
       for (String filePath : exportFiles) {
@@ -43,18 +40,21 @@ public class ExportService {
       }
     } catch (Exception ex) {
       log.error(ex.getMessage());
+      throw new RuntimeException(
+          "Unexpected error while generating exports for measureID: " + measure.getId());
     }
   }
 
   /**
    * Adds the bytes to zip.
    *
-   * @param path  file name along with path and extension
+   * @param path file name along with path and extension
    * @param input the input byte array
    * @param zipOutputStream the zip
    * @throws Exception the exception
    */
-  private void addBytesToZip(String path, byte[] input, ZipOutputStream zipOutputStream) throws IOException {
+  private void addBytesToZip(String path, byte[] input, ZipOutputStream zipOutputStream)
+      throws IOException {
     ZipEntry entry = new ZipEntry(path);
     entry.setSize(input.length);
     zipOutputStream.putNextEntry(entry);
@@ -62,15 +62,11 @@ public class ExportService {
     zipOutputStream.closeEntry();
   }
 
-
   private String getData(String filePath, Measure measure, String accessToken) {
-
-    String measureBundleJson = bundleService.bundleMeasure(measure, accessToken);
     if (filePath.contains(".cql")) {
       return measure.getCql();
     } else if (filePath.contains(".json")) {
-      // test data
-      return measureBundleJson;
+      return bundleService.bundleMeasure(measure, accessToken);
     }
     return null;
   }
