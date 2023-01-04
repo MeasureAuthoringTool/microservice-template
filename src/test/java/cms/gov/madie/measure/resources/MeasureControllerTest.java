@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-
+import java.io.UnsupportedEncodingException;
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
 import java.security.Principal;
@@ -501,7 +501,8 @@ class MeasureControllerTest {
   }
 
   @Test
-  void searchMeasuresByNameOrEcqmTitleWithoutCurrentUserFilter() {
+  void searchMeasuresByNameOrEcqmTitleWithoutCurrentUserFilter()
+      throws UnsupportedEncodingException {
     Page<Measure> measures = new PageImpl<>(List.of(measure));
     when(repository.findAllByMeasureNameOrEcqmTitle(any(String.class), any(Pageable.class)))
         .thenReturn(measures);
@@ -520,7 +521,7 @@ class MeasureControllerTest {
   }
 
   @Test
-  void searchMeasuresByNameOrEcqmTitleWithCurrentUserFilter() {
+  void searchMeasuresByNameOrEcqmTitleWithCurrentUserFilter() throws UnsupportedEncodingException {
     Page<Measure> measures = new PageImpl<>(List.of(measure));
     when(repository.findAllByMeasureNameOrEcqmTitleForCurrentUser(
             any(String.class), any(Pageable.class), anyString()))
