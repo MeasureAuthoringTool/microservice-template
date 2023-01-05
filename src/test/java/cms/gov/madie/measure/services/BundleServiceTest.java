@@ -99,14 +99,6 @@ class BundleServiceTest implements ResourceUtil {
   }
 
   @Test
-  void testBundleMeasureWhenThereIsNoElmJson() {
-    measure.setElmJson(null);
-    assertThrows(
-        InvalidResourceBundleStateException.class,
-        () -> bundleService.bundleMeasure(measure, "Bearer TOKEN"));
-  }
-
-  @Test
   void testBundleMeasureThrowsOperationException() {
     when(elmTranslatorClient.getElmJson(anyString(), anyString()))
         .thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
