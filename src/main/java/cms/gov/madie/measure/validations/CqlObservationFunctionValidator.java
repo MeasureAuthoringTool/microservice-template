@@ -70,15 +70,16 @@ public class CqlObservationFunctionValidator {
         if (numberOfOperands == 1) {
           String operandTypeSpecifierName =
               operandIterator.next().get("operandTypeSpecifier").get("name").asText();
-          observationPopBasis.put(
-              node.get("name").asText(), operandTypeSpecifierName.split("}")[1]);
+          if (!(operandTypeSpecifierName.split("}")[1].equalsIgnoreCase("Boolean"))) {
+            observationPopBasis.put(
+                node.get("name").asText(), operandTypeSpecifierName.split("}")[1]);
+          }
           // Boolean Population Basis require MO's with no parameters
         } else if (numberOfOperands < 1) {
           observationPopBasis.put(node.get("name").asText(), "Boolean");
           // Not a valid MO against any Population Basis
-        } else {
-          observationPopBasis.put(node.get("name").asText(), "NA");
         }
+        observationPopBasis.putIfAbsent(node.get("name").asText(), "NA");
       }
     }
     return observationPopBasis;
