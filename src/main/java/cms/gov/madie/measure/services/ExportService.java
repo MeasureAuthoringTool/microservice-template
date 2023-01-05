@@ -47,9 +47,6 @@ public class ExportService {
   }
 
   public <T extends Resource> T createFhirResourceFromJson(String json, Class<T> clazz) {
-    if (StringUtils.isBlank(json)) {
-      return null;
-    }
     return fhirContext.newJsonParser().parseResource(clazz, json);
   }
 
