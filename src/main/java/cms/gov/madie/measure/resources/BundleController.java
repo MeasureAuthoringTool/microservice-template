@@ -26,7 +26,7 @@ public class BundleController {
 
   private final BundleService bundleService;
 
-  @GetMapping(path = "/measures/{measureId}/bundles", produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetMapping(path = "/measures/{measureId}/bundle", produces = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<String> getMeasureBundle(
       @PathVariable String measureId,
       Principal principal,
