@@ -45,7 +45,7 @@ public class BundleControllerMvcTest {
     when(measureRepository.findById(anyString())).thenReturn(Optional.empty());
     mockMvc
         .perform(
-            get("/measures/1234/bundles")
+            get("/measures/1234/bundle")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .header("Authorization", "test-okta")
@@ -62,7 +62,7 @@ public class BundleControllerMvcTest {
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
     mockMvc
         .perform(
-            get("/measures/1234/bundles")
+            get("/measures/1234/bundle")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .header("Authorization", "test-okta")
@@ -98,7 +98,7 @@ public class BundleControllerMvcTest {
                 measure.getMeasureName(), new RuntimeException("CAUSE")));
     mockMvc
         .perform(
-            get("/measures/1234/bundles")
+            get("/measures/1234/bundle")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .header("Authorization", "test-okta")
@@ -153,7 +153,7 @@ public class BundleControllerMvcTest {
     when(bundleService.bundleMeasure(any(Measure.class), anyString())).thenReturn(bundleString);
     mockMvc
         .perform(
-            get("/measures/1234/bundles")
+            get("/measures/1234/bundle")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .header("Authorization", "test-okta")
