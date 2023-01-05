@@ -1,5 +1,7 @@
 package cms.gov.madie.measure.services;
 
+import ca.uhn.fhir.context.FhirContext;
+import cms.gov.madie.measure.utils.ResourceUtil;
 import gov.cms.madie.models.measure.Measure;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,13 +17,15 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class ExportServiceTest {
+class ExportServiceTest implements ResourceUtil {
 
   @Mock private BundleService bundleService;
+  @Mock private FhirContext fhirContext;
 
   @InjectMocks private ExportService exportService;
 
   private Measure measure;
+  private String measureBundle;
 
   @BeforeEach
   public void setUp() {
@@ -41,12 +45,13 @@ class ExportServiceTest {
             .lastModifiedBy("test user")
             .model("QI-Core v4.1.1")
             .build();
+    measureBundle = getData("/bundles/export_test.json");
   }
 
   @Test
   void testGenerateExportsForMeasure() {
-    String testMeasureBundleJson = "test data";
-    when(bundleService.bundleMeasure(any(), anyString())).thenReturn(testMeasureBundleJson);
+    when(bundleService.bundleMeasure(any(), anyString())).thenReturn(measureBundle);
+    when(fhirContext.newJsonParser()).thenReturn(FhirContext.forR4().newJsonParser());
     exportService.generateExports(measure, "Bearer TOKEN", OutputStream.nullOutputStream());
     verify(bundleService, times(1)).bundleMeasure(any(), anyString());
   }
