@@ -4,7 +4,6 @@ import cms.gov.madie.measure.exceptions.BundleOperationException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
 import cms.gov.madie.measure.exceptions.InvalidResourceBundleStateException;
-import com.nimbusds.oauth2.sdk.util.StringUtils;
 import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Measure;
 import lombok.AllArgsConstructor;
@@ -33,12 +32,7 @@ public class BundleService {
 
     if (CollectionUtils.isEmpty(measure.getGroups())) {
       throw new InvalidResourceBundleStateException(
-          "Measure", measure.getId(), "since there are no associated measure groups.");
-    }
-
-    if (measure.getElmJson() == null || StringUtils.isBlank(measure.getElmJson())) {
-      throw new InvalidResourceBundleStateException(
-          "Measure", measure.getId(), "since there are issues with the CQL.");
+          "Measure", measure.getId(), "since there are no associated population criteria.");
     }
 
     try {
@@ -48,7 +42,6 @@ public class BundleService {
       }
       measure.setElmJson(elmJson.getJson());
       measure.setElmXml(elmJson.getXml());
-
       return fhirServicesClient.getMeasureBundle(measure, accessToken);
     } catch (CqlElmTranslationServiceException | CqlElmTranslationErrorException e) {
       throw e;

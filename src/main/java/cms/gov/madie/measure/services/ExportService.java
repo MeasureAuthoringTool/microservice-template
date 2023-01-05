@@ -8,10 +8,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import cms.gov.madie.measure.utils.ExportFileNamesUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
-
-import com.nimbusds.oauth2.sdk.util.StringUtils;
-
 import gov.cms.madie.models.measure.Measure;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

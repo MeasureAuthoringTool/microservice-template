@@ -32,6 +32,7 @@ public class BundleController {
       Principal principal,
       @RequestHeader("Authorization") String accessToken) {
     Optional<Measure> measureOptional = measureRepository.findById(measureId);
+    log.info("User [{}] is attempting to create a new measure bundle for [{}]", principal.getName(), measureId);
     if (measureOptional.isEmpty()) {
       throw new ResourceNotFoundException("Measure", measureId);
     }
