@@ -744,7 +744,7 @@ public class GroupServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testUpdateGrroupWithBooleanAsOperandTypeSpecifierName() {
+  public void testUpdateGroupWithBooleanAsOperandTypeSpecifierName() {
     group2.setMeasureObservations(
         List.of(
             new MeasureObservation(
