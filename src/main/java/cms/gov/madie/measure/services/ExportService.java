@@ -42,7 +42,7 @@ public class ExportService {
     } catch (Exception ex) {
       log.error(ex.getMessage());
       throw new RuntimeException(
-        "Unexpected error while generating exports for measureID: " + measure.getId());
+          "Unexpected error while generating exports for measureID: " + measure.getId());
     }
   }
 
@@ -50,12 +50,14 @@ public class ExportService {
     return fhirContext.newJsonParser().parseResource(clazz, json);
   }
 
-  private void addMeasureBundleToExport(ZipOutputStream zos, String fileName, String measureBundle) throws IOException {
+  private void addMeasureBundleToExport(ZipOutputStream zos, String fileName, String measureBundle)
+      throws IOException {
     String measureBundleFile = fileName + ".json";
     addBytesToZip(measureBundleFile, measureBundle.getBytes(), zos);
   }
 
-  private void addLibraryCqlFilesToExport(ZipOutputStream zos, Bundle measureBundle) throws IOException {
+  private void addLibraryCqlFilesToExport(ZipOutputStream zos, Bundle measureBundle)
+      throws IOException {
     Map<String, String> cqlMap = getCQLForLibraries(measureBundle);
     for (Map.Entry<String, String> entry : cqlMap.entrySet()) {
       String filePath = CQL_DIRECTORY + entry.getKey() + ".cql";
@@ -64,39 +66,38 @@ public class ExportService {
     }
   }
 
-
   private Map<String, String> getCQLForLibraries(Bundle measureBundle) {
     Map<String, String> libraryCqlMap = new HashMap<String, String>();
-    measureBundle.getEntry()
-      .stream()
-      .filter(entry -> StringUtils.equals("Library", entry.getResource().getResourceType().name()))
-      .forEach(entry -> {
-        Library library = (Library) entry.getResource();
-        Attachment attachment = getCqlAttachment(library);
-        String cql = new String(attachment.getData());
-        libraryCqlMap.put(library.getName(), cql);
-      });
+    measureBundle.getEntry().stream()
+        .filter(
+            entry -> StringUtils.equals("Library", entry.getResource().getResourceType().name()))
+        .forEach(
+            entry -> {
+              Library library = (Library) entry.getResource();
+              Attachment attachment = getCqlAttachment(library);
+              String cql = new String(attachment.getData());
+              libraryCqlMap.put(library.getName(), cql);
+            });
     return libraryCqlMap;
   }
 
   private Attachment getCqlAttachment(Library library) {
     return library.getContent().stream()
-      .filter(content -> StringUtils.equals(TEXT_CQL, content.getContentType()))
-      .findAny()
-      .orElse(null);
+        .filter(content -> StringUtils.equals(TEXT_CQL, content.getContentType()))
+        .findAny()
+        .orElse(null);
   }
-
 
   /**
    * Adds the bytes to zip.
    *
-   * @param path            file name along with path and extension
-   * @param input           the input byte array
+   * @param path file name along with path and extension
+   * @param input the input byte array
    * @param zipOutputStream the zip
    * @throws Exception the exception
    */
   private void addBytesToZip(String path, byte[] input, ZipOutputStream zipOutputStream)
-    throws IOException {
+      throws IOException {
     ZipEntry entry = new ZipEntry(path);
     entry.setSize(input.length);
     zipOutputStream.putNextEntry(entry);
