@@ -36,7 +36,6 @@ public class ExportService {
 
     String measureBundle = bundleService.bundleMeasure(measure, accessToken);
     Bundle bundle = createFhirResourceFromJson(measureBundle, Bundle.class);
-    getCQLForLibraries(bundle);
     try (ZipOutputStream zos = new ZipOutputStream(outputStream)) {
       addMeasureBundleToExport(zos, exportFileName, measureBundle);
       addLibraryCqlFilesToExport(zos, bundle);
