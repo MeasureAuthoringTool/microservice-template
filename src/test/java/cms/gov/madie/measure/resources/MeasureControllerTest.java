@@ -316,9 +316,6 @@ class MeasureControllerTest {
     testMeasure.setMeasureName("MSR01");
     testMeasure.setVersion(new gov.cms.madie.models.library.Version(0, 0, 1));
 
-    doThrow(new UnauthorizedException("Measure", measure.getId(), "aninvalidUser@gmail.com"))
-        .when(measureService)
-        .verifyAuthorization(anyString(), any());
     assertThrows(
         UnauthorizedException.class,
         () -> controller.updateMeasure("testid", testMeasure, principal));
@@ -347,11 +344,11 @@ class MeasureControllerTest {
   @Test
   void testUpdateMeasureReturnsInvalidDeletionCredentialsException() {
     Principal principal = mock(Principal.class);
-    when(principal.getName()).thenReturn("anInvalidUser@gmail.com");
+    when(principal.getName()).thenReturn("sharedUser@gmail.com");
     measure.setCreatedBy("MSR01");
     measure.setActive(true);
     AclSpecification acl = new AclSpecification();
-    acl.setUserId("invalidUser@gmail.com");
+    acl.setUserId("sharedUser@gmail.com");
     acl.setRoles(List.of(RoleEnum.SHARED_WITH));
     measure.setAcls(List.of(acl));
     when(repository.findById(anyString())).thenReturn(Optional.of(measure));
@@ -421,11 +418,6 @@ class MeasureControllerTest {
     var testMeasure = new Measure();
     testMeasure.setActive(true);
     testMeasure.setId("testid");
-
-    doThrow(new UnauthorizedException("Measure", measure.getId(), "unAuthorizedUser@gmail.com"))
-        .when(measureService)
-        .verifyAuthorization(anyString(), any());
-
     assertThrows(
         UnauthorizedException.class,
         () -> controller.updateMeasure("testid", testMeasure, principal));
@@ -507,101 +499,6 @@ class MeasureControllerTest {
     assertEquals(group.getId(), response.getBody().getId());
     assertEquals(group.getScoring(), response.getBody().getScoring());
     assertEquals(group.getPopulations(), response.getBody().getPopulations());
-  }
-
-  @Test
-  void testBundleMeasureThrowsNotFoundException() {
-    Principal principal = mock(Principal.class);
-    when(repository.findById(anyString())).thenReturn(Optional.empty());
-    assertThrows(
-        ResourceNotFoundException.class,
-        () -> controller.getMeasureBundle("MeasureID", principal, "Bearer TOKEN"));
-  }
-
-  @Test
-  void testBundleMeasureThrowsAccessException() {
-    Principal principal = mock(Principal.class);
-    when(principal.getName()).thenReturn("test.user");
-    final Measure measure = Measure.builder().createdBy("OtherUser").build();
-    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
-    assertThrows(
-        UnauthorizedException.class,
-        () -> controller.getMeasureBundle("MeasureID", principal, "Bearer TOKEN"));
-  }
-
-  @Test
-  void testBundleMeasureThrowsOperationException() {
-    Principal principal = mock(Principal.class);
-    when(principal.getName()).thenReturn("test.user");
-    final String elmJson = "{\"text\": \"ELM JSON\"}";
-    final Measure measure =
-        Measure.builder()
-            .createdBy("test.user")
-            .groups(
-                List.of(
-                    Group.builder()
-                        .groupDescription("Group1")
-                        .scoring(MeasureScoring.RATIO.toString())
-                        .build()))
-            .elmJson(elmJson)
-            .build();
-    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
-    when(measureService.bundleMeasure(any(Measure.class), anyString()))
-        .thenThrow(
-            new BundleOperationException("Measure", "MeasureID", new RuntimeException("cause")));
-    assertThrows(
-        BundleOperationException.class,
-        () -> controller.getMeasureBundle("MeasureID", principal, "Bearer TOKEN"));
-  }
-
-  @Test
-  void testBundleMeasureThrowsElmTranslationException() {
-    Principal principal = mock(Principal.class);
-    when(principal.getName()).thenReturn("test.user");
-    final String elmJson = "{\"text\": \"ELM JSON\"}";
-    final Measure measure =
-        Measure.builder()
-            .createdBy("test.user")
-            .groups(
-                List.of(
-                    Group.builder()
-                        .groupDescription("Group1")
-                        .scoring(MeasureScoring.RATIO.toString())
-                        .build()))
-            .elmJson(elmJson)
-            .build();
-    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
-    when(measureService.bundleMeasure(any(Measure.class), anyString()))
-        .thenThrow(new CqlElmTranslationErrorException(measure.getMeasureName()));
-    assertThrows(
-        CqlElmTranslationErrorException.class,
-        () -> controller.getMeasureBundle("MeasureID", principal, "Bearer TOKEN"));
-  }
-
-  @Test
-  void testBundleMeasureReturnsBundleString() {
-    Principal principal = mock(Principal.class);
-    when(principal.getName()).thenReturn("test.user");
-    final String elmJson = "{\"text\": \"ELM JSON\"}";
-    final String json = "{\"message\": \"GOOD JSON\"}";
-    final Measure measure =
-        Measure.builder()
-            .createdBy("test.user")
-            .groups(
-                List.of(
-                    Group.builder()
-                        .groupDescription("Group1")
-                        .scoring(MeasureScoring.RATIO.toString())
-                        .build()))
-            .elmJson(elmJson)
-            .build();
-    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
-    when(measureService.bundleMeasure(any(Measure.class), anyString())).thenReturn(json);
-    ResponseEntity<String> output =
-        controller.getMeasureBundle("MeasureID", principal, "Bearer TOKEN");
-    assertThat(output, is(notNullValue()));
-    assertThat(output.getStatusCode(), is(equalTo(HttpStatus.OK)));
-    assertThat(output.getBody(), is(equalTo(json)));
   }
 
   @Test

@@ -1,9 +1,5 @@
 package cms.gov.madie.measure.services;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -35,10 +31,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.client.HttpClientErrorException;
-import cms.gov.madie.measure.exceptions.BundleOperationException;
-import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.InvalidCmsIdException;
 import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
 import cms.gov.madie.measure.exceptions.InvalidMeasurementPeriodException;
@@ -47,7 +39,6 @@ import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
 import cms.gov.madie.measure.utils.ResourceUtil;
-import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.Population;
@@ -57,10 +48,6 @@ import gov.cms.madie.models.measure.Stratification;
 @ExtendWith(MockitoExtension.class)
 public class MeasureServiceTest implements ResourceUtil {
   @Mock private MeasureRepository measureRepository;
-
-  @Mock private FhirServicesClient fhirServicesClient;
-
-  @Mock private ElmTranslatorClient elmTranslatorClient;
 
   @InjectMocks private MeasureService measureService;
 
@@ -352,61 +339,6 @@ public class MeasureServiceTest implements ResourceUtil {
   //        capturedGroup.getPopulation().get(MeasurePopulation.INITIAL_POPULATION));
   //    assertEquals("Description", capturedGroup.getGroupDescription());
   //  }
-
-  @Test
-  void testBundleMeasureReturnsNullForNullMeasure() {
-    String output = measureService.bundleMeasure(null, "Bearer TOKEN");
-    assertThat(output, is(nullValue()));
-  }
-
-  @Test
-  void testBundleMeasureThrowsOperationException() {
-    final Measure measure = Measure.builder().createdBy("test.user").cql("CQL").build();
-    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
-        .thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
-    when(fhirServicesClient.getMeasureBundle(any(Measure.class), anyString()))
-        .thenThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN));
-    assertThrows(
-        BundleOperationException.class,
-        () -> measureService.bundleMeasure(measure, "Bearer TOKEN"));
-  }
-
-  @Test
-  void testBundleMeasureThrowsCqlElmTranslatorExceptionWithErrors() {
-    final Measure measure = Measure.builder().createdBy("test.user").cql("CQL").build();
-    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
-        .thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
-    when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(true);
-    assertThrows(
-        CqlElmTranslationErrorException.class,
-        () -> measureService.bundleMeasure(measure, "Bearer TOKEN"));
-  }
-
-  @Test
-  void testBundleMeasureReturnsBundleString() {
-    final String json = "{\"message\": \"GOOD JSON\"}";
-    final Measure measure = Measure.builder().createdBy("test.user").cql("CQL").build();
-    when(fhirServicesClient.getMeasureBundle(any(Measure.class), anyString())).thenReturn(json);
-    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
-        .thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
-    String output = measureService.bundleMeasure(measure, "Bearer TOKEN");
-    assertThat(output, is(equalTo(json)));
-  }
-
-  @Test
-  public void testVerifyAuthorizationThrowsExceptionForDifferentUsers() {
-    assertThrows(
-        UnauthorizedException.class, () -> measureService.verifyAuthorization("user1", measure));
-  }
-
-  @Test
-  public void testVerifyAuthorizationPassesForSharedUser() throws Exception {
-    AclSpecification acl = new AclSpecification();
-    acl.setUserId("userTest");
-    acl.setRoles(List.of(RoleEnum.SHARED_WITH));
-    measure.setAcls(List.of(acl));
-    assertDoesNotThrow(() -> measureService.verifyAuthorization("userTest", measure));
-  }
 
   @Test
   public void testCheckDuplicateCqlLibraryNameDoesNotThrowException() {

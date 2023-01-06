@@ -30,11 +30,9 @@ public class FhirServicesClient {
     HttpHeaders headers = new HttpHeaders();
     headers.set(HttpHeaders.AUTHORIZATION, accessToken);
     HttpEntity<Measure> measureEntity = new HttpEntity<>(measure, headers);
-    String response =
-        fhirServicesRestTemplate
-            .exchange(uri, HttpMethod.PUT, measureEntity, String.class)
-            .getBody();
-    return response;
+    return fhirServicesRestTemplate
+        .exchange(uri, HttpMethod.PUT, measureEntity, String.class)
+        .getBody();
   }
 
   public ResponseEntity<String> validateBundle(String testCaseJson, String accessToken) {
