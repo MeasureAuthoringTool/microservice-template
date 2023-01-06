@@ -50,13 +50,13 @@ public class ExportService {
     return fhirContext.newJsonParser().parseResource(clazz, json);
   }
 
-  private void addMeasureBundleToExport(ZipOutputStream zos, String fileName, String measureBundle)
+  public void addMeasureBundleToExport(ZipOutputStream zos, String fileName, String measureBundle)
       throws IOException {
     String measureBundleFile = fileName + ".json";
     addBytesToZip(measureBundleFile, measureBundle.getBytes(), zos);
   }
 
-  private void addLibraryCqlFilesToExport(ZipOutputStream zos, Bundle measureBundle)
+  public void addLibraryCqlFilesToExport(ZipOutputStream zos, Bundle measureBundle)
       throws IOException {
     Map<String, String> cqlMap = getCQLForLibraries(measureBundle);
     for (Map.Entry<String, String> entry : cqlMap.entrySet()) {
@@ -76,7 +76,8 @@ public class ExportService {
               Library library = (Library) entry.getResource();
               Attachment attachment = getCqlAttachment(library);
               String cql = new String(attachment.getData());
-              libraryCqlMap.put(library.getName(), cql);
+              String key = library.getName() + library.getVersion();
+              libraryCqlMap.put(key, cql);
             });
     return libraryCqlMap;
   }
