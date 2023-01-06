@@ -67,7 +67,7 @@ public class ExportService {
   }
 
   private Map<String, String> getCQLForLibraries(Bundle measureBundle) {
-    Map<String, String> libraryCqlMap = new HashMap<String, String>();
+    Map<String, String> libraryCqlMap = new HashMap<>();
     measureBundle.getEntry().stream()
         .filter(
             entry -> StringUtils.equals("Library", entry.getResource().getResourceType().name()))
@@ -94,7 +94,7 @@ public class ExportService {
    * @param path file name along with path and extension
    * @param input the input byte array
    * @param zipOutputStream the zip
-   * @throws Exception the exception
+   * @throws IOException the exception
    */
   private void addBytesToZip(String path, byte[] input, ZipOutputStream zipOutputStream)
       throws IOException {
