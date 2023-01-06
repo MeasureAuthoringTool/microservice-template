@@ -46,17 +46,13 @@ public class ExportService {
     }
   }
 
-  public <T extends Resource> T createFhirResourceFromJson(String json, Class<T> clazz) {
-    return fhirContext.newJsonParser().parseResource(clazz, json);
-  }
-
-  public void addMeasureBundleToExport(ZipOutputStream zos, String fileName, String measureBundle)
+  private void addMeasureBundleToExport(ZipOutputStream zos, String fileName, String measureBundle)
       throws IOException {
     String measureBundleFile = fileName + ".json";
     addBytesToZip(measureBundleFile, measureBundle.getBytes(), zos);
   }
 
-  public void addLibraryCqlFilesToExport(ZipOutputStream zos, Bundle measureBundle)
+  private void addLibraryCqlFilesToExport(ZipOutputStream zos, Bundle measureBundle)
       throws IOException {
     Map<String, String> cqlMap = getCQLForLibraries(measureBundle);
     for (Map.Entry<String, String> entry : cqlMap.entrySet()) {
@@ -64,6 +60,10 @@ public class ExportService {
       String data = entry.getValue();
       addBytesToZip(filePath, data.getBytes(), zos);
     }
+  }
+
+  private  <T extends Resource> T createFhirResourceFromJson(String json, Class<T> clazz) {
+    return fhirContext.newJsonParser().parseResource(clazz, json);
   }
 
   private Map<String, String> getCQLForLibraries(Bundle measureBundle) {
@@ -97,7 +97,7 @@ public class ExportService {
    * @param zipOutputStream the zip
    * @throws IOException the exception
    */
-  private void addBytesToZip(String path, byte[] input, ZipOutputStream zipOutputStream)
+  void addBytesToZip(String path, byte[] input, ZipOutputStream zipOutputStream)
       throws IOException {
     ZipEntry entry = new ZipEntry(path);
     entry.setSize(input.length);

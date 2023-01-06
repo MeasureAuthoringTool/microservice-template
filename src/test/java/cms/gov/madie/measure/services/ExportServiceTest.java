@@ -94,7 +94,7 @@ class ExportServiceTest implements ResourceUtil {
 
     doThrow(new IOException())
         .when(exportService)
-        .addMeasureBundleToExport(any(ZipOutputStream.class), anyString(), anyString());
+        .addBytesToZip(anyString(), any(), any());
     when(fhirContext.newJsonParser()).thenReturn(FhirContext.forR4().newJsonParser());
 
     Exception ex =
