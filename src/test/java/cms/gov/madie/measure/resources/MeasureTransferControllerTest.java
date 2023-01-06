@@ -132,7 +132,7 @@ public class MeasureTransferControllerTest {
             .id("testId")
             .createdBy("testCreatedBy")
             .measureSetId("abc-pqr-xyz")
-            .version("0.000")
+            .version(new gov.cms.madie.models.library.Version(0, 0, 0))
             .measureName("MedicationDispenseTest")
             .cqlLibraryName("MedicationDispenseTest")
             .model("QI-Core")

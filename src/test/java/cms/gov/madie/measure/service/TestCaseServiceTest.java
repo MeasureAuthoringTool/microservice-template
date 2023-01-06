@@ -77,7 +77,7 @@ public class TestCaseServiceTest {
     measure.setId(ObjectId.get().toString());
     measure.setMeasureSetId("IDIDID");
     measure.setMeasureName("MSR01");
-    measure.setVersion("0.001");
+    measure.setVersion(new gov.cms.madie.models.library.Version(0, 0, 1));
   }
 
   @Test

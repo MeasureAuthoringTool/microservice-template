@@ -57,7 +57,7 @@ class MeasureControllerTest {
     measure.setActive(true);
     measure.setMeasureSetId("IDIDID");
     measure.setMeasureName("MSR01");
-    measure.setVersion("0.001");
+    measure.setVersion(new gov.cms.madie.models.library.Version(0, 0, 1));
   }
 
   @Test
@@ -314,7 +314,7 @@ class MeasureControllerTest {
     testMeasure.setCreatedBy("anotheruser");
     testMeasure.setId("testid");
     testMeasure.setMeasureName("MSR01");
-    testMeasure.setVersion("0.001");
+    testMeasure.setVersion(new gov.cms.madie.models.library.Version(0, 0, 1));
 
     doThrow(new UnauthorizedException("Measure", measure.getId(), "aninvalidUser@gmail.com"))
         .when(measureService)
@@ -337,7 +337,7 @@ class MeasureControllerTest {
     testMeasure.setCreatedBy("validUser@gmail.com");
     testMeasure.setId("testid");
     testMeasure.setMeasureName("MSR01");
-    testMeasure.setVersion("0.001");
+    testMeasure.setVersion(new gov.cms.madie.models.library.Version(0, 0, 1));
 
     assertThrows(
         UnauthorizedException.class,
@@ -361,7 +361,7 @@ class MeasureControllerTest {
     testMeasure.setCreatedBy("anotheruser");
     testMeasure.setId("testid");
     testMeasure.setMeasureName("MSR01");
-    testMeasure.setVersion("0.001");
+    testMeasure.setVersion(new gov.cms.madie.models.library.Version(0, 0, 1));
     testMeasure.setActive(false);
     doThrow(new InvalidDeletionCredentialsException("invalidUser@gmail.com"))
         .when(measureService)
