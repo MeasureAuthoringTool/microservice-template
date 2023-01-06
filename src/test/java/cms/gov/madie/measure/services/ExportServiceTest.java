@@ -85,7 +85,7 @@ class ExportServiceTest implements ResourceUtil {
     ZipInputStream zipInputStream = new ZipInputStream( new ByteArrayInputStream( out.toByteArray() ) );
     List<String> actualFilesInZip = getFilesInZip(zipInputStream);
     assertThat(expectedFilesInZip.size(), is(equalTo(actualFilesInZip.size())));
-    assertThat(expectedFilesInZip,is(equalTo(actualFilesInZip)));
+    assertThat(expectedFilesInZip, is(equalTo(actualFilesInZip)));
   }
 
   @Test
