@@ -121,7 +121,7 @@
     <dependency>
       <groupId>ca.uhn.hapi.fhir</groupId>
       <artifactId>hapi-fhir-structures-r4</artifactId>
-      <version>6.2.2</version>
+      <version>6.2.4</version>
       <exclusions>
         <exclusion>
           <groupId>com.squareup.okhttp3</groupId>
