@@ -744,6 +744,19 @@ public class GroupServiceTest implements ResourceUtil {
   }
 
   @Test
+  public void testUpdateGroupWithBooleanAsOperandTypeSpecifierName() {
+    group2.setMeasureObservations(
+        List.of(
+            new MeasureObservation(
+                "id-1", "fun23", "id-2", AggregateMethodType.MAXIMUM.getValue())));
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+    assertThrows(
+        InvalidReturnTypeException.class,
+        () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+  }
+
+  @Test
   public void testUpdateGroupWithStratificationWhenReturnTypeNotEqualToPopulationBasis() {
     group2.setPopulations(null);
     // non-boolean define for strat cql definition
