@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.services;
 
 import ca.uhn.fhir.context.FhirContext;
+import cms.gov.madie.measure.exceptions.BundleOperationException;
 import cms.gov.madie.measure.utils.ResourceUtil;
 import gov.cms.madie.models.measure.Measure;
 import org.junit.jupiter.api.BeforeEach;
@@ -96,10 +97,24 @@ class ExportServiceTest implements ResourceUtil {
       addMeasureBundleToExport(any(ZipOutputStream.class), anyString(), anyString());
     when(fhirContext.newJsonParser()).thenReturn(FhirContext.forR4().newJsonParser());
 
-    assertThrows(
+    Exception ex = assertThrows(
       RuntimeException.class,
-      () -> exportService.generateExports(measure, "Bearer TOKEN", OutputStream.nullOutputStream()),
-      "Unexpected error while generating exports for measureID: " + measure.getId());
+      () -> exportService.generateExports(measure, "Bearer TOKEN", OutputStream.nullOutputStream()));
+    assertThat(ex.getMessage(),
+      is(equalTo("Unexpected error while generating exports for measureID: xyz-p13r-13ert")));
+  }
+
+  @Test
+  void testGenerateExportsWhenMeasureBundleNotAvailable() throws IOException {
+    when(bundleService.bundleMeasure(any(), anyString()))
+      .thenThrow(new BundleOperationException("Measure", measure.getId(), new Exception("Bundle generation failed")));
+
+    Exception ex = assertThrows(
+      RuntimeException.class,
+      () -> exportService.generateExports(measure, "Bearer TOKEN", OutputStream.nullOutputStream()));
+    assertThat(ex.getMessage(),
+      is(equalTo("An error occurred while bundling Measure with ID xyz-p13r-13ert. " +
+        "Please try again later or contact a System Administrator if this continues to occur.")));
   }
 
   private List<String> getFilesInZip(ZipInputStream zipInputStream) throws IOException {
