@@ -76,7 +76,7 @@ public class ExportService {
               Library library = (Library) entry.getResource();
               Attachment attachment = getCqlAttachment(library);
               String cql = new String(attachment.getData());
-              String key = library.getName() + library.getVersion();
+              String key = library.getName() + "-v" + library.getVersion();
               libraryCqlMap.put(key, cql);
             });
     return libraryCqlMap;

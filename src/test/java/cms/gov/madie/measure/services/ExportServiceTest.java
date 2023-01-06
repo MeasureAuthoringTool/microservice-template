@@ -40,8 +40,7 @@ class ExportServiceTest implements ResourceUtil {
   @Mock private BundleService bundleService;
   @Mock private FhirContext fhirContext;
 
-  @Spy
-  @InjectMocks private ExportService exportService;
+  @Spy @InjectMocks private ExportService exportService;
 
   private Measure measure;
   private String measureBundle;
@@ -77,13 +76,13 @@ class ExportServiceTest implements ResourceUtil {
     verify(bundleService, times(1)).bundleMeasure(any(), anyString());
 
     // expected files in export zip
-    List<String> expectedFilesInZip = List.of(
-      "ExportTest-v1.0.000-QI-Core v4.1.1.json",
-      "/cql/ExportTest0.0.000.cql",
-      "/cql/FHIRHelpers4.1.000.cql"
-    );
+    List<String> expectedFilesInZip =
+        List.of(
+            "ExportTest-v1.0.000-QI-Core v4.1.1.json",
+            "/cql/ExportTest-v0.0.000.cql",
+            "/cql/FHIRHelpers-v4.1.000.cql");
 
-    ZipInputStream zipInputStream = new ZipInputStream( new ByteArrayInputStream( out.toByteArray() ) );
+    ZipInputStream zipInputStream = new ZipInputStream(new ByteArrayInputStream(out.toByteArray()));
     List<String> actualFilesInZip = getFilesInZip(zipInputStream);
     assertThat(expectedFilesInZip.size(), is(equalTo(actualFilesInZip.size())));
     assertThat(expectedFilesInZip, is(equalTo(actualFilesInZip)));
@@ -93,28 +92,41 @@ class ExportServiceTest implements ResourceUtil {
   void testGenerateExportsWhenWritingFileToZipFailed() throws IOException {
     when(bundleService.bundleMeasure(any(), anyString())).thenReturn(measureBundle);
 
-    doThrow(new IOException()).when(exportService).
-      addMeasureBundleToExport(any(ZipOutputStream.class), anyString(), anyString());
+    doThrow(new IOException())
+        .when(exportService)
+        .addMeasureBundleToExport(any(ZipOutputStream.class), anyString(), anyString());
     when(fhirContext.newJsonParser()).thenReturn(FhirContext.forR4().newJsonParser());
 
-    Exception ex = assertThrows(
-      RuntimeException.class,
-      () -> exportService.generateExports(measure, "Bearer TOKEN", OutputStream.nullOutputStream()));
-    assertThat(ex.getMessage(),
-      is(equalTo("Unexpected error while generating exports for measureID: xyz-p13r-13ert")));
+    Exception ex =
+        assertThrows(
+            RuntimeException.class,
+            () ->
+                exportService.generateExports(
+                    measure, "Bearer TOKEN", OutputStream.nullOutputStream()));
+    assertThat(
+        ex.getMessage(),
+        is(equalTo("Unexpected error while generating exports for measureID: xyz-p13r-13ert")));
   }
 
   @Test
   void testGenerateExportsWhenMeasureBundleNotAvailable() throws IOException {
     when(bundleService.bundleMeasure(any(), anyString()))
-      .thenThrow(new BundleOperationException("Measure", measure.getId(), new Exception("Bundle generation failed")));
+        .thenThrow(
+            new BundleOperationException(
+                "Measure", measure.getId(), new Exception("Bundle generation failed")));
 
-    Exception ex = assertThrows(
-      RuntimeException.class,
-      () -> exportService.generateExports(measure, "Bearer TOKEN", OutputStream.nullOutputStream()));
-    assertThat(ex.getMessage(),
-      is(equalTo("An error occurred while bundling Measure with ID xyz-p13r-13ert. " +
-        "Please try again later or contact a System Administrator if this continues to occur.")));
+    Exception ex =
+        assertThrows(
+            RuntimeException.class,
+            () ->
+                exportService.generateExports(
+                    measure, "Bearer TOKEN", OutputStream.nullOutputStream()));
+    assertThat(
+        ex.getMessage(),
+        is(
+            equalTo(
+                "An error occurred while bundling Measure with ID xyz-p13r-13ert. "
+                    + "Please try again later or contact a System Administrator if this continues to occur.")));
   }
 
   private List<String> getFilesInZip(ZipInputStream zipInputStream) throws IOException {
