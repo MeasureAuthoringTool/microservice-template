@@ -4,6 +4,7 @@ import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.common.Version;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,7 +29,7 @@ class ControllerUtilTest {
             .cql("test cql")
             .measureSetId("IDIDID")
             .measureName("MSR01")
-            .version(new gov.cms.madie.models.library.Version(0, 0, 1))
+            .version(new Version(0, 0, 1))
             .createdAt(Instant.now())
             .createdBy("test user")
             .lastModifiedAt(Instant.now())

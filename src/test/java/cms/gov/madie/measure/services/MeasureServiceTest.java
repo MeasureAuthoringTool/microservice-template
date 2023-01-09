@@ -15,6 +15,7 @@ import static org.mockito.Mockito.when;
 
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
+import gov.cms.madie.models.common.Version;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -92,7 +93,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .elmJson(elmJson)
             .measureSetId("IDIDID")
             .measureName("MSR01")
-            .version(new gov.cms.madie.models.library.Version(0, 0, 1))
+            .version(new Version(0, 0, 1))
             .groups(groups)
             .createdAt(Instant.now())
             .createdBy("test user")

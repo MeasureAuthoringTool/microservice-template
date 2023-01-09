@@ -18,6 +18,7 @@ import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
 import gov.cms.madie.models.measure.Reference;
 import gov.cms.madie.models.measure.Stratification;
+import gov.cms.madie.models.common.Version;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -132,7 +133,7 @@ public class MeasureTransferControllerTest {
             .id("testId")
             .createdBy("testCreatedBy")
             .measureSetId("abc-pqr-xyz")
-            .version(new gov.cms.madie.models.library.Version(0, 0, 0))
+            .version(new Version(0, 0, 0))
             .measureName("MedicationDispenseTest")
             .cqlLibraryName("MedicationDispenseTest")
             .model("QI-Core")

@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 import gov.cms.madie.models.measure.TestCaseStratificationValue;
+import gov.cms.madie.models.common.Version;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -158,7 +159,7 @@ public class GroupServiceTest implements ResourceUtil {
             .elmJson(elmJson)
             .measureSetId("IDIDID")
             .measureName("MSR01")
-            .version(new gov.cms.madie.models.library.Version(0, 0, 1))
+            .version(new Version(0, 0, 1))
             .groups(groups)
             .createdAt(Instant.now())
             .createdBy("test user")
