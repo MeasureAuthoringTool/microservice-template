@@ -35,6 +35,7 @@ import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.GroupService;
 import cms.gov.madie.measure.services.MeasureService;
 import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import lombok.RequiredArgsConstructor;
@@ -92,7 +93,7 @@ public class MeasureController {
     measure.setCreatedAt(now);
     measure.setLastModifiedBy(username);
     measure.setLastModifiedAt(now);
-    measure.setVersion("0.0.000");
+    measure.setVersion(new Version(0, 0, 0));
 
     Measure savedMeasure = repository.save(measure);
     log.info("User [{}] successfully created new measure with ID [{}]", username, measure.getId());

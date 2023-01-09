@@ -6,6 +6,7 @@ import cms.gov.madie.measure.repositories.MeasureRepository;
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.common.Version;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -72,7 +73,7 @@ class ExportControllerTest {
     final Measure measure =
         Measure.builder()
             .ecqmTitle("test_ecqm_title")
-            .version("0.0.000")
+            .version(new Version(0, 0, 0))
             .model("QiCore 4.1.1")
             .createdBy("test.user")
             .build();

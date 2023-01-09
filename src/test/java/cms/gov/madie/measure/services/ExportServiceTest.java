@@ -4,6 +4,7 @@ import ca.uhn.fhir.context.FhirContext;
 import cms.gov.madie.measure.exceptions.BundleOperationException;
 import cms.gov.madie.measure.utils.ResourceUtil;
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.common.Version;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -55,7 +56,7 @@ class ExportServiceTest implements ResourceUtil {
             .cqlErrors(false)
             .measureSetId("IDIDID")
             .measureName("MSR01")
-            .version("1.0.000")
+            .version(new Version(1, 0, 0))
             .createdAt(Instant.now())
             .createdBy("test user")
             .lastModifiedAt(Instant.now())
