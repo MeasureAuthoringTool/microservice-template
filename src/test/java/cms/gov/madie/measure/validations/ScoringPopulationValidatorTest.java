@@ -1,8 +1,6 @@
 package cms.gov.madie.measure.validations;
 
-import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureScoring;
@@ -34,9 +32,6 @@ class ScoringPopulationValidatorTest {
   @Mock private ConstraintValidatorContext validatorContext;
   @Mock private MeasureRepository measureRepository;
   private final ScoringPopulationValidator validator = new ScoringPopulationValidator();
-
-  private final CqlObservationFunctionValidator returnTypeValidator =
-      new CqlObservationFunctionValidator();
 
   private Group group1;
   private Measure measure;

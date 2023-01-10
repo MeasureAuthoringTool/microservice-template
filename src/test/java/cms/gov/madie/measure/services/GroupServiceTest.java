@@ -49,6 +49,7 @@ import gov.cms.madie.models.measure.Stratification;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import gov.cms.madie.models.measure.TestCasePopulationValue;
+import gov.cms.madie.models.common.Version;
 
 @ExtendWith(MockitoExtension.class)
 public class GroupServiceTest implements ResourceUtil {
