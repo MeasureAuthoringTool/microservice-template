@@ -71,7 +71,7 @@ public class VersionService {
   private void validateMeasureForVersioning(Measure measure, String username) {
     if (!measure.getMeasureMetaData().isDraft()) {
       log.error(
-          "User [{}] attempted to version CQL Library with id [{}] which is not in a draft state",
+          "User [{}] attempted to version measure with id [{}] which is not in a draft state",
           username,
           measure.getId());
       throw new BadVersionRequestException(
@@ -79,7 +79,7 @@ public class VersionService {
     }
     if (measure.isCqlErrors()) {
       log.error(
-          "User [{}] attempted to version CQL Library with id [{}] which has CQL errors",
+          "User [{}] attempted to version measure with id [{}] which has CQL errors",
           username,
           measure.getId());
       throw new BadVersionRequestException(
@@ -91,7 +91,7 @@ public class VersionService {
             .findFirst()
             .isPresent()) {
       log.error(
-          "User [{}] attempted to version CQL Library with id [{}] which has invalid resources",
+          "User [{}] attempted to version measure with id [{}] which has invalid resources",
           username,
           measure.getId());
       throw new BadVersionRequestException(
