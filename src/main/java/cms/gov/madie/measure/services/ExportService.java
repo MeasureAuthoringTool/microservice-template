@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.services;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.IParser;
 import cms.gov.madie.measure.utils.ExportFileNamesUtil;
 import gov.cms.madie.models.measure.Measure;
 import lombok.AllArgsConstructor;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -29,16 +31,18 @@ public class ExportService {
 
   private static final String TEXT_CQL = "text/cql";
   private static final String CQL_DIRECTORY = "/cql/";
+  private static final String RESOURCE_DIRECTORY = "/resources/";
 
   public void generateExports(Measure measure, String accessToken, OutputStream outputStream) {
     String exportFileName = ExportFileNamesUtil.getExportFileName(measure);
     log.info("Generating exports for " + exportFileName);
 
     String measureBundle = bundleService.bundleMeasure(measure, accessToken);
-    Bundle bundle = createFhirResourceFromJson(measureBundle, Bundle.class);
+    Bundle bundle = createFhirResourceFromJson(measureBundle);
     try (ZipOutputStream zos = new ZipOutputStream(outputStream)) {
       addMeasureBundleToExport(zos, exportFileName, measureBundle);
       addLibraryCqlFilesToExport(zos, bundle);
+      addLibraryResourcesToExport(zos, bundle);
     } catch (Exception ex) {
       log.error(ex.getMessage());
       throw new RuntimeException(
@@ -62,23 +66,34 @@ public class ExportService {
     }
   }
 
-  private  <T extends Resource> T createFhirResourceFromJson(String json, Class<T> clazz) {
-    return fhirContext.newJsonParser().parseResource(clazz, json);
+  private void addLibraryResourcesToExport(ZipOutputStream zos, Bundle measureBundle)
+      throws IOException {
+    List<Library> libraries = getLibraryResources(measureBundle);
+    for (Library library : libraries) {
+      String jsonString = convertFhirResourceToJsonString(library);
+      String xmlString = convertFhirResourceToXmlString(library);
+      String fileName = RESOURCE_DIRECTORY + "library-" + library.getName();
+      addBytesToZip(fileName + ".json", jsonString.getBytes(), zos);
+      addBytesToZip(fileName + ".xml", xmlString.getBytes(), zos);
+    }
+  }
+
+  private List<Library> getLibraryResources(Bundle measureBundle) {
+    return measureBundle.getEntry().stream()
+        .filter(
+            entry -> StringUtils.equals("Library", entry.getResource().getResourceType().name()))
+        .map(entry -> (Library) entry.getResource())
+        .toList();
   }
 
   private Map<String, String> getCQLForLibraries(Bundle measureBundle) {
     Map<String, String> libraryCqlMap = new HashMap<>();
-    measureBundle.getEntry().stream()
-        .filter(
-            entry -> StringUtils.equals("Library", entry.getResource().getResourceType().name()))
-        .forEach(
-            entry -> {
-              Library library = (Library) entry.getResource();
-              Attachment attachment = getCqlAttachment(library);
-              String cql = new String(attachment.getData());
-              String key = library.getName() + "-v" + library.getVersion();
-              libraryCqlMap.put(key, cql);
-            });
+    List<Library> libraries = getLibraryResources(measureBundle);
+    for (Library library : libraries) {
+      Attachment attachment = getCqlAttachment(library);
+      String cql = new String(attachment.getData());
+      libraryCqlMap.put(library.getName(), cql);
+    }
     return libraryCqlMap;
   }
 
@@ -104,5 +119,21 @@ public class ExportService {
     zipOutputStream.putNextEntry(entry);
     zipOutputStream.write(input);
     zipOutputStream.closeEntry();
+  }
+
+  private IParser fhirJsonParser() {
+    return fhirContext.newJsonParser();
+  }
+
+  private Bundle createFhirResourceFromJson(String json) {
+    return fhirJsonParser().parseResource(Bundle.class, json);
+  }
+
+  private String convertFhirResourceToJsonString(Resource resource) {
+    return fhirJsonParser().setPrettyPrint(true).encodeResourceToString(resource);
+  }
+
+  private String convertFhirResourceToXmlString(Resource resource) {
+    return fhirContext.newXmlParser().setPrettyPrint(true).encodeResourceToString(resource);
   }
 }
