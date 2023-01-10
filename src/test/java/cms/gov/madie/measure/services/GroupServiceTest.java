@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 import gov.cms.madie.models.measure.TestCaseStratificationValue;
+import gov.cms.madie.models.common.Version;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
