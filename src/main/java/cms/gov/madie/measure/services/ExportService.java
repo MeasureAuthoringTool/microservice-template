@@ -70,11 +70,11 @@ public class ExportService {
       throws IOException {
     List<Library> libraries = getLibraryResources(measureBundle);
     for (Library library : libraries) {
-      String jsonString = convertFhirResourceToJsonString(library);
-      String xmlString = convertFhirResourceToXmlString(library);
+      String json = convertFhirResourceToJson(library);
+      String xml = convertFhirResourceToXml(library);
       String fileName = RESOURCES_DIRECTORY + "library-" + library.getName();
-      addBytesToZip(fileName + ".json", jsonString.getBytes(), zos);
-      addBytesToZip(fileName + ".xml", xmlString.getBytes(), zos);
+      addBytesToZip(fileName + ".json", json.getBytes(), zos);
+      addBytesToZip(fileName + ".xml", xml.getBytes(), zos);
     }
   }
 
@@ -125,11 +125,11 @@ public class ExportService {
     return fhirContext.newJsonParser();
   }
 
-  private String convertFhirResourceToJsonString(Resource resource) {
+  private String convertFhirResourceToJson(Resource resource) {
     return fhirJsonParser().setPrettyPrint(true).encodeResourceToString(resource);
   }
 
-  private String convertFhirResourceToXmlString(Resource resource) {
+  private String convertFhirResourceToXml(Resource resource) {
     return fhirContext.newXmlParser().setPrettyPrint(true).encodeResourceToString(resource);
   }
 }
