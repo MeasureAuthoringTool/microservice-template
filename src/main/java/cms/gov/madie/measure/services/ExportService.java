@@ -62,7 +62,7 @@ public class ExportService {
     }
   }
 
-  private  <T extends Resource> T createFhirResourceFromJson(String json, Class<T> clazz) {
+  private <T extends Resource> T createFhirResourceFromJson(String json, Class<T> clazz) {
     return fhirContext.newJsonParser().parseResource(clazz, json);
   }
 
