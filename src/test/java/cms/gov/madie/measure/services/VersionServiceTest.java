@@ -51,9 +51,11 @@ public class VersionServiceTest {
 
   @Test
   public void testCreateVersionThrowsBadVersionRequestExceptionForInvalidVersionType() {
+    Measure existingMeasure = Measure.builder().id("testMeasureId").createdBy("testUser").build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
 
     assertThrows(
-        ResourceNotFoundException.class,
+        BadVersionRequestException.class,
         () ->
             versionService.createVersion(
                 "testMeasureId", "NOTVALIDVERSIONTYPE", "testUser", "accesstoken"));
