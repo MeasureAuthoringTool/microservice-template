@@ -38,7 +38,7 @@ public class ExportService {
     log.info("Generating exports for " + exportFileName);
 
     String measureBundle = bundleService.bundleMeasure(measure, accessToken);
-    Bundle bundle = createFhirResourceFromJson(measureBundle);
+    Bundle bundle = fhirJsonParser().parseResource(Bundle.class, measureBundle);
     try (ZipOutputStream zos = new ZipOutputStream(outputStream)) {
       addMeasureBundleToExport(zos, exportFileName, measureBundle);
       addLibraryCqlFilesToExport(zos, bundle);
@@ -123,10 +123,6 @@ public class ExportService {
 
   private IParser fhirJsonParser() {
     return fhirContext.newJsonParser();
-  }
-
-  private Bundle createFhirResourceFromJson(String json) {
-    return fhirJsonParser().parseResource(Bundle.class, json);
   }
 
   private String convertFhirResourceToJsonString(Resource resource) {
