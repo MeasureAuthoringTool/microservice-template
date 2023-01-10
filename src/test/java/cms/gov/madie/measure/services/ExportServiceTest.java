@@ -112,7 +112,7 @@ class ExportServiceTest implements ResourceUtil {
   }
 
   @Test
-  void testGenerateExportsWhenMeasureBundleNotAvailable() throws IOException {
+  void testGenerateExportsWhenMeasureBundleNotAvailable() {
     when(bundleService.bundleMeasure(any(), anyString()))
         .thenThrow(
             new BundleOperationException(
