@@ -31,7 +31,7 @@ public class ExportService {
 
   private static final String TEXT_CQL = "text/cql";
   private static final String CQL_DIRECTORY = "/cql/";
-  private static final String RESOURCE_DIRECTORY = "/resources/";
+  private static final String RESOURCES_DIRECTORY = "/resources/";
 
   public void generateExports(Measure measure, String accessToken, OutputStream outputStream) {
     String exportFileName = ExportFileNamesUtil.getExportFileName(measure);
@@ -72,7 +72,7 @@ public class ExportService {
     for (Library library : libraries) {
       String jsonString = convertFhirResourceToJsonString(library);
       String xmlString = convertFhirResourceToXmlString(library);
-      String fileName = RESOURCE_DIRECTORY + "library-" + library.getName();
+      String fileName = RESOURCES_DIRECTORY + "library-" + library.getName();
       addBytesToZip(fileName + ".json", jsonString.getBytes(), zos);
       addBytesToZip(fileName + ".xml", xmlString.getBytes(), zos);
     }
