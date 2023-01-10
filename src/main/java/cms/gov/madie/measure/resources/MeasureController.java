@@ -35,7 +35,7 @@ import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.GroupService;
 import cms.gov.madie.measure.services.MeasureService;
 import gov.cms.madie.models.common.ActionType;
-import gov.cms.madie.models.library.Version;
+import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import lombok.RequiredArgsConstructor;

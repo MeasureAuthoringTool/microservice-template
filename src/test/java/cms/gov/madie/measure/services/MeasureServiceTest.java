@@ -1,6 +1,5 @@
 package cms.gov.madie.measure.services;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -13,8 +12,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import gov.cms.madie.models.access.AclSpecification;
-import gov.cms.madie.models.access.RoleEnum;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -35,7 +32,6 @@ import cms.gov.madie.measure.exceptions.InvalidCmsIdException;
 import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
 import cms.gov.madie.measure.exceptions.InvalidMeasurementPeriodException;
 import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
-import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
 import cms.gov.madie.measure.utils.ResourceUtil;
@@ -44,6 +40,7 @@ import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
 import gov.cms.madie.models.measure.Stratification;
+import gov.cms.madie.models.common.Version;
 
 @ExtendWith(MockitoExtension.class)
 public class MeasureServiceTest implements ResourceUtil {
@@ -92,7 +89,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .elmJson(elmJson)
             .measureSetId("IDIDID")
             .measureName("MSR01")
-            .version(new gov.cms.madie.models.library.Version(0, 0, 1))
+            .version(new Version(0, 0, 1))
             .groups(groups)
             .createdAt(Instant.now())
             .createdBy("test user")

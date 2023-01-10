@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.services;
 
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.common.Version;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,7 +35,7 @@ class ExportServiceTest {
             .cqlErrors(false)
             .measureSetId("IDIDID")
             .measureName("MSR01")
-            .version(new gov.cms.madie.models.library.Version(1, 0, 0))
+            .version(new Version(1, 0, 0))
             .createdAt(Instant.now())
             .createdBy("test user")
             .lastModifiedAt(Instant.now())

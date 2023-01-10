@@ -1,8 +1,6 @@
 package cms.gov.madie.measure.validations;
 
-import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureScoring;
@@ -10,6 +8,7 @@ import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import gov.cms.madie.models.measure.TestCasePopulationValue;
+import gov.cms.madie.models.common.Version;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,9 +32,6 @@ class ScoringPopulationValidatorTest {
   @Mock private ConstraintValidatorContext validatorContext;
   @Mock private MeasureRepository measureRepository;
   private final ScoringPopulationValidator validator = new ScoringPopulationValidator();
-
-  private final CqlObservationFunctionValidator returnTypeValidator =
-      new CqlObservationFunctionValidator();
 
   private Group group1;
   private Measure measure;
@@ -67,7 +63,7 @@ class ScoringPopulationValidatorTest {
             .cql("test cql")
             .measureSetId("IDIDID")
             .measureName("MSR01")
-            .version(new gov.cms.madie.models.library.Version(0, 0, 1))
+            .version(new Version(0, 0, 1))
             .groups(groups)
             .createdAt(Instant.now())
             .createdBy("test user")
