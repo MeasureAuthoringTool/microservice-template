@@ -70,6 +70,7 @@ class ExportServiceTest implements ResourceUtil {
   void testGenerateExportsForMeasure() throws IOException {
     when(bundleService.bundleMeasure(any(), anyString())).thenReturn(measureBundle);
     when(fhirContext.newJsonParser()).thenReturn(FhirContext.forR4().newJsonParser());
+    when(fhirContext.newXmlParser()).thenReturn(FhirContext.forR4().newXmlParser());
     ByteArrayOutputStream out = new ByteArrayOutputStream();
 
     exportService.generateExports(measure, "Bearer TOKEN", out);
@@ -79,8 +80,12 @@ class ExportServiceTest implements ResourceUtil {
     List<String> expectedFilesInZip =
         List.of(
             "ExportTest-v1.0.000-QI-Core v4.1.1.json",
-            "/cql/ExportTest-v0.0.000.cql",
-            "/cql/FHIRHelpers-v4.1.000.cql");
+            "/cql/ExportTest.cql",
+            "/cql/FHIRHelpers.cql",
+            "/resources/library-ExportTest.json",
+            "/resources/library-ExportTest.xml",
+            "/resources/library-FHIRHelpers.json",
+            "/resources/library-FHIRHelpers.xml");
 
     ZipInputStream zipInputStream = new ZipInputStream(new ByteArrayInputStream(out.toByteArray()));
     List<String> actualFilesInZip = getFilesInZip(zipInputStream);
@@ -107,7 +112,7 @@ class ExportServiceTest implements ResourceUtil {
   }
 
   @Test
-  void testGenerateExportsWhenMeasureBundleNotAvailable() throws IOException {
+  void testGenerateExportsWhenMeasureBundleNotAvailable() {
     when(bundleService.bundleMeasure(any(), anyString()))
         .thenThrow(
             new BundleOperationException(
