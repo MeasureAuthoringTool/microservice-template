@@ -5,10 +5,11 @@ import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+import cms.gov.madie.measure.exceptions.InternalServerErrorException;
 import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.Measure;
 import cms.gov.madie.measure.exceptions.BadVersionRequestException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
@@ -49,15 +50,16 @@ public class VersionService {
     measure.setLastModifiedAt(Instant.now());
     measure.setLastModifiedBy(username);
 
-    String oldVersion = formatVersion(measure);
-    String newVersion = getNextVersion(measure, versionType);
+    Version oldVersion = measure.getVersion();
+    Version newVersion = getNextVersion(measure, versionType);
+    measure.setVersion(newVersion);
 
     String newCql =
         measure
             .getCql()
             .replace(
-                "library " + measure.getCqlLibraryName() + " version '" + oldVersion + "'",
-                "library " + measure.getCqlLibraryName() + " version '" + newVersion + "'");
+                getLibraryContentLine(measure.getCqlLibraryName(), oldVersion),
+                getLibraryContentLine(measure.getCqlLibraryName(), newVersion));
     measure.setCql(newCql);
 
     Measure savedMeasure = measureRepository.save(measure);
@@ -109,25 +111,43 @@ public class VersionService {
     }
   }
 
-  protected String getNextVersion(Measure measure, String versionType) {
-    if (VERSION_TYPE_MAJOR.equalsIgnoreCase(versionType)) {
-      measure.getVersion().setMajor(measure.getVersion().getMajor() + 1);
-      measure.getVersion().setMinor(0);
-      measure.getVersion().setRevisionNumber(0);
-    } else if (VERSION_TYPE_MINOR.equalsIgnoreCase(versionType)) {
-      measure.getVersion().setMinor(measure.getVersion().getMinor() + 1);
-      measure.getVersion().setRevisionNumber(0);
-    } else if (VERSION_TYPE_PATCH.equalsIgnoreCase(versionType)) {
-      measure.getVersion().setRevisionNumber(measure.getVersion().getRevisionNumber() + 1);
+  protected Version getNextVersion(Measure measure, String versionType) {
+    Version version;
+    try {
+      if (VERSION_TYPE_MAJOR.equalsIgnoreCase(versionType)) {
+        version =
+            measureRepository
+                .findMaxVersionByMeasureSetId(measure.getMeasureSetId())
+                .orElse(new Version());
+        return version.toBuilder().major(version.getMajor() + 1).minor(0).revisionNumber(0).build();
+
+      } else if (VERSION_TYPE_MINOR.equalsIgnoreCase(versionType)) {
+        version =
+            measureRepository
+                .findMaxMinorVersionByMeasureSetIdAndVersionMajor(
+                    measure.getMeasureSetId(), measure.getVersion().getMajor())
+                .orElse(new Version());
+        return version.toBuilder().minor(version.getMinor() + 1).revisionNumber(0).build();
+
+      } else if (VERSION_TYPE_PATCH.equalsIgnoreCase(versionType)) {
+        version =
+            measureRepository
+                .findMaxRevisionNumberByMeasureSetIdAndVersionMajorAndMinor(
+                    measure.getMeasureSetId(),
+                    measure.getVersion().getMajor(),
+                    measure.getVersion().getMinor())
+                .orElse(new Version());
+        return version.toBuilder().revisionNumber(version.getRevisionNumber() + 1).build();
+      }
+    } catch (RuntimeException ex) {
+      log.error("VersionService::getNextVersion Exception while getting version number", ex);
+      throw new InternalServerErrorException(
+          "Unable to version measure with id: " + measure.getId(), ex);
     }
-    return formatVersion(measure);
+    return new Version();
   }
 
-  protected String formatVersion(Measure measure) {
-    return String.valueOf(measure.getVersion().getMajor())
-        + "."
-        + String.valueOf(measure.getVersion().getMinor())
-        + "."
-        + StringUtils.leftPad(String.valueOf(measure.getVersion().getRevisionNumber()), 3, '0');
+  private String getLibraryContentLine(String cqlLibraryName, Version version) {
+    return "library " + cqlLibraryName + " version " + "\'" + version + "\'";
   }
 }

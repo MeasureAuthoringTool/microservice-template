@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -21,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import cms.gov.madie.measure.exceptions.BadVersionRequestException;
+import cms.gov.madie.measure.exceptions.InternalServerErrorException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
@@ -118,10 +120,30 @@ public class VersionServiceTest {
   }
 
   @Test
+  public void testCreateVersionThrowsInternalServerErrorException() {
+    Measure existingMeasure =
+        Measure.builder()
+            .id("testMeasureId")
+            .measureSetId("testMeasureSetId")
+            .createdBy("testUser")
+            .build();
+
+    Exception cause = new RuntimeException("Internal Server Error!");
+    when(measureRepository.findMaxVersionByMeasureSetId(anyString())).thenThrow(cause);
+
+    assertThrows(
+        InternalServerErrorException.class,
+        () -> versionService.getNextVersion(existingMeasure, "MAJOR"),
+        "Unable to version measure with id: testMeasureId");
+    verify(measureRepository, times(1)).findMaxVersionByMeasureSetId(anyString());
+  }
+
+  @Test
   public void testCreateVersionMajorSuccess() {
     Measure existingMeasure =
         Measure.builder()
             .id("testMeasureId")
+            .measureSetId("testMeasureSetId")
             .createdBy("testUser")
             .cql("library Test1CQLLib version '2.3.001'")
             .build();
@@ -132,6 +154,10 @@ public class VersionServiceTest {
     existingMeasure.setVersion(version);
 
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+
+    Version newVersion = Version.builder().major(2).minor(2).revisionNumber(2).build();
+    when(measureRepository.findMaxVersionByMeasureSetId(anyString()))
+        .thenReturn(Optional.of(newVersion));
 
     Measure updatedMeasure = existingMeasure.toBuilder().build();
     Version updatedVersion = Version.builder().major(3).minor(0).revisionNumber(0).build();
@@ -156,6 +182,7 @@ public class VersionServiceTest {
     Measure existingMeasure =
         Measure.builder()
             .id("testMeasureId")
+            .measureSetId("testMeasureSetId")
             .createdBy("testUser")
             .cql("library Test1CQLLib version '2.3.001'")
             .build();
@@ -167,6 +194,10 @@ public class VersionServiceTest {
     List<TestCase> testCases = List.of(TestCase.builder().validResource(true).build());
     existingMeasure.setTestCases(testCases);
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+
+    Version newVersion = Version.builder().major(2).minor(3).revisionNumber(2).build();
+    when(measureRepository.findMaxMinorVersionByMeasureSetIdAndVersionMajor(anyString(), anyInt()))
+        .thenReturn(Optional.of(newVersion));
 
     Measure updatedMeasure = existingMeasure.toBuilder().build();
     Version updatedVersion = Version.builder().major(2).minor(4).revisionNumber(0).build();
@@ -191,6 +222,7 @@ public class VersionServiceTest {
     Measure existingMeasure =
         Measure.builder()
             .id("testMeasureId")
+            .measureSetId("testMeasureSetId")
             .createdBy("testUser")
             .cql("library Test1CQLLib version '2.3.001'")
             .build();
@@ -202,6 +234,11 @@ public class VersionServiceTest {
     List<TestCase> testCases = List.of(TestCase.builder().validResource(true).build());
     existingMeasure.setTestCases(testCases);
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+
+    Version newVersion = Version.builder().major(2).minor(3).revisionNumber(1).build();
+    when(measureRepository.findMaxRevisionNumberByMeasureSetIdAndVersionMajorAndMinor(
+            anyString(), anyInt(), anyInt()))
+        .thenReturn(Optional.of(newVersion));
 
     Measure updatedMeasure = existingMeasure.toBuilder().build();
     Version updatedVersion = Version.builder().major(2).minor(3).revisionNumber(2).build();
