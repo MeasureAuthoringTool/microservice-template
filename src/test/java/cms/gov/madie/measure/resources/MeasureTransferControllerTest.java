@@ -120,7 +120,7 @@ public class MeasureTransferControllerTest {
     measureMetaData.setSteward("SB");
     measureMetaData.setCopyright("Copyright@SB");
     measureMetaData.setReferences(references);
-    measureMetaData.setDraft(true);
+    measureMetaData.setDraft(false);
     measureMetaData.setEndorsements(endorsements);
     measureMetaData.setRiskAdjustment("test risk adjustment");
     measureMetaData.setDefinition("test definition");
@@ -172,8 +172,7 @@ public class MeasureTransferControllerTest {
     assertEquals(
         measure.getMeasureMetaData().getEndorsements().get(0).getEndorser(),
         persistedMeasure.getMeasureMetaData().getEndorsements().get(0).getEndorser());
-    assertEquals(
-        measure.getMeasureMetaData().isDraft(), persistedMeasure.getMeasureMetaData().isDraft());
+    assertTrue(persistedMeasure.getMeasureMetaData().isDraft());
     assertEquals(
         measure.getMeasureMetaData().getRiskAdjustment(),
         persistedMeasure.getMeasureMetaData().getRiskAdjustment());
@@ -189,6 +188,42 @@ public class MeasureTransferControllerTest {
     assertEquals(
         measure.getMeasureMetaData().getSupplementalDataElements(),
         persistedMeasure.getMeasureMetaData().getSupplementalDataElements());
+
+    verify(actionLogService, times(1))
+        .logAction(
+            targetIdArgumentCaptor.capture(),
+            targetClassArgumentCaptor.capture(),
+            actionTypeArgumentCaptor.capture(),
+            performedByArgumentCaptor.capture());
+    assertNotNull(targetIdArgumentCaptor.getValue());
+    assertThat(targetClassArgumentCaptor.getValue(), is(equalTo(Measure.class)));
+    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.IMPORTED)));
+    assertThat(performedByArgumentCaptor.getValue(), is(equalTo("testCreatedBy")));
+  }
+
+  @Test
+  public void createMeasureSuccessDefaultToDraftTest() {
+    ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
+    measure.setMeasureMetaData(null);
+    doReturn(measure).when(repository).save(any(Measure.class));
+
+    ResponseEntity<Measure> response =
+        controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
+
+    verify(repository, times(1)).save(persistedMeasureArgCaptor.capture());
+    Measure persistedMeasure = response.getBody();
+    assertNotNull(persistedMeasure);
+
+    assertEquals(measure.getMeasureSetId(), persistedMeasure.getMeasureSetId());
+    assertEquals(measure.getMeasureName(), persistedMeasure.getMeasureName());
+    assertEquals(measure.getCqlLibraryName(), persistedMeasure.getCqlLibraryName());
+    assertEquals(measure.getCql(), persistedMeasure.getCql());
+    assertEquals(measure.getGroups().size(), persistedMeasure.getGroups().size());
+    assertEquals(
+        measure.getGroups().get(0).getPopulations().get(0).getDescription(),
+        persistedMeasure.getGroups().get(0).getPopulations().get(0).getDescription());
+    assertTrue(persistedMeasure.getMeasureMetaData().isDraft());
 
     verify(actionLogService, times(1))
         .logAction(

@@ -85,17 +85,17 @@ public class VersionService {
       throw new BadVersionRequestException(
           "Measure", measure.getId(), username, "Measure has CQL errors.");
     }
-    if (measure.getTestCases() == null
-        || measure.getTestCases().stream()
+    if (measure.getTestCases() != null
+        && measure.getTestCases().stream()
             .filter(p -> !p.isValidResource())
             .findFirst()
             .isPresent()) {
       log.error(
-          "User [{}] attempted to version measure with id [{}] which has invalid resources",
+          "User [{}] attempted to version measure with id [{}] which has invalid test cases",
           username,
           measure.getId());
       throw new BadVersionRequestException(
-          "Measure", measure.getId(), username, "Measure has invalid resources.");
+          "Measure", measure.getId(), username, "Measure has invalid test cases.");
     }
   }
 

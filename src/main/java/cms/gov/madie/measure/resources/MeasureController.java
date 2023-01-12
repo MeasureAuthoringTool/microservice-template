@@ -38,6 +38,7 @@ import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureMetaData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -94,6 +95,14 @@ public class MeasureController {
     measure.setLastModifiedBy(username);
     measure.setLastModifiedAt(now);
     measure.setVersion(new Version(0, 0, 0));
+
+    if (measure.getMeasureMetaData() != null) {
+      measure.getMeasureMetaData().setDraft(true);
+    } else {
+      MeasureMetaData metaData = new MeasureMetaData();
+      metaData.setDraft(true);
+      measure.setMeasureMetaData(metaData);
+    }
 
     Measure savedMeasure = repository.save(measure);
     log.info("User [{}] successfully created new measure with ID [{}]", username, measure.getId());

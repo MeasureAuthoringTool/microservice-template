@@ -102,21 +102,6 @@ public class VersionServiceTest {
   }
 
   @Test
-  public void testCreateVersionThrowsBadVersionRequestExceptionForInvalidResourcesNonTestCases() {
-    Measure existingMeasure = Measure.builder().id("testMeasureId").createdBy("testUser").build();
-    MeasureMetaData metaData = new MeasureMetaData();
-    metaData.setDraft(true);
-    existingMeasure.setMeasureMetaData(metaData);
-    existingMeasure.setTestCases(null);
-
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
-
-    assertThrows(
-        BadVersionRequestException.class,
-        () -> versionService.createVersion("testMeasureId", "MAJOR", "testUser", "accesstoken"));
-  }
-
-  @Test
   public void testCreateVersionThrowsBadVersionRequestExceptionForInvalidResources() {
     Measure existingMeasure = Measure.builder().id("testMeasureId").createdBy("testUser").build();
     MeasureMetaData metaData = new MeasureMetaData();
@@ -140,8 +125,6 @@ public class VersionServiceTest {
     existingMeasure.setMeasureMetaData(metaData);
     Version version = Version.builder().major(2).minor(3).revisionNumber(1).build();
     existingMeasure.setVersion(version);
-    List<TestCase> testCases = List.of(TestCase.builder().validResource(true).build());
-    existingMeasure.setTestCases(testCases);
 
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
 
