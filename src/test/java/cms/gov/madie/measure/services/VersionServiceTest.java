@@ -119,7 +119,12 @@ public class VersionServiceTest {
 
   @Test
   public void testCreateVersionMajorSuccess() {
-    Measure existingMeasure = Measure.builder().id("testMeasureId").createdBy("testUser").build();
+    Measure existingMeasure =
+        Measure.builder()
+            .id("testMeasureId")
+            .createdBy("testUser")
+            .cql("library Test1CQLLib version '2.3.001'")
+            .build();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(true);
     existingMeasure.setMeasureMetaData(metaData);
@@ -148,7 +153,12 @@ public class VersionServiceTest {
 
   @Test
   public void testCreateVersionMinorSuccess() {
-    Measure existingMeasure = Measure.builder().id("testMeasureId").createdBy("testUser").build();
+    Measure existingMeasure =
+        Measure.builder()
+            .id("testMeasureId")
+            .createdBy("testUser")
+            .cql("library Test1CQLLib version '2.3.001'")
+            .build();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(true);
     existingMeasure.setMeasureMetaData(metaData);
@@ -178,7 +188,12 @@ public class VersionServiceTest {
 
   @Test
   public void testCreateVersionPatchSuccess() {
-    Measure existingMeasure = Measure.builder().id("testMeasureId").createdBy("testUser").build();
+    Measure existingMeasure =
+        Measure.builder()
+            .id("testMeasureId")
+            .createdBy("testUser")
+            .cql("library Test1CQLLib version '2.3.001'")
+            .build();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(true);
     existingMeasure.setMeasureMetaData(metaData);

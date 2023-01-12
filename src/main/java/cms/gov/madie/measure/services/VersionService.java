@@ -5,6 +5,7 @@ import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import gov.cms.madie.models.common.ActionType;
@@ -48,7 +49,16 @@ public class VersionService {
     measure.setLastModifiedAt(Instant.now());
     measure.setLastModifiedBy(username);
 
-    getNextVersion(measure, versionType);
+    String oldVersion = formatVersion(measure);
+    String newVersion = getNextVersion(measure, versionType);
+
+    String newCql =
+        measure
+            .getCql()
+            .replace(
+                "library " + measure.getCqlLibraryName() + " version '" + oldVersion + "'",
+                "library " + measure.getCqlLibraryName() + " version '" + newVersion + "'");
+    measure.setCql(newCql);
 
     Measure savedMeasure = measureRepository.save(measure);
 
@@ -99,7 +109,7 @@ public class VersionService {
     }
   }
 
-  protected void getNextVersion(Measure measure, String versionType) {
+  protected String getNextVersion(Measure measure, String versionType) {
     if (VERSION_TYPE_MAJOR.equalsIgnoreCase(versionType)) {
       measure.getVersion().setMajor(measure.getVersion().getMajor() + 1);
       measure.getVersion().setMinor(0);
@@ -110,5 +120,14 @@ public class VersionService {
     } else if (VERSION_TYPE_PATCH.equalsIgnoreCase(versionType)) {
       measure.getVersion().setRevisionNumber(measure.getVersion().getRevisionNumber() + 1);
     }
+    return formatVersion(measure);
+  }
+
+  protected String formatVersion(Measure measure) {
+    return String.valueOf(measure.getVersion().getMajor())
+        + "."
+        + String.valueOf(measure.getVersion().getMinor())
+        + "."
+        + StringUtils.leftPad(String.valueOf(measure.getVersion().getRevisionNumber()), 3, '0');
   }
 }
