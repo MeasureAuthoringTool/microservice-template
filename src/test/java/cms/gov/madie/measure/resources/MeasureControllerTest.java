@@ -81,6 +81,7 @@ class MeasureControllerTest {
     assertThat(savedMeasure.getLastModifiedBy(), is(equalTo("test.user")));
     assertThat(savedMeasure.getCreatedAt(), is(notNullValue()));
     assertThat(savedMeasure.getLastModifiedAt(), is(notNullValue()));
+    assertTrue(savedMeasure.getMeasureMetaData().isDraft());
 
     verify(actionLogService, times(1))
         .logAction(
@@ -91,6 +92,29 @@ class MeasureControllerTest {
     assertNotNull(targetIdArgumentCaptor.getValue());
     assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.CREATED)));
     assertThat(performedByArgumentCaptor.getValue(), is(equalTo("test.user")));
+  }
+
+  @Test
+  void saveMeasureAndDefaultToDraft() {
+    ArgumentCaptor<Measure> saveMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
+    measure.setId("testId");
+    measure.setMeasureMetaData(null);
+    doReturn(measure).when(repository).save(ArgumentMatchers.any());
+
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    ResponseEntity<Measure> response = controller.addMeasure(measure, principal);
+    assertNotNull(response.getBody());
+    assertEquals("IDIDID", response.getBody().getMeasureSetId());
+
+    verify(repository, times(1)).save(saveMeasureArgCaptor.capture());
+    Measure savedMeasure = saveMeasureArgCaptor.getValue();
+    assertThat(savedMeasure.getCreatedBy(), is(equalTo("test.user")));
+    assertThat(savedMeasure.getLastModifiedBy(), is(equalTo("test.user")));
+    assertThat(savedMeasure.getCreatedAt(), is(notNullValue()));
+    assertThat(savedMeasure.getLastModifiedAt(), is(notNullValue()));
+    assertTrue(savedMeasure.getMeasureMetaData().isDraft());
   }
 
   @Test

@@ -3,6 +3,7 @@ package cms.gov.madie.measure.resources;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureMetaData;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
@@ -52,6 +53,13 @@ public class MeasureTransferController {
     Instant now = Instant.now();
     measure.setCreatedAt(now);
     measure.setLastModifiedAt(now);
+    if (measure.getMeasureMetaData() != null) {
+      measure.getMeasureMetaData().setDraft(true);
+    } else {
+      MeasureMetaData metaData = new MeasureMetaData();
+      metaData.setDraft(true);
+      measure.setMeasureMetaData(metaData);
+    }
     // set ids for groups
     measure.getGroups().stream().forEach(group -> group.setId(ObjectId.get().toString()));
     Measure savedMeasure = repository.save(measure);
