@@ -21,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import cms.gov.madie.measure.exceptions.BadVersionRequestException;
+import cms.gov.madie.measure.exceptions.InternalServerErrorException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.services.VersionService;
@@ -82,6 +83,23 @@ public class MeasureVersionControllerTest {
         .createVersion(anyString(), anyString(), anyString(), anyString());
     assertThrows(
         UnauthorizedException.class,
+        () ->
+            measureVersionController.createVersion(
+                "testMeasureId", "MAJOR", principal, "accesstoken"));
+  }
+
+  @Test
+  public void testCreateVersionReturnsInternalServerErrorException() {
+    when(principal.getName()).thenReturn("testUser");
+
+    Exception cause = new RuntimeException("Internal Server Error!");
+    InternalServerErrorException excpetion =
+        new InternalServerErrorException("Internal server error!", cause);
+    doThrow(excpetion)
+        .when(versionService)
+        .createVersion(anyString(), anyString(), anyString(), anyString());
+    assertThrows(
+        InternalServerErrorException.class,
         () ->
             measureVersionController.createVersion(
                 "testMeasureId", "MAJOR", principal, "accesstoken"));

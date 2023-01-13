@@ -139,6 +139,21 @@ public class VersionServiceTest {
   }
 
   @Test
+  public void testGetNextVersionOtherException() {
+    Measure existingMeasure =
+        Measure.builder()
+            .id("testMeasureId")
+            .measureSetId("testMeasureSetId")
+            .createdBy("testUser")
+            .cql("library Test1CQLLib version '2.3.001'")
+            .build();
+    Version version = versionService.getNextVersion(existingMeasure, "InvalidVersionType");
+    assertEquals(version.getMajor(), 0);
+    assertEquals(version.getMinor(), 0);
+    assertEquals(version.getRevisionNumber(), 0);
+  }
+
+  @Test
   public void testCreateVersionMajorSuccess() {
     Measure existingMeasure =
         Measure.builder()
