@@ -23,7 +23,7 @@ public class MeasureVersionController {
 
   private final VersionService versionService;
 
-  @PutMapping("/version/{id}")
+  @PutMapping("/{id}/version")
   public ResponseEntity<Measure> createVersion(
       @PathVariable("id") String id,
       @RequestParam String versionType,
