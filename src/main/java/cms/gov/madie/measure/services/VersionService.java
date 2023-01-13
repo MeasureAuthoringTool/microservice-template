@@ -58,8 +58,8 @@ public class VersionService {
         measure
             .getCql()
             .replace(
-                getLibraryContentLine(measure.getCqlLibraryName(), oldVersion),
-                getLibraryContentLine(measure.getCqlLibraryName(), newVersion));
+                generateLibraryContentLine(measure.getCqlLibraryName(), oldVersion),
+                generateLibraryContentLine(measure.getCqlLibraryName(), newVersion));
     measure.setCql(newCql);
 
     Measure savedMeasure = measureRepository.save(measure);
@@ -147,7 +147,7 @@ public class VersionService {
     return new Version();
   }
 
-  private String getLibraryContentLine(String cqlLibraryName, Version version) {
+  private String generateLibraryContentLine(String cqlLibraryName, Version version) {
     return "library " + cqlLibraryName + " version " + "\'" + version + "\'";
   }
 }
