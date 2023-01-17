@@ -47,7 +47,8 @@ public class MeasureVersionControllerTest {
   }
 
   @Test
-  public void testCreateVersionReturnsResourceNotFoundException() {
+  public void testCreateVersionReturnsResourceNotFoundException()
+      throws InternalServerErrorException {
     when(principal.getName()).thenReturn("testUser");
     when(versionService.createVersion(anyString(), anyString(), anyString(), anyString()))
         .thenThrow(new ResourceNotFoundException("Measure", measure.getId()));
@@ -59,7 +60,8 @@ public class MeasureVersionControllerTest {
   }
 
   @Test
-  public void testCreateVersionReturnsBadVersionRequestException() {
+  public void testCreateVersionReturnsBadVersionRequestException()
+      throws InternalServerErrorException {
     when(principal.getName()).thenReturn("testUser");
 
     doThrow(
@@ -75,7 +77,7 @@ public class MeasureVersionControllerTest {
   }
 
   @Test
-  public void testCreateVersionReturnsUnauthorizedException() {
+  public void testCreateVersionReturnsUnauthorizedException() throws InternalServerErrorException {
     when(principal.getName()).thenReturn("testUser");
 
     doThrow(new UnauthorizedException("Measure", measure.getId(), principal.getName()))
@@ -89,7 +91,8 @@ public class MeasureVersionControllerTest {
   }
 
   @Test
-  public void testCreateVersionReturnsInternalServerErrorException() {
+  public void testCreateVersionReturnsInternalServerErrorException()
+      throws InternalServerErrorException {
     when(principal.getName()).thenReturn("testUser");
 
     Exception cause = new RuntimeException("Internal Server Error!");
@@ -106,7 +109,7 @@ public class MeasureVersionControllerTest {
   }
 
   @Test
-  public void testCreateVersionSuccess() {
+  public void testCreateVersionSuccess() throws InternalServerErrorException {
     when(principal.getName()).thenReturn("testUser");
     Measure updatedMeasure = Measure.builder().id("testMeasureId").createdBy("testUser").build();
     Version updatedVersion = Version.builder().major(3).minor(0).revisionNumber(0).build();

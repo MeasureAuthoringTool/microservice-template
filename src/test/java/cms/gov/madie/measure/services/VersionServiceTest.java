@@ -139,7 +139,7 @@ public class VersionServiceTest {
   }
 
   @Test
-  public void testGetNextVersionOtherException() {
+  public void testGetNextVersionOtherException() throws InternalServerErrorException {
     Measure existingMeasure =
         Measure.builder()
             .id("testMeasureId")
@@ -154,7 +154,7 @@ public class VersionServiceTest {
   }
 
   @Test
-  public void testCreateVersionMajorSuccess() {
+  public void testCreateVersionMajorSuccess() throws InternalServerErrorException {
     Measure existingMeasure =
         Measure.builder()
             .id("testMeasureId")
@@ -193,7 +193,7 @@ public class VersionServiceTest {
   }
 
   @Test
-  public void testCreateVersionMinorSuccess() {
+  public void testCreateVersionMinorSuccess() throws InternalServerErrorException {
     Measure existingMeasure =
         Measure.builder()
             .id("testMeasureId")
@@ -233,7 +233,7 @@ public class VersionServiceTest {
   }
 
   @Test
-  public void testCreateVersionPatchSuccess() {
+  public void testCreateVersionPatchSuccess() throws InternalServerErrorException {
     Measure existingMeasure =
         Measure.builder()
             .id("testMeasureId")

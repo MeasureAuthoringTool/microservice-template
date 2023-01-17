@@ -28,7 +28,8 @@ public class VersionService {
   private static final String VERSION_TYPE_MINOR = "MINOR";
   private static final String VERSION_TYPE_PATCH = "PATCH";
 
-  public Measure createVersion(String id, String versionType, String username, String accessToken) {
+  public Measure createVersion(String id, String versionType, String username, String accessToken)
+      throws InternalServerErrorException {
 
     Measure measure =
         measureRepository
@@ -111,7 +112,8 @@ public class VersionService {
     }
   }
 
-  protected Version getNextVersion(Measure measure, String versionType) {
+  protected Version getNextVersion(Measure measure, String versionType)
+      throws InternalServerErrorException {
     Version version;
     try {
       if (VERSION_TYPE_MAJOR.equalsIgnoreCase(versionType)) {

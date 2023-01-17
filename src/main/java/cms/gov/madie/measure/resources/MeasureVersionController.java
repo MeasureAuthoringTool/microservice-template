@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import cms.gov.madie.measure.exceptions.InternalServerErrorException;
 import cms.gov.madie.measure.services.VersionService;
 import gov.cms.madie.models.measure.Measure;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +29,8 @@ public class MeasureVersionController {
       @PathVariable("id") String id,
       @RequestParam String versionType,
       Principal principal,
-      @RequestHeader("Authorization") String accessToken) {
+      @RequestHeader("Authorization") String accessToken)
+      throws InternalServerErrorException {
     return ResponseEntity.ok(
         versionService.createVersion(id, versionType, principal.getName(), accessToken));
   }
