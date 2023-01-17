@@ -96,7 +96,7 @@ public class MeasureController {
     measure.setCreatedAt(now);
     measure.setLastModifiedBy(username);
     measure.setLastModifiedAt(now);
-    measure.setVersion("0.0.000");
+//    measure.setVersion("0.0.000");
 
     Measure savedMeasure = repository.save(measure);
     log.info("User [{}] successfully created new measure with ID [{}]", username, measure.getId());
@@ -107,11 +107,12 @@ public class MeasureController {
   }
 
   @PutMapping("/measures/{id}")
-  public ResponseEntity<String> updateMeasure(
+  public ResponseEntity<Measure> updateMeasure(
       @PathVariable("id") String id,
       @RequestBody @Validated(Measure.ValidationSequence.class) Measure measure,
-      Principal principal) {
-    ResponseEntity<String> response = ResponseEntity.badRequest().body("Measure does not exist.");
+      Principal principal,
+      @RequestHeader("Authorization") String accessToken) {
+    ResponseEntity<Measure> response;
     final String username = principal.getName();
     if (id == null || id.isEmpty() || !id.equals(measure.getId())) {
       log.info("got invalid id [{}] vs measureId: [{}]", id, measure.getId());
@@ -119,52 +120,14 @@ public class MeasureController {
     }
 
     log.info("getMeasureId [{}]", id);
-    Optional<Measure> persistedMeasure = repository.findById(id);
 
-    if (persistedMeasure.isPresent()) {
-      if (username != null && persistedMeasure.get().getCreatedBy() != null) {
-        log.info(
-            "got username [{}] vs createdBy: [{}]",
-            username,
-            persistedMeasure.get().getCreatedBy());
-        // either owner or shared-with role
-        measureService.verifyAuthorization(username, persistedMeasure.get());
-
-        // no user can update a soft-deleted measure
-        if (!persistedMeasure.get().isActive()) {
-          throw new UnauthorizedException(
-              "Measure", persistedMeasure.get().getId(), principal.getName());
-        }
-        // shared user should be able to edit Measure but won’t have delete access
-        if (!measure.isActive()) {
-          measureService.checkDeletionCredentials(username, persistedMeasure.get().getCreatedBy());
-        }
-      }
-      if (isCqlLibraryNameChanged(measure, persistedMeasure.get())) {
-        measureService.checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
-      }
-
-      measureService.checkVersionIdChanged(
-          measure.getVersionId(), persistedMeasure.get().getVersionId());
-      measureService.checkCmsIdChanged(measure.getCmsId(), persistedMeasure.get().getCmsId());
-
-      if (isMeasurementPeriodChanged(measure, persistedMeasure.get())) {
-        measureService.validateMeasurementPeriod(
-            measure.getMeasurementPeriodStart(), measure.getMeasurementPeriodEnd());
-      }
-      measure.setLastModifiedBy(username);
-      measure.setLastModifiedAt(Instant.now());
-      // prevent users from overwriting the createdAt/By
-      measure.setCreatedAt(persistedMeasure.get().getCreatedAt());
-      measure.setCreatedBy(persistedMeasure.get().getCreatedBy());
-      repository.save(measure);
-      response = ResponseEntity.ok().body("Measure updated successfully.");
-      if (!measure.isActive()) {
-        actionLogService.logAction(measure.getId(), Measure.class, ActionType.DELETED, username);
-      } else {
-        actionLogService.logAction(measure.getId(), Measure.class, ActionType.UPDATED, username);
-      }
+    response = ResponseEntity.ok().body(measureService.updateMeasure(id, username, measure, accessToken));
+    if (!measure.isActive()) {
+      actionLogService.logAction(id, Measure.class, ActionType.DELETED, username);
+    } else {
+      actionLogService.logAction(id, Measure.class, ActionType.UPDATED, username);
     }
+
     return response;
   }
 
@@ -263,22 +226,7 @@ public class MeasureController {
       throw new InvalidResourceBundleStateException(
           "Measure", measureId, "since there are no associated measure groups.");
     }
-    if (measure.getElmJson() == null || StringUtils.isBlank(measure.getElmJson())) {
-      throw new InvalidResourceBundleStateException(
-          "Measure", measureId, "since there are issues with the CQL.");
-    }
     return ResponseEntity.ok(measureService.bundleMeasure(measure, accessToken));
-  }
-
-  private boolean isCqlLibraryNameChanged(Measure measure, Measure persistedMeasure) {
-    return !Objects.equals(persistedMeasure.getCqlLibraryName(), measure.getCqlLibraryName());
-  }
-
-  private boolean isMeasurementPeriodChanged(Measure measure, Measure persistedMeasure) {
-    return !Objects.equals(
-            persistedMeasure.getMeasurementPeriodStart(), measure.getMeasurementPeriodStart())
-        || !Objects.equals(
-            persistedMeasure.getMeasurementPeriodEnd(), measure.getMeasurementPeriodEnd());
   }
 
   @GetMapping("/measures/search/{criteria}")

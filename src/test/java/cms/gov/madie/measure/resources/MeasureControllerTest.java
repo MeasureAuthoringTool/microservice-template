@@ -57,7 +57,7 @@ class MeasureControllerTest {
     measure.setActive(true);
     measure.setMeasureSetId("IDIDID");
     measure.setMeasureName("MSR01");
-    measure.setVersion("0.001");
+//    measure.setVersion("0.001");
   }
 
   @Test
@@ -192,7 +192,8 @@ class MeasureControllerTest {
         .when(repository)
         .save(ArgumentMatchers.any(Measure.class));
 
-    ResponseEntity<String> response = controller.updateMeasure(m1.getId(), m1, principal);
+    ResponseEntity<Measure> response = controller.updateMeasure(m1.getId(), m1, principal, "Bearer TOKEN");
+    fail(); // TODO: fix this test for update measure return type change
     assertEquals("Measure updated successfully.", response.getBody());
     verify(repository, times(1)).save(saveMeasureArgCaptor.capture());
     Measure savedMeasure = saveMeasureArgCaptor.getValue();
@@ -264,7 +265,8 @@ class MeasureControllerTest {
         .when(repository)
         .save(ArgumentMatchers.any(Measure.class));
 
-    ResponseEntity<String> response = controller.updateMeasure(m1.getId(), m1, principal);
+    ResponseEntity<Measure> response = controller.updateMeasure(m1.getId(), m1, principal, "Bearer TOKEN");
+    fail(); // TODO: fix this test for update measure return type change
     assertEquals("Measure updated successfully.", response.getBody());
     verify(repository, times(1)).save(saveMeasureArgCaptor.capture());
     Measure savedMeasure = saveMeasureArgCaptor.getValue();
@@ -297,7 +299,7 @@ class MeasureControllerTest {
     when(principal.getName()).thenReturn("test.user2");
 
     assertThrows(
-        InvalidIdException.class, () -> controller.updateMeasure(null, measure, principal));
+        InvalidIdException.class, () -> controller.updateMeasure(null, measure, principal, "Bearer TOKEN"));
   }
 
   @Test
@@ -314,14 +316,14 @@ class MeasureControllerTest {
     testMeasure.setCreatedBy("anotheruser");
     testMeasure.setId("testid");
     testMeasure.setMeasureName("MSR01");
-    testMeasure.setVersion("0.001");
+//    testMeasure.setVersion("0.001");
 
     doThrow(new UnauthorizedException("Measure", measure.getId(), "aninvalidUser@gmail.com"))
         .when(measureService)
         .verifyAuthorization(anyString(), any());
     assertThrows(
         UnauthorizedException.class,
-        () -> controller.updateMeasure("testid", testMeasure, principal));
+        () -> controller.updateMeasure("testid", testMeasure, principal, "Bearer TOKEN"));
   }
 
   @Test
@@ -337,11 +339,11 @@ class MeasureControllerTest {
     testMeasure.setCreatedBy("validUser@gmail.com");
     testMeasure.setId("testid");
     testMeasure.setMeasureName("MSR01");
-    testMeasure.setVersion("0.001");
+//    testMeasure.setVersion("0.001");
 
     assertThrows(
         UnauthorizedException.class,
-        () -> controller.updateMeasure("testid", testMeasure, principal));
+        () -> controller.updateMeasure("testid", testMeasure, principal, "Bearer TOKEN"));
   }
 
   @Test
@@ -361,14 +363,14 @@ class MeasureControllerTest {
     testMeasure.setCreatedBy("anotheruser");
     testMeasure.setId("testid");
     testMeasure.setMeasureName("MSR01");
-    testMeasure.setVersion("0.001");
+//    testMeasure.setVersion("0.001");
     testMeasure.setActive(false);
     doThrow(new InvalidDeletionCredentialsException("invalidUser@gmail.com"))
         .when(measureService)
         .checkDeletionCredentials(anyString(), anyString());
     assertThrows(
         InvalidDeletionCredentialsException.class,
-        () -> controller.updateMeasure("testid", testMeasure, principal));
+        () -> controller.updateMeasure("testid", testMeasure, principal, "Bearer TOKEN"));
   }
 
   @Test
@@ -376,7 +378,8 @@ class MeasureControllerTest {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user2");
 
-    assertThrows(InvalidIdException.class, () -> controller.updateMeasure("", measure, principal));
+    assertThrows(InvalidIdException.class, () ->
+        controller.updateMeasure("", measure, principal, "Bearer TOKEN"));
   }
 
   @Test
@@ -386,7 +389,8 @@ class MeasureControllerTest {
     Measure m1234 = measure.toBuilder().id("ID1234").build();
 
     assertThrows(
-        InvalidIdException.class, () -> controller.updateMeasure("ID5678", m1234, principal));
+        InvalidIdException.class, () ->
+            controller.updateMeasure("ID5678", m1234, principal, "Bearer TOKEN"));
   }
 
   @Test
@@ -397,14 +401,14 @@ class MeasureControllerTest {
     // no measure id specified
     assertThrows(
         InvalidIdException.class,
-        () -> controller.updateMeasure(measure.getId(), measure, principal));
+        () -> controller.updateMeasure(measure.getId(), measure, principal, "Bearer TOKEN"));
     // non-existing measure or measure with fake id
     measure.setId("5399aba6e4b0ae375bfdca88");
     Optional<Measure> empty = Optional.empty();
 
     doReturn(empty).when(repository).findById(measure.getId());
 
-    ResponseEntity<String> response = controller.updateMeasure(measure.getId(), measure, principal);
+    ResponseEntity<Measure> response = controller.updateMeasure(measure.getId(), measure, principal, "Bearer TOKEN");
     assertEquals("Measure does not exist.", response.getBody());
   }
 
@@ -428,7 +432,7 @@ class MeasureControllerTest {
 
     assertThrows(
         UnauthorizedException.class,
-        () -> controller.updateMeasure("testid", testMeasure, principal));
+        () -> controller.updateMeasure("testid", testMeasure, principal, "Bearer TOKEN"));
   }
 
   @Test

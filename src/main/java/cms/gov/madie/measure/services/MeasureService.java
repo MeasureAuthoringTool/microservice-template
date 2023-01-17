@@ -10,16 +10,24 @@ import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
+import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeValidator;
+import cms.gov.madie.measure.validations.CqlObservationFunctionValidator;
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.measure.ElmJson;
+import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import gov.cms.madie.models.measure.Population;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -33,6 +41,153 @@ public class MeasureService {
   private final MeasureRepository measureRepository;
   private final FhirServicesClient fhirServicesClient;
   private final ElmTranslatorClient elmTranslatorClient;
+  private final CqlDefinitionReturnTypeValidator cqlDefinitionReturnTypeValidator;
+  private final CqlObservationFunctionValidator cqlObservationFunctionValidator;
+
+  public Measure updateMeasure(final String id, final String username, Measure updatingMeasure, final String accessToken) {
+    // TODO: fill this in
+    Optional<Measure> persistedMeasureOpt = measureRepository.findById(id);
+
+    if (persistedMeasureOpt.isPresent()) {
+      final Measure existingMeasure = persistedMeasureOpt.get();
+      if (username != null && existingMeasure.getCreatedBy() != null) {
+        log.info(
+            "got username [{}] vs createdBy: [{}]",
+            username,
+            existingMeasure.getCreatedBy());
+        // either owner or shared-with role
+        verifyAuthorization(username, existingMeasure);
+
+        // no user can update a soft-deleted measure
+        if (!existingMeasure.isActive()) {
+          throw new UnauthorizedException(
+              "Measure", existingMeasure.getId(), username);
+        }
+        // shared user should be able to edit Measure but won’t have delete access
+        if (!updatingMeasure.isActive()) {
+          checkDeletionCredentials(username, existingMeasure.getCreatedBy());
+        }
+      }
+      if (isCqlLibraryNameChanged(updatingMeasure, existingMeasure)) {
+        checkDuplicateCqlLibraryName(updatingMeasure.getCqlLibraryName());
+      }
+
+      checkVersionIdChanged(
+          updatingMeasure.getVersionId(), existingMeasure.getVersionId());
+      checkCmsIdChanged(updatingMeasure.getCmsId(), existingMeasure.getCmsId());
+
+      if (isMeasurementPeriodChanged(updatingMeasure, existingMeasure)) {
+        validateMeasurementPeriod(
+            updatingMeasure.getMeasurementPeriodStart(), updatingMeasure.getMeasurementPeriodEnd());
+      }
+
+      if (isMeasureCqlChanged(existingMeasure, updatingMeasure)) {
+        log.info("Detected CQL change for measure with ID [{}] by user [{}]...updating ELM", updatingMeasure.getId(), username);
+        updatingMeasure = updateElm(updatingMeasure, accessToken);
+        updatingMeasure = validateAllMeasureGroupReturnTypes(updatingMeasure);
+      }
+      log.info("saving with errors on measure: {}", updatingMeasure.getErrors());
+      updatingMeasure.setLastModifiedBy(username);
+      updatingMeasure.setLastModifiedAt(Instant.now());
+      // prevent users from overwriting the createdAt/By
+      updatingMeasure.setCreatedAt(existingMeasure.getCreatedAt());
+      updatingMeasure.setCreatedBy(existingMeasure.getCreatedBy());
+      updatingMeasure = measureRepository.save(updatingMeasure);
+    }
+
+    return updatingMeasure;
+  }
+
+  public Measure validateAllMeasureGroupReturnTypes(Measure measure) {
+    final String elmJson = measure.getElmJson();
+    boolean groupsExistWithPopulations = isGroupsExistWithPopulations(measure);
+    if (elmJson == null && groupsExistWithPopulations) {
+      log.info("Measure has groups with populations with definitions, but ELM JSON is missing!");
+      // TODO: add more context to errors flag here
+      measure.setCqlErrors(true);
+      measure = measure.toBuilder()
+          .error("CQL_RETURN_TYPE_MISMATCH")
+          .error("ELM_MISSING")
+          .build();
+    } else if(elmJson != null && groupsExistWithPopulations) {
+      if (measure.getGroups().stream().anyMatch(group ->
+          !isGroupReturnTypesValid(group, elmJson))) {
+        log.info("Mismatch exists between CQL return types and Population Criteria definition types!");
+        measure = measure.toBuilder().error("CQL_RETURN_TYPE_MISMATCH").build();
+      } else if (measure.getErrors() != null && measure.getErrors().contains("CQL_RETURN_TYPE_MISMATCH")) {
+        log.info("No CQL return type mismatch! Woo!");
+        Set<String> updatedErrors = measure.getErrors()
+            .stream()
+            .filter(e -> !StringUtils.equals("CQL_RETURN_TYPE_MISMATCH", e))
+            .collect(Collectors.toSet());
+        log.info("updated errors; {}", updatedErrors);
+        measure = measure.toBuilder()
+            .clearErrors()
+            .errors(updatedErrors)
+            .build();
+      }
+    }
+    return measure;
+  }
+
+  public boolean isGroupReturnTypesValid(final Group group, final String elmJson) {
+    try {
+      cqlDefinitionReturnTypeValidator.validateCqlDefinitionReturnTypes(group, elmJson);
+    } catch (Exception ex) {
+      // Either no return types were found in ELM, or return type mismatch exists
+      log.error("An error occurred while validating population return types", ex);
+      return false;
+    }
+    try {
+      cqlObservationFunctionValidator.validateObservationFunctions(group, elmJson);
+    } catch (Exception ex) {
+      // Either no return types were found in ELM, or return type mismatch exists
+      log.error("An error occurred while validating observation return types", ex);
+      return false;
+    }
+    return true;
+  }
+
+  public boolean isGroupsExistWithPopulations(Measure measure) {
+    if (measure == null || measure.getGroups() == null || measure.getGroups().isEmpty()) {
+      return false;
+    }
+    return measure.getGroups().stream().anyMatch((group) -> {
+      final List<Population> populations = group.getPopulations();
+      if (populations == null)
+        return false;
+      return populations.stream().anyMatch(population ->
+        StringUtils.isNotBlank(population.getDefinition())
+      );
+    });
+  }
+
+  public boolean isMeasureCqlChanged(final Measure original, final Measure updated) {
+//    if (original == null && updated != null) {
+//      log.info("isMeasureCqlChanged - original null, updated not null");
+//      return true;
+//    }
+//    if (original != null && updated == null) {
+//      log.info("isMeasureCqlChanged - original not null, updated null");
+//      return true;
+//    }
+//    if (original == null && updated == null) {
+//      log.info("isMeasureCqlChanged - original and updated both null");
+//      return false;
+//    }
+    return !StringUtils.equals(original.getCql(), updated.getCql());
+  }
+
+  private boolean isCqlLibraryNameChanged(Measure measure, Measure persistedMeasure) {
+    return !Objects.equals(persistedMeasure.getCqlLibraryName(), measure.getCqlLibraryName());
+  }
+
+  private boolean isMeasurementPeriodChanged(Measure measure, Measure persistedMeasure) {
+    return !Objects.equals(
+        persistedMeasure.getMeasurementPeriodStart(), measure.getMeasurementPeriodStart())
+        || !Objects.equals(
+        persistedMeasure.getMeasurementPeriodEnd(), measure.getMeasurementPeriodEnd());
+  }
 
   public void checkDuplicateCqlLibraryName(String cqlLibraryName) {
     if (StringUtils.isNotEmpty(cqlLibraryName)
@@ -86,17 +241,27 @@ public class MeasureService {
     }
   }
 
+  public Measure updateElm(Measure measure, String accessToken) {
+    if (measure != null && StringUtils.isNotBlank(measure.getCql())) {
+      final ElmJson elmJson = elmTranslatorClient.getElmJson(measure.getCql(), accessToken);
+      if (elmTranslatorClient.hasErrors(elmJson)) {
+        throw new CqlElmTranslationErrorException(measure.getMeasureName());
+      }
+
+      measure = measure.toBuilder()
+          .elmJson(elmJson.getJson())
+          .elmXml(elmJson.getXml())
+          .build();
+    }
+    return measure;
+  }
+
   public String bundleMeasure(Measure measure, String accessToken) {
     if (measure == null) {
       return null;
     }
     try {
-      final ElmJson elmJson = elmTranslatorClient.getElmJson(measure.getCql(), accessToken);
-      if (elmTranslatorClient.hasErrors(elmJson)) {
-        throw new CqlElmTranslationErrorException(measure.getMeasureName());
-      }
-      measure.setElmJson(elmJson.getJson());
-      measure.setElmXml(elmJson.getXml());
+      measure = updateElm(measure, accessToken);
 
       return fhirServicesClient.getMeasureBundle(measure, accessToken);
     } catch (CqlElmTranslationServiceException | CqlElmTranslationErrorException e) {

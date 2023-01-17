@@ -8,9 +8,11 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.MeasureObservation;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
 
+@Component
 public class CqlObservationFunctionValidator {
 
   public void validateObservationFunctions(Group group, String elmJson)
