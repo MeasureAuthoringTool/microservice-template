@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 import gov.cms.madie.models.measure.TestCaseStratificationValue;
+import gov.cms.madie.models.common.Version;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,6 +49,7 @@ import gov.cms.madie.models.measure.Stratification;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import gov.cms.madie.models.measure.TestCasePopulationValue;
+import gov.cms.madie.models.common.Version;
 
 @ExtendWith(MockitoExtension.class)
 public class GroupServiceTest implements ResourceUtil {
@@ -158,7 +160,7 @@ public class GroupServiceTest implements ResourceUtil {
             .elmJson(elmJson)
             .measureSetId("IDIDID")
             .measureName("MSR01")
-            .version("0.001")
+            .version(new Version(0, 0, 1))
             .groups(groups)
             .createdAt(Instant.now())
             .createdBy("test user")
@@ -741,6 +743,19 @@ public class GroupServiceTest implements ResourceUtil {
 
     Group group = groupService.createOrUpdateGroup(group1, measure.getId(), "test.user");
     assertNotNull(group);
+  }
+
+  @Test
+  public void testUpdateGroupWithBooleanAsOperandTypeSpecifierName() {
+    group2.setMeasureObservations(
+        List.of(
+            new MeasureObservation(
+                "id-1", "fun23", "id-2", AggregateMethodType.MAXIMUM.getValue())));
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+    assertThrows(
+        InvalidReturnTypeException.class,
+        () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
   }
 
   @Test

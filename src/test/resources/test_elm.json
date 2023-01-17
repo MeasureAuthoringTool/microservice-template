@@ -3165,9 +3165,85 @@
               }
             }
           ]
+        },
+        {
+          "localId": "118",
+          "locator": "74:1-75:6",
+          "resultTypeName": "{urn:hl7-org:elm-types:r1}Encounter",
+          "name": "fun23",
+          "context": "Patient",
+          "accessLevel": "Public",
+          "type": "FunctionDef",
+          "annotation": [
+            {
+              "type": "Annotation",
+              "s": {
+                "r": "118",
+                "s": [
+                  {
+                    "value": [
+                      "",
+                      "define function ",
+                      "\"fun\"",
+                      "(",
+                      "\"notPascalCase\"",
+                      " "
+                    ]
+                  },
+                  {
+                    "r": "116",
+                    "s": [
+                      {
+                        "value": [
+                          "Integer"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "value": [
+                      " ):\n  "
+                    ]
+                  },
+                  {
+                    "r": "117",
+                    "s": [
+                      {
+                        "r": "117",
+                        "value": [
+                          "true"
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "expression": {
+            "localId": "117",
+            "locator": "75:3-75:6",
+            "resultTypeName": "{urn:hl7-org:elm-types:r1}Boolean",
+            "valueType": "{urn:hl7-org:elm-types:r1}Boolean",
+            "value": "true",
+            "type": "Literal"
+          },
+          "operand": [
+            {
+              "name": "notPascalCase",
+              "operandTypeSpecifier": {
+                "localId": "116",
+                "locator": "74:39-74:45",
+                "resultTypeName": "{urn:hl7-org:elm-types:r1}Boolean",
+                "name": "{urn:hl7-org:elm-types:r1}Boolean",
+                "type": "NamedTypeSpecifier"
+              }
+            }
+          ]
         }
       ]
     }
   },
   "externalErrors": []
 }
+

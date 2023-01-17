@@ -18,6 +18,7 @@ import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
 import gov.cms.madie.models.measure.Reference;
 import gov.cms.madie.models.measure.Stratification;
+import gov.cms.madie.models.common.Version;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -130,7 +131,7 @@ public class MeasureTransferControllerMvcTest {
             .versionId("testId")
             .createdBy("testCreatedBy")
             .measureSetId("abc-pqr-xyz")
-            .version("0.000")
+            .version(new Version(0, 0, 1))
             .measureName("MedicationDispenseTest")
             .cqlLibraryName("MedicationDispenseTest")
             .ecqmTitle("ecqmTitle")

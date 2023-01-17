@@ -10,6 +10,7 @@ import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
+import cms.gov.madie.measure.utils.ControllerUtil;
 import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeValidator;
 import cms.gov.madie.measure.validations.CqlObservationFunctionValidator;
 import gov.cms.madie.models.access.AclSpecification;
@@ -56,7 +57,7 @@ public class MeasureService {
             username,
             existingMeasure.getCreatedBy());
         // either owner or shared-with role
-        verifyAuthorization(username, existingMeasure);
+        ControllerUtil.verifyAuthorization(username, existingMeasure);
 
         // no user can update a soft-deleted measure
         if (!existingMeasure.isActive()) {
@@ -225,19 +226,6 @@ public class MeasureService {
   public void checkDeletionCredentials(String username, String createdBy) {
     if (!username.equalsIgnoreCase(createdBy)) {
       throw new InvalidDeletionCredentialsException(username);
-    }
-  }
-
-  public void verifyAuthorization(String username, Measure measure) {
-    if (!measure.getCreatedBy().equalsIgnoreCase(username)
-        && (CollectionUtils.isEmpty(measure.getAcls())
-            || !measure.getAcls().stream()
-                .anyMatch(
-                    acl ->
-                        acl.getUserId().equalsIgnoreCase(username)
-                            && acl.getRoles().stream()
-                                .anyMatch(role -> role.equals(RoleEnum.SHARED_WITH))))) {
-      throw new UnauthorizedException("Measure", measure.getId(), username);
     }
   }
 

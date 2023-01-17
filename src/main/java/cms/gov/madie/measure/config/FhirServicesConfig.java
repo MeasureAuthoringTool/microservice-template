@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.config;
 
+import ca.uhn.fhir.context.FhirContext;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -22,5 +23,10 @@ public class FhirServicesConfig {
   @Bean
   public RestTemplate fhirServicesRestTemplate() {
     return new RestTemplate();
+  }
+
+  @Bean
+  public FhirContext fhirContext() {
+    return FhirContext.forR4();
   }
 }

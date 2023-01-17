@@ -3,6 +3,7 @@ package cms.gov.madie.measure.resources;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.TestCase;
+import gov.cms.madie.models.common.Version;
 import cms.gov.madie.measure.services.TestCaseService;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,7 +52,7 @@ public class TestCaseControllerTest {
     measure.setId(ObjectId.get().toString());
     measure.setMeasureSetId("IDIDID");
     measure.setMeasureName("MSR01");
-    measure.setVersion("0.001");
+    measure.setVersion(new Version(0, 0, 1));
   }
 
   @Test

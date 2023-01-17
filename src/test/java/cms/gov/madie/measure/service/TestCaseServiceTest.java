@@ -11,6 +11,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.*;
+import gov.cms.madie.models.common.Version;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.TestCaseService;
 import org.assertj.core.util.Lists;
@@ -77,7 +78,7 @@ public class TestCaseServiceTest {
     measure.setId(ObjectId.get().toString());
     measure.setMeasureSetId("IDIDID");
     measure.setMeasureName("MSR01");
-    measure.setVersion("0.001");
+    measure.setVersion(new Version(0, 0, 1));
   }
 
   @Test

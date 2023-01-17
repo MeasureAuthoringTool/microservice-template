@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.resources;
 
+import cms.gov.madie.measure.utils.ControllerUtil;
 import gov.cms.madie.models.access.RoleEnum;
 
 import java.io.UnsupportedEncodingException;
@@ -39,8 +40,10 @@ import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.GroupService;
 import cms.gov.madie.measure.services.MeasureService;
 import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureMetaData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -96,7 +99,15 @@ public class MeasureController {
     measure.setCreatedAt(now);
     measure.setLastModifiedBy(username);
     measure.setLastModifiedAt(now);
-//    measure.setVersion("0.0.000");
+    measure.setVersion(new Version(0, 0, 0));
+
+    if (measure.getMeasureMetaData() != null) {
+      measure.getMeasureMetaData().setDraft(true);
+    } else {
+      MeasureMetaData metaData = new MeasureMetaData();
+      metaData.setDraft(true);
+      measure.setMeasureMetaData(metaData);
+    }
 
     Measure savedMeasure = repository.save(measure);
     log.info("User [{}] successfully created new measure with ID [{}]", username, measure.getId());
@@ -198,35 +209,15 @@ public class MeasureController {
         groupService.deleteMeasureGroup(measureId, groupId, principal.getName()));
   }
 
-  @GetMapping(path = "/measures/{measureId}/bundles", produces = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity<String> getMeasureBundle(
-      @PathVariable String measureId,
-      Principal principal,
-      @RequestHeader("Authorization") String accessToken) {
-    Optional<Measure> measureOptional = repository.findById(measureId);
-    if (measureOptional.isEmpty()) {
-      throw new ResourceNotFoundException("Measure", measureId);
-    }
-    Measure measure = measureOptional.get();
-    if (!principal.getName().equalsIgnoreCase(measure.getCreatedBy())
-        && (CollectionUtils.isEmpty(measure.getAcls())
-            || !measure.getAcls().stream()
-                .anyMatch(
-                    acl ->
-                        acl.getUserId().equalsIgnoreCase(principal.getName())
-                            && acl.getRoles().stream()
-                                .anyMatch(role -> role.equals(RoleEnum.SHARED_WITH))))) {
-      throw new UnauthorizedException("Measure", measureId, principal.getName());
-    }
-    if (measure.isCqlErrors()) {
-      throw new InvalidResourceBundleStateException(
-          "Measure", measureId, "since CQL errors exist.");
-    }
-    if (CollectionUtils.isEmpty(measure.getGroups())) {
-      throw new InvalidResourceBundleStateException(
-          "Measure", measureId, "since there are no associated measure groups.");
-    }
-    return ResponseEntity.ok(measureService.bundleMeasure(measure, accessToken));
+  private boolean isCqlLibraryNameChanged(Measure measure, Measure persistedMeasure) {
+    return !Objects.equals(persistedMeasure.getCqlLibraryName(), measure.getCqlLibraryName());
+  }
+
+  private boolean isMeasurementPeriodChanged(Measure measure, Measure persistedMeasure) {
+    return !Objects.equals(
+            persistedMeasure.getMeasurementPeriodStart(), measure.getMeasurementPeriodStart())
+        || !Objects.equals(
+            persistedMeasure.getMeasurementPeriodEnd(), measure.getMeasurementPeriodEnd());
   }
 
   @GetMapping("/measures/search/{criteria}")
