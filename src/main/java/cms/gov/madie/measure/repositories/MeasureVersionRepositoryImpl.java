@@ -24,11 +24,7 @@ public class MeasureVersionRepositoryImpl implements MeasureVersionRepository {
   public Optional<Version> findMaxVersionByMeasureSetId(String measureSetId) {
 
     Query q =
-        new Query(
-                Criteria.where("measureSetId")
-                    .is(measureSetId)
-                    .and("measureMetaData.draft")
-                    .is(false))
+        new Query(Criteria.where("measureSetId").is(measureSetId))
             .with(
                 Sort.by(
                     Sort.Direction.DESC,
@@ -53,9 +49,7 @@ public class MeasureVersionRepositoryImpl implements MeasureVersionRepository {
                 Criteria.where("measureSetId")
                     .is(measureSetId)
                     .and("version.major")
-                    .is(majorVersion)
-                    .and("measureMetaData.draft")
-                    .is(false))
+                    .is(majorVersion))
             .with(
                 Sort.by(
                     Sort.Direction.DESC,
@@ -83,9 +77,7 @@ public class MeasureVersionRepositoryImpl implements MeasureVersionRepository {
                     .and("version.major")
                     .is(majorVersion)
                     .and("version.minor")
-                    .is(minorVersion)
-                    .and("measureMetaData.draft")
-                    .is(false))
+                    .is(minorVersion))
             .with(
                 Sort.by(
                     Sort.Direction.DESC,
