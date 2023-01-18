@@ -23,7 +23,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import cms.gov.madie.measure.exceptions.BadVersionRequestException;
-import cms.gov.madie.measure.exceptions.InternalServerErrorException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.services.VersionService;
@@ -101,28 +100,6 @@ public class MeasureVersionControllerMvcTest {
                 .header("Authorization", "test-okta-token")
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isForbidden())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE));
-
-    verify(versionService, times(1))
-        .createVersion(eq("testMeasureId"), eq("MAJOR"), eq(TEST_USER_ID), eq("test-okta-token"));
-  }
-
-  @Test
-  public void testCreateVersionReturnsInternalServerErrorException() throws Exception {
-    doThrow(
-            new InternalServerErrorException(
-                "Internal server error!", new RuntimeException("Internal Server Error!")))
-        .when(versionService)
-        .createVersion(anyString(), anyString(), anyString(), anyString());
-
-    mockMvc
-        .perform(
-            put("/measures/testMeasureId/version/?versionType=MAJOR")
-                .with(user(TEST_USER_ID))
-                .with(csrf())
-                .header("Authorization", "test-okta-token")
-                .contentType(MediaType.APPLICATION_JSON_VALUE))
-        .andExpect(status().isInternalServerError())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE));
 
     verify(versionService, times(1))

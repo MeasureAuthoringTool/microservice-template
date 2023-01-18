@@ -21,7 +21,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import cms.gov.madie.measure.exceptions.BadVersionRequestException;
-import cms.gov.madie.measure.exceptions.InternalServerErrorException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.services.VersionService;
@@ -47,8 +46,7 @@ public class MeasureVersionControllerTest {
   }
 
   @Test
-  public void testCreateVersionReturnsResourceNotFoundException()
-      throws InternalServerErrorException {
+  public void testCreateVersionReturnsResourceNotFoundException() throws Exception {
     when(principal.getName()).thenReturn("testUser");
     when(versionService.createVersion(anyString(), anyString(), anyString(), anyString()))
         .thenThrow(new ResourceNotFoundException("Measure", measure.getId()));
@@ -60,8 +58,7 @@ public class MeasureVersionControllerTest {
   }
 
   @Test
-  public void testCreateVersionReturnsBadVersionRequestException()
-      throws InternalServerErrorException {
+  public void testCreateVersionReturnsBadVersionRequestException() throws Exception {
     when(principal.getName()).thenReturn("testUser");
 
     doThrow(
@@ -77,7 +74,7 @@ public class MeasureVersionControllerTest {
   }
 
   @Test
-  public void testCreateVersionReturnsUnauthorizedException() throws InternalServerErrorException {
+  public void testCreateVersionReturnsUnauthorizedException() throws Exception {
     when(principal.getName()).thenReturn("testUser");
 
     doThrow(new UnauthorizedException("Measure", measure.getId(), principal.getName()))
@@ -91,25 +88,7 @@ public class MeasureVersionControllerTest {
   }
 
   @Test
-  public void testCreateVersionReturnsInternalServerErrorException()
-      throws InternalServerErrorException {
-    when(principal.getName()).thenReturn("testUser");
-
-    Exception cause = new RuntimeException("Internal Server Error!");
-    InternalServerErrorException excpetion =
-        new InternalServerErrorException("Internal server error!", cause);
-    doThrow(excpetion)
-        .when(versionService)
-        .createVersion(anyString(), anyString(), anyString(), anyString());
-    assertThrows(
-        InternalServerErrorException.class,
-        () ->
-            measureVersionController.createVersion(
-                "testMeasureId", "MAJOR", principal, "accesstoken"));
-  }
-
-  @Test
-  public void testCreateVersionSuccess() throws InternalServerErrorException {
+  public void testCreateVersionSuccess() throws Exception {
     when(principal.getName()).thenReturn("testUser");
     Measure updatedMeasure = Measure.builder().id("testMeasureId").createdBy("testUser").build();
     Version updatedVersion = Version.builder().major(3).minor(0).revisionNumber(0).build();

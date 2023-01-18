@@ -149,13 +149,6 @@ public class ErrorHandlingControllerAdvice {
     return getErrorAttributes(request, HttpStatus.BAD_REQUEST);
   }
 
-  @ExceptionHandler(InternalServerErrorException.class)
-  @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-  @ResponseBody
-  Map<String, Object> onInternalServerErrorException(WebRequest request) {
-    return getErrorAttributes(request, HttpStatus.INTERNAL_SERVER_ERROR);
-  }
-
   private Map<String, Object> getErrorAttributes(WebRequest request, HttpStatus httpStatus) {
     // BINDING_ERRORS and STACK_TRACE are too detailed and confusing to parse
     // Let's just add a list of simplified validation errors

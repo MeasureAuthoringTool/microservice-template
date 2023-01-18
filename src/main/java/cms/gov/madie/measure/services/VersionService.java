@@ -5,9 +5,9 @@ import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import cms.gov.madie.measure.exceptions.InternalServerErrorException;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.Measure;
@@ -29,7 +29,7 @@ public class VersionService {
   private static final String VERSION_TYPE_PATCH = "PATCH";
 
   public Measure createVersion(String id, String versionType, String username, String accessToken)
-      throws InternalServerErrorException {
+      throws Exception {
 
     Measure measure =
         measureRepository
@@ -98,6 +98,14 @@ public class VersionService {
       throw new BadVersionRequestException(
           "Measure", measure.getId(), username, "Measure has CQL errors.");
     }
+    if (StringUtils.isBlank(measure.getCql())) {
+      log.error(
+          "User [{}] attempted to version measure with id [{}] which has empty CQL",
+          username,
+          measure.getId());
+      throw new BadVersionRequestException(
+          "Measure", measure.getId(), username, "Measure has no CQL.");
+    }
     if (measure.getTestCases() != null
         && measure.getTestCases().stream()
             .filter(p -> !p.isValidResource())
@@ -112,40 +120,35 @@ public class VersionService {
     }
   }
 
-  protected Version getNextVersion(Measure measure, String versionType)
-      throws InternalServerErrorException {
+  protected Version getNextVersion(Measure measure, String versionType) throws Exception {
     Version version;
-    try {
-      if (VERSION_TYPE_MAJOR.equalsIgnoreCase(versionType)) {
-        version =
-            measureRepository
-                .findMaxVersionByMeasureSetId(measure.getMeasureSetId())
-                .orElse(new Version());
-        return version.toBuilder().major(version.getMajor() + 1).minor(0).revisionNumber(0).build();
 
-      } else if (VERSION_TYPE_MINOR.equalsIgnoreCase(versionType)) {
-        version =
-            measureRepository
-                .findMaxMinorVersionByMeasureSetIdAndVersionMajor(
-                    measure.getMeasureSetId(), measure.getVersion().getMajor())
-                .orElse(new Version());
-        return version.toBuilder().minor(version.getMinor() + 1).revisionNumber(0).build();
+    if (VERSION_TYPE_MAJOR.equalsIgnoreCase(versionType)) {
+      version =
+          measureRepository
+              .findMaxVersionByMeasureSetId(measure.getMeasureSetId())
+              .orElse(new Version());
+      return version.toBuilder().major(version.getMajor() + 1).minor(0).revisionNumber(0).build();
 
-      } else if (VERSION_TYPE_PATCH.equalsIgnoreCase(versionType)) {
-        version =
-            measureRepository
-                .findMaxRevisionNumberByMeasureSetIdAndVersionMajorAndMinor(
-                    measure.getMeasureSetId(),
-                    measure.getVersion().getMajor(),
-                    measure.getVersion().getMinor())
-                .orElse(new Version());
-        return version.toBuilder().revisionNumber(version.getRevisionNumber() + 1).build();
-      }
-    } catch (RuntimeException ex) {
-      log.error("VersionService::getNextVersion Exception while getting version number", ex);
-      throw new InternalServerErrorException(
-          "Unable to version measure with id: " + measure.getId(), ex);
+    } else if (VERSION_TYPE_MINOR.equalsIgnoreCase(versionType)) {
+      version =
+          measureRepository
+              .findMaxMinorVersionByMeasureSetIdAndVersionMajor(
+                  measure.getMeasureSetId(), measure.getVersion().getMajor())
+              .orElse(new Version());
+      return version.toBuilder().minor(version.getMinor() + 1).revisionNumber(0).build();
+
+    } else if (VERSION_TYPE_PATCH.equalsIgnoreCase(versionType)) {
+      version =
+          measureRepository
+              .findMaxRevisionNumberByMeasureSetIdAndVersionMajorAndMinor(
+                  measure.getMeasureSetId(),
+                  measure.getVersion().getMajor(),
+                  measure.getVersion().getMinor())
+              .orElse(new Version());
+      return version.toBuilder().revisionNumber(version.getRevisionNumber() + 1).build();
     }
+
     return new Version();
   }
 

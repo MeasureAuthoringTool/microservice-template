@@ -22,7 +22,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import cms.gov.madie.measure.exceptions.BadVersionRequestException;
-import cms.gov.madie.measure.exceptions.InternalServerErrorException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
@@ -104,8 +103,33 @@ public class VersionServiceTest {
   }
 
   @Test
+  public void testCreateVersionThrowsBadVersionRequestExceptionForEmptyCQL() {
+    Measure existingMeasure =
+        Measure.builder()
+            .id("testMeasureId")
+            .createdBy("testUser")
+            .cqlErrors(false)
+            .cql("")
+            .build();
+    MeasureMetaData metaData = new MeasureMetaData();
+    metaData.setDraft(true);
+    existingMeasure.setMeasureMetaData(metaData);
+
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+
+    assertThrows(
+        BadVersionRequestException.class,
+        () -> versionService.createVersion("testMeasureId", "MAJOR", "testUser", "accesstoken"));
+  }
+
+  @Test
   public void testCreateVersionThrowsBadVersionRequestExceptionForInvalidResources() {
-    Measure existingMeasure = Measure.builder().id("testMeasureId").createdBy("testUser").build();
+    Measure existingMeasure =
+        Measure.builder()
+            .id("testMeasureId")
+            .createdBy("testUser")
+            .cql("library Test1CQLLib version '2.3.001")
+            .build();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(true);
     existingMeasure.setMeasureMetaData(metaData);
@@ -120,26 +144,7 @@ public class VersionServiceTest {
   }
 
   @Test
-  public void testCreateVersionThrowsInternalServerErrorException() {
-    Measure existingMeasure =
-        Measure.builder()
-            .id("testMeasureId")
-            .measureSetId("testMeasureSetId")
-            .createdBy("testUser")
-            .build();
-
-    Exception cause = new RuntimeException("Internal Server Error!");
-    when(measureRepository.findMaxVersionByMeasureSetId(anyString())).thenThrow(cause);
-
-    assertThrows(
-        InternalServerErrorException.class,
-        () -> versionService.getNextVersion(existingMeasure, "MAJOR"),
-        "Unable to version measure with id: testMeasureId");
-    verify(measureRepository, times(1)).findMaxVersionByMeasureSetId(anyString());
-  }
-
-  @Test
-  public void testGetNextVersionOtherException() throws InternalServerErrorException {
+  public void testGetNextVersionOtherException() throws Exception {
     Measure existingMeasure =
         Measure.builder()
             .id("testMeasureId")
@@ -154,7 +159,7 @@ public class VersionServiceTest {
   }
 
   @Test
-  public void testCreateVersionMajorSuccess() throws InternalServerErrorException {
+  public void testCreateVersionMajorSuccess() throws Exception {
     Measure existingMeasure =
         Measure.builder()
             .id("testMeasureId")
@@ -193,7 +198,7 @@ public class VersionServiceTest {
   }
 
   @Test
-  public void testCreateVersionMinorSuccess() throws InternalServerErrorException {
+  public void testCreateVersionMinorSuccess() throws Exception {
     Measure existingMeasure =
         Measure.builder()
             .id("testMeasureId")
@@ -233,7 +238,7 @@ public class VersionServiceTest {
   }
 
   @Test
-  public void testCreateVersionPatchSuccess() throws InternalServerErrorException {
+  public void testCreateVersionPatchSuccess() throws Exception {
     Measure existingMeasure =
         Measure.builder()
             .id("testMeasureId")
