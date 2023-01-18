@@ -27,11 +27,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.cms.madie.models.access.RoleEnum;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+
+import gov.cms.madie.models.measure.MeasureMetaData;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -74,6 +79,7 @@ public class MeasureControllerMvcTest {
 
   @Autowired private MockMvc mockMvc;
   @Captor private ArgumentCaptor<Measure> measureArgumentCaptor;
+  @Captor private ArgumentCaptor<Measure> measureArgumentCaptor2;
 
   private static final String TEST_USER_ID = "test-okta-user-id-123";
 
@@ -91,6 +97,13 @@ public class MeasureControllerMvcTest {
   @Captor private ArgumentCaptor<String> performedByArgumentCaptor;
 
   private static final String MODEL = ModelType.QI_CORE.toString();
+
+  public String toJsonString(Object obj) throws JsonProcessingException {
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.registerModule(new JavaTimeModule());
+    mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+    return mapper.writeValueAsString(obj);
+  }
 
   @Test
   public void testGrantAccess() throws Exception {
@@ -123,6 +136,7 @@ public class MeasureControllerMvcTest {
 
   @Test
   public void testUpdatePassed() throws Exception {
+
     String measureId = "f225481c-921e-4015-9e14-e5046bfac9ff";
     String measureName = "TestMeasure";
     String steward = "d0cc18ce-63fd-4b94-b713-c1d9fd6b2329";
@@ -136,65 +150,107 @@ public class MeasureControllerMvcTest {
     String ecqmTitle = "ecqmTitle";
     String measureSetId = "measureSetId";
 
-    Measure priorMeasure = new Measure();
-    priorMeasure.setId(measureId);
-    priorMeasure.setMeasureName(measureName);
-    priorMeasure.setCqlLibraryName(libName);
-    priorMeasure.setModel(MODEL);
-    priorMeasure.setVersionId(measureId);
+
+
+//    Measure priorMeasure = new Measure();
+//    priorMeasure.setId(measureId);
+//    priorMeasure.setMeasureName(measureName);
+//    priorMeasure.setCqlLibraryName(libName);
+//    priorMeasure.setModel(MODEL);
+//    priorMeasure.setVersionId(measureId);
+
+    final Measure priorMeasure = Measure.builder()
+        .id(measureId)
+        .active(true)
+        .measureName(measureName)
+        .cqlLibraryName(libName)
+        .model(MODEL)
+        .versionId(measureId)
+        .measureSetId(measureSetId)
+        .build();
+    MeasureMetaData metaData = new MeasureMetaData();
+    metaData.setSteward(steward);
+    metaData.setDescription(description);
+    metaData.setCopyright(copyright);
+    metaData.setDisclaimer(disclaimer);
+    metaData.setRationale(rationale);
+    metaData.setDevelopers(developers);
+    metaData.setGuidance(guidance);
+    final Measure updatingMeasure = priorMeasure.toBuilder()
+        .ecqmTitle(ecqmTitle)
+        .measureMetaData(metaData)
+        .build();
 
     when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(priorMeasure));
-    when(measureRepository.save(any(Measure.class))).thenReturn(mock(Measure.class));
+    when(measureService.updateMeasure(any(Measure.class), anyString(), any(Measure.class), anyString()))
+        .thenReturn(updatingMeasure);
 
-    final String measureAsJson =
-        ("{\"id\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"ecqmTitle\":\"%s\", \"measureMetaData\": "
-                + "{ \"steward\" : \"%s\", \"description\" : \"%s\", \"copyright\" : \"%s\", \"disclaimer\" : \"%s\", \"rationale\" : \"%s\","
-                + " \"developers\" : [\"%s\"], \"guidance\" : \"%s\"}, \"model\":\"%s\", \"versionId\":\"%s\",\"measureSetId\":\"%s\"}")
-            .formatted(
-                measureId,
-                measureName,
-                libName,
-                ecqmTitle,
-                steward,
-                description,
-                copyright,
-                disclaimer,
-                rationale,
-                developers.get(0),
-                guidance,
-                MODEL,
-                measureId,
-                measureSetId);
+//    final String measureAsJson =
+//        ("{\"id\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"ecqmTitle\":\"%s\", \"measureMetaData\": "
+//                + "{ \"steward\" : \"%s\", \"description\" : \"%s\", \"copyright\" : \"%s\", \"disclaimer\" : \"%s\", \"rationale\" : \"%s\","
+//                + " \"developers\" : [\"%s\"], \"guidance\" : \"%s\"}, \"model\":\"%s\", \"versionId\":\"%s\",\"measureSetId\":\"%s\"}")
+//            .formatted(
+//                measureId,
+//                measureName,
+//                libName,
+//                ecqmTitle,
+//                steward,
+//                description,
+//                copyright,
+//                disclaimer,
+//                rationale,
+//                developers.get(0),
+//                guidance,
+//                MODEL,
+//                measureId,
+//                measureSetId);
+
+    final String measureAsJson = toJsonString(updatingMeasure);
     mockMvc
         .perform(
             put("/measures/" + measureId)
                 .with(user(TEST_USER_ID))
                 .with(csrf())
+                .header("Authorization", "test-okta")
                 .content(measureAsJson)
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isOk())
-        .andExpect(content().string("Measure updated successfully."));
+        .andExpect(jsonPath("$.id").value(measureId))
+        .andExpect(jsonPath("$.measureName").value(measureName))
+        .andExpect(jsonPath("$.cqlLibraryName").value(libName))
+        .andExpect(jsonPath("$.model").value(MODEL))
+        .andExpect(jsonPath("$.versionId").value(measureId))
+        .andExpect(jsonPath("$.measureSetId").value(measureSetId))
+        .andExpect(jsonPath("$.measureMetaData.steward").value(steward))
+        .andExpect(jsonPath("$.measureMetaData.description").value(description))
+        .andExpect(jsonPath("$.measureMetaData.copyright").value(copyright))
+        .andExpect(jsonPath("$.measureMetaData.disclaimer").value(disclaimer));
 
     verify(measureRepository, times(1)).findById(eq(measureId));
-    verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
-    verifyNoMoreInteractions(measureRepository);
-    Measure savedMeasure = measureArgumentCaptor.getValue();
-    assertNotNull(savedMeasure.getMeasureMetaData());
-    assertEquals(measureName, savedMeasure.getMeasureName());
-    assertEquals(steward, savedMeasure.getMeasureMetaData().getSteward());
-    assertEquals(description, savedMeasure.getMeasureMetaData().getDescription());
-    assertEquals(copyright, savedMeasure.getMeasureMetaData().getCopyright());
-    assertEquals(disclaimer, savedMeasure.getMeasureMetaData().getDisclaimer());
-    assertEquals(rationale, savedMeasure.getMeasureMetaData().getRationale());
-    assertEquals(developers.get(0), savedMeasure.getMeasureMetaData().getDevelopers().get(0));
-    assertEquals(guidance, savedMeasure.getMeasureMetaData().getGuidance());
-    assertEquals(MODEL, savedMeasure.getModel());
-    assertEquals(measureId, savedMeasure.getVersionId());
-    assertNotNull(savedMeasure.getLastModifiedAt());
-    assertEquals(TEST_USER_ID, savedMeasure.getLastModifiedBy());
-    int lastModCompareTo =
-        savedMeasure.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
-    assertEquals(1, lastModCompareTo);
+    verify(measureService, times(1))
+        .updateMeasure(measureArgumentCaptor.capture(), anyString(), measureArgumentCaptor2.capture(), anyString());
+    assertThat(measureArgumentCaptor.getValue(), is(equalTo(priorMeasure)));
+    assertThat(measureArgumentCaptor2.getValue(), is(equalTo(updatingMeasure)));
+
+//    verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
+//    verifyNoMoreInteractions(measureRepository);
+//    Measure savedMeasure = measureArgumentCaptor.getValue();
+//    assertNotNull(savedMeasure.getMeasureMetaData());
+//    assertEquals(measureName, savedMeasure.getMeasureName());
+//    assertEquals(steward, savedMeasure.getMeasureMetaData().getSteward());
+//    assertEquals(description, savedMeasure.getMeasureMetaData().getDescription());
+//    assertEquals(copyright, savedMeasure.getMeasureMetaData().getCopyright());
+//    assertEquals(disclaimer, savedMeasure.getMeasureMetaData().getDisclaimer());
+//    assertEquals(rationale, savedMeasure.getMeasureMetaData().getRationale());
+//    assertEquals(developers.get(0), savedMeasure.getMeasureMetaData().getDevelopers().get(0));
+//    assertEquals(guidance, savedMeasure.getMeasureMetaData().getGuidance());
+//    assertEquals(MODEL, savedMeasure.getModel());
+//    assertEquals(measureId, savedMeasure.getVersionId());
+//    assertNotNull(savedMeasure.getLastModifiedAt());
+//    assertEquals(TEST_USER_ID, savedMeasure.getLastModifiedBy());
+//    int lastModCompareTo =
+//        savedMeasure.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
+//    assertEquals(1, lastModCompareTo);
 
     verify(actionLogService, times(1))
         .logAction(
@@ -222,66 +278,104 @@ public class MeasureControllerMvcTest {
     String ecqmTitle = "ecqmTitle";
     String measureSetId = "measureSetId";
 
-    Measure priorMeasure = new Measure();
-    priorMeasure.setId(measureId);
-    priorMeasure.setMeasureName(measureName);
-    priorMeasure.setCqlLibraryName(libName);
-    priorMeasure.setEcqmTitle(ecqmTitle);
-    priorMeasure.setModel(MODEL);
-    priorMeasure.setVersionId(measureId);
+//    Measure priorMeasure = new Measure();
+//    priorMeasure.setId(measureId);
+//    priorMeasure.setMeasureName(measureName);
+//    priorMeasure.setCqlLibraryName(libName);
+//    priorMeasure.setEcqmTitle(ecqmTitle);
+//    priorMeasure.setModel(MODEL);
+//    priorMeasure.setVersionId(measureId);
+
+    final Measure priorMeasure = Measure.builder()
+        .id(measureId)
+        .active(true)
+        .measureName(measureName)
+        .cqlLibraryName(libName)
+        .model(MODEL)
+        .versionId(measureId)
+        .measureSetId(measureSetId)
+        .build();
+
+//    final String measureAsJson =
+//        ("{\"id\": \"%s\", \"active\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"ecqmTitle\":\"%s\", "
+//                + "\"measureMetaData\": { \"steward\" : \"%s\", \"description\" : \"%s\", \"copyright\" : \"%s\", \"disclaimer\" : \"%s\", "
+//                + "\"rationale\" : \"%s\", \"developers\" : [\"%s\"], \"guidance\" : \"%s\"}, \"model\":\"%s\", \"versionId\":\"%s\",\"measureSetId\":\"%s\"}")
+//            .formatted(
+//                measureId,
+//                false,
+//                measureName,
+//                libName,
+//                ecqmTitle,
+//                steward,
+//                description,
+//                copyright,
+//                disclaimer,
+//                rationale,
+//                developers.get(0),
+//                guidance,
+//                MODEL,
+//                measureId,
+//                measureSetId);
+    MeasureMetaData metaData = new MeasureMetaData();
+    metaData.setSteward(steward);
+    metaData.setDescription(description);
+    metaData.setCopyright(copyright);
+    metaData.setDisclaimer(disclaimer);
+    metaData.setRationale(rationale);
+    metaData.setDevelopers(developers);
+    metaData.setGuidance(guidance);
+    final Measure updatingMeasure = priorMeasure.toBuilder()
+        .active(false)
+        .measureMetaData(metaData)
+        .ecqmTitle(ecqmTitle)
+        .build();
+
+    final String measureAsJson = toJsonString(updatingMeasure);
 
     when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(priorMeasure));
-    when(measureRepository.save(any(Measure.class))).thenReturn(mock(Measure.class));
+    when(measureService.updateMeasure(any(Measure.class), anyString(), any(Measure.class), anyString()))
+        .thenReturn(updatingMeasure);
 
-    final String measureAsJson =
-        ("{\"id\": \"%s\", \"active\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"ecqmTitle\":\"%s\", "
-                + "\"measureMetaData\": { \"steward\" : \"%s\", \"description\" : \"%s\", \"copyright\" : \"%s\", \"disclaimer\" : \"%s\", "
-                + "\"rationale\" : \"%s\", \"developers\" : [\"%s\"], \"guidance\" : \"%s\"}, \"model\":\"%s\", \"versionId\":\"%s\",\"measureSetId\":\"%s\"}")
-            .formatted(
-                measureId,
-                false,
-                measureName,
-                libName,
-                ecqmTitle,
-                steward,
-                description,
-                copyright,
-                disclaimer,
-                rationale,
-                developers.get(0),
-                guidance,
-                MODEL,
-                measureId,
-                measureSetId);
     mockMvc
         .perform(
             put("/measures/" + measureId)
                 .with(user(TEST_USER_ID))
                 .with(csrf())
+                .header("Authorization", "test-okta")
                 .content(measureAsJson)
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isOk())
-        .andExpect(content().string("Measure updated successfully."));
+        .andExpect(jsonPath("$.id").value(measureId))
+        .andExpect(jsonPath("$.measureName").value(measureName))
+        .andExpect(jsonPath("$.cqlLibraryName").value(libName))
+        .andExpect(jsonPath("$.model").value(MODEL))
+        .andExpect(jsonPath("$.versionId").value(measureId))
+        .andExpect(jsonPath("$.measureSetId").value(measureSetId))
+        .andExpect(jsonPath("$.measureMetaData.steward").value(steward))
+        .andExpect(jsonPath("$.measureMetaData.description").value(description))
+        .andExpect(jsonPath("$.measureMetaData.copyright").value(copyright))
+        .andExpect(jsonPath("$.measureMetaData.disclaimer").value(disclaimer));
 
     verify(measureRepository, times(1)).findById(eq(measureId));
-    verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
-    verifyNoMoreInteractions(measureRepository);
-    Measure savedMeasure = measureArgumentCaptor.getValue();
-    assertNotNull(savedMeasure.getMeasureMetaData());
-    assertEquals(measureName, savedMeasure.getMeasureName());
-    assertEquals(steward, savedMeasure.getMeasureMetaData().getSteward());
-    assertEquals(description, savedMeasure.getMeasureMetaData().getDescription());
-    assertEquals(copyright, savedMeasure.getMeasureMetaData().getCopyright());
-    assertEquals(disclaimer, savedMeasure.getMeasureMetaData().getDisclaimer());
-    assertEquals(rationale, savedMeasure.getMeasureMetaData().getRationale());
-    assertEquals(developers.get(0), savedMeasure.getMeasureMetaData().getDevelopers().get(0));
-    assertEquals(guidance, savedMeasure.getMeasureMetaData().getGuidance());
-    assertEquals(MODEL, savedMeasure.getModel());
-    assertNotNull(savedMeasure.getLastModifiedAt());
-    assertEquals(TEST_USER_ID, savedMeasure.getLastModifiedBy());
-    int lastModCompareTo =
-        savedMeasure.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
-    assertEquals(1, lastModCompareTo);
+
+//    verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
+//    verifyNoMoreInteractions(measureRepository);
+//    Measure savedMeasure = measureArgumentCaptor.getValue();
+//    assertNotNull(savedMeasure.getMeasureMetaData());
+//    assertEquals(measureName, savedMeasure.getMeasureName());
+//    assertEquals(steward, savedMeasure.getMeasureMetaData().getSteward());
+//    assertEquals(description, savedMeasure.getMeasureMetaData().getDescription());
+//    assertEquals(copyright, savedMeasure.getMeasureMetaData().getCopyright());
+//    assertEquals(disclaimer, savedMeasure.getMeasureMetaData().getDisclaimer());
+//    assertEquals(rationale, savedMeasure.getMeasureMetaData().getRationale());
+//    assertEquals(developers.get(0), savedMeasure.getMeasureMetaData().getDevelopers().get(0));
+//    assertEquals(guidance, savedMeasure.getMeasureMetaData().getGuidance());
+//    assertEquals(MODEL, savedMeasure.getModel());
+//    assertNotNull(savedMeasure.getLastModifiedAt());
+//    assertEquals(TEST_USER_ID, savedMeasure.getLastModifiedBy());
+//    int lastModCompareTo =
+//        savedMeasure.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
+//    assertEquals(1, lastModCompareTo);
 
     verify(actionLogService, times(1))
         .logAction(
@@ -625,11 +719,15 @@ public class MeasureControllerMvcTest {
     existingMeasure.setCqlLibraryName("ExistingMeasureLibrary");
     existingMeasure.setEcqmTitle("ecqmTitle");
     existingMeasure.setVersionId(existingMeasure.getId());
-    doThrow(
-            new DuplicateKeyException(
-                "cqlLibraryName", "CQL library with given name already exists."))
-        .when(measureService)
-        .checkDuplicateCqlLibraryName(any(String.class));
+//    doThrow(
+//            new DuplicateKeyException(
+//                "cqlLibraryName", "CQL library with given name already exists."))
+//        .when(measureService)
+//        .checkDuplicateCqlLibraryName(any(String.class));
+
+    when(measureService.updateMeasure(any(Measure.class), anyString(), any(Measure.class), anyString()))
+        .thenThrow(new DuplicateKeyException(
+            "cqlLibraryName", "CQL library with given name already exists."));
 
     final String updatedMeasureAsJson =
         "{\"id\": \"%s\",\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\", \"ecqmTitle\": \"%s\", \"model\":\"%s\",\"versionId\":\"%s\",\"measureSetId\":\"%s\"}"
@@ -646,6 +744,7 @@ public class MeasureControllerMvcTest {
             put("/measures/" + priorMeasure.getId())
                 .with(user(TEST_USER_ID))
                 .with(csrf())
+                .header("Authorization", "test-okta")
                 .content(updatedMeasureAsJson)
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
@@ -655,7 +754,7 @@ public class MeasureControllerMvcTest {
 
     verify(measureRepository, times(1)).findById(eq(priorMeasure.getId()));
     verify(measureService, times(1))
-        .checkDuplicateCqlLibraryName(eq(existingMeasure.getCqlLibraryName()));
+        .updateMeasure(eq(priorMeasure), anyString(), any(Measure.class), anyString());
     verifyNoMoreInteractions(measureRepository);
   }
 
@@ -679,9 +778,13 @@ public class MeasureControllerMvcTest {
     existingMeasure.setEcqmTitle("ecqmTitle");
     existingMeasure.setMeasureSetId("measureSetId");
     existingMeasure.setVersionId("newVersionID");
-    doThrow(new InvalidVersionIdException("newVersionId"))
-        .when(measureService)
-        .checkVersionIdChanged(existingMeasure.getVersionId(), priorMeasure.getVersionId());
+
+    when(measureService.updateMeasure(any(Measure.class), anyString(), any(Measure.class), anyString()))
+        .thenThrow(new InvalidVersionIdException("newVersionId"));
+
+//    doThrow(new InvalidVersionIdException("newVersionId"))
+//        .when(measureService)
+//        .checkVersionIdChanged(existingMeasure.getVersionId(), priorMeasure.getVersionId());
 
     final String updatedMeasureAsJson =
         "{\"id\": \"%s\",\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\", \"ecqmTitle\": \"%s\", \"model\":\"%s\",\"versionId\":\"%s\",\"measureSetId\":\"%s\"}"
@@ -698,13 +801,14 @@ public class MeasureControllerMvcTest {
             put("/measures/" + priorMeasure.getId())
                 .with(user(TEST_USER_ID))
                 .with(csrf())
+                .header("Authorization", "test-okta")
                 .content(updatedMeasureAsJson)
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest());
 
     verify(measureRepository, times(1)).findById(eq(priorMeasure.getId()));
     verify(measureService, times(1))
-        .checkVersionIdChanged(existingMeasure.getVersionId(), priorMeasure.getVersionId());
+        .updateMeasure(any(Measure.class), anyString(), any(Measure.class), anyString());
     verifyNoMoreInteractions(measureRepository);
   }
 
@@ -730,9 +834,9 @@ public class MeasureControllerMvcTest {
     existingMeasure.setVersionId(priorMeasure.getVersionId());
     existingMeasure.setCmsId("newCmsId");
     existingMeasure.setMeasureSetId("measureSetId");
-    doThrow(new InvalidCmsIdException(existingMeasure.getCmsId()))
-        .when(measureService)
-        .checkCmsIdChanged(existingMeasure.getCmsId(), priorMeasure.getCmsId());
+
+    when(measureService.updateMeasure(any(Measure.class), anyString(), any(Measure.class), anyString()))
+        .thenThrow(new InvalidCmsIdException(existingMeasure.getCmsId()));
 
     final String updatedMeasureAsJson =
         "{\"id\": \"%s\",\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\", \"ecqmTitle\": \"%s\", \"model\":\"%s\",\"versionId\":\"%s\",\"measureSetId\":\"%s\",\"cmsId\":\"%s\"}"
@@ -750,13 +854,14 @@ public class MeasureControllerMvcTest {
             put("/measures/" + priorMeasure.getId())
                 .with(user(TEST_USER_ID))
                 .with(csrf())
+                .header("Authorization", "test-okta")
                 .content(updatedMeasureAsJson)
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest());
 
     verify(measureRepository, times(1)).findById(eq(priorMeasure.getId()));
     verify(measureService, times(1))
-        .checkCmsIdChanged(existingMeasure.getCmsId(), priorMeasure.getCmsId());
+        .updateMeasure(any(Measure.class), anyString(), any(Measure.class), anyString());
     verifyNoMoreInteractions(measureRepository);
   }
 
@@ -911,7 +1016,8 @@ public class MeasureControllerMvcTest {
     saved.setMeasureSetId(measureSetId);
 
     when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(saved));
-    when(measureRepository.save(any(Measure.class))).thenReturn(saved);
+    when(measureService.updateMeasure(any(Measure.class), anyString(), any(Measure.class), anyString()))
+        .thenReturn(saved);
 
     final String measureAsJson =
         "{ \"id\": \"%s\", \"measureName\":\"%s\", \"cqlLibraryName\":\"%s\" , \"ecqmTitle\":\"%s\", \"model\":\"%s\", \"versionId\":\"%s\",\"measureSetId\":\"%s\"}"
@@ -922,13 +1028,15 @@ public class MeasureControllerMvcTest {
             put("/measures/" + measureId)
                 .with(user(TEST_USER_ID))
                 .with(csrf())
+                .header("Authorization", "test-okta")
                 .content(measureAsJson)
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isOk())
-        .andExpect(content().string("Measure updated successfully."));
+        .andExpect(jsonPath("$.measureName").value(measureName));
 
     verify(measureRepository, times(1)).findById(eq(measureId));
-    verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
+    verify(measureService, times(1))
+        .updateMeasure(any(Measure.class), anyString(), any(Measure.class), anyString());
     verifyNoMoreInteractions(measureRepository);
   }
 

@@ -209,29 +209,17 @@ class MeasureControllerTest {
             .lastModifiedAt(original)
             .build();
 
-    doReturn(Optional.of(originalMeasure))
-        .when(repository)
-        .findById(ArgumentMatchers.eq(originalMeasure.getId()));
+    when(measureService.updateMeasure(any(Measure.class), anyString(), any(Measure.class), anyString()))
+        .thenReturn(m1);
 
-    doAnswer((args) -> args.getArgument(0))
-        .when(repository)
-        .save(ArgumentMatchers.any(Measure.class));
+    when(repository.findById(anyString())).thenReturn(Optional.of(originalMeasure));
 
     ResponseEntity<Measure> response = controller.updateMeasure(m1.getId(), m1, principal, "Bearer TOKEN");
-    fail(); // TODO: fix this test for update measure return type change
-    assertEquals("Measure updated successfully.", response.getBody());
-    verify(repository, times(1)).save(saveMeasureArgCaptor.capture());
-    Measure savedMeasure = saveMeasureArgCaptor.getValue();
-    assertThat(savedMeasure.getCreatedAt(), is(notNullValue()));
-    assertThat(savedMeasure.getCreatedBy(), is(equalTo("test.user2")));
-    assertThat(savedMeasure.getLastModifiedAt(), is(notNullValue()));
-    assertThat(savedMeasure.getLastModifiedBy(), is(equalTo("test.user2")));
-    assertThat(savedMeasure.getMeasurementPeriodStart(), is(equalTo(new Date("12/02/2021"))));
-    assertThat(savedMeasure.getMeasurementPeriodEnd(), is(equalTo(new Date("12/02/2022"))));
-    assertThat(savedMeasure.getMeasureMetaData().getDescription(), is(equalTo("TestDescription")));
-    assertThat(savedMeasure.getMeasureMetaData().getCopyright(), is(equalTo("TestCopyright")));
-    assertThat(savedMeasure.getMeasureMetaData().getDisclaimer(), is(equalTo("TestDisclaimer")));
-    assertThat(savedMeasure.getMeasureMetaData().getRationale(), is(equalTo("TestRationale")));
+    assertThat(response.getBody(), is(notNullValue()));
+    assertThat(response.getBody(), is(equalTo(m1)));
+    assertEquals(m1, response.getBody());
+    verify(measureService, times(1)).updateMeasure(any(Measure.class), anyString(), saveMeasureArgCaptor.capture(), anyString());
+    assertThat(saveMeasureArgCaptor.getValue(), is(equalTo(m1)));
 
     verify(actionLogService, times(1))
         .logAction(
@@ -286,25 +274,14 @@ class MeasureControllerTest {
         .when(repository)
         .findById(ArgumentMatchers.eq(originalMeasure.getId()));
 
-    doAnswer((args) -> args.getArgument(0))
-        .when(repository)
-        .save(ArgumentMatchers.any(Measure.class));
+    when(measureService.updateMeasure(any(Measure.class), anyString(), any(Measure.class), anyString()))
+        .thenReturn(m1);
 
     ResponseEntity<Measure> response = controller.updateMeasure(m1.getId(), m1, principal, "Bearer TOKEN");
-    fail(); // TODO: fix this test for update measure return type change
-    assertEquals("Measure updated successfully.", response.getBody());
-    verify(repository, times(1)).save(saveMeasureArgCaptor.capture());
-    Measure savedMeasure = saveMeasureArgCaptor.getValue();
-    assertThat(savedMeasure.getCreatedAt(), is(notNullValue()));
-    assertThat(savedMeasure.getCreatedBy(), is(equalTo("test.user2")));
-    assertThat(savedMeasure.getLastModifiedAt(), is(notNullValue()));
-    assertThat(savedMeasure.getLastModifiedBy(), is(equalTo("test.user2")));
-    assertThat(savedMeasure.getMeasurementPeriodStart(), is(equalTo(new Date("12/02/2021"))));
-    assertThat(savedMeasure.getMeasurementPeriodEnd(), is(equalTo(new Date("12/02/2022"))));
-    assertThat(savedMeasure.getMeasureMetaData().getDescription(), is(equalTo("TestDescription")));
-    assertThat(savedMeasure.getMeasureMetaData().getCopyright(), is(equalTo("TestCopyright")));
-    assertThat(savedMeasure.getMeasureMetaData().getDisclaimer(), is(equalTo("TestDisclaimer")));
-    assertThat(savedMeasure.getMeasureMetaData().getRationale(), is(equalTo("TestRationale")));
+
+    assertEquals(m1, response.getBody());
+    verify(measureService, times(1)).updateMeasure(any(Measure.class), anyString(), saveMeasureArgCaptor.capture(), anyString());
+    assertThat(saveMeasureArgCaptor.getValue(), is(equalTo(m1)));
 
     verify(actionLogService, times(1))
         .logAction(
@@ -430,8 +407,10 @@ class MeasureControllerTest {
 
     doReturn(empty).when(repository).findById(measure.getId());
 
-    ResponseEntity<Measure> response = controller.updateMeasure(measure.getId(), measure, principal, "Bearer TOKEN");
-    assertEquals("Measure does not exist.", response.getBody());
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> controller.updateMeasure(measure.getId(), measure, principal, "Bearer TOKEN")
+    );
   }
 
   @Test

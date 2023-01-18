@@ -7,10 +7,8 @@ import cms.gov.madie.measure.exceptions.InvalidCmsIdException;
 import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
 import cms.gov.madie.measure.exceptions.InvalidMeasurementPeriodException;
 import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
-import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
-import cms.gov.madie.measure.utils.ControllerUtil;
 import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeValidator;
 import cms.gov.madie.measure.validations.CqlObservationFunctionValidator;
 import gov.cms.madie.models.access.AclSpecification;
@@ -45,58 +43,33 @@ public class MeasureService {
   private final CqlDefinitionReturnTypeValidator cqlDefinitionReturnTypeValidator;
   private final CqlObservationFunctionValidator cqlObservationFunctionValidator;
 
-  public Measure updateMeasure(final String id, final String username, Measure updatingMeasure, final String accessToken) {
+  public Measure updateMeasure(final Measure existingMeasure, final String username, Measure updatingMeasure, final String accessToken) {
     // TODO: fill this in
-    Optional<Measure> persistedMeasureOpt = measureRepository.findById(id);
-
-    if (persistedMeasureOpt.isPresent()) {
-      final Measure existingMeasure = persistedMeasureOpt.get();
-      if (username != null && existingMeasure.getCreatedBy() != null) {
-        log.info(
-            "got username [{}] vs createdBy: [{}]",
-            username,
-            existingMeasure.getCreatedBy());
-        // either owner or shared-with role
-        ControllerUtil.verifyAuthorization(username, existingMeasure);
-
-        // no user can update a soft-deleted measure
-        if (!existingMeasure.isActive()) {
-          throw new UnauthorizedException(
-              "Measure", existingMeasure.getId(), username);
-        }
-        // shared user should be able to edit Measure but won’t have delete access
-        if (!updatingMeasure.isActive()) {
-          checkDeletionCredentials(username, existingMeasure.getCreatedBy());
-        }
-      }
-      if (isCqlLibraryNameChanged(updatingMeasure, existingMeasure)) {
-        checkDuplicateCqlLibraryName(updatingMeasure.getCqlLibraryName());
-      }
-
-      checkVersionIdChanged(
-          updatingMeasure.getVersionId(), existingMeasure.getVersionId());
-      checkCmsIdChanged(updatingMeasure.getCmsId(), existingMeasure.getCmsId());
-
-      if (isMeasurementPeriodChanged(updatingMeasure, existingMeasure)) {
-        validateMeasurementPeriod(
-            updatingMeasure.getMeasurementPeriodStart(), updatingMeasure.getMeasurementPeriodEnd());
-      }
-
-      if (isMeasureCqlChanged(existingMeasure, updatingMeasure)) {
-        log.info("Detected CQL change for measure with ID [{}] by user [{}]...updating ELM", updatingMeasure.getId(), username);
-        updatingMeasure = updateElm(updatingMeasure, accessToken);
-        updatingMeasure = validateAllMeasureGroupReturnTypes(updatingMeasure);
-      }
-      log.info("saving with errors on measure: {}", updatingMeasure.getErrors());
-      updatingMeasure.setLastModifiedBy(username);
-      updatingMeasure.setLastModifiedAt(Instant.now());
-      // prevent users from overwriting the createdAt/By
-      updatingMeasure.setCreatedAt(existingMeasure.getCreatedAt());
-      updatingMeasure.setCreatedBy(existingMeasure.getCreatedBy());
-      updatingMeasure = measureRepository.save(updatingMeasure);
+    if (isCqlLibraryNameChanged(updatingMeasure, existingMeasure)) {
+      checkDuplicateCqlLibraryName(updatingMeasure.getCqlLibraryName());
     }
 
-    return updatingMeasure;
+    checkVersionIdChanged(
+        updatingMeasure.getVersionId(), existingMeasure.getVersionId());
+    checkCmsIdChanged(updatingMeasure.getCmsId(), existingMeasure.getCmsId());
+
+    if (isMeasurementPeriodChanged(updatingMeasure, existingMeasure)) {
+      validateMeasurementPeriod(
+          updatingMeasure.getMeasurementPeriodStart(), updatingMeasure.getMeasurementPeriodEnd());
+    }
+
+    if (isMeasureCqlChanged(existingMeasure, updatingMeasure)) {
+      log.info("Detected CQL change for measure with ID [{}] by user [{}]...updating ELM", updatingMeasure.getId(), username);
+      updatingMeasure = updateElm(updatingMeasure, accessToken);
+      updatingMeasure = validateAllMeasureGroupReturnTypes(updatingMeasure);
+    }
+    log.info("saving with errors on measure: {}", updatingMeasure.getErrors());
+    updatingMeasure.setLastModifiedBy(username);
+    updatingMeasure.setLastModifiedAt(Instant.now());
+    // prevent users from overwriting the createdAt/By
+    updatingMeasure.setCreatedAt(existingMeasure.getCreatedAt());
+    updatingMeasure.setCreatedBy(existingMeasure.getCreatedBy());
+    return measureRepository.save(updatingMeasure);
   }
 
   public Measure validateAllMeasureGroupReturnTypes(Measure measure) {

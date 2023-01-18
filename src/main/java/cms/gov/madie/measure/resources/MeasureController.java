@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.resources;
 
+import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
 import cms.gov.madie.measure.utils.ControllerUtil;
 import gov.cms.madie.models.access.RoleEnum;
 
@@ -132,11 +133,37 @@ public class MeasureController {
 
     log.info("getMeasureId [{}]", id);
 
-    response = ResponseEntity.ok().body(measureService.updateMeasure(id, username, measure, accessToken));
-    if (!measure.isActive()) {
-      actionLogService.logAction(id, Measure.class, ActionType.DELETED, username);
+    Optional<Measure> persistedMeasureOpt = repository.findById(id);
+
+    if (persistedMeasureOpt.isPresent()) {
+      final Measure existingMeasure = persistedMeasureOpt.get();
+      if (username != null && existingMeasure.getCreatedBy() != null) {
+        log.info(
+            "got username [{}] vs createdBy: [{}]",
+            username,
+            existingMeasure.getCreatedBy());
+        // either owner or shared-with role
+        ControllerUtil.verifyAuthorization(username, existingMeasure);
+
+        // no user can update a soft-deleted measure
+        if (!existingMeasure.isActive()) {
+          throw new UnauthorizedException(
+              "Measure", existingMeasure.getId(), username);
+        }
+        // shared user should be able to edit Measure but won’t have delete access
+        if (!measure.isActive()) {
+          measureService.checkDeletionCredentials(username, existingMeasure.getCreatedBy());
+        }
+      }
+
+      response = ResponseEntity.ok().body(measureService.updateMeasure(existingMeasure, username, measure, accessToken));
+      if (!measure.isActive()) {
+        actionLogService.logAction(id, Measure.class, ActionType.DELETED, username);
+      } else {
+        actionLogService.logAction(id, Measure.class, ActionType.UPDATED, username);
+      }
     } else {
-      actionLogService.logAction(id, Measure.class, ActionType.UPDATED, username);
+      throw new ResourceNotFoundException("Measure", id);
     }
 
     return response;
