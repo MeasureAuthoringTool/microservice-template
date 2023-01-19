@@ -1,18 +1,15 @@
 package cms.gov.madie.measure.services;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.List;
-import java.util.Optional;
-
+import cms.gov.madie.measure.exceptions.BadVersionRequestException;
+import cms.gov.madie.measure.exceptions.MeasureNotDraftableException;
+import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.exceptions.UnauthorizedException;
+import cms.gov.madie.measure.repositories.MeasureRepository;
+import gov.cms.madie.models.common.Version;
+import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureMetaData;
+import gov.cms.madie.models.measure.TestCase;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -21,14 +18,22 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import cms.gov.madie.measure.exceptions.BadVersionRequestException;
-import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import cms.gov.madie.measure.exceptions.UnauthorizedException;
-import cms.gov.madie.measure.repositories.MeasureRepository;
-import gov.cms.madie.models.common.Version;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.MeasureMetaData;
-import gov.cms.madie.models.measure.TestCase;
+import java.util.List;
+import java.util.Optional;
+
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class VersionServiceTest {
@@ -276,5 +281,99 @@ public class VersionServiceTest {
     assertEquals(savedValue.getVersion().getMinor(), 3);
     assertEquals(savedValue.getVersion().getRevisionNumber(), 2);
     assertFalse(savedValue.getMeasureMetaData().isDraft());
+  }
+
+  @Test
+  public void testCreateDraftSuccessfully() {
+    Measure versionedMeasure = buildBasicMeasure();
+    MeasureMetaData metaData = new MeasureMetaData();
+    metaData.setDraft(true);
+    Measure versionedCopy =
+        versionedMeasure
+            .toBuilder()
+            .id("2")
+            .versionId("13-13-13-13")
+            .measureName("Test")
+            .measureMetaData(metaData)
+            .groups(List.of())
+            .testCases(List.of())
+            .build();
+
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(versionedMeasure));
+    when(measureRepository.existsByMeasureSetIdAndMeasureMetaDataDraft(anyString(), anyBoolean()))
+        .thenReturn(false);
+    when(measureRepository.save(any(Measure.class))).thenReturn(versionedCopy);
+    when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
+
+    Measure draft = versionService.createDraft(versionedMeasure.getId(), "Test", "test-user");
+
+    assertThat(draft.getMeasureName(), is(equalTo("Test")));
+    // draft flag to true
+    assertThat(draft.getMeasureMetaData().isDraft(), is(equalTo(true)));
+    // version remains same
+    assertThat(draft.getVersion().getMajor(), is(equalTo(2)));
+    assertThat(draft.getVersion().getMinor(), is(equalTo(3)));
+    assertThat(draft.getVersion().getRevisionNumber(), is(equalTo(1)));
+    // no groups and test cases
+    assertThat(draft.getGroups().size(), is(equalTo(0)));
+    assertThat(draft.getTestCases().size(), is(equalTo(0)));
+  }
+
+  @Test
+  public void testCreateDraftWhenMeasureDoesNotExists() {
+    String measureId = "nonExistent";
+    when(measureRepository.findById(anyString())).thenReturn(Optional.empty());
+    Exception ex =
+        assertThrows(
+            ResourceNotFoundException.class,
+            () -> versionService.createDraft(measureId, "Test", "test-user"));
+    assertThat(ex.getMessage(), is(equalTo("Could not find Measure with id: " + measureId)));
+  }
+
+  @Test
+  public void testCreateDraftWhenDraftUserUnAuthorized() {
+    Measure measure = buildBasicMeasure();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+
+    Exception ex =
+        assertThrows(
+            UnauthorizedException.class,
+            () -> versionService.createDraft(measure.getId(), "Test", "Unauthorized"));
+    assertThat(
+        ex.getMessage(), is(equalTo("User Unauthorized is not authorized for Measure with ID 1")));
+  }
+
+  @Test
+  public void testCreateDraftWhenDraftAlreadyExists() {
+    Measure measure = buildBasicMeasure();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(measureRepository.existsByMeasureSetIdAndMeasureMetaDataDraft(anyString(), anyBoolean()))
+        .thenReturn(true);
+
+    Exception ex =
+        assertThrows(
+            MeasureNotDraftableException.class,
+            () -> versionService.createDraft(measure.getId(), "Test", "test-user"));
+    assertThat(
+        ex.getMessage(),
+        is(
+            equalTo(
+                "Can not create a draft for the measure \"Test\". Only one draft is permitted per measure.")));
+  }
+
+  private Measure buildBasicMeasure() {
+    return Measure.builder()
+        .id("1")
+        .measureSetId("1-1-1-1")
+        .measureName("Test")
+        .createdBy("test-user")
+        .cql("library TestCQLLib version '2.3.001'")
+        .cmsId("CMS12")
+        .versionId("12-12-12-12")
+        .version(Version.builder().major(2).minor(3).revisionNumber(1).build())
+        .measureMetaData(new MeasureMetaData())
+        .testCases(List.of(new TestCase()))
+        .groups(List.of(new Group()))
+        .build();
   }
 }

@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import java.security.Principal;
 
+import cms.gov.madie.measure.exceptions.InvalidIdException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -104,5 +105,26 @@ public class MeasureVersionControllerTest {
     assertThat(entity, is(notNullValue()));
     assertThat(entity.getStatusCode(), is(HttpStatus.OK));
     assertThat(entity.getBody(), is(equalTo(updatedMeasure)));
+  }
+
+  @Test
+  public void testCreateDraftSuccessfully() {
+    when(principal.getName()).thenReturn("testUser");
+    measure.setMeasureName("Test");
+    when(versionService.createDraft(anyString(), anyString(), anyString())).thenReturn(measure);
+
+    ResponseEntity<Measure> entity = measureVersionController.createDraft("12", measure, principal);
+    assertThat(entity.getStatusCode(), is(HttpStatus.CREATED));
+    assertThat(entity.getBody(), is(equalTo(measure)));
+  }
+
+  @Test
+  public void testCreateDraftEmptyMeasure() {
+    Exception ex =
+        assertThrows(
+            InvalidIdException.class,
+            () -> measureVersionController.createDraft("12", measure, principal));
+
+    assertThat(ex.getMessage(), is(equalTo("Measure name is required.")));
   }
 }
