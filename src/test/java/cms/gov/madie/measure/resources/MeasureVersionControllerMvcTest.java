@@ -168,7 +168,6 @@ public class MeasureVersionControllerMvcTest {
                     .contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(status().isBadRequest())
             .andReturn();
-    ;
     verifyNoInteractions(versionService);
     assertThat(
         result.getResponse().getContentAsString(), containsString("Measure name is required."));
