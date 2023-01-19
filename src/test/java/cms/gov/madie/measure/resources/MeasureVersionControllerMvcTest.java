@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.exceptions.BadVersionRequestException;
+import cms.gov.madie.measure.exceptions.MeasureNotDraftableException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.services.VersionService;
@@ -171,5 +172,25 @@ public class MeasureVersionControllerMvcTest {
     verifyNoInteractions(versionService);
     assertThat(
         result.getResponse().getContentAsString(), containsString("Measure name is required."));
+  }
+
+  @Test
+  public void testCreateDraftWhenMeasureNotDraftable() throws Exception {
+    when(versionService.createDraft(anyString(), anyString(), anyString()))
+        .thenThrow(new MeasureNotDraftableException("Test"));
+    MvcResult result =
+        mockMvc
+            .perform(
+                post("/measures/testMeasureId/draft")
+                    .content("{\"measureName\": \"Test\"}")
+                    .with(user(TEST_USER_ID))
+                    .with(csrf())
+                    .header("Authorization", "test-okta-token")
+                    .contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+    assertThat(
+        result.getResponse().getContentAsString(),
+        containsString("Only one draft is permitted per measure."));
   }
 }

@@ -341,7 +341,7 @@ public class VersionServiceTest {
             UnauthorizedException.class,
             () -> versionService.createDraft(measure.getId(), "Test", user));
     assertThat(
-        ex.getMessage(), is(equalTo("User "+ user + " is not authorized for Measure with ID 1")));
+        ex.getMessage(), is(equalTo("User " + user + " is not authorized for Measure with ID 1")));
   }
 
   @Test
