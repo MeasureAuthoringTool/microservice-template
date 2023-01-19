@@ -5,9 +5,11 @@ import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.Measure;
 import cms.gov.madie.measure.exceptions.BadVersionRequestException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
@@ -26,7 +28,8 @@ public class VersionService {
   private static final String VERSION_TYPE_MINOR = "MINOR";
   private static final String VERSION_TYPE_PATCH = "PATCH";
 
-  public Measure createVersion(String id, String versionType, String username, String accessToken) {
+  public Measure createVersion(String id, String versionType, String username, String accessToken)
+      throws Exception {
 
     Measure measure =
         measureRepository
@@ -48,7 +51,17 @@ public class VersionService {
     measure.setLastModifiedAt(Instant.now());
     measure.setLastModifiedBy(username);
 
-    getNextVersion(measure, versionType);
+    Version oldVersion = measure.getVersion();
+    Version newVersion = getNextVersion(measure, versionType);
+    measure.setVersion(newVersion);
+
+    String newCql =
+        measure
+            .getCql()
+            .replace(
+                generateLibraryContentLine(measure.getCqlLibraryName(), oldVersion),
+                generateLibraryContentLine(measure.getCqlLibraryName(), newVersion));
+    measure.setCql(newCql);
 
     Measure savedMeasure = measureRepository.save(measure);
 
@@ -85,6 +98,14 @@ public class VersionService {
       throw new BadVersionRequestException(
           "Measure", measure.getId(), username, "Measure has CQL errors.");
     }
+    if (StringUtils.isBlank(measure.getCql())) {
+      log.error(
+          "User [{}] attempted to version measure with id [{}] which has empty CQL",
+          username,
+          measure.getId());
+      throw new BadVersionRequestException(
+          "Measure", measure.getId(), username, "Measure has no CQL.");
+    }
     if (measure.getTestCases() != null
         && measure.getTestCases().stream()
             .filter(p -> !p.isValidResource())
@@ -99,16 +120,39 @@ public class VersionService {
     }
   }
 
-  protected void getNextVersion(Measure measure, String versionType) {
+  protected Version getNextVersion(Measure measure, String versionType) throws Exception {
+    Version version;
+
     if (VERSION_TYPE_MAJOR.equalsIgnoreCase(versionType)) {
-      measure.getVersion().setMajor(measure.getVersion().getMajor() + 1);
-      measure.getVersion().setMinor(0);
-      measure.getVersion().setRevisionNumber(0);
+      version =
+          measureRepository
+              .findMaxVersionByMeasureSetId(measure.getMeasureSetId())
+              .orElse(new Version());
+      return version.toBuilder().major(version.getMajor() + 1).minor(0).revisionNumber(0).build();
+
     } else if (VERSION_TYPE_MINOR.equalsIgnoreCase(versionType)) {
-      measure.getVersion().setMinor(measure.getVersion().getMinor() + 1);
-      measure.getVersion().setRevisionNumber(0);
+      version =
+          measureRepository
+              .findMaxMinorVersionByMeasureSetIdAndVersionMajor(
+                  measure.getMeasureSetId(), measure.getVersion().getMajor())
+              .orElse(new Version());
+      return version.toBuilder().minor(version.getMinor() + 1).revisionNumber(0).build();
+
     } else if (VERSION_TYPE_PATCH.equalsIgnoreCase(versionType)) {
-      measure.getVersion().setRevisionNumber(measure.getVersion().getRevisionNumber() + 1);
+      version =
+          measureRepository
+              .findMaxRevisionNumberByMeasureSetIdAndVersionMajorAndMinor(
+                  measure.getMeasureSetId(),
+                  measure.getVersion().getMajor(),
+                  measure.getVersion().getMinor())
+              .orElse(new Version());
+      return version.toBuilder().revisionNumber(version.getRevisionNumber() + 1).build();
     }
+
+    return new Version();
+  }
+
+  private String generateLibraryContentLine(String cqlLibraryName, Version version) {
+    return "library " + cqlLibraryName + " version " + "\'" + version + "\'";
   }
 }
