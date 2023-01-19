@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -102,8 +103,33 @@ public class VersionServiceTest {
   }
 
   @Test
+  public void testCreateVersionThrowsBadVersionRequestExceptionForEmptyCQL() {
+    Measure existingMeasure =
+        Measure.builder()
+            .id("testMeasureId")
+            .createdBy("testUser")
+            .cqlErrors(false)
+            .cql("")
+            .build();
+    MeasureMetaData metaData = new MeasureMetaData();
+    metaData.setDraft(true);
+    existingMeasure.setMeasureMetaData(metaData);
+
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+
+    assertThrows(
+        BadVersionRequestException.class,
+        () -> versionService.createVersion("testMeasureId", "MAJOR", "testUser", "accesstoken"));
+  }
+
+  @Test
   public void testCreateVersionThrowsBadVersionRequestExceptionForInvalidResources() {
-    Measure existingMeasure = Measure.builder().id("testMeasureId").createdBy("testUser").build();
+    Measure existingMeasure =
+        Measure.builder()
+            .id("testMeasureId")
+            .createdBy("testUser")
+            .cql("library Test1CQLLib version '2.3.001")
+            .build();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(true);
     existingMeasure.setMeasureMetaData(metaData);
@@ -118,8 +144,29 @@ public class VersionServiceTest {
   }
 
   @Test
-  public void testCreateVersionMajorSuccess() {
-    Measure existingMeasure = Measure.builder().id("testMeasureId").createdBy("testUser").build();
+  public void testGetNextVersionOtherException() throws Exception {
+    Measure existingMeasure =
+        Measure.builder()
+            .id("testMeasureId")
+            .measureSetId("testMeasureSetId")
+            .createdBy("testUser")
+            .cql("library Test1CQLLib version '2.3.001'")
+            .build();
+    Version version = versionService.getNextVersion(existingMeasure, "InvalidVersionType");
+    assertEquals(version.getMajor(), 0);
+    assertEquals(version.getMinor(), 0);
+    assertEquals(version.getRevisionNumber(), 0);
+  }
+
+  @Test
+  public void testCreateVersionMajorSuccess() throws Exception {
+    Measure existingMeasure =
+        Measure.builder()
+            .id("testMeasureId")
+            .measureSetId("testMeasureSetId")
+            .createdBy("testUser")
+            .cql("library Test1CQLLib version '2.3.001'")
+            .build();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(true);
     existingMeasure.setMeasureMetaData(metaData);
@@ -127,6 +174,10 @@ public class VersionServiceTest {
     existingMeasure.setVersion(version);
 
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+
+    Version newVersion = Version.builder().major(2).minor(2).revisionNumber(2).build();
+    when(measureRepository.findMaxVersionByMeasureSetId(anyString()))
+        .thenReturn(Optional.of(newVersion));
 
     Measure updatedMeasure = existingMeasure.toBuilder().build();
     Version updatedVersion = Version.builder().major(3).minor(0).revisionNumber(0).build();
@@ -147,8 +198,14 @@ public class VersionServiceTest {
   }
 
   @Test
-  public void testCreateVersionMinorSuccess() {
-    Measure existingMeasure = Measure.builder().id("testMeasureId").createdBy("testUser").build();
+  public void testCreateVersionMinorSuccess() throws Exception {
+    Measure existingMeasure =
+        Measure.builder()
+            .id("testMeasureId")
+            .measureSetId("testMeasureSetId")
+            .createdBy("testUser")
+            .cql("library Test1CQLLib version '2.3.001'")
+            .build();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(true);
     existingMeasure.setMeasureMetaData(metaData);
@@ -157,6 +214,10 @@ public class VersionServiceTest {
     List<TestCase> testCases = List.of(TestCase.builder().validResource(true).build());
     existingMeasure.setTestCases(testCases);
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+
+    Version newVersion = Version.builder().major(2).minor(3).revisionNumber(2).build();
+    when(measureRepository.findMaxMinorVersionByMeasureSetIdAndVersionMajor(anyString(), anyInt()))
+        .thenReturn(Optional.of(newVersion));
 
     Measure updatedMeasure = existingMeasure.toBuilder().build();
     Version updatedVersion = Version.builder().major(2).minor(4).revisionNumber(0).build();
@@ -177,8 +238,14 @@ public class VersionServiceTest {
   }
 
   @Test
-  public void testCreateVersionPatchSuccess() {
-    Measure existingMeasure = Measure.builder().id("testMeasureId").createdBy("testUser").build();
+  public void testCreateVersionPatchSuccess() throws Exception {
+    Measure existingMeasure =
+        Measure.builder()
+            .id("testMeasureId")
+            .measureSetId("testMeasureSetId")
+            .createdBy("testUser")
+            .cql("library Test1CQLLib version '2.3.001'")
+            .build();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(true);
     existingMeasure.setMeasureMetaData(metaData);
@@ -187,6 +254,11 @@ public class VersionServiceTest {
     List<TestCase> testCases = List.of(TestCase.builder().validResource(true).build());
     existingMeasure.setTestCases(testCases);
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+
+    Version newVersion = Version.builder().major(2).minor(3).revisionNumber(1).build();
+    when(measureRepository.findMaxRevisionNumberByMeasureSetIdAndVersionMajorAndMinor(
+            anyString(), anyInt(), anyInt()))
+        .thenReturn(Optional.of(newVersion));
 
     Measure updatedMeasure = existingMeasure.toBuilder().build();
     Version updatedVersion = Version.builder().major(2).minor(3).revisionNumber(2).build();
