@@ -45,7 +45,6 @@ public class MeasureVersionController {
       throw new InvalidIdException("Measure name is required.");
     }
     var output = versionService.createDraft(id, measure.getMeasureName(), principal.getName());
-    log.info("output: {}", output);
     return ResponseEntity.status(HttpStatus.CREATED).body(output);
   }
 }
