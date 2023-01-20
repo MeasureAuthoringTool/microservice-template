@@ -40,24 +40,6 @@ class MeasureUtilTest {
   @Mock private CqlObservationFunctionValidator cqlObservationFunctionValidator;
 
   @InjectMocks private MeasureUtil measureUtil;
-  private Measure measure;
-
-  @BeforeEach
-  public void setUp() {
-    measure =
-        Measure.builder()
-            .active(true)
-            .id("xyz-p13r-13ert")
-            .cql("test cql")
-            .measureSetId("IDIDID")
-            .measureName("MSR01")
-            .version(new Version(0, 0, 1))
-            .createdAt(Instant.now())
-            .createdBy("test user")
-            .lastModifiedAt(Instant.now())
-            .lastModifiedBy("test user")
-            .build();
-  }
 
   @Test
   public void testValidateAllMeasureGroupReturnTypesReturnsNullForNullInput() {

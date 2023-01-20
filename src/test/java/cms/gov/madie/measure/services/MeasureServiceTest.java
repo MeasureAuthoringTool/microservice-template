@@ -36,9 +36,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.stubbing.Answer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -66,8 +64,7 @@ public class MeasureServiceTest implements ResourceUtil {
 
   @InjectMocks private MeasureService measureService;
 
-  @Captor
-  private ArgumentCaptor<Measure> measureArgumentCaptor;
+  @Captor private ArgumentCaptor<Measure> measureArgumentCaptor;
 
   private Group group2;
   private Measure measure;
@@ -121,15 +118,14 @@ public class MeasureServiceTest implements ResourceUtil {
 
   @Test
   public void testUpdateMeasureThrowsExceptionForDuplicateLibraryName() {
-    Measure original = Measure.builder()
-        .cqlLibraryName("OriginalLibName")
-        .measureName("Measure1")
-        .cmsId("CMS_ID1")
-        .build();
+    Measure original =
+        Measure.builder()
+            .cqlLibraryName("OriginalLibName")
+            .measureName("Measure1")
+            .cmsId("CMS_ID1")
+            .build();
 
-    Measure updated = original.toBuilder()
-        .cqlLibraryName("Changed_Name")
-        .build();
+    Measure updated = original.toBuilder().cqlLibraryName("Changed_Name").build();
 
     when(measureUtil.isCqlLibraryNameChanged(any(Measure.class), any(Measure.class)))
         .thenReturn(true);
@@ -138,66 +134,60 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertThrows(
         DuplicateKeyException.class,
-        () -> measureService.updateMeasure(original, "User1", updated, "Access Token")
-    );
+        () -> measureService.updateMeasure(original, "User1", updated, "Access Token"));
   }
 
   @Test
   public void testUpdateMeasureThrowsExceptionForChangedVersionId() {
-    Measure original = Measure.builder()
-        .cqlLibraryName("OriginalLibName")
-        .measureName("Measure1")
-        .cmsId("CMS_ID1")
-        .versionId("VersionId")
-        .build();
+    Measure original =
+        Measure.builder()
+            .cqlLibraryName("OriginalLibName")
+            .measureName("Measure1")
+            .cmsId("CMS_ID1")
+            .versionId("VersionId")
+            .build();
 
-    Measure updated = original.toBuilder()
-        .versionId(null)
-        .build();
+    Measure updated = original.toBuilder().versionId(null).build();
 
     when(measureUtil.isCqlLibraryNameChanged(any(Measure.class), any(Measure.class)))
         .thenReturn(false);
     assertThrows(
         InvalidVersionIdException.class,
-        () -> measureService.updateMeasure(original, "User1", updated, "Access Token")
-    );
+        () -> measureService.updateMeasure(original, "User1", updated, "Access Token"));
   }
 
   @Test
   public void testUpdateMeasureThrowsExceptionForChangedCmsId() {
-    Measure original = Measure.builder()
-        .cqlLibraryName("OriginalLibName")
-        .measureName("Measure1")
-        .cmsId("CMS_ID1")
-        .versionId("VersionId")
-        .build();
+    Measure original =
+        Measure.builder()
+            .cqlLibraryName("OriginalLibName")
+            .measureName("Measure1")
+            .cmsId("CMS_ID1")
+            .versionId("VersionId")
+            .build();
 
-    Measure updated = original.toBuilder()
-        .cmsId(null)
-        .build();
+    Measure updated = original.toBuilder().cmsId(null).build();
 
     when(measureUtil.isCqlLibraryNameChanged(any(Measure.class), any(Measure.class)))
         .thenReturn(false);
     assertThrows(
         InvalidCmsIdException.class,
-        () -> measureService.updateMeasure(original, "User1", updated, "Access Token")
-    );
+        () -> measureService.updateMeasure(original, "User1", updated, "Access Token"));
   }
 
   @Test
   public void testUpdateMeasureThrowsExceptionForInvalidMeasurementPeriod() {
-    Measure original = Measure.builder()
-        .cqlLibraryName("OriginalLibName")
-        .measureName("Measure1")
-        .cmsId("CMS_ID1")
-        .versionId("VersionId")
-        .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
-        .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
-        .build();
+    Measure original =
+        Measure.builder()
+            .cqlLibraryName("OriginalLibName")
+            .measureName("Measure1")
+            .cmsId("CMS_ID1")
+            .versionId("VersionId")
+            .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
+            .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
+            .build();
 
-    Measure updated = original.toBuilder()
-        .measurementPeriodEnd(null)
-        .build();
+    Measure updated = original.toBuilder().measurementPeriodEnd(null).build();
     when(measureUtil.isCqlLibraryNameChanged(any(Measure.class), any(Measure.class)))
         .thenReturn(false);
     when(measureUtil.isMeasurementPeriodChanged(any(Measure.class), any(Measure.class)))
@@ -205,8 +195,7 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertThrows(
         InvalidMeasurementPeriodException.class,
-      () -> measureService.updateMeasure(original, "User1", updated, "Access Token")
-    );
+        () -> measureService.updateMeasure(original, "User1", updated, "Access Token"));
   }
 
   @Test
@@ -214,31 +203,33 @@ public class MeasureServiceTest implements ResourceUtil {
     final Instant createdAt = Instant.now().minus(5, ChronoUnit.DAYS);
     final String createdBy = "UserABC";
 
-    Measure original = Measure.builder()
-        .cqlLibraryName("OriginalLibName")
-        .measureName("Measure1")
-        .cmsId("CMS_ID1")
-        .versionId("VersionId")
-        .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
-        .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
-        .createdAt(createdAt)
-        .createdBy(createdBy)
-        .lastModifiedAt(createdAt)
-        .lastModifiedBy(createdBy)
-        .build();
+    Measure original =
+        Measure.builder()
+            .cqlLibraryName("OriginalLibName")
+            .measureName("Measure1")
+            .cmsId("CMS_ID1")
+            .versionId("VersionId")
+            .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
+            .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
+            .createdAt(createdAt)
+            .createdBy(createdBy)
+            .lastModifiedAt(createdAt)
+            .lastModifiedBy(createdBy)
+            .build();
 
-    Measure updated = original.toBuilder()
-        .createdAt(Instant.now())
-        .createdBy("SomebodyElse")
-        .lastModifiedAt(null)
-        .lastModifiedBy("Nobody")
-        .build();
+    Measure updated =
+        original
+            .toBuilder()
+            .createdAt(Instant.now())
+            .createdBy("SomebodyElse")
+            .lastModifiedAt(null)
+            .lastModifiedBy("Nobody")
+            .build();
     when(measureUtil.isCqlLibraryNameChanged(any(Measure.class), any(Measure.class)))
         .thenReturn(false);
     when(measureUtil.isMeasurementPeriodChanged(any(Measure.class), any(Measure.class)))
         .thenReturn(true);
-    when(measureUtil.isMeasureCqlChanged(any(Measure.class), any(Measure.class)))
-        .thenReturn(false);
+    when(measureUtil.isMeasureCqlChanged(any(Measure.class), any(Measure.class))).thenReturn(false);
     when(measureRepository.save(any(Measure.class))).thenReturn(updated);
 
     Measure output = measureService.updateMeasure(original, "User1", updated, "Access Token");
@@ -250,45 +241,38 @@ public class MeasureServiceTest implements ResourceUtil {
     assertThat(persisted, is(equalTo(updated)));
     assertThat(persisted.getCreatedAt(), is(equalTo(createdAt)));
     assertThat(persisted.getCreatedBy(), is(equalTo(createdBy)));
-    final boolean isLastModifiedUpdated = Instant.now()
-        .minus(1, ChronoUnit.MINUTES)
-        .isBefore(persisted.getLastModifiedAt());
+    final boolean isLastModifiedUpdated =
+        Instant.now().minus(1, ChronoUnit.MINUTES).isBefore(persisted.getLastModifiedAt());
     assertThat(isLastModifiedUpdated, is(true));
     assertThat(persisted.getLastModifiedBy(), is(equalTo("User1")));
   }
 
   @Test
   public void testUpdateMeasureSavesMeasureWithUpdatedCql() {
-    Measure original = Measure.builder()
-        .cqlLibraryName("OriginalLibName")
-        .measureName("Measure1")
-        .cmsId("CMS_ID1")
-        .versionId("VersionId")
-        .cql("original cql here")
-        .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
-        .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
-        .build();
+    Measure original =
+        Measure.builder()
+            .cqlLibraryName("OriginalLibName")
+            .measureName("Measure1")
+            .cmsId("CMS_ID1")
+            .versionId("VersionId")
+            .cql("original cql here")
+            .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
+            .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
+            .build();
 
-    Measure updated = original.toBuilder()
-        .cql("changed cql here")
-        .build();
+    Measure updated = original.toBuilder().cql("changed cql here").build();
     when(measureUtil.isCqlLibraryNameChanged(any(Measure.class), any(Measure.class)))
         .thenReturn(false);
     when(measureUtil.isMeasurementPeriodChanged(any(Measure.class), any(Measure.class)))
         .thenReturn(false);
-    when(measureUtil.isMeasureCqlChanged(any(Measure.class), any(Measure.class)))
-        .thenReturn(true);
-    when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(
-        ElmJson.builder()
-            .json("{\"library\": {}}")
-            .xml("<library></library>")
-            .build()
-    );
+    when(measureUtil.isMeasureCqlChanged(any(Measure.class), any(Measure.class))).thenReturn(true);
+    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+        .thenReturn(ElmJson.builder().json("{\"library\": {}}").xml("<library></library>").build());
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(false);
 
-    Measure expected = updated.toBuilder().error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES).build();
-    when(measureUtil.validateAllMeasureGroupReturnTypes(any(Measure.class)))
-        .thenReturn(expected);
+    Measure expected =
+        updated.toBuilder().error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES).build();
+    when(measureUtil.validateAllMeasureGroupReturnTypes(any(Measure.class))).thenReturn(expected);
     when(measureRepository.save(any(Measure.class))).thenReturn(expected);
 
     Measure output = measureService.updateMeasure(original, "User1", updated, "Access Token");
@@ -299,36 +283,32 @@ public class MeasureServiceTest implements ResourceUtil {
     Measure persisted = measureArgumentCaptor.getValue();
     assertThat(persisted, is(equalTo(expected)));
   }
+
   @Test
   public void testUpdateMeasureSavesMeasureWithUpdatedCqlAndErrorsGettingElm() {
-    Measure original = Measure.builder()
-        .cqlLibraryName("OriginalLibName")
-        .measureName("Measure1")
-        .cmsId("CMS_ID1")
-        .versionId("VersionId")
-        .cql("original cql here")
-        .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
-        .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
-        .build();
+    Measure original =
+        Measure.builder()
+            .cqlLibraryName("OriginalLibName")
+            .measureName("Measure1")
+            .cmsId("CMS_ID1")
+            .versionId("VersionId")
+            .cql("original cql here")
+            .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
+            .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
+            .build();
 
-    Measure updated = original.toBuilder()
-        .cql("changed cql here")
-        .build();
+    Measure updated = original.toBuilder().cql("changed cql here").build();
     when(measureUtil.isCqlLibraryNameChanged(any(Measure.class), any(Measure.class)))
         .thenReturn(false);
     when(measureUtil.isMeasurementPeriodChanged(any(Measure.class), any(Measure.class)))
         .thenReturn(false);
-    when(measureUtil.isMeasureCqlChanged(any(Measure.class), any(Measure.class)))
-        .thenReturn(true);
-    when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(
-        ElmJson.builder()
-            .json("{\"library\": {}}")
-            .xml("<library></library>")
-            .build()
-    );
+    when(measureUtil.isMeasureCqlChanged(any(Measure.class), any(Measure.class))).thenReturn(true);
+    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+        .thenReturn(ElmJson.builder().json("{\"library\": {}}").xml("<library></library>").build());
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(true);
 
-    when(measureRepository.save(any(Measure.class))).thenAnswer(invocationOnMock -> invocationOnMock.getArgument(0));
+    when(measureRepository.save(any(Measure.class)))
+        .thenAnswer(invocationOnMock -> invocationOnMock.getArgument(0));
 
     Measure output = measureService.updateMeasure(original, "User1", updated, "Access Token");
     assertThat(output, is(notNullValue()));
@@ -362,28 +342,19 @@ public class MeasureServiceTest implements ResourceUtil {
   @Test
   public void testUpdateElmThrowsExceptionIfElmHasErrors() {
     final Measure measure = Measure.builder().cql("some really good cql here").build();
-    when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(
-        ElmJson.builder()
-            .json("{\"library\": {}}")
-            .xml("<library></library>")
-            .build()
-    );
+    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+        .thenReturn(ElmJson.builder().json("{\"library\": {}}").xml("<library></library>").build());
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(true);
     assertThrows(
         CqlElmTranslationErrorException.class,
-        () -> measureService.updateElm(measure, "Access Token")
-    );
+        () -> measureService.updateElm(measure, "Access Token"));
   }
 
   @Test
   public void testUpdateElmReturnsElmJson() {
     final Measure measure = Measure.builder().cql("some really good cql here").build();
-    when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(
-        ElmJson.builder()
-            .json("{\"library\": {}}")
-            .xml("<library></library>")
-            .build()
-    );
+    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+        .thenReturn(ElmJson.builder().json("{\"library\": {}}").xml("<library></library>").build());
     Measure output = measureService.updateElm(measure, "Access Token");
     assertThat(output, is(notNullValue()));
     assertThat(output.getElmJson(), is(equalTo("{\"library\": {}}")));

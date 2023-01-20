@@ -209,16 +209,20 @@ class MeasureControllerTest {
             .lastModifiedAt(original)
             .build();
 
-    when(measureService.updateMeasure(any(Measure.class), anyString(), any(Measure.class), anyString()))
+    when(measureService.updateMeasure(
+            any(Measure.class), anyString(), any(Measure.class), anyString()))
         .thenReturn(m1);
 
     when(repository.findById(anyString())).thenReturn(Optional.of(originalMeasure));
 
-    ResponseEntity<Measure> response = controller.updateMeasure(m1.getId(), m1, principal, "Bearer TOKEN");
+    ResponseEntity<Measure> response =
+        controller.updateMeasure(m1.getId(), m1, principal, "Bearer TOKEN");
     assertThat(response.getBody(), is(notNullValue()));
     assertThat(response.getBody(), is(equalTo(m1)));
     assertEquals(m1, response.getBody());
-    verify(measureService, times(1)).updateMeasure(any(Measure.class), anyString(), saveMeasureArgCaptor.capture(), anyString());
+    verify(measureService, times(1))
+        .updateMeasure(
+            any(Measure.class), anyString(), saveMeasureArgCaptor.capture(), anyString());
     assertThat(saveMeasureArgCaptor.getValue(), is(equalTo(m1)));
 
     verify(actionLogService, times(1))
@@ -274,13 +278,17 @@ class MeasureControllerTest {
         .when(repository)
         .findById(ArgumentMatchers.eq(originalMeasure.getId()));
 
-    when(measureService.updateMeasure(any(Measure.class), anyString(), any(Measure.class), anyString()))
+    when(measureService.updateMeasure(
+            any(Measure.class), anyString(), any(Measure.class), anyString()))
         .thenReturn(m1);
 
-    ResponseEntity<Measure> response = controller.updateMeasure(m1.getId(), m1, principal, "Bearer TOKEN");
+    ResponseEntity<Measure> response =
+        controller.updateMeasure(m1.getId(), m1, principal, "Bearer TOKEN");
 
     assertEquals(m1, response.getBody());
-    verify(measureService, times(1)).updateMeasure(any(Measure.class), anyString(), saveMeasureArgCaptor.capture(), anyString());
+    verify(measureService, times(1))
+        .updateMeasure(
+            any(Measure.class), anyString(), saveMeasureArgCaptor.capture(), anyString());
     assertThat(saveMeasureArgCaptor.getValue(), is(equalTo(m1)));
 
     verify(actionLogService, times(1))
@@ -301,7 +309,8 @@ class MeasureControllerTest {
     when(principal.getName()).thenReturn("test.user2");
 
     assertThrows(
-        InvalidIdException.class, () -> controller.updateMeasure(null, measure, principal, "Bearer TOKEN"));
+        InvalidIdException.class,
+        () -> controller.updateMeasure(null, measure, principal, "Bearer TOKEN"));
   }
 
   @Test
@@ -377,8 +386,9 @@ class MeasureControllerTest {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user2");
 
-    assertThrows(InvalidIdException.class, () ->
-        controller.updateMeasure("", measure, principal, "Bearer TOKEN"));
+    assertThrows(
+        InvalidIdException.class,
+        () -> controller.updateMeasure("", measure, principal, "Bearer TOKEN"));
   }
 
   @Test
@@ -388,8 +398,8 @@ class MeasureControllerTest {
     Measure m1234 = measure.toBuilder().id("ID1234").build();
 
     assertThrows(
-        InvalidIdException.class, () ->
-            controller.updateMeasure("ID5678", m1234, principal, "Bearer TOKEN"));
+        InvalidIdException.class,
+        () -> controller.updateMeasure("ID5678", m1234, principal, "Bearer TOKEN"));
   }
 
   @Test
@@ -409,8 +419,7 @@ class MeasureControllerTest {
 
     assertThrows(
         ResourceNotFoundException.class,
-        () -> controller.updateMeasure(measure.getId(), measure, principal, "Bearer TOKEN")
-    );
+        () -> controller.updateMeasure(measure.getId(), measure, principal, "Bearer TOKEN"));
   }
 
   @Test

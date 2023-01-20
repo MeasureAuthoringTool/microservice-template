@@ -38,10 +38,11 @@ public class MeasureUtil {
 
     final String elmJson = measure.getElmJson();
     boolean groupsExistWithPopulations = isGroupsExistWithPopulations(measure);
+    Measure outputMeasure = measure;
     if (elmJson == null && groupsExistWithPopulations) {
       // Measure has groups with populations with definitions, but ELM JSON is missing
       measure.setCqlErrors(true);
-      measure =
+      outputMeasure =
           measure
               .toBuilder()
               .error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES)
@@ -52,7 +53,7 @@ public class MeasureUtil {
           .anyMatch(group -> !isGroupReturnTypesValid(group, elmJson))) {
         log.info(
             "Mismatch exists between CQL return types and Population Criteria definition types!");
-        measure =
+        outputMeasure =
             measure
                 .toBuilder()
                 .error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES)
@@ -65,10 +66,10 @@ public class MeasureUtil {
                 .filter(e -> !MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES.equals(e))
                 .collect(Collectors.toSet());
         log.info("updated errors; {}", updatedErrors);
-        measure = measure.toBuilder().clearErrors().errors(updatedErrors).build();
+        outputMeasure = measure.toBuilder().clearErrors().errors(updatedErrors).build();
       }
     }
-    return measure;
+    return outputMeasure;
   }
 
   public boolean isGroupsExistWithPopulations(Measure measure) {

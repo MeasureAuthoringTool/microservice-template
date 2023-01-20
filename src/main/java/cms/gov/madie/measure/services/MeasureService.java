@@ -33,13 +33,16 @@ public class MeasureService {
   private final ElmTranslatorClient elmTranslatorClient;
   private final MeasureUtil measureUtil;
 
-  public Measure updateMeasure(final Measure existingMeasure, final String username, Measure updatingMeasure, final String accessToken) {
+  public Measure updateMeasure(
+      final Measure existingMeasure,
+      final String username,
+      final Measure updatingMeasure,
+      final String accessToken) {
     if (measureUtil.isCqlLibraryNameChanged(updatingMeasure, existingMeasure)) {
       checkDuplicateCqlLibraryName(updatingMeasure.getCqlLibraryName());
     }
 
-    checkVersionIdChanged(
-        updatingMeasure.getVersionId(), existingMeasure.getVersionId());
+    checkVersionIdChanged(updatingMeasure.getVersionId(), existingMeasure.getVersionId());
     checkCmsIdChanged(updatingMeasure.getCmsId(), existingMeasure.getCmsId());
 
     if (measureUtil.isMeasurementPeriodChanged(updatingMeasure, existingMeasure)) {
@@ -47,23 +50,26 @@ public class MeasureService {
           updatingMeasure.getMeasurementPeriodStart(), updatingMeasure.getMeasurementPeriodEnd());
     }
 
+    Measure outputMeasure = updatingMeasure;
     if (measureUtil.isMeasureCqlChanged(existingMeasure, updatingMeasure)) {
       try {
-        updatingMeasure = updateElm(updatingMeasure, accessToken);
-        updatingMeasure = measureUtil.validateAllMeasureGroupReturnTypes(updatingMeasure);
+        outputMeasure =
+            measureUtil.validateAllMeasureGroupReturnTypes(updateElm(updatingMeasure, accessToken));
       } catch (CqlElmTranslationErrorException ex) {
-        updatingMeasure = updatingMeasure.toBuilder()
-            .cqlErrors(true)
-            .error(MeasureErrorType.ERRORS_ELM_JSON)
-            .build();
+        outputMeasure =
+            updatingMeasure
+                .toBuilder()
+                .cqlErrors(true)
+                .error(MeasureErrorType.ERRORS_ELM_JSON)
+                .build();
       }
     }
-    updatingMeasure.setLastModifiedBy(username);
-    updatingMeasure.setLastModifiedAt(Instant.now());
+    outputMeasure.setLastModifiedBy(username);
+    outputMeasure.setLastModifiedAt(Instant.now());
     // prevent users from overwriting the createdAt/By
-    updatingMeasure.setCreatedAt(existingMeasure.getCreatedAt());
-    updatingMeasure.setCreatedBy(existingMeasure.getCreatedBy());
-    return measureRepository.save(updatingMeasure);
+    outputMeasure.setCreatedAt(existingMeasure.getCreatedAt());
+    outputMeasure.setCreatedBy(existingMeasure.getCreatedBy());
+    return measureRepository.save(outputMeasure);
   }
 
   public void checkDuplicateCqlLibraryName(String cqlLibraryName) {
@@ -113,10 +119,7 @@ public class MeasureService {
         throw new CqlElmTranslationErrorException(measure.getMeasureName());
       }
 
-      measure = measure.toBuilder()
-          .elmJson(elmJson.getJson())
-          .elmXml(elmJson.getXml())
-          .build();
+      return measure.toBuilder().elmJson(elmJson.getJson()).elmXml(elmJson.getXml()).build();
     }
     return measure;
   }

@@ -150,24 +150,23 @@ public class MeasureControllerMvcTest {
     String ecqmTitle = "ecqmTitle";
     String measureSetId = "measureSetId";
 
+    //    Measure priorMeasure = new Measure();
+    //    priorMeasure.setId(measureId);
+    //    priorMeasure.setMeasureName(measureName);
+    //    priorMeasure.setCqlLibraryName(libName);
+    //    priorMeasure.setModel(MODEL);
+    //    priorMeasure.setVersionId(measureId);
 
-
-//    Measure priorMeasure = new Measure();
-//    priorMeasure.setId(measureId);
-//    priorMeasure.setMeasureName(measureName);
-//    priorMeasure.setCqlLibraryName(libName);
-//    priorMeasure.setModel(MODEL);
-//    priorMeasure.setVersionId(measureId);
-
-    final Measure priorMeasure = Measure.builder()
-        .id(measureId)
-        .active(true)
-        .measureName(measureName)
-        .cqlLibraryName(libName)
-        .model(MODEL)
-        .versionId(measureId)
-        .measureSetId(measureSetId)
-        .build();
+    final Measure priorMeasure =
+        Measure.builder()
+            .id(measureId)
+            .active(true)
+            .measureName(measureName)
+            .cqlLibraryName(libName)
+            .model(MODEL)
+            .versionId(measureId)
+            .measureSetId(measureSetId)
+            .build();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setSteward(steward);
     metaData.setDescription(description);
@@ -176,34 +175,36 @@ public class MeasureControllerMvcTest {
     metaData.setRationale(rationale);
     metaData.setDevelopers(developers);
     metaData.setGuidance(guidance);
-    final Measure updatingMeasure = priorMeasure.toBuilder()
-        .ecqmTitle(ecqmTitle)
-        .measureMetaData(metaData)
-        .build();
+    final Measure updatingMeasure =
+        priorMeasure.toBuilder().ecqmTitle(ecqmTitle).measureMetaData(metaData).build();
 
     when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(priorMeasure));
-    when(measureService.updateMeasure(any(Measure.class), anyString(), any(Measure.class), anyString()))
+    when(measureService.updateMeasure(
+            any(Measure.class), anyString(), any(Measure.class), anyString()))
         .thenReturn(updatingMeasure);
 
-//    final String measureAsJson =
-//        ("{\"id\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"ecqmTitle\":\"%s\", \"measureMetaData\": "
-//                + "{ \"steward\" : \"%s\", \"description\" : \"%s\", \"copyright\" : \"%s\", \"disclaimer\" : \"%s\", \"rationale\" : \"%s\","
-//                + " \"developers\" : [\"%s\"], \"guidance\" : \"%s\"}, \"model\":\"%s\", \"versionId\":\"%s\",\"measureSetId\":\"%s\"}")
-//            .formatted(
-//                measureId,
-//                measureName,
-//                libName,
-//                ecqmTitle,
-//                steward,
-//                description,
-//                copyright,
-//                disclaimer,
-//                rationale,
-//                developers.get(0),
-//                guidance,
-//                MODEL,
-//                measureId,
-//                measureSetId);
+    //    final String measureAsJson =
+    //        ("{\"id\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\",
+    // \"ecqmTitle\":\"%s\", \"measureMetaData\": "
+    //                + "{ \"steward\" : \"%s\", \"description\" : \"%s\", \"copyright\" : \"%s\",
+    // \"disclaimer\" : \"%s\", \"rationale\" : \"%s\","
+    //                + " \"developers\" : [\"%s\"], \"guidance\" : \"%s\"}, \"model\":\"%s\",
+    // \"versionId\":\"%s\",\"measureSetId\":\"%s\"}")
+    //            .formatted(
+    //                measureId,
+    //                measureName,
+    //                libName,
+    //                ecqmTitle,
+    //                steward,
+    //                description,
+    //                copyright,
+    //                disclaimer,
+    //                rationale,
+    //                developers.get(0),
+    //                guidance,
+    //                MODEL,
+    //                measureId,
+    //                measureSetId);
 
     final String measureAsJson = toJsonString(updatingMeasure);
     mockMvc
@@ -228,29 +229,34 @@ public class MeasureControllerMvcTest {
 
     verify(measureRepository, times(1)).findById(eq(measureId));
     verify(measureService, times(1))
-        .updateMeasure(measureArgumentCaptor.capture(), anyString(), measureArgumentCaptor2.capture(), anyString());
+        .updateMeasure(
+            measureArgumentCaptor.capture(),
+            anyString(),
+            measureArgumentCaptor2.capture(),
+            anyString());
     assertThat(measureArgumentCaptor.getValue(), is(equalTo(priorMeasure)));
     assertThat(measureArgumentCaptor2.getValue(), is(equalTo(updatingMeasure)));
 
-//    verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
-//    verifyNoMoreInteractions(measureRepository);
-//    Measure savedMeasure = measureArgumentCaptor.getValue();
-//    assertNotNull(savedMeasure.getMeasureMetaData());
-//    assertEquals(measureName, savedMeasure.getMeasureName());
-//    assertEquals(steward, savedMeasure.getMeasureMetaData().getSteward());
-//    assertEquals(description, savedMeasure.getMeasureMetaData().getDescription());
-//    assertEquals(copyright, savedMeasure.getMeasureMetaData().getCopyright());
-//    assertEquals(disclaimer, savedMeasure.getMeasureMetaData().getDisclaimer());
-//    assertEquals(rationale, savedMeasure.getMeasureMetaData().getRationale());
-//    assertEquals(developers.get(0), savedMeasure.getMeasureMetaData().getDevelopers().get(0));
-//    assertEquals(guidance, savedMeasure.getMeasureMetaData().getGuidance());
-//    assertEquals(MODEL, savedMeasure.getModel());
-//    assertEquals(measureId, savedMeasure.getVersionId());
-//    assertNotNull(savedMeasure.getLastModifiedAt());
-//    assertEquals(TEST_USER_ID, savedMeasure.getLastModifiedBy());
-//    int lastModCompareTo =
-//        savedMeasure.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
-//    assertEquals(1, lastModCompareTo);
+    //    verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
+    //    verifyNoMoreInteractions(measureRepository);
+    //    Measure savedMeasure = measureArgumentCaptor.getValue();
+    //    assertNotNull(savedMeasure.getMeasureMetaData());
+    //    assertEquals(measureName, savedMeasure.getMeasureName());
+    //    assertEquals(steward, savedMeasure.getMeasureMetaData().getSteward());
+    //    assertEquals(description, savedMeasure.getMeasureMetaData().getDescription());
+    //    assertEquals(copyright, savedMeasure.getMeasureMetaData().getCopyright());
+    //    assertEquals(disclaimer, savedMeasure.getMeasureMetaData().getDisclaimer());
+    //    assertEquals(rationale, savedMeasure.getMeasureMetaData().getRationale());
+    //    assertEquals(developers.get(0), savedMeasure.getMeasureMetaData().getDevelopers().get(0));
+    //    assertEquals(guidance, savedMeasure.getMeasureMetaData().getGuidance());
+    //    assertEquals(MODEL, savedMeasure.getModel());
+    //    assertEquals(measureId, savedMeasure.getVersionId());
+    //    assertNotNull(savedMeasure.getLastModifiedAt());
+    //    assertEquals(TEST_USER_ID, savedMeasure.getLastModifiedBy());
+    //    int lastModCompareTo =
+    //        savedMeasure.getLastModifiedAt().compareTo(Instant.now().minus(60,
+    // ChronoUnit.SECONDS));
+    //    assertEquals(1, lastModCompareTo);
 
     verify(actionLogService, times(1))
         .logAction(
@@ -278,44 +284,48 @@ public class MeasureControllerMvcTest {
     String ecqmTitle = "ecqmTitle";
     String measureSetId = "measureSetId";
 
-//    Measure priorMeasure = new Measure();
-//    priorMeasure.setId(measureId);
-//    priorMeasure.setMeasureName(measureName);
-//    priorMeasure.setCqlLibraryName(libName);
-//    priorMeasure.setEcqmTitle(ecqmTitle);
-//    priorMeasure.setModel(MODEL);
-//    priorMeasure.setVersionId(measureId);
+    //    Measure priorMeasure = new Measure();
+    //    priorMeasure.setId(measureId);
+    //    priorMeasure.setMeasureName(measureName);
+    //    priorMeasure.setCqlLibraryName(libName);
+    //    priorMeasure.setEcqmTitle(ecqmTitle);
+    //    priorMeasure.setModel(MODEL);
+    //    priorMeasure.setVersionId(measureId);
 
-    final Measure priorMeasure = Measure.builder()
-        .id(measureId)
-        .active(true)
-        .measureName(measureName)
-        .cqlLibraryName(libName)
-        .model(MODEL)
-        .versionId(measureId)
-        .measureSetId(measureSetId)
-        .build();
+    final Measure priorMeasure =
+        Measure.builder()
+            .id(measureId)
+            .active(true)
+            .measureName(measureName)
+            .cqlLibraryName(libName)
+            .model(MODEL)
+            .versionId(measureId)
+            .measureSetId(measureSetId)
+            .build();
 
-//    final String measureAsJson =
-//        ("{\"id\": \"%s\", \"active\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\", \"ecqmTitle\":\"%s\", "
-//                + "\"measureMetaData\": { \"steward\" : \"%s\", \"description\" : \"%s\", \"copyright\" : \"%s\", \"disclaimer\" : \"%s\", "
-//                + "\"rationale\" : \"%s\", \"developers\" : [\"%s\"], \"guidance\" : \"%s\"}, \"model\":\"%s\", \"versionId\":\"%s\",\"measureSetId\":\"%s\"}")
-//            .formatted(
-//                measureId,
-//                false,
-//                measureName,
-//                libName,
-//                ecqmTitle,
-//                steward,
-//                description,
-//                copyright,
-//                disclaimer,
-//                rationale,
-//                developers.get(0),
-//                guidance,
-//                MODEL,
-//                measureId,
-//                measureSetId);
+    //    final String measureAsJson =
+    //        ("{\"id\": \"%s\", \"active\": \"%s\", \"measureName\": \"%s\",
+    // \"cqlLibraryName\":\"%s\", \"ecqmTitle\":\"%s\", "
+    //                + "\"measureMetaData\": { \"steward\" : \"%s\", \"description\" : \"%s\",
+    // \"copyright\" : \"%s\", \"disclaimer\" : \"%s\", "
+    //                + "\"rationale\" : \"%s\", \"developers\" : [\"%s\"], \"guidance\" : \"%s\"},
+    // \"model\":\"%s\", \"versionId\":\"%s\",\"measureSetId\":\"%s\"}")
+    //            .formatted(
+    //                measureId,
+    //                false,
+    //                measureName,
+    //                libName,
+    //                ecqmTitle,
+    //                steward,
+    //                description,
+    //                copyright,
+    //                disclaimer,
+    //                rationale,
+    //                developers.get(0),
+    //                guidance,
+    //                MODEL,
+    //                measureId,
+    //                measureSetId);
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setSteward(steward);
     metaData.setDescription(description);
@@ -324,16 +334,19 @@ public class MeasureControllerMvcTest {
     metaData.setRationale(rationale);
     metaData.setDevelopers(developers);
     metaData.setGuidance(guidance);
-    final Measure updatingMeasure = priorMeasure.toBuilder()
-        .active(false)
-        .measureMetaData(metaData)
-        .ecqmTitle(ecqmTitle)
-        .build();
+    final Measure updatingMeasure =
+        priorMeasure
+            .toBuilder()
+            .active(false)
+            .measureMetaData(metaData)
+            .ecqmTitle(ecqmTitle)
+            .build();
 
     final String measureAsJson = toJsonString(updatingMeasure);
 
     when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(priorMeasure));
-    when(measureService.updateMeasure(any(Measure.class), anyString(), any(Measure.class), anyString()))
+    when(measureService.updateMeasure(
+            any(Measure.class), anyString(), any(Measure.class), anyString()))
         .thenReturn(updatingMeasure);
 
     mockMvc
@@ -358,24 +371,25 @@ public class MeasureControllerMvcTest {
 
     verify(measureRepository, times(1)).findById(eq(measureId));
 
-//    verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
-//    verifyNoMoreInteractions(measureRepository);
-//    Measure savedMeasure = measureArgumentCaptor.getValue();
-//    assertNotNull(savedMeasure.getMeasureMetaData());
-//    assertEquals(measureName, savedMeasure.getMeasureName());
-//    assertEquals(steward, savedMeasure.getMeasureMetaData().getSteward());
-//    assertEquals(description, savedMeasure.getMeasureMetaData().getDescription());
-//    assertEquals(copyright, savedMeasure.getMeasureMetaData().getCopyright());
-//    assertEquals(disclaimer, savedMeasure.getMeasureMetaData().getDisclaimer());
-//    assertEquals(rationale, savedMeasure.getMeasureMetaData().getRationale());
-//    assertEquals(developers.get(0), savedMeasure.getMeasureMetaData().getDevelopers().get(0));
-//    assertEquals(guidance, savedMeasure.getMeasureMetaData().getGuidance());
-//    assertEquals(MODEL, savedMeasure.getModel());
-//    assertNotNull(savedMeasure.getLastModifiedAt());
-//    assertEquals(TEST_USER_ID, savedMeasure.getLastModifiedBy());
-//    int lastModCompareTo =
-//        savedMeasure.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
-//    assertEquals(1, lastModCompareTo);
+    //    verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
+    //    verifyNoMoreInteractions(measureRepository);
+    //    Measure savedMeasure = measureArgumentCaptor.getValue();
+    //    assertNotNull(savedMeasure.getMeasureMetaData());
+    //    assertEquals(measureName, savedMeasure.getMeasureName());
+    //    assertEquals(steward, savedMeasure.getMeasureMetaData().getSteward());
+    //    assertEquals(description, savedMeasure.getMeasureMetaData().getDescription());
+    //    assertEquals(copyright, savedMeasure.getMeasureMetaData().getCopyright());
+    //    assertEquals(disclaimer, savedMeasure.getMeasureMetaData().getDisclaimer());
+    //    assertEquals(rationale, savedMeasure.getMeasureMetaData().getRationale());
+    //    assertEquals(developers.get(0), savedMeasure.getMeasureMetaData().getDevelopers().get(0));
+    //    assertEquals(guidance, savedMeasure.getMeasureMetaData().getGuidance());
+    //    assertEquals(MODEL, savedMeasure.getModel());
+    //    assertNotNull(savedMeasure.getLastModifiedAt());
+    //    assertEquals(TEST_USER_ID, savedMeasure.getLastModifiedBy());
+    //    int lastModCompareTo =
+    //        savedMeasure.getLastModifiedAt().compareTo(Instant.now().minus(60,
+    // ChronoUnit.SECONDS));
+    //    assertEquals(1, lastModCompareTo);
 
     verify(actionLogService, times(1))
         .logAction(
@@ -719,15 +733,17 @@ public class MeasureControllerMvcTest {
     existingMeasure.setCqlLibraryName("ExistingMeasureLibrary");
     existingMeasure.setEcqmTitle("ecqmTitle");
     existingMeasure.setVersionId(existingMeasure.getId());
-//    doThrow(
-//            new DuplicateKeyException(
-//                "cqlLibraryName", "CQL library with given name already exists."))
-//        .when(measureService)
-//        .checkDuplicateCqlLibraryName(any(String.class));
+    //    doThrow(
+    //            new DuplicateKeyException(
+    //                "cqlLibraryName", "CQL library with given name already exists."))
+    //        .when(measureService)
+    //        .checkDuplicateCqlLibraryName(any(String.class));
 
-    when(measureService.updateMeasure(any(Measure.class), anyString(), any(Measure.class), anyString()))
-        .thenThrow(new DuplicateKeyException(
-            "cqlLibraryName", "CQL library with given name already exists."));
+    when(measureService.updateMeasure(
+            any(Measure.class), anyString(), any(Measure.class), anyString()))
+        .thenThrow(
+            new DuplicateKeyException(
+                "cqlLibraryName", "CQL library with given name already exists."));
 
     final String updatedMeasureAsJson =
         "{\"id\": \"%s\",\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\", \"ecqmTitle\": \"%s\", \"model\":\"%s\",\"versionId\":\"%s\",\"measureSetId\":\"%s\"}"
@@ -779,12 +795,13 @@ public class MeasureControllerMvcTest {
     existingMeasure.setMeasureSetId("measureSetId");
     existingMeasure.setVersionId("newVersionID");
 
-    when(measureService.updateMeasure(any(Measure.class), anyString(), any(Measure.class), anyString()))
+    when(measureService.updateMeasure(
+            any(Measure.class), anyString(), any(Measure.class), anyString()))
         .thenThrow(new InvalidVersionIdException("newVersionId"));
 
-//    doThrow(new InvalidVersionIdException("newVersionId"))
-//        .when(measureService)
-//        .checkVersionIdChanged(existingMeasure.getVersionId(), priorMeasure.getVersionId());
+    //    doThrow(new InvalidVersionIdException("newVersionId"))
+    //        .when(measureService)
+    //        .checkVersionIdChanged(existingMeasure.getVersionId(), priorMeasure.getVersionId());
 
     final String updatedMeasureAsJson =
         "{\"id\": \"%s\",\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\", \"ecqmTitle\": \"%s\", \"model\":\"%s\",\"versionId\":\"%s\",\"measureSetId\":\"%s\"}"
@@ -835,7 +852,8 @@ public class MeasureControllerMvcTest {
     existingMeasure.setCmsId("newCmsId");
     existingMeasure.setMeasureSetId("measureSetId");
 
-    when(measureService.updateMeasure(any(Measure.class), anyString(), any(Measure.class), anyString()))
+    when(measureService.updateMeasure(
+            any(Measure.class), anyString(), any(Measure.class), anyString()))
         .thenThrow(new InvalidCmsIdException(existingMeasure.getCmsId()));
 
     final String updatedMeasureAsJson =
@@ -1016,7 +1034,8 @@ public class MeasureControllerMvcTest {
     saved.setMeasureSetId(measureSetId);
 
     when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(saved));
-    when(measureService.updateMeasure(any(Measure.class), anyString(), any(Measure.class), anyString()))
+    when(measureService.updateMeasure(
+            any(Measure.class), anyString(), any(Measure.class), anyString()))
         .thenReturn(saved);
 
     final String measureAsJson =
