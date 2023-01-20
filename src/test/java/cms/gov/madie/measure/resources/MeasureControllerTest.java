@@ -335,6 +335,27 @@ class MeasureControllerTest {
   }
 
   @Test
+  void testUpdateMeasureReturnsExceptionForUpdatingSoftDeletedMeasure() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("validuser@gmail.com");
+    measure.setCreatedBy("validuser@gmail.com");
+    measure.setActive(false);
+    measure.setAcls(null);
+    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
+
+    var testMeasure = new Measure();
+    testMeasure.setActive(false);
+    testMeasure.setCreatedBy("validuser@gmail.com");
+    testMeasure.setId("testid");
+    testMeasure.setMeasureName("MSR01");
+    testMeasure.setVersion(new Version(0, 0, 1));
+
+    assertThrows(
+        UnauthorizedException.class,
+        () -> controller.updateMeasure("testid", testMeasure, principal, "Bearer TOKEN"));
+  }
+
+  @Test
   void testUpdateMeasureReturnsExceptionForSoftDeletedMeasure() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("validUser@gmail.com");

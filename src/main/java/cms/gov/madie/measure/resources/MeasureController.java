@@ -229,17 +229,6 @@ public class MeasureController {
         groupService.deleteMeasureGroup(measureId, groupId, principal.getName()));
   }
 
-  private boolean isCqlLibraryNameChanged(Measure measure, Measure persistedMeasure) {
-    return !Objects.equals(persistedMeasure.getCqlLibraryName(), measure.getCqlLibraryName());
-  }
-
-  private boolean isMeasurementPeriodChanged(Measure measure, Measure persistedMeasure) {
-    return !Objects.equals(
-            persistedMeasure.getMeasurementPeriodStart(), measure.getMeasurementPeriodStart())
-        || !Objects.equals(
-            persistedMeasure.getMeasurementPeriodEnd(), measure.getMeasurementPeriodEnd());
-  }
-
   @GetMapping("/measures/search/{criteria}")
   public ResponseEntity<Page<Measure>> findAllByMeasureNameOrEcqmTitle(
       Principal principal,
