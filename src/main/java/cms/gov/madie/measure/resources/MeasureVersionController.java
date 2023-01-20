@@ -1,19 +1,23 @@
 package cms.gov.madie.measure.resources;
 
-import java.security.Principal;
-
+import cms.gov.madie.measure.exceptions.InvalidIdException;
+import cms.gov.madie.measure.services.VersionService;
+import gov.cms.madie.models.measure.Measure;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import cms.gov.madie.measure.services.VersionService;
-import gov.cms.madie.models.measure.Measure;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.security.Principal;
 
 @Slf4j
 @RestController
@@ -32,5 +36,15 @@ public class MeasureVersionController {
       throws Exception {
     return ResponseEntity.ok(
         versionService.createVersion(id, versionType, principal.getName(), accessToken));
+  }
+
+  @PostMapping("/{id}/draft")
+  public ResponseEntity<Measure> createDraft(
+      @PathVariable("id") String id, @RequestBody final Measure measure, Principal principal) {
+    if (StringUtils.isBlank(measure.getMeasureName())) {
+      throw new InvalidIdException("Measure name is required.");
+    }
+    var output = versionService.createDraft(id, measure.getMeasureName(), principal.getName());
+    return ResponseEntity.status(HttpStatus.CREATED).body(output);
   }
 }

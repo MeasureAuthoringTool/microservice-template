@@ -1,20 +1,21 @@
 package cms.gov.madie.measure.services;
 
-import java.time.Instant;
-
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Service;
-
-import gov.cms.madie.models.common.ActionType;
-import gov.cms.madie.models.common.Version;
-import gov.cms.madie.models.measure.Measure;
 import cms.gov.madie.measure.exceptions.BadVersionRequestException;
+import cms.gov.madie.measure.exceptions.MeasureNotDraftableException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.utils.ControllerUtil;
+import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.common.Version;
+import gov.cms.madie.models.measure.Measure;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @AllArgsConstructor
@@ -79,6 +80,44 @@ public class VersionService {
         "User [{}] successfully versioned measure with ID [{}]", username, savedMeasure.getId());
 
     return savedMeasure;
+  }
+
+  public Measure createDraft(String id, String measureName, String username) {
+    Measure measure =
+        measureRepository
+            .findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Measure", id));
+
+    ControllerUtil.verifyAuthorization(username, measure);
+    if (!isDraftable(measure)) {
+      throw new MeasureNotDraftableException(measure.getMeasureName());
+    }
+    Measure measureDraft = measure.toBuilder().build();
+    measureDraft.setId(null);
+    measureDraft.setVersionId(UUID.randomUUID().toString());
+    measureDraft.setMeasureName(measureName);
+    measureDraft.getMeasureMetaData().setDraft(true);
+    // TODO: MAT-5237 add groups and tests back
+    measureDraft.setGroups(List.of());
+    measureDraft.setTestCases(List.of());
+    var now = Instant.now();
+    measureDraft.setCreatedAt(now);
+    measureDraft.setLastModifiedAt(now);
+    measureDraft.setCreatedBy(username);
+    Measure savedDraft = measureRepository.save(measureDraft);
+    log.info(
+        "User [{}] created a draft for measure with id [{}]. Draft id is [{}]",
+        username,
+        measure.getId(),
+        savedDraft.getId());
+    actionLogService.logAction(savedDraft.getId(), Measure.class, ActionType.DRAFTED, username);
+    return savedDraft;
+  }
+
+  /** Returns false if there is already a draft for the measure family. */
+  private boolean isDraftable(Measure measure) {
+    return !measureRepository.existsByMeasureSetIdAndMeasureMetaDataDraft(
+        measure.getMeasureSetId(), true);
   }
 
   private void validateMeasureForVersioning(Measure measure, String username) {

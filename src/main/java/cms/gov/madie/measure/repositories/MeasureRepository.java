@@ -46,4 +46,6 @@ public interface MeasureRepository
           + "]}")
   Page<Measure> findAllByMeasureNameOrEcqmTitleForCurrentUser(
       String criteria, Pageable page, String user);
+
+  boolean existsByMeasureSetIdAndMeasureMetaDataDraft(String setId, boolean draft);
 }
