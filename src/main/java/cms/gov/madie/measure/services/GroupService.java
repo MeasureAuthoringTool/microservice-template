@@ -4,6 +4,7 @@ import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.utils.MeasureUtil;
 import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeValidator;
 import cms.gov.madie.measure.validations.CqlObservationFunctionValidator;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -38,6 +39,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class GroupService {
 
+  private final MeasureUtil measureUtil;
   private final MeasureRepository measureRepository;
 
   public Group createOrUpdateGroup(Group group, String measureId, String username) {
@@ -84,6 +86,7 @@ public class GroupService {
       }
     }
     updateGroupForTestCases(group, measure.getTestCases());
+    measure = measureUtil.validateAllMeasureGroupReturnTypes(measure);
     measure.setLastModifiedBy(username);
     measure.setLastModifiedAt(Instant.now());
     measureRepository.save(measure);
