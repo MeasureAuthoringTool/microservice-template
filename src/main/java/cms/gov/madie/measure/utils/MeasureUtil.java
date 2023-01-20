@@ -25,8 +25,9 @@ public class MeasureUtil {
 
   /**
    * Validates measure group population define return types and observation function return types
-   * compared to the population basis of the group.
-   * If any mismatches are found, an error is added to the list of errors on the measure object
+   * compared to the population basis of the group. If any mismatches are found, an error is added
+   * to the list of errors on the measure object
+   *
    * @param measure
    * @return
    */
@@ -40,26 +41,31 @@ public class MeasureUtil {
     if (elmJson == null && groupsExistWithPopulations) {
       // Measure has groups with populations with definitions, but ELM JSON is missing
       measure.setCqlErrors(true);
-      measure = measure.toBuilder()
-          .error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES)
-          .error(MeasureErrorType.MISSING_ELM)
-          .build();
-    } else if(elmJson != null && groupsExistWithPopulations) {
-      if (measure.getGroups().stream().anyMatch(group ->
-          !isGroupReturnTypesValid(group, elmJson))) {
-        log.info("Mismatch exists between CQL return types and Population Criteria definition types!");
-        measure = measure.toBuilder().error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES).build();
-      } else if (measure.getErrors() != null && measure.getErrors().contains(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES)) {
+      measure =
+          measure
+              .toBuilder()
+              .error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES)
+              .error(MeasureErrorType.MISSING_ELM)
+              .build();
+    } else if (elmJson != null && groupsExistWithPopulations) {
+      if (measure.getGroups().stream()
+          .anyMatch(group -> !isGroupReturnTypesValid(group, elmJson))) {
+        log.info(
+            "Mismatch exists between CQL return types and Population Criteria definition types!");
+        measure =
+            measure
+                .toBuilder()
+                .error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES)
+                .build();
+      } else if (measure.getErrors() != null
+          && measure.getErrors().contains(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES)) {
         log.info("No CQL return type mismatch! Woo!");
-        Set<MeasureErrorType> updatedErrors = measure.getErrors()
-            .stream()
-            .filter(e -> !MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES.equals(e))
-            .collect(Collectors.toSet());
+        Set<MeasureErrorType> updatedErrors =
+            measure.getErrors().stream()
+                .filter(e -> !MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES.equals(e))
+                .collect(Collectors.toSet());
         log.info("updated errors; {}", updatedErrors);
-        measure = measure.toBuilder()
-            .clearErrors()
-            .errors(updatedErrors)
-            .build();
+        measure = measure.toBuilder().clearErrors().errors(updatedErrors).build();
       }
     }
     return measure;
@@ -69,14 +75,16 @@ public class MeasureUtil {
     if (measure == null || measure.getGroups() == null || measure.getGroups().isEmpty()) {
       return false;
     }
-    return measure.getGroups().stream().anyMatch((group) -> {
-      final List<Population> populations = group.getPopulations();
-      if (populations == null)
-        return false;
-      return populations.stream().anyMatch(population ->
-          StringUtils.isNotBlank(population.getDefinition())
-      );
-    });
+    return measure.getGroups().stream()
+        .anyMatch(
+            (group) -> {
+              final List<Population> populations = group.getPopulations();
+              if (populations == null) {
+                return false;
+              }
+              return populations.stream()
+                  .anyMatch(population -> StringUtils.isNotBlank(population.getDefinition()));
+            });
   }
 
   public boolean isGroupReturnTypesValid(final Group group, final String elmJson) {
@@ -110,9 +118,8 @@ public class MeasureUtil {
 
   public boolean isMeasurementPeriodChanged(Measure measure, Measure persistedMeasure) {
     return !Objects.equals(
-        persistedMeasure.getMeasurementPeriodStart(), measure.getMeasurementPeriodStart())
+            persistedMeasure.getMeasurementPeriodStart(), measure.getMeasurementPeriodStart())
         || !Objects.equals(
-        persistedMeasure.getMeasurementPeriodEnd(), measure.getMeasurementPeriodEnd());
+            persistedMeasure.getMeasurementPeriodEnd(), measure.getMeasurementPeriodEnd());
   }
-
 }
