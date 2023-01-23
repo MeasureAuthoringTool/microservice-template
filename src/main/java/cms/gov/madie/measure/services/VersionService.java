@@ -119,7 +119,7 @@ public class VersionService {
   private List<Group> updateGroupIds(List<Group> groups) {
     if (groups != null) {
       List<Group> updatedGroups = groups;
-      updatedGroups.stream().forEach(group -> group.setId(ObjectId.get().toString()));
+      updatedGroups.forEach(group -> group.setId(ObjectId.get().toString()));
       return updatedGroups;
     }
     return List.of();
