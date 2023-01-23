@@ -116,8 +116,8 @@ public class VersionService {
 
   /** Returns false if there is already a draft for the measure family. */
   private boolean isDraftable(Measure measure) {
-    return !measureRepository.existsByMeasureSetIdAndMeasureMetaDataDraft(
-        measure.getMeasureSetId(), true);
+    return !measureRepository.existsByMeasureSetIdAndActiveAndMeasureMetaDataDraft(
+        measure.getMeasureSetId(), true, true);
   }
 
   private void validateMeasureForVersioning(Measure measure, String username) {
