@@ -367,7 +367,8 @@ public class VersionServiceTest {
             .build();
 
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(versionedMeasure));
-    when(measureRepository.existsByMeasureSetIdAndMeasureMetaDataDraft(anyString(), anyBoolean()))
+    when(measureRepository.existsByMeasureSetIdAndActiveAndMeasureMetaDataDraft(
+            anyString(), anyBoolean(), anyBoolean()))
         .thenReturn(false);
     when(measureRepository.save(any(Measure.class))).thenReturn(versionedCopy);
     when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
@@ -414,7 +415,8 @@ public class VersionServiceTest {
   public void testCreateDraftWhenDraftAlreadyExists() {
     Measure measure = buildBasicMeasure();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    when(measureRepository.existsByMeasureSetIdAndMeasureMetaDataDraft(anyString(), anyBoolean()))
+    when(measureRepository.existsByMeasureSetIdAndActiveAndMeasureMetaDataDraft(
+            anyString(), anyBoolean(), anyBoolean()))
         .thenReturn(true);
 
     Exception ex =
