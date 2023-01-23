@@ -6,10 +6,7 @@ import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import gov.cms.madie.models.common.Version;
-import gov.cms.madie.models.measure.Group;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.MeasureMetaData;
-import gov.cms.madie.models.measure.TestCase;
+import gov.cms.madie.models.measure.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -18,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,6 +43,30 @@ public class VersionServiceTest {
   @InjectMocks VersionService versionService;
 
   @Captor private ArgumentCaptor<Measure> measureCaptor;
+
+  Group cvGroup =
+          Group.builder()
+                  .id("xyz-p12r-12ert")
+                  .populationBasis("Encounter")
+                  .scoring("Continuous Variable")
+                  .populations(
+                          List.of(
+                                  new Population(
+                                          "id-1", PopulationType.INITIAL_POPULATION, "FactorialOfFive", null, null),
+                                  new Population(
+                                          "id-2",
+                                          PopulationType.MEASURE_POPULATION,
+                                          "Measure Population",
+                                          null,
+                                          null)))
+                  .measureObservations(
+                          List.of(
+                                  new MeasureObservation(
+                                          "id-1", "fun", "id-2", AggregateMethodType.MAXIMUM.getValue())))
+                  .stratifications(List.of())
+                  .groupDescription("Description")
+                  .scoringUnit("test-scoring-unit")
+                  .build();
 
   @Test
   public void testCreateVersionThrowsResourceNotFoundException() {
@@ -295,7 +317,7 @@ public class VersionServiceTest {
             .versionId("13-13-13-13")
             .measureName("Test")
             .measureMetaData(metaData)
-            .groups(List.of())
+            .groups(List.of(cvGroup))
             .testCases(List.of())
             .build();
 
@@ -314,8 +336,8 @@ public class VersionServiceTest {
     assertThat(draft.getVersion().getMajor(), is(equalTo(2)));
     assertThat(draft.getVersion().getMinor(), is(equalTo(3)));
     assertThat(draft.getVersion().getRevisionNumber(), is(equalTo(1)));
-    // no groups and test cases
-    assertThat(draft.getGroups().size(), is(equalTo(0)));
+    assertThat(draft.getGroups().size(), is(equalTo(1)));
+    // no test cases
     assertThat(draft.getTestCases().size(), is(equalTo(0)));
   }
 
@@ -373,8 +395,8 @@ public class VersionServiceTest {
         .versionId("12-12-12-12")
         .version(Version.builder().major(2).minor(3).revisionNumber(1).build())
         .measureMetaData(new MeasureMetaData())
+        .groups(List.of(cvGroup))
         .testCases(List.of(new TestCase()))
-        .groups(List.of(new Group()))
         .build();
   }
 }

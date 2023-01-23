@@ -7,10 +7,12 @@ import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.utils.ControllerUtil;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.Version;
+import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -97,13 +99,15 @@ public class VersionService {
     measureDraft.setVersionId(UUID.randomUUID().toString());
     measureDraft.setMeasureName(measureName);
     measureDraft.getMeasureMetaData().setDraft(true);
-    // TODO: MAT-5237 add groups and tests back
-    measureDraft.setGroups(List.of());
+    measureDraft.setGroups(updateGroupIds(measure.getGroups()));
+    // TODO: MAT-5238 add tests back
     measureDraft.setTestCases(List.of());
     var now = Instant.now();
     measureDraft.setCreatedAt(now);
     measureDraft.setLastModifiedAt(now);
     measureDraft.setCreatedBy(username);
+
+    System.out.println(measureDraft.getGroups());
     Measure savedDraft = measureRepository.save(measureDraft);
     log.info(
         "User [{}] created a draft for measure with id [{}]. Draft id is [{}]",
@@ -112,6 +116,14 @@ public class VersionService {
         savedDraft.getId());
     actionLogService.logAction(savedDraft.getId(), Measure.class, ActionType.DRAFTED, username);
     return savedDraft;
+  }
+
+  private List<Group> updateGroupIds(List<Group> groups) {
+    if (groups != null) {
+      groups.stream().forEach(group -> group.setId(ObjectId.get().toString()));
+      return groups;
+    }
+    return List.of();
   }
 
   /** Returns false if there is already a draft for the measure family. */
