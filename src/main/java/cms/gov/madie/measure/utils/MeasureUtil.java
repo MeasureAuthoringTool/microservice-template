@@ -38,38 +38,52 @@ public class MeasureUtil {
 
     final String elmJson = measure.getElmJson();
     boolean groupsExistWithPopulations = isGroupsExistWithPopulations(measure);
-    Measure outputMeasure = measure;
+    Measure.MeasureBuilder measureBuilder = measure.toBuilder();
     if (elmJson == null && groupsExistWithPopulations) {
       // Measure has groups with populations with definitions, but ELM JSON is missing
-      measure.setCqlErrors(true);
-      outputMeasure =
-          measure
-              .toBuilder()
+      measureBuilder =
+          measureBuilder
+              .cqlErrors(true)
               .error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES)
-              .error(MeasureErrorType.MISSING_ELM)
-              .build();
+              .error(MeasureErrorType.MISSING_ELM);
     } else if (elmJson != null && groupsExistWithPopulations) {
       if (measure.getGroups().stream()
           .anyMatch(group -> !isGroupReturnTypesValid(group, elmJson))) {
-        log.info(
-            "Mismatch exists between CQL return types and Population Criteria definition types!");
-        outputMeasure =
-            measure
-                .toBuilder()
-                .error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES)
-                .build();
-      } else if (measure.getErrors() != null
-          && measure.getErrors().contains(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES)) {
-        log.info("No CQL return type mismatch! Woo!");
-        Set<MeasureErrorType> updatedErrors =
-            measure.getErrors().stream()
-                .filter(e -> !MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES.equals(e))
-                .collect(Collectors.toSet());
-        log.info("updated errors; {}", updatedErrors);
-        outputMeasure = measure.toBuilder().clearErrors().errors(updatedErrors).build();
+        measureBuilder =
+            measureBuilder.error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES);
+      } else {
+        measureBuilder =
+            measureBuilder
+                .clearErrors()
+                .errors(
+                    removeError(
+                        measure.getErrors(),
+                        MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES));
       }
+    } else {
+      measureBuilder =
+          measureBuilder
+              .clearErrors()
+              .errors(
+                  removeError(
+                      measure.getErrors(), MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES));
     }
-    return outputMeasure;
+    return measureBuilder.build();
+  }
+
+  /**
+   * Functional method to remove an error from a set. If the errors set is not null and not empty,
+   * and if the error is not null a new set will be returned with the error removed (if found).
+   *
+   * @param errors
+   * @param error
+   * @return
+   */
+  public Set<MeasureErrorType> removeError(Set<MeasureErrorType> errors, MeasureErrorType error) {
+    if (errors == null || errors.isEmpty() || error == null) {
+      return errors;
+    }
+    return errors.stream().filter(e -> !error.equals(e)).collect(Collectors.toSet());
   }
 
   public boolean isGroupsExistWithPopulations(Measure measure) {
@@ -107,7 +121,9 @@ public class MeasureUtil {
   }
 
   public boolean isMeasureCqlChanged(final Measure original, final Measure updated) {
-    if ((original == null || updated == null) && original != updated) {
+    if (original == null && updated == null) {
+      return false;
+    } else if (original == null || updated == null) {
       return true;
     }
     return !StringUtils.equals(original.getCql(), updated.getCql());

@@ -17,8 +17,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -204,6 +207,83 @@ class MeasureUtilTest {
   }
 
   @Test
+  public void
+      testValidateAllMeasureGroupReturnTypesReturnsMeasureWithNoErrorForNoGroupsExistWithNoElm() {
+    Measure measure = Measure.builder().elmJson(null).groups(List.of()).build();
+
+    Measure output = measureUtil.validateAllMeasureGroupReturnTypes(measure);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.isCqlErrors(), is(false));
+    assertThat(output.getErrors(), is(notNullValue()));
+    assertThat(output.getErrors().isEmpty(), is(true));
+  }
+
+  @Test
+  public void
+      testValidateAllMeasureGroupReturnTypesReturnsMeasureWithErrorsRemovedForNoGroupsExistWithNoElm() {
+    Measure measure =
+        Measure.builder()
+            .elmJson(null)
+            .groups(List.of())
+            .error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES)
+            .build();
+
+    Measure output = measureUtil.validateAllMeasureGroupReturnTypes(measure);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.isCqlErrors(), is(false));
+    assertThat(output.getErrors(), is(notNullValue()));
+    assertThat(output.getErrors().isEmpty(), is(true));
+  }
+
+  @Test
+  public void testRemoveErrorReturnsInputForNullErrors() {
+    Set<MeasureErrorType> errors = null;
+    MeasureErrorType error = MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES;
+    Set<MeasureErrorType> output = measureUtil.removeError(errors, error);
+    assertThat(output, is(equalTo(errors)));
+  }
+
+  @Test
+  public void testRemoveErrorReturnsInputForEmpty() {
+    Set<MeasureErrorType> errors = new HashSet<>();
+    MeasureErrorType error = MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES;
+    Set<MeasureErrorType> output = measureUtil.removeError(errors, error);
+    assertThat(output, is(equalTo(errors)));
+  }
+
+  @Test
+  public void testRemoveErrorReturnsInputForNullError() {
+    Set<MeasureErrorType> errors = new HashSet<>();
+    errors.add(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES);
+    MeasureErrorType error = null;
+    Set<MeasureErrorType> output = measureUtil.removeError(errors, error);
+    assertThat(output, is(equalTo(errors)));
+  }
+
+  @Test
+  public void testRemoveErrorReturnsEmptySetWithErrorRemoved() {
+    Set<MeasureErrorType> errors = new HashSet<>();
+    errors.add(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES);
+    MeasureErrorType error = MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES;
+    Set<MeasureErrorType> output = measureUtil.removeError(errors, error);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.isEmpty(), is(true));
+  }
+
+  @Test
+  public void testRemoveErrorReturnsSetWithErrorRemoved() {
+    Set<MeasureErrorType> errors = new HashSet<>();
+    errors.add(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES);
+    errors.add(MeasureErrorType.ERRORS_ELM_JSON);
+    MeasureErrorType error = MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES;
+    Set<MeasureErrorType> output = measureUtil.removeError(errors, error);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.size(), is(equalTo(1)));
+    assertThat(output.contains(MeasureErrorType.ERRORS_ELM_JSON), is(true));
+    assertThat(errors.size(), is(equalTo(2)));
+  }
+
+  @Test
   public void testIsGroupsExistWithPopulationsReturnsFalseForNullMeasure() {
     boolean output = measureUtil.isGroupsExistWithPopulations(null);
     assertThat(output, is(false));
@@ -342,6 +422,12 @@ class MeasureUtilTest {
   }
 
   @Test
+  public void testIsMesureCqlChangedReturnsFalseForOriginalAndChangedMeasureBothNull() {
+    boolean output = measureUtil.isMeasureCqlChanged(null, null);
+    assertThat(output, is(false));
+  }
+
+  @Test
   public void testIsMeasureCqlChangedReturnsTrueForNullOriginalMeasure() {
     final Measure changed = Measure.builder().cql("this is the changed cql").build();
     boolean output = measureUtil.isMeasureCqlChanged(null, changed);
@@ -377,6 +463,14 @@ class MeasureUtilTest {
     final Measure changed = Measure.builder().cql("this is the changed cql").build();
     boolean output = measureUtil.isMeasureCqlChanged(original, changed);
     assertThat(output, is(true));
+  }
+
+  @Test
+  public void testIsMeasureCqlChangedReturnsFalseForUnchangedCql() {
+    final Measure original = Measure.builder().cql("THIS IS THE ORIGINAL CQL").build();
+    final Measure changed = Measure.builder().cql("THIS IS THE ORIGINAL CQL").build();
+    boolean output = measureUtil.isMeasureCqlChanged(original, changed);
+    assertThat(output, is(false));
   }
 
   @Test

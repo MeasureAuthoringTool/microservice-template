@@ -81,13 +81,10 @@ public class MeasureService {
   }
 
   public void validateMeasurementPeriod(Date measurementPeriodStart, Date measurementPeriodEnd) {
-    System.out.println("validating measurement period here");
     if (measurementPeriodStart == null || measurementPeriodEnd == null) {
       throw new InvalidMeasurementPeriodException(
           "Measurement period date is required and must be valid");
     }
-
-    System.out.println("didn't blow up?? why not??");
     SimpleDateFormat checkYear = new SimpleDateFormat("yyyy");
     int checkMeasurementPeriodStart = Integer.parseInt(checkYear.format(measurementPeriodStart));
     int checkMeasurementPeriodEnd = Integer.parseInt(checkYear.format(measurementPeriodEnd));
