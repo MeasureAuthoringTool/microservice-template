@@ -106,8 +106,6 @@ public class VersionService {
     measureDraft.setCreatedAt(now);
     measureDraft.setLastModifiedAt(now);
     measureDraft.setCreatedBy(username);
-
-    System.out.println(measureDraft.getGroups());
     Measure savedDraft = measureRepository.save(measureDraft);
     log.info(
         "User [{}] created a draft for measure with id [{}]. Draft id is [{}]",

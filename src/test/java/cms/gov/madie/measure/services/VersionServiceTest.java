@@ -45,28 +45,24 @@ public class VersionServiceTest {
   @Captor private ArgumentCaptor<Measure> measureCaptor;
 
   Group cvGroup =
-          Group.builder()
-                  .id("xyz-p12r-12ert")
-                  .populationBasis("Encounter")
-                  .scoring("Continuous Variable")
-                  .populations(
-                          List.of(
-                                  new Population(
-                                          "id-1", PopulationType.INITIAL_POPULATION, "FactorialOfFive", null, null),
-                                  new Population(
-                                          "id-2",
-                                          PopulationType.MEASURE_POPULATION,
-                                          "Measure Population",
-                                          null,
-                                          null)))
-                  .measureObservations(
-                          List.of(
-                                  new MeasureObservation(
-                                          "id-1", "fun", "id-2", AggregateMethodType.MAXIMUM.getValue())))
-                  .stratifications(List.of())
-                  .groupDescription("Description")
-                  .scoringUnit("test-scoring-unit")
-                  .build();
+      Group.builder()
+          .id("xyz-p12r-12ert")
+          .populationBasis("Encounter")
+          .scoring("Continuous Variable")
+          .populations(
+              List.of(
+                  new Population(
+                      "id-1", PopulationType.INITIAL_POPULATION, "FactorialOfFive", null, null),
+                  new Population(
+                      "id-2", PopulationType.MEASURE_POPULATION, "Measure Population", null, null)))
+          .measureObservations(
+              List.of(
+                  new MeasureObservation(
+                      "id-1", "fun", "id-2", AggregateMethodType.MAXIMUM.getValue())))
+          .stratifications(List.of())
+          .groupDescription("Description")
+          .scoringUnit("test-scoring-unit")
+          .build();
 
   @Test
   public void testCreateVersionThrowsResourceNotFoundException() {
@@ -337,7 +333,55 @@ public class VersionServiceTest {
     assertThat(draft.getVersion().getMinor(), is(equalTo(3)));
     assertThat(draft.getVersion().getRevisionNumber(), is(equalTo(1)));
     assertThat(draft.getGroups().size(), is(equalTo(1)));
-    // no test cases
+    assertFalse(draft.getGroups().stream().anyMatch(item -> "xyz-p12r-12ert".equals(item.getId())));
+    assertThat(draft.getTestCases().size(), is(equalTo(0)));
+  }
+
+  @Test
+  public void testCreateDraftSuccessfullyWithoutGroups() {
+    Measure versionedMeasure =
+        Measure.builder()
+            .id("1")
+            .measureSetId("1-1-1-1")
+            .measureName("Test")
+            .createdBy("test-user")
+            .cql("library TestCQLLib version '2.3.001'")
+            .cmsId("CMS12")
+            .versionId("12-12-12-12")
+            .version(Version.builder().major(2).minor(3).revisionNumber(1).build())
+            .measureMetaData(new MeasureMetaData())
+            .groups(List.of(new Group()))
+            .testCases(List.of(new TestCase()))
+            .build();
+    MeasureMetaData metaData = new MeasureMetaData();
+    metaData.setDraft(true);
+    Measure versionedCopy =
+        versionedMeasure
+            .toBuilder()
+            .id("2")
+            .versionId("13-13-13-13")
+            .measureName("Test")
+            .measureMetaData(metaData)
+            .groups(List.of())
+            .testCases(List.of())
+            .build();
+
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(versionedMeasure));
+    when(measureRepository.existsByMeasureSetIdAndMeasureMetaDataDraft(anyString(), anyBoolean()))
+        .thenReturn(false);
+    when(measureRepository.save(any(Measure.class))).thenReturn(versionedCopy);
+    when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
+
+    Measure draft = versionService.createDraft(versionedMeasure.getId(), "Test", "test-user");
+
+    assertThat(draft.getMeasureName(), is(equalTo("Test")));
+    // draft flag to true
+    assertThat(draft.getMeasureMetaData().isDraft(), is(equalTo(true)));
+    // version remains same
+    assertThat(draft.getVersion().getMajor(), is(equalTo(2)));
+    assertThat(draft.getVersion().getMinor(), is(equalTo(3)));
+    assertThat(draft.getVersion().getRevisionNumber(), is(equalTo(1)));
+    assertThat(draft.getGroups().size(), is(equalTo(0)));
     assertThat(draft.getTestCases().size(), is(equalTo(0)));
   }
 
