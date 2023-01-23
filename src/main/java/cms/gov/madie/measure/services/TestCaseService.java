@@ -56,33 +56,35 @@ public class TestCaseService {
     this.mapper = mapper;
   }
 
-  public TestCase persistTestCase(
-      TestCase testCase, String measureId, String username, String accessToken) {
-    Measure measure = findMeasureById(measureId);
-
+  protected TestCase enrichTestCase(TestCase testCase, String username, String accessToken) {
+    final TestCase enrichedTestCase = testCase.toBuilder().build();
     Instant now = Instant.now();
     // mongo doesn't create object id for embedded objects, setting manually
-    testCase.setId(ObjectId.get().toString());
-    testCase.setCreatedAt(now);
-    testCase.setCreatedBy(username);
-    testCase.setLastModifiedAt(now);
-    testCase.setLastModifiedBy(username);
-    testCase.setValidResource(false);
-    testCase.setHapiOperationOutcome(null);
-    testCase.setResourceUri(null);
+    enrichedTestCase.setId(ObjectId.get().toString());
+    enrichedTestCase.setCreatedAt(now);
+    enrichedTestCase.setCreatedBy(username);
+    enrichedTestCase.setLastModifiedAt(now);
+    enrichedTestCase.setLastModifiedBy(username);
+    enrichedTestCase.setValidResource(false);
+    enrichedTestCase.setHapiOperationOutcome(null);
+    enrichedTestCase.setResourceUri(null);
 
-    //    TestCase upserted = upsertFhirBundle(testCase);
-    testCase.setHapiOperationOutcome(validateTestCaseJson(testCase, accessToken));
+    enrichedTestCase.setHapiOperationOutcome(validateTestCaseJson(enrichedTestCase, accessToken));
+    return enrichedTestCase;
+  }
 
+  public TestCase persistTestCase(
+      TestCase testCase, String measureId, String username, String accessToken) {
+    final Measure measure = findMeasureById(measureId);
+    final TestCase enrichedTestCase = enrichTestCase(testCase, username, accessToken);
     if (measure.getTestCases() == null) {
-      measure.setTestCases(List.of(testCase));
+      measure.setTestCases(List.of(enrichedTestCase));
     } else {
-      measure.getTestCases().add(testCase);
+      measure.getTestCases().add(enrichedTestCase);
     }
-
     measureRepository.save(measure);
 
-    actionLogService.logAction(testCase.getId(), TestCase.class, ActionType.CREATED, username);
+    actionLogService.logAction(enrichedTestCase.getId(), TestCase.class, ActionType.CREATED, username);
 
     log.info(
         "User [{}] successfully created new test case with ID [{}] for the measure with ID[{}] ",
@@ -90,6 +92,32 @@ public class TestCaseService {
         testCase.getId(),
         measureId);
     return testCase;
+  }
+
+
+  public List<TestCase> bulkPersistTestCase(
+      List<TestCase> newTestCases, String measureId, String username, String accessToken) {
+    final Measure measure = findMeasureById(measureId);
+    List<TestCase> enrichedTestCases = new ArrayList<>(newTestCases.size());
+    for (TestCase testCase: newTestCases) {
+      final TestCase enriched = enrichTestCase(testCase, username, accessToken);
+      enrichedTestCases.add(enriched);
+      actionLogService.logAction(enriched.getId(), TestCase.class, ActionType.IMPORTED, username);
+    }
+    if (measure.getTestCases() == null) {
+      measure.setTestCases(enrichedTestCases);
+    } else {
+      measure.getTestCases().addAll(enrichedTestCases);
+    }
+
+    measureRepository.save(measure);
+
+    log.info(
+        "User [{}] successfully imported [{}] test cases to the measure with ID[{}] ",
+        username,
+        enrichedTestCases.size(),
+        measureId);
+    return enrichedTestCases;
   }
 
   public TestCase updateTestCase(

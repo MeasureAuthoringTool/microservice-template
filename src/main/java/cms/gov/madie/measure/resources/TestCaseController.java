@@ -38,6 +38,17 @@ public class TestCaseController {
             testCaseService.persistTestCase(testCase, measureId, principal.getName(), accessToken));
   }
 
+
+
+  @PostMapping(ControllerUtil.TEST_CASES + "/bulk")
+  public ResponseEntity<List<TestCase>> importTestCases(
+      @RequestBody List<TestCase> testCases,
+      @PathVariable String measureId,
+      @RequestHeader("Authorization") String accessToken,
+      Principal principal) {
+    return ResponseEntity.ok(testCaseService.bulkPersistTestCase(testCases, measureId, principal.getName(), accessToken));
+  }
+
   @GetMapping(ControllerUtil.TEST_CASES)
   public ResponseEntity<List<TestCase>> getTestCasesByMeasureId(@PathVariable String measureId) {
     return ResponseEntity.ok(testCaseService.findTestCasesByMeasureId(measureId));
