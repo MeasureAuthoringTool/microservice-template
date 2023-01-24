@@ -7,15 +7,18 @@ import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.utils.ControllerUtil;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.Version;
+import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @AllArgsConstructor
@@ -97,8 +100,8 @@ public class VersionService {
     measureDraft.setVersionId(UUID.randomUUID().toString());
     measureDraft.setMeasureName(measureName);
     measureDraft.getMeasureMetaData().setDraft(true);
-    // TODO: MAT-5237 add groups and tests back
-    measureDraft.setGroups(List.of());
+    measureDraft.setGroups(cloneMeasureGroups(measure.getGroups()));
+    // TODO: MAT-5238 add tests back
     measureDraft.setTestCases(List.of());
     var now = Instant.now();
     measureDraft.setCreatedAt(now);
@@ -114,10 +117,19 @@ public class VersionService {
     return savedDraft;
   }
 
+  private List<Group> cloneMeasureGroups(List<Group> groups) {
+    if (groups != null) {
+      return groups.stream()
+          .map(group -> group.toBuilder().id(ObjectId.get().toString()).build())
+          .collect(Collectors.toList());
+    }
+    return List.of();
+  }
+
   /** Returns false if there is already a draft for the measure family. */
   private boolean isDraftable(Measure measure) {
-    return !measureRepository.existsByMeasureSetIdAndMeasureMetaDataDraft(
-        measure.getMeasureSetId(), true);
+    return !measureRepository.existsByMeasureSetIdAndActiveAndMeasureMetaDataDraft(
+        measure.getMeasureSetId(), true, true);
   }
 
   private void validateMeasureForVersioning(Measure measure, String username) {
