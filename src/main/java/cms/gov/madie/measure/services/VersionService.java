@@ -117,11 +117,11 @@ public class VersionService {
     return savedDraft;
   }
 
-  private List<Group> cloneMeasureGroups(List<Group> groups)  {
+  private List<Group> cloneMeasureGroups(List<Group> groups) {
     if (groups != null) {
       return groups.stream()
-              .map(group -> group.toBuilder().id(ObjectId.get().toString()).build())
-              .collect(Collectors.toList());
+          .map(group -> group.toBuilder().id(ObjectId.get().toString()).build())
+          .collect(Collectors.toList());
     }
     return List.of();
   }

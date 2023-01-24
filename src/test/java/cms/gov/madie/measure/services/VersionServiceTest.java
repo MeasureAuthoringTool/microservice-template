@@ -7,6 +7,7 @@ import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.*;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -312,7 +313,7 @@ public class VersionServiceTest {
             .versionId("13-13-13-13")
             .measureName("Test")
             .measureMetaData(metaData)
-            .groups(List.of(cvGroup))
+            .groups(List.of(cvGroup.toBuilder().id(ObjectId.get().toString()).build()))
             .testCases(List.of())
             .build();
 
@@ -333,6 +334,7 @@ public class VersionServiceTest {
     assertThat(draft.getVersion().getMinor(), is(equalTo(3)));
     assertThat(draft.getVersion().getRevisionNumber(), is(equalTo(1)));
     assertThat(draft.getGroups().size(), is(equalTo(1)));
+    System.out.println(draft.getGroups());
     assertFalse(draft.getGroups().stream().anyMatch(item -> "xyz-p12r-12ert".equals(item.getId())));
     assertThat(draft.getTestCases().size(), is(equalTo(0)));
   }
