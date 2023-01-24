@@ -209,28 +209,21 @@ class MeasureControllerTest {
             .lastModifiedAt(original)
             .build();
 
-    doReturn(Optional.of(originalMeasure))
-        .when(repository)
-        .findById(ArgumentMatchers.eq(originalMeasure.getId()));
+    when(measureService.updateMeasure(
+            any(Measure.class), anyString(), any(Measure.class), anyString()))
+        .thenReturn(m1);
 
-    doAnswer((args) -> args.getArgument(0))
-        .when(repository)
-        .save(ArgumentMatchers.any(Measure.class));
+    when(repository.findById(anyString())).thenReturn(Optional.of(originalMeasure));
 
-    ResponseEntity<String> response = controller.updateMeasure(m1.getId(), m1, principal);
-    assertEquals("Measure updated successfully.", response.getBody());
-    verify(repository, times(1)).save(saveMeasureArgCaptor.capture());
-    Measure savedMeasure = saveMeasureArgCaptor.getValue();
-    assertThat(savedMeasure.getCreatedAt(), is(notNullValue()));
-    assertThat(savedMeasure.getCreatedBy(), is(equalTo("test.user2")));
-    assertThat(savedMeasure.getLastModifiedAt(), is(notNullValue()));
-    assertThat(savedMeasure.getLastModifiedBy(), is(equalTo("test.user2")));
-    assertThat(savedMeasure.getMeasurementPeriodStart(), is(equalTo(new Date("12/02/2021"))));
-    assertThat(savedMeasure.getMeasurementPeriodEnd(), is(equalTo(new Date("12/02/2022"))));
-    assertThat(savedMeasure.getMeasureMetaData().getDescription(), is(equalTo("TestDescription")));
-    assertThat(savedMeasure.getMeasureMetaData().getCopyright(), is(equalTo("TestCopyright")));
-    assertThat(savedMeasure.getMeasureMetaData().getDisclaimer(), is(equalTo("TestDisclaimer")));
-    assertThat(savedMeasure.getMeasureMetaData().getRationale(), is(equalTo("TestRationale")));
+    ResponseEntity<Measure> response =
+        controller.updateMeasure(m1.getId(), m1, principal, "Bearer TOKEN");
+    assertThat(response.getBody(), is(notNullValue()));
+    assertThat(response.getBody(), is(equalTo(m1)));
+    assertEquals(m1, response.getBody());
+    verify(measureService, times(1))
+        .updateMeasure(
+            any(Measure.class), anyString(), saveMeasureArgCaptor.capture(), anyString());
+    assertThat(saveMeasureArgCaptor.getValue(), is(equalTo(m1)));
 
     verify(actionLogService, times(1))
         .logAction(
@@ -285,24 +278,18 @@ class MeasureControllerTest {
         .when(repository)
         .findById(ArgumentMatchers.eq(originalMeasure.getId()));
 
-    doAnswer((args) -> args.getArgument(0))
-        .when(repository)
-        .save(ArgumentMatchers.any(Measure.class));
+    when(measureService.updateMeasure(
+            any(Measure.class), anyString(), any(Measure.class), anyString()))
+        .thenReturn(m1);
 
-    ResponseEntity<String> response = controller.updateMeasure(m1.getId(), m1, principal);
-    assertEquals("Measure updated successfully.", response.getBody());
-    verify(repository, times(1)).save(saveMeasureArgCaptor.capture());
-    Measure savedMeasure = saveMeasureArgCaptor.getValue();
-    assertThat(savedMeasure.getCreatedAt(), is(notNullValue()));
-    assertThat(savedMeasure.getCreatedBy(), is(equalTo("test.user2")));
-    assertThat(savedMeasure.getLastModifiedAt(), is(notNullValue()));
-    assertThat(savedMeasure.getLastModifiedBy(), is(equalTo("test.user2")));
-    assertThat(savedMeasure.getMeasurementPeriodStart(), is(equalTo(new Date("12/02/2021"))));
-    assertThat(savedMeasure.getMeasurementPeriodEnd(), is(equalTo(new Date("12/02/2022"))));
-    assertThat(savedMeasure.getMeasureMetaData().getDescription(), is(equalTo("TestDescription")));
-    assertThat(savedMeasure.getMeasureMetaData().getCopyright(), is(equalTo("TestCopyright")));
-    assertThat(savedMeasure.getMeasureMetaData().getDisclaimer(), is(equalTo("TestDisclaimer")));
-    assertThat(savedMeasure.getMeasureMetaData().getRationale(), is(equalTo("TestRationale")));
+    ResponseEntity<Measure> response =
+        controller.updateMeasure(m1.getId(), m1, principal, "Bearer TOKEN");
+
+    assertEquals(m1, response.getBody());
+    verify(measureService, times(1))
+        .updateMeasure(
+            any(Measure.class), anyString(), saveMeasureArgCaptor.capture(), anyString());
+    assertThat(saveMeasureArgCaptor.getValue(), is(equalTo(m1)));
 
     verify(actionLogService, times(1))
         .logAction(
@@ -322,7 +309,8 @@ class MeasureControllerTest {
     when(principal.getName()).thenReturn("test.user2");
 
     assertThrows(
-        InvalidIdException.class, () -> controller.updateMeasure(null, measure, principal));
+        InvalidIdException.class,
+        () -> controller.updateMeasure(null, measure, principal, "Bearer TOKEN"));
   }
 
   @Test
@@ -343,7 +331,28 @@ class MeasureControllerTest {
 
     assertThrows(
         UnauthorizedException.class,
-        () -> controller.updateMeasure("testid", testMeasure, principal));
+        () -> controller.updateMeasure("testid", testMeasure, principal, "Bearer TOKEN"));
+  }
+
+  @Test
+  void testUpdateMeasureReturnsExceptionForUpdatingSoftDeletedMeasure() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("validuser@gmail.com");
+    measure.setCreatedBy("validuser@gmail.com");
+    measure.setActive(false);
+    measure.setAcls(null);
+    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
+
+    var testMeasure = new Measure();
+    testMeasure.setActive(false);
+    testMeasure.setCreatedBy("validuser@gmail.com");
+    testMeasure.setId("testid");
+    testMeasure.setMeasureName("MSR01");
+    testMeasure.setVersion(new Version(0, 0, 1));
+
+    assertThrows(
+        UnauthorizedException.class,
+        () -> controller.updateMeasure("testid", testMeasure, principal, "Bearer TOKEN"));
   }
 
   @Test
@@ -363,7 +372,7 @@ class MeasureControllerTest {
 
     assertThrows(
         UnauthorizedException.class,
-        () -> controller.updateMeasure("testid", testMeasure, principal));
+        () -> controller.updateMeasure("testid", testMeasure, principal, "Bearer TOKEN"));
   }
 
   @Test
@@ -390,7 +399,7 @@ class MeasureControllerTest {
         .checkDeletionCredentials(anyString(), anyString());
     assertThrows(
         InvalidDeletionCredentialsException.class,
-        () -> controller.updateMeasure("testid", testMeasure, principal));
+        () -> controller.updateMeasure("testid", testMeasure, principal, "Bearer TOKEN"));
   }
 
   @Test
@@ -398,7 +407,9 @@ class MeasureControllerTest {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user2");
 
-    assertThrows(InvalidIdException.class, () -> controller.updateMeasure("", measure, principal));
+    assertThrows(
+        InvalidIdException.class,
+        () -> controller.updateMeasure("", measure, principal, "Bearer TOKEN"));
   }
 
   @Test
@@ -408,7 +419,8 @@ class MeasureControllerTest {
     Measure m1234 = measure.toBuilder().id("ID1234").build();
 
     assertThrows(
-        InvalidIdException.class, () -> controller.updateMeasure("ID5678", m1234, principal));
+        InvalidIdException.class,
+        () -> controller.updateMeasure("ID5678", m1234, principal, "Bearer TOKEN"));
   }
 
   @Test
@@ -419,15 +431,16 @@ class MeasureControllerTest {
     // no measure id specified
     assertThrows(
         InvalidIdException.class,
-        () -> controller.updateMeasure(measure.getId(), measure, principal));
+        () -> controller.updateMeasure(measure.getId(), measure, principal, "Bearer TOKEN"));
     // non-existing measure or measure with fake id
     measure.setId("5399aba6e4b0ae375bfdca88");
     Optional<Measure> empty = Optional.empty();
 
     doReturn(empty).when(repository).findById(measure.getId());
 
-    ResponseEntity<String> response = controller.updateMeasure(measure.getId(), measure, principal);
-    assertEquals("Measure does not exist.", response.getBody());
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> controller.updateMeasure(measure.getId(), measure, principal, "Bearer TOKEN"));
   }
 
   @Test
@@ -445,7 +458,7 @@ class MeasureControllerTest {
     testMeasure.setId("testid");
     assertThrows(
         UnauthorizedException.class,
-        () -> controller.updateMeasure("testid", testMeasure, principal));
+        () -> controller.updateMeasure("testid", testMeasure, principal, "Bearer TOKEN"));
   }
 
   @Test
