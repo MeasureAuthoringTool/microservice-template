@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @AllArgsConstructor
@@ -99,7 +100,7 @@ public class VersionService {
     measureDraft.setVersionId(UUID.randomUUID().toString());
     measureDraft.setMeasureName(measureName);
     measureDraft.getMeasureMetaData().setDraft(true);
-    measureDraft.setGroups(updateGroupIds(measure.getGroups()));
+    measureDraft.setGroups(cloneMeasureGroups(measure.getGroups()));
     // TODO: MAT-5238 add tests back
     measureDraft.setTestCases(List.of());
     var now = Instant.now();
@@ -116,11 +117,11 @@ public class VersionService {
     return savedDraft;
   }
 
-  private List<Group> updateGroupIds(List<Group> groups) {
+  private List<Group> cloneMeasureGroups(List<Group> groups)  {
     if (groups != null) {
-      List<Group> updatedGroups = groups;
-      updatedGroups.forEach(group -> group.setId(ObjectId.get().toString()));
-      return updatedGroups;
+      return groups.stream()
+              .map(group -> group.toBuilder().id(ObjectId.get().toString()).build())
+              .collect(Collectors.toList());
     }
     return List.of();
   }
