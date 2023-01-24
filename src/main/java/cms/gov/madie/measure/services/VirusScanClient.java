@@ -1,11 +1,8 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.config.VirusScanConfig;
-import cms.gov.madie.measure.resources.ScanController;
+import gov.cms.madie.models.scanner.VirusScanResponseDto;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -16,11 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.validation.ObjectError;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
-import java.util.List;
 
 @Slf4j
 @Service
@@ -52,27 +47,9 @@ public class VirusScanClient {
 
 
 
-  @Data
-  @Builder(toBuilder = true)
-  @NoArgsConstructor
-  @AllArgsConstructor
-  public static class ScanValidationDto {
-    private boolean valid;
-    private ObjectError error;
-  }
 
-  @Data
-  public static class VirusScanResponseDto {
-    private int filesScanned;
-    private int infectedFileCount;
-    private int cleanFileCount;
-    private List<VirusScanResultDto> scanResults;
-  }
 
-  @Data
-  public static class VirusScanResultDto {
-    private String fileName;
-    private boolean infected;
-    private List<String> viruses;
-  }
+
+
+
 }

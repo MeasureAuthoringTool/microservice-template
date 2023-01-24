@@ -1,21 +1,33 @@
 package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.services.FhirServicesClient;
+import cms.gov.madie.measure.services.VirusScanClient;
+import gov.cms.madie.models.scanner.ScanValidationDto;
+import gov.cms.madie.models.scanner.VirusScanResponseDto;
+import gov.cms.madie.models.scanner.VirusScanResultDto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.security.Principal;
+import java.util.List;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -25,6 +37,8 @@ import static org.mockito.Mockito.when;
 class ValidationControllerTest {
 
   @Mock private FhirServicesClient fhirServicesClient;
+
+  @Mock private VirusScanClient virusScanClient;
 
   @InjectMocks private ValidationController validationController;
 
@@ -52,5 +66,85 @@ class ValidationControllerTest {
         .validateBundle(testCaseJsonCaptor.capture(), accessTokenCaptor.capture());
     assertThat(testCaseJsonCaptor.getValue(), is(equalTo(testCaseJson)));
     assertThat(accessTokenCaptor.getValue(), is(equalTo(accessToken)));
+  }
+
+  @Test
+  void testScanFileHandlesNoFileResponse() {
+    MultipartFile multipartFile = Mockito.mock(MultipartFile.class);
+    when(multipartFile.getOriginalFilename()).thenReturn("TestFile.txt");
+    Resource resource = Mockito.mock(Resource.class);
+    when(multipartFile.getResource()).thenReturn(resource);
+    Principal principal = Mockito.mock(Principal.class);
+    when(principal.getName()).thenReturn("TestUser");
+    VirusScanResponseDto scanResponse = VirusScanResponseDto.builder()
+        .filesScanned(0)
+        .cleanFileCount(0)
+        .build();
+    when(virusScanClient.scanFile(any(Resource.class))).thenReturn(scanResponse);
+
+    ResponseEntity<ScanValidationDto> output = validationController.scanFile(multipartFile, principal);
+    assertThat(output.getStatusCode(), is(equalTo(HttpStatus.BAD_REQUEST)));
+    assertThat(output, is(notNullValue()));
+    assertThat(output.getBody(), is(notNullValue()));
+    assertThat(output.getBody().isValid(), is(false));
+    assertThat(output.getBody().getError(), is(notNullValue()));
+    assertThat(output.getBody().getError().getDefaultMessage(), is(equalTo(
+      "Validation service returned zero validated files."
+    )));
+  }
+
+  @Test
+  void testScanFileHandlesCleanFileResponse() {
+    MultipartFile multipartFile = Mockito.mock(MultipartFile.class);
+    when(multipartFile.getOriginalFilename()).thenReturn("TestFile.txt");
+    Resource resource = Mockito.mock(Resource.class);
+    when(multipartFile.getResource()).thenReturn(resource);
+    Principal principal = Mockito.mock(Principal.class);
+    when(principal.getName()).thenReturn("TestUser");
+    VirusScanResponseDto scanResponse = VirusScanResponseDto.builder()
+        .filesScanned(1)
+        .cleanFileCount(1)
+        .build();
+    when(virusScanClient.scanFile(any(Resource.class))).thenReturn(scanResponse);
+
+    ScanValidationDto expected = ScanValidationDto.builder().fileName("TestFile.txt").valid(true).build();
+    ResponseEntity<ScanValidationDto> output = validationController.scanFile(multipartFile, principal);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.getStatusCode(), is(equalTo(HttpStatus.OK)));
+    assertThat(output.getBody(), is(equalTo(expected)));
+  }
+
+  @Test
+  void testScanFileHandlesInfectedFileResponse() {
+    MultipartFile multipartFile = Mockito.mock(MultipartFile.class);
+    when(multipartFile.getOriginalFilename()).thenReturn("TestFile.txt");
+    Resource resource = Mockito.mock(Resource.class);
+    when(multipartFile.getResource()).thenReturn(resource);
+    Principal principal = Mockito.mock(Principal.class);
+    when(principal.getName()).thenReturn("TestUser");
+    VirusScanResponseDto scanResponse = VirusScanResponseDto.builder()
+        .filesScanned(1)
+        .cleanFileCount(0)
+        .infectedFileCount(1)
+        .scanResults(List.of(
+            VirusScanResultDto.builder()
+                .fileName("TestFile.txt")
+                .infected(true)
+                .viruses(List.of("SomeBadVirus", "LessBadVirusButStillBad"))
+                .build()
+        ))
+        .build();
+    when(virusScanClient.scanFile(any(Resource.class))).thenReturn(scanResponse);
+
+    ResponseEntity<ScanValidationDto> output = validationController.scanFile(multipartFile, principal);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.getStatusCode(), is(equalTo(HttpStatus.OK)));
+    assertThat(output.getBody(), is(notNullValue()));
+    assertThat(output.getBody().isValid(), is(false));
+    assertThat(output.getBody().getFileName(), is(equalTo("TestFile.txt")));
+    assertThat(output.getBody().getError(), is(notNullValue()));
+    assertThat(output.getBody().getError().getDefaultMessage(), is(equalTo(
+        "File validation failed with error code V100."
+    )));
   }
 }

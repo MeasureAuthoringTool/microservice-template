@@ -95,7 +95,6 @@ public class TestCaseServiceTest {
     TestCase persistTestCase =
         testCaseService.persistTestCase(testCase, measure.getId(), "test.user", "TOKEN");
     verify(repository, times(1)).save(measureCaptor.capture());
-    assertEquals(testCase.getId(), persistTestCase.getId());
     Measure savedMeasure = measureCaptor.getValue();
     assertEquals(measure.getLastModifiedBy(), savedMeasure.getLastModifiedBy());
     assertEquals(measure.getLastModifiedAt(), savedMeasure.getLastModifiedAt());

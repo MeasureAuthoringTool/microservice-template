@@ -59,8 +59,6 @@ public class TestCaseService {
   protected TestCase enrichTestCase(TestCase testCase, String username, String accessToken) {
     final TestCase enrichedTestCase = testCase.toBuilder().build();
     Instant now = Instant.now();
-    // mongo doesn't create object id for embedded objects, setting manually
-    enrichedTestCase.setId(ObjectId.get().toString());
     enrichedTestCase.setCreatedAt(now);
     enrichedTestCase.setCreatedBy(username);
     enrichedTestCase.setLastModifiedAt(now);
@@ -76,7 +74,12 @@ public class TestCaseService {
   public TestCase persistTestCase(
       TestCase testCase, String measureId, String username, String accessToken) {
     final Measure measure = findMeasureById(measureId);
-    final TestCase enrichedTestCase = enrichTestCase(testCase, username, accessToken);
+    final TestCase enrichedTestCase = enrichTestCase(
+        testCase.toBuilder().id(ObjectId.get().toString()).build(),
+        username,
+        accessToken
+    );
+    log.info("enrichedTestCase: {}", enrichedTestCase);
     if (measure.getTestCases() == null) {
       measure.setTestCases(List.of(enrichedTestCase));
     } else {
@@ -91,7 +94,7 @@ public class TestCaseService {
         username,
         testCase.getId(),
         measureId);
-    return testCase;
+    return enrichedTestCase;
   }
 
 
@@ -100,7 +103,11 @@ public class TestCaseService {
     final Measure measure = findMeasureById(measureId);
     List<TestCase> enrichedTestCases = new ArrayList<>(newTestCases.size());
     for (TestCase testCase: newTestCases) {
-      final TestCase enriched = enrichTestCase(testCase, username, accessToken);
+      final TestCase enriched = enrichTestCase(
+          testCase.toBuilder().id(ObjectId.get().toString()).build(),
+          username,
+          accessToken
+      );
       enrichedTestCases.add(enriched);
       actionLogService.logAction(enriched.getId(), TestCase.class, ActionType.IMPORTED, username);
     }
