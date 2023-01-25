@@ -7,7 +7,6 @@ import java.io.UnsupportedEncodingException;
 import java.security.Principal;
 import java.time.Instant;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,6 +24,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
@@ -113,11 +113,12 @@ public class MeasureController {
   }
 
   @PutMapping("/measures/{id}")
-  public ResponseEntity<String> updateMeasure(
+  public ResponseEntity<Measure> updateMeasure(
       @PathVariable("id") String id,
       @RequestBody @Validated(Measure.ValidationSequence.class) Measure measure,
-      Principal principal) {
-    ResponseEntity<String> response = ResponseEntity.badRequest().body("Measure does not exist.");
+      Principal principal,
+      @RequestHeader("Authorization") String accessToken) {
+    ResponseEntity<Measure> response;
     final String username = principal.getName();
     if (id == null || id.isEmpty() || !id.equals(measure.getId())) {
       log.info("got invalid id [{}] vs measureId: [{}]", id, measure.getId());
@@ -125,52 +126,38 @@ public class MeasureController {
     }
 
     log.info("getMeasureId [{}]", id);
-    Optional<Measure> persistedMeasure = repository.findById(id);
 
-    if (persistedMeasure.isPresent()) {
-      if (username != null && persistedMeasure.get().getCreatedBy() != null) {
-        log.info(
-            "got username [{}] vs createdBy: [{}]",
-            username,
-            persistedMeasure.get().getCreatedBy());
+    Optional<Measure> persistedMeasureOpt = repository.findById(id);
+
+    if (persistedMeasureOpt.isPresent()) {
+      final Measure existingMeasure = persistedMeasureOpt.get();
+      if (username != null && existingMeasure.getCreatedBy() != null) {
+        log.info("got username [{}] vs createdBy: [{}]", username, existingMeasure.getCreatedBy());
         // either owner or shared-with role
-        ControllerUtil.verifyAuthorization(username, persistedMeasure.get());
+        ControllerUtil.verifyAuthorization(username, existingMeasure);
 
         // no user can update a soft-deleted measure
-        if (!persistedMeasure.get().isActive()) {
-          throw new UnauthorizedException(
-              "Measure", persistedMeasure.get().getId(), principal.getName());
+        if (!existingMeasure.isActive()) {
+          throw new UnauthorizedException("Measure", existingMeasure.getId(), username);
         }
         // shared user should be able to edit Measure but won’t have delete access
         if (!measure.isActive()) {
-          measureService.checkDeletionCredentials(username, persistedMeasure.get().getCreatedBy());
+          measureService.checkDeletionCredentials(username, existingMeasure.getCreatedBy());
         }
       }
-      if (isCqlLibraryNameChanged(measure, persistedMeasure.get())) {
-        measureService.checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
-      }
 
-      measureService.checkVersionIdChanged(
-          measure.getVersionId(), persistedMeasure.get().getVersionId());
-      measureService.checkCmsIdChanged(measure.getCmsId(), persistedMeasure.get().getCmsId());
-
-      if (isMeasurementPeriodChanged(measure, persistedMeasure.get())) {
-        measureService.validateMeasurementPeriod(
-            measure.getMeasurementPeriodStart(), measure.getMeasurementPeriodEnd());
-      }
-      measure.setLastModifiedBy(username);
-      measure.setLastModifiedAt(Instant.now());
-      // prevent users from overwriting the createdAt/By
-      measure.setCreatedAt(persistedMeasure.get().getCreatedAt());
-      measure.setCreatedBy(persistedMeasure.get().getCreatedBy());
-      repository.save(measure);
-      response = ResponseEntity.ok().body("Measure updated successfully.");
+      response =
+          ResponseEntity.ok()
+              .body(measureService.updateMeasure(existingMeasure, username, measure, accessToken));
       if (!measure.isActive()) {
-        actionLogService.logAction(measure.getId(), Measure.class, ActionType.DELETED, username);
+        actionLogService.logAction(id, Measure.class, ActionType.DELETED, username);
       } else {
-        actionLogService.logAction(measure.getId(), Measure.class, ActionType.UPDATED, username);
+        actionLogService.logAction(id, Measure.class, ActionType.UPDATED, username);
       }
+    } else {
+      throw new ResourceNotFoundException("Measure", id);
     }
+
     return response;
   }
 
@@ -239,17 +226,6 @@ public class MeasureController {
         measureId);
     return ResponseEntity.ok(
         groupService.deleteMeasureGroup(measureId, groupId, principal.getName()));
-  }
-
-  private boolean isCqlLibraryNameChanged(Measure measure, Measure persistedMeasure) {
-    return !Objects.equals(persistedMeasure.getCqlLibraryName(), measure.getCqlLibraryName());
-  }
-
-  private boolean isMeasurementPeriodChanged(Measure measure, Measure persistedMeasure) {
-    return !Objects.equals(
-            persistedMeasure.getMeasurementPeriodStart(), measure.getMeasurementPeriodStart())
-        || !Objects.equals(
-            persistedMeasure.getMeasurementPeriodEnd(), measure.getMeasurementPeriodEnd());
   }
 
   @GetMapping("/measures/search/{criteria}")
