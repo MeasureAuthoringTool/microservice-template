@@ -20,6 +20,9 @@ public class FhirServicesConfig {
   @Value("${madie.fhir.service.hapi-fhir.validation.bundle-uri}")
   private String madieFhirServiceValidateBundleUri;
 
+  @Value("${madie.fhir.service.hapi-fhir.measures.save-measure-uri}")
+  private String madieFhirServiceSaveMeasureUri;
+
   @Bean
   public RestTemplate fhirServicesRestTemplate() {
     return new RestTemplate();

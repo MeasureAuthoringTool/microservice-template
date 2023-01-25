@@ -53,6 +53,9 @@ class FhirServicesClientTest {
         .when(fhirServicesConfig.getMadieFhirServiceMeasuresBundleUri())
         .thenReturn("/api/fhir/measures/bundles");
     lenient()
+        .when(fhirServicesConfig.getMadieFhirServiceSaveMeasureUri())
+        .thenReturn("/api/fhir/measures/save");
+    lenient()
         .when(fhirServicesConfig.getMadieFhirServiceValidateBundleUri())
         .thenReturn("/api/fhir/validations/bundles");
   }
@@ -129,6 +132,36 @@ class FhirServicesClientTest {
             any(URI.class), eq(HttpMethod.POST), any(HttpEntity.class), any(Class.class)))
         .thenReturn(ResponseEntity.ok(goodOutcomeJson));
     ResponseEntity<String> output = fhirServicesClient.validateBundle(testCaseJson, accessToken);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.getBody(), is(notNullValue()));
+    assertThat(output.getBody(), is(equalTo(goodOutcomeJson)));
+    verify(restTemplate, times(1))
+        .exchange(
+            any(URI.class), eq(HttpMethod.POST), httpEntityCaptor.capture(), any(Class.class));
+    HttpEntity httpEntity = httpEntityCaptor.getValue();
+    assertThat(httpEntity.getHeaders(), is(notNullValue()));
+    List<String> authorization = httpEntity.getHeaders().get(HttpHeaders.AUTHORIZATION);
+    assertThat(authorization, is(notNullValue()));
+    assertThat(authorization.size(), is(equalTo(1)));
+    assertThat(authorization.get(0), is(equalTo(accessToken)));
+  }
+
+  @Test
+  void testSaveMeasureInHapiFhirsStringData() {
+    final String accessToken = "Bearer TOKEN";
+    final String goodOutcomeJson = "{ \"code\": 200, \"successful\": true }";
+    Measure measure =
+        Measure.builder()
+            .id("testMeasureId")
+            .measureSetId("testMeasureSetId")
+            .createdBy("testUser")
+            .cql("library Test1CQLLib version '2.3.001'")
+            .build();
+
+    when(restTemplate.exchange(
+            any(URI.class), eq(HttpMethod.POST), any(HttpEntity.class), any(Class.class)))
+        .thenReturn(ResponseEntity.ok(goodOutcomeJson));
+    ResponseEntity<String> output = fhirServicesClient.saveMeasureInHapiFhir(measure, accessToken);
     assertThat(output, is(notNullValue()));
     assertThat(output.getBody(), is(notNullValue()));
     assertThat(output.getBody(), is(equalTo(goodOutcomeJson)));

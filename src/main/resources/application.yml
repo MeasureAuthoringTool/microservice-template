@@ -17,6 +17,7 @@ madie:
       hapi-fhir:
         measures:
           bundle-uri: /fhir/measures/bundles
+          save-measure-uri: /fhir/measures/save
         validation:
           bundle-uri: /fhir/validations/bundles
   cql-elm:
