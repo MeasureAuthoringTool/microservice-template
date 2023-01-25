@@ -10,12 +10,14 @@ import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.Stratification;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+@Component
 public class CqlDefinitionReturnTypeValidator {
 
   /**
