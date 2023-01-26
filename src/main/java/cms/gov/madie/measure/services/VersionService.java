@@ -72,13 +72,6 @@ public class VersionService {
                 generateLibraryContentLine(measure.getCqlLibraryName(), newVersion));
     measure.setCql(newCql);
 
-    ResponseEntity<String> result = fhirServicesClient.saveMeasureInHapiFhir(measure, accessToken);
-
-    log.info(
-        "User [{}] successfully saved versioned measure with ID [{}] in HAPI FHIR",
-        username,
-        (result != null ? result.getBody() : " null"));
-
     Measure savedMeasure = measureRepository.save(measure);
 
     actionLogService.logAction(
@@ -93,6 +86,14 @@ public class VersionService {
 
     log.info(
         "User [{}] successfully versioned measure with ID [{}]", username, savedMeasure.getId());
+
+    ResponseEntity<String> result =
+        fhirServicesClient.saveMeasureInHapiFhir(savedMeasure, accessToken);
+
+    log.info(
+        "User [{}] successfully saved versioned measure with ID [{}] in HAPI FHIR",
+        username,
+        (result != null ? result.getBody() : " null"));
 
     return savedMeasure;
   }

@@ -23,8 +23,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -258,11 +256,10 @@ public class VersionServiceTest {
     MeasureMetaData updatedMetaData = new MeasureMetaData();
     updatedMetaData.setDraft(false);
     updatedMeasure.setMeasureMetaData(updatedMetaData);
+    when(measureRepository.save(any(Measure.class))).thenReturn(updatedMeasure);
 
     when(fhirServicesClient.saveMeasureInHapiFhir(any(), anyString()))
         .thenReturn(ResponseEntity.ok("Created"));
-
-    when(measureRepository.save(any(Measure.class))).thenReturn(updatedMeasure);
 
     versionService.createVersion("testMeasureId", "MAJOR", "testUser", "accesstoken");
 
@@ -272,6 +269,8 @@ public class VersionServiceTest {
     assertEquals(savedValue.getVersion().getMinor(), 0);
     assertEquals(savedValue.getVersion().getRevisionNumber(), 0);
     assertFalse(savedValue.getMeasureMetaData().isDraft());
+
+    verify(fhirServicesClient, times(1)).saveMeasureInHapiFhir(updatedMeasure, "accesstoken");
   }
 
   @Test
@@ -306,11 +305,10 @@ public class VersionServiceTest {
     MeasureMetaData updatedMetaData = new MeasureMetaData();
     updatedMetaData.setDraft(false);
     updatedMeasure.setMeasureMetaData(updatedMetaData);
+    when(measureRepository.save(any(Measure.class))).thenReturn(updatedMeasure);
 
     when(fhirServicesClient.saveMeasureInHapiFhir(any(), anyString()))
         .thenReturn(ResponseEntity.ok("Created"));
-
-    when(measureRepository.save(any(Measure.class))).thenReturn(updatedMeasure);
 
     versionService.createVersion("testMeasureId", "MINOR", "testUser", "accesstoken");
 
@@ -320,6 +318,8 @@ public class VersionServiceTest {
     assertEquals(savedValue.getVersion().getMinor(), 4);
     assertEquals(savedValue.getVersion().getRevisionNumber(), 0);
     assertFalse(savedValue.getMeasureMetaData().isDraft());
+
+    verify(fhirServicesClient, times(1)).saveMeasureInHapiFhir(updatedMeasure, "accesstoken");
   }
 
   @Test
@@ -355,10 +355,9 @@ public class VersionServiceTest {
     MeasureMetaData updatedMetaData = new MeasureMetaData();
     updatedMetaData.setDraft(false);
     updatedMeasure.setMeasureMetaData(updatedMetaData);
+    when(measureRepository.save(any(Measure.class))).thenReturn(updatedMeasure);
 
     when(fhirServicesClient.saveMeasureInHapiFhir(any(), anyString())).thenReturn(null);
-
-    when(measureRepository.save(any(Measure.class))).thenReturn(updatedMeasure);
 
     versionService.createVersion("testMeasureId", "PATCH", "testUser", "accesstoken");
 
@@ -368,6 +367,8 @@ public class VersionServiceTest {
     assertEquals(savedValue.getVersion().getMinor(), 3);
     assertEquals(savedValue.getVersion().getRevisionNumber(), 2);
     assertFalse(savedValue.getMeasureMetaData().isDraft());
+
+    verify(fhirServicesClient, times(1)).saveMeasureInHapiFhir(updatedMeasure, "accesstoken");
   }
 
   @Test
