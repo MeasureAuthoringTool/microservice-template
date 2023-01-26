@@ -24,6 +24,9 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.List;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
@@ -102,6 +105,65 @@ public class TestCaseControllerMvcTest {
     assertEquals(TEST_DESCRIPTION, persistedTestCase.getDescription());
     assertEquals(TEST_JSON, persistedTestCase.getJson());
     assertEquals(TEST_USER_ID, usernameCaptor.getValue());
+  }
+
+  @Test
+  public void testAddTestCases() throws Exception {
+    ArgumentCaptor<List> testCaseListCaptor = ArgumentCaptor.forClass(List.class);
+    List<TestCase> savedTestCases =
+        List.of(
+            TestCase.builder()
+                .id("ID1")
+                .title("Test1")
+                .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
+                .validResource(true)
+                .build(),
+            TestCase.builder()
+                .id("ID2")
+                .title("Test2")
+                .json("{\"resourceType\": \"RANDOM\", \"type\": \"BAD\"}")
+                .validResource(false)
+                .build());
+
+    when(testCaseService.persistTestCases(anyList(), anyString(), anyString(), anyString()))
+        .thenReturn(savedTestCases);
+
+    List<TestCase> testCases =
+        List.of(
+            TestCase.builder()
+                .title("Test1")
+                .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
+                .build(),
+            TestCase.builder()
+                .title("Test2")
+                .json("{\"resourceType\": \"RANDOM\", \"type\": \"BAD\"}")
+                .build());
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.post("/measures/1234/test-cases/list")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .header("Authorization", "test-okta")
+                .content(asJsonString(testCases))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$[0].id").value("ID1"))
+        .andExpect(jsonPath("$[0].title").value("Test1"))
+        .andExpect(jsonPath("$[0].validResource").value(true))
+        .andExpect(jsonPath("$[1].id").value("ID2"))
+        .andExpect(jsonPath("$[1].title").value("Test2"))
+        .andExpect(jsonPath("$[1].validResource").value(false));
+    verify(testCaseService, times(1))
+        .persistTestCases(
+            testCaseListCaptor.capture(),
+            measureIdCaptor.capture(),
+            usernameCaptor.capture(),
+            anyString());
+    assertThat(testCaseListCaptor.getValue(), is(equalTo(testCases)));
+    assertThat(usernameCaptor.getValue(), is(equalTo(TEST_USER_ID)));
   }
 
   @Test

@@ -25,6 +25,11 @@ madie:
       base-url: ${ELM_TRANSLATOR_SERVICE_URL:http://localhost:8084/api}
       elm-json-uri: /cql/translator/cql
       elm-json-uri-for-mat-transferred-measure: /mat/translator/cqlToElm
+  virus-scan:
+    service:
+      base-url: ${VIRUS_SCAN_SERVICE_URL:http://localhost:5000}
+      scan-file-uri: /scan-file
+      api-key: ${VIRUS_SCAN_SERVICE_APIKEY:1234567}
 
 management:
   endpoints:
