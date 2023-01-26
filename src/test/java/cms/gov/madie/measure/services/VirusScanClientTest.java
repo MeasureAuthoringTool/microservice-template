@@ -1,6 +1,5 @@
 package cms.gov.madie.measure.services;
 
-import cms.gov.madie.measure.config.FhirServicesConfig;
 import cms.gov.madie.measure.config.VirusScanConfig;
 import gov.cms.madie.models.scanner.VirusScanResponseDto;
 import gov.cms.madie.models.scanner.VirusScanResultDto;
@@ -17,17 +16,11 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class VirusScanClientTest {

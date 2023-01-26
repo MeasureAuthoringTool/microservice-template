@@ -137,6 +137,9 @@ public class TestCaseServiceTest {
 
     TestCase persistTestCase =
         testCaseService.persistTestCase(testCase, measure.getId(), "test.user", "TOKEN");
+    assertThat(persistTestCase, is(notNullValue()));
+    assertThat(persistTestCase.getId(), is(notNullValue()));
+    assertThat(persistTestCase.getTitle(), is(equalTo(testCase.getTitle())));
     verify(repository, times(1)).save(measureCaptor.capture());
     Measure savedMeasure = measureCaptor.getValue();
     assertEquals(measure.getLastModifiedBy(), savedMeasure.getLastModifiedBy());
@@ -171,9 +174,23 @@ public class TestCaseServiceTest {
   }
 
   @Test
-  public void testValidateTestCaseAsResource() {
-    TestCase testCase = TestCase.builder().build();
+  public void testValidateTestCaseAsResource() throws JsonProcessingException {
+    TestCase testCase = TestCase.builder()
+        .id("TestID")
+        .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
+        .build();
     final String accessToken = "Bearer Token";
+
+    when(fhirServicesClient.validateBundle(anyString(), anyString()))
+        .thenReturn(ResponseEntity.ok("{}"));
+    when(mapper.readValue("{}", HapiOperationOutcome.class))
+        .thenReturn(HapiOperationOutcome.builder().code(200).successful(true).build());
+
+    TestCase output = testCaseService.validateTestCaseAsResource(testCase, accessToken);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.getJson(), is(notNullValue()));
+    assertThat(output.getHapiOperationOutcome(), is(notNullValue()));
+    assertThat(output.getHapiOperationOutcome().getCode(), is(equalTo(200)));
   }
 
   @Test

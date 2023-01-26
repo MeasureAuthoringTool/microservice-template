@@ -34,8 +34,6 @@ import java.util.stream.Collectors;
 public class TestCaseService {
 
   private final MeasureRepository measureRepository;
-  private HapiFhirConfig hapiFhirConfig;
-  private RestTemplate hapiFhirRestTemplate;
   private ActionLogService actionLogService;
   private FhirServicesClient fhirServicesClient;
   private ObjectMapper mapper;
@@ -43,14 +41,10 @@ public class TestCaseService {
   @Autowired
   public TestCaseService(
       MeasureRepository measureRepository,
-      HapiFhirConfig hapiFhirConfig,
-      @Qualifier("hapiFhirRestTemplate") RestTemplate hapiFhirRestTemplate,
       ActionLogService actionLogService,
       FhirServicesClient fhirServicesClient,
       ObjectMapper mapper) {
     this.measureRepository = measureRepository;
-    this.hapiFhirConfig = hapiFhirConfig;
-    this.hapiFhirRestTemplate = hapiFhirRestTemplate;
     this.actionLogService = actionLogService;
     this.fhirServicesClient = fhirServicesClient;
     this.mapper = mapper;
@@ -75,7 +69,6 @@ public class TestCaseService {
     final Measure measure = findMeasureById(measureId);
     TestCase enrichedTestCase = enrichNewTestCase(testCase, username);
     enrichedTestCase = validateTestCaseAsResource(enrichedTestCase, accessToken);
-    log.info("enrichedTestCase: {}", enrichedTestCase);
     if (measure.getTestCases() == null) {
       measure.setTestCases(List.of(enrichedTestCase));
     } else {
