@@ -47,4 +47,15 @@ public class FhirServicesClient {
     HttpEntity<String> measureEntity = new HttpEntity<>(testCaseJson, headers);
     return fhirServicesRestTemplate.exchange(uri, HttpMethod.POST, measureEntity, String.class);
   }
+
+  public ResponseEntity<String> saveMeasureInHapiFhir(Measure measure, String accessToken) {
+    URI uri =
+        URI.create(
+            fhirServicesConfig.getMadieFhirServiceBaseUrl()
+                + fhirServicesConfig.getMadieFhirServiceSaveMeasureUri());
+    HttpHeaders headers = new HttpHeaders();
+    headers.set(HttpHeaders.AUTHORIZATION, accessToken);
+    HttpEntity<Measure> measureEntity = new HttpEntity<>(measure, headers);
+    return fhirServicesRestTemplate.exchange(uri, HttpMethod.POST, measureEntity, String.class);
+  }
 }
