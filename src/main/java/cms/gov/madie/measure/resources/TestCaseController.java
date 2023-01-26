@@ -40,13 +40,14 @@ public class TestCaseController {
 
 
 
-  @PostMapping(ControllerUtil.TEST_CASES + "/bulk")
-  public ResponseEntity<List<TestCase>> importTestCases(
+  @PostMapping(ControllerUtil.TEST_CASES + "/list")
+  public ResponseEntity<List<TestCase>> addTestCases(
       @RequestBody List<TestCase> testCases,
       @PathVariable String measureId,
       @RequestHeader("Authorization") String accessToken,
       Principal principal) {
-    return ResponseEntity.ok(testCaseService.bulkPersistTestCase(testCases, measureId, principal.getName(), accessToken));
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(testCaseService.persistTestCases(testCases, measureId, principal.getName(), accessToken));
   }
 
   @GetMapping(ControllerUtil.TEST_CASES)

@@ -56,29 +56,25 @@ public class TestCaseService {
     this.mapper = mapper;
   }
 
-  protected TestCase enrichTestCase(TestCase testCase, String username, String accessToken) {
+  protected TestCase enrichNewTestCase(TestCase testCase, String username) {
     final TestCase enrichedTestCase = testCase.toBuilder().build();
     Instant now = Instant.now();
+    enrichedTestCase.setId(ObjectId.get().toString());
     enrichedTestCase.setCreatedAt(now);
     enrichedTestCase.setCreatedBy(username);
     enrichedTestCase.setLastModifiedAt(now);
     enrichedTestCase.setLastModifiedBy(username);
-    enrichedTestCase.setValidResource(false);
-    enrichedTestCase.setHapiOperationOutcome(null);
     enrichedTestCase.setResourceUri(null);
-
-    enrichedTestCase.setHapiOperationOutcome(validateTestCaseJson(enrichedTestCase, accessToken));
+    enrichedTestCase.setHapiOperationOutcome(null);
+    enrichedTestCase.setValidResource(false);
     return enrichedTestCase;
   }
 
   public TestCase persistTestCase(
       TestCase testCase, String measureId, String username, String accessToken) {
     final Measure measure = findMeasureById(measureId);
-    final TestCase enrichedTestCase = enrichTestCase(
-        testCase.toBuilder().id(ObjectId.get().toString()).build(),
-        username,
-        accessToken
-    );
+    TestCase enrichedTestCase = enrichNewTestCase(testCase, username);
+    enrichedTestCase = validateTestCaseAsResource(enrichedTestCase, accessToken);
     log.info("enrichedTestCase: {}", enrichedTestCase);
     if (measure.getTestCases() == null) {
       measure.setTestCases(List.of(enrichedTestCase));
@@ -98,16 +94,16 @@ public class TestCaseService {
   }
 
 
-  public List<TestCase> bulkPersistTestCase(
+  public List<TestCase> persistTestCases(
       List<TestCase> newTestCases, String measureId, String username, String accessToken) {
+    if (newTestCases == null || newTestCases.isEmpty()) {
+      return newTestCases;
+    }
     final Measure measure = findMeasureById(measureId);
     List<TestCase> enrichedTestCases = new ArrayList<>(newTestCases.size());
     for (TestCase testCase: newTestCases) {
-      final TestCase enriched = enrichTestCase(
-          testCase.toBuilder().id(ObjectId.get().toString()).build(),
-          username,
-          accessToken
-      );
+      TestCase enriched = enrichNewTestCase(testCase, username);
+      enriched = validateTestCaseAsResource(enriched, accessToken);
       enrichedTestCases.add(enriched);
       actionLogService.logAction(enriched.getId(), TestCase.class, ActionType.IMPORTED, username);
     }
@@ -125,6 +121,19 @@ public class TestCaseService {
         enrichedTestCases.size(),
         measureId);
     return enrichedTestCases;
+  }
+
+  public TestCase validateTestCaseAsResource(final TestCase testCase, final String accessToken) {
+    final HapiOperationOutcome hapiOperationOutcome = validateTestCaseJson(testCase, accessToken);
+    TestCase.TestCaseBuilder testCaseBuilder = testCase.toBuilder().hapiOperationOutcome(hapiOperationOutcome);
+    if (hapiOperationOutcome != null
+        && (hapiOperationOutcome.getCode() >= 200 || hapiOperationOutcome.getCode() <= 299)
+        && hapiOperationOutcome.isSuccessful()) {
+      testCaseBuilder.validResource(true);
+    } else {
+      testCaseBuilder.validResource(false);
+    }
+    return testCaseBuilder.build();
   }
 
   public TestCase updateTestCase(
