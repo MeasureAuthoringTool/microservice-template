@@ -80,7 +80,9 @@ public class MeasureUtil {
    * @return
    */
   public Set<MeasureErrorType> removeError(Set<MeasureErrorType> errors, MeasureErrorType error) {
-    if (errors == null || errors.isEmpty() || error == null) {
+    if (errors == null) {
+      return Set.of();
+    } else if (errors.isEmpty() || error == null) {
       return errors;
     }
     return errors.stream().filter(e -> !error.equals(e)).collect(Collectors.toSet());

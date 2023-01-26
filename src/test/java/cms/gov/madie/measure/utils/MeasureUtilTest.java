@@ -240,7 +240,8 @@ class MeasureUtilTest {
     Set<MeasureErrorType> errors = null;
     MeasureErrorType error = MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES;
     Set<MeasureErrorType> output = measureUtil.removeError(errors, error);
-    assertThat(output, is(equalTo(errors)));
+    assertThat(output, is(notNullValue()));
+    assertThat(output.isEmpty(), is(true));
   }
 
   @Test
