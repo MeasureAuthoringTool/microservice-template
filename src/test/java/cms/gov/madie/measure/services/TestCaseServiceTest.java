@@ -1,11 +1,9 @@
-package cms.gov.madie.measure.service;
+package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.HapiFhirConfig;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
-import cms.gov.madie.measure.services.ActionLogService;
-import cms.gov.madie.measure.services.FhirServicesClient;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,7 +11,6 @@ import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.*;
 import gov.cms.madie.models.common.Version;
 import cms.gov.madie.measure.repositories.MeasureRepository;
-import cms.gov.madie.measure.services.TestCaseService;
 import org.assertj.core.util.Lists;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +34,7 @@ import java.util.*;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -95,7 +93,6 @@ public class TestCaseServiceTest {
     TestCase persistTestCase =
         testCaseService.persistTestCase(testCase, measure.getId(), "test.user", "TOKEN");
     verify(repository, times(1)).save(measureCaptor.capture());
-    assertEquals(testCase.getId(), persistTestCase.getId());
     Measure savedMeasure = measureCaptor.getValue();
     assertEquals(measure.getLastModifiedBy(), savedMeasure.getLastModifiedBy());
     assertEquals(measure.getLastModifiedAt(), savedMeasure.getLastModifiedAt());
@@ -121,6 +118,236 @@ public class TestCaseServiceTest {
     assertEquals(persistTestCase.getId(), targetIdArgumentCaptor.getValue());
     assertEquals(TestCase.class, targetClassArgumentCaptor.getValue());
     assertEquals(ActionType.CREATED, actionTypeArgumentCaptor.getValue());
+  }
+
+  @Test
+  public void testPersistTestCaseWithExistingTestCases() {
+    List<TestCase> existingTestCases = new ArrayList<>();
+    TestCase existingTestCase = TestCase.builder().id("Test1ID").title("Test0").build();
+    existingTestCases.add(existingTestCase);
+    measure.setTestCases(existingTestCases);
+    ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
+    Optional<Measure> optional = Optional.of(measure);
+    Mockito.doReturn(optional).when(repository).findById(any(String.class));
+
+    Mockito.doReturn(measure).when(repository).save(any(Measure.class));
+
+    when(fhirServicesClient.validateBundle(anyString(), anyString()))
+        .thenReturn(ResponseEntity.ok("{ \"code\": 200, \"successful\": true }"));
+
+    TestCase persistTestCase =
+        testCaseService.persistTestCase(testCase, measure.getId(), "test.user", "TOKEN");
+    assertThat(persistTestCase, is(notNullValue()));
+    assertThat(persistTestCase.getId(), is(notNullValue()));
+    assertThat(persistTestCase.getTitle(), is(equalTo(testCase.getTitle())));
+    verify(repository, times(1)).save(measureCaptor.capture());
+    Measure savedMeasure = measureCaptor.getValue();
+    assertEquals(measure.getLastModifiedBy(), savedMeasure.getLastModifiedBy());
+    assertEquals(measure.getLastModifiedAt(), savedMeasure.getLastModifiedAt());
+    assertNotNull(savedMeasure.getTestCases());
+    assertEquals(2, savedMeasure.getTestCases().size());
+    assertThat(savedMeasure.getTestCases().get(0), is(equalTo(existingTestCase)));
+    TestCase capturedTestCase = savedMeasure.getTestCases().get(1);
+    int lastModCompareTo =
+        capturedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
+    assertEquals("test.user", capturedTestCase.getLastModifiedBy());
+    assertEquals("test.user", capturedTestCase.getCreatedBy());
+    assertEquals(1, lastModCompareTo);
+    assertEquals(capturedTestCase.getLastModifiedAt(), capturedTestCase.getCreatedAt());
+  }
+
+  @Test
+  public void testEnrichNewTestCase() {
+    TestCase testCase = new TestCase();
+    final String username = "user01";
+    TestCase output = testCaseService.enrichNewTestCase(testCase, username);
+    assertThat(output, is(not(equalTo(testCase))));
+    assertThat(output.getId(), is(notNullValue()));
+    assertThat(output.getCreatedAt(), is(notNullValue()));
+    assertThat(output.getCreatedBy(), is(equalTo(username)));
+    assertThat(output.getLastModifiedAt(), is(notNullValue()));
+    assertThat(output.getLastModifiedAt(), is(equalTo(output.getCreatedAt())));
+    assertThat(output.getLastModifiedBy(), is(equalTo(username)));
+    assertThat(output.getResourceUri(), is(nullValue()));
+    assertThat(output.getHapiOperationOutcome(), is(nullValue()));
+    assertThat(output.isValidResource(), is(false));
+  }
+
+  @Test
+  public void testValidateTestCaseAsResource() throws JsonProcessingException {
+    TestCase testCase = TestCase.builder()
+        .id("TestID")
+        .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
+        .build();
+    final String accessToken = "Bearer Token";
+
+    when(fhirServicesClient.validateBundle(anyString(), anyString()))
+        .thenReturn(ResponseEntity.ok("{}"));
+    when(mapper.readValue("{}", HapiOperationOutcome.class))
+        .thenReturn(HapiOperationOutcome.builder().code(200).successful(true).build());
+
+    TestCase output = testCaseService.validateTestCaseAsResource(testCase, accessToken);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.getJson(), is(notNullValue()));
+    assertThat(output.getHapiOperationOutcome(), is(notNullValue()));
+    assertThat(output.getHapiOperationOutcome().getCode(), is(equalTo(200)));
+  }
+
+  @Test
+  public void testPersistTestCasesThrowsResourceNotFoundExceptionForUnknownId() {
+    List<TestCase> newTestCases = List.of(TestCase.builder().title("Test1").build());
+    String measureId = measure.getId();
+    String username = "user01";
+    String accessToken = "Bearer Token";
+    when(repository.findById(anyString())).thenReturn(Optional.empty());
+
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> testCaseService.persistTestCases(newTestCases, measureId, username, accessToken));
+  }
+
+  @Test
+  public void testPersistTestCasesHandlesNullList() {
+    List<TestCase> newTestCases = null;
+    String measureId = measure.getId();
+    String username = "user01";
+    String accessToken = "Bearer Token";
+
+    List<TestCase> output =
+        testCaseService.persistTestCases(newTestCases, measureId, username, accessToken);
+    assertThat(output, is(nullValue()));
+  }
+
+  @Test
+  public void testPersistTestCasesHandlesEmptyList() {
+    List<TestCase> newTestCases = List.of();
+    String measureId = measure.getId();
+    String username = "user01";
+    String accessToken = "Bearer Token";
+
+    List<TestCase> output =
+        testCaseService.persistTestCases(newTestCases, measureId, username, accessToken);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.isEmpty(), is(true));
+  }
+
+  @Test
+  public void testPersistTestCasesHandlesListToMeasureNoExistingTestCases() {
+    List<TestCase> newTestCases =
+        List.of(
+            TestCase.builder().title("Test1").build(), TestCase.builder().title("Test2").build());
+    String measureId = measure.getId();
+    String username = "user01";
+    String accessToken = "Bearer Token";
+    when(repository.findById(eq(measureId))).thenReturn(Optional.of(measure));
+
+    List<TestCase> output =
+        testCaseService.persistTestCases(newTestCases, measureId, username, accessToken);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.size(), is(equalTo(2)));
+    assertThat(output.get(0).getId(), is(notNullValue()));
+    assertThat(output.get(0).getCreatedAt(), is(notNullValue()));
+    assertThat(output.get(0).getCreatedBy(), is(equalTo("user01")));
+    assertThat(output.get(0).getLastModifiedAt(), is(notNullValue()));
+    assertThat(output.get(0).getLastModifiedBy(), is(equalTo("user01")));
+    assertThat(output.get(0).getResourceUri(), is(nullValue()));
+    assertThat(output.get(0).getHapiOperationOutcome(), is(nullValue()));
+    assertThat(output.get(0).isValidResource(), is(false));
+    assertThat(output.get(1).getId(), is(notNullValue()));
+    assertThat(output.get(1).getCreatedAt(), is(notNullValue()));
+    assertThat(output.get(1).getCreatedBy(), is(equalTo("user01")));
+    assertThat(output.get(1).getLastModifiedAt(), is(notNullValue()));
+    assertThat(output.get(1).getLastModifiedBy(), is(equalTo("user01")));
+    assertThat(output.get(1).getResourceUri(), is(nullValue()));
+    assertThat(output.get(1).getHapiOperationOutcome(), is(nullValue()));
+    assertThat(output.get(1).isValidResource(), is(false));
+
+    verifyNoInteractions(fhirServicesClient);
+  }
+
+  @Test
+  public void testPersistTestCasesHandlesListToMeasureWithExistingTestCases() {
+    List<TestCase> existingTestCases = new ArrayList<>();
+    existingTestCases.add(TestCase.builder().id("Test1ID").title("Test0").build());
+    measure.setTestCases(existingTestCases);
+    List<TestCase> newTestCases =
+        List.of(
+            TestCase.builder().title("Test1").build(), TestCase.builder().title("Test2").build());
+    String measureId = measure.getId();
+    String username = "user01";
+    String accessToken = "Bearer Token";
+    when(repository.findById(eq(measureId))).thenReturn(Optional.of(measure));
+
+    List<TestCase> output =
+        testCaseService.persistTestCases(newTestCases, measureId, username, accessToken);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.size(), is(equalTo(2)));
+    assertThat(output.get(0).getId(), is(notNullValue()));
+    assertThat(output.get(0).getCreatedAt(), is(notNullValue()));
+    assertThat(output.get(0).getCreatedBy(), is(equalTo("user01")));
+    assertThat(output.get(0).getLastModifiedAt(), is(notNullValue()));
+    assertThat(output.get(0).getLastModifiedBy(), is(equalTo("user01")));
+    assertThat(output.get(0).getResourceUri(), is(nullValue()));
+    assertThat(output.get(0).getHapiOperationOutcome(), is(nullValue()));
+    assertThat(output.get(0).isValidResource(), is(false));
+    assertThat(output.get(1).getId(), is(notNullValue()));
+    assertThat(output.get(1).getCreatedAt(), is(notNullValue()));
+    assertThat(output.get(1).getCreatedBy(), is(equalTo("user01")));
+    assertThat(output.get(1).getLastModifiedAt(), is(notNullValue()));
+    assertThat(output.get(1).getLastModifiedBy(), is(equalTo("user01")));
+    assertThat(output.get(1).getResourceUri(), is(nullValue()));
+    assertThat(output.get(1).getHapiOperationOutcome(), is(nullValue()));
+    assertThat(output.get(1).isValidResource(), is(false));
+
+    verifyNoInteractions(fhirServicesClient);
+  }
+
+  @Test
+  public void testPersistTestCasesHandlesListToMeasureWithJson() throws JsonProcessingException {
+    List<TestCase> newTestCases =
+        List.of(
+            TestCase.builder()
+                .title("Test1")
+                .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
+                .build(),
+            TestCase.builder()
+                .title("Test2")
+                .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
+                .build());
+    String measureId = measure.getId();
+    String username = "user01";
+    String accessToken = "Bearer Token";
+    when(repository.findById(eq(measureId))).thenReturn(Optional.of(measure));
+    when(mapper.readValue("{}", HapiOperationOutcome.class))
+        .thenReturn(HapiOperationOutcome.builder().code(200).successful(true).build())
+        .thenReturn(HapiOperationOutcome.builder().code(400).successful(false).build());
+    when(fhirServicesClient.validateBundle(anyString(), anyString()))
+        .thenReturn(ResponseEntity.ok("{}"));
+
+    List<TestCase> output =
+        testCaseService.persistTestCases(newTestCases, measureId, username, accessToken);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.size(), is(equalTo(2)));
+    assertThat(output.get(0).getId(), is(notNullValue()));
+    assertThat(output.get(0).getCreatedAt(), is(notNullValue()));
+    assertThat(output.get(0).getCreatedBy(), is(equalTo("user01")));
+    assertThat(output.get(0).getLastModifiedAt(), is(notNullValue()));
+    assertThat(output.get(0).getLastModifiedBy(), is(equalTo("user01")));
+    assertThat(output.get(0).getResourceUri(), is(nullValue()));
+    assertThat(output.get(0).getHapiOperationOutcome(), is(notNullValue()));
+    assertThat(output.get(0).getHapiOperationOutcome().getCode(), is(equalTo(200)));
+    assertThat(output.get(0).isValidResource(), is(true));
+    assertThat(output.get(1).getId(), is(notNullValue()));
+    assertThat(output.get(1).getCreatedAt(), is(notNullValue()));
+    assertThat(output.get(1).getCreatedBy(), is(equalTo("user01")));
+    assertThat(output.get(1).getLastModifiedAt(), is(notNullValue()));
+    assertThat(output.get(1).getLastModifiedBy(), is(equalTo("user01")));
+    assertThat(output.get(1).getResourceUri(), is(nullValue()));
+    assertThat(output.get(1).getHapiOperationOutcome(), is(notNullValue()));
+    assertThat(output.get(1).getHapiOperationOutcome().getCode(), is(equalTo(400)));
+    assertThat(output.get(1).isValidResource(), is(false));
+
+    verify(fhirServicesClient, times(2)).validateBundle(anyString(), anyString());
   }
 
   @Test

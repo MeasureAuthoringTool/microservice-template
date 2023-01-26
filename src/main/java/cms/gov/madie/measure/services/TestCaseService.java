@@ -34,8 +34,6 @@ import java.util.stream.Collectors;
 public class TestCaseService {
 
   private final MeasureRepository measureRepository;
-  private HapiFhirConfig hapiFhirConfig;
-  private RestTemplate hapiFhirRestTemplate;
   private ActionLogService actionLogService;
   private FhirServicesClient fhirServicesClient;
   private ObjectMapper mapper;
@@ -43,53 +41,93 @@ public class TestCaseService {
   @Autowired
   public TestCaseService(
       MeasureRepository measureRepository,
-      HapiFhirConfig hapiFhirConfig,
-      @Qualifier("hapiFhirRestTemplate") RestTemplate hapiFhirRestTemplate,
       ActionLogService actionLogService,
       FhirServicesClient fhirServicesClient,
       ObjectMapper mapper) {
     this.measureRepository = measureRepository;
-    this.hapiFhirConfig = hapiFhirConfig;
-    this.hapiFhirRestTemplate = hapiFhirRestTemplate;
     this.actionLogService = actionLogService;
     this.fhirServicesClient = fhirServicesClient;
     this.mapper = mapper;
   }
 
+  protected TestCase enrichNewTestCase(TestCase testCase, String username) {
+    final TestCase enrichedTestCase = testCase.toBuilder().build();
+    Instant now = Instant.now();
+    enrichedTestCase.setId(ObjectId.get().toString());
+    enrichedTestCase.setCreatedAt(now);
+    enrichedTestCase.setCreatedBy(username);
+    enrichedTestCase.setLastModifiedAt(now);
+    enrichedTestCase.setLastModifiedBy(username);
+    enrichedTestCase.setResourceUri(null);
+    enrichedTestCase.setHapiOperationOutcome(null);
+    enrichedTestCase.setValidResource(false);
+    return enrichedTestCase;
+  }
+
   public TestCase persistTestCase(
       TestCase testCase, String measureId, String username, String accessToken) {
-    Measure measure = findMeasureById(measureId);
-
-    Instant now = Instant.now();
-    // mongo doesn't create object id for embedded objects, setting manually
-    testCase.setId(ObjectId.get().toString());
-    testCase.setCreatedAt(now);
-    testCase.setCreatedBy(username);
-    testCase.setLastModifiedAt(now);
-    testCase.setLastModifiedBy(username);
-    testCase.setValidResource(false);
-    testCase.setHapiOperationOutcome(null);
-    testCase.setResourceUri(null);
-
-    //    TestCase upserted = upsertFhirBundle(testCase);
-    testCase.setHapiOperationOutcome(validateTestCaseJson(testCase, accessToken));
-
+    final Measure measure = findMeasureById(measureId);
+    TestCase enrichedTestCase = enrichNewTestCase(testCase, username);
+    enrichedTestCase = validateTestCaseAsResource(enrichedTestCase, accessToken);
     if (measure.getTestCases() == null) {
-      measure.setTestCases(List.of(testCase));
+      measure.setTestCases(List.of(enrichedTestCase));
     } else {
-      measure.getTestCases().add(testCase);
+      measure.getTestCases().add(enrichedTestCase);
     }
-
     measureRepository.save(measure);
 
-    actionLogService.logAction(testCase.getId(), TestCase.class, ActionType.CREATED, username);
+    actionLogService.logAction(
+        enrichedTestCase.getId(), TestCase.class, ActionType.CREATED, username);
 
     log.info(
         "User [{}] successfully created new test case with ID [{}] for the measure with ID[{}] ",
         username,
         testCase.getId(),
         measureId);
-    return testCase;
+    return enrichedTestCase;
+  }
+
+  public List<TestCase> persistTestCases(
+      List<TestCase> newTestCases, String measureId, String username, String accessToken) {
+    if (newTestCases == null || newTestCases.isEmpty()) {
+      return newTestCases;
+    }
+    final Measure measure = findMeasureById(measureId);
+    List<TestCase> enrichedTestCases = new ArrayList<>(newTestCases.size());
+    for (TestCase testCase : newTestCases) {
+      TestCase enriched = enrichNewTestCase(testCase, username);
+      enriched = validateTestCaseAsResource(enriched, accessToken);
+      enrichedTestCases.add(enriched);
+      actionLogService.logAction(enriched.getId(), TestCase.class, ActionType.IMPORTED, username);
+    }
+    if (measure.getTestCases() == null) {
+      measure.setTestCases(enrichedTestCases);
+    } else {
+      measure.getTestCases().addAll(enrichedTestCases);
+    }
+
+    measureRepository.save(measure);
+
+    log.info(
+        "User [{}] successfully imported [{}] test cases to the measure with ID[{}] ",
+        username,
+        enrichedTestCases.size(),
+        measureId);
+    return enrichedTestCases;
+  }
+
+  public TestCase validateTestCaseAsResource(final TestCase testCase, final String accessToken) {
+    final HapiOperationOutcome hapiOperationOutcome = validateTestCaseJson(testCase, accessToken);
+    TestCase.TestCaseBuilder testCaseBuilder =
+        testCase.toBuilder().hapiOperationOutcome(hapiOperationOutcome);
+    if (hapiOperationOutcome != null
+        && (hapiOperationOutcome.getCode() >= 200 || hapiOperationOutcome.getCode() <= 299)
+        && hapiOperationOutcome.isSuccessful()) {
+      testCaseBuilder.validResource(true);
+    } else {
+      testCaseBuilder.validResource(false);
+    }
+    return testCaseBuilder.build();
   }
 
   public TestCase updateTestCase(
