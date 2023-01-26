@@ -321,6 +321,8 @@ public class VersionServiceTest {
     when(measureRepository.existsByMeasureSetIdAndActiveAndMeasureMetaDataDraft(
             anyString(), anyBoolean(), anyBoolean()))
         .thenReturn(false);
+    when(measureRepository.existsByCqlLibraryNameAndMeasureSetIdIsNot(anyString(), anyString()))
+        .thenReturn(false);
     when(measureRepository.save(any(Measure.class))).thenReturn(versionedCopy);
     when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
 
@@ -369,6 +371,8 @@ public class VersionServiceTest {
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(versionedMeasure));
     when(measureRepository.existsByMeasureSetIdAndActiveAndMeasureMetaDataDraft(
             anyString(), anyBoolean(), anyBoolean()))
+        .thenReturn(false);
+    when(measureRepository.existsByCqlLibraryNameAndMeasureSetIdIsNot(anyString(), anyString()))
         .thenReturn(false);
     when(measureRepository.save(any(Measure.class))).thenReturn(versionedCopy);
     when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
@@ -428,6 +432,26 @@ public class VersionServiceTest {
         is(
             equalTo(
                 "Can not create a draft for the measure \"Test\". Only one draft is permitted per measure.")));
+  }
+
+  @Test
+  public void testCreateDraftWhenMeasureWithCqlLibraryAlreadyExistsOutsideTheMeasureSet() {
+    Measure measure = buildBasicMeasure();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(measureRepository.existsByMeasureSetIdAndActiveAndMeasureMetaDataDraft(
+            anyString(), anyBoolean(), anyBoolean()))
+        .thenReturn(false);
+    when(measureRepository.existsByCqlLibraryNameAndMeasureSetIdIsNot(anyString(), anyString()))
+        .thenReturn(true);
+    Exception ex =
+        assertThrows(
+            MeasureNotDraftableException.class,
+            () -> versionService.createDraft(measure.getId(), "Test", "test-user"));
+    assertThat(
+        ex.getMessage(),
+        is(
+            equalTo(
+                "Can not create a draft for the measure \"Test\". Measure already exists with measure name \"Test\".")));
   }
 
   private Measure buildBasicMeasure() {

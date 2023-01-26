@@ -41,8 +41,6 @@ public class MeasureVersionControllerMvcTest {
 
   @MockBean private VersionService versionService;
 
-  @Captor private ArgumentCaptor<Measure> measureArgumentCaptor;
-
   @Autowired private MockMvc mockMvc;
 
   private static final String TEST_USER_ID = "test-user-id";

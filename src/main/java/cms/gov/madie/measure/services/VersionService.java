@@ -92,8 +92,19 @@ public class VersionService {
             .orElseThrow(() -> new ResourceNotFoundException("Measure", id));
 
     ControllerUtil.verifyAuthorization(username, measure);
-    if (!isDraftable(measure)) {
+    // check if a draft exists with measure set
+    boolean isDraftExistsInMeasureSet =
+        measureRepository.existsByMeasureSetIdAndActiveAndMeasureMetaDataDraft(
+            measure.getMeasureSetId(), true, true);
+    if (isDraftExistsInMeasureSet) {
       throw new MeasureNotDraftableException(measure.getMeasureName());
+    }
+    // check if a measure exists with cql library name outside of measure setId
+    boolean isMeasureExistsWithLibraryName =
+        measureRepository.existsByCqlLibraryNameAndMeasureSetIdIsNot(
+            measureName, measure.getMeasureSetId());
+    if (isMeasureExistsWithLibraryName) {
+      throw new MeasureNotDraftableException(measure.getMeasureName(), measureName);
     }
     Measure measureDraft = measure.toBuilder().build();
     measureDraft.setId(null);
@@ -124,12 +135,6 @@ public class VersionService {
           .collect(Collectors.toList());
     }
     return List.of();
-  }
-
-  /** Returns false if there is already a draft for the measure family. */
-  private boolean isDraftable(Measure measure) {
-    return !measureRepository.existsByMeasureSetIdAndActiveAndMeasureMetaDataDraft(
-        measure.getMeasureSetId(), true, true);
   }
 
   private void validateMeasureForVersioning(Measure measure, String username) {

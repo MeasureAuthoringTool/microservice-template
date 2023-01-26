@@ -49,4 +49,6 @@ public interface MeasureRepository
 
   boolean existsByMeasureSetIdAndActiveAndMeasureMetaDataDraft(
       String setId, boolean active, boolean draft);
+
+  boolean existsByCqlLibraryNameAndMeasureSetIdIsNot(String cqlLibraryName, String measureSetId);
 }
