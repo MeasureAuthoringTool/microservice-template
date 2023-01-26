@@ -110,34 +110,34 @@ public class TestCaseControllerMvcTest {
   @Test
   public void testAddTestCases() throws Exception {
     ArgumentCaptor<List> testCaseListCaptor = ArgumentCaptor.forClass(List.class);
-    List<TestCase> savedTestCases = List.of(
-        TestCase.builder()
-            .id("ID1")
-            .title("Test1")
-            .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
-            .validResource(true)
-            .build(),
-        TestCase.builder()
-            .id("ID2")
-            .title("Test2")
-            .json("{\"resourceType\": \"RANDOM\", \"type\": \"BAD\"}")
-            .validResource(false)
-            .build()
-    );
+    List<TestCase> savedTestCases =
+        List.of(
+            TestCase.builder()
+                .id("ID1")
+                .title("Test1")
+                .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
+                .validResource(true)
+                .build(),
+            TestCase.builder()
+                .id("ID2")
+                .title("Test2")
+                .json("{\"resourceType\": \"RANDOM\", \"type\": \"BAD\"}")
+                .validResource(false)
+                .build());
 
     when(testCaseService.persistTestCases(anyList(), anyString(), anyString(), anyString()))
         .thenReturn(savedTestCases);
 
-    List<TestCase> testCases = List.of(
-        TestCase.builder()
-            .title("Test1")
-            .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
-            .build(),
-        TestCase.builder()
-            .title("Test2")
-            .json("{\"resourceType\": \"RANDOM\", \"type\": \"BAD\"}")
-            .build()
-    );
+    List<TestCase> testCases =
+        List.of(
+            TestCase.builder()
+                .title("Test1")
+                .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
+                .build(),
+            TestCase.builder()
+                .title("Test2")
+                .json("{\"resourceType\": \"RANDOM\", \"type\": \"BAD\"}")
+                .build());
 
     mockMvc
         .perform(

@@ -29,27 +29,13 @@ public class VirusScanClient {
     headers.setContentType(MediaType.MULTIPART_FORM_DATA);
     headers.set("apikey", virusScanConfig.getApiKey());
 
-    MultiValueMap<String, Object> body
-        = new LinkedMultiValueMap<>();
+    MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
     body.add("file", fileResource);
     final String virusScanUrl = virusScanConfig.getBaseUrl() + virusScanConfig.getScanFileUri();
     final URI uri = URI.create(virusScanUrl);
-    ResponseEntity<VirusScanResponseDto> response = virusScanRestTemplate.exchange(
-        new RequestEntity(body, headers, HttpMethod.POST, uri),
-        VirusScanResponseDto.class
-    );
+    ResponseEntity<VirusScanResponseDto> response =
+        virusScanRestTemplate.exchange(
+            new RequestEntity(body, headers, HttpMethod.POST, uri), VirusScanResponseDto.class);
     return response.getBody();
   }
-
-
-
-
-
-
-
-
-
-
-
-
 }

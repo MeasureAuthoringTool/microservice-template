@@ -38,8 +38,6 @@ public class TestCaseController {
             testCaseService.persistTestCase(testCase, measureId, principal.getName(), accessToken));
   }
 
-
-
   @PostMapping(ControllerUtil.TEST_CASES + "/list")
   public ResponseEntity<List<TestCase>> addTestCases(
       @RequestBody List<TestCase> testCases,
@@ -47,7 +45,9 @@ public class TestCaseController {
       @RequestHeader("Authorization") String accessToken,
       Principal principal) {
     return ResponseEntity.status(HttpStatus.CREATED)
-        .body(testCaseService.persistTestCases(testCases, measureId, principal.getName(), accessToken));
+        .body(
+            testCaseService.persistTestCases(
+                testCases, measureId, principal.getName(), accessToken));
   }
 
   @GetMapping(ControllerUtil.TEST_CASES)

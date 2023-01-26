@@ -123,10 +123,7 @@ public class TestCaseServiceTest {
   @Test
   public void testPersistTestCaseWithExistingTestCases() {
     List<TestCase> existingTestCases = new ArrayList<>();
-    TestCase existingTestCase = TestCase.builder()
-        .id("Test1ID")
-        .title("Test0")
-        .build();
+    TestCase existingTestCase = TestCase.builder().id("Test1ID").title("Test0").build();
     existingTestCases.add(existingTestCase);
     measure.setTestCases(existingTestCases);
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
@@ -177,16 +174,11 @@ public class TestCaseServiceTest {
   public void testValidateTestCaseAsResource() {
     TestCase testCase = TestCase.builder().build();
     final String accessToken = "Bearer Token";
-
   }
 
   @Test
-  public void testPersistTestCasesThrowsResourceNotFoundExceptionForUnknownId(){
-    List<TestCase> newTestCases = List.of(
-        TestCase.builder()
-            .title("Test1")
-            .build()
-    );
+  public void testPersistTestCasesThrowsResourceNotFoundExceptionForUnknownId() {
+    List<TestCase> newTestCases = List.of(TestCase.builder().title("Test1").build());
     String measureId = measure.getId();
     String username = "user01";
     String accessToken = "Bearer Token";
@@ -194,49 +186,46 @@ public class TestCaseServiceTest {
 
     assertThrows(
         ResourceNotFoundException.class,
-        () -> testCaseService.persistTestCases(newTestCases, measureId, username, accessToken)
-    );
+        () -> testCaseService.persistTestCases(newTestCases, measureId, username, accessToken));
   }
 
   @Test
-  public void testPersistTestCasesHandlesNullList(){
+  public void testPersistTestCasesHandlesNullList() {
     List<TestCase> newTestCases = null;
     String measureId = measure.getId();
     String username = "user01";
     String accessToken = "Bearer Token";
 
-    List<TestCase> output = testCaseService.persistTestCases(newTestCases, measureId, username, accessToken);
+    List<TestCase> output =
+        testCaseService.persistTestCases(newTestCases, measureId, username, accessToken);
     assertThat(output, is(nullValue()));
   }
 
   @Test
-  public void testPersistTestCasesHandlesEmptyList(){
+  public void testPersistTestCasesHandlesEmptyList() {
     List<TestCase> newTestCases = List.of();
     String measureId = measure.getId();
     String username = "user01";
     String accessToken = "Bearer Token";
 
-    List<TestCase> output = testCaseService.persistTestCases(newTestCases, measureId, username, accessToken);
+    List<TestCase> output =
+        testCaseService.persistTestCases(newTestCases, measureId, username, accessToken);
     assertThat(output, is(notNullValue()));
     assertThat(output.isEmpty(), is(true));
   }
 
   @Test
-  public void testPersistTestCasesHandlesListToMeasureNoExistingTestCases(){
-    List<TestCase> newTestCases = List.of(
-        TestCase.builder()
-            .title("Test1")
-            .build(),
-        TestCase.builder()
-            .title("Test2")
-            .build()
-    );
+  public void testPersistTestCasesHandlesListToMeasureNoExistingTestCases() {
+    List<TestCase> newTestCases =
+        List.of(
+            TestCase.builder().title("Test1").build(), TestCase.builder().title("Test2").build());
     String measureId = measure.getId();
     String username = "user01";
     String accessToken = "Bearer Token";
     when(repository.findById(eq(measureId))).thenReturn(Optional.of(measure));
 
-    List<TestCase> output = testCaseService.persistTestCases(newTestCases, measureId, username, accessToken);
+    List<TestCase> output =
+        testCaseService.persistTestCases(newTestCases, measureId, username, accessToken);
     assertThat(output, is(notNullValue()));
     assertThat(output.size(), is(equalTo(2)));
     assertThat(output.get(0).getId(), is(notNullValue()));
@@ -260,29 +249,20 @@ public class TestCaseServiceTest {
   }
 
   @Test
-  public void testPersistTestCasesHandlesListToMeasureWithExistingTestCases(){
+  public void testPersistTestCasesHandlesListToMeasureWithExistingTestCases() {
     List<TestCase> existingTestCases = new ArrayList<>();
-    existingTestCases.add(
-      TestCase.builder()
-        .id("Test1ID")
-        .title("Test0")
-        .build()
-    );
+    existingTestCases.add(TestCase.builder().id("Test1ID").title("Test0").build());
     measure.setTestCases(existingTestCases);
-    List<TestCase> newTestCases = List.of(
-        TestCase.builder()
-            .title("Test1")
-            .build(),
-        TestCase.builder()
-            .title("Test2")
-            .build()
-    );
+    List<TestCase> newTestCases =
+        List.of(
+            TestCase.builder().title("Test1").build(), TestCase.builder().title("Test2").build());
     String measureId = measure.getId();
     String username = "user01";
     String accessToken = "Bearer Token";
     when(repository.findById(eq(measureId))).thenReturn(Optional.of(measure));
 
-    List<TestCase> output = testCaseService.persistTestCases(newTestCases, measureId, username, accessToken);
+    List<TestCase> output =
+        testCaseService.persistTestCases(newTestCases, measureId, username, accessToken);
     assertThat(output, is(notNullValue()));
     assertThat(output.size(), is(equalTo(2)));
     assertThat(output.get(0).getId(), is(notNullValue()));
@@ -307,33 +287,28 @@ public class TestCaseServiceTest {
 
   @Test
   public void testPersistTestCasesHandlesListToMeasureWithJson() throws JsonProcessingException {
-    List<TestCase> newTestCases = List.of(
-        TestCase.builder()
-            .title("Test1")
-            .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
-            .build(),
-        TestCase.builder()
-            .title("Test2")
-            .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
-            .build()
-    );
+    List<TestCase> newTestCases =
+        List.of(
+            TestCase.builder()
+                .title("Test1")
+                .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
+                .build(),
+            TestCase.builder()
+                .title("Test2")
+                .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
+                .build());
     String measureId = measure.getId();
     String username = "user01";
     String accessToken = "Bearer Token";
     when(repository.findById(eq(measureId))).thenReturn(Optional.of(measure));
     when(mapper.readValue("{}", HapiOperationOutcome.class))
-        .thenReturn(HapiOperationOutcome.builder()
-            .code(200)
-            .successful(true)
-            .build())
-        .thenReturn(HapiOperationOutcome.builder()
-            .code(400)
-            .successful(false)
-            .build());
+        .thenReturn(HapiOperationOutcome.builder().code(200).successful(true).build())
+        .thenReturn(HapiOperationOutcome.builder().code(400).successful(false).build());
     when(fhirServicesClient.validateBundle(anyString(), anyString()))
         .thenReturn(ResponseEntity.ok("{}"));
 
-    List<TestCase> output = testCaseService.persistTestCases(newTestCases, measureId, username, accessToken);
+    List<TestCase> output =
+        testCaseService.persistTestCases(newTestCases, measureId, username, accessToken);
     assertThat(output, is(notNullValue()));
     assertThat(output.size(), is(equalTo(2)));
     assertThat(output.get(0).getId(), is(notNullValue()));

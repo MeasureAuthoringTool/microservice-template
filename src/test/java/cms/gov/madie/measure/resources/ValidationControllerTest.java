@@ -76,21 +76,20 @@ class ValidationControllerTest {
     when(multipartFile.getResource()).thenReturn(resource);
     Principal principal = Mockito.mock(Principal.class);
     when(principal.getName()).thenReturn("TestUser");
-    VirusScanResponseDto scanResponse = VirusScanResponseDto.builder()
-        .filesScanned(0)
-        .cleanFileCount(0)
-        .build();
+    VirusScanResponseDto scanResponse =
+        VirusScanResponseDto.builder().filesScanned(0).cleanFileCount(0).build();
     when(virusScanClient.scanFile(any(Resource.class))).thenReturn(scanResponse);
 
-    ResponseEntity<ScanValidationDto> output = validationController.scanFile(multipartFile, principal);
+    ResponseEntity<ScanValidationDto> output =
+        validationController.scanFile(multipartFile, principal);
     assertThat(output.getStatusCode(), is(equalTo(HttpStatus.BAD_REQUEST)));
     assertThat(output, is(notNullValue()));
     assertThat(output.getBody(), is(notNullValue()));
     assertThat(output.getBody().isValid(), is(false));
     assertThat(output.getBody().getError(), is(notNullValue()));
-    assertThat(output.getBody().getError().getDefaultMessage(), is(equalTo(
-      "Validation service returned zero validated files."
-    )));
+    assertThat(
+        output.getBody().getError().getDefaultMessage(),
+        is(equalTo("Validation service returned zero validated files.")));
   }
 
   @Test
@@ -101,14 +100,14 @@ class ValidationControllerTest {
     when(multipartFile.getResource()).thenReturn(resource);
     Principal principal = Mockito.mock(Principal.class);
     when(principal.getName()).thenReturn("TestUser");
-    VirusScanResponseDto scanResponse = VirusScanResponseDto.builder()
-        .filesScanned(1)
-        .cleanFileCount(1)
-        .build();
+    VirusScanResponseDto scanResponse =
+        VirusScanResponseDto.builder().filesScanned(1).cleanFileCount(1).build();
     when(virusScanClient.scanFile(any(Resource.class))).thenReturn(scanResponse);
 
-    ScanValidationDto expected = ScanValidationDto.builder().fileName("TestFile.txt").valid(true).build();
-    ResponseEntity<ScanValidationDto> output = validationController.scanFile(multipartFile, principal);
+    ScanValidationDto expected =
+        ScanValidationDto.builder().fileName("TestFile.txt").valid(true).build();
+    ResponseEntity<ScanValidationDto> output =
+        validationController.scanFile(multipartFile, principal);
     assertThat(output, is(notNullValue()));
     assertThat(output.getStatusCode(), is(equalTo(HttpStatus.OK)));
     assertThat(output.getBody(), is(equalTo(expected)));
@@ -122,29 +121,31 @@ class ValidationControllerTest {
     when(multipartFile.getResource()).thenReturn(resource);
     Principal principal = Mockito.mock(Principal.class);
     when(principal.getName()).thenReturn("TestUser");
-    VirusScanResponseDto scanResponse = VirusScanResponseDto.builder()
-        .filesScanned(1)
-        .cleanFileCount(0)
-        .infectedFileCount(1)
-        .scanResults(List.of(
-            VirusScanResultDto.builder()
-                .fileName("TestFile.txt")
-                .infected(true)
-                .viruses(List.of("SomeBadVirus", "LessBadVirusButStillBad"))
-                .build()
-        ))
-        .build();
+    VirusScanResponseDto scanResponse =
+        VirusScanResponseDto.builder()
+            .filesScanned(1)
+            .cleanFileCount(0)
+            .infectedFileCount(1)
+            .scanResults(
+                List.of(
+                    VirusScanResultDto.builder()
+                        .fileName("TestFile.txt")
+                        .infected(true)
+                        .viruses(List.of("SomeBadVirus", "LessBadVirusButStillBad"))
+                        .build()))
+            .build();
     when(virusScanClient.scanFile(any(Resource.class))).thenReturn(scanResponse);
 
-    ResponseEntity<ScanValidationDto> output = validationController.scanFile(multipartFile, principal);
+    ResponseEntity<ScanValidationDto> output =
+        validationController.scanFile(multipartFile, principal);
     assertThat(output, is(notNullValue()));
     assertThat(output.getStatusCode(), is(equalTo(HttpStatus.OK)));
     assertThat(output.getBody(), is(notNullValue()));
     assertThat(output.getBody().isValid(), is(false));
     assertThat(output.getBody().getFileName(), is(equalTo("TestFile.txt")));
     assertThat(output.getBody().getError(), is(notNullValue()));
-    assertThat(output.getBody().getError().getDefaultMessage(), is(equalTo(
-        "File validation failed with error code V100."
-    )));
+    assertThat(
+        output.getBody().getError().getDefaultMessage(),
+        is(equalTo("File validation failed with error code V100.")));
   }
 }

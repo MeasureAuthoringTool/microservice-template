@@ -18,9 +18,9 @@ public class VirusScanConfig {
 
   @Value("${madie.virus-scan.service.api-key}")
   private String apiKey;
+
   @Bean
   public RestTemplate virusScanRestTemplate() {
     return new RestTemplate();
   }
-
 }

@@ -79,35 +79,36 @@ public class TestCaseControllerTest {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
-    List<TestCase> savedTestCases = List.of(
-        TestCase.builder()
-            .id("ID1")
-            .title("Test1")
-            .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
-            .validResource(true)
-            .build(),
-        TestCase.builder()
-            .id("ID2")
-            .title("Test2")
-            .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
-            .validResource(true)
-            .build()
-    );
+    List<TestCase> savedTestCases =
+        List.of(
+            TestCase.builder()
+                .id("ID1")
+                .title("Test1")
+                .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
+                .validResource(true)
+                .build(),
+            TestCase.builder()
+                .id("ID2")
+                .title("Test2")
+                .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
+                .validResource(true)
+                .build());
 
     when(testCaseService.persistTestCases(anyList(), anyString(), anyString(), anyString()))
         .thenReturn(savedTestCases);
 
-    List<TestCase> testCases = List.of(
-        TestCase.builder()
-            .title("Test1")
-            .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
-            .build(),
-        TestCase.builder()
-            .title("Test2")
-            .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
-            .build()
-    );
-    ResponseEntity<List<TestCase>> output = controller.addTestCases(testCases, "MeasureID", "Bearer Token", principal);
+    List<TestCase> testCases =
+        List.of(
+            TestCase.builder()
+                .title("Test1")
+                .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
+                .build(),
+            TestCase.builder()
+                .title("Test2")
+                .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
+                .build());
+    ResponseEntity<List<TestCase>> output =
+        controller.addTestCases(testCases, "MeasureID", "Bearer Token", principal);
     assertThat(output, is(notNullValue()));
     assertThat(output.getStatusCode(), is(equalTo(HttpStatus.CREATED)));
     assertThat(output.getBody(), is(equalTo(savedTestCases)));

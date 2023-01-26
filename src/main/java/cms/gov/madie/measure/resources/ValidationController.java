@@ -40,8 +40,7 @@ public class ValidationController {
 
   @PostMapping("/files")
   public ResponseEntity<ScanValidationDto> scanFile(
-      @RequestParam("file") MultipartFile multipartFile,
-      Principal principal) {
+      @RequestParam("file") MultipartFile multipartFile, Principal principal) {
     final String fileName = StringUtils.cleanPath(multipartFile.getOriginalFilename());
     final String username = principal.getName();
     VirusScanResponseDto scanResponse = virusScanClient.scanFile(multipartFile.getResource());
@@ -49,39 +48,43 @@ public class ValidationController {
 
     if (scanResponse.getFilesScanned() == 0) {
       log.warn(
-          "User [{}] tried to validate file [{}] but virus scan service response contained zero scanned files!",
+          "User [{}] tried to validate file [{}] but virus scan service "
+              + "response contained zero scanned files!",
           username,
-          fileName
-      );
-      return ResponseEntity.badRequest().body(
-          ScanValidationDto.builder()
-              .fileName(null)
-              .valid(false)
-              .error(new ObjectError(
-                  fileName,
-                  new String[]{"400"},
-                  null,
-                  "Validation service returned zero validated files."))
-              .build()
-      );
-    } else if(scanResponse.getFilesScanned() == scanResponse.getCleanFileCount()) {
+          fileName);
+      return ResponseEntity.badRequest()
+          .body(
+              ScanValidationDto.builder()
+                  .fileName(null)
+                  .valid(false)
+                  .error(
+                      new ObjectError(
+                          fileName,
+                          new String[] {"400"},
+                          null,
+                          "Validation service returned zero validated files."))
+                  .build());
+    } else if (scanResponse.getFilesScanned() == scanResponse.getCleanFileCount()) {
       // all files are clean!
       log.info("User [{}] invoked virus scan proxy endpoint and scanned file was clean", username);
       return ResponseEntity.ok(ScanValidationDto.builder().fileName(fileName).valid(true).build());
     } else {
       // errors occurred or virus detected
-      log.info("User [{}] invoked virus scan proxy endpoint and scanned file was infected! Returning error code V100.", username);
+      log.info(
+          "User [{}] invoked virus scan proxy endpoint and scanned file was infected! "
+              + "Returning error code V100.",
+          username);
       return ResponseEntity.ok(
           ScanValidationDto.builder()
               .fileName(fileName)
               .valid(false)
-              .error(new ObjectError(
-                  fileName,
-                  new String[]{"V100"},
-                  null,
-                  "File validation failed with error code V100."))
-              .build()
-      );
+              .error(
+                  new ObjectError(
+                      fileName,
+                      new String[] {"V100"},
+                      null,
+                      "File validation failed with error code V100."))
+              .build());
     }
   }
 }

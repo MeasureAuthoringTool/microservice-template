@@ -83,7 +83,8 @@ public class TestCaseService {
     }
     measureRepository.save(measure);
 
-    actionLogService.logAction(enrichedTestCase.getId(), TestCase.class, ActionType.CREATED, username);
+    actionLogService.logAction(
+        enrichedTestCase.getId(), TestCase.class, ActionType.CREATED, username);
 
     log.info(
         "User [{}] successfully created new test case with ID [{}] for the measure with ID[{}] ",
@@ -93,7 +94,6 @@ public class TestCaseService {
     return enrichedTestCase;
   }
 
-
   public List<TestCase> persistTestCases(
       List<TestCase> newTestCases, String measureId, String username, String accessToken) {
     if (newTestCases == null || newTestCases.isEmpty()) {
@@ -101,7 +101,7 @@ public class TestCaseService {
     }
     final Measure measure = findMeasureById(measureId);
     List<TestCase> enrichedTestCases = new ArrayList<>(newTestCases.size());
-    for (TestCase testCase: newTestCases) {
+    for (TestCase testCase : newTestCases) {
       TestCase enriched = enrichNewTestCase(testCase, username);
       enriched = validateTestCaseAsResource(enriched, accessToken);
       enrichedTestCases.add(enriched);
@@ -125,7 +125,8 @@ public class TestCaseService {
 
   public TestCase validateTestCaseAsResource(final TestCase testCase, final String accessToken) {
     final HapiOperationOutcome hapiOperationOutcome = validateTestCaseJson(testCase, accessToken);
-    TestCase.TestCaseBuilder testCaseBuilder = testCase.toBuilder().hapiOperationOutcome(hapiOperationOutcome);
+    TestCase.TestCaseBuilder testCaseBuilder =
+        testCase.toBuilder().hapiOperationOutcome(hapiOperationOutcome);
     if (hapiOperationOutcome != null
         && (hapiOperationOutcome.getCode() >= 200 || hapiOperationOutcome.getCode() <= 299)
         && hapiOperationOutcome.isSuccessful()) {
