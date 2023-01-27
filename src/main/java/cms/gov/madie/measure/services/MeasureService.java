@@ -1,13 +1,16 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.InvalidCmsIdException;
 import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
 import cms.gov.madie.measure.exceptions.InvalidMeasurementPeriodException;
 import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
+import cms.gov.madie.measure.utils.MeasureUtil;
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
+import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Measure;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -15,6 +18,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+
+import gov.cms.madie.models.measure.MeasureErrorType;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -25,6 +30,47 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class MeasureService {
   private final MeasureRepository measureRepository;
+  private final ElmTranslatorClient elmTranslatorClient;
+  private final MeasureUtil measureUtil;
+
+  public Measure updateMeasure(
+      final Measure existingMeasure,
+      final String username,
+      final Measure updatingMeasure,
+      final String accessToken) {
+    if (measureUtil.isCqlLibraryNameChanged(updatingMeasure, existingMeasure)) {
+      checkDuplicateCqlLibraryName(updatingMeasure.getCqlLibraryName());
+    }
+
+    checkVersionIdChanged(updatingMeasure.getVersionId(), existingMeasure.getVersionId());
+    checkCmsIdChanged(updatingMeasure.getCmsId(), existingMeasure.getCmsId());
+
+    if (measureUtil.isMeasurementPeriodChanged(updatingMeasure, existingMeasure)) {
+      validateMeasurementPeriod(
+          updatingMeasure.getMeasurementPeriodStart(), updatingMeasure.getMeasurementPeriodEnd());
+    }
+
+    Measure outputMeasure = updatingMeasure;
+    if (measureUtil.isMeasureCqlChanged(existingMeasure, updatingMeasure)) {
+      try {
+        outputMeasure =
+            measureUtil.validateAllMeasureGroupReturnTypes(updateElm(updatingMeasure, accessToken));
+      } catch (CqlElmTranslationErrorException ex) {
+        outputMeasure =
+            updatingMeasure
+                .toBuilder()
+                .cqlErrors(true)
+                .error(MeasureErrorType.ERRORS_ELM_JSON)
+                .build();
+      }
+    }
+    outputMeasure.setLastModifiedBy(username);
+    outputMeasure.setLastModifiedAt(Instant.now());
+    // prevent users from overwriting the createdAt/By
+    outputMeasure.setCreatedAt(existingMeasure.getCreatedAt());
+    outputMeasure.setCreatedBy(existingMeasure.getCreatedBy());
+    return measureRepository.save(outputMeasure);
+  }
 
   public void checkDuplicateCqlLibraryName(String cqlLibraryName) {
     if (StringUtils.isNotEmpty(cqlLibraryName)
@@ -35,12 +81,10 @@ public class MeasureService {
   }
 
   public void validateMeasurementPeriod(Date measurementPeriodStart, Date measurementPeriodEnd) {
-
     if (measurementPeriodStart == null || measurementPeriodEnd == null) {
       throw new InvalidMeasurementPeriodException(
           "Measurement period date is required and must be valid");
     }
-
     SimpleDateFormat checkYear = new SimpleDateFormat("yyyy");
     int checkMeasurementPeriodStart = Integer.parseInt(checkYear.format(measurementPeriodStart));
     int checkMeasurementPeriodEnd = Integer.parseInt(checkYear.format(measurementPeriodEnd));
@@ -63,6 +107,18 @@ public class MeasureService {
     if (!username.equalsIgnoreCase(createdBy)) {
       throw new InvalidDeletionCredentialsException(username);
     }
+  }
+
+  public Measure updateElm(Measure measure, String accessToken) {
+    if (measure != null && StringUtils.isNotBlank(measure.getCql())) {
+      final ElmJson elmJson = elmTranslatorClient.getElmJson(measure.getCql(), accessToken);
+      if (elmTranslatorClient.hasErrors(elmJson)) {
+        throw new CqlElmTranslationErrorException(measure.getMeasureName());
+      }
+
+      return measure.toBuilder().elmJson(elmJson.getJson()).elmXml(elmJson.getXml()).build();
+    }
+    return measure;
   }
 
   public void checkVersionIdChanged(String changedVersionId, String originalVersionId) {

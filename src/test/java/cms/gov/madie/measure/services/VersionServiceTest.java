@@ -1,11 +1,17 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.exceptions.BadVersionRequestException;
+import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.MeasureNotDraftableException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import gov.cms.madie.models.common.Version;
+import gov.cms.madie.models.measure.ElmJson;
+import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureMetaData;
+import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.*;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
@@ -15,6 +21,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.Optional;
@@ -40,9 +47,17 @@ public class VersionServiceTest {
 
   @Mock ActionLogService actionLogService;
 
+  @Mock ElmTranslatorClient elmTranslatorClient;
+
+  @Mock FhirServicesClient fhirServicesClient;
+
   @InjectMocks VersionService versionService;
 
   @Captor private ArgumentCaptor<Measure> measureCaptor;
+
+  private final String ELMJON_ERROR =
+      "{\n" + "\"errorExceptions\" : \n" + "[ {\"error\":\"error translating cql\" } ]\n" + "}";
+  private final String ELMJON_NO_ERROR = "{\n" + "\"errorExceptions\" : \n" + "[]\n" + "}";
 
   Group cvGroup =
       Group.builder()
@@ -146,6 +161,31 @@ public class VersionServiceTest {
   }
 
   @Test
+  public void testCreateVersionThrowsCqlElmTranslationErrorExceptionForInvalidCQL() {
+    Measure existingMeasure =
+        Measure.builder()
+            .id("testMeasureId")
+            .measureName("test measure")
+            .createdBy("testUser")
+            .cqlErrors(false)
+            .cql("test cql")
+            .build();
+    MeasureMetaData metaData = new MeasureMetaData();
+    metaData.setDraft(true);
+    existingMeasure.setMeasureMetaData(metaData);
+
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+
+    ElmJson elmJson = ElmJson.builder().json(ELMJON_ERROR).build();
+    when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(elmJson);
+    when(elmTranslatorClient.hasErrors(any())).thenReturn(true);
+
+    assertThrows(
+        CqlElmTranslationErrorException.class,
+        () -> versionService.createVersion("testMeasureId", "MAJOR", "testUser", "accesstoken"));
+  }
+
+  @Test
   public void testCreateVersionThrowsBadVersionRequestExceptionForInvalidResources() {
     Measure existingMeasure =
         Measure.builder()
@@ -160,6 +200,10 @@ public class VersionServiceTest {
     existingMeasure.setTestCases(testCases);
 
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+
+    ElmJson elmJson = ElmJson.builder().json(ELMJON_NO_ERROR).build();
+    when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(elmJson);
+    when(elmTranslatorClient.hasErrors(any())).thenReturn(false);
 
     assertThrows(
         BadVersionRequestException.class,
@@ -198,6 +242,10 @@ public class VersionServiceTest {
 
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
 
+    ElmJson elmJson = ElmJson.builder().json(ELMJON_NO_ERROR).build();
+    when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(elmJson);
+    when(elmTranslatorClient.hasErrors(any())).thenReturn(false);
+
     Version newVersion = Version.builder().major(2).minor(2).revisionNumber(2).build();
     when(measureRepository.findMaxVersionByMeasureSetId(anyString()))
         .thenReturn(Optional.of(newVersion));
@@ -210,6 +258,9 @@ public class VersionServiceTest {
     updatedMeasure.setMeasureMetaData(updatedMetaData);
     when(measureRepository.save(any(Measure.class))).thenReturn(updatedMeasure);
 
+    when(fhirServicesClient.saveMeasureInHapiFhir(any(), anyString()))
+        .thenReturn(ResponseEntity.ok("Created"));
+
     versionService.createVersion("testMeasureId", "MAJOR", "testUser", "accesstoken");
 
     verify(measureRepository, times(1)).save(measureCaptor.capture());
@@ -218,6 +269,8 @@ public class VersionServiceTest {
     assertEquals(savedValue.getVersion().getMinor(), 0);
     assertEquals(savedValue.getVersion().getRevisionNumber(), 0);
     assertFalse(savedValue.getMeasureMetaData().isDraft());
+
+    verify(fhirServicesClient, times(1)).saveMeasureInHapiFhir(updatedMeasure, "accesstoken");
   }
 
   @Test
@@ -238,6 +291,10 @@ public class VersionServiceTest {
     existingMeasure.setTestCases(testCases);
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
 
+    ElmJson elmJson = ElmJson.builder().json(ELMJON_NO_ERROR).build();
+    when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(elmJson);
+    when(elmTranslatorClient.hasErrors(any())).thenReturn(false);
+
     Version newVersion = Version.builder().major(2).minor(3).revisionNumber(2).build();
     when(measureRepository.findMaxMinorVersionByMeasureSetIdAndVersionMajor(anyString(), anyInt()))
         .thenReturn(Optional.of(newVersion));
@@ -250,6 +307,9 @@ public class VersionServiceTest {
     updatedMeasure.setMeasureMetaData(updatedMetaData);
     when(measureRepository.save(any(Measure.class))).thenReturn(updatedMeasure);
 
+    when(fhirServicesClient.saveMeasureInHapiFhir(any(), anyString()))
+        .thenReturn(ResponseEntity.ok("Created"));
+
     versionService.createVersion("testMeasureId", "MINOR", "testUser", "accesstoken");
 
     verify(measureRepository, times(1)).save(measureCaptor.capture());
@@ -258,6 +318,8 @@ public class VersionServiceTest {
     assertEquals(savedValue.getVersion().getMinor(), 4);
     assertEquals(savedValue.getVersion().getRevisionNumber(), 0);
     assertFalse(savedValue.getMeasureMetaData().isDraft());
+
+    verify(fhirServicesClient, times(1)).saveMeasureInHapiFhir(updatedMeasure, "accesstoken");
   }
 
   @Test
@@ -278,6 +340,10 @@ public class VersionServiceTest {
     existingMeasure.setTestCases(testCases);
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
 
+    ElmJson elmJson = ElmJson.builder().json(ELMJON_NO_ERROR).build();
+    when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(elmJson);
+    when(elmTranslatorClient.hasErrors(any())).thenReturn(false);
+
     Version newVersion = Version.builder().major(2).minor(3).revisionNumber(1).build();
     when(measureRepository.findMaxRevisionNumberByMeasureSetIdAndVersionMajorAndMinor(
             anyString(), anyInt(), anyInt()))
@@ -291,6 +357,8 @@ public class VersionServiceTest {
     updatedMeasure.setMeasureMetaData(updatedMetaData);
     when(measureRepository.save(any(Measure.class))).thenReturn(updatedMeasure);
 
+    when(fhirServicesClient.saveMeasureInHapiFhir(any(), anyString())).thenReturn(null);
+
     versionService.createVersion("testMeasureId", "PATCH", "testUser", "accesstoken");
 
     verify(measureRepository, times(1)).save(measureCaptor.capture());
@@ -299,6 +367,8 @@ public class VersionServiceTest {
     assertEquals(savedValue.getVersion().getMinor(), 3);
     assertEquals(savedValue.getVersion().getRevisionNumber(), 2);
     assertFalse(savedValue.getMeasureMetaData().isDraft());
+
+    verify(fhirServicesClient, times(1)).saveMeasureInHapiFhir(updatedMeasure, "accesstoken");
   }
 
   @Test

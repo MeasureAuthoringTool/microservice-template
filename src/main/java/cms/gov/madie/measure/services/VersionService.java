@@ -1,12 +1,14 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.exceptions.BadVersionRequestException;
+import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.MeasureNotDraftableException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.utils.ControllerUtil;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.Version;
+import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.TestCase;
@@ -14,6 +16,7 @@ import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.ResponseEntity;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -32,6 +35,8 @@ public class VersionService {
 
   private final ActionLogService actionLogService;
   private final MeasureRepository measureRepository;
+  private final ElmTranslatorClient elmTranslatorClient;
+  private final FhirServicesClient fhirServicesClient;
 
   private static final String VERSION_TYPE_MAJOR = "MAJOR";
   private static final String VERSION_TYPE_MINOR = "MINOR";
@@ -54,7 +59,7 @@ public class VersionService {
 
     ControllerUtil.verifyAuthorization(username, measure);
 
-    validateMeasureForVersioning(measure, username);
+    validateMeasureForVersioning(measure, username, accessToken);
 
     measure.getMeasureMetaData().setDraft(false);
     measure.setLastModifiedAt(Instant.now());
@@ -86,6 +91,14 @@ public class VersionService {
 
     log.info(
         "User [{}] successfully versioned measure with ID [{}]", username, savedMeasure.getId());
+
+    ResponseEntity<String> result =
+        fhirServicesClient.saveMeasureInHapiFhir(savedMeasure, accessToken);
+
+    log.info(
+        "User [{}] successfully saved versioned measure with ID [{}] in HAPI FHIR",
+        username,
+        (result != null ? result.getBody() : " null"));
 
     return savedMeasure;
   }
@@ -168,7 +181,7 @@ public class VersionService {
         measure.getMeasureSetId(), true, true);
   }
 
-  private void validateMeasureForVersioning(Measure measure, String username) {
+  private void validateMeasureForVersioning(Measure measure, String username, String accessToken) {
     if (!measure.getMeasureMetaData().isDraft()) {
       log.error(
           "User [{}] attempted to version measure with id [{}] which is not in a draft state",
@@ -192,6 +205,11 @@ public class VersionService {
           measure.getId());
       throw new BadVersionRequestException(
           "Measure", measure.getId(), username, "Measure has no CQL.");
+    } else {
+      final ElmJson elmJson = elmTranslatorClient.getElmJson(measure.getCql(), accessToken);
+      if (elmTranslatorClient.hasErrors(elmJson)) {
+        throw new CqlElmTranslationErrorException(measure.getMeasureName());
+      }
     }
     if (measure.getTestCases() != null
         && measure.getTestCases().stream()
