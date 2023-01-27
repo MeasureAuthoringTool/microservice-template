@@ -146,7 +146,6 @@ public class VersionService {
   private List<TestCase> cloneTestCases(List<TestCase> testCases, List<Group> draftGroups) {
     if (!CollectionUtils.isEmpty(testCases)) {
       List<TestCaseGroupPopulation> updatedTestCaseGroupPopulations = new ArrayList<>();
-
       return testCases.stream()
           .map(
               testCase -> {
