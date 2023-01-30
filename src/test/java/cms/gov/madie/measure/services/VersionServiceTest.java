@@ -391,6 +391,12 @@ public class VersionServiceTest {
 
   @Test
   public void testCreateDraftSuccessfully() {
+    TestCaseGroupPopulation clonedTestCaseGroupPopulation =
+            TestCaseGroupPopulation.builder()
+                    .groupId("clonedGroupId1")
+                    .scoring("Cohort")
+                    .populationBasis("boolean")
+                    .build();
     Measure versionedMeasure = buildBasicMeasure();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(true);
@@ -402,7 +408,7 @@ public class VersionServiceTest {
             .measureName("Test")
             .measureMetaData(metaData)
             .groups(List.of(cvGroup.toBuilder().id(ObjectId.get().toString()).build()))
-            .testCases(List.of(testCase))
+            .testCases(List.of(testCase.toBuilder().id(ObjectId.get().toString()).groupPopulations(List.of(clonedTestCaseGroupPopulation)).build()))
             .build();
 
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(versionedMeasure));
@@ -424,6 +430,8 @@ public class VersionServiceTest {
     assertThat(draft.getGroups().size(), is(equalTo(1)));
     assertFalse(draft.getGroups().stream().anyMatch(item -> "xyz-p12r-12ert".equals(item.getId())));
     assertThat(draft.getTestCases().size(), is(equalTo(1)));
+    assertFalse(draft.getGroups().stream().anyMatch(item -> "testId1".equals(item.getId())));
+    assertThat(draft.getTestCases().get(0).getGroupPopulations().get(0).getGroupId(),is(equalTo("clonedGroupId1")));
   }
 
   @Test
@@ -529,7 +537,7 @@ public class VersionServiceTest {
         .version(Version.builder().major(2).minor(3).revisionNumber(1).build())
         .measureMetaData(new MeasureMetaData())
         .groups(List.of(cvGroup))
-        .testCases(List.of(new TestCase()))
+        .testCases(List.of(testCase))
         .build();
   }
 }
