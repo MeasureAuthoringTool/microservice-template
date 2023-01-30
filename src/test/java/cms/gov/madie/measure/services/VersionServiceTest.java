@@ -59,6 +59,23 @@ public class VersionServiceTest {
       "{\n" + "\"errorExceptions\" : \n" + "[ {\"error\":\"error translating cql\" } ]\n" + "}";
   private final String ELMJON_NO_ERROR = "{\n" + "\"errorExceptions\" : \n" + "[]\n" + "}";
 
+  TestCaseGroupPopulation testCaseGroupPopulation=
+          TestCaseGroupPopulation.builder().groupId("groupId1")
+                  .scoring("Cohort")
+                  .populationBasis("boolean")
+                  .build();
+
+  TestCase testCase =
+                  TestCase.builder()
+                          .id("testId1")
+                          .name("IPPPass")
+                          .series("BloodPressure>124")
+                          .createdBy("TestUser")
+                          .lastModifiedBy("TestUser2")
+                          .json("{\"resourceType\":\"Patient\"}")
+                          .title("Test1")
+                          .groupPopulations(List.of(testCaseGroupPopulation))
+                          .build();
   Group cvGroup =
       Group.builder()
           .id("xyz-p12r-12ert")
@@ -384,7 +401,7 @@ public class VersionServiceTest {
             .measureName("Test")
             .measureMetaData(metaData)
             .groups(List.of(cvGroup.toBuilder().id(ObjectId.get().toString()).build()))
-            .testCases(List.of())
+            .testCases(List.of(testCase))
             .build();
 
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(versionedMeasure));
@@ -404,9 +421,8 @@ public class VersionServiceTest {
     assertThat(draft.getVersion().getMinor(), is(equalTo(3)));
     assertThat(draft.getVersion().getRevisionNumber(), is(equalTo(1)));
     assertThat(draft.getGroups().size(), is(equalTo(1)));
-    System.out.println(draft.getGroups());
     assertFalse(draft.getGroups().stream().anyMatch(item -> "xyz-p12r-12ert".equals(item.getId())));
-    assertThat(draft.getTestCases().size(), is(equalTo(0)));
+    assertThat(draft.getTestCases().size(), is(equalTo(1)));
   }
 
   @Test
