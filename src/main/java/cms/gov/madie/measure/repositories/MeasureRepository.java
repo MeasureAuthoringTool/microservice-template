@@ -20,9 +20,10 @@ public interface MeasureRepository
 
   Page<Measure> findAllByActive(Boolean active, Pageable page);
 
-  @Query(collation = "{ 'locale': 'en_US', 'strength': 2}",
-      value = "{$or: [{createdBy: ?0 , active : ?1}, "
-            + "{'acls.userId' : ?0 , 'acls.roles' : ?2}]}")
+  @Query(
+      collation = "{ 'locale': 'en_US', 'strength': 2}",
+      value =
+          "{$or: [{createdBy: ?0 , active : ?1}, " + "{'acls.userId' : ?0 , 'acls.roles' : ?2}]}")
   Page<Measure> findAllByCreatedByAndActiveOrShared(
       String user, Boolean active, String shared, Pageable page);
 
@@ -39,11 +40,13 @@ public interface MeasureRepository
           + "]}")
   Page<Measure> findAllByMeasureNameOrEcqmTitle(String criteria, Pageable page);
 
-  @Query(collation = "{ 'locale': 'en_US', 'strength': 2}",
-      value = " {$and: [{'createdBy' : ?1, active : true} ,  "
-          + "{$or: [{'measureName' : { $regex : /\\Q?0\\E/, $options: 'i' } },"
-          + "{'ecqmTitle' : { $regex : /\\Q?0\\E/, $options: 'i' }}]} "
-          + "]}")
+  @Query(
+      collation = "{ 'locale': 'en_US', 'strength': 2}",
+      value =
+          " {$and: [{'createdBy' : ?1, active : true} ,  "
+              + "{$or: [{'measureName' : { $regex : /\\Q?0\\E/, $options: 'i' } },"
+              + "{'ecqmTitle' : { $regex : /\\Q?0\\E/, $options: 'i' }}]} "
+              + "]}")
   Page<Measure> findAllByMeasureNameOrEcqmTitleForCurrentUser(
       String criteria, Pageable page, String user);
 
