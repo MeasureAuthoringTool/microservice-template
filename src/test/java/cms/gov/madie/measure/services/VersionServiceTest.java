@@ -59,23 +59,24 @@ public class VersionServiceTest {
       "{\n" + "\"errorExceptions\" : \n" + "[ {\"error\":\"error translating cql\" } ]\n" + "}";
   private final String ELMJON_NO_ERROR = "{\n" + "\"errorExceptions\" : \n" + "[]\n" + "}";
 
-  TestCaseGroupPopulation testCaseGroupPopulation=
-          TestCaseGroupPopulation.builder().groupId("groupId1")
-                  .scoring("Cohort")
-                  .populationBasis("boolean")
-                  .build();
+  TestCaseGroupPopulation testCaseGroupPopulation =
+      TestCaseGroupPopulation.builder()
+          .groupId("groupId1")
+          .scoring("Cohort")
+          .populationBasis("boolean")
+          .build();
 
   TestCase testCase =
-                  TestCase.builder()
-                          .id("testId1")
-                          .name("IPPPass")
-                          .series("BloodPressure>124")
-                          .createdBy("TestUser")
-                          .lastModifiedBy("TestUser2")
-                          .json("{\"resourceType\":\"Patient\"}")
-                          .title("Test1")
-                          .groupPopulations(List.of(testCaseGroupPopulation))
-                          .build();
+      TestCase.builder()
+          .id("testId1")
+          .name("IPPPass")
+          .series("BloodPressure>124")
+          .createdBy("TestUser")
+          .lastModifiedBy("TestUser2")
+          .json("{\"resourceType\":\"Patient\"}")
+          .title("Test1")
+          .groupPopulations(List.of(testCaseGroupPopulation))
+          .build();
   Group cvGroup =
       Group.builder()
           .id("xyz-p12r-12ert")
