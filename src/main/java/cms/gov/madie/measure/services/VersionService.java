@@ -145,10 +145,10 @@ public class VersionService {
 
   private List<TestCase> cloneTestCases(List<TestCase> testCases, List<Group> draftGroups) {
     if (!CollectionUtils.isEmpty(testCases)) {
-      List<TestCaseGroupPopulation> updatedTestCaseGroupPopulations = new ArrayList<>();
       return testCases.stream()
           .map(
               testCase -> {
+                List<TestCaseGroupPopulation> updatedTestCaseGroupPopulations = new ArrayList<>();
                 List<TestCaseGroupPopulation> testCaseGroups = testCase.getGroupPopulations();
                 if (!CollectionUtils.isEmpty(testCaseGroups)) {
                   AtomicInteger indexHolder = new AtomicInteger();
