@@ -11,16 +11,21 @@ import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.TestCase;
+import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.ResponseEntity;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -114,8 +119,7 @@ public class VersionService {
     measureDraft.setMeasureName(measureName);
     measureDraft.getMeasureMetaData().setDraft(true);
     measureDraft.setGroups(cloneMeasureGroups(measure.getGroups()));
-    // TODO: MAT-5238 add tests back
-    measureDraft.setTestCases(List.of());
+    measureDraft.setTestCases(cloneTestCases(measure.getTestCases(), measureDraft.getGroups()));
     var now = Instant.now();
     measureDraft.setCreatedAt(now);
     measureDraft.setLastModifiedAt(now);
@@ -131,9 +135,40 @@ public class VersionService {
   }
 
   private List<Group> cloneMeasureGroups(List<Group> groups) {
-    if (groups != null) {
+    if (!CollectionUtils.isEmpty(groups)) {
       return groups.stream()
           .map(group -> group.toBuilder().id(ObjectId.get().toString()).build())
+          .collect(Collectors.toList());
+    }
+    return List.of();
+  }
+
+  private List<TestCase> cloneTestCases(List<TestCase> testCases, List<Group> draftGroups) {
+    if (!CollectionUtils.isEmpty(testCases)) {
+      return testCases.stream()
+          .map(
+              testCase -> {
+                List<TestCaseGroupPopulation> updatedTestCaseGroupPopulations = new ArrayList<>();
+                List<TestCaseGroupPopulation> testCaseGroups = testCase.getGroupPopulations();
+                if (!CollectionUtils.isEmpty(testCaseGroups)) {
+                  AtomicInteger indexHolder = new AtomicInteger();
+                  updatedTestCaseGroupPopulations.addAll(
+                      testCaseGroups.stream()
+                          .map(
+                              testCaseGroupPopulation ->
+                                  testCaseGroupPopulation
+                                      .toBuilder()
+                                      .groupId(
+                                          draftGroups.get(indexHolder.getAndIncrement()).getId())
+                                      .build())
+                          .toList());
+                }
+                return testCase
+                    .toBuilder()
+                    .id(ObjectId.get().toString())
+                    .groupPopulations(updatedTestCaseGroupPopulations)
+                    .build();
+              })
           .collect(Collectors.toList());
     }
     return List.of();

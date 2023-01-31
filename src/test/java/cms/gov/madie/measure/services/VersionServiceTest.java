@@ -59,6 +59,24 @@ public class VersionServiceTest {
       "{\n" + "\"errorExceptions\" : \n" + "[ {\"error\":\"error translating cql\" } ]\n" + "}";
   private final String ELMJON_NO_ERROR = "{\n" + "\"errorExceptions\" : \n" + "[]\n" + "}";
 
+  TestCaseGroupPopulation testCaseGroupPopulation =
+      TestCaseGroupPopulation.builder()
+          .groupId("groupId1")
+          .scoring("Cohort")
+          .populationBasis("boolean")
+          .build();
+
+  TestCase testCase =
+      TestCase.builder()
+          .id("testId1")
+          .name("IPPPass")
+          .series("BloodPressure>124")
+          .createdBy("TestUser")
+          .lastModifiedBy("TestUser2")
+          .json("{\"resourceType\":\"Patient\"}")
+          .title("Test1")
+          .groupPopulations(List.of(testCaseGroupPopulation))
+          .build();
   Group cvGroup =
       Group.builder()
           .id("xyz-p12r-12ert")
@@ -373,6 +391,12 @@ public class VersionServiceTest {
 
   @Test
   public void testCreateDraftSuccessfully() {
+    TestCaseGroupPopulation clonedTestCaseGroupPopulation =
+            TestCaseGroupPopulation.builder()
+                    .groupId("clonedGroupId1")
+                    .scoring("Cohort")
+                    .populationBasis("boolean")
+                    .build();
     Measure versionedMeasure = buildBasicMeasure();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(true);
@@ -384,7 +408,7 @@ public class VersionServiceTest {
             .measureName("Test")
             .measureMetaData(metaData)
             .groups(List.of(cvGroup.toBuilder().id(ObjectId.get().toString()).build()))
-            .testCases(List.of())
+            .testCases(List.of(testCase.toBuilder().id(ObjectId.get().toString()).groupPopulations(List.of(clonedTestCaseGroupPopulation)).build()))
             .build();
 
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(versionedMeasure));
@@ -404,9 +428,10 @@ public class VersionServiceTest {
     assertThat(draft.getVersion().getMinor(), is(equalTo(3)));
     assertThat(draft.getVersion().getRevisionNumber(), is(equalTo(1)));
     assertThat(draft.getGroups().size(), is(equalTo(1)));
-    System.out.println(draft.getGroups());
     assertFalse(draft.getGroups().stream().anyMatch(item -> "xyz-p12r-12ert".equals(item.getId())));
-    assertThat(draft.getTestCases().size(), is(equalTo(0)));
+    assertThat(draft.getTestCases().size(), is(equalTo(1)));
+    assertFalse(draft.getGroups().stream().anyMatch(item -> "testId1".equals(item.getId())));
+    assertThat(draft.getTestCases().get(0).getGroupPopulations().get(0).getGroupId(),is(equalTo("clonedGroupId1")));
   }
 
   @Test
@@ -512,7 +537,7 @@ public class VersionServiceTest {
         .version(Version.builder().major(2).minor(3).revisionNumber(1).build())
         .measureMetaData(new MeasureMetaData())
         .groups(List.of(cvGroup))
-        .testCases(List.of(new TestCase()))
+        .testCases(List.of(testCase))
         .build();
   }
 }

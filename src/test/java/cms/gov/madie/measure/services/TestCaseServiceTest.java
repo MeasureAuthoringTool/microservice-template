@@ -175,10 +175,11 @@ public class TestCaseServiceTest {
 
   @Test
   public void testValidateTestCaseAsResource() throws JsonProcessingException {
-    TestCase testCase = TestCase.builder()
-        .id("TestID")
-        .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
-        .build();
+    TestCase testCase =
+        TestCase.builder()
+            .id("TestID")
+            .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
+            .build();
     final String accessToken = "Bearer Token";
 
     when(fhirServicesClient.validateBundle(anyString(), anyString()))
