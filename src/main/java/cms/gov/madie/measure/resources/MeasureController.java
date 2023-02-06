@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.resources;
 
+import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
 import cms.gov.madie.measure.utils.ControllerUtil;
 import gov.cms.madie.models.access.RoleEnum;
 
@@ -135,6 +136,10 @@ public class MeasureController {
         log.info("got username [{}] vs createdBy: [{}]", username, existingMeasure.getCreatedBy());
         // either owner or shared-with role
         ControllerUtil.verifyAuthorization(username, existingMeasure);
+
+        if (!existingMeasure.getMeasureMetaData().isDraft()) {
+          throw new InvalidDraftStatusException(measure.getId());
+        }
 
         // no user can update a soft-deleted measure
         if (!existingMeasure.isActive()) {

@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.HapiFhirConfig;
+import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
@@ -67,6 +68,11 @@ public class TestCaseService {
   public TestCase persistTestCase(
       TestCase testCase, String measureId, String username, String accessToken) {
     final Measure measure = findMeasureById(measureId);
+
+    if (!measure.getMeasureMetaData().isDraft()) {
+      throw new InvalidDraftStatusException(measure.getId());
+    }
+
     TestCase enrichedTestCase = enrichNewTestCase(testCase, username);
     enrichedTestCase = validateTestCaseAsResource(enrichedTestCase, accessToken);
     if (measure.getTestCases() == null) {
@@ -93,6 +99,11 @@ public class TestCaseService {
       return newTestCases;
     }
     final Measure measure = findMeasureById(measureId);
+
+    if (!measure.getMeasureMetaData().isDraft()) {
+      throw new InvalidDraftStatusException(measure.getId());
+    }
+
     List<TestCase> enrichedTestCases = new ArrayList<>(newTestCases.size());
     for (TestCase testCase : newTestCases) {
       TestCase enriched = enrichNewTestCase(testCase, username);
@@ -133,6 +144,11 @@ public class TestCaseService {
   public TestCase updateTestCase(
       TestCase testCase, String measureId, String username, String accessToken) {
     Measure measure = findMeasureById(measureId);
+
+    if (!measure.getMeasureMetaData().isDraft()) {
+      throw new InvalidDraftStatusException(measure.getId());
+    }
+
     if (measure.getTestCases() == null) {
       measure.setTestCases(new ArrayList<>());
     }
@@ -209,6 +225,11 @@ public class TestCaseService {
     }
 
     Measure measure = findMeasureById(measureId);
+
+    if (!measure.getMeasureMetaData().isDraft()) {
+      throw new InvalidDraftStatusException(measure.getId());
+    }
+
     if (!hasPermissionToDelete(username, measure)) {
       log.info(
           "User [{}] is not authorized to delete the test case with ID [{}] from measure [{}]",
