@@ -392,11 +392,11 @@ public class VersionServiceTest {
   @Test
   public void testCreateDraftSuccessfully() {
     TestCaseGroupPopulation clonedTestCaseGroupPopulation =
-            TestCaseGroupPopulation.builder()
-                    .groupId("clonedGroupId1")
-                    .scoring("Cohort")
-                    .populationBasis("boolean")
-                    .build();
+        TestCaseGroupPopulation.builder()
+            .groupId("clonedGroupId1")
+            .scoring("Cohort")
+            .populationBasis("boolean")
+            .build();
     Measure versionedMeasure = buildBasicMeasure();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(true);
@@ -408,7 +408,13 @@ public class VersionServiceTest {
             .measureName("Test")
             .measureMetaData(metaData)
             .groups(List.of(cvGroup.toBuilder().id(ObjectId.get().toString()).build()))
-            .testCases(List.of(testCase.toBuilder().id(ObjectId.get().toString()).groupPopulations(List.of(clonedTestCaseGroupPopulation)).build()))
+            .testCases(
+                List.of(
+                    testCase
+                        .toBuilder()
+                        .id(ObjectId.get().toString())
+                        .groupPopulations(List.of(clonedTestCaseGroupPopulation))
+                        .build()))
             .build();
 
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(versionedMeasure));
@@ -431,7 +437,9 @@ public class VersionServiceTest {
     assertFalse(draft.getGroups().stream().anyMatch(item -> "xyz-p12r-12ert".equals(item.getId())));
     assertThat(draft.getTestCases().size(), is(equalTo(1)));
     assertFalse(draft.getGroups().stream().anyMatch(item -> "testId1".equals(item.getId())));
-    assertThat(draft.getTestCases().get(0).getGroupPopulations().get(0).getGroupId(),is(equalTo("clonedGroupId1")));
+    assertThat(
+        draft.getTestCases().get(0).getGroupPopulations().get(0).getGroupId(),
+        is(equalTo("clonedGroupId1")));
   }
 
   @Test

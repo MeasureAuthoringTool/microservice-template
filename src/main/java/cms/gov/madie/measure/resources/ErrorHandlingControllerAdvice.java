@@ -99,7 +99,8 @@ public class ErrorHandlingControllerAdvice {
 
   @ExceptionHandler({
     InvalidResourceBundleStateException.class,
-    CqlElmTranslationErrorException.class
+    CqlElmTranslationErrorException.class,
+    InvalidDraftStatusException.class
   })
   @ResponseStatus(HttpStatus.CONFLICT)
   @ResponseBody

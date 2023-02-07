@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.HapiFhirConfig;
+import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
@@ -77,6 +78,7 @@ public class TestCaseServiceTest {
     measure.setMeasureSetId("IDIDID");
     measure.setMeasureName("MSR01");
     measure.setVersion(new Version(0, 0, 1));
+    measure.setMeasureMetaData(MeasureMetaData.builder().draft(true).build());
   }
 
   @Test
@@ -352,6 +354,17 @@ public class TestCaseServiceTest {
   }
 
   @Test
+  public void testPersistTestCaseReturnsInvalidDraftStatusException() {
+    measure.setMeasureMetaData(MeasureMetaData.builder().draft(false).build());
+    Optional<Measure> optional = Optional.of(measure);
+    Mockito.doReturn(optional).when(repository).findById(any(String.class));
+
+    assertThrows(
+        InvalidDraftStatusException.class,
+        () -> testCaseService.persistTestCase(testCase, measure.getId(), "test.user", "TOKEN"));
+  }
+
+  @Test
   public void testFindTestCasesByMeasureId() {
     measure.setTestCases(List.of(testCase));
     Optional<Measure> optional = Optional.of(measure);
@@ -509,6 +522,17 @@ public class TestCaseServiceTest {
     assertNotEquals(updatedTestCase.getLastModifiedAt(), updatedTestCase.getCreatedAt());
     assertEquals(originalTestCase.getCreatedAt(), updatedTestCase.getCreatedAt());
     assertEquals(originalTestCase.getCreatedBy(), updatedTestCase.getCreatedBy());
+  }
+
+  @Test
+  public void testUpdateTestCaseReturnsInvalidDraftStatusException() {
+    measure.setMeasureMetaData(MeasureMetaData.builder().draft(false).build());
+    Optional<Measure> optional = Optional.of(measure);
+    Mockito.doReturn(optional).when(repository).findById(any(String.class));
+
+    assertThrows(
+        InvalidDraftStatusException.class,
+        () -> testCaseService.updateTestCase(testCase, measure.getId(), "test.user", "TOKEN"));
   }
 
   @Test
@@ -689,7 +713,12 @@ public class TestCaseServiceTest {
             TestCase.builder().id("TC2_ID").title("TC2").build());
 
     Measure existingMeasure =
-        Measure.builder().id("measure-id").createdBy("test.user").testCases(testCases).build();
+        Measure.builder()
+            .id("measure-id")
+            .createdBy("test.user")
+            .testCases(testCases)
+            .measureMetaData(MeasureMetaData.builder().draft(true).build())
+            .build();
     when(repository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
 
     doReturn(existingMeasure).when(repository).save(any(Measure.class));
@@ -726,7 +755,12 @@ public class TestCaseServiceTest {
             TestCase.builder().id("TC1_ID").title("TC1").build(),
             TestCase.builder().id("TC2_ID").title("TC2").build());
     final Measure measure =
-        Measure.builder().id("measure-id").createdBy("OtherUser").testCases(testCases).build();
+        Measure.builder()
+            .id("measure-id")
+            .createdBy("OtherUser")
+            .testCases(testCases)
+            .measureMetaData(MeasureMetaData.builder().draft(true).build())
+            .build();
     when(repository.findById(anyString())).thenReturn(Optional.of(measure));
     assertThrows(
         InvalidIdException.class,
@@ -735,7 +769,12 @@ public class TestCaseServiceTest {
 
   @Test
   void testDeleteTestCaseReturnsExceptionThrowsAccessException() {
-    final Measure measure = Measure.builder().id("measure-id").createdBy("OtherUser").build();
+    final Measure measure =
+        Measure.builder()
+            .id("measure-id")
+            .createdBy("OtherUser")
+            .measureMetaData(MeasureMetaData.builder().draft(true).build())
+            .build();
     when(repository.findById(anyString())).thenReturn(Optional.of(measure));
     assertThrows(
         UnauthorizedException.class,
@@ -752,12 +791,38 @@ public class TestCaseServiceTest {
   @Test
   void testDeleteTestCasReturnsExceptionForNullTestCasesinMeasure() {
     Measure existingMeasure =
-        Measure.builder().id("measure-id").createdBy("test.user").testCases(null).build();
+        Measure.builder()
+            .id("measure-id")
+            .createdBy("test.user")
+            .testCases(null)
+            .measureMetaData(MeasureMetaData.builder().draft(true).build())
+            .build();
     when(repository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
 
     assertThrows(
         InvalidIdException.class,
         () -> testCaseService.deleteTestCase("measure-id", "testCaseId", "test.user"));
+  }
+
+  @Test
+  void testDeleteTestCaseReturnsInvalidDraftStatusException() {
+    List<TestCase> testCases =
+        List.of(
+            TestCase.builder().id("TC1_ID").title("TC1").build(),
+            TestCase.builder().id("TC2_ID").title("TC2").build());
+
+    Measure existingMeasure =
+        Measure.builder()
+            .id("measure-id")
+            .createdBy("test.user")
+            .testCases(testCases)
+            .measureMetaData(MeasureMetaData.builder().draft(false).build())
+            .build();
+    when(repository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+
+    assertThrows(
+        InvalidDraftStatusException.class,
+        () -> testCaseService.deleteTestCase("measure-id", "TC2_ID", "test.user"));
   }
 
   @Test

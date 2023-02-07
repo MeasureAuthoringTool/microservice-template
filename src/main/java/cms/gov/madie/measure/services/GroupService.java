@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
@@ -46,6 +47,9 @@ public class GroupService {
     Measure measure = measureRepository.findById(measureId).orElse(null);
     if (measure == null) {
       throw new ResourceNotFoundException("Measure", measureId);
+    }
+    if (!measure.getMeasureMetaData().isDraft()) {
+      throw new InvalidDraftStatusException(measure.getId());
     }
     try {
       new CqlDefinitionReturnTypeValidator()
@@ -142,6 +146,10 @@ public class GroupService {
     Measure measure = measureRepository.findById(measureId).orElse(null);
     if (measure == null) {
       throw new ResourceNotFoundException("Measure", measureId);
+    }
+
+    if (!measure.getMeasureMetaData().isDraft()) {
+      throw new InvalidDraftStatusException(measure.getId());
     }
 
     if (!username.equalsIgnoreCase(measure.getCreatedBy())

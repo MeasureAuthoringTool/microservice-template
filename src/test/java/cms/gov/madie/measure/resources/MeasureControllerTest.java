@@ -185,6 +185,7 @@ class MeasureControllerTest {
     metaData.setCopyright("TestCopyright");
     metaData.setDisclaimer("TestDisclaimer");
     metaData.setRationale("TestRationale");
+    metaData.setDraft(true);
     measure.setMeasureMetaData(metaData);
     measure.setMeasurementPeriodStart(new Date("12/02/2020"));
     measure.setMeasurementPeriodEnd(new Date("12/02/2021"));
@@ -248,6 +249,7 @@ class MeasureControllerTest {
     metaData.setCopyright("TestCopyright");
     metaData.setDisclaimer("TestDisclaimer");
     metaData.setRationale("TestRationale");
+    metaData.setDraft(true);
     measure.setMeasureMetaData(metaData);
     measure.setMeasurementPeriodStart(new Date("12/02/2020"));
     measure.setMeasurementPeriodEnd(new Date("12/02/2021"));
@@ -341,6 +343,7 @@ class MeasureControllerTest {
     measure.setCreatedBy("validuser@gmail.com");
     measure.setActive(false);
     measure.setAcls(null);
+    measure.setMeasureMetaData(MeasureMetaData.builder().draft(true).build());
     when(repository.findById(anyString())).thenReturn(Optional.of(measure));
 
     var testMeasure = new Measure();
@@ -381,6 +384,7 @@ class MeasureControllerTest {
     when(principal.getName()).thenReturn("sharedUser@gmail.com");
     measure.setCreatedBy("MSR01");
     measure.setActive(true);
+    measure.setMeasureMetaData(MeasureMetaData.builder().draft(true).build());
     AclSpecification acl = new AclSpecification();
     acl.setUserId("sharedUser@gmail.com");
     acl.setRoles(List.of(RoleEnum.SHARED_WITH));
@@ -399,6 +403,31 @@ class MeasureControllerTest {
         .checkDeletionCredentials(anyString(), anyString());
     assertThrows(
         InvalidDeletionCredentialsException.class,
+        () -> controller.updateMeasure("testid", testMeasure, principal, "Bearer TOKEN"));
+  }
+
+  @Test
+  void testUpdateMeasureReturnsInvalidDraftStatusException() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("sharedUser@gmail.com");
+    measure.setCreatedBy("MSR01");
+    measure.setActive(true);
+    measure.setMeasureMetaData(MeasureMetaData.builder().draft(false).build());
+    AclSpecification acl = new AclSpecification();
+    acl.setUserId("sharedUser@gmail.com");
+    acl.setRoles(List.of(RoleEnum.SHARED_WITH));
+    measure.setAcls(List.of(acl));
+    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
+
+    var testMeasure = new Measure();
+    testMeasure.setActive(false);
+    testMeasure.setCreatedBy("anotheruser");
+    testMeasure.setId("testid");
+    testMeasure.setMeasureName("MSR01");
+    testMeasure.setVersion(new Version(0, 0, 1));
+    testMeasure.setActive(false);
+    assertThrows(
+        InvalidDraftStatusException.class,
         () -> controller.updateMeasure("testid", testMeasure, principal, "Bearer TOKEN"));
   }
 
