@@ -15,7 +15,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     "/measure-transfer/**", "/log/**", "/measures/**/grant", "/organizations/**"
   };
   private static final String[] AUTH_WHITELIST = {
-    "/measure-transfer/**", "/actuator/**", "/log/**", "/measures/**/grant", "/v3/api-docs/**",
+    "/measure-transfer/**", "/actuator/**", "/log/**", "/measures/**/grant"
   };
 
   @Override
