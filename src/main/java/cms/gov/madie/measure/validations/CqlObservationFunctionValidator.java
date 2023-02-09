@@ -70,11 +70,19 @@ public class CqlObservationFunctionValidator {
         // Non-Boolean Population Basis require MO's with exactly one parameter matching the Pop
         // Basis.
         if (numberOfOperands == 1) {
-          String operandTypeSpecifierName =
-              operandIterator.next().get("operandTypeSpecifier").get("name").asText();
-          if (!(operandTypeSpecifierName.split("}")[1].equalsIgnoreCase("Boolean"))) {
-            observationPopBasis.put(
-                node.get("name").asText(), operandTypeSpecifierName.split("}")[1]);
+          JsonNode currentOperandDetails = operandIterator.next();
+          if (currentOperandDetails.get("operandTypeSpecifier").get("name") != null
+              && currentOperandDetails
+                  .get("operandTypeSpecifier")
+                  .get("type")
+                  .asText()
+                  .equals("NamedTypeSpecifier")) {
+            String operandTypeSpecifierName =
+                currentOperandDetails.get("operandTypeSpecifier").get("name").asText();
+            if (!(operandTypeSpecifierName.split("}")[1].equalsIgnoreCase("Boolean"))) {
+              observationPopBasis.put(
+                  node.get("name").asText(), operandTypeSpecifierName.split("}")[1]);
+            }
           }
           // Boolean Population Basis require MO's with no parameters
         } else if (numberOfOperands < 1) {
