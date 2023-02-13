@@ -79,6 +79,7 @@ public class MeasureServiceTest implements ResourceUtil {
 
     measureMetaData = new MeasureMetaData();
     measureMetaData.setDraft(true);
+
     // Present in DB and has ID
     group2 =
         Group.builder()
