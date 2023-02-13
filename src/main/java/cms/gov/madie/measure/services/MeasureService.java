@@ -64,6 +64,7 @@ public class MeasureService {
                 .build();
       }
     }
+    outputMeasure.getMeasureMetaData().setDraft(existingMeasure.getMeasureMetaData().isDraft());
     outputMeasure.setLastModifiedBy(username);
     outputMeasure.setLastModifiedAt(Instant.now());
     // prevent users from overwriting the createdAt/By
