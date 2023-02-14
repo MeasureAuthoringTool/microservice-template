@@ -27,8 +27,7 @@ import java.util.Optional;
 
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.utils.MeasureUtil;
-import gov.cms.madie.models.measure.ElmJson;
-import gov.cms.madie.models.measure.MeasureErrorType;
+import gov.cms.madie.models.measure.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -47,11 +46,6 @@ import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
 import cms.gov.madie.measure.utils.ResourceUtil;
-import gov.cms.madie.models.measure.Group;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.Population;
-import gov.cms.madie.models.measure.PopulationType;
-import gov.cms.madie.models.measure.Stratification;
 import gov.cms.madie.models.common.Version;
 
 @ExtendWith(MockitoExtension.class)
@@ -67,6 +61,7 @@ public class MeasureServiceTest implements ResourceUtil {
   @Captor private ArgumentCaptor<Measure> measureArgumentCaptor;
 
   private Group group2;
+  private MeasureMetaData measureMetaData;
   private Measure measure;
 
   @BeforeEach
@@ -81,6 +76,9 @@ public class MeasureServiceTest implements ResourceUtil {
 
     Stratification emptyStrat = new Stratification();
     // new group, not in DB, so no ID
+
+    measureMetaData = new MeasureMetaData();
+    measureMetaData.setDraft(true);
 
     // Present in DB and has ID
     group2 =
@@ -213,6 +211,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
             .createdAt(createdAt)
             .createdBy(createdBy)
+            .measureMetaData(measureMetaData)
             .lastModifiedAt(createdAt)
             .lastModifiedBy(createdBy)
             .build();
@@ -256,6 +255,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .cmsId("CMS_ID1")
             .versionId("VersionId")
             .cql("original cql here")
+            .measureMetaData(measureMetaData)
             .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
             .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
             .build();
@@ -293,6 +293,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .cmsId("CMS_ID1")
             .versionId("VersionId")
             .cql("original cql here")
+            .measureMetaData(measureMetaData)
             .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
             .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
             .build();
