@@ -39,18 +39,21 @@ public class ElmTranslatorClient {
     }
   }
 
-  public String getHumanReadable(Measure measure, String accessToken){
-    try{
-      URI uri= URI.create(elmTranslatorClientConfig.getCqlElmServiceBaseUrl()+"/human-readable");
+  public String getHumanReadable(Measure measure, String accessToken) {
+    try {
+      URI uri = URI.create(elmTranslatorClientConfig.getCqlElmServiceBaseUrl() + "/human-readable");
       HttpHeaders headers = new HttpHeaders();
       headers.set(HttpHeaders.AUTHORIZATION, accessToken);
       HttpEntity<Measure> measureEntity = new HttpEntity<>(measure, headers);
       return elmTranslatorRestTemplate
-              .exchange(uri,HttpMethod.PUT, measureEntity, String.class ).getBody();
-    }catch (Exception ex) {
-      log.error("An error occurred parsing the human readable response from the CQL to ELM translation service", ex);
+          .exchange(uri, HttpMethod.PUT, measureEntity, String.class)
+          .getBody();
+    } catch (Exception ex) {
+      log.error(
+          "An error occurred parsing the human readable response from the CQL to ELM translation service",
+          ex);
       throw new CqlElmTranslationServiceException(
-              "There was an error calling CQL-ELM translation service", ex);
+          "There was an error calling CQL-ELM translation service", ex);
     }
   }
 

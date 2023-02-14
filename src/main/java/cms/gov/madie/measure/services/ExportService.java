@@ -40,7 +40,7 @@ public class ExportService {
 
     String measureBundle = bundleService.bundleMeasure(measure, accessToken);
     Bundle bundle = fhirJsonParser().parseResource(Bundle.class, measureBundle);
-    String humanReadableFile=elmTranslatorClient.getHumanReadable(measure,accessToken);
+    String humanReadableFile = elmTranslatorClient.getHumanReadable(measure, accessToken);
     try (ZipOutputStream zos = new ZipOutputStream(outputStream)) {
       addMeasureBundleToExport(zos, exportFileName, measureBundle);
       addLibraryCqlFilesToExport(zos, bundle);
@@ -53,9 +53,11 @@ public class ExportService {
     }
   }
 
-  private void addHumanReadableFile(ZipOutputStream zos, Measure measure, String humanReadableFile) throws IOException {
-    String humanReadableFileName=measure.getEcqmTitle()+"-"+measure.getVersion()+"-FHIR.html";
-    addBytesToZip(humanReadableFileName,humanReadableFile.getBytes(),zos);
+  private void addHumanReadableFile(ZipOutputStream zos, Measure measure, String humanReadableFile)
+      throws IOException {
+    String humanReadableFileName =
+        measure.getEcqmTitle() + "-" + measure.getVersion() + "-FHIR.html";
+    addBytesToZip(humanReadableFileName, humanReadableFile.getBytes(), zos);
   }
 
   private void addMeasureBundleToExport(ZipOutputStream zos, String fileName, String measureBundle)
