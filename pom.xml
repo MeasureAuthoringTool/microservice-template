@@ -20,8 +20,8 @@
     <mvn.checkstyle.version>3.1.2</mvn.checkstyle.version>
     <mvnreports.version>3.1.1</mvnreports.version>
     <mvnsite.version>3.9.1</mvnsite.version>
-    <springboot.version>2.5.7</springboot.version>
-    <springfox.version>3.0.0</springfox.version>
+    <springboot.version>2.6.14</springboot.version>
+    <springdoc.version>1.6.14</springdoc.version>
   </properties>
 
   <!--  https://docs.mongock.io/index.html  -->
@@ -83,29 +83,9 @@
       <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
     <dependency>
-      <groupId>io.springfox</groupId>
-      <artifactId>springfox-boot-starter</artifactId>
-      <version>${springfox.version}</version>
-    </dependency>
-    <dependency>
       <groupId>com.okta.spring</groupId>
       <artifactId>okta-spring-boot-starter</artifactId>
       <version>2.1.6</version>
-    </dependency>
-    <dependency>
-      <groupId>io.springfox</groupId>
-      <artifactId>springfox-swagger-ui</artifactId>
-      <version>${springfox.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.springfox</groupId>
-      <artifactId>springfox-swagger2</artifactId>
-      <version>${springfox.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.springfox</groupId>
-      <artifactId>springfox-bean-validators</artifactId>
-      <version>${springfox.version}</version>
     </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>
@@ -143,6 +123,12 @@
     <dependency>
       <groupId>io.mongock</groupId>
       <artifactId>mongodb-springdata-v3-driver</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-ui</artifactId>
+      <version>${springdoc.version}</version>
     </dependency>
 
     <dependency>
