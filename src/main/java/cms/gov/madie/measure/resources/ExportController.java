@@ -26,8 +26,6 @@ public class ExportController {
 
   private final BundleService bundleService;
 
-  private static final String CONTENT_DISPOSITION = "Content-Disposition";
-
   @GetMapping(path = "/measures/{id}/exports", produces = "application/zip")
   public ResponseEntity<byte[]> getZip(
       Principal principal,
@@ -48,13 +46,5 @@ public class ExportController {
     ControllerUtil.verifyAuthorization(username, measure);
 
     return bundleService.exportBundleMeasure(measure, accessToken);
-    //
-    //    return ResponseEntity.ok()
-    //        .header(
-    //            CONTENT_DISPOSITION,
-    //            "attachment;filename=\"" + ExportFileNamesUtil.getExportFileName(measure) +
-    // ".zip\"")
-    //        .contentType(MediaType.valueOf("application/zip"))
-    //        .body(out -> bundleService.exportBundleMeasure(measure, accessToken));
   }
 }
