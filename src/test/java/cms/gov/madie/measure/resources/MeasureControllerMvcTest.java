@@ -4,6 +4,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -11,7 +12,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -623,7 +623,7 @@ public class MeasureControllerMvcTest {
     assertEquals(MODEL, savedMeasure.getModel());
     assertEquals(TEST_USER_ID, savedMeasure.getCreatedBy());
     assertEquals(TEST_USER_ID, savedMeasure.getLastModifiedBy());
-    assertEquals(measureId, savedMeasure.getVersionId());
+    assertNotEquals(measureId, savedMeasure.getVersionId());
     assertNotNull(savedMeasure.getCreatedAt());
     assertNotNull(savedMeasure.getLastModifiedAt());
 

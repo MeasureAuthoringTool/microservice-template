@@ -6,6 +6,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -136,25 +137,6 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testUpdateMeasureThrowsExceptionForChangedVersionId() {
-    Measure original =
-        Measure.builder()
-            .cqlLibraryName("OriginalLibName")
-            .measureName("Measure1")
-            .cmsId("CMS_ID1")
-            .versionId("VersionId")
-            .build();
-
-    Measure updated = original.toBuilder().versionId(null).build();
-
-    when(measureUtil.isCqlLibraryNameChanged(any(Measure.class), any(Measure.class)))
-        .thenReturn(false);
-    assertThrows(
-        InvalidVersionIdException.class,
-        () -> measureService.updateMeasure(original, "User1", updated, "Access Token"));
-  }
-
-  @Test
   public void testUpdateMeasureThrowsExceptionForChangedCmsId() {
     Measure original =
         Measure.builder()
@@ -206,7 +188,8 @@ public class MeasureServiceTest implements ResourceUtil {
             .cqlLibraryName("OriginalLibName")
             .measureName("Measure1")
             .cmsId("CMS_ID1")
-            .versionId("VersionId")
+            .measureSetId("MeasureSetId")
+            .cqlLibraryName("CqlLibraryName")
             .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
             .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
             .createdAt(createdAt)
@@ -223,9 +206,11 @@ public class MeasureServiceTest implements ResourceUtil {
             .createdBy("SomebodyElse")
             .lastModifiedAt(null)
             .lastModifiedBy("Nobody")
+            .versionId("VersionId")
             .build();
     when(measureUtil.isCqlLibraryNameChanged(any(Measure.class), any(Measure.class)))
-        .thenReturn(false);
+        .thenReturn(true);
+    when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
     when(measureUtil.isMeasurementPeriodChanged(any(Measure.class), any(Measure.class)))
         .thenReturn(true);
     when(measureUtil.isMeasureCqlChanged(any(Measure.class), any(Measure.class))).thenReturn(false);
@@ -244,6 +229,9 @@ public class MeasureServiceTest implements ResourceUtil {
         Instant.now().minus(1, ChronoUnit.MINUTES).isBefore(persisted.getLastModifiedAt());
     assertThat(isLastModifiedUpdated, is(true));
     assertThat(persisted.getLastModifiedBy(), is(equalTo("User1")));
+    assertNotEquals(persisted.getVersionId(), "VersionId");
+    assertEquals(persisted.getMeasureSetId(), "MeasureSetId");
+    assertEquals(persisted.getCqlLibraryName(), "CqlLibraryName");
   }
 
   @Test

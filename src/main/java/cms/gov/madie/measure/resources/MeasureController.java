@@ -9,6 +9,8 @@ import java.security.Principal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -96,6 +98,8 @@ public class MeasureController {
     measure.setLastModifiedBy(username);
     measure.setLastModifiedAt(now);
     measure.setVersion(new Version(0, 0, 0));
+    measure.setVersionId(UUID.randomUUID().toString());
+    measure.setMeasureSetId(UUID.randomUUID().toString());
 
     if (measure.getMeasureMetaData() != null) {
       measure.getMeasureMetaData().setDraft(true);
