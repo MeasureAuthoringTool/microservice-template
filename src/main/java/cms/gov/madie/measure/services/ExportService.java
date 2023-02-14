@@ -28,6 +28,7 @@ public class ExportService {
 
   private final BundleService bundleService;
   private FhirContext fhirContext;
+  private final ElmTranslatorClient elmTranslatorClient;
 
   private static final String TEXT_CQL = "text/cql";
   private static final String CQL_DIRECTORY = "/cql/";
@@ -39,15 +40,22 @@ public class ExportService {
 
     String measureBundle = bundleService.bundleMeasure(measure, accessToken);
     Bundle bundle = fhirJsonParser().parseResource(Bundle.class, measureBundle);
+    String humanReadableFile=elmTranslatorClient.getHumanReadable(measure,accessToken);
     try (ZipOutputStream zos = new ZipOutputStream(outputStream)) {
       addMeasureBundleToExport(zos, exportFileName, measureBundle);
       addLibraryCqlFilesToExport(zos, bundle);
       addLibraryResourcesToExport(zos, bundle);
+      addHumanReadableFile(zos, measure, humanReadableFile);
     } catch (Exception ex) {
       log.error(ex.getMessage());
       throw new RuntimeException(
           "Unexpected error while generating exports for measureID: " + measure.getId());
     }
+  }
+
+  private void addHumanReadableFile(ZipOutputStream zos, Measure measure, String humanReadableFile) throws IOException {
+    String humanReadableFileName=measure.getEcqmTitle()+"-"+measure.getVersion()+"-FHIR.html";
+    addBytesToZip(humanReadableFileName,humanReadableFile.getBytes(),zos);
   }
 
   private void addMeasureBundleToExport(ZipOutputStream zos, String fileName, String measureBundle)
