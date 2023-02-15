@@ -39,11 +39,13 @@ class ExportServiceTest implements ResourceUtil {
 
   @Mock private BundleService bundleService;
   @Mock private FhirContext fhirContext;
+  @Mock private ElmTranslatorClient elmTranslatorClient;
 
   @Spy @InjectMocks private ExportService exportService;
 
   private Measure measure;
   private String measureBundle;
+  private String humanReadable;
 
   @BeforeEach
   public void setUp() {
@@ -64,6 +66,7 @@ class ExportServiceTest implements ResourceUtil {
             .model("QI-Core v4.1.1")
             .build();
     measureBundle = getData("/bundles/export_test.json");
+    humanReadable = getData("/humanReadable_test.txt");
   }
 
   @Test
@@ -71,6 +74,7 @@ class ExportServiceTest implements ResourceUtil {
     when(bundleService.bundleMeasure(any(), anyString())).thenReturn(measureBundle);
     when(fhirContext.newJsonParser()).thenReturn(FhirContext.forR4().newJsonParser());
     when(fhirContext.newXmlParser()).thenReturn(FhirContext.forR4().newXmlParser());
+    when(elmTranslatorClient.getHumanReadable(any(), anyString())).thenReturn(humanReadable);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
 
     exportService.generateExports(measure, "Bearer TOKEN", out);
@@ -85,7 +89,8 @@ class ExportServiceTest implements ResourceUtil {
             "/resources/library-ExportTest.json",
             "/resources/library-ExportTest.xml",
             "/resources/library-FHIRHelpers.json",
-            "/resources/library-FHIRHelpers.xml");
+            "/resources/library-FHIRHelpers.xml",
+            "ExportTest-1.0.000-FHIR.html");
 
     ZipInputStream zipInputStream = new ZipInputStream(new ByteArrayInputStream(out.toByteArray()));
     List<String> actualFilesInZip = getFilesInZip(zipInputStream);

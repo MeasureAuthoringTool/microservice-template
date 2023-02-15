@@ -1,0 +1,105 @@
+<div>
+    <table class="grid dict">
+
+
+            <tr>
+                <th scope="row"><b>Url: </b></th>
+                <td style="padding-left: 4px;">http://ecqi.healthit.gov/ecqms/Measure/Test1wdwd</td>
+            </tr>
+
+
+            <tr>
+                <th scope="row"><b>Version: </b></th>
+                <td style="padding-left: 4px;">0.0.000</td>
+            </tr>
+
+
+
+            <tr>
+                <th scope="row"><b>Name: </b></th>
+                <td style="padding-left: 4px;">Test1wdwd</td>
+            </tr>
+
+
+            <tr>
+                <th scope="row"><b>Title: </b></th>
+                <td style="padding-left: 4px;">Test1234w</td>
+            </tr>
+
+
+
+
+            <tr>
+                <th scope="row"><b>Experimental: </b></th>
+                <td style="padding-left: 4px;">true</td>
+            </tr>
+
+
+
+
+
+
+
+            <tr>
+                <th scope="row"><b>Publisher: </b></th>
+                <td style="padding-left: 4px;">UNKNOWN</td>
+            </tr>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            <tr>
+                <th scope="row"><b>Purpose: </b></th>
+                <td style="padding-left: 4px;">UNKNOWN</td>
+            </tr>
+
+
+
+            <tr>
+                <th scope="row"><b>Copyright: </b></th>
+                <td style="padding-left: 25px;">UNKNOWN</td>
+            </tr>
+
+
+            <tr>
+                <th scope="row"><b>Disclaimer: </b></th>
+                <td style="padding-left: 25px;">UNKNOWN</td>
+            </tr>
+
+
+
+
+            <tr>
+                <th scope="row"><b>Effective Period: </b></th>
+                <td style="padding-left: 4px;">2001-12-22..2002-12-22</td>
+            </tr>
+
+
+
+
+
+
+            <tr>
+                <th scope="row"><b>Libraries: </b></th>
+                <td style="padding-left: 4px;">
+                    <table class="grid-dict">
+
+                            <tr><td>http://ecqi.healthit.gov/ecqms/Library/Test1wdwd</td></tr>
+
+                    </table>
+                </td>
+            </tr>
+
+    </table>
+</div>

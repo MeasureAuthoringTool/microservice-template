@@ -50,7 +50,8 @@ public class ElmTranslatorClient {
           .getBody();
     } catch (Exception ex) {
       log.error(
-          "An error occurred parsing the human readable response from the CQL to ELM translation service",
+          "An error occurred parsing the human readable response "
+              + "from the CQL to ELM translation service",
           ex);
       throw new CqlElmTranslationServiceException(
           "There was an error calling CQL-ELM translation service", ex);
