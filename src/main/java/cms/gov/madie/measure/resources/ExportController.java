@@ -1,12 +1,11 @@
 package cms.gov.madie.measure.resources;
 
+import cms.gov.madie.measure.services.BundleService;
 import java.security.Principal;
 import java.util.Optional;
 
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.utils.ControllerUtil;
-import cms.gov.madie.measure.utils.ExportFileNamesUtil;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,11 +13,9 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 import cms.gov.madie.measure.repositories.MeasureRepository;
-import cms.gov.madie.measure.services.ExportService;
 import gov.cms.madie.models.measure.Measure;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 @Slf4j
 @RestController
@@ -27,12 +24,10 @@ public class ExportController {
 
   private final MeasureRepository measureRepository;
 
-  private final ExportService exportService;
-
-  private static final String CONTENT_DISPOSITION = "Content-Disposition";
+  private final BundleService bundleService;
 
   @GetMapping(path = "/measures/{id}/exports", produces = "application/zip")
-  public ResponseEntity<StreamingResponseBody> getZip(
+  public ResponseEntity<byte[]> getZip(
       Principal principal,
       @PathVariable("id") String id,
       @RequestHeader("Authorization") String accessToken) {
@@ -50,11 +45,6 @@ public class ExportController {
     // We may not want to have this check, Confirm with Stan.
     ControllerUtil.verifyAuthorization(username, measure);
 
-    return ResponseEntity.ok()
-        .header(
-            CONTENT_DISPOSITION,
-            "attachment;filename=\"" + ExportFileNamesUtil.getExportFileName(measure) + ".zip\"")
-        .contentType(MediaType.valueOf("application/zip"))
-        .body(out -> exportService.generateExports(measure, accessToken, out));
+    return bundleService.exportBundleMeasure(measure, accessToken);
   }
 }

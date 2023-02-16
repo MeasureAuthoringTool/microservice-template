@@ -17,6 +17,7 @@ madie:
       hapi-fhir:
         measures:
           bundle-uri: /fhir/measures/bundles
+          export-uri: /fhir/measures/export
           save-measure-uri: /fhir/measures/save
         validation:
           bundle-uri: /fhir/validations/bundles
