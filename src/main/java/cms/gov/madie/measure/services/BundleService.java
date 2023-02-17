@@ -2,14 +2,15 @@ package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.exceptions.BundleOperationException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
-import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
 import cms.gov.madie.measure.exceptions.InvalidResourceBundleStateException;
 import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Measure;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.client.RestClientException;
 
 @Slf4j
 @Service
@@ -25,6 +26,30 @@ public class BundleService {
       return null;
     }
 
+    try {
+      retrieveElmJson(measure, accessToken);
+      return fhirServicesClient.getMeasureBundle(measure, accessToken);
+    } catch (RestClientException | IllegalArgumentException ex) {
+      log.error("An error occurred while bundling measure {}", measure.getId(), ex);
+      throw new BundleOperationException("Measure", measure.getId(), ex);
+    }
+  }
+
+  public ResponseEntity<byte[]> exportBundleMeasure(Measure measure, String accessToken) {
+    if (measure == null) {
+      return null;
+    }
+
+    try {
+      retrieveElmJson(measure, accessToken);
+      return fhirServicesClient.getMeasureBundleExport(measure, accessToken);
+    } catch (RestClientException | IllegalArgumentException ex) {
+      log.error("An error occurred while bundling measure {}", measure.getId(), ex);
+      throw new BundleOperationException("Measure", measure.getId(), ex);
+    }
+  }
+
+  protected void retrieveElmJson(Measure measure, String accessToken) {
     if (measure.isCqlErrors()) {
       throw new InvalidResourceBundleStateException(
           "Measure", measure.getId(), "since CQL errors exist.");
@@ -35,19 +60,11 @@ public class BundleService {
           "Measure", measure.getId(), "since there are no associated population criteria.");
     }
 
-    try {
-      final ElmJson elmJson = elmTranslatorClient.getElmJson(measure.getCql(), accessToken);
-      if (elmTranslatorClient.hasErrors(elmJson)) {
-        throw new CqlElmTranslationErrorException(measure.getMeasureName());
-      }
-      measure.setElmJson(elmJson.getJson());
-      measure.setElmXml(elmJson.getXml());
-      return fhirServicesClient.getMeasureBundle(measure, accessToken);
-    } catch (CqlElmTranslationServiceException | CqlElmTranslationErrorException e) {
-      throw e;
-    } catch (Exception ex) {
-      log.error("An error occurred while bundling measure {}", measure.getId(), ex);
-      throw new BundleOperationException("Measure", measure.getId(), ex);
+    final ElmJson elmJson = elmTranslatorClient.getElmJson(measure.getCql(), accessToken);
+    if (elmTranslatorClient.hasErrors(elmJson)) {
+      throw new CqlElmTranslationErrorException(measure.getMeasureName());
     }
+    measure.setElmJson(elmJson.getJson());
+    measure.setElmXml(elmJson.getXml());
   }
 }
