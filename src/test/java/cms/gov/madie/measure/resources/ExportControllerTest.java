@@ -3,12 +3,16 @@ package cms.gov.madie.measure.resources;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.services.BundleService;
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.common.Version;
+import java.io.OutputStream;
+import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.platform.engine.reporting.ReportEntry;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -29,6 +33,8 @@ import static org.mockito.Mockito.*;
 class ExportControllerTest {
 
   @Mock private MeasureRepository measureRepository;
+
+  @Mock private BundleService bundleService;
 
   @InjectMocks private ExportController exportController;
 
@@ -77,11 +83,11 @@ class ExportControllerTest {
             .model("QiCore 4.1.1")
             .createdBy("test.user")
             .build();
+
+    ResponseEntity<byte[]> respone = ResponseEntity.ok(new byte[0]);
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    ResponseEntity<StreamingResponseBody> output =
-        exportController.getZip(principal, "test_id", "Bearer TOKEN");
+    when(bundleService.exportBundleMeasure(eq(measure), anyString())).thenReturn(respone);
+    ResponseEntity<byte[]> output = exportController.getZip(principal, "test_id", "Bearer TOKEN");
     assertEquals(HttpStatus.OK, output.getStatusCode());
-    String zipFileName = output.getHeaders().get(HttpHeaders.CONTENT_DISPOSITION).get(0);
-    assertEquals("attachment;filename=\"test_ecqm_title-v0.0.000-QiCore 4.1.1.zip\"", zipFileName);
   }
 }
