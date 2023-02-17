@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import gov.cms.madie.models.measure.MeasureErrorType;
 import lombok.AllArgsConstructor;
@@ -42,7 +43,13 @@ public class MeasureService {
       checkDuplicateCqlLibraryName(updatingMeasure.getCqlLibraryName());
     }
 
-    checkVersionIdChanged(updatingMeasure.getVersionId(), existingMeasure.getVersionId());
+    if (StringUtils.isBlank(existingMeasure.getVersionId())) {
+      existingMeasure.setVersionId(UUID.randomUUID().toString());
+    }
+    if (StringUtils.isBlank(existingMeasure.getMeasureSetId())) {
+      existingMeasure.setMeasureSetId(UUID.randomUUID().toString());
+    }
+
     checkCmsIdChanged(updatingMeasure.getCmsId(), existingMeasure.getCmsId());
 
     if (measureUtil.isMeasurementPeriodChanged(updatingMeasure, existingMeasure)) {
@@ -70,6 +77,9 @@ public class MeasureService {
     // prevent users from overwriting the createdAt/By
     outputMeasure.setCreatedAt(existingMeasure.getCreatedAt());
     outputMeasure.setCreatedBy(existingMeasure.getCreatedBy());
+    // prevent users from overwriting versionId and measureSetId
+    outputMeasure.setVersionId(existingMeasure.getVersionId());
+    outputMeasure.setMeasureSetId(existingMeasure.getMeasureSetId());
     return measureRepository.save(outputMeasure);
   }
 

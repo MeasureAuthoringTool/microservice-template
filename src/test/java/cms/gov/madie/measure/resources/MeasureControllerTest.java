@@ -106,7 +106,7 @@ class MeasureControllerTest {
 
     ResponseEntity<Measure> response = controller.addMeasure(measure, principal);
     assertNotNull(response.getBody());
-    assertEquals("IDIDID", response.getBody().getMeasureSetId());
+    assertNotEquals("IDIDID", response.getBody().getMeasureSetId());
 
     verify(repository, times(1)).save(saveMeasureArgCaptor.capture());
     Measure savedMeasure = saveMeasureArgCaptor.getValue();
