@@ -227,9 +227,9 @@ class BundleControllerTest {
             .createdBy("test.user")
             .build();
 
-    ResponseEntity<String> respone = ResponseEntity.ok("test");
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    when(bundleService.getMeasureBundleForExport(eq(measure), anyString())).thenReturn(respone);
+    when(bundleService.getMeasureBundleForExport(eq(measure), anyString()))
+        .thenReturn(ResponseEntity.ok("test"));
 
     ResponseEntity<String> output =
         bundleController.getMeasureBundle("MeasureID", principal, "test_id", "Bearer TOKEN");
