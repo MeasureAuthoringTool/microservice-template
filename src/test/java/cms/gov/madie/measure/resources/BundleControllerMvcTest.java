@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -41,7 +42,7 @@ public class BundleControllerMvcTest {
   private static final String TEST_USER_ID = "test-okta-user-id-123";
 
   @Test
-  void getMeasureBundleReturnsNotFound() throws Exception {
+  void getMeasureBundleForCalculationReturnsNotFound() throws Exception {
     when(measureRepository.findById(anyString())).thenReturn(Optional.empty());
     mockMvc
         .perform(
@@ -56,7 +57,7 @@ public class BundleControllerMvcTest {
   }
 
   @Test
-  void testGetMeasureBundleReturnsForbidden() throws Exception {
+  void testGetMeasureBundleForCalculationReturnsForbidden() throws Exception {
     Measure measure =
         Measure.builder().id("1234").measureName("TestMeasure").createdBy("OTHER_USER").build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
@@ -76,7 +77,8 @@ public class BundleControllerMvcTest {
   }
 
   @Test
-  void testGetMeasureBundleReturnsServerExceptionForCqlElmTranslationFailure() throws Exception {
+  void testGetMeasureBundleForCalculationReturnsServerExceptionForCqlElmTranslationFailure()
+      throws Exception {
     final String elmJson = "{\"text\": \"ELM JSON\"}";
     Measure measure =
         Measure.builder()
@@ -92,7 +94,7 @@ public class BundleControllerMvcTest {
             .elmJson(elmJson)
             .build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    when(bundleService.bundleMeasure(any(Measure.class), anyString()))
+    when(bundleService.getMeasureBundleForCalculation(any(Measure.class), anyString()))
         .thenThrow(
             new CqlElmTranslationServiceException(
                 measure.getMeasureName(), new RuntimeException("CAUSE")));
@@ -108,7 +110,7 @@ public class BundleControllerMvcTest {
   }
 
   @Test
-  void testGetMeasureBundleReturnsMeasureBundle() throws Exception {
+  void testGetMeasureBundleForCalculationReturnsMeasureBundle() throws Exception {
     final String elmJson = "{\"text\": \"ELM JSON\"}";
     final String bundleString =
         "{\n"
@@ -150,11 +152,75 @@ public class BundleControllerMvcTest {
             .elmJson(elmJson)
             .build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    when(bundleService.bundleMeasure(any(Measure.class), anyString())).thenReturn(bundleString);
+    when(bundleService.getMeasureBundleForCalculation(any(Measure.class), anyString()))
+        .thenReturn(bundleString);
     mockMvc
         .perform(
             get("/measures/1234/bundle")
                 .with(user(TEST_USER_ID))
+                .with(csrf())
+                .header("Authorization", "test-okta")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.resourceType").value("Bundle"))
+        .andExpect(jsonPath("$.type").value("transaction"))
+        .andExpect(jsonPath("$.entry[0].resource.resourceType").value("Measure"))
+        .andExpect(jsonPath("$.entry[0].resource.name").value("EXM124"))
+        .andExpect(jsonPath("$.entry[0].resource.version").value("9.0.000"));
+    verify(measureRepository, times(1)).findById(eq("1234"));
+  }
+
+  @Test
+  void testGetMeasureBundleForExportReturnsMeasureBundle() throws Exception {
+    final String elmJson = "{\"text\": \"ELM JSON\"}";
+    final String bundleString =
+        "{\n"
+            + "    \"resourceType\": \"Bundle\",\n"
+            + "    \"type\": \"transaction\",\n"
+            + "    \"entry\": [\n"
+            + "        {\n"
+            + "            \"resource\": {\n"
+            + "                \"resourceType\": \"Measure\",\n"
+            + "                \"meta\": {\n"
+            + "                    \"profile\": [\n"
+            + "                        \"http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/proportion-measure-cqfm\"\n"
+            + "                    ]\n"
+            + "                },\n"
+            + "                \"url\": \"http://hl7.org/fhir/us/cqfmeasures/Measure/EXM124\",\n"
+            + "                \"version\": \"9.0.000\",\n"
+            + "                \"name\": \"EXM124\",\n"
+            + "                \"title\": \"Cervical Cancer Screening\",\n"
+            + "                \"experimental\": true,\n"
+            + "                \"effectivePeriod\": {\n"
+            + "                    \"start\": \"2022-05-09\",\n"
+            + "                    \"end\": \"2022-05-09\"\n"
+            + "                }\n"
+            + "            }\n"
+            + "        }\n"
+            + "    ]\n"
+            + "}";
+    Measure measure =
+        Measure.builder()
+            .measureName("EXM124")
+            .createdBy(TEST_USER_ID)
+            .cqlErrors(false)
+            .groups(
+                List.of(
+                    Group.builder()
+                        .groupDescription("Group1")
+                        .scoring(MeasureScoring.RATIO.toString())
+                        .build()))
+            .elmJson(elmJson)
+            .build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    ResponseEntity<String> respone = ResponseEntity.ok(bundleString);
+    when(bundleService.getMeasureBundleForExport(any(Measure.class), anyString()))
+        .thenReturn(respone);
+    mockMvc
+        .perform(
+            get("/measures/1234/bundle")
+                .with(user(TEST_USER_ID))
+                .queryParam("bundleType", "export")
                 .with(csrf())
                 .header("Authorization", "test-okta")
                 .accept(MediaType.APPLICATION_JSON))

@@ -21,7 +21,7 @@ public class FhirServicesClient {
   private FhirServicesConfig fhirServicesConfig;
   private RestTemplate fhirServicesRestTemplate;
 
-  public String getMeasureBundle(Measure measure, String accessToken) {
+  public String getMeasureBundleForCalculation(Measure measure, String accessToken) {
     URI uri =
         URI.create(
             fhirServicesConfig.getMadieFhirServiceBaseUrl()
@@ -34,7 +34,7 @@ public class FhirServicesClient {
         .getBody();
   }
 
-  public ResponseEntity<byte[]> getMeasureBundleExport(Measure measure, String accessToken) {
+  public ResponseEntity<byte[]> getMeasureBundleForExport(Measure measure, String accessToken) {
     URI uri =
         URI.create(
             fhirServicesConfig.getMadieFhirServiceBaseUrl()

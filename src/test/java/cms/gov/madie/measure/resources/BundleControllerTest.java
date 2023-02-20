@@ -8,6 +8,7 @@ import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.BundleService;
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
+import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureScoring;
@@ -28,6 +29,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -41,27 +43,31 @@ class BundleControllerTest {
   @InjectMocks private BundleController bundleController;
 
   @Test
-  void testBundleMeasureThrowsNotFoundException() {
+  void testGetMeasureBundleForCalculationThrowsNotFoundException() {
     Principal principal = mock(Principal.class);
     when(measureRepository.findById(anyString())).thenReturn(Optional.empty());
     assertThrows(
         ResourceNotFoundException.class,
-        () -> bundleController.getMeasureBundle("MeasureID", principal, "Bearer TOKEN"));
+        () ->
+            bundleController.getMeasureBundle(
+                "MeasureID", principal, "Bearer TOKEN", "calculation"));
   }
 
   @Test
-  void testBundleMeasureThrowsAccessException() {
+  void testGetMeasureBundleForCalculationThrowsAccessException() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
     final Measure measure = Measure.builder().createdBy("OtherUser").build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
     assertThrows(
         UnauthorizedException.class,
-        () -> bundleController.getMeasureBundle("MeasureID", principal, "Bearer TOKEN"));
+        () ->
+            bundleController.getMeasureBundle(
+                "MeasureID", principal, "Bearer TOKEN", "calculation"));
   }
 
   @Test
-  void testBundleMeasureThrowsAccessExceptionForSharedUsers() {
+  void testGetMeasureBundleForCalculationThrowsAccessExceptionForSharedUsers() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user3");
     var acl = new AclSpecification();
@@ -71,11 +77,13 @@ class BundleControllerTest {
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
     assertThrows(
         UnauthorizedException.class,
-        () -> bundleController.getMeasureBundle("MeasureID", principal, "Bearer TOKEN"));
+        () ->
+            bundleController.getMeasureBundle(
+                "MeasureID", principal, "Bearer TOKEN", "calculation"));
   }
 
   @Test
-  void testBundleMeasureForSharedUsers() {
+  void testGetMeasureBundleForCalculationForSharedUsers() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user2");
     final String json = "{\"message\": \"GOOD JSON\"}";
@@ -84,15 +92,16 @@ class BundleControllerTest {
     acl.setRoles(List.of(RoleEnum.SHARED_WITH));
     final Measure measure = Measure.builder().createdBy("test.user").acls(List.of(acl)).build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    when(bundleService.bundleMeasure(any(Measure.class), anyString())).thenReturn(json);
+    when(bundleService.getMeasureBundleForCalculation(any(Measure.class), anyString()))
+        .thenReturn(json);
     ResponseEntity<String> output =
-        bundleController.getMeasureBundle("MeasureID", principal, "Bearer TOKEN");
+        bundleController.getMeasureBundle("MeasureID", principal, "Bearer TOKEN", "calculation");
     assertThat(output.getStatusCode(), is(equalTo(HttpStatus.OK)));
     assertThat(output.getBody(), is(equalTo(json)));
   }
 
   @Test
-  void testBundleMeasureThrowsOperationException() {
+  void testGetMeasureBundleForCalculationThrowsOperationException() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
     final String elmJson = "{\"text\": \"ELM JSON\"}";
@@ -108,16 +117,18 @@ class BundleControllerTest {
             .elmJson(elmJson)
             .build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    when(bundleService.bundleMeasure(any(Measure.class), anyString()))
+    when(bundleService.getMeasureBundleForCalculation(any(Measure.class), anyString()))
         .thenThrow(
             new BundleOperationException("Measure", "MeasureID", new RuntimeException("cause")));
     assertThrows(
         BundleOperationException.class,
-        () -> bundleController.getMeasureBundle("MeasureID", principal, "Bearer TOKEN"));
+        () ->
+            bundleController.getMeasureBundle(
+                "MeasureID", principal, "Bearer TOKEN", "calculation"));
   }
 
   @Test
-  void testBundleMeasureThrowsElmTranslationException() {
+  void testGetMeasureBundleForCalculationThrowsElmTranslationException() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
     final String elmJson = "{\"text\": \"ELM JSON\"}";
@@ -133,15 +144,17 @@ class BundleControllerTest {
             .elmJson(elmJson)
             .build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    when(bundleService.bundleMeasure(any(Measure.class), anyString()))
+    when(bundleService.getMeasureBundleForCalculation(any(Measure.class), anyString()))
         .thenThrow(new CqlElmTranslationErrorException(measure.getMeasureName()));
     assertThrows(
         CqlElmTranslationErrorException.class,
-        () -> bundleController.getMeasureBundle("MeasureID", principal, "Bearer TOKEN"));
+        () ->
+            bundleController.getMeasureBundle(
+                "MeasureID", principal, "Bearer TOKEN", "calculation"));
   }
 
   @Test
-  void testBundleMeasureReturnsBundleString() {
+  void testGetMeasureBundleForCalculationReturnsBundleString() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
     final String elmJson = "{\"text\": \"ELM JSON\"}";
@@ -158,11 +171,68 @@ class BundleControllerTest {
             .elmJson(elmJson)
             .build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    when(bundleService.bundleMeasure(any(Measure.class), anyString())).thenReturn(json);
+    when(bundleService.getMeasureBundleForCalculation(any(Measure.class), anyString()))
+        .thenReturn(json);
     ResponseEntity<String> output =
-        bundleController.getMeasureBundle("MeasureID", principal, "Bearer TOKEN");
+        bundleController.getMeasureBundle("MeasureID", principal, "Bearer TOKEN", "calculation");
     assertThat(output, is(notNullValue()));
     assertThat(output.getStatusCode(), is(equalTo(HttpStatus.OK)));
     assertThat(output.getBody(), is(equalTo(json)));
+  }
+
+  @Test
+  void testGetMeasureBundleForExportThrowsNotFoundException() {
+    Principal principal = mock(Principal.class);
+    when(measureRepository.findById(anyString())).thenReturn(Optional.empty());
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> bundleController.getMeasureBundle("MeasureID", principal, "Bearer TOKEN", "export"));
+  }
+
+  @Test
+  void testGetMeasureBundleForExportThrowsUnAuthorizedException() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+    final Measure measure = Measure.builder().createdBy("OtherUser").build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    assertThrows(
+        UnauthorizedException.class,
+        () -> bundleController.getMeasureBundle("MeasureID", principal, "Bearer TOKEN", "export"));
+  }
+
+  @Test
+  void testGetMeasureBundleForExportThrowsAccessExceptionForSharedUsers() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user3");
+    var acl = new AclSpecification();
+    acl.setUserId("test.user2");
+    acl.setRoles(List.of(RoleEnum.SHARED_WITH));
+    final Measure measure = Measure.builder().createdBy("test.user").acls(List.of(acl)).build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    assertThrows(
+        UnauthorizedException.class,
+        () -> bundleController.getMeasureBundle("MeasureID", principal, "Bearer TOKEN", "export"));
+  }
+
+  @Test
+  void testGetMeasureBundleForExportReturnsAResponse() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+    final Measure measure =
+        Measure.builder()
+            .id("MeasureID")
+            .ecqmTitle("test_ecqm_title")
+            .version(new Version(0, 0, 0))
+            .model("QiCore 4.1.1")
+            .createdBy("test.user")
+            .build();
+
+    ResponseEntity<String> respone = ResponseEntity.ok(new String("test"));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(bundleService.getMeasureBundleForExport(eq(measure), anyString())).thenReturn(respone);
+
+    ResponseEntity<String> output =
+        bundleController.getMeasureBundle("MeasureID", principal, "test_id", "Bearer TOKEN");
+    assertEquals(HttpStatus.OK, output.getStatusCode());
   }
 }

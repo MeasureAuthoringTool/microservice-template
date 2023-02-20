@@ -61,7 +61,7 @@ class FhirServicesClientTest {
   }
 
   @Test
-  void testFhirServicesClientThrowsException() {
+  void testFhirServicesClientThrowsExceptionForCalculationBundle() {
     Measure measure = Measure.builder().build();
     final String accessToken = "Bearer TOKEN";
     when(restTemplate.exchange(
@@ -69,7 +69,7 @@ class FhirServicesClientTest {
         .thenThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN));
     assertThrows(
         HttpClientErrorException.class,
-        () -> fhirServicesClient.getMeasureBundle(measure, accessToken));
+        () -> fhirServicesClient.getMeasureBundleForCalculation(measure, accessToken));
     verify(restTemplate, times(1))
         .exchange(any(URI.class), eq(HttpMethod.PUT), httpEntityCaptor.capture(), any(Class.class));
     HttpEntity httpEntity = httpEntityCaptor.getValue();
@@ -81,14 +81,14 @@ class FhirServicesClientTest {
   }
 
   @Test
-  void testFhirServicesClientReturnsStringData() {
+  void testFhirServicesClientReturnsStringDataForCalculationBundle() {
     Measure measure = Measure.builder().build();
     final String accessToken = "Bearer TOKEN";
     final String json = "{\"message\": \"GOOD JSON\"}";
     when(restTemplate.exchange(
             any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
         .thenReturn(ResponseEntity.ok(json));
-    String output = fhirServicesClient.getMeasureBundle(measure, accessToken);
+    String output = fhirServicesClient.getMeasureBundleForCalculation(measure, accessToken);
     assertThat(output, is(equalTo(json)));
     verify(restTemplate, times(1))
         .exchange(any(URI.class), eq(HttpMethod.PUT), httpEntityCaptor.capture(), any(Class.class));
@@ -168,6 +168,47 @@ class FhirServicesClientTest {
     verify(restTemplate, times(1))
         .exchange(
             any(URI.class), eq(HttpMethod.POST), httpEntityCaptor.capture(), any(Class.class));
+    HttpEntity httpEntity = httpEntityCaptor.getValue();
+    assertThat(httpEntity.getHeaders(), is(notNullValue()));
+    List<String> authorization = httpEntity.getHeaders().get(HttpHeaders.AUTHORIZATION);
+    assertThat(authorization, is(notNullValue()));
+    assertThat(authorization.size(), is(equalTo(1)));
+    assertThat(authorization.get(0), is(equalTo(accessToken)));
+  }
+
+  @Test
+  void testFhirServicesClientThrowsExceptionForExportBundle() {
+    Measure measure = Measure.builder().build();
+    final String accessToken = "Bearer TOKEN";
+    when(restTemplate.exchange(
+            any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+        .thenThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN));
+    assertThrows(
+        HttpClientErrorException.class,
+        () -> fhirServicesClient.getMeasureBundleForExport(measure, accessToken));
+    verify(restTemplate, times(1))
+        .exchange(any(URI.class), eq(HttpMethod.PUT), httpEntityCaptor.capture(), any(Class.class));
+    HttpEntity httpEntity = httpEntityCaptor.getValue();
+    assertThat(httpEntity.getHeaders(), is(notNullValue()));
+    List<String> authorization = httpEntity.getHeaders().get(HttpHeaders.AUTHORIZATION);
+    assertThat(authorization, is(notNullValue()));
+    assertThat(authorization.size(), is(equalTo(1)));
+    assertThat(authorization.get(0), is(equalTo(accessToken)));
+  }
+
+  @Test
+  void testFhirServicesClientReturnsDataForExportBundle() {
+    Measure measure = Measure.builder().build();
+    final String accessToken = "Bearer TOKEN";
+    final String json = "{\"message\": \"GOOD JSON\"}";
+    when(restTemplate.exchange(
+            any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+        .thenReturn(ResponseEntity.ok(json.getBytes()));
+    ResponseEntity<byte[]> output =
+        fhirServicesClient.getMeasureBundleForExport(measure, accessToken);
+    assertThat(output.getBody(), is(equalTo(json.getBytes())));
+    verify(restTemplate, times(1))
+        .exchange(any(URI.class), eq(HttpMethod.PUT), httpEntityCaptor.capture(), any(Class.class));
     HttpEntity httpEntity = httpEntityCaptor.getValue();
     assertThat(httpEntity.getHeaders(), is(notNullValue()));
     List<String> authorization = httpEntity.getHeaders().get(HttpHeaders.AUTHORIZATION);

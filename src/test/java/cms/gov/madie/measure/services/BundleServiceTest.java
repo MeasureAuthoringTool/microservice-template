@@ -18,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.time.Instant;
@@ -78,65 +79,133 @@ class BundleServiceTest implements ResourceUtil {
   }
 
   @Test
-  void testBundleMeasureReturnsNullForNullMeasure() {
-    String output = bundleService.bundleMeasure(null, "Bearer TOKEN");
+  void testGetMeasureBundleForCalculationReturnsNullForNullMeasure() {
+    String output = bundleService.getMeasureBundleForCalculation(null, "Bearer TOKEN");
     assertThat(output, is(nullValue()));
   }
 
   @Test
-  void testBundleMeasureWhenThereAreCqlErrors() {
+  void testGetMeasureBundleForCalculationWhenThereAreCqlErrors() {
     measure.setCqlErrors(true);
     assertThrows(
         InvalidResourceBundleStateException.class,
-        () -> bundleService.bundleMeasure(measure, "Bearer TOKEN"));
+        () -> bundleService.getMeasureBundleForCalculation(measure, "Bearer TOKEN"));
   }
 
   @Test
-  void testBundleMeasureWhenThereAreNoGroups() {
+  void testGetMeasureBundleForCalculationWhenThereAreNoGroups() {
     measure.setGroups(new ArrayList<>());
     assertThrows(
         InvalidResourceBundleStateException.class,
-        () -> bundleService.bundleMeasure(measure, "Bearer TOKEN"));
+        () -> bundleService.getMeasureBundleForCalculation(measure, "Bearer TOKEN"));
   }
 
   @Test
-  void testBundleMeasureThrowsOperationException() {
+  void testGetMeasureBundleForCalculationThrowsOperationException() {
     when(elmTranslatorClient.getElmJson(anyString(), anyString()))
         .thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
-    when(fhirServicesClient.getMeasureBundle(any(Measure.class), anyString()))
+    when(fhirServicesClient.getMeasureBundleForCalculation(any(Measure.class), anyString()))
         .thenThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN));
     assertThrows(
-        BundleOperationException.class, () -> bundleService.bundleMeasure(measure, "Bearer TOKEN"));
+        BundleOperationException.class,
+        () -> bundleService.getMeasureBundleForCalculation(measure, "Bearer TOKEN"));
   }
 
   @Test
-  void testBundleMeasureThrowsCqlElmTranslationServiceException() {
+  void testGetMeasureBundleForCalculationThrowsCqlElmTranslationServiceException() {
     when(elmTranslatorClient.getElmJson(anyString(), anyString()))
         .thenThrow(
             new CqlElmTranslationServiceException(
                 "There was an error calling CQL-ELM translation service", new Exception()));
     assertThrows(
         CqlElmTranslationServiceException.class,
-        () -> bundleService.bundleMeasure(measure, "Bearer TOKEN"));
+        () -> bundleService.getMeasureBundleForCalculation(measure, "Bearer TOKEN"));
   }
 
   @Test
-  void testBundleMeasureThrowsCqlElmTranslatorExceptionWithErrors() {
+  void testGetMeasureBundleForCalculationThrowsCqlElmTranslatorExceptionWithErrors() {
     when(elmTranslatorClient.getElmJson(anyString(), anyString()))
         .thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(true);
     assertThrows(
         CqlElmTranslationErrorException.class,
-        () -> bundleService.bundleMeasure(measure, "Bearer TOKEN"));
+        () -> bundleService.getMeasureBundleForCalculation(measure, "Bearer TOKEN"));
   }
 
   @Test
-  void testBundleMeasureReturnsBundleString() {
+  void testGetMeasureBundleForCalculationReturnsBundleString() {
     final String json = "{\"message\": \"GOOD JSON\"}";
-    when(fhirServicesClient.getMeasureBundle(any(Measure.class), anyString())).thenReturn(json);
+    when(fhirServicesClient.getMeasureBundleForCalculation(any(Measure.class), anyString()))
+        .thenReturn(json);
     when(elmTranslatorClient.getElmJson(anyString(), anyString()))
         .thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
-    String output = bundleService.bundleMeasure(measure, "Bearer TOKEN");
+    String output = bundleService.getMeasureBundleForCalculation(measure, "Bearer TOKEN");
     assertThat(output, is(equalTo(json)));
+  }
+
+  @Test
+  void testGetMeasureBundleForExportReturnsNullForNullMeasure() {
+    ResponseEntity<String> output = bundleService.getMeasureBundleForExport(null, "Bearer TOKEN");
+    assertThat(output, is(nullValue()));
+  }
+
+  @Test
+  void testGetMeasureBundleForExportWhenThereAreCqlErrors() {
+    measure.setCqlErrors(true);
+    assertThrows(
+        InvalidResourceBundleStateException.class,
+        () -> bundleService.getMeasureBundleForExport(measure, "Bearer TOKEN"));
+  }
+
+  @Test
+  void testGetMeasureBundleForExportWhenThereAreNoGroups() {
+    measure.setGroups(new ArrayList<>());
+    assertThrows(
+        InvalidResourceBundleStateException.class,
+        () -> bundleService.getMeasureBundleForExport(measure, "Bearer TOKEN"));
+  }
+
+  @Test
+  void testGetMeasureBundleForExportThrowsOperationException() {
+    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+        .thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
+    when(fhirServicesClient.getMeasureBundleForExport(any(Measure.class), anyString()))
+        .thenThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN));
+    assertThrows(
+        BundleOperationException.class,
+        () -> bundleService.getMeasureBundleForExport(measure, "Bearer TOKEN"));
+  }
+
+  @Test
+  void testGetMeasureBundleForExportThrowsCqlElmTranslationServiceException() {
+    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+        .thenThrow(
+            new CqlElmTranslationServiceException(
+                "There was an error calling CQL-ELM translation service", new Exception()));
+    assertThrows(
+        CqlElmTranslationServiceException.class,
+        () -> bundleService.getMeasureBundleForExport(measure, "Bearer TOKEN"));
+  }
+
+  @Test
+  void testGetMeasureBundleForExportThrowsCqlElmTranslatorExceptionWithErrors() {
+    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+        .thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
+    when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(true);
+    assertThrows(
+        CqlElmTranslationErrorException.class,
+        () -> bundleService.getMeasureBundleForExport(measure, "Bearer TOKEN"));
+  }
+
+  @Test
+  void testGetMeasureBundleForExportReturnsBundleString() {
+    final String json = "{\"message\": \"GOOD JSON\"}";
+    when(fhirServicesClient.getMeasureBundleForExport(any(Measure.class), anyString()))
+        .thenReturn(new ResponseEntity(json.getBytes(), HttpStatus.OK));
+    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+        .thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
+    ResponseEntity<String> output =
+        bundleService.getMeasureBundleForExport(measure, "Bearer TOKEN");
+    assertThat(output.getBody(), is(equalTo(json)));
   }
 }

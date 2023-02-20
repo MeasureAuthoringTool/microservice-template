@@ -21,30 +21,31 @@ public class BundleService {
 
   private final ElmTranslatorClient elmTranslatorClient;
 
-  public String bundleMeasure(Measure measure, String accessToken) {
+  public String getMeasureBundleForCalculation(Measure measure, String accessToken) {
     if (measure == null) {
       return null;
     }
 
     try {
       retrieveElmJson(measure, accessToken);
-      return fhirServicesClient.getMeasureBundle(measure, accessToken);
+      return fhirServicesClient.getMeasureBundleForCalculation(measure, accessToken);
     } catch (RestClientException | IllegalArgumentException ex) {
       log.error("An error occurred while bundling measure {}", measure.getId(), ex);
       throw new BundleOperationException("Measure", measure.getId(), ex);
     }
   }
 
-  public ResponseEntity<byte[]> exportBundleMeasure(Measure measure, String accessToken) {
+  public ResponseEntity<String> getMeasureBundleForExport(Measure measure, String accessToken) {
     if (measure == null) {
       return null;
     }
 
     try {
       retrieveElmJson(measure, accessToken);
-      return fhirServicesClient.getMeasureBundleExport(measure, accessToken);
-    } catch (RestClientException | IllegalArgumentException ex) {
-      log.error("An error occurred while bundling measure {}", measure.getId(), ex);
+      return ResponseEntity.ok(
+          new String(fhirServicesClient.getMeasureBundleForExport(measure, accessToken).getBody()));
+    } catch (RestClientException | IllegalArgumentException | NullPointerException ex) {
+      log.error("An error occurred while exporting bundled measure {}", measure.getId(), ex);
       throw new BundleOperationException("Measure", measure.getId(), ex);
     }
   }
