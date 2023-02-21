@@ -79,7 +79,7 @@ class BundleServiceTest implements ResourceUtil {
 
   @Test
   void testBundleMeasureReturnsNullForNullMeasure() {
-    String output = bundleService.bundleMeasure(null, "Bearer TOKEN");
+    String output = bundleService.bundleMeasure(null, "Bearer TOKEN", "calculation");
     assertThat(output, is(nullValue()));
   }
 
@@ -88,7 +88,7 @@ class BundleServiceTest implements ResourceUtil {
     measure.setCqlErrors(true);
     assertThrows(
         InvalidResourceBundleStateException.class,
-        () -> bundleService.bundleMeasure(measure, "Bearer TOKEN"));
+        () -> bundleService.bundleMeasure(measure, "Bearer TOKEN", "calculation"));
   }
 
   @Test
@@ -96,17 +96,18 @@ class BundleServiceTest implements ResourceUtil {
     measure.setGroups(new ArrayList<>());
     assertThrows(
         InvalidResourceBundleStateException.class,
-        () -> bundleService.bundleMeasure(measure, "Bearer TOKEN"));
+        () -> bundleService.bundleMeasure(measure, "Bearer TOKEN", "calculation"));
   }
 
   @Test
   void testBundleMeasureThrowsOperationException() {
     when(elmTranslatorClient.getElmJson(anyString(), anyString()))
         .thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
-    when(fhirServicesClient.getMeasureBundle(any(Measure.class), anyString()))
+    when(fhirServicesClient.getMeasureBundle(any(Measure.class), anyString(), anyString()))
         .thenThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN));
     assertThrows(
-        BundleOperationException.class, () -> bundleService.bundleMeasure(measure, "Bearer TOKEN"));
+        BundleOperationException.class,
+        () -> bundleService.bundleMeasure(measure, "Bearer TOKEN", "calculation"));
   }
 
   @Test
@@ -117,7 +118,7 @@ class BundleServiceTest implements ResourceUtil {
                 "There was an error calling CQL-ELM translation service", new Exception()));
     assertThrows(
         CqlElmTranslationServiceException.class,
-        () -> bundleService.bundleMeasure(measure, "Bearer TOKEN"));
+        () -> bundleService.bundleMeasure(measure, "Bearer TOKEN", "calculation"));
   }
 
   @Test
@@ -127,16 +128,17 @@ class BundleServiceTest implements ResourceUtil {
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(true);
     assertThrows(
         CqlElmTranslationErrorException.class,
-        () -> bundleService.bundleMeasure(measure, "Bearer TOKEN"));
+        () -> bundleService.bundleMeasure(measure, "Bearer TOKEN", "calculation"));
   }
 
   @Test
   void testBundleMeasureReturnsBundleString() {
     final String json = "{\"message\": \"GOOD JSON\"}";
-    when(fhirServicesClient.getMeasureBundle(any(Measure.class), anyString())).thenReturn(json);
+    when(fhirServicesClient.getMeasureBundle(any(Measure.class), anyString(), anyString()))
+        .thenReturn(json);
     when(elmTranslatorClient.getElmJson(anyString(), anyString()))
         .thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
-    String output = bundleService.bundleMeasure(measure, "Bearer TOKEN");
+    String output = bundleService.bundleMeasure(measure, "Bearer TOKEN", "calculation");
     assertThat(output, is(equalTo(json)));
   }
 }

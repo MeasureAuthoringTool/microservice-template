@@ -21,14 +21,14 @@ public class BundleService {
 
   private final ElmTranslatorClient elmTranslatorClient;
 
-  public String bundleMeasure(Measure measure, String accessToken) {
+  public String bundleMeasure(Measure measure, String accessToken, String bundleType) {
     if (measure == null) {
       return null;
     }
 
     try {
       retrieveElmJson(measure, accessToken);
-      return fhirServicesClient.getMeasureBundle(measure, accessToken);
+      return fhirServicesClient.getMeasureBundle(measure, accessToken, bundleType);
     } catch (RestClientException | IllegalArgumentException ex) {
       log.error("An error occurred while bundling measure {}", measure.getId(), ex);
       throw new BundleOperationException("Measure", measure.getId(), ex);
