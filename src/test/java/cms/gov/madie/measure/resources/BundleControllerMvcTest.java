@@ -92,7 +92,7 @@ public class BundleControllerMvcTest {
             .elmJson(elmJson)
             .build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    when(bundleService.bundleMeasure(any(Measure.class), anyString()))
+    when(bundleService.bundleMeasure(any(Measure.class), anyString(), anyString()))
         .thenThrow(
             new CqlElmTranslationServiceException(
                 measure.getMeasureName(), new RuntimeException("CAUSE")));
@@ -150,7 +150,8 @@ public class BundleControllerMvcTest {
             .elmJson(elmJson)
             .build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    when(bundleService.bundleMeasure(any(Measure.class), anyString())).thenReturn(bundleString);
+    when(bundleService.bundleMeasure(any(Measure.class), anyString(), anyString()))
+        .thenReturn(bundleString);
     mockMvc
         .perform(
             get("/measures/1234/bundle")

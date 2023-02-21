@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Slf4j
 @Service
@@ -21,11 +22,11 @@ public class FhirServicesClient {
   private FhirServicesConfig fhirServicesConfig;
   private RestTemplate fhirServicesRestTemplate;
 
-  public String getMeasureBundle(Measure measure, String accessToken) {
+  public String getMeasureBundle(Measure measure, String accessToken, String bundleType) {
     URI uri =
-        URI.create(
-            fhirServicesConfig.getMadieFhirServiceBaseUrl()
-                + fhirServicesConfig.getMadieFhirServiceMeasuresBundleUri());
+        buildMadieFhirServiceUri(
+            bundleType, fhirServicesConfig.getMadieFhirServiceMeasuresBundleUri());
+
     HttpHeaders headers = new HttpHeaders();
     headers.set(HttpHeaders.AUTHORIZATION, accessToken);
     HttpEntity<Measure> measureEntity = new HttpEntity<>(measure, headers);
@@ -69,5 +70,14 @@ public class FhirServicesClient {
     headers.set(HttpHeaders.AUTHORIZATION, accessToken);
     HttpEntity<Measure> measureEntity = new HttpEntity<>(measure, headers);
     return fhirServicesRestTemplate.exchange(uri, HttpMethod.POST, measureEntity, String.class);
+  }
+
+  private URI buildMadieFhirServiceUri(String bundleType, String fhirServiceUri) {
+    return UriComponentsBuilder.fromHttpUrl(
+            fhirServicesConfig.getMadieFhirServiceBaseUrl() + fhirServiceUri)
+        .queryParam("bundleType", bundleType)
+        .build()
+        .encode()
+        .toUri();
   }
 }

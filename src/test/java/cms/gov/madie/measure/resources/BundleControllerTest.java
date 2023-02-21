@@ -46,7 +46,9 @@ class BundleControllerTest {
     when(measureRepository.findById(anyString())).thenReturn(Optional.empty());
     assertThrows(
         ResourceNotFoundException.class,
-        () -> bundleController.getMeasureBundle("MeasureID", principal, "Bearer TOKEN"));
+        () ->
+            bundleController.getMeasureBundle(
+                "MeasureID", principal, "Bearer TOKEN", "calculation"));
   }
 
   @Test
@@ -57,7 +59,9 @@ class BundleControllerTest {
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
     assertThrows(
         UnauthorizedException.class,
-        () -> bundleController.getMeasureBundle("MeasureID", principal, "Bearer TOKEN"));
+        () ->
+            bundleController.getMeasureBundle(
+                "MeasureID", principal, "Bearer TOKEN", "calculation"));
   }
 
   @Test
@@ -71,7 +75,9 @@ class BundleControllerTest {
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
     assertThrows(
         UnauthorizedException.class,
-        () -> bundleController.getMeasureBundle("MeasureID", principal, "Bearer TOKEN"));
+        () ->
+            bundleController.getMeasureBundle(
+                "MeasureID", principal, "Bearer TOKEN", "calculation"));
   }
 
   @Test
@@ -84,9 +90,10 @@ class BundleControllerTest {
     acl.setRoles(List.of(RoleEnum.SHARED_WITH));
     final Measure measure = Measure.builder().createdBy("test.user").acls(List.of(acl)).build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    when(bundleService.bundleMeasure(any(Measure.class), anyString())).thenReturn(json);
+    when(bundleService.bundleMeasure(any(Measure.class), anyString(), anyString()))
+        .thenReturn(json);
     ResponseEntity<String> output =
-        bundleController.getMeasureBundle("MeasureID", principal, "Bearer TOKEN");
+        bundleController.getMeasureBundle("MeasureID", principal, "Bearer TOKEN", "calculation");
     assertThat(output.getStatusCode(), is(equalTo(HttpStatus.OK)));
     assertThat(output.getBody(), is(equalTo(json)));
   }
@@ -108,12 +115,14 @@ class BundleControllerTest {
             .elmJson(elmJson)
             .build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    when(bundleService.bundleMeasure(any(Measure.class), anyString()))
+    when(bundleService.bundleMeasure(any(Measure.class), anyString(), anyString()))
         .thenThrow(
             new BundleOperationException("Measure", "MeasureID", new RuntimeException("cause")));
     assertThrows(
         BundleOperationException.class,
-        () -> bundleController.getMeasureBundle("MeasureID", principal, "Bearer TOKEN"));
+        () ->
+            bundleController.getMeasureBundle(
+                "MeasureID", principal, "Bearer TOKEN", "calculation"));
   }
 
   @Test
@@ -133,11 +142,13 @@ class BundleControllerTest {
             .elmJson(elmJson)
             .build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    when(bundleService.bundleMeasure(any(Measure.class), anyString()))
+    when(bundleService.bundleMeasure(any(Measure.class), anyString(), anyString()))
         .thenThrow(new CqlElmTranslationErrorException(measure.getMeasureName()));
     assertThrows(
         CqlElmTranslationErrorException.class,
-        () -> bundleController.getMeasureBundle("MeasureID", principal, "Bearer TOKEN"));
+        () ->
+            bundleController.getMeasureBundle(
+                "MeasureID", principal, "Bearer TOKEN", "calculation"));
   }
 
   @Test
@@ -158,9 +169,10 @@ class BundleControllerTest {
             .elmJson(elmJson)
             .build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    when(bundleService.bundleMeasure(any(Measure.class), anyString())).thenReturn(json);
+    when(bundleService.bundleMeasure(any(Measure.class), anyString(), anyString()))
+        .thenReturn(json);
     ResponseEntity<String> output =
-        bundleController.getMeasureBundle("MeasureID", principal, "Bearer TOKEN");
+        bundleController.getMeasureBundle("MeasureID", principal, "Bearer TOKEN", "calculation");
     assertThat(output, is(notNullValue()));
     assertThat(output.getStatusCode(), is(equalTo(HttpStatus.OK)));
     assertThat(output.getBody(), is(equalTo(json)));
