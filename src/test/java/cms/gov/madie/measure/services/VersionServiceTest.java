@@ -91,7 +91,11 @@ public class VersionServiceTest {
           .measureObservations(
               List.of(
                   new MeasureObservation(
-                      "id-1", "fun", "id-2", AggregateMethodType.MAXIMUM.getValue())))
+                      "id-1",
+                      "fun",
+                      "a description of fun",
+                      "id-2",
+                      AggregateMethodType.MAXIMUM.getValue())))
           .stratifications(List.of())
           .groupDescription("Description")
           .scoringUnit("test-scoring-unit")
