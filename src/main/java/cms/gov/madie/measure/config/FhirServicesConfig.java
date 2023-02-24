@@ -32,5 +32,4 @@ public class FhirServicesConfig {
     restTemplate.getMessageConverters().add(new ByteArrayHttpMessageConverter());
     return restTemplate;
   }
-
 }

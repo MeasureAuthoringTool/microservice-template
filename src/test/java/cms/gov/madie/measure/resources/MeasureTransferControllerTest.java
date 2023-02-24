@@ -94,7 +94,11 @@ public class MeasureTransferControllerTest {
                         "test description")),
                 List.of(
                     new MeasureObservation(
-                        "mo-id-1", "ipp", null, AggregateMethodType.AVERAGE.getValue())),
+                        "mo-id-1",
+                        "ipp",
+                        "a description of ipp",
+                        null,
+                        AggregateMethodType.AVERAGE.getValue())),
                 "Description",
                 "improvmentNotation",
                 "rateAggragation",
