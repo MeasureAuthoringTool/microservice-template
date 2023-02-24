@@ -19,8 +19,10 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import gov.cms.madie.models.measure.MeasureErrorType;
@@ -29,6 +31,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 @Slf4j
 @Service
@@ -45,41 +48,44 @@ public class MeasureService {
     checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
     validateMeasurementPeriod(
         measure.getMeasurementPeriodStart(), measure.getMeasurementPeriodEnd());
+    Measure measureCopy = measure;
+    Set<MeasureErrorType> errorTypes = new HashSet<>();
     try {
-      measure = updateElm(measure, accessToken);
+      measureCopy = updateElm(measure, accessToken);
     } catch (CqlElmTranslationErrorException ex) {
-      measure.setCqlErrors(true);
-      measure.getErrors().add(MeasureErrorType.ERRORS_ELM_JSON);
+      errorTypes.add(MeasureErrorType.ERRORS_ELM_JSON);
     }
     try {
       terminologyValidationService.validateTerminology(measure.getElmJson(), accessToken);
     } catch (InvalidTerminologyException ex) {
-      measure.setCqlErrors(true);
-      measure.getErrors().add(MeasureErrorType.INVALID_TERMINOLOGY);
+      errorTypes.add(MeasureErrorType.INVALID_TERMINOLOGY);
+    }
+    if (!CollectionUtils.isEmpty(errorTypes)) {
+      measureCopy.setCqlErrors(true);
+      measureCopy.setErrors(errorTypes);
     }
 
     Instant now = Instant.now();
     // Clear ID so that the unique GUID from MongoDB will be applied
-    measure.setId(null);
-    measure.setCreatedBy(username);
-    measure.setCreatedAt(now);
-    measure.setLastModifiedBy(username);
-    measure.setLastModifiedAt(now);
-    measure.setVersion(new Version(0, 0, 0));
-    measure.setVersionId(UUID.randomUUID().toString());
-    measure.setMeasureSetId(UUID.randomUUID().toString());
+    measureCopy.setId(null);
+    measureCopy.setCreatedBy(username);
+    measureCopy.setCreatedAt(now);
+    measureCopy.setLastModifiedBy(username);
+    measureCopy.setLastModifiedAt(now);
+    measureCopy.setVersion(new Version(0, 0, 0));
+    measureCopy.setVersionId(UUID.randomUUID().toString());
+    measureCopy.setMeasureSetId(UUID.randomUUID().toString());
 
-    if (measure.getMeasureMetaData() != null) {
-      measure.getMeasureMetaData().setDraft(true);
+    if (measureCopy.getMeasureMetaData() != null) {
+      measureCopy.getMeasureMetaData().setDraft(true);
     } else {
       MeasureMetaData metaData = new MeasureMetaData();
       metaData.setDraft(true);
-      measure.setMeasureMetaData(metaData);
+      measureCopy.setMeasureMetaData(metaData);
     }
 
-    Measure savedMeasure = measureRepository.save(measure);
-    log.info("User [{}] successfully created new measure with ID [{}]", username, measure.getId());
-
+    Measure savedMeasure = measureRepository.save(measureCopy);
+    log.info("User [{}] successfully created new measure with ID [{}]", username, savedMeasure.getId());
     actionLogService.logAction(savedMeasure.getId(), Measure.class, ActionType.CREATED, username);
 
     return savedMeasure;

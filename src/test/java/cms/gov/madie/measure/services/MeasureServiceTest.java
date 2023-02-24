@@ -1,5 +1,7 @@
 package cms.gov.madie.measure.services;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -12,7 +14,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -23,11 +28,15 @@ import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
+import cms.gov.madie.measure.exceptions.InvalidTerminologyException;
 import cms.gov.madie.measure.utils.MeasureUtil;
+import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -57,6 +66,9 @@ public class MeasureServiceTest implements ResourceUtil {
 
   @Mock private MeasureUtil measureUtil;
 
+  @Mock private ActionLogService actionLogService;
+  @Mock private TerminologyValidationService terminologyValidationService;
+
   @InjectMocks private MeasureService measureService;
 
   @Captor private ArgumentCaptor<Measure> measureArgumentCaptor;
@@ -64,6 +76,7 @@ public class MeasureServiceTest implements ResourceUtil {
   private Group group2;
   private MeasureMetaData measureMetaData;
   private Measure measure;
+  private String elmJson;
 
   @BeforeEach
   public void setUp() {
@@ -97,7 +110,7 @@ public class MeasureServiceTest implements ResourceUtil {
 
     List<Group> groups = new ArrayList<>();
     groups.add(group2);
-    String elmJson = getData("/test_elm.json");
+    elmJson = getData("/test_elm.json");
     measure =
         Measure.builder()
             .active(true)
@@ -113,6 +126,77 @@ public class MeasureServiceTest implements ResourceUtil {
             .lastModifiedAt(Instant.now())
             .lastModifiedBy("test user")
             .build();
+  }
+
+  @Test
+  public void testCreateMeasureSuccessfullyWithNoCql() {
+    String usr = "john rao";
+    Measure measureToSave = measure.toBuilder()
+      .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
+      .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
+      .cqlLibraryName("VTE")
+      .cql("")
+      .elmJson(null)
+      .build();
+    when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
+    when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
+    when(actionLogService.logAction(any(), any(), any(), any()))
+      .thenReturn(true);
+
+    Measure savedMeasure = measureService.createMeasure(measureToSave, usr, "token");
+    assertThat(savedMeasure.getMeasureName(), is(equalTo(measureToSave.getMeasureName())));
+    assertThat(savedMeasure.getCqlLibraryName(), is(equalTo(measureToSave.getCqlLibraryName())));
+  }
+
+  @Test
+  public void testCreateMeasureSuccessfullyWithValidCql() {
+    String usr = "john rao";
+    Measure measureToSave = measure.toBuilder()
+      .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
+      .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
+      .cqlLibraryName("VTE")
+      .build();
+    when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
+    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+      .thenReturn(ElmJson.builder().json(elmJson).build());
+    when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(false);
+    doNothing().when(terminologyValidationService).validateTerminology(anyString(), anyString());
+    when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
+    when(actionLogService.logAction(any(), any(), any(), any()))
+      .thenReturn(true);
+
+    Measure savedMeasure = measureService.createMeasure(measureToSave, usr, "token");
+    assertThat(savedMeasure.getMeasureName(), is(equalTo(measureToSave.getMeasureName())));
+    assertThat(savedMeasure.getCqlLibraryName(), is(equalTo(measureToSave.getCqlLibraryName())));
+    assertThat(savedMeasure.getErrors(), is(emptySet()));
+    assertThat(savedMeasure.isCqlErrors(), is(equalTo(false)));
+  }
+
+  @Test
+  public void testCreateMeasureSuccessfullyWithInvalidCqlAndTerminology() {
+    String usr = "john rao";
+    Measure measureToSave = measure.toBuilder()
+      .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
+      .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
+      .cqlLibraryName("VTE")
+      .build();
+    when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
+    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+      .thenReturn(ElmJson.builder().json(elmJson).build());
+    when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(true);
+    doThrow(InvalidTerminologyException.class)
+      .when(terminologyValidationService).validateTerminology(anyString(), anyString());
+    when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
+    when(actionLogService.logAction(any(), any(), any(), any()))
+      .thenReturn(true);
+
+    Measure savedMeasure = measureService.createMeasure(measureToSave, usr, "token");
+    assertThat(savedMeasure.getMeasureName(), is(equalTo(measureToSave.getMeasureName())));
+    assertThat(savedMeasure.getCqlLibraryName(), is(equalTo(measureToSave.getCqlLibraryName())));
+    assertThat(savedMeasure.getErrors().size(), is(equalTo(2)));
+    assertThat(savedMeasure.getErrors().contains(MeasureErrorType.ERRORS_ELM_JSON), is(true));
+    assertThat(savedMeasure.getErrors().contains(MeasureErrorType.INVALID_TERMINOLOGY), is(true));
+    assertThat(savedMeasure.isCqlErrors(), is(equalTo(true)));
   }
 
   @Test
