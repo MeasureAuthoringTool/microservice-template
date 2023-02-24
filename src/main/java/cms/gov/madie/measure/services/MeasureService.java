@@ -85,7 +85,8 @@ public class MeasureService {
     }
 
     Measure savedMeasure = measureRepository.save(measureCopy);
-    log.info("User [{}] successfully created new measure with ID [{}]", username, savedMeasure.getId());
+    log.info(
+        "User [{}] successfully created new measure with ID [{}]", username, savedMeasure.getId());
     actionLogService.logAction(savedMeasure.getId(), Measure.class, ActionType.CREATED, username);
 
     return savedMeasure;

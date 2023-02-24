@@ -1,6 +1,5 @@
 package cms.gov.madie.measure.services;
 
-import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -128,41 +127,45 @@ public class MeasureServiceTest implements ResourceUtil {
   @Test
   public void testCreateMeasureSuccessfullyWithNoCql() {
     String usr = "john rao";
-    Measure measureToSave = measure.toBuilder()
-      .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
-      .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
-      .cqlLibraryName("VTE")
-      .cql("")
-      .elmJson(null)
-      .build();
+    Measure measureToSave =
+        measure
+            .toBuilder()
+            .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
+            .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
+            .cqlLibraryName("VTE")
+            .cql("")
+            .elmJson(null)
+            .build();
     when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
-    when(actionLogService.logAction(any(), any(), any(), any()))
-      .thenReturn(true);
+    when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
 
     Measure savedMeasure = measureService.createMeasure(measureToSave, usr, "token");
     assertThat(savedMeasure.getMeasureName(), is(equalTo(measureToSave.getMeasureName())));
     assertThat(savedMeasure.getCqlLibraryName(), is(equalTo(measureToSave.getCqlLibraryName())));
+    assertThat(savedMeasure.getCreatedBy(), is(equalTo(usr)));
+    assertThat(savedMeasure.isCqlErrors(), is(equalTo(false)));
+    assertThat(savedMeasure.getErrors(), is(emptySet()));
   }
 
   @Test
   public void testCreateMeasureSuccessfullyWithValidCql() {
-    String usr = "john rao";
-    Measure measureToSave = measure.toBuilder()
-      .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
-      .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
-      .cqlLibraryName("VTE")
-      .build();
+    Measure measureToSave =
+        measure
+            .toBuilder()
+            .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
+            .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
+            .cqlLibraryName("VTE")
+            .build();
     when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
     when(elmTranslatorClient.getElmJson(anyString(), anyString()))
-      .thenReturn(ElmJson.builder().json(elmJson).build());
+        .thenReturn(ElmJson.builder().json(elmJson).build());
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(false);
     doNothing().when(terminologyValidationService).validateTerminology(anyString(), anyString());
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
-    when(actionLogService.logAction(any(), any(), any(), any()))
-      .thenReturn(true);
+    when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
 
-    Measure savedMeasure = measureService.createMeasure(measureToSave, usr, "token");
+    Measure savedMeasure = measureService.createMeasure(measureToSave, "john rao", "token");
     assertThat(savedMeasure.getMeasureName(), is(equalTo(measureToSave.getMeasureName())));
     assertThat(savedMeasure.getCqlLibraryName(), is(equalTo(measureToSave.getCqlLibraryName())));
     assertThat(savedMeasure.getErrors(), is(emptySet()));
@@ -172,28 +175,50 @@ public class MeasureServiceTest implements ResourceUtil {
   @Test
   public void testCreateMeasureSuccessfullyWithInvalidCqlAndTerminology() {
     String usr = "john rao";
-    Measure measureToSave = measure.toBuilder()
-      .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
-      .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
-      .cqlLibraryName("VTE")
-      .build();
+    Measure measureToSave =
+        measure
+            .toBuilder()
+            .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
+            .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
+            .cqlLibraryName("VTE")
+            .build();
     when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
     when(elmTranslatorClient.getElmJson(anyString(), anyString()))
-      .thenReturn(ElmJson.builder().json(elmJson).build());
+        .thenReturn(ElmJson.builder().json(elmJson).build());
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(true);
     doThrow(InvalidTerminologyException.class)
-      .when(terminologyValidationService).validateTerminology(anyString(), anyString());
+        .when(terminologyValidationService)
+        .validateTerminology(anyString(), anyString());
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
-    when(actionLogService.logAction(any(), any(), any(), any()))
-      .thenReturn(true);
+    when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
 
     Measure savedMeasure = measureService.createMeasure(measureToSave, usr, "token");
     assertThat(savedMeasure.getMeasureName(), is(equalTo(measureToSave.getMeasureName())));
     assertThat(savedMeasure.getCqlLibraryName(), is(equalTo(measureToSave.getCqlLibraryName())));
+    assertThat(savedMeasure.getCreatedBy(), is(equalTo(usr)));
     assertThat(savedMeasure.getErrors().size(), is(equalTo(2)));
     assertThat(savedMeasure.getErrors().contains(MeasureErrorType.ERRORS_ELM_JSON), is(true));
     assertThat(savedMeasure.getErrors().contains(MeasureErrorType.INVALID_TERMINOLOGY), is(true));
     assertThat(savedMeasure.isCqlErrors(), is(equalTo(true)));
+  }
+
+  @Test
+  public void testCreateMeasureWhenLibraryNameDuplicate() {
+    Measure measureToSave =
+        measure
+            .toBuilder()
+            .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
+            .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
+            .cqlLibraryName("VTE")
+            .cql("")
+            .elmJson(null)
+            .build();
+    when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.of(measure));
+
+    assertThrows(
+        DuplicateKeyException.class,
+        () -> measureService.createMeasure(measureToSave, "john rao", "token"),
+        "CQL library with given name already exists");
   }
 
   @Test
