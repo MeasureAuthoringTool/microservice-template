@@ -48,7 +48,6 @@ public class TerminologyServiceClientTest {
 
   @Test
   public void testValidateCodes() {
-    var testVs = "two test value sets";
     var codeSystem =
         CqlCode.CqlCodeSystem.builder()
             .oid("http://loinc.org")
