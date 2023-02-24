@@ -32,7 +32,6 @@ import java.util.Optional;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.InvalidTerminologyException;
 import cms.gov.madie.measure.utils.MeasureUtil;
-import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
