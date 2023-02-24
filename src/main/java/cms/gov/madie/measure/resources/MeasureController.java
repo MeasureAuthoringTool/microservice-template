@@ -12,6 +12,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,6 +22,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -83,37 +86,10 @@ public class MeasureController {
   @PostMapping("/measure")
   public ResponseEntity<Measure> addMeasure(
       @RequestBody @Validated(Measure.ValidationSequence.class) Measure measure,
-      Principal principal) {
+      Principal principal,
+      @RequestHeader("Authorization") String accessToken) {
     final String username = principal.getName();
-    log.info("User [{}] is attempting to create a new measure", username);
-    measureService.checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
-    measureService.validateMeasurementPeriod(
-        measure.getMeasurementPeriodStart(), measure.getMeasurementPeriodEnd());
-
-    // Clear ID so that the unique GUID from MongoDB will be applied
-    Instant now = Instant.now();
-    measure.setId(null);
-    measure.setCreatedBy(username);
-    measure.setCreatedAt(now);
-    measure.setLastModifiedBy(username);
-    measure.setLastModifiedAt(now);
-    measure.setVersion(new Version(0, 0, 0));
-    measure.setVersionId(UUID.randomUUID().toString());
-    measure.setMeasureSetId(UUID.randomUUID().toString());
-
-    if (measure.getMeasureMetaData() != null) {
-      measure.getMeasureMetaData().setDraft(true);
-    } else {
-      MeasureMetaData metaData = new MeasureMetaData();
-      metaData.setDraft(true);
-      measure.setMeasureMetaData(metaData);
-    }
-
-    Measure savedMeasure = repository.save(measure);
-    log.info("User [{}] successfully created new measure with ID [{}]", username, measure.getId());
-
-    actionLogService.logAction(savedMeasure.getId(), Measure.class, ActionType.CREATED, username);
-
+    Measure savedMeasure = measureService.createMeasure(measure, username, accessToken);
     return ResponseEntity.status(HttpStatus.CREATED).body(savedMeasure);
   }
 

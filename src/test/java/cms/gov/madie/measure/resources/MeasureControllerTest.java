@@ -63,58 +63,21 @@ class MeasureControllerTest {
 
   @Test
   void saveMeasure() {
-    ArgumentCaptor<Measure> saveMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
     measure.setId("testId");
-    doReturn(measure).when(repository).save(ArgumentMatchers.any());
-
+    doReturn(measure)
+        .when(measureService)
+        .createMeasure(any(Measure.class), anyString(), anyString());
     Measure measures = new Measure();
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
-    ResponseEntity<Measure> response = controller.addMeasure(measures, principal);
+    ResponseEntity<Measure> response = controller.addMeasure(measures, principal, "");
     assertNotNull(response.getBody());
     assertEquals("IDIDID", response.getBody().getMeasureSetId());
 
-    verify(repository, times(1)).save(saveMeasureArgCaptor.capture());
-    Measure savedMeasure = saveMeasureArgCaptor.getValue();
-    assertThat(savedMeasure.getCreatedBy(), is(equalTo("test.user")));
-    assertThat(savedMeasure.getLastModifiedBy(), is(equalTo("test.user")));
-    assertThat(savedMeasure.getCreatedAt(), is(notNullValue()));
-    assertThat(savedMeasure.getLastModifiedAt(), is(notNullValue()));
-    assertTrue(savedMeasure.getMeasureMetaData().isDraft());
-
-    verify(actionLogService, times(1))
-        .logAction(
-            targetIdArgumentCaptor.capture(),
-            targetClassArgumentCaptor.capture(),
-            actionTypeArgumentCaptor.capture(),
-            performedByArgumentCaptor.capture());
-    assertNotNull(targetIdArgumentCaptor.getValue());
-    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.CREATED)));
-    assertThat(performedByArgumentCaptor.getValue(), is(equalTo("test.user")));
-  }
-
-  @Test
-  void saveMeasureAndDefaultToDraft() {
-    ArgumentCaptor<Measure> saveMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
-    measure.setId("testId");
-    measure.setMeasureMetaData(null);
-    doReturn(measure).when(repository).save(ArgumentMatchers.any());
-
-    Principal principal = mock(Principal.class);
-    when(principal.getName()).thenReturn("test.user");
-
-    ResponseEntity<Measure> response = controller.addMeasure(measure, principal);
-    assertNotNull(response.getBody());
-    assertNotEquals("IDIDID", response.getBody().getMeasureSetId());
-
-    verify(repository, times(1)).save(saveMeasureArgCaptor.capture());
-    Measure savedMeasure = saveMeasureArgCaptor.getValue();
-    assertThat(savedMeasure.getCreatedBy(), is(equalTo("test.user")));
-    assertThat(savedMeasure.getLastModifiedBy(), is(equalTo("test.user")));
-    assertThat(savedMeasure.getCreatedAt(), is(notNullValue()));
-    assertThat(savedMeasure.getLastModifiedAt(), is(notNullValue()));
-    assertTrue(savedMeasure.getMeasureMetaData().isDraft());
+    Measure savedMeasure = response.getBody();
+    assertThat(savedMeasure.getMeasureName(), is(equalTo(measure.getMeasureName())));
+    assertThat(savedMeasure.getId(), is(equalTo(measure.getId())));
   }
 
   @Test

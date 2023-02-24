@@ -4,12 +4,15 @@ import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.InvalidCmsIdException;
 import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
 import cms.gov.madie.measure.exceptions.InvalidMeasurementPeriodException;
+import cms.gov.madie.measure.exceptions.InvalidTerminologyException;
 import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
 import cms.gov.madie.measure.utils.MeasureUtil;
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
+import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Measure;
 import java.text.SimpleDateFormat;
@@ -21,6 +24,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import gov.cms.madie.models.measure.MeasureErrorType;
+import gov.cms.madie.models.measure.MeasureMetaData;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -33,6 +37,53 @@ public class MeasureService {
   private final MeasureRepository measureRepository;
   private final ElmTranslatorClient elmTranslatorClient;
   private final MeasureUtil measureUtil;
+  private final ActionLogService actionLogService;
+  private final TerminologyValidationService terminologyValidationService;
+
+  public Measure createMeasure(Measure measure, final String username, String accessToken) {
+    log.info("User [{}] is attempting to create a new measure", username);
+    checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
+    validateMeasurementPeriod(
+        measure.getMeasurementPeriodStart(), measure.getMeasurementPeriodEnd());
+    try {
+      measure = updateElm(measure, accessToken);
+    } catch (CqlElmTranslationErrorException ex) {
+      measure.setCqlErrors(true);
+      measure.getErrors().add(MeasureErrorType.ERRORS_ELM_JSON);
+    }
+    try {
+      terminologyValidationService.validateTerminology(measure.getElmJson(), accessToken);
+    } catch (InvalidTerminologyException ex) {
+      measure.setCqlErrors(true);
+      measure.getErrors().add(MeasureErrorType.INVALID_TERMINOLOGY);
+    }
+
+    Instant now = Instant.now();
+    // Clear ID so that the unique GUID from MongoDB will be applied
+    measure.setId(null);
+    measure.setCreatedBy(username);
+    measure.setCreatedAt(now);
+    measure.setLastModifiedBy(username);
+    measure.setLastModifiedAt(now);
+    measure.setVersion(new Version(0, 0, 0));
+    measure.setVersionId(UUID.randomUUID().toString());
+    measure.setMeasureSetId(UUID.randomUUID().toString());
+
+    if (measure.getMeasureMetaData() != null) {
+      measure.getMeasureMetaData().setDraft(true);
+    } else {
+      MeasureMetaData metaData = new MeasureMetaData();
+      metaData.setDraft(true);
+      measure.setMeasureMetaData(metaData);
+    }
+
+    Measure savedMeasure = measureRepository.save(measure);
+    log.info("User [{}] successfully created new measure with ID [{}]", username, measure.getId());
+
+    actionLogService.logAction(savedMeasure.getId(), Measure.class, ActionType.CREATED, username);
+
+    return savedMeasure;
+  }
 
   public Measure updateMeasure(
       final Measure existingMeasure,
