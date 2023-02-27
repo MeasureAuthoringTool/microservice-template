@@ -39,7 +39,7 @@ public class TerminologyServiceClient {
               String.class)
           .getBody();
     } catch (HttpClientErrorException ex) {
-      log.error("An issue occurred while validating ValueSets: " + ex.getMessage());
+      log.error("An issue occurred while validating ValueSets: ", ex);
       throw new InvalidTerminologyException("Invalid ValueSet: ", ex.getMessage());
     }
   }
