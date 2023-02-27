@@ -66,6 +66,9 @@ public class TerminologyValidationService {
       return null;
     }
     var valueSetDefs = (List<Map<String, String>>) valueSets.get("def");
+    if (CollectionUtils.isEmpty(valueSetDefs)) {
+      return null;
+    }
     return valueSetDefs.stream()
         .map(valueSetDef -> getOidFromValueSetId(valueSetDef.get("id")))
         .collect(Collectors.toList());
@@ -79,7 +82,7 @@ public class TerminologyValidationService {
       return null;
     }
     var codeDefs = (List<Map<String, Object>>) codes.get("def");
-    return codeDefs.stream().map(codeDef -> getCode(codeDef, codeSystems)).toList();
+    return codeDefs.stream().map(codeDef -> getCqlCode(codeDef, codeSystems)).toList();
   }
 
   private Map<String, Object> getLibrary(String elm) {
@@ -99,7 +102,7 @@ public class TerminologyValidationService {
     }
   }
 
-  private CqlCode getCode(Map<String, Object> codeDefinition, Map<String, Object> codeSystems) {
+  private CqlCode getCqlCode(Map<String, Object> codeDefinition, Map<String, Object> codeSystems) {
     if (codeDefinition == null) {
       return null;
     }

@@ -13,9 +13,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -35,7 +39,7 @@ public class TerminologyValidationServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testValidateTerminologyWhenNoErrors() throws Exception {
+  public void testValidateTerminologyWhenNoErrors() {
     when(terminologyServiceClient.fetchValueSets(any(ValueSetsSearchCriteria.class), anyString()))
         .thenReturn("[json]");
 
@@ -47,7 +51,14 @@ public class TerminologyValidationServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testValidateTerminologyWhenErrorsWithValueSets() throws Exception {
+  public void testValidateTerminologyWhenNoELm() {
+    terminologyValidationService.validateTerminology("", "token");
+    verify(terminologyServiceClient, never()).fetchValueSets(any(), any());
+    verify(terminologyServiceClient, never()).validateCodes(any(), any());
+  }
+
+  @Test
+  public void testValidateTerminologyWhenErrorsWithValueSets() {
     when(terminologyServiceClient.fetchValueSets(any(ValueSetsSearchCriteria.class), anyString()))
         .thenThrow(InvalidTerminologyException.class);
 
@@ -59,7 +70,7 @@ public class TerminologyValidationServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testValidateTerminologyWhenErrorsWithCqlCodes() throws Exception {
+  public void testValidateTerminologyWhenErrorsWithCqlCodes() {
     when(terminologyServiceClient.fetchValueSets(any(ValueSetsSearchCriteria.class), anyString()))
         .thenReturn("[json]");
 
@@ -71,5 +82,48 @@ public class TerminologyValidationServiceTest implements ResourceUtil {
         "Invalid Cql code");
     verify(terminologyServiceClient, times(1)).fetchValueSets(any(), any());
     verify(terminologyServiceClient, times(1)).validateCodes(any(), any());
+  }
+
+  @Test
+  public void testValidateTerminologyWhenNoValueSetsAndCodeInCql() {
+    String elm =
+        "{\"errorExceptions\": [], \"library\": { \"annotation\": [], \"valueSets\": {}, \"codes\": {} }}";
+    terminologyValidationService.validateTerminology(elm, "token");
+    verify(terminologyServiceClient, never()).fetchValueSets(any(), any());
+    verify(terminologyServiceClient, never()).validateCodes(any(), any());
+  }
+
+  @Test
+  public void testValidateTerminologyWhenCodeWithNoCodeSystemInCql() {
+    String elm =
+        "{\n"
+            + "         \"library\": {\n"
+            + "           \"codeSystems\": {\n"
+            + "           },\n"
+            + "           \"codes\": {\n"
+            + "             \"def\": [\n"
+            + "               {\n"
+            + "                 \"name\": \"Amdinocillin [Susceptibility] by Serum bactericidal titer\",\n"
+            + "                 \"id\": \"10-9\",\n"
+            + "                 \"display\": \"Amdinocillin [Susceptibility] by Serum bactericidal titer\",\n"
+            + "                 \"accessLevel\": \"Public\",\n"
+            + "                 \"codeSystem\": {\n"
+            + "                   \"name\": \"LOINC\"\n"
+            + "                 }\n"
+            + "               }\n"
+            + "             ]\n"
+            + "           }\n"
+            + "         }\n"
+            + "       }";
+
+    when(terminologyServiceClient.validateCodes(any(), anyString()))
+        .thenReturn(List.of(CqlCode.builder().codeId("test code").isValid(false).build()));
+
+    Exception ex =
+        assertThrows(
+            InvalidTerminologyException.class,
+            () -> terminologyValidationService.validateTerminology(elm, "token"));
+    verify(terminologyServiceClient, times(1)).validateCodes(any(), any());
+    assertThat(ex.getMessage(), is(equalTo("Invalid terminology CQL Code: test code")));
   }
 }
