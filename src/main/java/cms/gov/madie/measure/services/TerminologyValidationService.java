@@ -41,12 +41,7 @@ public class TerminologyValidationService {
                     .map(oid -> ValueSetsSearchCriteria.ValueSetParams.builder().oid(oid).build())
                     .toList())
             .build();
-    try {
-      terminologyServiceClient.fetchValueSets(searchCriteria, accessToken);
-    } catch (Exception ex) {
-      log.error("An issue occurred while validating ValueSets: " + ex.getMessage());
-      throw new InvalidTerminologyException("One or more invalid ValueSets");
-    }
+    terminologyServiceClient.fetchValueSets(searchCriteria, accessToken);
   }
 
   public void validateCodes(String elm, String accessToken) {
@@ -55,6 +50,7 @@ public class TerminologyValidationService {
       return;
     }
     List<CqlCode> validatedCodes = terminologyServiceClient.validateCodes(cqlCodes, accessToken);
+    // throw error if there is at least one invalid code
     CqlCode invalidCode =
         validatedCodes.stream().filter(cqlCode -> !cqlCode.isValid()).findFirst().orElse(null);
     if (invalidCode != null) {

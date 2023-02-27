@@ -2,6 +2,7 @@ package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.config.TerminologyServiceConfig;
 import cms.gov.madie.measure.dto.ValueSetsSearchCriteria;
+import cms.gov.madie.measure.exceptions.InvalidTerminologyException;
 import gov.cms.madie.models.cql.terminology.CqlCode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,8 +10,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -18,6 +21,7 @@ import java.util.List;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -44,6 +48,28 @@ public class TerminologyServiceClientTest {
         .thenReturn(ResponseEntity.ok(testVs));
     String response = terminologyServiceClient.fetchValueSets(criteria, "token");
     assertThat(response, is(equalTo(testVs)));
+  }
+
+  @Test
+  public void testFetchValueSetsWhenNotValueSetNotFound() {
+    var testVs = "two test value sets";
+    var oids = List.of("1.2.3.4", "4.5.6.7");
+    var criteria =
+        ValueSetsSearchCriteria.builder()
+            .includeDraft(true)
+            .valueSetParams(
+                oids.stream()
+                    .map(oid -> ValueSetsSearchCriteria.ValueSetParams.builder().oid(oid).build())
+                    .toList())
+            .build();
+    when(terminologyRestTemplate.exchange(any(RequestEntity.class), any(Class.class)))
+        .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
+    Exception ex =
+        assertThrows(
+            InvalidTerminologyException.class,
+            () -> terminologyServiceClient.fetchValueSets(criteria, "token"));
+    assertThat(
+        ex.getMessage(), is(equalTo("Invalid terminology Invalid ValueSet: : 404 NOT_FOUND")));
   }
 
   @Test
