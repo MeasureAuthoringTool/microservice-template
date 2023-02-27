@@ -56,7 +56,7 @@ public class MeasureService {
       errorTypes.add(MeasureErrorType.ERRORS_ELM_JSON);
     }
     try {
-      terminologyValidationService.validateTerminology(measure.getElmJson(), accessToken);
+      terminologyValidationService.validateTerminology(measureCopy.getElmJson(), accessToken);
     } catch (InvalidTerminologyException ex) {
       errorTypes.add(MeasureErrorType.INVALID_TERMINOLOGY);
     }
