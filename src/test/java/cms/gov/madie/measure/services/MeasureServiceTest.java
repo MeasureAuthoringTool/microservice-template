@@ -134,6 +134,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .cqlLibraryName("VTE")
             .cql("")
             .elmJson(null)
+            .measureMetaData(new MeasureMetaData())
             .build();
     when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
@@ -145,6 +146,7 @@ public class MeasureServiceTest implements ResourceUtil {
     assertThat(savedMeasure.getCreatedBy(), is(equalTo(usr)));
     assertThat(savedMeasure.isCqlErrors(), is(equalTo(false)));
     assertThat(savedMeasure.getErrors(), is(emptySet()));
+    assertThat(savedMeasure.getMeasureMetaData().isDraft(), is(equalTo(true)));
   }
 
   @Test
