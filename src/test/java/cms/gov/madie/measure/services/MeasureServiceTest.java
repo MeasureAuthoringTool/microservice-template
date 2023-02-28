@@ -68,7 +68,9 @@ public class MeasureServiceTest implements ResourceUtil {
 
   private Group group2;
   private MeasureMetaData measureMetaData;
-  private Measure measure;
+  private Measure measure1;
+  private Measure measure2;
+  
 
   @BeforeEach
   public void setUp() {
@@ -103,7 +105,7 @@ public class MeasureServiceTest implements ResourceUtil {
     List<Group> groups = new ArrayList<>();
     groups.add(group2);
     String elmJson = getData("/test_elm.json");
-    measure =
+    measure1 =
         Measure.builder()
             .active(true)
             .id("xyz-p13r-13ert")
@@ -118,13 +120,30 @@ public class MeasureServiceTest implements ResourceUtil {
             .lastModifiedAt(Instant.now())
             .lastModifiedBy("test user")
             .build();
+    
+    measure2 =
+        Measure.builder()
+            .active(true)
+            .id("xyz-p13r-13ert")
+            .cql("test cql")
+            .elmJson(elmJson)
+            .measureSetId("2D2D2D")
+            .measureName("MSR01")
+            .version(new Version(0, 0, 1))
+            .groups(groups)
+            .createdAt(Instant.now())
+            .createdBy("test user")
+            .lastModifiedAt(Instant.now())
+            .lastModifiedBy("test user")
+            .measureMetaData(measureMetaData)
+            .build();
   }
 
   @Test
   public void testGetMeasures() {
     PageRequest initialPage = PageRequest.of(0, 10);
 
-    Page<Measure> activeMeasures = new PageImpl<>(List.of(measure));
+    Page<Measure> activeMeasures = new PageImpl<>(List.of(measure1));
 
     doReturn(activeMeasures)
         .when(measureRepository)
@@ -135,17 +154,18 @@ public class MeasureServiceTest implements ResourceUtil {
 
   @Test
   public void testGetMeasureDrafts() {
-
-    List<Measure> activeMeasures = List.of(measure);
-    List<String> measureSetIds = List.of("IDIDID");
+    measure2.getMeasureMetaData().setDraft(false);
+    List<Measure> activeMeasures = List.of(measure1);
+    List<String> measureSetIds = List.of("IDIDID", "2D2D2D");
 
     doReturn(activeMeasures)
         .when(measureRepository)
         .findAllByMeasureSetIdInAndActiveAndMeasureMetaDataDraft(anyList(), eq(true), eq(true));
     Map<String, Boolean> measures = measureService.getMeasureDrafts(measureSetIds);
     assertNotNull(measures);
-    assertEquals(1, measures.size());
+    assertEquals(2, measures.size());
     assertFalse(measures.get("IDIDID"));
+    assertTrue(measures.get("2D2D2D"));
   }
 
   @Test
@@ -404,7 +424,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .model("QI-Core")
             .active(true)
             .build();
-    Page<Measure> activeMeasures = new PageImpl<>(List.of(measure, m1));
+    Page<Measure> activeMeasures = new PageImpl<>(List.of(measure1, m1));
     Page<Measure> inactiveMeasures = new PageImpl<>(List.of(m2));
     PageRequest initialPage = PageRequest.of(0, 10);
 
