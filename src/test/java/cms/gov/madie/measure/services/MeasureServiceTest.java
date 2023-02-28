@@ -70,7 +70,6 @@ public class MeasureServiceTest implements ResourceUtil {
   private MeasureMetaData measureMetaData;
   private Measure measure1;
   private Measure measure2;
-  
 
   @BeforeEach
   public void setUp() {
@@ -120,7 +119,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .lastModifiedAt(Instant.now())
             .lastModifiedBy("test user")
             .build();
-    
+
     measure2 =
         Measure.builder()
             .active(true)
