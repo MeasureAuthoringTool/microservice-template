@@ -978,7 +978,8 @@ public class MeasureControllerMvcTest {
             .build();
 
     Page<Measure> allMeasures = new PageImpl<>(List.of(m1, m2, m3));
-    when(measureRepository.findAllByActive(any(Boolean.class), any(Pageable.class)))
+
+    when(measureService.getMeasures(any(Boolean.class), any(Pageable.class), eq(TEST_USER_ID)))
         .thenReturn(allMeasures);
 
     MvcResult result =
@@ -992,8 +993,9 @@ public class MeasureControllerMvcTest {
     String expectedJsonStr = mapper.writeValueAsString(allMeasures);
 
     assertThat(resultStr, is(equalTo(expectedJsonStr)));
-    verify(measureRepository, times(1)).findAllByActive(any(Boolean.class), any(Pageable.class));
-    verifyNoMoreInteractions(measureRepository);
+    verify(measureService, times(1))
+        .getMeasures(any(Boolean.class), any(Pageable.class), eq(TEST_USER_ID));
+    verifyNoMoreInteractions(measureService);
   }
 
   @Test
@@ -1024,7 +1026,7 @@ public class MeasureControllerMvcTest {
             .build();
 
     Page<Measure> allMeasures = new PageImpl<>(List.of(m1, m2, m3));
-    when(measureRepository.findAllByActive(any(Boolean.class), any(Pageable.class)))
+    when(measureService.getMeasures(eq(false), any(Pageable.class), eq(TEST_USER_ID)))
         .thenReturn(allMeasures);
 
     MvcResult result =
@@ -1042,8 +1044,9 @@ public class MeasureControllerMvcTest {
     String expectedJsonStr = mapper.writeValueAsString(allMeasures);
 
     assertThat(resultStr, is(equalTo(expectedJsonStr)));
-    verify(measureRepository, times(1)).findAllByActive(any(Boolean.class), any(Pageable.class));
-    verifyNoMoreInteractions(measureRepository);
+    verify(measureService, times(1)).getMeasures(eq(false), any(Pageable.class), eq(TEST_USER_ID));
+
+    verifyNoMoreInteractions(measureService);
   }
 
   @Test
@@ -1074,7 +1077,7 @@ public class MeasureControllerMvcTest {
             .build();
 
     Page<Measure> allMeasures = new PageImpl<>(List.of(m1, m2, m3));
-    when(measureRepository.findAllByActive(any(Boolean.class), any(Pageable.class)))
+    when(measureService.getMeasures(eq(false), any(Pageable.class), eq(TEST_USER_ID)))
         .thenReturn(allMeasures);
 
     MvcResult result =
@@ -1094,12 +1097,15 @@ public class MeasureControllerMvcTest {
     String expectedJsonStr = mapper.writeValueAsString(allMeasures);
 
     assertThat(resultStr, is(equalTo(expectedJsonStr)));
-    verify(measureRepository, times(1))
-        .findAllByActive(activeCaptor.capture(), pageRequestCaptor.capture());
+
+    verify(measureService, times(1))
+        .getMeasures(activeCaptor.capture(), pageRequestCaptor.capture(), eq(TEST_USER_ID));
+
     PageRequest pageRequestValue = pageRequestCaptor.getValue();
     assertEquals(25, pageRequestValue.getPageSize());
     assertEquals(3, pageRequestValue.getPageNumber());
-    verifyNoMoreInteractions(measureRepository);
+
+    verifyNoMoreInteractions(measureService);
   }
 
   @Test
@@ -1124,9 +1130,8 @@ public class MeasureControllerMvcTest {
 
     final Page<Measure> measures = new PageImpl<>(List.of(m1, m2));
 
-    when(measureRepository.findAllByCreatedByAndActiveOrShared(
-            anyString(), any(Boolean.class), anyString(), any(PageRequest.class)))
-        .thenReturn(measures); // fix
+    when(measureService.getMeasures(eq(true), any(Pageable.class), eq(TEST_USER_ID)))
+        .thenReturn(measures);
 
     MvcResult result =
         mockMvc
@@ -1143,13 +1148,8 @@ public class MeasureControllerMvcTest {
     String expectedJsonStr = mapper.writeValueAsString(measures);
 
     assertThat(resultStr, is(equalTo(expectedJsonStr)));
-    verify(measureRepository, times(1))
-        .findAllByCreatedByAndActiveOrShared(
-            eq(TEST_USER_ID),
-            any(Boolean.class),
-            eq(RoleEnum.SHARED_WITH.toString()),
-            any(PageRequest.class));
-    verifyNoMoreInteractions(measureRepository);
+    verify(measureService, times(1)).getMeasures(eq(true), any(Pageable.class), eq(TEST_USER_ID));
+    verifyNoMoreInteractions(measureService);
   }
 
   @Test

@@ -1,15 +1,12 @@
 package cms.gov.madie.measure.repositories;
 
+import java.util.List;
 import java.util.Optional;
-
-import org.springframework.data.mongodb.repository.MongoRepository;
-
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
-
-import gov.cms.madie.models.measure.Measure;
-
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
+import gov.cms.madie.models.measure.Measure;
 
 public interface MeasureRepository
     extends MongoRepository<Measure, String>, MeasureVersionRepository {
@@ -52,4 +49,9 @@ public interface MeasureRepository
 
   boolean existsByMeasureSetIdAndActiveAndMeasureMetaDataDraft(
       String setId, boolean active, boolean draft);
+  // Map measureSetId, boolean (ie.,
+  // id 1 - drafted , 2 - versioned  setId 4 4, false
+  // id 1 - versioned , 2 - versioned setId 4 4, true
+  List<Measure> findAllByMeasureSetIdInAndActiveAndMeasureMetaDataDraft(
+      List<String> setIds, boolean active, boolean draft);
 }
