@@ -21,6 +21,7 @@ import gov.cms.madie.models.common.Version;
 import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.GroupService;
 import cms.gov.madie.measure.services.MeasureService;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,7 +46,7 @@ class MeasureControllerTest {
 
   @InjectMocks private MeasureController controller;
 
-  private Measure measure;
+  private Measure measure1;
 
   @Captor private ArgumentCaptor<ActionType> actionTypeArgumentCaptor;
   @Captor private ArgumentCaptor<Class> targetClassArgumentCaptor;
@@ -54,18 +55,18 @@ class MeasureControllerTest {
 
   @BeforeEach
   public void setUp() {
-    measure = new Measure();
-    measure.setActive(true);
-    measure.setMeasureSetId("IDIDID");
-    measure.setMeasureName("MSR01");
-    measure.setVersion(new Version(0, 0, 1));
+    measure1 = new Measure();
+    measure1.setActive(true);
+    measure1.setMeasureSetId("IDIDID");
+    measure1.setMeasureName("MSR01");
+    measure1.setVersion(new Version(0, 0, 1));
   }
 
   @Test
   void saveMeasure() {
     ArgumentCaptor<Measure> saveMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
-    measure.setId("testId");
-    doReturn(measure).when(repository).save(ArgumentMatchers.any());
+    measure1.setId("testId");
+    doReturn(measure1).when(repository).save(ArgumentMatchers.any());
 
     Measure measures = new Measure();
     Principal principal = mock(Principal.class);
@@ -97,14 +98,14 @@ class MeasureControllerTest {
   @Test
   void saveMeasureAndDefaultToDraft() {
     ArgumentCaptor<Measure> saveMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
-    measure.setId("testId");
-    measure.setMeasureMetaData(null);
-    doReturn(measure).when(repository).save(ArgumentMatchers.any());
+    measure1.setId("testId");
+    measure1.setMeasureMetaData(null);
+    doReturn(measure1).when(repository).save(ArgumentMatchers.any());
 
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
-    ResponseEntity<Measure> response = controller.addMeasure(measure, principal);
+    ResponseEntity<Measure> response = controller.addMeasure(measure1, principal);
     assertNotNull(response.getBody());
     assertNotEquals("IDIDID", response.getBody().getMeasureSetId());
 
@@ -119,13 +120,14 @@ class MeasureControllerTest {
 
   @Test
   void getMeasuresWithoutCurrentUserFilter() {
-    Page<Measure> measures = new PageImpl<>(List.of(measure));
-    when(repository.findAllByActive(any(Boolean.class), any(Pageable.class))).thenReturn(measures);
+    Page<Measure> measures = new PageImpl<>(List.of(measure1));
+
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
-
+    when(measureService.getMeasures(eq(false), any(Pageable.class), eq("test.user")))
+        .thenReturn(measures);
     ResponseEntity<Page<Measure>> response = controller.getMeasures(principal, false, 10, 0);
-    verify(repository, times(1)).findAllByActive(any(Boolean.class), any(Pageable.class));
+    verify(measureService, times(1)).getMeasures(eq(false), any(Pageable.class), eq("test.user"));
     verifyNoMoreInteractions(repository);
     assertNotNull(response.getBody());
     assertNotNull(response.getBody().getContent());
@@ -135,20 +137,15 @@ class MeasureControllerTest {
 
   @Test
   void getMeasuresWithCurrentUserFilter() {
-    Page<Measure> measures = new PageImpl<>(List.of(measure));
-    when(repository.findAllByCreatedByAndActiveOrShared(
-            anyString(), any(Boolean.class), anyString(), any(Pageable.class)))
+    Page<Measure> measures = new PageImpl<>(List.of(measure1));
+    when(measureService.getMeasures(eq(true), any(Pageable.class), eq("test.user")))
         .thenReturn(measures);
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
     ResponseEntity<Page<Measure>> response = controller.getMeasures(principal, true, 10, 0);
-    verify(repository, times(1))
-        .findAllByCreatedByAndActiveOrShared(
-            eq("test.user"),
-            any(Boolean.class),
-            eq(RoleEnum.SHARED_WITH.toString()),
-            any(Pageable.class));
+    verify(measureService, times(1)).getMeasures(eq(true), any(Pageable.class), eq("test.user"));
+
     verifyNoMoreInteractions(repository);
     assertNotNull(response.getBody().getContent());
     assertNotNull(response.getBody().getContent().get(0));
@@ -156,14 +153,31 @@ class MeasureControllerTest {
   }
 
   @Test
+  void getDraftedMeasures() {
+    // pass a list of measures to the GET Measures and return those that are draft status
+    measure1.setId("testId");
+    Map<String, Boolean> measures = new HashMap<>();
+    measures.put("IDIDID", Boolean.TRUE);
+
+    when(measureService.getMeasureDrafts(anyList())).thenReturn(measures);
+    List<String> listOfMeasureIds = new ArrayList<>();
+    listOfMeasureIds.add("testId");
+    ResponseEntity<Map<String, Boolean>> response = controller.getDraftStatuses(listOfMeasureIds);
+    verify(measureService, times(1)).getMeasureDrafts(anyList());
+
+    verifyNoMoreInteractions(measureService);
+    assertNotNull(response.getBody().get("IDIDID"));
+  }
+
+  @Test
   void getMeasure() {
     String id = "testid";
-    Optional<Measure> optionalMeasure = Optional.of(measure);
+    Optional<Measure> optionalMeasure = Optional.of(measure1);
     doReturn(optionalMeasure).when(repository).findByIdAndActive(id, true);
     // measure found
     ResponseEntity<Measure> response = controller.getMeasure(id);
     assertEquals(
-        measure.getMeasureName(), Objects.requireNonNull(response.getBody()).getMeasureName());
+        measure1.getMeasureName(), Objects.requireNonNull(response.getBody()).getMeasureName());
 
     // if measure not found
     Optional<Measure> empty = Optional.empty();
@@ -186,11 +200,11 @@ class MeasureControllerTest {
     metaData.setDisclaimer("TestDisclaimer");
     metaData.setRationale("TestRationale");
     metaData.setDraft(true);
-    measure.setMeasureMetaData(metaData);
-    measure.setMeasurementPeriodStart(new Date("12/02/2020"));
-    measure.setMeasurementPeriodEnd(new Date("12/02/2021"));
+    measure1.setMeasureMetaData(metaData);
+    measure1.setMeasurementPeriodStart(new Date("12/02/2020"));
+    measure1.setMeasurementPeriodEnd(new Date("12/02/2021"));
     Measure originalMeasure =
-        measure
+        measure1
             .toBuilder()
             .id("5399aba6e4b0ae375bfdca88")
             .createdAt(createdAt)
@@ -250,11 +264,11 @@ class MeasureControllerTest {
     metaData.setDisclaimer("TestDisclaimer");
     metaData.setRationale("TestRationale");
     metaData.setDraft(true);
-    measure.setMeasureMetaData(metaData);
-    measure.setMeasurementPeriodStart(new Date("12/02/2020"));
-    measure.setMeasurementPeriodEnd(new Date("12/02/2021"));
+    measure1.setMeasureMetaData(metaData);
+    measure1.setMeasurementPeriodStart(new Date("12/02/2020"));
+    measure1.setMeasurementPeriodEnd(new Date("12/02/2021"));
     Measure originalMeasure =
-        measure
+        measure1
             .toBuilder()
             .id("5399aba6e4b0ae375bfdca88")
             .active(true)
@@ -312,17 +326,17 @@ class MeasureControllerTest {
 
     assertThrows(
         InvalidIdException.class,
-        () -> controller.updateMeasure(null, measure, principal, "Bearer TOKEN"));
+        () -> controller.updateMeasure(null, measure1, principal, "Bearer TOKEN"));
   }
 
   @Test
   void testUpdateMeasureReturnsExceptionForInvalidCredentials() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("aninvalidUser@gmail.com");
-    measure.setCreatedBy("MSR01");
-    measure.setActive(true);
-    measure.setAcls(null);
-    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
+    measure1.setCreatedBy("MSR01");
+    measure1.setActive(true);
+    measure1.setAcls(null);
+    when(repository.findById(anyString())).thenReturn(Optional.of(measure1));
 
     var testMeasure = new Measure();
     testMeasure.setActive(false);
@@ -340,11 +354,11 @@ class MeasureControllerTest {
   void testUpdateMeasureReturnsExceptionForUpdatingSoftDeletedMeasure() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("validuser@gmail.com");
-    measure.setCreatedBy("validuser@gmail.com");
-    measure.setActive(false);
-    measure.setAcls(null);
-    measure.setMeasureMetaData(MeasureMetaData.builder().draft(true).build());
-    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
+    measure1.setCreatedBy("validuser@gmail.com");
+    measure1.setActive(false);
+    measure1.setAcls(null);
+    measure1.setMeasureMetaData(MeasureMetaData.builder().draft(true).build());
+    when(repository.findById(anyString())).thenReturn(Optional.of(measure1));
 
     var testMeasure = new Measure();
     testMeasure.setActive(false);
@@ -362,9 +376,9 @@ class MeasureControllerTest {
   void testUpdateMeasureReturnsExceptionForSoftDeletedMeasure() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("validUser@gmail.com");
-    measure.setCreatedBy("MSR01");
-    measure.setActive(false);
-    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
+    measure1.setCreatedBy("MSR01");
+    measure1.setActive(false);
+    when(repository.findById(anyString())).thenReturn(Optional.of(measure1));
 
     var testMeasure = new Measure();
     testMeasure.setActive(true);
@@ -382,14 +396,14 @@ class MeasureControllerTest {
   void testUpdateMeasureReturnsInvalidDeletionCredentialsException() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("sharedUser@gmail.com");
-    measure.setCreatedBy("MSR01");
-    measure.setActive(true);
-    measure.setMeasureMetaData(MeasureMetaData.builder().draft(true).build());
+    measure1.setCreatedBy("MSR01");
+    measure1.setActive(true);
+    measure1.setMeasureMetaData(MeasureMetaData.builder().draft(true).build());
     AclSpecification acl = new AclSpecification();
     acl.setUserId("sharedUser@gmail.com");
     acl.setRoles(List.of(RoleEnum.SHARED_WITH));
-    measure.setAcls(List.of(acl));
-    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
+    measure1.setAcls(List.of(acl));
+    when(repository.findById(anyString())).thenReturn(Optional.of(measure1));
 
     var testMeasure = new Measure();
     testMeasure.setActive(false);
@@ -410,14 +424,14 @@ class MeasureControllerTest {
   void testUpdateMeasureReturnsInvalidDraftStatusException() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("sharedUser@gmail.com");
-    measure.setCreatedBy("MSR01");
-    measure.setActive(true);
-    measure.setMeasureMetaData(MeasureMetaData.builder().draft(false).build());
+    measure1.setCreatedBy("MSR01");
+    measure1.setActive(true);
+    measure1.setMeasureMetaData(MeasureMetaData.builder().draft(false).build());
     AclSpecification acl = new AclSpecification();
     acl.setUserId("sharedUser@gmail.com");
     acl.setRoles(List.of(RoleEnum.SHARED_WITH));
-    measure.setAcls(List.of(acl));
-    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
+    measure1.setAcls(List.of(acl));
+    when(repository.findById(anyString())).thenReturn(Optional.of(measure1));
 
     var testMeasure = new Measure();
     testMeasure.setActive(false);
@@ -438,14 +452,14 @@ class MeasureControllerTest {
 
     assertThrows(
         InvalidIdException.class,
-        () -> controller.updateMeasure("", measure, principal, "Bearer TOKEN"));
+        () -> controller.updateMeasure("", measure1, principal, "Bearer TOKEN"));
   }
 
   @Test
   void testUpdateMeasureReturnsExceptionForNonMatchingIds() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user2");
-    Measure m1234 = measure.toBuilder().id("ID1234").build();
+    Measure m1234 = measure1.toBuilder().id("ID1234").build();
 
     assertThrows(
         InvalidIdException.class,
@@ -460,27 +474,27 @@ class MeasureControllerTest {
     // no measure id specified
     assertThrows(
         InvalidIdException.class,
-        () -> controller.updateMeasure(measure.getId(), measure, principal, "Bearer TOKEN"));
+        () -> controller.updateMeasure(measure1.getId(), measure1, principal, "Bearer TOKEN"));
     // non-existing measure or measure with fake id
-    measure.setId("5399aba6e4b0ae375bfdca88");
+    measure1.setId("5399aba6e4b0ae375bfdca88");
     Optional<Measure> empty = Optional.empty();
 
-    doReturn(empty).when(repository).findById(measure.getId());
+    doReturn(empty).when(repository).findById(measure1.getId());
 
     assertThrows(
         ResourceNotFoundException.class,
-        () -> controller.updateMeasure(measure.getId(), measure, principal, "Bearer TOKEN"));
+        () -> controller.updateMeasure(measure1.getId(), measure1, principal, "Bearer TOKEN"));
   }
 
   @Test
   void updateUnAuthorizedMeasure() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("unAuthorizedUser@gmail.com");
-    measure.setCreatedBy("actualOwner@gmail.com");
-    measure.setActive(true);
-    measure.setMeasurementPeriodStart(new Date());
-    measure.setId("testid");
-    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
+    measure1.setCreatedBy("actualOwner@gmail.com");
+    measure1.setActive(true);
+    measure1.setMeasurementPeriodStart(new Date());
+    measure1.setId("testid");
+    when(repository.findById(anyString())).thenReturn(Optional.of(measure1));
 
     var testMeasure = new Measure();
     testMeasure.setActive(true);
@@ -571,7 +585,7 @@ class MeasureControllerTest {
   @Test
   void searchMeasuresByNameOrEcqmTitleWithoutCurrentUserFilter()
       throws UnsupportedEncodingException {
-    Page<Measure> measures = new PageImpl<>(List.of(measure));
+    Page<Measure> measures = new PageImpl<>(List.of(measure1));
     when(repository.findAllByMeasureNameOrEcqmTitle(any(String.class), any(Pageable.class)))
         .thenReturn(measures);
     Principal principal = mock(Principal.class);
@@ -590,7 +604,7 @@ class MeasureControllerTest {
 
   @Test
   void searchMeasuresByNameOrEcqmTitleWithCurrentUserFilter() throws UnsupportedEncodingException {
-    Page<Measure> measures = new PageImpl<>(List.of(measure));
+    Page<Measure> measures = new PageImpl<>(List.of(measure1));
     when(repository.findAllByMeasureNameOrEcqmTitleForCurrentUser(
             any(String.class), any(Pageable.class), anyString()))
         .thenReturn(measures);

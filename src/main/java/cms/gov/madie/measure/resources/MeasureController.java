@@ -7,7 +7,10 @@ import gov.cms.madie.models.access.RoleEnum;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
 import java.time.Instant;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -30,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import com.okta.commons.lang.Collections;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
@@ -55,6 +59,14 @@ public class MeasureController {
   private final GroupService groupService;
   private final ActionLogService actionLogService;
 
+  @GetMapping("/measures/draftstatus")
+  public ResponseEntity<Map<String, Boolean>> getDraftStatuses(
+      @RequestParam(required = false, name = "measureSetIds") List<String> measureSetIds) {
+    Map<String, Boolean> results = new HashMap<>();
+    results = measureService.getMeasureDrafts(measureSetIds);
+    return ResponseEntity.status(HttpStatus.CREATED).body(results);
+  }
+
   @GetMapping("/measures")
   public ResponseEntity<Page<Measure>> getMeasures(
       Principal principal,
@@ -63,12 +75,11 @@ public class MeasureController {
       @RequestParam(required = false, defaultValue = "10", name = "limit") int limit,
       @RequestParam(required = false, defaultValue = "0", name = "page") int page) {
     final String username = principal.getName();
+    Page<Measure> measures;
     final Pageable pageReq = PageRequest.of(page, limit, Sort.by("lastModifiedAt").descending());
-    Page<Measure> measures =
-        filterByCurrentUser
-            ? repository.findAllByCreatedByAndActiveOrShared(
-                username, true, RoleEnum.SHARED_WITH.toString(), pageReq)
-            : repository.findAllByActive(true, pageReq);
+
+    measures = measureService.getMeasures(filterByCurrentUser, pageReq, username);
+
     return ResponseEntity.ok(measures);
   }
 

@@ -7,12 +7,15 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -23,7 +26,9 @@ import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
@@ -113,6 +118,34 @@ public class MeasureServiceTest implements ResourceUtil {
             .lastModifiedAt(Instant.now())
             .lastModifiedBy("test user")
             .build();
+  }
+
+  @Test
+  public void testGetMeasures() {
+    PageRequest initialPage = PageRequest.of(0, 10);
+
+    Page<Measure> activeMeasures = new PageImpl<>(List.of(measure));
+
+    doReturn(activeMeasures)
+        .when(measureRepository)
+        .findAllByActive(eq(true), any(PageRequest.class));
+    Object measures = measureService.getMeasures(false, initialPage, null);
+    assertNotNull(measures);
+  }
+
+  @Test
+  public void testGetMeasureDrafts() {
+
+    List<Measure> activeMeasures = List.of(measure);
+    List<String> measureSetIds = List.of("IDIDID");
+
+    doReturn(activeMeasures)
+        .when(measureRepository)
+        .findAllByMeasureSetIdInAndActiveAndMeasureMetaDataDraft(anyList(), eq(true), eq(true));
+    Map<String, Boolean> measures = measureService.getMeasureDrafts(measureSetIds);
+    assertNotNull(measures);
+    assertEquals(1, measures.size());
+    assertFalse(measures.get("IDIDID"));
   }
 
   @Test
