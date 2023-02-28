@@ -478,8 +478,8 @@ class MeasureControllerTest {
   @Test
   void updateUnAuthorizedMeasure() {
     Principal principal = mock(Principal.class);
-    when(principal.getName()).thenReturn("unAuthorizedUser@gmail.com");
-    measure1.setCreatedBy("actualOwner@gmail.com");
+    when(principal.getName()).thenReturn("unAuthorized user");
+    measure1.setCreatedBy("actual owner");
     measure1.setActive(true);
     measure1.setMeasurementPeriodStart(new Date());
     measure1.setId("testid");
