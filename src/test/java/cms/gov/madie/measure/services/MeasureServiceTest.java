@@ -1,22 +1,24 @@
 package cms.gov.madie.measure.services;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -24,11 +26,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-
-import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
-import cms.gov.madie.measure.utils.MeasureUtil;
-import gov.cms.madie.models.measure.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,14 +39,24 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.InvalidCmsIdException;
 import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
 import cms.gov.madie.measure.exceptions.InvalidMeasurementPeriodException;
 import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
+import cms.gov.madie.measure.utils.MeasureUtil;
 import cms.gov.madie.measure.utils.ResourceUtil;
 import gov.cms.madie.models.common.Version;
+import gov.cms.madie.models.measure.ElmJson;
+import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureErrorType;
+import gov.cms.madie.models.measure.MeasureMetaData;
+import gov.cms.madie.models.measure.Population;
+import gov.cms.madie.models.measure.PopulationType;
+import gov.cms.madie.models.measure.Stratification;
 
 @ExtendWith(MockitoExtension.class)
 public class MeasureServiceTest implements ResourceUtil {
@@ -63,7 +72,8 @@ public class MeasureServiceTest implements ResourceUtil {
 
   private Group group2;
   private MeasureMetaData measureMetaData;
-  private Measure measure;
+  private Measure measure1;
+  private Measure measure2;
 
   @BeforeEach
   public void setUp() {
@@ -98,7 +108,7 @@ public class MeasureServiceTest implements ResourceUtil {
     List<Group> groups = new ArrayList<>();
     groups.add(group2);
     String elmJson = getData("/test_elm.json");
-    measure =
+    measure1 =
         Measure.builder()
             .active(true)
             .id("xyz-p13r-13ert")
@@ -113,6 +123,52 @@ public class MeasureServiceTest implements ResourceUtil {
             .lastModifiedAt(Instant.now())
             .lastModifiedBy("test user")
             .build();
+
+    measure2 =
+        Measure.builder()
+            .active(true)
+            .id("xyz-p13r-13ert")
+            .cql("test cql")
+            .elmJson(elmJson)
+            .measureSetId("2D2D2D")
+            .measureName("MSR01")
+            .version(new Version(0, 0, 1))
+            .groups(groups)
+            .createdAt(Instant.now())
+            .createdBy("test user")
+            .lastModifiedAt(Instant.now())
+            .lastModifiedBy("test user")
+            .measureMetaData(measureMetaData)
+            .build();
+  }
+
+  @Test
+  public void testGetMeasures() {
+    PageRequest initialPage = PageRequest.of(0, 10);
+
+    Page<Measure> activeMeasures = new PageImpl<>(List.of(measure1));
+
+    doReturn(activeMeasures)
+        .when(measureRepository)
+        .findAllByActive(eq(true), any(PageRequest.class));
+    Object measures = measureService.getMeasures(false, initialPage, null);
+    assertNotNull(measures);
+  }
+
+  @Test
+  public void testGetMeasureDrafts() {
+    measure2.getMeasureMetaData().setDraft(false);
+    List<Measure> activeMeasures = List.of(measure1);
+    List<String> measureSetIds = List.of("IDIDID", "2D2D2D");
+
+    doReturn(activeMeasures)
+        .when(measureRepository)
+        .findAllByMeasureSetIdInAndActiveAndMeasureMetaDataDraft(anyList(), eq(true), eq(true));
+    Map<String, Boolean> measures = measureService.getMeasureDrafts(measureSetIds);
+    assertNotNull(measures);
+    assertEquals(2, measures.size());
+    assertFalse(measures.get("IDIDID"));
+    assertTrue(measures.get("2D2D2D"));
   }
 
   @Test
@@ -372,7 +428,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .model("QI-Core")
             .active(true)
             .build();
-    Page<Measure> activeMeasures = new PageImpl<>(List.of(measure, m1));
+    Page<Measure> activeMeasures = new PageImpl<>(List.of(measure1, m1));
     Page<Measure> inactiveMeasures = new PageImpl<>(List.of(m2));
     PageRequest initialPage = PageRequest.of(0, 10);
 
