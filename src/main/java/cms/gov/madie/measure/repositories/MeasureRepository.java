@@ -1,17 +1,12 @@
 package cms.gov.madie.measure.repositories;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-
-import org.springframework.data.mongodb.repository.MongoRepository;
-
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
-
-import gov.cms.madie.models.measure.Measure;
-
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
+import gov.cms.madie.models.measure.Measure;
 
 public interface MeasureRepository
     extends MongoRepository<Measure, String>, MeasureVersionRepository {
