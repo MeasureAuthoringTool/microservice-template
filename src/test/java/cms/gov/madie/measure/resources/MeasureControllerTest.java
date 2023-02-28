@@ -36,7 +36,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -129,7 +128,7 @@ class MeasureControllerTest {
     ArgumentCaptor<Measure> saveMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
     measure1.setId("testId");
     measure1.setMeasureMetaData(null);
-    doReturn(measure1).when(repository).save(ArgumentMatchers.any());
+    doReturn(measure1).when(repository).save(any());
 
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
@@ -321,7 +320,7 @@ class MeasureControllerTest {
 
     doReturn(Optional.of(originalMeasure))
         .when(repository)
-        .findById(ArgumentMatchers.eq(originalMeasure.getId()));
+        .findById(eq(originalMeasure.getId()));
 
     when(measureService.updateMeasure(
             any(Measure.class), anyString(), any(Measure.class), anyString()))
