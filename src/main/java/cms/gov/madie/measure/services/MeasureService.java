@@ -55,7 +55,7 @@ public class MeasureService {
     Measure measureCopy = measure.toBuilder().build();
     Set<MeasureErrorType> errorTypes = new HashSet<>();
     try {
-      measureCopy = updateElm(measure, accessToken);
+      measureCopy = updateElm(measureCopy, accessToken);
     } catch (CqlElmTranslationErrorException ex) {
       errorTypes.add(MeasureErrorType.ERRORS_ELM_JSON);
     }

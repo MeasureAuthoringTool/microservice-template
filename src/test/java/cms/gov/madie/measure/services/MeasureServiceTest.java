@@ -194,6 +194,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .cql("")
             .elmJson(null)
             .measureMetaData(new MeasureMetaData())
+            .createdBy(usr)
             .build();
     when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
