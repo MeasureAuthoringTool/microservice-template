@@ -409,6 +409,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .versionId("VersionId")
             .cql("original cql here")
             .measureMetaData(measureMetaData)
+            .errors(List.of(MeasureErrorType.ERRORS_ELM_JSON))
             .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
             .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
             .build();

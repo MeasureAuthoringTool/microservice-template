@@ -124,6 +124,9 @@ public class MeasureService {
       try {
         outputMeasure =
             measureUtil.validateAllMeasureGroupReturnTypes(updateElm(updatingMeasure, accessToken));
+        // no errors were encountered so remove the ELM JSON error
+        // TODO: remove this when backend validations for CQL/ELM are enhanced
+        outputMeasure.setErrors(measureUtil.removeError(outputMeasure.getErrors(), MeasureErrorType.ERRORS_ELM_JSON));
       } catch (CqlElmTranslationErrorException ex) {
         outputMeasure =
             updatingMeasure
@@ -132,6 +135,9 @@ public class MeasureService {
                 .error(MeasureErrorType.ERRORS_ELM_JSON)
                 .build();
       }
+    } else {
+      // prevent users from manually clearing errors!
+      outputMeasure.setErrors(existingMeasure.getErrors());
     }
     outputMeasure.getMeasureMetaData().setDraft(existingMeasure.getMeasureMetaData().isDraft());
     outputMeasure.setLastModifiedBy(username);
