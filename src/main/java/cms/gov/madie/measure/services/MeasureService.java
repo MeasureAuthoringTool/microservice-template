@@ -52,7 +52,7 @@ public class MeasureService {
     checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
     validateMeasurementPeriod(
         measure.getMeasurementPeriodStart(), measure.getMeasurementPeriodEnd());
-    Measure measureCopy = measure;
+    Measure measureCopy = measure.toBuilder().build();
     Set<MeasureErrorType> errorTypes = new HashSet<>();
     try {
       measureCopy = updateElm(measure, accessToken);
@@ -126,7 +126,8 @@ public class MeasureService {
             measureUtil.validateAllMeasureGroupReturnTypes(updateElm(updatingMeasure, accessToken));
         // no errors were encountered so remove the ELM JSON error
         // TODO: remove this when backend validations for CQL/ELM are enhanced
-        outputMeasure.setErrors(measureUtil.removeError(outputMeasure.getErrors(), MeasureErrorType.ERRORS_ELM_JSON));
+        outputMeasure.setErrors(
+            measureUtil.removeError(outputMeasure.getErrors(), MeasureErrorType.ERRORS_ELM_JSON));
       } catch (CqlElmTranslationErrorException ex) {
         outputMeasure =
             updatingMeasure

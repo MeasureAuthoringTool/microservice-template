@@ -40,6 +40,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static java.util.Collections.emptySet;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -234,12 +235,17 @@ public class MeasureServiceTest implements ResourceUtil {
   @Test
   public void testCreateMeasureSuccessfullyWithInvalidCqlAndTerminology() {
     String usr = "john rao";
+    Set<MeasureErrorType> errors =
+        Set.of(MeasureErrorType.ERRORS_ELM_JSON, MeasureErrorType.INVALID_TERMINOLOGY);
     Measure measureToSave =
         measure1
             .toBuilder()
             .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
             .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
             .cqlLibraryName("VTE")
+            .cqlErrors(true)
+            .errors(errors)
+            .createdBy(usr)
             .build();
     when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
     when(elmTranslatorClient.getElmJson(anyString(), anyString()))
