@@ -318,9 +318,7 @@ class MeasureControllerTest {
             .active(false)
             .build();
 
-    doReturn(Optional.of(originalMeasure))
-        .when(repository)
-        .findById(eq(originalMeasure.getId()));
+    doReturn(Optional.of(originalMeasure)).when(repository).findById(eq(originalMeasure.getId()));
 
     when(measureService.updateMeasure(
             any(Measure.class), anyString(), any(Measure.class), anyString()))

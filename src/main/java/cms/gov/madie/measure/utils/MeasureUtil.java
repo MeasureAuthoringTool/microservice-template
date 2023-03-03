@@ -39,7 +39,9 @@ public class MeasureUtil {
     final String elmJson = measure.getElmJson();
     boolean groupsExistWithPopulations = isGroupsExistWithPopulations(measure);
     Measure.MeasureBuilder measureBuilder = measure.toBuilder();
-    measureBuilder.clearErrors().errors(removeError(measure.getErrors(), MeasureErrorType.MISSING_ELM));
+    measureBuilder
+        .clearErrors()
+        .errors(removeError(measure.getErrors(), MeasureErrorType.MISSING_ELM));
     if (elmJson == null && groupsExistWithPopulations) {
       // Measure has groups with populations with definitions, but ELM JSON is missing
       measureBuilder =
