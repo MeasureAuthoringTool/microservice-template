@@ -11,7 +11,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 
-@ChangeUnit(id = "add_delete_organizations_initializer", order = "1", author = "madie_dev")
+@ChangeUnit(id = "add_updated_organizations_initializer", order = "1", author = "madie_dev")
 public class AddOrganizationsChangeUnit {
 
   private final ObjectMapper objectMapper;
@@ -22,7 +22,7 @@ public class AddOrganizationsChangeUnit {
 
   @Execution
   public void addOrganizations(OrganizationRepository organizationRepository) throws IOException {
-    InputStream inputStream = getClass().getResourceAsStream("/data/delete-organizations.json");
+    InputStream inputStream = getClass().getResourceAsStream("/data/updated-organizations.json");
     List<Organization> organizationList =
         Arrays.asList(objectMapper.readValue(inputStream, Organization[].class));
     // deleting the previous existing records
