@@ -1,50 +1,5 @@
 package cms.gov.madie.measure.resources;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-import java.io.UnsupportedEncodingException;
-import java.security.Principal;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
 import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
@@ -63,6 +18,51 @@ import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureMetaData;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import java.io.UnsupportedEncodingException;
+import java.security.Principal;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class MeasureControllerTest {
@@ -92,58 +92,21 @@ class MeasureControllerTest {
 
   @Test
   void saveMeasure() {
-    ArgumentCaptor<Measure> saveMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
     measure1.setId("testId");
-    doReturn(measure1).when(repository).save(any());
-
+    doReturn(measure1)
+        .when(measureService)
+        .createMeasure(any(Measure.class), anyString(), anyString());
     Measure measures = new Measure();
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
-    ResponseEntity<Measure> response = controller.addMeasure(measures, principal);
+    ResponseEntity<Measure> response = controller.addMeasure(measures, principal, "");
     assertNotNull(response.getBody());
     assertEquals("IDIDID", response.getBody().getMeasureSetId());
 
-    verify(repository, times(1)).save(saveMeasureArgCaptor.capture());
-    Measure savedMeasure = saveMeasureArgCaptor.getValue();
-    assertThat(savedMeasure.getCreatedBy(), is(equalTo("test.user")));
-    assertThat(savedMeasure.getLastModifiedBy(), is(equalTo("test.user")));
-    assertThat(savedMeasure.getCreatedAt(), is(notNullValue()));
-    assertThat(savedMeasure.getLastModifiedAt(), is(notNullValue()));
-    assertTrue(savedMeasure.getMeasureMetaData().isDraft());
-
-    verify(actionLogService, times(1))
-        .logAction(
-            targetIdArgumentCaptor.capture(),
-            targetClassArgumentCaptor.capture(),
-            actionTypeArgumentCaptor.capture(),
-            performedByArgumentCaptor.capture());
-    assertNotNull(targetIdArgumentCaptor.getValue());
-    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.CREATED)));
-    assertThat(performedByArgumentCaptor.getValue(), is(equalTo("test.user")));
-  }
-
-  @Test
-  void saveMeasureAndDefaultToDraft() {
-    ArgumentCaptor<Measure> saveMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
-    measure1.setId("testId");
-    measure1.setMeasureMetaData(null);
-    doReturn(measure1).when(repository).save(any());
-
-    Principal principal = mock(Principal.class);
-    when(principal.getName()).thenReturn("test.user");
-
-    ResponseEntity<Measure> response = controller.addMeasure(measure1, principal);
-    assertNotNull(response.getBody());
-    assertNotEquals("IDIDID", response.getBody().getMeasureSetId());
-
-    verify(repository, times(1)).save(saveMeasureArgCaptor.capture());
-    Measure savedMeasure = saveMeasureArgCaptor.getValue();
-    assertThat(savedMeasure.getCreatedBy(), is(equalTo("test.user")));
-    assertThat(savedMeasure.getLastModifiedBy(), is(equalTo("test.user")));
-    assertThat(savedMeasure.getCreatedAt(), is(notNullValue()));
-    assertThat(savedMeasure.getLastModifiedAt(), is(notNullValue()));
-    assertTrue(savedMeasure.getMeasureMetaData().isDraft());
+    Measure savedMeasure = response.getBody();
+    assertThat(savedMeasure.getMeasureName(), is(equalTo(measure1.getMeasureName())));
+    assertThat(savedMeasure.getId(), is(equalTo(measure1.getId())));
   }
 
   @Test
@@ -318,9 +281,7 @@ class MeasureControllerTest {
             .active(false)
             .build();
 
-    doReturn(Optional.of(originalMeasure))
-        .when(repository)
-        .findById(eq(originalMeasure.getId()));
+    doReturn(Optional.of(originalMeasure)).when(repository).findById(eq(originalMeasure.getId()));
 
     when(measureService.updateMeasure(
             any(Measure.class), anyString(), any(Measure.class), anyString()))
@@ -517,8 +478,8 @@ class MeasureControllerTest {
   @Test
   void updateUnAuthorizedMeasure() {
     Principal principal = mock(Principal.class);
-    when(principal.getName()).thenReturn("unAuthorizedUser@gmail.com");
-    measure1.setCreatedBy("actualOwner@gmail.com");
+    when(principal.getName()).thenReturn("unAuthorized user");
+    measure1.setCreatedBy("actual owner");
     measure1.setActive(true);
     measure1.setMeasurementPeriodStart(new Date());
     measure1.setId("testid");

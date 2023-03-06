@@ -1,42 +1,26 @@
 package cms.gov.madie.measure.resources;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
+import cms.gov.madie.measure.exceptions.InvalidCmsIdException;
+import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
+import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
+import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.services.ActionLogService;
+import cms.gov.madie.measure.services.GroupService;
+import cms.gov.madie.measure.services.MeasureService;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.cms.madie.models.access.RoleEnum;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Optional;
-
+import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.common.ModelType;
+import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureGroupTypes;
 import gov.cms.madie.models.measure.MeasureMetaData;
+import gov.cms.madie.models.measure.MeasureScoring;
+import gov.cms.madie.models.measure.Population;
+import gov.cms.madie.models.measure.PopulationType;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -51,22 +35,35 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import cms.gov.madie.measure.exceptions.InvalidCmsIdException;
-import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
-import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
-import cms.gov.madie.measure.repositories.MeasureRepository;
-import cms.gov.madie.measure.services.ActionLogService;
-import cms.gov.madie.measure.services.GroupService;
-import cms.gov.madie.measure.services.MeasureService;
-import gov.cms.madie.models.common.ActionType;
-import gov.cms.madie.models.common.ModelType;
-import gov.cms.madie.models.measure.Group;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.MeasureGroupTypes;
-import gov.cms.madie.models.measure.MeasureScoring;
-import gov.cms.madie.models.measure.Population;
-import gov.cms.madie.models.measure.PopulationType;
+
+import java.util.List;
+import java.util.Optional;
+
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest({MeasureController.class})
 @ActiveProfiles("test")
@@ -150,13 +147,6 @@ public class MeasureControllerMvcTest {
     String ecqmTitle = "ecqmTitle";
     String measureSetId = "measureSetId";
 
-    //    Measure priorMeasure = new Measure();
-    //    priorMeasure.setId(measureId);
-    //    priorMeasure.setMeasureName(measureName);
-    //    priorMeasure.setCqlLibraryName(libName);
-    //    priorMeasure.setModel(MODEL);
-    //    priorMeasure.setVersionId(measureId);
-
     final Measure priorMeasure =
         Measure.builder()
             .id(measureId)
@@ -182,29 +172,6 @@ public class MeasureControllerMvcTest {
     when(measureService.updateMeasure(
             any(Measure.class), anyString(), any(Measure.class), anyString()))
         .thenReturn(updatingMeasure);
-
-    //    final String measureAsJson =
-    //        ("{\"id\": \"%s\", \"measureName\": \"%s\", \"cqlLibraryName\":\"%s\",
-    // \"ecqmTitle\":\"%s\", \"measureMetaData\": "
-    //                + "{ \"steward\" : \"%s\", \"description\" : \"%s\", \"copyright\" : \"%s\",
-    // \"disclaimer\" : \"%s\", \"rationale\" : \"%s\","
-    //                + " \"developers\" : [\"%s\"], \"guidance\" : \"%s\"}, \"model\":\"%s\",
-    // \"versionId\":\"%s\",\"measureSetId\":\"%s\"}")
-    //            .formatted(
-    //                measureId,
-    //                measureName,
-    //                libName,
-    //                ecqmTitle,
-    //                steward,
-    //                description,
-    //                copyright,
-    //                disclaimer,
-    //                rationale,
-    //                developers.get(0),
-    //                guidance,
-    //                MODEL,
-    //                measureId,
-    //                measureSetId);
 
     final String measureAsJson = toJsonString(updatingMeasure);
     mockMvc
@@ -237,27 +204,6 @@ public class MeasureControllerMvcTest {
     assertThat(measureArgumentCaptor.getValue(), is(equalTo(priorMeasure)));
     assertThat(measureArgumentCaptor2.getValue(), is(equalTo(updatingMeasure)));
 
-    //    verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
-    //    verifyNoMoreInteractions(measureRepository);
-    //    Measure savedMeasure = measureArgumentCaptor.getValue();
-    //    assertNotNull(savedMeasure.getMeasureMetaData());
-    //    assertEquals(measureName, savedMeasure.getMeasureName());
-    //    assertEquals(steward, savedMeasure.getMeasureMetaData().getSteward());
-    //    assertEquals(description, savedMeasure.getMeasureMetaData().getDescription());
-    //    assertEquals(copyright, savedMeasure.getMeasureMetaData().getCopyright());
-    //    assertEquals(disclaimer, savedMeasure.getMeasureMetaData().getDisclaimer());
-    //    assertEquals(rationale, savedMeasure.getMeasureMetaData().getRationale());
-    //    assertEquals(developers.get(0), savedMeasure.getMeasureMetaData().getDevelopers().get(0));
-    //    assertEquals(guidance, savedMeasure.getMeasureMetaData().getGuidance());
-    //    assertEquals(MODEL, savedMeasure.getModel());
-    //    assertEquals(measureId, savedMeasure.getVersionId());
-    //    assertNotNull(savedMeasure.getLastModifiedAt());
-    //    assertEquals(TEST_USER_ID, savedMeasure.getLastModifiedBy());
-    //    int lastModCompareTo =
-    //        savedMeasure.getLastModifiedAt().compareTo(Instant.now().minus(60,
-    // ChronoUnit.SECONDS));
-    //    assertEquals(1, lastModCompareTo);
-
     verify(actionLogService, times(1))
         .logAction(
             targetIdArgumentCaptor.capture(),
@@ -284,14 +230,6 @@ public class MeasureControllerMvcTest {
     String ecqmTitle = "ecqmTitle";
     String measureSetId = "measureSetId";
 
-    //    Measure priorMeasure = new Measure();
-    //    priorMeasure.setId(measureId);
-    //    priorMeasure.setMeasureName(measureName);
-    //    priorMeasure.setCqlLibraryName(libName);
-    //    priorMeasure.setEcqmTitle(ecqmTitle);
-    //    priorMeasure.setModel(MODEL);
-    //    priorMeasure.setVersionId(measureId);
-
     final Measure priorMeasure =
         Measure.builder()
             .id(measureId)
@@ -302,30 +240,6 @@ public class MeasureControllerMvcTest {
             .versionId(measureId)
             .measureSetId(measureSetId)
             .build();
-
-    //    final String measureAsJson =
-    //        ("{\"id\": \"%s\", \"active\": \"%s\", \"measureName\": \"%s\",
-    // \"cqlLibraryName\":\"%s\", \"ecqmTitle\":\"%s\", "
-    //                + "\"measureMetaData\": { \"steward\" : \"%s\", \"description\" : \"%s\",
-    // \"copyright\" : \"%s\", \"disclaimer\" : \"%s\", "
-    //                + "\"rationale\" : \"%s\", \"developers\" : [\"%s\"], \"guidance\" : \"%s\"},
-    // \"model\":\"%s\", \"versionId\":\"%s\",\"measureSetId\":\"%s\"}")
-    //            .formatted(
-    //                measureId,
-    //                false,
-    //                measureName,
-    //                libName,
-    //                ecqmTitle,
-    //                steward,
-    //                description,
-    //                copyright,
-    //                disclaimer,
-    //                rationale,
-    //                developers.get(0),
-    //                guidance,
-    //                MODEL,
-    //                measureId,
-    //                measureSetId);
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setSteward(steward);
     metaData.setDescription(description);
@@ -370,26 +284,6 @@ public class MeasureControllerMvcTest {
         .andExpect(jsonPath("$.measureMetaData.disclaimer").value(disclaimer));
 
     verify(measureRepository, times(1)).findById(eq(measureId));
-
-    //    verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
-    //    verifyNoMoreInteractions(measureRepository);
-    //    Measure savedMeasure = measureArgumentCaptor.getValue();
-    //    assertNotNull(savedMeasure.getMeasureMetaData());
-    //    assertEquals(measureName, savedMeasure.getMeasureName());
-    //    assertEquals(steward, savedMeasure.getMeasureMetaData().getSteward());
-    //    assertEquals(description, savedMeasure.getMeasureMetaData().getDescription());
-    //    assertEquals(copyright, savedMeasure.getMeasureMetaData().getCopyright());
-    //    assertEquals(disclaimer, savedMeasure.getMeasureMetaData().getDisclaimer());
-    //    assertEquals(rationale, savedMeasure.getMeasureMetaData().getRationale());
-    //    assertEquals(developers.get(0), savedMeasure.getMeasureMetaData().getDevelopers().get(0));
-    //    assertEquals(guidance, savedMeasure.getMeasureMetaData().getGuidance());
-    //    assertEquals(MODEL, savedMeasure.getModel());
-    //    assertNotNull(savedMeasure.getLastModifiedAt());
-    //    assertEquals(TEST_USER_ID, savedMeasure.getLastModifiedBy());
-    //    int lastModCompareTo =
-    //        savedMeasure.getLastModifiedAt().compareTo(Instant.now().minus(60,
-    // ChronoUnit.SECONDS));
-    //    assertEquals(1, lastModCompareTo);
 
     verify(actionLogService, times(1))
         .logAction(
@@ -591,8 +485,8 @@ public class MeasureControllerMvcTest {
     saved.setModel(MODEL);
     saved.setEcqmTitle(ecqmTitle);
     saved.setVersionId(measureId);
-    when(measureRepository.save(any(Measure.class))).thenReturn(saved);
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
+    when(measureService.createMeasure(any(Measure.class), anyString(), anyString()))
+        .thenReturn(saved);
 
     final String measureAsJson =
         "{\"measureName\": \"%s\",\"measureSetId\":\"%s\", \"cqlLibraryName\": \"%s\" , \"ecqmTitle\": \"%s\", \"model\": \"%s\", \"versionId\":\"%s\"}"
@@ -603,6 +497,7 @@ public class MeasureControllerMvcTest {
             post("/measure")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
+                .header("Authorization", TEST_USER_ID)
                 .content(measureAsJson)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON))
@@ -614,28 +509,15 @@ public class MeasureControllerMvcTest {
         .andExpect(jsonPath("$.id").value(measureId))
         .andExpect(jsonPath("$.versionId").value(measureId));
 
-    verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
+    verify(measureService, times(1))
+        .createMeasure(measureArgumentCaptor.capture(), anyString(), anyString());
     verifyNoMoreInteractions(measureRepository);
     Measure savedMeasure = measureArgumentCaptor.getValue();
     assertEquals(measureName, savedMeasure.getMeasureName());
     assertEquals(libraryName, savedMeasure.getCqlLibraryName());
     assertEquals(ecqmTitle, savedMeasure.getEcqmTitle());
     assertEquals(MODEL, savedMeasure.getModel());
-    assertEquals(TEST_USER_ID, savedMeasure.getCreatedBy());
-    assertEquals(TEST_USER_ID, savedMeasure.getLastModifiedBy());
-    assertNotEquals(measureId, savedMeasure.getVersionId());
-    assertNotNull(savedMeasure.getCreatedAt());
-    assertNotNull(savedMeasure.getLastModifiedAt());
-
-    verify(actionLogService, times(1))
-        .logAction(
-            targetIdArgumentCaptor.capture(),
-            targetClassArgumentCaptor.capture(),
-            actionTypeArgumentCaptor.capture(),
-            performedByArgumentCaptor.capture());
-    assertNotNull(targetIdArgumentCaptor.getValue());
-    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.CREATED)));
-    assertThat(performedByArgumentCaptor.getValue(), is(equalTo(TEST_USER_ID)));
+    assertNotEquals(measureId, savedMeasure.getId());
   }
 
   @Test
@@ -674,47 +556,6 @@ public class MeasureControllerMvcTest {
   }
 
   @Test
-  public void testNewMeasureFailsIfDuplicatedLibraryName() throws Exception {
-    Measure existing = new Measure();
-    String measureId = "id123";
-    existing.setId(measureId);
-    existing.setMeasureName("ExistingMeasure");
-    String cqlLibraryName = "ExistingLibrary";
-    existing.setCqlLibraryName(cqlLibraryName);
-    existing.setModel(MODEL);
-    String ecqmTitle = "ecqmTitle";
-    String measureSetId = "measureSetId";
-    existing.setEcqmTitle(ecqmTitle);
-    existing.setVersionId(measureId);
-    existing.getMeasureMetaData().setSteward("TestSteward");
-    existing.getMeasureMetaData().setDevelopers(List.of("TestDeveloper"));
-
-    doThrow(
-            new DuplicateKeyException(
-                "cqlLibraryName", "CQL library with given name already exists."))
-        .when(measureService)
-        .checkDuplicateCqlLibraryName(any(String.class));
-
-    final String newMeasureAsJson =
-        "{\"measureName\": \"NewMeasure\", \"cqlLibraryName\": \"%s\", \"ecqmTitle\": \"%s\",\"model\":\"%s\",\"versionId\":\"%s\",\"measureSetId\":\"%s\"}"
-            .formatted(cqlLibraryName, ecqmTitle, MODEL, measureId, measureSetId);
-    mockMvc
-        .perform(
-            post("/measure")
-                .with(user(TEST_USER_ID))
-                .with(csrf())
-                .content(newMeasureAsJson)
-                .contentType(MediaType.APPLICATION_JSON_VALUE))
-        .andExpect(status().isBadRequest())
-        .andExpect(
-            jsonPath("$.validationErrors.cqlLibraryName")
-                .value("CQL library with given name already exists."));
-
-    verify(measureService, times(1)).checkDuplicateCqlLibraryName(eq(cqlLibraryName));
-    verifyNoMoreInteractions(measureRepository);
-  }
-
-  @Test
   public void testUpdateMeasureFailsIfDuplicatedLibraryName() throws Exception {
     Measure priorMeasure = new Measure();
     priorMeasure.setId("id0");
@@ -733,11 +574,6 @@ public class MeasureControllerMvcTest {
     existingMeasure.setCqlLibraryName("ExistingMeasureLibrary");
     existingMeasure.setEcqmTitle("ecqmTitle");
     existingMeasure.setVersionId(existingMeasure.getId());
-    //    doThrow(
-    //            new DuplicateKeyException(
-    //                "cqlLibraryName", "CQL library with given name already exists."))
-    //        .when(measureService)
-    //        .checkDuplicateCqlLibraryName(any(String.class));
 
     when(measureService.updateMeasure(
             any(Measure.class), anyString(), any(Measure.class), anyString()))
@@ -798,10 +634,6 @@ public class MeasureControllerMvcTest {
     when(measureService.updateMeasure(
             any(Measure.class), anyString(), any(Measure.class), anyString()))
         .thenThrow(new InvalidVersionIdException("newVersionId"));
-
-    //    doThrow(new InvalidVersionIdException("newVersionId"))
-    //        .when(measureService)
-    //        .checkVersionIdChanged(existingMeasure.getVersionId(), priorMeasure.getVersionId());
 
     final String updatedMeasureAsJson =
         "{\"id\": \"%s\",\"measureName\": \"%s\", \"cqlLibraryName\": \"%s\", \"ecqmTitle\": \"%s\", \"model\":\"%s\",\"versionId\":\"%s\",\"measureSetId\":\"%s\"}"
@@ -971,48 +803,6 @@ public class MeasureControllerMvcTest {
             jsonPath("$.validationErrors.cqlLibraryName")
                 .value("Measure Library Name is invalid."));
     verifyNoInteractions(measureRepository);
-  }
-
-  @Test
-  public void testNewMeasurePassesIfCqlLibraryNameStartsWithCapitalCharAndFollowedByAlphaNumeric()
-      throws Exception {
-    Measure saved = new Measure();
-    String measureId = "id123";
-    saved.setId(measureId);
-    String measureName = "SavedMeasure";
-    String libraryName = "ALi12aAccllklk6U";
-    String ecqmTitle = "ecqmTitle";
-    String measureSetId = "measureSetId";
-    saved.setMeasureName(measureName);
-    saved.setCqlLibraryName(libraryName);
-    saved.setEcqmTitle(ecqmTitle);
-    saved.setModel(MODEL);
-    saved.setVersionId(measureId);
-    saved.setMeasureSetId(measureSetId);
-
-    when(measureRepository.save(any(Measure.class))).thenReturn(saved);
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
-
-    final String measureAsJson =
-        "{ \"measureName\":\"%s\", \"cqlLibraryName\":\"%s\", \"ecqmTitle\":\"%s\", \"model\":\"%s\", \"versionId\":\"%s\",\"measureSetId\":\"%s\"}"
-            .formatted(measureName, libraryName, ecqmTitle, MODEL, measureId, measureSetId);
-    mockMvc
-        .perform(
-            post("/measure")
-                .with(user(TEST_USER_ID))
-                .with(csrf())
-                .content(measureAsJson)
-                .contentType(MediaType.APPLICATION_JSON_VALUE))
-        .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.measureName").value(measureName))
-        .andExpect(jsonPath("$.cqlLibraryName").value(libraryName))
-        .andExpect(jsonPath("$.ecqmTitle").value(ecqmTitle))
-        .andExpect(jsonPath("$.model").value(MODEL))
-        .andExpect(jsonPath("$.id").value(measureId))
-        .andExpect(jsonPath("$.versionId").value(measureId));
-
-    verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
-    verifyNoMoreInteractions(measureRepository);
   }
 
   @Test

@@ -31,6 +31,11 @@ madie:
       base-url: ${VIRUS_SCAN_SERVICE_URL:http://localhost:5000}
       scan-file-uri: /scan-file
       api-key: ${VIRUS_SCAN_SERVICE_APIKEY:1234567}
+  terminology:
+    service:
+      base-url: ${TERMINOLOGY_SSERVICE_URL:http://localhost:8082/api/vsac}
+      fetch-value-sets: /value-sets/searches
+      validate-codes: /validations/codes
 
 management:
   endpoints:
