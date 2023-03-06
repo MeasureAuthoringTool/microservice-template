@@ -11,7 +11,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 
-@ChangeUnit(id = "add_organizations_initializer", order = "1", author = "madie_dev")
+@ChangeUnit(id = "add_updated_organizations_initializer", order = "1", author = "madie_dev")
 public class AddOrganizationsChangeUnit {
 
   private final ObjectMapper objectMapper;
@@ -25,6 +25,8 @@ public class AddOrganizationsChangeUnit {
     InputStream inputStream = getClass().getResourceAsStream("/data/organizations.json");
     List<Organization> organizationList =
         Arrays.asList(objectMapper.readValue(inputStream, Organization[].class));
+    // deleting the previous existing records
+    organizationRepository.deleteAll();
     organizationRepository.insert(organizationList);
   }
 
