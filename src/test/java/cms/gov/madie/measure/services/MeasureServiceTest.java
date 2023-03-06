@@ -1,5 +1,48 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
+import cms.gov.madie.measure.exceptions.InvalidCmsIdException;
+import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
+import cms.gov.madie.measure.exceptions.InvalidMeasurementPeriodException;
+import cms.gov.madie.measure.exceptions.InvalidTerminologyException;
+import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
+import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.resources.DuplicateKeyException;
+import cms.gov.madie.measure.utils.MeasureUtil;
+import cms.gov.madie.measure.utils.ResourceUtil;
+import gov.cms.madie.models.common.Version;
+import gov.cms.madie.models.measure.ElmJson;
+import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureErrorType;
+import gov.cms.madie.models.measure.MeasureMetaData;
+import gov.cms.madie.models.measure.Population;
+import gov.cms.madie.models.measure.PopulationType;
+import gov.cms.madie.models.measure.Stratification;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
+import static java.util.Collections.emptySet;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -15,48 +58,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
-import cms.gov.madie.measure.exceptions.InvalidCmsIdException;
-import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
-import cms.gov.madie.measure.exceptions.InvalidMeasurementPeriodException;
-import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
-import cms.gov.madie.measure.repositories.MeasureRepository;
-import cms.gov.madie.measure.resources.DuplicateKeyException;
-import cms.gov.madie.measure.utils.MeasureUtil;
-import cms.gov.madie.measure.utils.ResourceUtil;
-import gov.cms.madie.models.common.Version;
-import gov.cms.madie.models.measure.ElmJson;
-import gov.cms.madie.models.measure.Group;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.MeasureErrorType;
-import gov.cms.madie.models.measure.MeasureMetaData;
-import gov.cms.madie.models.measure.Population;
-import gov.cms.madie.models.measure.PopulationType;
-import gov.cms.madie.models.measure.Stratification;
 
 @ExtendWith(MockitoExtension.class)
 public class MeasureServiceTest implements ResourceUtil {
@@ -66,12 +73,16 @@ public class MeasureServiceTest implements ResourceUtil {
 
   @Mock private MeasureUtil measureUtil;
 
+  @Mock private ActionLogService actionLogService;
+  @Mock private TerminologyValidationService terminologyValidationService;
+
   @InjectMocks private MeasureService measureService;
 
   @Captor private ArgumentCaptor<Measure> measureArgumentCaptor;
 
   private Group group2;
   private MeasureMetaData measureMetaData;
+  private String elmJson;
   private Measure measure1;
   private Measure measure2;
 
@@ -107,7 +118,7 @@ public class MeasureServiceTest implements ResourceUtil {
 
     List<Group> groups = new ArrayList<>();
     groups.add(group2);
-    String elmJson = getData("/test_elm.json");
+    elmJson = getData("/test_elm.json");
     measure1 =
         Measure.builder()
             .active(true)
@@ -169,6 +180,111 @@ public class MeasureServiceTest implements ResourceUtil {
     assertEquals(2, measures.size());
     assertFalse(measures.get("IDIDID"));
     assertTrue(measures.get("2D2D2D"));
+  }
+
+  @Test
+  public void testCreateMeasureSuccessfullyWithNoCql() {
+    String usr = "john rao";
+    Measure measureToSave =
+        measure1
+            .toBuilder()
+            .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
+            .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
+            .cqlLibraryName("VTE")
+            .cql("")
+            .elmJson(null)
+            .measureMetaData(new MeasureMetaData())
+            .createdBy(usr)
+            .build();
+    when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
+    when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
+    when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
+
+    Measure savedMeasure = measureService.createMeasure(measureToSave, usr, "token");
+    assertThat(savedMeasure.getMeasureName(), is(equalTo(measureToSave.getMeasureName())));
+    assertThat(savedMeasure.getCqlLibraryName(), is(equalTo(measureToSave.getCqlLibraryName())));
+    assertThat(savedMeasure.getCreatedBy(), is(equalTo(usr)));
+    assertThat(savedMeasure.isCqlErrors(), is(equalTo(false)));
+    assertThat(savedMeasure.getErrors(), is(emptySet()));
+    assertThat(savedMeasure.getMeasureMetaData().isDraft(), is(equalTo(true)));
+  }
+
+  @Test
+  public void testCreateMeasureSuccessfullyWithValidCql() {
+    Measure measureToSave =
+        measure1
+            .toBuilder()
+            .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
+            .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
+            .cqlLibraryName("VTE")
+            .build();
+    when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
+    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+        .thenReturn(ElmJson.builder().json(elmJson).build());
+    when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(false);
+    doNothing().when(terminologyValidationService).validateTerminology(anyString(), anyString());
+    when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
+    when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
+
+    Measure savedMeasure = measureService.createMeasure(measureToSave, "john rao", "token");
+    assertThat(savedMeasure.getMeasureName(), is(equalTo(measureToSave.getMeasureName())));
+    assertThat(savedMeasure.getCqlLibraryName(), is(equalTo(measureToSave.getCqlLibraryName())));
+    assertThat(savedMeasure.getErrors(), is(emptySet()));
+    assertThat(savedMeasure.isCqlErrors(), is(equalTo(false)));
+  }
+
+  @Test
+  public void testCreateMeasureSuccessfullyWithInvalidCqlAndTerminology() {
+    String usr = "john rao";
+    Set<MeasureErrorType> errors =
+        Set.of(MeasureErrorType.ERRORS_ELM_JSON, MeasureErrorType.INVALID_TERMINOLOGY);
+    Measure measureToSave =
+        measure1
+            .toBuilder()
+            .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
+            .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
+            .cqlLibraryName("VTE")
+            .cqlErrors(true)
+            .errors(errors)
+            .createdBy(usr)
+            .build();
+    when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
+    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+        .thenReturn(ElmJson.builder().json(elmJson).build());
+    when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(true);
+    doThrow(InvalidTerminologyException.class)
+        .when(terminologyValidationService)
+        .validateTerminology(anyString(), anyString());
+    when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
+    when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
+
+    Measure savedMeasure = measureService.createMeasure(measureToSave, usr, "token");
+    assertThat(savedMeasure.getMeasureName(), is(equalTo(measureToSave.getMeasureName())));
+    assertThat(savedMeasure.getCqlLibraryName(), is(equalTo(measureToSave.getCqlLibraryName())));
+    assertThat(savedMeasure.getCreatedBy(), is(equalTo(usr)));
+    assertThat(savedMeasure.getErrors().size(), is(equalTo(2)));
+    assertThat(savedMeasure.getErrors().contains(MeasureErrorType.ERRORS_ELM_JSON), is(true));
+    assertThat(savedMeasure.getErrors().contains(MeasureErrorType.INVALID_TERMINOLOGY), is(true));
+    assertThat(savedMeasure.isCqlErrors(), is(equalTo(true)));
+  }
+
+  @Test
+  public void testCreateMeasureWhenLibraryNameDuplicate() {
+    Measure measureToSave =
+        measure1
+            .toBuilder()
+            .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
+            .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
+            .cqlLibraryName("VTE")
+            .cql("")
+            .elmJson(null)
+            .build();
+    when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.of(measure1));
+
+    assertThrows(
+        DuplicateKeyException.class,
+        () -> measureService.createMeasure(measureToSave, "john rao", "token"),
+        "CQL library with given name already exists");
   }
 
   @Test

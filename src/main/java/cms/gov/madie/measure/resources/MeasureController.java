@@ -1,14 +1,19 @@
 package cms.gov.madie.measure.resources;
 
-import java.io.UnsupportedEncodingException;
-import java.security.Principal;
-import java.time.Instant;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import javax.servlet.http.HttpServletRequest;
+import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
+import cms.gov.madie.measure.exceptions.InvalidIdException;
+import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.exceptions.UnauthorizedException;
+import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.services.ActionLogService;
+import cms.gov.madie.measure.services.GroupService;
+import cms.gov.madie.measure.services.MeasureService;
+import cms.gov.madie.measure.utils.ControllerUtil;
+import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.Measure;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,22 +32,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
-import cms.gov.madie.measure.exceptions.InvalidIdException;
-import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import cms.gov.madie.measure.exceptions.UnauthorizedException;
-import cms.gov.madie.measure.repositories.MeasureRepository;
-import cms.gov.madie.measure.services.ActionLogService;
-import cms.gov.madie.measure.services.GroupService;
-import cms.gov.madie.measure.services.MeasureService;
-import cms.gov.madie.measure.utils.ControllerUtil;
-import gov.cms.madie.models.common.ActionType;
-import gov.cms.madie.models.common.Version;
-import gov.cms.madie.models.measure.Group;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.MeasureMetaData;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
+import javax.servlet.http.HttpServletRequest;
+import java.io.UnsupportedEncodingException;
+import java.security.Principal;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -72,9 +69,7 @@ public class MeasureController {
     final String username = principal.getName();
     Page<Measure> measures;
     final Pageable pageReq = PageRequest.of(page, limit, Sort.by("lastModifiedAt").descending());
-
     measures = measureService.getMeasures(filterByCurrentUser, pageReq, username);
-
     return ResponseEntity.ok(measures);
   }
 
@@ -89,37 +84,10 @@ public class MeasureController {
   @PostMapping("/measure")
   public ResponseEntity<Measure> addMeasure(
       @RequestBody @Validated(Measure.ValidationSequence.class) Measure measure,
-      Principal principal) {
+      Principal principal,
+      @RequestHeader("Authorization") String accessToken) {
     final String username = principal.getName();
-    log.info("User [{}] is attempting to create a new measure", username);
-    measureService.checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
-    measureService.validateMeasurementPeriod(
-        measure.getMeasurementPeriodStart(), measure.getMeasurementPeriodEnd());
-
-    // Clear ID so that the unique GUID from MongoDB will be applied
-    Instant now = Instant.now();
-    measure.setId(null);
-    measure.setCreatedBy(username);
-    measure.setCreatedAt(now);
-    measure.setLastModifiedBy(username);
-    measure.setLastModifiedAt(now);
-    measure.setVersion(new Version(0, 0, 0));
-    measure.setVersionId(UUID.randomUUID().toString());
-    measure.setMeasureSetId(UUID.randomUUID().toString());
-
-    if (measure.getMeasureMetaData() != null) {
-      measure.getMeasureMetaData().setDraft(true);
-    } else {
-      MeasureMetaData metaData = new MeasureMetaData();
-      metaData.setDraft(true);
-      measure.setMeasureMetaData(metaData);
-    }
-
-    Measure savedMeasure = repository.save(measure);
-    log.info("User [{}] successfully created new measure with ID [{}]", username, measure.getId());
-
-    actionLogService.logAction(savedMeasure.getId(), Measure.class, ActionType.CREATED, username);
-
+    Measure savedMeasure = measureService.createMeasure(measure, username, accessToken);
     return ResponseEntity.status(HttpStatus.CREATED).body(savedMeasure);
   }
 

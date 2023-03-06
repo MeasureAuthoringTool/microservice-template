@@ -1,33 +1,41 @@
 package cms.gov.madie.measure.services;
 
-import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.InvalidCmsIdException;
 import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
 import cms.gov.madie.measure.exceptions.InvalidMeasurementPeriodException;
+import cms.gov.madie.measure.exceptions.InvalidTerminologyException;
 import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
 import cms.gov.madie.measure.utils.MeasureUtil;
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
+import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureErrorType;
+import gov.cms.madie.models.measure.MeasureMetaData;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -36,6 +44,57 @@ public class MeasureService {
   private final MeasureRepository measureRepository;
   private final ElmTranslatorClient elmTranslatorClient;
   private final MeasureUtil measureUtil;
+  private final ActionLogService actionLogService;
+  private final TerminologyValidationService terminologyValidationService;
+
+  public Measure createMeasure(Measure measure, final String username, String accessToken) {
+    log.info("User [{}] is attempting to create a new measure", username);
+    checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
+    validateMeasurementPeriod(
+        measure.getMeasurementPeriodStart(), measure.getMeasurementPeriodEnd());
+    Measure measureCopy = measure.toBuilder().build();
+    Set<MeasureErrorType> errorTypes = new HashSet<>();
+    try {
+      measureCopy = updateElm(measureCopy, accessToken);
+    } catch (CqlElmTranslationErrorException ex) {
+      errorTypes.add(MeasureErrorType.ERRORS_ELM_JSON);
+    }
+    try {
+      terminologyValidationService.validateTerminology(measureCopy.getElmJson(), accessToken);
+    } catch (InvalidTerminologyException ex) {
+      errorTypes.add(MeasureErrorType.INVALID_TERMINOLOGY);
+    }
+    if (!CollectionUtils.isEmpty(errorTypes)) {
+      measureCopy.setCqlErrors(true);
+      measureCopy.setErrors(errorTypes);
+    }
+
+    Instant now = Instant.now();
+    // Clear ID so that the unique GUID from MongoDB will be applied
+    measureCopy.setId(null);
+    measureCopy.setCreatedBy(username);
+    measureCopy.setCreatedAt(now);
+    measureCopy.setLastModifiedBy(username);
+    measureCopy.setLastModifiedAt(now);
+    measureCopy.setVersion(new Version(0, 0, 0));
+    measureCopy.setVersionId(UUID.randomUUID().toString());
+    measureCopy.setMeasureSetId(UUID.randomUUID().toString());
+
+    if (measureCopy.getMeasureMetaData() != null) {
+      measureCopy.getMeasureMetaData().setDraft(true);
+    } else {
+      MeasureMetaData metaData = new MeasureMetaData();
+      metaData.setDraft(true);
+      measureCopy.setMeasureMetaData(metaData);
+    }
+
+    Measure savedMeasure = measureRepository.save(measureCopy);
+    log.info(
+        "User [{}] successfully created new measure with ID [{}]", username, savedMeasure.getId());
+    actionLogService.logAction(savedMeasure.getId(), Measure.class, ActionType.CREATED, username);
+
+    return savedMeasure;
+  }
 
   public Measure updateMeasure(
       final Measure existingMeasure,
