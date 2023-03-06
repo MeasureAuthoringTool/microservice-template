@@ -1,1102 +1,1192 @@
 [
-    {
-        "name": "Net-Integrated Consulting, Inc.",
-        "oid": "1.2.3.4"
-    },
-    {
-        "name": "GE Healthcare",
-        "oid": "1.2.840.113619"
-    },
-    {
-        "name": "The Joint Commission",
-        "oid": "1.3.6.1.4.1.33895"
-    },
-    {
-        "name": "Joint Commission",
-        "oid": "1.3.6.1.4.1.33895.1.3.0"
-    },
-    {
-        "name": "NLM",
-        "oid": "2.16.840.1.113762.1"
-    },
-    {
-        "name": "The University of Kansas Medical Center Research Institute, Inc.",
-        "oid": "2.16.840.1.113883.3.2066"
-    },
-    {
-        "name": "Dental Quality Alliance",
-        "oid": "2.16.840.1.113883.17.77"
-    },
-    {
-        "name": "Lantana Consulting Group",
-        "oid": "2.16.840.1.113883.3.117"
-    },
-    {
-        "name": "HealthInfoNet",
-        "oid": "2.16.840.1.113883.3.1239"
-    },
-    {
-        "name": "Mathematica",
-        "oid": "2.16.840.1.113883.3.1240"
-    },
-    {
-        "name": "MITRE",
-        "oid": "2.16.840.1.113883.3.1257"
-    },
-    {
-        "name": "FMQAI",
-        "oid": "2.16.840.1.113883.3.1260"
-    },
-    {
-        "name": "Department of Health & Human Services",
-        "oid": "2.16.840.1.113883.3.1275"
-    },
-    {
-        "name": "Booz Allen Hamilton",
-        "oid": "2.16.840.1.113883.3.1287"
-    },
-    {
-        "name": "Blackbird Solutions, Inc.",
-        "oid": "2.16.840.1.113883.3.1300"
-    },
-    {
-        "name": "ACS Midas +",
-        "oid": "2.16.840.1.113883.3.1335"
-    },
-    {
-        "name": "GSI Health",
-        "oid": "2.16.840.1.113883.3.1358"
-    },
-    {
-        "name": "Northwestern University",
-        "oid": "2.16.840.1.113883.3.1427"
-    },
-    {
-        "name": "Hope Network",
-        "oid": "2.16.840.1.113883.3.1443"
-    },
-    {
-        "name": "Intermoutain Healthcare",
-        "oid": "2.16.840.1.113883.3.15"
-    },
-    {
-        "name": "MITRE",
-        "oid": "2.16.840.1.113883.3.1502"
-    },
-    {
-        "name": "American Academy of Neurology",
-        "oid": "2.16.840.1.113883.3.1544"
-    },
-    {
-        "name": "American College of Rheumatology",
-        "oid": "2.16.840.1.113883.3.1564"
-    },
-    {
-        "name": "State of Maine",
-        "oid": "2.16.840.1.113883.3.1584"
-    },
-    {
-        "name": "Vanderbilt University",
-        "oid": "2.16.840.1.113883.3.1782"
-    },
-    {
-        "name": "American Academy of Ophthalmology",
-        "oid": "2.16.840.1.113883.3.1934"
-    },
-    {
-        "name": "Mayo Clinic",
-        "oid": "2.16.840.1.113883.3.2"
-    },
-    {
-        "name": "Oncology Nursing Society",
-        "oid": "2.16.840.1.113883.3.2340"
-    },
-    {
-        "name": "CSC",
-        "oid": "2.16.840.1.113883.3.302"
-    },
-    {
-        "name": "MN Community Measurement",
-        "oid": "2.16.840.1.113883.3.3144"
-    },
-    {
-        "name": "Maine Medical Center",
-        "oid": "2.16.840.1.113883.3.3302"
-    },
-    {
-        "name": "Jason Weinstein Inc",
-        "oid": "2.16.840.1.113883.3.3628"
-    },
-    {
-        "name": "ONC",
-        "oid": "2.16.840.1.113883.3.4295"
-    },
-    {
-        "name": "National Committee for Quality Assurance",
-        "oid": "2.16.840.1.113883.3.464"
-    },
-    {
-        "name": "American Medical Association-convened Physician Consortium for Performance Improvement(R) (AMA-PCPI)",
-        "oid": "2.16.840.1.113883.3.526"
-    },
-    {
-        "name": "NQF",
-        "oid": "2.16.840.1.113883.3.560"
-    },
-    {
-        "name": "Quality Insights of Pennsylvania",
-        "oid": "2.16.840.1.113883.3.600"
-    },
-    {
-        "name": "Oklahoma Foundation for Medical Quality",
-        "oid": "2.16.840.1.113883.3.666"
-    },
-    {
-        "name": "Telligen",
-        "oid": "2.16.840.1.113883.3.67"
-    },
-    {
-        "name": "American Board of Internal Medicine",
-        "oid": "2.16.840.1.113883.3.797"
-    },
-    {
-        "name": "The McKesson Corporation",
-        "oid": "2.16.840.1.113883.3.8"
-    },
-    {
-        "name": "Siemens Medical Solutions",
-        "oid": "2.16.840.1.114060"
-    },
-    {
-        "name": "Centers for Disease Control and Prevention (CDC)",
-        "oid": "2.16.840.1.114222.4"
-    },
-    {
-        "name": "Minnesota Community Measurement (invalid)",
-        "oid": "2.16.840.1.133883.3.3114"
-    },
-    {
-        "name": "Valence Health",
-        "oid": "2.16.840.1.113883.3.4334"
-    },
-    {
-        "name": "Select Medical",
-        "oid": "2.16.840.1.113883.3.4566"
-    },
-    {
-        "name": "University of Colorado",
-        "oid": "2.16.840.1.113883.3.3071"
-    },
-    {
-        "name": "Arizona State University - Dept of Biomedical Infomatics",
-        "oid": "2.16.840.1.113883.3.4657"
-    },
-    {
-        "name": "University HealthSystem Consortium",
-        "oid": "2.16.840.1.113883.3.4685"
-    },
-    {
-        "name": "Chronic Disease Registry, Inc.",
-        "oid": "2.16.840.1.113883.3.1727"
-    },
-    {
-        "name": "ESAC, Inc.",
-        "oid": "2.16.840.1.113883.3.4780"
-    },
-    {
-        "name": "Primary Health Innovations",
-        "oid": "2.16.840.1.113883.3.4774"
-    },
-    {
-        "name": "Conceptual MindWorks",
-        "oid": "2.16.840.1.113883.3.3765"
-    },
-    {
-        "name": "Clinigence",
-        "oid": "2.16.840.1.113883.3.1163"
-    },
-    {
-        "name": "Allscripts",
-        "oid": "2.16.840.1.113883.3.1049"
-    },
-    {
-        "name": "Michigan Health Information Network",
-        "oid": "2.16.840.1.113883.3.1481"
-    },
-    {
-        "name": "Iatric Systems",
-        "oid": "2.16.840.1.113883.3.229"
-    },
-    {
-        "name": "American Gastroenterological Association",
-        "oid": "2.16.840.1.113883.3.4839"
-    },
-    {
-        "name": "Marshfield Clinic Research Foundation",
-        "oid": "2.16.840.1.113883.3.383"
-    },
-    {
-        "name": "Oregon Health Authority",
-        "oid": "2.16.840.1.113883.5300"
-    },
-    {
-        "name": "Cerner",
-        "oid": "2.16.840.1.113883.3.13"
-    },
-    {
-        "name": "Medicomp Systems",
-        "oid": "2.16.840.1.113883.6.26"
-    },
-    {
-        "name": "HCA Healthcare",
-        "oid": "2.16.840.1.113883.1110"
-    },
-    {
-        "name": "Health Services Advisory Group",
-        "oid": "2.16.840.1.113883.3.1286"
-    },
-    {
-        "name": "Intelligent Medical Objects (IMO)",
-        "oid": "2.16.840.1.113883.3.247.2.1"
-    },
-    {
-        "name": "TBD Solutions LLC",
-        "oid": "2.16.840.1.113883.3.5563"
-    },
-    {
-        "name": "Kingdomain Corporation",
-        "oid": "2.16.840.1.113883.3.5522"
-    },
-    {
-        "name": "STI Computer Services",
-        "oid": "2.16.840.1.113883.3.929"
-    },
-    {
-        "name": "Arcadia Solutions",
-        "oid": "2.16.840.1.113883.3.5645"
-    },
-    {
-        "name": "Commonwealth Informatics Inc.",
-        "oid": "2.16.840.1.113883.3.5027"
-    },
-    {
-        "name": "The Children's Hospital of Philadelphia",
-        "oid": "2.16.840.1.113883.3.648"
-    },
-    {
-        "name": "Ten 2 Eleven Business Solutions LLC",
-        "oid": "2.16.840.1.113883.3.5485"
-    },
-    {
-        "name": "Medisolv",
-        "oid": "2.16.840.1.13883.3.5752"
-    },
-    {
-        "name": "American Academy of Orthopaedic Surgeons",
-        "oid": "2.16.840.1.113883.3.5781"
-    },
-    {
-        "name": "Infectious Diseases Society of America",
-        "oid": "2.16.840.1.113883.3.5782"
-    },
-    {
-        "name": "American College of Emergency Physicians (ACEP)",
-        "oid": "2.16.840.1.113883.17.4077"
-    },
-    {
-        "name": "Caradigm",
-        "oid": "2.16.840.1.113883.3.1461"
-    },
-    {
-        "name": "Intellicure, Inc",
-        "oid": "2.16.840.1.113883.3.246"
-    },
-    {
-        "name": "Optum",
-        "oid": "2.16.840.1.113883.3.2966"
-    },
-    {
-        "name": "Indian Health Service",
-        "oid": "2.16.840.1.113883.3.454"
-    },
-    {
-        "name": "Park Street Solutions Company",
-        "oid": "2.16.840.1.113883.3.6018"
-    },
-    {
-        "name": "American Society of Addiction Medicine (ASAM)",
-        "oid": "2.16.840.1.113883.13.276"
-    },
-    {
-        "name": "Centers for Medicare & Medicaid Services (CMS)",
-        "oid": "9048cd4c-b61b-11e4-a71e-12e3f512a338"
-    },
-    {
-        "name": "Yale New Haven Health Service Corporation/ Center for Outcomes Research and Evaluation",
-        "oid": "88a7ab8e-b92d-11e4-a71e-12e3f512a338"
-    },
-    {
-        "name": "NTT Data",
-        "oid": "1.3.6.1.4.1.338"
-    },
-    {
-        "name": "CDC National Center on Birth Defects and Developmental Disabilities",
-        "oid": "aa9d0077-34fa-494d-b6df-487e5176c91b"
-    },
-    {
-        "name": "CDC Early Hearing Detection and Intervention Program",
-        "oid": "2.16.840.1.114222.4.1.214079"
-    },
-    {
-        "name": "Citius Tech Inc.",
-        "oid": "2.16.840.1.113883.3.1733"
-    },
-    {
-        "name": "American Society of Clinical Oncology",
-        "oid": "2.16.840.1.113883.3.1444"
-    },
-    {
-        "name": "CancerLin Q",
-        "oid": "2.16.840.1.113883.3.6075"
-    },
-    {
-        "name": "Center for Quality Assessment & Improvement in Mental Health (CQAIMH)",
-        "oid": "8fb595cc-ce4e-11e4-b9d6-1681e6b88ec1"
-    },
-    {
-        "name": "Infomedika",
-        "oid": "2.16.840.1.113883.3.6089"
-    },
-    {
-        "name": "IT Practice Consulting Corp",
-        "oid": "2.16.840.1.113883.3.6110"
-    },
-    {
-        "name": "Bellevue College",
-        "oid": "2.16.840.1.113883.3.6099"
-    },
-    {
-        "name": "Battelle Memorial Institute",
-        "oid": "2.16.840.1.113883.3.6106"
-    },
-    {
-        "name": "American Podiatric Medical Association",
-        "oid": "7e1dc7aa-5eb0-4d02-bb3f-84f640fe9ee4"
-    },
-    {
-        "name": "US Wound Registry",
-        "oid": "2.16.840.1.113883.3.6169"
-    },
-    {
-        "name": "Prometheus Research, LLC",
-        "oid": "2.16.840.1.113883.3.6167"
-    },
-    {
-        "name": "The Lewin Group",
-        "oid": "2.16.840.1.113883.3.3157"
-    },
-    {
-        "name": "Tenet",
-        "oid": "2.16.840.1.113883.3.1056"
-    },
-    {
-        "name": "Health Language",
-        "oid": "2.16.840.1.113883.17.4099"
-    },
-    {
-        "name": "Swain Eng and Associates",
-        "oid": "2.16.840.1.113883.3.6193"
-    },
-    {
-        "name": "SMC Partners",
-        "oid": "2.16.840.1.113883.3.492"
-    },
-    {
-        "name": "Resolution Health",
-        "oid": "2.16.840.1.113883.3.6224"
-    },
-    {
-        "name": "American College of Radiology",
-        "oid": "2.16.840.1.113883.3.6168"
-    },
-    {
-        "name": "The Lazy Company",
-        "oid": "2.16.840.1.113883.3.3032"
-    },
-    {
-        "name": "National Minority Quality Forum (NMQF)",
-        "oid": "2.16.840.1.113883.3.6254"
-    },
-    {
-        "name": "The Vaerys Company, LLC",
-        "oid": "f3429db0-3da1-423d-a8a1-9c6239db1f4b"
-    },
-    {
-        "name": "American Academy of Allergy Asthma and Immunology",
-        "oid": "2.16.840.1.113883.3.6261"
-    },
-    {
-        "name": "College of American Pathologists",
-        "oid": "2.16.840.1.113883.3.1434"
-    },
-    {
-        "name": "RTI International",
-        "oid": "cb8c0b44-b61a-4078-bbc0-de5272643a84"
-    },
-    {
-        "name": "Academy of Nutrition and Dietetics",
-        "oid": "2.16.840.1.113883.3.6308"
-    },
-    {
-        "name": "Austin Regional Clinic Population Health Analytics",
-        "oid": "2.16.840.1.113883.3.6366"
-    },
-    {
-        "name": "CHPRE George Mason University",
-        "oid": "f9a27f3a-aea9-412a-a5e9-f5c6a2404b79"
-    },
-    {
-        "name": "Dynamic Health IT",
-        "oid": "2.16.840.1.113883.3.1520"
-    },
-    {
-        "name": "American Nurses Association",
-        "oid": "5b8682a3-7620-417e-9313-34a2b7886237"
-    },
-    {
-        "name": "Press Ganey Associates, Inc.",
-        "oid": "042113c8-0e62-42fb-b5e0-4dcc5484d51c"
-    },
-    {
-        "name": "Transcend Insights",
-        "oid": "2.16.840.1.113883.3.876"
-    },
-    {
-        "name": "American Medical Association (AMA)",
-        "oid": "d041e15c-a7a0-41b8-be5b-87340ecd14bc"
-    },
-    {
-        "name": "PCPI(R) Foundation (PCPI[R])",
-        "oid": "83e9797c-adec-4446-8c35-3ffd5d981c66"
-    },
-    {
-        "name": "Office of the Assistant Secretary for Planning and Evaluation (ASPE)",
-        "oid": "93a937d1-f1bc-4428-998e-4975ba23e30a"
-    },
-    {
-        "name": "Lightbeam Health Solutions",
-        "oid": "2.16.840.1.113883.3.6589"
-    },
-    {
-        "name": "Oregon Urology",
-        "oid": "2.16.840.1.113883.3.6734"
-    },
-    {
-        "name": "Econometrica",
-        "oid": "92ae014b-40e7-4b66-9a02-f710d12b1a79"
-    },
-    {
-        "name": "American Society for Radiation Oncology",
-        "oid": "2.16.840.1.113883.3.1890"
-    },
-    {
-        "name": "Arbor Research Collaborative for Health",
-        "oid": "abfc1712-00c9-40d9-a070-a9b92af8c75d"
-    },
-    {
-        "name": "FEI Systems",
-        "oid": "2.16.840.1.113883.3.468"
-    },
-    {
-        "name": "eClinicalWorks",
-        "oid": "2.16.840.1.113883.4.391"
-    },
-    {
-        "name": "National Kidney Foundation",
-        "oid": "2.16.840.1.113883.3.6929"
-    },
-    {
-        "name": "Oregon Pediatric Improvement Partnership at Oregon Health & Science University (OHSU)",
-        "oid": "04140949-6808-4175-829c-37fefa6e59ec"
-    },
-    {
-        "name": "Colorado Department of Healthcare Policy and Finance",
-        "oid": "e1823138-61ba-4f4b-8a92-58a23541b7a9"
-    },
-    {
-        "name": "Custom Computing Corporation",
-        "oid": "2.16.840.1.113883.3.6454"
-    },
-    {
-        "name": "Health Resources & Services Administration",
-        "oid": "2.16.840.1.113883.3.3447"
-    },
-    {
-        "name": "Pharmacy Quality Alliance",
-        "oid": "2.16.840.1.113883.3.7109"
-    },
-    {
-        "name": "PSMI Consulting",
-        "oid": "2.16.840.1.113883.3.6727"
-    },
-    {
-        "name": "Able Health",
-        "oid": "2.16.840.1.113883.3.7130"
-    },
-    {
-        "name": "Practice Fusion",
-        "oid": "2.16.840.1.113883.3.3388"
-    },
-    {
-        "name": "Kareo Inc.",
-        "oid": "2.16.840.1.113883.3.7220"
-    },
-    {
-        "name": "Quality Insights",
-        "oid": "2.16.840.1.113883.3.7230"
-    },
-    {
-        "name": "Health eFilings",
-        "oid": "2.16.840.1.113883.3.5587"
-    },
-    {
-        "name": "Evolent Health",
-        "oid": "2.16.840.1.113883.3.2371"
-    },
-    {
-        "name": "American College of Cardiology - ACCF/AHA Task Force on Performance Measures",
-        "oid": "2.16.840.1.113883.3.3566"
-    },
-    {
-        "name": "Qualifacts Systems Inc",
-        "oid": "2.16.840.1.113883.3.1452"
-    },
-    {
-        "name": "Large Urology Group Practice Association (LUGPA)",
-        "oid": "2.16.840.1.113883.3.7320"
-    },
-    {
-        "name": "NewYork-Presbyterian Hospital",
-        "oid": "2.16.840.1.113883.3.1073"
-    },
-    {
-        "name": "Michigan Department of Community Health",
-        "oid": "2.16.840.1.113883.3.5416"
-    },
-    {
-        "name": "Afoundria, LLC",
-        "oid": "2.16.840.1.113883.3.7385"
-    },
-    {
-        "name": "American Heart Association-American Stroke Association",
-        "oid": "2.16.840.1.113883.3.6038"
-    },
-    {
-        "name": "Premier, Inc.",
-        "oid": "2.16.840.1.113883.3.7416"
-    },
-    {
-        "name": "Kaiser Foundation Health Plan",
-        "oid": "1.3.6.1.4.1.26580.120"
-    },
-    {
-        "name": "Innovaccer Anylytics",
-        "oid": "2.16.840.1.113883.3.7464"
-    },
-    {
-        "name": "American Academy of Physical Medicine and Rehabilitation",
-        "oid": "2.16.840.1.113883.3.7587"
-    },
-    {
-        "name": "HHS",
-        "oid": "37e4d0ed-5ebd-4103-a404-ab34a23d5868"
-    },
-    {
-        "name": "Physician Compass",
-        "oid": "2.16.840.1.113883.3.1745"
-    },
-    {
-        "name": "athenahealth",
-        "oid": "2.16.840.1.113883.3.564"
-    },
-    {
-        "name": "Interpreta Inc.",
-        "oid": "2.16.840.1.113883.3.7701"
-    },
-    {
-        "name": "ECRI",
-        "oid": "1.3.6.1.4.1.6997.4"
-    },
-    {
-        "name": "Apervita Inc.",
-        "oid": "8a89e110-af5d-4359-9472-210c6c73ae54"
-    },
-    {
-        "name": "Cedarbridge",
-        "oid": "df10e997-2d8a-4fab-8324-a21aab13a979"
-    },
-    {
-        "name": "Orion Health",
-        "oid": "2.16.840.1.113883.3.89"
-    },
-    {
-        "name": "Far Harbor LLC",
-        "oid": "44314aad-708c-4b90-9bfd-95d186508552"
-    },
-    {
-        "name": "SMC Partners LLC",
-        "oid": "ba760956-ddb3-4eeb-941e-1f770e40086e"
-    },
-    {
-        "name": "Semedy INC",
-        "oid": "0e33f086-72dc-4ee6-ac8f-486a6e9bade4"
-    },
-    {
-        "name": "Integrated Medicine Alliance",
-        "oid": "30a66d6e-9b2e-4c42-88a5-07d221717c94"
-    },
-    {
-        "name": "Northwestern University Feinberg School of Medicine",
-        "oid": "478337be-08a0-4d23-a09a-84ac1419c541"
-    },
-    {
-        "name": "Lexigram Inc",
-        "oid": "5650af81-aab2-468e-b6f4-144820e891d2"
-    },
-    {
-        "name": "The Shams Group",
-        "oid": "621cb64b-9e50-4fb1-9b06-21d48e636202"
-    },
-    {
-        "name": "Wisconsin Collaborative For Healthcare Quality",
-        "oid": "f2ce4b5d-9273-4474-b2e2-8ce039fd2783"
-    },
-    {
-        "name": "SAMHSA",
-        "oid": "93d3c4bf-5d9a-4774-80a8-891630aa9b5b"
-    },
-    {
-        "name": "Consortium for the Advancement of Sustainability in Healthcare",
-        "oid": "46b3a377-e698-433c-a464-2d0be1da7efa"
-    },
-    {
-        "name": "IMPAQ International",
-        "oid": "3f2f8061-bce1-4024-b378-c20475dab014"
-    },
-    {
-        "name": "Bellese Technologies",
-        "oid": "07f62fad-1159-4506-9dc8-2992980eb803"
-    },
-    {
-        "name": "Zynx Health",
-        "oid": "005da22f-fc8f-40f2-be28-201b16022bde"
-    },
-    {
-        "name": "Motive Medical Intelligence",
-        "oid": "2.16.840.1.113883.3.866"
-    },
-    {
-        "name": "Memorial Hospital of Sweetwater County",
-        "oid": "2.16.840.1.113883.3.1172"
-    },
-    {
-        "name": "Brigham and Womens Health",
-        "oid": "d30be14c-fd58-4e52-afbc-a09f733789ba"
-    },
-    {
-        "name": "University of Washington",
-        "oid": "2.16.840.1.113883.3.3897"
-    },
-    {
-        "name": "Netsmart",
-        "oid": "2.16.840.1.113883.3.3569"
-    },
-    {
-        "name": "American Society of Anesthesiologist  (ASA)",
-        "oid": "2.16.840.1.113883.3.8238"
-    },
-    {
-        "name": "The Montrose Center",
-        "oid": "2.16.840.1.113883.9.102"
-    },
-    {
-        "name": "Meditech INC",
-        "oid": "2.16.840.1.113883.3.6128"
-    },
-    {
-        "name": "Sphere Institute",
-        "oid": "41c73271-0edc-434f-9e6a-99e0d8edfe7c"
-    },
-    {
-        "name": "Clinician - Driven Quality Solutions, LLC",
-        "oid": "4a17e8b1-cc95-41c8-b462-92618b064338"
-    },
-    {
-        "name": "Clinovations GovHealth",
-        "oid": "4734a478-5c66-11e9-8647-d663bd873d93"
-    },
-    {
-        "name": "American College of Emergency Physicians",
-        "oid": "8dc72bc2-5f86-11e9-8647-d663bd873d93"
-    },
-    {
-        "name": "Emerald Health LLC",
-        "oid": "d1cbeb9c-b9dd-4e5b-877a-3398d7d4b330"
-    },
-    {
-        "name": "University of California, San Francisco, Department of Family",
-        "oid": "dcf3712a-1549-4364-9c74-8081722a8c94"
-    },
-    {
-        "name": "Agency for Healthcare Research and Quality (AHRQ)",
-        "oid": "2.16.840.1.113883.3.263"
-    },
-    {
-        "name": "Humana IT Solutions Engineering",
-        "oid": "D4CB44D3-5135-4E99-BA50-0A953F88D66A"
-    },
-    {
-        "name": "Imagine I.T.",
-        "oid": "6cb36897-4690-46e6-b4a7-2d1a22445a46"
-    },
-    {
-        "name": "Epic Systems",
-        "oid": "1.2.840.1.114350"
-    },
-    {
-        "name": "American Optometric Association",
-        "oid": "2.16.840.1.113883.3.8420"
-    },
-    {
-        "name": "Office of Population Affairs",
-        "oid": "53251192-5c9d-44ab-bb9f-b39b6595af21"
-    },
-    {
-        "name": "Society of Interventional Radiology",
-        "oid": "6ce4c956-309d-4b54-befa-d86811189e41"
-    },
-    {
-        "name": "SemanticBits",
-        "oid": "02c84f54-919b-4464-bf51-a1438f2710e2"
-    },
-    {
-        "name": "National EMS Quality Alliance",
-        "oid": "2.16.840.1.113883.3.8404"
-    },
-    {
-        "name": "Brilogy Corporation",
-        "oid": "2.16.840.1.113883.3.5242"
-    },
-    {
-        "name": "Aetna",
-        "oid": "2.16.840.1.113883.3.6865"
-    },
-    {
-        "name": "New Wave",
-        "oid": "15b92526-5b1a-4c7f-a01c-cc30b0957937"
-    },
-    {
-        "name": "Anthem, Inc.",
-        "oid": "2.16.840.1.113883.3.7875"
-    },
-    {
-        "name": "Family Medicine Residency of Idaho",
-        "oid": "49f5f9fa-75b8-4095-ab59-33597c75bce4"
-    },
-    {
-        "name": "Meridios",
-        "oid": "2.16.840.1.113883.3.1740"
-    },
-    {
-        "name": "Health Catalyst",
-        "oid": "2.16.840.1.113883.17.4249"
-    },
-    {
-        "name": "AltaPoint Data Systems, LLC",
-        "oid": "e9603fbc-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Verana Health",
-        "oid": "e960423c-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "SemanticMD, Inc",
-        "oid": "e9604340-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Alara Imaging, Inc.",
-        "oid": "e96044c6-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "American Society of Retina Specialists",
-        "oid": "e9604598-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Centers for the Study of Services d/b/a Consumers’ Checkbook",
-        "oid": "e96046b0-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "InterSystems",
-        "oid": "2.16.840.1.113883.3.86"
-    },
-    {
-        "name": "GPM, Corp.",
-        "oid": "2.16.840.1.113883.3.2934"
-    },
-    {
-        "name": "LabCorp",
-        "oid": "2.16.840.1.113883.3.362"
-    },
-    {
-        "name": "Cambia Health Solutions",
-        "oid": "e960476e-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Commure, Inc.",
-        "oid": "e9604890-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "MK Advisory Services, LLC",
-        "oid": "e9604976-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Assurecare",
-        "oid": "e9604a98-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "DBA",
-        "oid": "e9604bec-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "IntraHealth International",
-        "oid": "2.16.840.1.113883.3.9049"
-    },
-    {
-        "name": "Advanced Health Outcomes LLC",
-        "oid": "e9604dc2-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Focus Informatics",
-        "oid": "e9604eda-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Wise Health System",
-        "oid": "e9604f98-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Duke University",
-        "oid": "2.16.840.1.113883.3.156"
-    },
-    {
-        "name": "IBM Watson Health",
-        "oid": "e96050ec-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "ACO Health Solutions",
-        "oid": "e96051aa-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Branch Health Clinic Naval Station Norfolk",
-        "oid": "e96052f4-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "American Society for Clinical Pathology",
-        "oid": "e96053b2-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Adirondack Health Organization",
-        "oid": "e96054b6-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Unqork",
-        "oid": "e96055ba-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Elation Health",
-        "oid": "2.16.840.1.113883.3.8294"
-    },
-    {
-        "name": "University of California San Francisco",
-        "oid": "e960570e-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Burn and Reconstructive Centers of America",
-        "oid": "e96057fe-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Veterans Health Administration",
-        "oid": "e96058e4-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Ventech Solutions, Inc",
-        "oid": "e96059e8-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "ArborMetrix",
-        "oid": "2.16.840.1.113883.3.9159"
-    },
-    {
-        "name": "Rispen Consulting",
-        "oid": "e9605ae2-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "American Heart Association",
-        "oid": "e9605bbe-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Deaconess Health System",
-        "oid": "e9605ce0-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Laurel Health Advisors, LLC",
-        "oid": "e9605e20-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Phrase Health",
-        "oid": "e9606046-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Global eSolutions Group",
-        "oid": "e9606168-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Oregon Primary Care Association",
-        "oid": "e960628a-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "KPI Ninja",
-        "oid": "2.16.840.1.113883.3.9014"
-    },
-    {
-        "name": "Endlink",
-        "oid": "e96063b6-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "TECHNOLOGY ADVISORY GROUP",
-        "oid": "e96064ba-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Novillus",
-        "oid": "2.16.840.1.113883.9.274"
-    },
-    {
-        "name": "One Partner LLC HIE",
-        "oid": "2.16.840.1.113883.3.4893"
-    },
-    {
-        "name": "Veradigm",
-        "oid": "e96065dc-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Sanford",
-        "oid": "e9606730-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Arch Systems",
-        "oid": "e9606848-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Integrated Wound Care",
-        "oid": "e960696a-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "CVS Health",
-        "oid": "e9606aaa-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "American Institutes for Research (AIR)",
-        "oid": "e9606bf4-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Astrata",
-        "oid": "e9606d0c-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Avalere Health",
-        "oid": "e9606e1a-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Pixameter",
-        "oid": "e9606f1e-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "CompuGroup Medical",
-        "oid": "e9607054-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Jenny Cares",
-        "oid": "e9607162-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Rush University Medical Center",
-        "oid": "e960725c-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "SavantSolutions4HIT, LLC",
-        "oid": "e960737e-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Critical Juncture LLC",
-        "oid": "e9607478-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Amida Technology Solutions",
-        "oid": "e96075cc-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Value healthcare consultants llc",
-        "oid": "e96076d0-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "American Dental Association",
-        "oid": "2.16.840.1.113883.3.289"
-    },
-    {
-        "name": "Sera Prognostics",
-        "oid": "e96077d4-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Beaumont Health",
-        "oid": "2.16.840.1.113883.3.1097"
-    },
-    {
-        "name": "Administrative Network Technology Solution",
-        "oid": "2.16.840.1.113883.3.5416.1.2784"
-    },
-    {
-        "name": "ICF",
-        "oid": "e96078ba-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Edifecs",
-        "oid": "2.16.840.1.113883.3.6179"
-    },
-    {
-        "name": "Bay Area CS",
-        "oid": "e96079dc-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "AIR-IDSA",
-        "oid": "e9607ad6-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Society of Nuclear Medicine and Molecular Imaging",
-        "oid": "e9607c20-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Adaptive Inelligence",
-        "oid": "e9607d38-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Health Data Decisions",
-        "oid": "e9607e64-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "Acquirable Health Technologies",
-        "oid": "e9607f86-a69f-11ea-bb37-0242ac130002"
-    },
-    {
-        "name": "American Society of Hematology",
-        "oid": "2.16.840.1.113883.3.9353"
-    }
+  {
+    "name": "Net-Integrated Consulting, Inc.",
+    "oid": "1.2.3.4",
+    "url": "https://www.nicwdm.com/"
+  },
+  {
+    "name": "GE Healthcare",
+    "oid": "1.2.840.113619",
+    "url": "https://www.gehealthcare.com/v2"
+  },
+  {
+    "name": "The Joint Commission",
+    "oid": "1.3.6.1.4.1.33895",
+    "url": "https://www.jointcommission.org/"
+  },
+  {
+    "name": "NLM",
+    "oid": "2.16.840.1.113762.1",
+    "url": "https://www.nlm.nih.gov/"
+  },
+  {
+    "name": "The University of Kansas Medical Center Research Institute, Inc.",
+    "oid": "2.16.840.1.113883.3.2066",
+    "url": "https://www.kumc.edu/"
+  },
+  {
+    "name": "Dental Quality Alliance",
+    "oid": "2.16.840.1.113883.17.77",
+    "url": "https://www.ada.org/resources/research/dental-quality-alliance"
+  },
+  {
+    "name": "Lantana Consulting Group",
+    "oid": "2.16.840.1.113883.3.117",
+    "url": "https://www.lantanagroup.com/"
+  },
+  {
+    "name": "HealthInfoNet",
+    "oid": "2.16.840.1.113883.3.1239",
+    "url": "https://hinfonet.org/"
+  },
+  {
+    "name": "Mathematica",
+    "oid": "2.16.840.1.113883.3.1240",
+    "url": "https://www.mathematica.org/"
+  },
+  {
+    "name": "MITRE",
+    "oid": "2.16.840.1.113883.3.1257",
+    "url": "https://www.mitre.org/"
+  },
+  {
+    "name": "Department of Health & Human Services",
+    "oid": "2.16.840.1.113883.3.1275",
+    "url": "https://www.hhs.gov/"
+  },
+  {
+    "name": "Booz Allen Hamilton",
+    "oid": "2.16.840.1.113883.3.1287",
+    "url": "https://www.boozallen.com/"
+  },
+  {
+    "name": "Blackbird Solutions, Inc.",
+    "oid": "2.16.840.1.113883.3.1300",
+    "url": "https://blackbirdsolutions.com/"
+  },
+  {
+    "name": "ACS Midas +",
+    "oid": "2.16.840.1.113883.3.1335",
+    "url": "https://healthmanagement.org/site/p/acs-midas"
+  },
+  {
+    "name": "GSI Health",
+    "oid": "2.16.840.1.113883.3.1358",
+    "url": "https://www.gsihealth.com/"
+  },
+  {
+    "name": "Northwestern University",
+    "oid": "2.16.840.1.113883.3.1427",
+    "url": "https://www.northwestern.edu/"
+  },
+  {
+    "name": "Hope Network",
+    "oid": "2.16.840.1.113883.3.1443",
+    "url": "https://hopenetwork.org/"
+  },
+  {
+    "name": "Intermountain Healthcare",
+    "oid": "2.16.840.1.113883.3.15",
+    "url": "https://intermountainhealthcare.org/"
+  },
+  {
+    "name": "American Academy of Neurology",
+    "oid": "2.16.840.1.113883.3.1544",
+    "url": "www.aan.com"
+  },
+  {
+    "name": "American College of Rheumatology",
+    "oid": "2.16.840.1.113883.3.1564",
+    "url": "https://www.rheumatology.org/"
+  },
+  {
+    "name": "State of Maine",
+    "oid": "2.16.840.1.113883.3.1584",
+    "url": "https://www.maine.gov/"
+  },
+  {
+    "name": "Vanderbilt University",
+    "oid": "2.16.840.1.113883.3.1782",
+    "url": "https://www.vanderbilt.edu/"
+  },
+  {
+    "name": "American Academy of Ophthalmology",
+    "oid": "2.16.840.1.113883.3.1934",
+    "url": "www.aao.org"
+  },
+  {
+    "name": "Mayo Clinic",
+    "oid": "2.16.840.1.113883.3.2",
+    "url": "https://www.mayoclinic.org/"
+  },
+  {
+    "name": "Oncology Nursing Society",
+    "oid": "2.16.840.1.113883.3.2340",
+    "url": "https://www.ons.org/"
+  },
+  {
+    "name": "MN Community Measurement",
+    "oid": "2.16.840.1.113883.3.3144",
+    "url": "www.mncm.org"
+  },
+  {
+    "name": "Maine Medical Center",
+    "oid": "2.16.840.1.113883.3.3302",
+    "url": "https://www.mainehealth.org/Maine-Medical-Center"
+  },
+  {
+    "name": "ONC",
+    "oid": "2.16.840.1.113883.3.4295",
+    "url": "https://www.healthit.gov/"
+  },
+  {
+    "name": "National Committee for Quality Assurance",
+    "oid": "2.16.840.1.113883.3.464",
+    "url": "https://www.ncqa.org/"
+  },
+  {
+    "name": "American Medical Association-convened Physician Consortium for Performance Improvement(R) (AMA-PCPI)",
+    "oid": "2.16.840.1.113883.3.526",
+    "url": "https://www.ama-assn.org/"
+  },
+  {
+    "name": "NQF",
+    "oid": "2.16.840.1.113883.3.560",
+    "url": "https://www.qualityforum.org/Home.aspx"
+  },
+  {
+    "name": "Oklahoma Foundation for Medical Quality",
+    "oid": "2.16.840.1.113883.3.666",
+    "url": "https://www.ofmq.com/"
+  },
+  {
+    "name": "Telligen",
+    "oid": "2.16.840.1.113883.3.67",
+    "url": "https://www.telligen.com/"
+  },
+  {
+    "name": "American Board of Internal Medicine",
+    "oid": "2.16.840.1.113883.3.797",
+    "url": "https://www.abim.org/"
+  },
+  {
+    "name": "The McKesson Corporation",
+    "oid": "2.16.840.1.113883.3.8",
+    "url": "https://www.changehealthcare.com/"
+  },
+  {
+    "name": "Siemens Medical Solutions",
+    "oid": "2.16.840.1.114060",
+    "url": "https://www.siemens.com/global/en.html"
+  },
+  {
+    "name": "Centers for Disease Control and Prevention (CDC)",
+    "oid": "2.16.840.1.114222.4",
+    "url": "www.cdc.gov/hiv/"
+  },
+  {
+    "name": "Minnesota Community Measurement (invalid)",
+    "oid": "2.16.840.1.133883.3.3114",
+    "url": "https://mncm.org/"
+  },
+  {
+    "name": "Valence Health",
+    "oid": "2.16.840.1.113883.3.4334",
+    "url": "https://www.evolenthealth.com/valence-health"
+  },
+  {
+    "name": "Select Medical",
+    "oid": "2.16.840.1.113883.3.4566",
+    "url": "https://www.selectmedical.com/"
+  },
+  {
+    "name": "University of Colorado",
+    "oid": "2.16.840.1.113883.3.3071",
+    "url": "https://www.colorado.edu/"
+  },
+  {
+    "name": "Arizona State University - Dept of Biomedical Informatics",
+    "oid": "2.16.840.1.113883.3.4657",
+    "url": "https://chs.asu.edu/degree-programs/biomedical-informatics-and-biomedical-diagnostics"
+  },
+  {
+    "name": "ESAC, Inc.",
+    "oid": "2.16.840.1.113883.3.4780",
+    "url": "https://www.icf.com/work/federal-health/it"
+  },
+  {
+    "name": "Conceptual MindWorks",
+    "oid": "2.16.840.1.113883.3.3765",
+    "url": "https://conceptualmindworks.com/"
+  },
+  {
+    "name": "Clinigence",
+    "oid": "2.16.840.1.113883.3.1163",
+    "url": "https://clinigencehealth.com/"
+  },
+  {
+    "name": "Allscripts",
+    "oid": "2.16.840.1.113883.3.1049",
+    "url": "https://www.allscripts.com/"
+  },
+  {
+    "name": "Michigan Health Information Network",
+    "oid": "2.16.840.1.113883.3.1481",
+    "url": "https://mihin.org/"
+  },
+  {
+    "name": "Iatric Systems",
+    "oid": "2.16.840.1.113883.3.229",
+    "url": "https://new.iatric.com/"
+  },
+  {
+    "name": "American Gastroenterological Association",
+    "oid": "2.16.840.1.113883.3.4839",
+    "url": "https://gastro.org/"
+  },
+  {
+    "name": "Marshfield Clinic Research Foundation",
+    "oid": "2.16.840.1.113883.3.383",
+    "url": "https://www.marshfieldresearch.org/"
+  },
+  {
+    "name": "Oregon Health Authority",
+    "oid": "2.16.840.1.113883.5300",
+    "url": "https://www.oregon.gov/"
+  },
+  {
+    "name": "Cerner",
+    "oid": "2.16.840.1.113883.3.13",
+    "url": "https://www.cerner.com/"
+  },
+  {
+    "name": "Medicomp Systems",
+    "oid": "2.16.840.1.113883.6.26",
+    "url": "https://medicomp.com/"
+  },
+  {
+    "name": "HCA Healthcare",
+    "oid": "2.16.840.1.113883.1110",
+    "url": "https://hcahealthcare.com/"
+  },
+  {
+    "name": "Health Services Advisory Group",
+    "oid": "2.16.840.1.113883.3.1286",
+    "url": "https://www.hsag.com/en/"
+  },
+  {
+    "name": "Intelligent Medical Objects (IMO)",
+    "oid": "2.16.840.1.113883.3.247.2.1",
+    "url": "https://www.imohealth.com/"
+  },
+  {
+    "name": "TBD Solutions LLC",
+    "oid": "2.16.840.1.113883.3.5563",
+    "url": "https://www.tbdsolutions.com/"
+  },
+  {
+    "name": "STI Computer Services",
+    "oid": "2.16.840.1.113883.3.929",
+    "url": "https://sticomputer.com/"
+  },
+  {
+    "name": "Arcadia Solutions",
+    "oid": "2.16.840.1.113883.3.5645",
+    "url": "https://arcadia.io/"
+  },
+  {
+    "name": "Commonwealth Informatics Inc.",
+    "oid": "2.16.840.1.113883.3.5027",
+    "url": "https://commoninf.com/"
+  },
+  {
+    "name": "The Children's Hospital of Philadelphia",
+    "oid": "2.16.840.1.113883.3.648",
+    "url": "https://www.chop.edu/"
+  },
+  {
+    "name": "Ten 2 Eleven Business Solutions LLC",
+    "oid": "2.16.840.1.113883.3.5485",
+    "url": "http://ten2eleven.com/"
+  },
+  {
+    "name": "Medisolv",
+    "oid": "2.16.840.1.13883.3.5752",
+    "url": "https://medisolv.com/"
+  },
+  {
+    "name": "American Academy of Orthopaedic Surgeons",
+    "oid": "2.16.840.1.113883.3.5781",
+    "url": "https://www.aaos.org/"
+  },
+  {
+    "name": "Infectious Diseases Society of America",
+    "oid": "2.16.840.1.113883.3.5782",
+    "url": "https://www.idsociety.org/"
+  },
+  {
+    "name": "American College of Emergency Physicians (ACEP)",
+    "oid": "2.16.840.1.113883.17.4077",
+    "url": "https://www.acep.org/"
+  },
+  {
+    "name": "Caradigm",
+    "oid": "2.16.840.1.113883.3.1461",
+    "url": "https://www.inspirata.com/"
+  },
+  {
+    "name": "Intellicure, Inc",
+    "oid": "2.16.840.1.113883.3.246",
+    "url": "https://www.intellicure.com/"
+  },
+  {
+    "name": "Optum",
+    "oid": "2.16.840.1.113883.3.2966",
+    "url": "https://www.optum.com/"
+  },
+  {
+    "name": "Indian Health Service",
+    "oid": "2.16.840.1.113883.3.454",
+    "url": "https://www.ihs.gov/"
+  },
+  {
+    "name": "American Society of Addiction Medicine (ASAM)",
+    "oid": "2.16.840.1.113883.13.276",
+    "url": "https://www.asam.org/"
+  },
+  {
+    "name": "Centers for Medicare & Medicaid Services (CMS)",
+    "oid": "9048cd4c-b61b-11e4-a71e-12e3f512a338",
+    "url": "https://www.cms.gov/"
+  },
+  {
+    "name": "Yale New Haven Health Service Corporation/ Center for Outcomes Research and Evaluation",
+    "oid": "88a7ab8e-b92d-11e4-a71e-12e3f512a338",
+    "url": "https://medicine.yale.edu/core/"
+  },
+  {
+    "name": "NTT Data",
+    "oid": "1.3.6.1.4.1.338",
+    "url": "https://www.nttdata.com/global/en/"
+  },
+  {
+    "name": "CDC National Center on Birth Defects and Developmental Disabilities",
+    "oid": "aa9d0077-34fa-494d-b6df-487e5176c91b",
+    "url": "https://www.cdc.gov/ncbddd/index.html"
+  },
+  {
+    "name": "CDC Early Hearing Detection and Intervention Program",
+    "oid": "2.16.840.1.114222.4.1.214079",
+    "url": "https://www.cdc.gov/ncbddd/hearingloss/ehdi-programs.html"
+  },
+  {
+    "name": "Citius Tech Inc.",
+    "oid": "2.16.840.1.113883.3.1733",
+    "url": "https://www.citiustech.com/"
+  },
+  {
+    "name": "American Society of Clinical Oncology",
+    "oid": "2.16.840.1.113883.3.1444",
+    "url": "www.asco.org"
+  },
+  {
+    "name": "CancerLinQ",
+    "oid": "2.16.840.1.113883.3.6075",
+    "url": "https://cancerlinq.org/"
+  },
+  {
+    "name": "Infomedika",
+    "oid": "2.16.840.1.113883.3.6089",
+    "url": "https://infomedika.com/"
+  },
+  {
+    "name": "IT Practice Consulting Corp",
+    "oid": "2.16.840.1.113883.3.6110",
+    "url": "https://itpc-corp.com/"
+  },
+  {
+    "name": "Bellevue College",
+    "oid": "2.16.840.1.113883.3.6099",
+    "url": "https://www.bellevuecollege.edu/"
+  },
+  {
+    "name": "Battelle Memorial Institute",
+    "oid": "2.16.840.1.113883.3.6106",
+    "url": "https://www.battelle.org/"
+  },
+  {
+    "name": "American Podiatric Medical Association",
+    "oid": "7e1dc7aa-5eb0-4d02-bb3f-84f640fe9ee4",
+    "url": "https://www.apma.org/"
+  },
+  {
+    "name": "US Wound Registry",
+    "oid": "2.16.840.1.113883.3.6169",
+    "url": "https://uswoundregistry.com/"
+  },
+  {
+    "name": "Prometheus Research, LLC",
+    "oid": "2.16.840.1.113883.3.6167",
+    "url": "https://www.prometheusresearch.com/"
+  },
+  {
+    "name": "The Lewin Group",
+    "oid": "2.16.840.1.113883.3.3157",
+    "url": "https://www.lewin.com/"
+  },
+  {
+    "name": "Health Language",
+    "oid": "2.16.840.1.113883.17.4099",
+    "url": "https://www.wolterskluwer.com/en/solutions/health-language"
+  },
+  {
+    "name": "Swain Eng and Associates",
+    "oid": "2.16.840.1.113883.3.6193",
+    "url": "https://swainengassociates.com/"
+  },
+  {
+    "name": "American College of Radiology",
+    "oid": "2.16.840.1.113883.3.6168",
+    "url": "https://www.acr.org/"
+  },
+  {
+    "name": "National Minority Quality Forum (NMQF)",
+    "oid": "2.16.840.1.113883.3.6254",
+    "url": "https://www.nmqf.org/"
+  },
+  {
+    "name": "American Academy of Allergy Asthma and Immunology",
+    "oid": "2.16.840.1.113883.3.6261",
+    "url": "https://www.aaaai.org/"
+  },
+  {
+    "name": "College of American Pathologists",
+    "oid": "2.16.840.1.113883.3.1434",
+    "url": "https://www.cap.org/"
+  },
+  {
+    "name": "RTI International",
+    "oid": "cb8c0b44-b61a-4078-bbc0-de5272643a84",
+    "url": "https://www.rti.org/"
+  },
+  {
+    "name": "Academy of Nutrition and Dietetics",
+    "oid": "2.16.840.1.113883.3.6308",
+    "url": "www.eatrightpro.org"
+  },
+  {
+    "name": "Austin Regional Clinic Population Health Analytics",
+    "oid": "2.16.840.1.113883.3.6366",
+    "url": "https://www.austinregionalclinic.com/services/population-health"
+  },
+  {
+    "name": "CHPRE George Mason University",
+    "oid": "f9a27f3a-aea9-412a-a5e9-f5c6a2404b79",
+    "url": "https://www.gmu.edu/"
+  },
+  {
+    "name": "Dynamic Health IT",
+    "oid": "2.16.840.1.113883.3.1520",
+    "url": "https://www.dynamichealthit.com/"
+  },
+  {
+    "name": "American Nurses Association",
+    "oid": "5b8682a3-7620-417e-9313-34a2b7886237",
+    "url": "https://www.nursingworld.org/"
+  },
+  {
+    "name": "Press Ganey Associates, Inc.",
+    "oid": "042113c8-0e62-42fb-b5e0-4dcc5484d51c",
+    "url": "https://www.pressganey.com/"
+  },
+  {
+    "name": "American Medical Association (AMA)",
+    "oid": "d041e15c-a7a0-41b8-be5b-87340ecd14bc",
+    "url": "https://www.ama-assn.org/"
+  },
+  {
+    "name": "Office of the Assistant Secretary for Planning and Evaluation (ASPE)",
+    "oid": "93a937d1-f1bc-4428-998e-4975ba23e30a",
+    "url": "https://aspe.hhs.gov/"
+  },
+  {
+    "name": "Lightbeam Health Solutions",
+    "oid": "2.16.840.1.113883.3.6589",
+    "url": "https://lightbeamhealth.com/"
+  },
+  {
+    "name": "Oregon Urology",
+    "oid": "2.16.840.1.113883.3.6734",
+    "url": "www.oregonurology.com"
+  },
+  {
+    "name": "Econometrica",
+    "oid": "92ae014b-40e7-4b66-9a02-f710d12b1a79",
+    "url": "https://econometricainc.com/"
+  },
+  {
+    "name": "American Society for Radiation Oncology",
+    "oid": "2.16.840.1.113883.3.1890",
+    "url": "https://www.astro.org/"
+  },
+  {
+    "name": "Arbor Research Collaborative for Health",
+    "oid": "abfc1712-00c9-40d9-a070-a9b92af8c75d",
+    "url": "https://www.arborresearch.org/"
+  },
+  {
+    "name": "FEI Systems",
+    "oid": "2.16.840.1.113883.3.468",
+    "url": "https://feisystems.com/"
+  },
+  {
+    "name": "eClinicalWorks",
+    "oid": "2.16.840.1.113883.4.391",
+    "url": "https://www.eclinicalworks.com/"
+  },
+  {
+    "name": "National Kidney Foundation",
+    "oid": "2.16.840.1.113883.3.6929",
+    "url": "www.kidney.org"
+  },
+  {
+    "name": "Oregon Pediatric Improvement Partnership at Oregon Health & Science University (OHSU)",
+    "oid": "04140949-6808-4175-829c-37fefa6e59ec",
+    "url": "https://www.ohsu.edu/doernbecher/oregon-pediatric-improvement-partnership"
+  },
+  {
+    "name": "Colorado Department of Healthcare Policy and Finance",
+    "oid": "e1823138-61ba-4f4b-8a92-58a23541b7a9",
+    "url": "https://hcpf.colorado.gov/"
+  },
+  {
+    "name": "Custom Computing Corporation",
+    "oid": "2.16.840.1.113883.3.6454",
+    "url": "https://www.ccccorp.com/"
+  },
+  {
+    "name": "Health Resources & Services Administration",
+    "oid": "2.16.840.1.113883.3.3447",
+    "url": " https://www.hrsa.gov/"
+  },
+  {
+    "name": "Pharmacy Quality Alliance",
+    "oid": "2.16.840.1.113883.3.7109",
+    "url": "https://www.pqaalliance.org/"
+  },
+  {
+    "name": "Able Health",
+    "oid": "2.16.840.1.113883.3.7130",
+    "url": "https://www.healthcatalyst.com/insights/introducing-able-health-quality-measures-solution"
+  },
+  {
+    "name": "Practice Fusion",
+    "oid": "2.16.840.1.113883.3.3388",
+    "url": "https://www.practicefusion.com/"
+  },
+  {
+    "name": "Kareo Inc.",
+    "oid": "2.16.840.1.113883.3.7220",
+    "url": "https://www.kareo.com/"
+  },
+  {
+    "name": "Quality Insights",
+    "oid": "2.16.840.1.113883.3.7230",
+    "url": "https://www.qualityinsights.org/home"
+  },
+  {
+    "name": "Health eFilings",
+    "oid": "2.16.840.1.113883.3.5587",
+    "url": "https://healthefilings.com/"
+  },
+  {
+    "name": "Evolent Health",
+    "oid": "2.16.840.1.113883.3.2371",
+    "url": "https://www.evolenthealth.com/"
+  },
+  {
+    "name": "American College of Cardiology - ACC/AHA Task Force on Performance Measures",
+    "oid": "2.16.840.1.113883.3.3566",
+    "url": "https://www.acc.org/guidelines/about-guidelines-and-clinical-documents/guidelines-and-documents-task-forces"
+  },
+  {
+    "name": "Qualifacts Systems Inc",
+    "oid": "2.16.840.1.113883.3.1452",
+    "url": "https://www.qualifacts.com/"
+  },
+  {
+    "name": "Large Urology Group Practice Association (LUGPA)",
+    "oid": "2.16.840.1.113883.3.7320",
+    "url": "https://www.lugpa.org/"
+  },
+  {
+    "name": "NewYork-Presbyterian Hospital",
+    "oid": "2.16.840.1.113883.3.1073",
+    "url": "https://www.nyp.org/"
+  },
+  {
+    "name": "Michigan Department of Community Health",
+    "oid": "2.16.840.1.113883.3.5416",
+    "url": "https://www.michigan.gov/mdcs/state-employment/general/michigan-department-of-community-health"
+  },
+  {
+    "name": "American Heart Association-American Stroke Association",
+    "oid": "2.16.840.1.113883.3.6038",
+    "url": "https://www.heart.org/"
+  },
+  {
+    "name": "Premier, Inc.",
+    "oid": "2.16.840.1.113883.3.7416",
+    "url": "https://premierinc.com/"
+  },
+  {
+    "name": "Kaiser Foundation Health Plan",
+    "oid": "1.3.6.1.4.1.26580.120",
+    "url": "https://healthy.kaiserpermanente.org/"
+  },
+  {
+    "name": "Innovaccer",
+    "oid": "2.16.840.1.113883.3.7464",
+    "url": "https://innovaccer.com/"
+  },
+  {
+    "name": "American Academy of Physical Medicine and Rehabilitation",
+    "oid": "2.16.840.1.113883.3.7587",
+    "url": "https://www.aapmr.org/"
+  },
+  {
+    "name": "athenahealth",
+    "oid": "2.16.840.1.113883.3.564",
+    "url": "https://www.athenahealth.com/"
+  },
+  {
+    "name": "Interpreta Inc.",
+    "oid": "2.16.840.1.113883.3.7701",
+    "url": "https://www.interpreta.com/"
+  },
+  {
+    "name": "ECRI",
+    "oid": "1.3.6.1.4.1.6997.4",
+    "url": "https://www.ecri.org/"
+  },
+  {
+    "name": "Cedarbridge",
+    "oid": "df10e997-2d8a-4fab-8324-a21aab13a979",
+    "url": "https://www.cedarbridgegroup.com/"
+  },
+  {
+    "name": "Orion Health",
+    "oid": "2.16.840.1.113883.3.89",
+    "url": "https://orionhealth.com/us/"
+  },
+  {
+    "name": "Far Harbor LLC",
+    "oid": "44314aad-708c-4b90-9bfd-95d186508552",
+    "url": "https://farharbor.com/"
+  },
+  {
+    "name": "SMC Partners LLC",
+    "oid": "ba760956-ddb3-4eeb-941e-1f770e40086e",
+    "url": "https://smcpartners.com/ "
+  },
+  {
+    "name": "Semedy INC",
+    "oid": "0e33f086-72dc-4ee6-ac8f-486a6e9bade4",
+    "url": "https://www.semedy.com/"
+  },
+  {
+    "name": "Integrated Medicine Alliance",
+    "oid": "30a66d6e-9b2e-4c42-88a5-07d221717c94",
+    "url": "https://imamd.com/"
+  },
+  {
+    "name": "Northwestern University Feinberg School of Medicine",
+    "oid": "478337be-08a0-4d23-a09a-84ac1419c541",
+    "url": "https://www.feinberg.northwestern.edu/"
+  },
+  {
+    "name": "Lexigram Inc",
+    "oid": "5650af81-aab2-468e-b6f4-144820e891d2",
+    "url": "https://www.lexigram.io/"
+  },
+  {
+    "name": "The Shams Group",
+    "oid": "621cb64b-9e50-4fb1-9b06-21d48e636202",
+    "url": "https://shamsgroup.com/"
+  },
+  {
+    "name": "Wisconsin Collaborative For Healthcare Quality",
+    "oid": "f2ce4b5d-9273-4474-b2e2-8ce039fd2783",
+    "url": "https://www.wchq.org/"
+  },
+  {
+    "name": "SAMHSA",
+    "oid": "93d3c4bf-5d9a-4774-80a8-891630aa9b5b",
+    "url": "https://www.samhsa.gov/"
+  },
+  {
+    "name": "Bellese Technologies",
+    "oid": "07f62fad-1159-4506-9dc8-2992980eb803",
+    "url": "https://www.bellese.io/"
+  },
+  {
+    "name": "Zynx Health",
+    "oid": "005da22f-fc8f-40f2-be28-201b16022bde",
+    "url": "https://www.zynxhealth.com/"
+  },
+  {
+    "name": "Motive Medical Intelligence",
+    "oid": "2.16.840.1.113883.3.866",
+    "url": "https://motivepw.com/"
+  },
+  {
+    "name": "Memorial Hospital of Sweetwater County",
+    "oid": "2.16.840.1.113883.3.1172",
+    "url": "https://www.sweetwatermemorial.com/"
+  },
+  {
+    "name": "Brigham and Womens Health",
+    "oid": "d30be14c-fd58-4e52-afbc-a09f733789ba",
+    "url": "https://www.brighamandwomens.org/"
+  },
+  {
+    "name": "University of Washington",
+    "oid": "2.16.840.1.113883.3.3897",
+    "url": "https://www.washington.edu/"
+  },
+  {
+    "name": "Netsmart",
+    "oid": "2.16.840.1.113883.3.3569",
+    "url": "https://www.ntst.com/"
+  },
+  {
+    "name": "American Society of Anesthesiologist  (ASA)",
+    "oid": "2.16.840.1.113883.3.8238",
+    "url": "https://www.asahq.org/"
+  },
+  {
+    "name": "The Montrose Center",
+    "oid": "2.16.840.1.113883.9.102",
+    "url": "https://montrosecenter.org/"
+  },
+  {
+    "name": "Meditech INC",
+    "oid": "2.16.840.1.113883.3.6128",
+    "url": "https://ehr.meditech.com/"
+  },
+  {
+    "name": "Sphere Institute",
+    "oid": "41c73271-0edc-434f-9e6a-99e0d8edfe7c",
+    "url": "https://www.sphereinstitute.org/"
+  },
+  {
+    "name": "Clinician - Driven Quality Solutions, LLC",
+    "oid": "4a17e8b1-cc95-41c8-b462-92618b064338",
+    "url": "https://www.cdq-solutions.com/"
+  },
+  {
+    "name": "Clinovations GovHealth",
+    "oid": "4734a478-5c66-11e9-8647-d663bd873d93",
+    "url": "http://www.govhealth.com/"
+  },
+  {
+    "name": "Emerald Health LLC",
+    "oid": "d1cbeb9c-b9dd-4e5b-877a-3398d7d4b330",
+    "url": "https://www.emeraldhealthllc.com/"
+  },
+  {
+    "name": "University of California, San Francisco, Department of Family",
+    "oid": "dcf3712a-1549-4364-9c74-8081722a8c94",
+    "url": "https://fcm.ucsf.edu/"
+  },
+  {
+    "name": "Agency for Healthcare Research and Quality (AHRQ)",
+    "oid": "2.16.840.1.113883.3.263",
+    "url": "https://www.ahrq.gov/"
+  },
+  {
+    "name": "Humana IT Solutions Engineering",
+    "oid": "D4CB44D3-5135-4E99-BA50-0A953F88D66A",
+    "url": "https://www.humana.com/"
+  },
+  {
+    "name": "Imagine I.T.",
+    "oid": "6cb36897-4690-46e6-b4a7-2d1a22445a46",
+    "url": "https://imagineiti.com/"
+  },
+  {
+    "name": "Epic Systems",
+    "oid": "1.2.840.1.114350",
+    "url": "https://www.epic.com/"
+  },
+  {
+    "name": "American Optometric Association",
+    "oid": "2.16.840.1.113883.3.8420",
+    "url": "https://aoa.org/"
+  },
+  {
+    "name": "Office of Population Affairs",
+    "oid": "53251192-5c9d-44ab-bb9f-b39b6595af21",
+    "url": "https://opa.hhs.gov/"
+  },
+  {
+    "name": "Society of Interventional Radiology",
+    "oid": "6ce4c956-309d-4b54-befa-d86811189e41",
+    "url": "https://www.sirweb.org/"
+  },
+  {
+    "name": "SemanticBits",
+    "oid": "02c84f54-919b-4464-bf51-a1438f2710e2",
+    "url": "https://semanticbits.com/"
+  },
+  {
+    "name": "National EMS Quality Alliance",
+    "oid": "2.16.840.1.113883.3.8404",
+    "url": "https://www.nemsqa.org/"
+  },
+  {
+    "name": "Aetna",
+    "oid": "2.16.840.1.113883.3.6865",
+    "url": "https://www.aetna.com/"
+  },
+  {
+    "name": "New Wave",
+    "oid": "15b92526-5b1a-4c7f-a01c-cc30b0957937",
+    "url": "https://newwave.io/"
+  },
+  {
+    "name": "Anthem, Inc.",
+    "oid": "2.16.840.1.113883.3.7875",
+    "url": "https://www.elevancehealth.com/"
+  },
+  {
+    "name": "Family Medicine Residency of Idaho",
+    "oid": "49f5f9fa-75b8-4095-ab59-33597c75bce4",
+    "url": "https://www.fullcircleidaho.org/"
+  },
+  {
+    "name": "Meridios",
+    "oid": "2.16.840.1.113883.3.1740",
+    "url": "https://www.meridios.com/"
+  },
+  {
+    "name": "Health Catalyst",
+    "oid": "2.16.840.1.113883.17.4249",
+    "url": "https://www.healthcatalyst.com/"
+  },
+  {
+    "name": "AltaPoint Data Systems, LLC",
+    "oid": "e9603fbc-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.altapoint.com/"
+  },
+  {
+    "name": "Verana Health",
+    "oid": "e960423c-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.veranahealth.com/"
+  },
+  {
+    "name": "Alara Imaging, Inc.",
+    "oid": "e96044c6-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.alaracare.com/our-commitment"
+  },
+  {
+    "name": "American Society of Retina Specialists",
+    "oid": "e9604598-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.asrs.org/"
+  },
+  {
+    "name": "Centers for the Study of Services d/b/a Consumers' Checkbook",
+    "oid": "e96046b0-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.checkbook.org/"
+  },
+  {
+    "name": "InterSystems",
+    "oid": "2.16.840.1.113883.3.86",
+    "url": "https://www.intersystems.com/"
+  },
+  {
+    "name": "LabCorp",
+    "oid": "2.16.840.1.113883.3.362",
+    "url": "https://www.labcorp.com/"
+  },
+  {
+    "name": "Cambia Health Solutions",
+    "oid": "e960476e-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.cambiahealth.com/"
+  },
+  {
+    "name": "Commure, Inc.",
+    "oid": "e9604890-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.commure.com/"
+  },
+  {
+    "name": "MK Advisory Services, LLC",
+    "oid": "e9604976-a69f-11ea-bb37-0242ac130002",
+    "url": "https://mkadvisory.com/"
+  },
+  {
+    "name": "Assurecare",
+    "oid": "e9604a98-a69f-11ea-bb37-0242ac130002",
+    "url": "https://assurecare.com/"
+  },
+  {
+    "name": "IntraHealth International",
+    "oid": "2.16.840.1.113883.3.9049",
+    "url": "https://www.intrahealth.org/"
+  },
+  {
+    "name": "Advanced Health Outcomes LLC",
+    "oid": "e9604dc2-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.advancedhealthoutcomes.com/"
+  },
+  {
+    "name": "Focus Informatics",
+    "oid": "e9604eda-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.crunchbase.com/organization/focus-informatics"
+  },
+  {
+    "name": "Wise Health System",
+    "oid": "e9604f98-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.wisehealthsystem.com/"
+  },
+  {
+    "name": "Duke University",
+    "oid": "2.16.840.1.113883.3.156",
+    "url": "https://duke.edu/"
+  },
+  {
+    "name": "IBM Watson Health",
+    "oid": "e96050ec-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.ibm.com/watson-health"
+  },
+  {
+    "name": "ACO Health Solutions",
+    "oid": "e96051aa-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.acohealthsolutions.com/"
+  },
+  {
+    "name": "Branch Health Clinic Naval Station Norfolk",
+    "oid": "e96052f4-a69f-11ea-bb37-0242ac130002",
+    "url": "https://portsmouth.tricare.mil/Clinics/NAVSTA-Norfolk-BHC"
+  },
+  {
+    "name": "American Society for Clinical Pathology",
+    "oid": "e96053b2-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.ascp.org/content#"
+  },
+  {
+    "name": "Adirondack Health Organization",
+    "oid": "e96054b6-a69f-11ea-bb37-0242ac130002",
+    "url": "https://ahihealth.org/"
+  },
+  {
+    "name": "Unqork",
+    "oid": "e96055ba-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.unqork.com/"
+  },
+  {
+    "name": "Elation Health",
+    "oid": "2.16.840.1.113883.3.8294",
+    "url": "https://www.elationhealth.com/"
+  },
+  {
+    "name": "University of California San Francisco",
+    "oid": "e960570e-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.ucsf.edu/"
+  },
+  {
+    "name": "Burn and Reconstructive Centers of America",
+    "oid": "e96057fe-a69f-11ea-bb37-0242ac130002",
+    "url": "https://burncenters.com/"
+  },
+  {
+    "name": "Veterans Health Administration",
+    "oid": "e96058e4-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.va.gov/health/"
+  },
+  {
+    "name": "Ventech Solutions, Inc",
+    "oid": "e96059e8-a69f-11ea-bb37-0242ac130002",
+    "url": "https://ventechsolutions.com/"
+  },
+  {
+    "name": "ArborMetrix",
+    "oid": "2.16.840.1.113883.3.9159",
+    "url": "https://www.arbormetrix.com/"
+  },
+  {
+    "name": "Rispen Consulting",
+    "oid": "e9605ae2-a69f-11ea-bb37-0242ac130002",
+    "url": "https://rispen.us/"
+  },
+  {
+    "name": "American Heart Association",
+    "oid": "e9605bbe-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.heart.org/"
+  },
+  {
+    "name": "Deaconess Health System",
+    "oid": "e9605ce0-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.deaconess.com/"
+  },
+  {
+    "name": "Laurel Health Advisors, LLC",
+    "oid": "e9605e20-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.laurelhealthadvisors.net/"
+  },
+  {
+    "name": "Phrase Health",
+    "oid": "e9606046-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.phrasehealth.com/"
+  },
+  {
+    "name": "Global eSolutions Group",
+    "oid": "e9606168-a69f-11ea-bb37-0242ac130002",
+    "url": "http://www.geghealthcare.com/"
+  },
+  {
+    "name": "Oregon Primary Care Association",
+    "oid": "e960628a-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.orpca.org/"
+  },
+  {
+    "name": "KPI Ninja",
+    "oid": "2.16.840.1.113883.3.9014",
+    "url": "https://www.kpininja.com/"
+  },
+  {
+    "name": "Endlink",
+    "oid": "e96063b6-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.endlink.com/"
+  },
+  {
+    "name": "Novillus",
+    "oid": "2.16.840.1.113883.9.274",
+    "url": "https://www.novillus.com/"
+  },
+  {
+    "name": "One Partner LLC HIE",
+    "oid": "2.16.840.1.113883.3.4893",
+    "url": "https://www.onepartner.com/hie/"
+  },
+  {
+    "name": "Veradigm",
+    "oid": "e96065dc-a69f-11ea-bb37-0242ac130002",
+    "url": "https://veradigm.com/"
+  },
+  {
+    "name": "Sanford",
+    "oid": "e9606730-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.sanfordhealth.org/"
+  },
+  {
+    "name": "Arch Systems",
+    "oid": "e9606848-a69f-11ea-bb37-0242ac130002",
+    "url": "https://archsystemsinc.com/"
+  },
+  {
+    "name": "Integrated Wound Care",
+    "oid": "e960696a-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.integratedwc.com/"
+  },
+  {
+    "name": "CVS Health",
+    "oid": "e9606aaa-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.cvshealth.com/"
+  },
+  {
+    "name": "American Institutes for Research (AIR)",
+    "oid": "e9606bf4-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.air.org"
+  },
+  {
+    "name": "Astrata",
+    "oid": "e9606d0c-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.astrata.co/"
+  },
+  {
+    "name": "Avalere Health",
+    "oid": "e9606e1a-a69f-11ea-bb37-0242ac130002",
+    "url": "www.avalere.com"
+  },
+  {
+    "name": "CompuGroup Medical",
+    "oid": "e9607054-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.cgm.com/usa_en"
+  },
+  {
+    "name": "Rush University Medical Center",
+    "oid": "e960725c-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.rush.edu/"
+  },
+  {
+    "name": "SavantSolutions4HIT, LLC",
+    "oid": "e960737e-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.sos4hit.com/"
+  },
+  {
+    "name": "Critical Juncture LLC",
+    "oid": "e9607478-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.criticaljuncture.org/"
+  },
+  {
+    "name": "Amida Technology Solutions",
+    "oid": "e96075cc-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.amida.com/"
+  },
+  {
+    "name": "American Dental Association",
+    "oid": "2.16.840.1.113883.3.289",
+    "url": "https://www.ada.org/resources/research/dental-quality-alliance"
+  },
+  {
+    "name": "Sera Prognostics",
+    "oid": "e96077d4-a69f-11ea-bb37-0242ac130002",
+    "url": "https://seraprognostics.com/"
+  },
+  {
+    "name": "Beaumont Health",
+    "oid": "2.16.840.1.113883.3.1097",
+    "url": "https://www.beaumont.org/"
+  },
+  {
+    "name": "Administrative Network Technology Solution",
+    "oid": "2.16.840.1.113883.3.5416.1.2784",
+    "url": "https://www.antshealth.com/"
+  },
+  {
+    "name": "ICF",
+    "oid": "e96078ba-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.icf.com/"
+  },
+  {
+    "name": "Edifecs",
+    "oid": "2.16.840.1.113883.3.6179",
+    "url": "https://www.edifecs.com/"
+  },
+  {
+    "name": "AIR-IDSA",
+    "oid": "e9607ad6-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.air.org/"
+  },
+  {
+    "name": "Society of Nuclear Medicine and Molecular Imaging",
+    "oid": "e9607c20-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.snmmi.org/"
+  },
+  {
+    "name": "Health Data Decisions",
+    "oid": "e9607e64-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.healthdatadecisions.com/"
+  },
+  {
+    "name": "Acquirable Health Technologies",
+    "oid": "e9607f86-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.acquirablehealth.com/"
+  },
+  {
+    "name": "American Society of Hematology",
+    "oid": "2.16.840.1.113883.3.9353",
+    "url": "www.hematology.org"
+  }
 ]

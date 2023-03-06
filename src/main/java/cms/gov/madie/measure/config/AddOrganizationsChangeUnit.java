@@ -22,7 +22,7 @@ public class AddOrganizationsChangeUnit {
 
   @Execution
   public void addOrganizations(OrganizationRepository organizationRepository) throws IOException {
-    InputStream inputStream = getClass().getResourceAsStream("/data/updated-organizations.json");
+    InputStream inputStream = getClass().getResourceAsStream("/data/organizations.json");
     List<Organization> organizationList =
         Arrays.asList(objectMapper.readValue(inputStream, Organization[].class));
     // deleting the previous existing records
