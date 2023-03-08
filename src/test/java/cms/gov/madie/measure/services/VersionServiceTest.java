@@ -23,6 +23,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -100,6 +101,8 @@ public class VersionServiceTest {
           .groupDescription("Description")
           .scoringUnit("test-scoring-unit")
           .build();
+
+  private Date today = new Date();
 
   @Test
   public void testCreateVersionThrowsResourceNotFoundException() {
@@ -291,6 +294,8 @@ public class VersionServiceTest {
     assertEquals(savedValue.getVersion().getMinor(), 0);
     assertEquals(savedValue.getVersion().getRevisionNumber(), 0);
     assertFalse(savedValue.getMeasureMetaData().isDraft());
+    assertEquals(savedValue.getReviewMetaData().getApprovalDate().toString(), today.toString());
+    assertEquals(savedValue.getReviewMetaData().getLastReviewDate().toString(), today.toString());
 
     verify(fhirServicesClient, times(1)).saveMeasureInHapiFhir(updatedMeasure, "accesstoken");
   }
@@ -340,6 +345,8 @@ public class VersionServiceTest {
     assertEquals(savedValue.getVersion().getMinor(), 4);
     assertEquals(savedValue.getVersion().getRevisionNumber(), 0);
     assertFalse(savedValue.getMeasureMetaData().isDraft());
+    assertEquals(savedValue.getReviewMetaData().getApprovalDate().toString(), today.toString());
+    assertEquals(savedValue.getReviewMetaData().getLastReviewDate().toString(), today.toString());
 
     verify(fhirServicesClient, times(1)).saveMeasureInHapiFhir(updatedMeasure, "accesstoken");
   }
@@ -389,6 +396,8 @@ public class VersionServiceTest {
     assertEquals(savedValue.getVersion().getMinor(), 3);
     assertEquals(savedValue.getVersion().getRevisionNumber(), 2);
     assertFalse(savedValue.getMeasureMetaData().isDraft());
+    assertEquals(savedValue.getReviewMetaData().getApprovalDate().toString(), today.toString());
+    assertEquals(savedValue.getReviewMetaData().getLastReviewDate().toString(), today.toString());
 
     verify(fhirServicesClient, times(1)).saveMeasureInHapiFhir(updatedMeasure, "accesstoken");
   }
@@ -404,6 +413,8 @@ public class VersionServiceTest {
     Measure versionedMeasure = buildBasicMeasure();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(true);
+    ReviewMetaData reviewMetaData =
+        ReviewMetaData.builder().approvalDate(today).lastReviewDate(today).build();
     Measure versionedCopy =
         versionedMeasure
             .toBuilder()
@@ -419,6 +430,7 @@ public class VersionServiceTest {
                         .id(ObjectId.get().toString())
                         .groupPopulations(List.of(clonedTestCaseGroupPopulation))
                         .build()))
+            .reviewMetaData(reviewMetaData)
             .build();
 
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(versionedMeasure));
@@ -444,10 +456,13 @@ public class VersionServiceTest {
     assertThat(
         draft.getTestCases().get(0).getGroupPopulations().get(0).getGroupId(),
         is(equalTo("clonedGroupId1")));
+    assertEquals(draft.getReviewMetaData().getApprovalDate().toString(), today.toString());
+    assertEquals(draft.getReviewMetaData().getLastReviewDate().toString(), today.toString());
   }
 
   @Test
   public void testCreateDraftSuccessfullyWithoutGroups() {
+
     Measure versionedMeasure =
         Measure.builder()
             .id("1")
@@ -462,6 +477,8 @@ public class VersionServiceTest {
             .build();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(true);
+    ReviewMetaData reviewMetaData =
+        ReviewMetaData.builder().approvalDate(today).lastReviewDate(today).build();
     Measure versionedCopy =
         versionedMeasure
             .toBuilder()
@@ -471,6 +488,7 @@ public class VersionServiceTest {
             .measureMetaData(metaData)
             .groups(List.of())
             .testCases(List.of())
+            .reviewMetaData(reviewMetaData)
             .build();
 
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(versionedMeasure));
@@ -491,6 +509,8 @@ public class VersionServiceTest {
     assertThat(draft.getVersion().getRevisionNumber(), is(equalTo(1)));
     assertThat(draft.getGroups().size(), is(equalTo(0)));
     assertThat(draft.getTestCases().size(), is(equalTo(0)));
+    assertEquals(draft.getReviewMetaData().getApprovalDate().toString(), today.toString());
+    assertEquals(draft.getReviewMetaData().getLastReviewDate().toString(), today.toString());
   }
 
   @Test
@@ -551,5 +571,19 @@ public class VersionServiceTest {
         .groups(List.of(cvGroup))
         .testCases(List.of(testCase))
         .build();
+  }
+
+  @Test
+  public void testSetMeasureReviewMetaData() {
+    Date today = new Date();
+    Measure measure = Measure.builder().build();
+    measure = versionService.setMeasureReviewMetaData(measure);
+    assertEquals(measure.getReviewMetaData().getApprovalDate().toString(), today.toString());
+    assertEquals(measure.getReviewMetaData().getLastReviewDate().toString(), today.toString());
+
+    measure.setReviewMetaData(ReviewMetaData.builder().build());
+    measure = versionService.setMeasureReviewMetaData(measure);
+    assertEquals(measure.getReviewMetaData().getApprovalDate().toString(), today.toString());
+    assertEquals(measure.getReviewMetaData().getLastReviewDate().toString(), today.toString());
   }
 }

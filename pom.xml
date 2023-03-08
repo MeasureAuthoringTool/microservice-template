@@ -100,7 +100,7 @@
     <dependency>
       <groupId>gov.cms.madie</groupId>
       <artifactId>madie-java-models</artifactId>
-      <version>0.2.38-SNAPSHOT</version>
+      <version>0.2.39-SNAPSHOT</version>
     </dependency>
 
     <dependency>
