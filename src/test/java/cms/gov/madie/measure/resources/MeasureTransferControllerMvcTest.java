@@ -109,9 +109,9 @@ public class MeasureTransferControllerMvcTest {
     List<Endorsement> endorsements =
         List.of(
             Endorsement.builder()
-                .id("test endorsement id")
-                .endorser("test endorser")
-                .endorsementId("NQF")
+                .endorserSystemId("test endorsement system id")
+                .endorser("NQF")
+                .endorsementId("test EndorsementId")
                 .build());
 
     measureMetaData.setSteward("SB");
