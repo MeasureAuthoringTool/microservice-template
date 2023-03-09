@@ -23,8 +23,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -265,7 +265,7 @@ public class VersionService {
   }
 
   protected Measure setMeasureReviewMetaData(Measure measure) {
-    Date today = new Date();
+    LocalDate today = LocalDate.now();
     if (measure.getReviewMetaData() == null) {
       ReviewMetaData reviewMetaData =
           ReviewMetaData.builder().approvalDate(today).lastReviewDate(today).build();

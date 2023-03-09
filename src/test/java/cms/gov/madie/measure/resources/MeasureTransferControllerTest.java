@@ -114,12 +114,7 @@ public class MeasureTransferControllerTest {
                 .referenceType("DOCUMENT")
                 .build());
     List<Endorsement> endorsements =
-        List.of(
-            Endorsement.builder()
-                .id("test endorsement id")
-                .endorser("test endorser")
-                .endorsementId("NQF")
-                .build());
+        List.of(Endorsement.builder().endorser("test endorser").endorsementId("NQF").build());
 
     measureMetaData.setSteward("SB");
     measureMetaData.setCopyright("Copyright@SB");

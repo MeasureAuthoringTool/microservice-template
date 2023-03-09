@@ -23,7 +23,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -102,7 +102,7 @@ public class VersionServiceTest {
           .scoringUnit("test-scoring-unit")
           .build();
 
-  private Date today = new Date();
+  private LocalDate today = LocalDate.now();
 
   @Test
   public void testCreateVersionThrowsResourceNotFoundException() {
@@ -575,15 +575,14 @@ public class VersionServiceTest {
 
   @Test
   public void testSetMeasureReviewMetaData() {
-    Date today = new Date();
     Measure measure = Measure.builder().build();
     measure = versionService.setMeasureReviewMetaData(measure);
-    assertEquals(measure.getReviewMetaData().getApprovalDate().toString(), today.toString());
-    assertEquals(measure.getReviewMetaData().getLastReviewDate().toString(), today.toString());
+    assertEquals(measure.getReviewMetaData().getApprovalDate(), today);
+    assertEquals(measure.getReviewMetaData().getLastReviewDate(), today);
 
     measure.setReviewMetaData(ReviewMetaData.builder().build());
     measure = versionService.setMeasureReviewMetaData(measure);
-    assertEquals(measure.getReviewMetaData().getApprovalDate().toString(), today.toString());
-    assertEquals(measure.getReviewMetaData().getLastReviewDate().toString(), today.toString());
+    assertEquals(measure.getReviewMetaData().getApprovalDate(), today);
+    assertEquals(measure.getReviewMetaData().getLastReviewDate(), today);
   }
 }
