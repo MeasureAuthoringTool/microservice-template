@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -66,7 +65,7 @@ public class VersionService {
     measure.getMeasureMetaData().setDraft(false);
     measure.setLastModifiedAt(Instant.now());
     measure.setLastModifiedBy(username);
-    measure = setMeasureReviewMetaData(measure);
+    setMeasureReviewMetaData(measure);
 
     Version oldVersion = measure.getVersion();
     Version newVersion = getNextVersion(measure, versionType);
@@ -127,7 +126,7 @@ public class VersionService {
     measureDraft.setCreatedAt(now);
     measureDraft.setLastModifiedAt(now);
     measureDraft.setCreatedBy(username);
-    measureDraft = setMeasureReviewMetaData(measureDraft);
+    setMeasureReviewMetaDataForDraft(measureDraft);
     Measure savedDraft = measureRepository.save(measureDraft);
     log.info(
         "User [{}] created a draft for measure with id [{}]. Draft id is [{}]",
@@ -265,7 +264,7 @@ public class VersionService {
   }
 
   protected Measure setMeasureReviewMetaData(Measure measure) {
-    LocalDate today = LocalDate.now();
+    Instant today = Instant.now();
     if (measure.getReviewMetaData() == null) {
       ReviewMetaData reviewMetaData =
           ReviewMetaData.builder().approvalDate(today).lastReviewDate(today).build();
@@ -273,6 +272,14 @@ public class VersionService {
     } else {
       measure.getReviewMetaData().setApprovalDate(today);
       measure.getReviewMetaData().setLastReviewDate(today);
+    }
+    return measure;
+  }
+
+  protected Measure setMeasureReviewMetaDataForDraft(Measure measure) {
+    if (measure.getReviewMetaData() != null) {
+      measure.getReviewMetaData().setApprovalDate(null);
+      measure.getReviewMetaData().setLastReviewDate(null);
     }
     return measure;
   }
