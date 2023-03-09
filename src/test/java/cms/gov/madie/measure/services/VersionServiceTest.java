@@ -25,7 +25,6 @@ import org.springframework.http.ResponseEntity;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -105,9 +104,7 @@ public class VersionServiceTest {
           .scoringUnit("test-scoring-unit")
           .build();
 
-  private Date todayDate = new Date();
-  private long now = System.currentTimeMillis() / 1000;
-  private Instant today = Instant.ofEpochSecond(now);
+  private Instant today = Instant.now();
 
   @Test
   public void testCreateVersionThrowsResourceNotFoundException() {
@@ -299,12 +296,20 @@ public class VersionServiceTest {
     assertEquals(savedValue.getVersion().getMinor(), 0);
     assertEquals(savedValue.getVersion().getRevisionNumber(), 0);
     assertFalse(savedValue.getMeasureMetaData().isDraft());
-    assertEquals(
-        truncateToSeconds(savedValue.getReviewMetaData().getApprovalDate()).toString(),
-        todayDate.toString());
-    assertEquals(
-        truncateToSeconds(savedValue.getReviewMetaData().getLastReviewDate()).toString(),
-        todayDate.toString());
+    assertThat(
+        savedValue
+            .getReviewMetaData()
+            .getApprovalDate()
+            .truncatedTo(ChronoUnit.MINUTES)
+            .compareTo(today.truncatedTo(ChronoUnit.MINUTES)),
+        is(0));
+    assertThat(
+        savedValue
+            .getReviewMetaData()
+            .getLastReviewDate()
+            .truncatedTo(ChronoUnit.MINUTES)
+            .compareTo(today.truncatedTo(ChronoUnit.MINUTES)),
+        is(0));
 
     verify(fhirServicesClient, times(1)).saveMeasureInHapiFhir(updatedMeasure, "accesstoken");
   }
@@ -354,12 +359,20 @@ public class VersionServiceTest {
     assertEquals(savedValue.getVersion().getMinor(), 4);
     assertEquals(savedValue.getVersion().getRevisionNumber(), 0);
     assertFalse(savedValue.getMeasureMetaData().isDraft());
-    assertEquals(
-        truncateToSeconds(savedValue.getReviewMetaData().getApprovalDate()).toString(),
-        todayDate.toString());
-    assertEquals(
-        truncateToSeconds(savedValue.getReviewMetaData().getLastReviewDate()).toString(),
-        todayDate.toString());
+    assertThat(
+        savedValue
+            .getReviewMetaData()
+            .getApprovalDate()
+            .truncatedTo(ChronoUnit.MINUTES)
+            .compareTo(today.truncatedTo(ChronoUnit.MINUTES)),
+        is(0));
+    assertThat(
+        savedValue
+            .getReviewMetaData()
+            .getLastReviewDate()
+            .truncatedTo(ChronoUnit.MINUTES)
+            .compareTo(today.truncatedTo(ChronoUnit.MINUTES)),
+        is(0));
 
     verify(fhirServicesClient, times(1)).saveMeasureInHapiFhir(updatedMeasure, "accesstoken");
   }
@@ -409,12 +422,20 @@ public class VersionServiceTest {
     assertEquals(savedValue.getVersion().getMinor(), 3);
     assertEquals(savedValue.getVersion().getRevisionNumber(), 2);
     assertFalse(savedValue.getMeasureMetaData().isDraft());
-    assertEquals(
-        truncateToSeconds(savedValue.getReviewMetaData().getApprovalDate()).toString(),
-        todayDate.toString());
-    assertEquals(
-        truncateToSeconds(savedValue.getReviewMetaData().getLastReviewDate()).toString(),
-        todayDate.toString());
+    assertThat(
+        savedValue
+            .getReviewMetaData()
+            .getApprovalDate()
+            .truncatedTo(ChronoUnit.MINUTES)
+            .compareTo(today.truncatedTo(ChronoUnit.MINUTES)),
+        is(0));
+    assertThat(
+        savedValue
+            .getReviewMetaData()
+            .getLastReviewDate()
+            .truncatedTo(ChronoUnit.MINUTES)
+            .compareTo(today.truncatedTo(ChronoUnit.MINUTES)),
+        is(0));
 
     verify(fhirServicesClient, times(1)).saveMeasureInHapiFhir(updatedMeasure, "accesstoken");
   }
@@ -591,33 +612,6 @@ public class VersionServiceTest {
   }
 
   @Test
-  public void testSetMeasureReviewMetaData() {
-    Measure measure = Measure.builder().build();
-    versionService.setMeasureReviewMetaData(measure);
-
-    assertEquals(
-        truncateToSeconds(measure.getReviewMetaData().getApprovalDate()).toString(),
-        todayDate.toString());
-    assertEquals(
-        truncateToSeconds(measure.getReviewMetaData().getLastReviewDate()).toString(),
-        todayDate.toString());
-
-    measure.setReviewMetaData(ReviewMetaData.builder().build());
-    versionService.setMeasureReviewMetaData(measure);
-    assertEquals(
-        truncateToSeconds(measure.getReviewMetaData().getApprovalDate()).toString(),
-        todayDate.toString());
-    assertEquals(
-        truncateToSeconds(measure.getReviewMetaData().getLastReviewDate()).toString(),
-        todayDate.toString());
-  }
-
-  private Date truncateToSeconds(Instant instant) {
-    instant.truncatedTo(ChronoUnit.SECONDS);
-    return Date.from(instant);
-  }
-
-  @Test
   public void testSetMeasureReviewMetaDataForDraft() {
     Measure measure =
         Measure.builder()
@@ -627,5 +621,55 @@ public class VersionServiceTest {
     versionService.setMeasureReviewMetaDataForDraft(measure);
     assertNull(measure.getReviewMetaData().getApprovalDate());
     assertNull(measure.getReviewMetaData().getLastReviewDate());
+  }
+
+  @Test
+  public void testSetMeasureReviewMetaData() {
+    Measure measure = Measure.builder().build();
+    Instant now = Instant.now();
+    versionService.setMeasureReviewMetaData(measure);
+
+    assertThat(
+        measure
+            .getReviewMetaData()
+            .getLastReviewDate()
+            .truncatedTo(ChronoUnit.MINUTES)
+            .compareTo(now.truncatedTo(ChronoUnit.MINUTES)),
+        is(0));
+
+    assertThat(
+        measure
+            .getReviewMetaData()
+            .getApprovalDate()
+            .truncatedTo(ChronoUnit.MINUTES)
+            .compareTo(now.truncatedTo(ChronoUnit.MINUTES)),
+        is(0));
+  }
+
+  @Test
+  public void testReplaceMeasureReviewMetaData() {
+    Measure measure = Measure.builder().build();
+    Instant now = Instant.now();
+    measure.setReviewMetaData(ReviewMetaData.builder().build());
+    versionService.setMeasureReviewMetaData(measure);
+    assertThat(
+        measure
+            .getReviewMetaData()
+            .getLastReviewDate()
+            .truncatedTo(ChronoUnit.MINUTES)
+            .compareTo(now.truncatedTo(ChronoUnit.MINUTES)),
+        is(0));
+
+    assertThat(
+        measure
+            .getReviewMetaData()
+            .getApprovalDate()
+            .truncatedTo(ChronoUnit.MINUTES)
+            .compareTo(now.truncatedTo(ChronoUnit.MINUTES)),
+        is(0));
+
+    assertThat(
+        measure.getReviewMetaData().getLastReviewDate(),
+        is(measure.getReviewMetaData().getApprovalDate()));
   }
 }
