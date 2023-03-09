@@ -24,7 +24,7 @@ public class EndorsementController {
     List<EndorserOrganization> endorsementsList = endorsementsRepository.findAll();
     if (CollectionUtils.isEmpty(endorsementsList)) {
       log.debug("No endorsement organizations are available");
-      throw new RuntimeException("No endorsement organizations are available");
+      throw new IllegalStateException("No endorsement organizations are available");
     }
     return ResponseEntity.status(HttpStatus.OK).body(endorsementsList);
   }
