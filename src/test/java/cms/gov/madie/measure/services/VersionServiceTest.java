@@ -34,6 +34,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -614,5 +615,17 @@ public class VersionServiceTest {
   private Date truncateToSeconds(Instant instant) {
     instant = instant.truncatedTo(ChronoUnit.SECONDS);
     return Date.from(instant);
+  }
+
+  @Test
+  public void testSetMeasureReviewMetaDataForDraft() {
+    Measure measure =
+        Measure.builder()
+            .reviewMetaData(
+                ReviewMetaData.builder().approvalDate(today).lastReviewDate(today).build())
+            .build();
+    measure = versionService.setMeasureReviewMetaDataForDraft(measure);
+    assertNull(measure.getReviewMetaData().getApprovalDate());
+    assertNull(measure.getReviewMetaData().getLastReviewDate());
   }
 }
