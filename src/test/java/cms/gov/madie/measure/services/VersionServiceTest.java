@@ -613,7 +613,7 @@ public class VersionServiceTest {
   }
 
   private Date truncateToSeconds(Instant instant) {
-    instant = instant.truncatedTo(ChronoUnit.SECONDS);
+    instant.truncatedTo(ChronoUnit.SECONDS);
     return Date.from(instant);
   }
 
