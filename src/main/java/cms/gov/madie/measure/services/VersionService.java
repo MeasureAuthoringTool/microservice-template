@@ -263,7 +263,7 @@ public class VersionService {
     return "library " + cqlLibraryName + " version " + "\'" + version + "\'";
   }
 
-  protected Measure setMeasureReviewMetaData(Measure measure) {
+  protected void setMeasureReviewMetaData(Measure measure) {
     Instant today = Instant.now();
     if (measure.getReviewMetaData() == null) {
       ReviewMetaData reviewMetaData =
@@ -273,14 +273,12 @@ public class VersionService {
       measure.getReviewMetaData().setApprovalDate(today);
       measure.getReviewMetaData().setLastReviewDate(today);
     }
-    return measure;
   }
 
-  protected Measure setMeasureReviewMetaDataForDraft(Measure measure) {
+  protected void setMeasureReviewMetaDataForDraft(Measure measure) {
     if (measure.getReviewMetaData() != null) {
       measure.getReviewMetaData().setApprovalDate(null);
       measure.getReviewMetaData().setLastReviewDate(null);
     }
-    return measure;
   }
 }

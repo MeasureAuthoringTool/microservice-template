@@ -593,7 +593,7 @@ public class VersionServiceTest {
   @Test
   public void testSetMeasureReviewMetaData() {
     Measure measure = Measure.builder().build();
-    measure = versionService.setMeasureReviewMetaData(measure);
+    versionService.setMeasureReviewMetaData(measure);
 
     assertEquals(
         truncateToSeconds(measure.getReviewMetaData().getApprovalDate()).toString(),
@@ -603,7 +603,7 @@ public class VersionServiceTest {
         todayDate.toString());
 
     measure.setReviewMetaData(ReviewMetaData.builder().build());
-    measure = versionService.setMeasureReviewMetaData(measure);
+    versionService.setMeasureReviewMetaData(measure);
     assertEquals(
         truncateToSeconds(measure.getReviewMetaData().getApprovalDate()).toString(),
         todayDate.toString());
@@ -624,7 +624,7 @@ public class VersionServiceTest {
             .reviewMetaData(
                 ReviewMetaData.builder().approvalDate(today).lastReviewDate(today).build())
             .build();
-    measure = versionService.setMeasureReviewMetaDataForDraft(measure);
+    versionService.setMeasureReviewMetaDataForDraft(measure);
     assertNull(measure.getReviewMetaData().getApprovalDate());
     assertNull(measure.getReviewMetaData().getLastReviewDate());
   }
