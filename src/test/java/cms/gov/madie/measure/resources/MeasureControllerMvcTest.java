@@ -14,6 +14,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
+import gov.cms.madie.models.common.Organization;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureGroupTypes;
@@ -136,12 +137,12 @@ public class MeasureControllerMvcTest {
 
     String measureId = "f225481c-921e-4015-9e14-e5046bfac9ff";
     String measureName = "TestMeasure";
-    String steward = "d0cc18ce-63fd-4b94-b713-c1d9fd6b2329";
+    Organization steward = Organization.builder().name("d0cc18ce-63fd-4b94-b713-c1d9fd6b2329").build();
     String description = "TestDescription";
     String copyright = "TestCopyright";
     String disclaimer = "TestDisclaimer";
     String rationale = "TestRationale";
-    List<String> developers = List.of("TestDeveloper");
+    List<Organization> developers = List.of(Organization.builder().name("TestDeveloper").build());
     String guidance = "TestGuidance";
     String libName = "TestLib";
     String ecqmTitle = "ecqmTitle";
@@ -189,7 +190,7 @@ public class MeasureControllerMvcTest {
         .andExpect(jsonPath("$.model").value(MODEL))
         .andExpect(jsonPath("$.versionId").value(measureId))
         .andExpect(jsonPath("$.measureSetId").value(measureSetId))
-        .andExpect(jsonPath("$.measureMetaData.steward").value(steward))
+        .andExpect(jsonPath("$.measureMetaData.steward.name").value(steward.getName()))
         .andExpect(jsonPath("$.measureMetaData.description").value(description))
         .andExpect(jsonPath("$.measureMetaData.copyright").value(copyright))
         .andExpect(jsonPath("$.measureMetaData.disclaimer").value(disclaimer));
@@ -219,12 +220,12 @@ public class MeasureControllerMvcTest {
   public void testUpdatePassedLogDeleted() throws Exception {
     String measureId = "f225481c-921e-4015-9e14-e5046bfac9ff";
     String measureName = "TestMeasure";
-    String steward = "d0cc18ce-63fd-4b94-b713-c1d9fd6b2329";
+    Organization steward = Organization.builder().name("d0cc18ce-63fd-4b94-b713-c1d9fd6b2329").build();
     String description = "TestDescription";
     String copyright = "TestCopyright";
     String disclaimer = "TestDisclaimer";
     String rationale = "TestRationale";
-    List<String> developers = List.of("TestDeveloper");
+    List<Organization> developers = List.of(Organization.builder().name("TestDeveloper").build());
     String guidance = "TestGuidance";
     String libName = "TestLib";
     String ecqmTitle = "ecqmTitle";
@@ -278,7 +279,7 @@ public class MeasureControllerMvcTest {
         .andExpect(jsonPath("$.model").value(MODEL))
         .andExpect(jsonPath("$.versionId").value(measureId))
         .andExpect(jsonPath("$.measureSetId").value(measureSetId))
-        .andExpect(jsonPath("$.measureMetaData.steward").value(steward))
+        .andExpect(jsonPath("$.measureMetaData.steward.name").value(steward.getName()))
         .andExpect(jsonPath("$.measureMetaData.description").value(description))
         .andExpect(jsonPath("$.measureMetaData.copyright").value(copyright))
         .andExpect(jsonPath("$.measureMetaData.disclaimer").value(disclaimer));

@@ -8,6 +8,7 @@ import cms.gov.madie.measure.services.MeasureService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
+import gov.cms.madie.models.common.Organization;
 import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Endorsement;
 import gov.cms.madie.models.measure.Group;
@@ -109,12 +110,11 @@ public class MeasureTransferControllerMvcTest {
     List<Endorsement> endorsements =
         List.of(
             Endorsement.builder()
-                .id("test endorsement id")
                 .endorser("test endorser")
                 .endorsementId("NQF")
                 .build());
 
-    measureMetaData.setSteward("SB");
+    measureMetaData.setSteward(Organization.builder().name("SB").url("sb-url").build());
     measureMetaData.setCopyright("Copyright@SB");
     measureMetaData.setReferences(references);
     measureMetaData.setDraft(true);

@@ -38,7 +38,7 @@ public class MeasureMongoConfig {
 
     // customized converter
     ((AbstractMongoConverter) mongoConverter)
-        .setCustomConversions(new MongoCustomConversions(Arrays.asList(new VersionConverter())));
+        .setCustomConversions(new MongoCustomConversions(Arrays.asList(new VersionConverter(), new StringOrganizationConverter())));
 
     return mongoConverter;
   }
