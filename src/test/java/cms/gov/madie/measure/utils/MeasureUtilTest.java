@@ -8,6 +8,7 @@ import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureErrorType;
 import gov.cms.madie.models.measure.Population;
+import gov.cms.madie.models.measure.SupplementalData;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -16,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -29,6 +31,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -44,14 +47,114 @@ class MeasureUtilTest {
 
   @Test
   public void testValidateAllMeasureGroupReturnTypesReturnsNullForNullInput() {
-    Measure output = measureUtil.validateAllMeasureGroupReturnTypes(null);
+    Measure output = measureUtil.validateAllMeasureDependencies(null);
     assertThat(output, is(nullValue()));
+  }
+
+  @Test
+  public void testNoSupplementalData_ValidJson() throws JsonProcessingException {
+
+    Measure measure = Measure.builder().elmJson("{}").build();
+
+    Measure output = measureUtil.validateAllMeasureDependencies(measure);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.isCqlErrors(), is(false));
+    assertThat(output.getErrors(), is(notNullValue()));
+    assertThat(
+        output.getErrors().contains(MeasureErrorType.MISMATCH_CQL_SUPPLEMENTAL_DATA), is(false));
+    assertThat(output.getErrors().contains(MeasureErrorType.MISSING_ELM), is(false));
+  }
+
+  @Test
+  public void testCqlDefinitionNotPresentForSupplementalData_ValidJson()
+      throws JsonProcessingException {
+    SupplementalData supplementalData =
+        SupplementalData.builder()
+            .definition("THIS_DEFINITION")
+            .description("Just a dumb definition")
+            .build();
+    List<SupplementalData> sdes =
+        new ArrayList<>() {
+          {
+            add(supplementalData);
+          }
+        };
+
+    Measure measure = Measure.builder().elmJson("{}").supplementalData(sdes).build();
+
+    doReturn(false)
+        .when(cqlDefinitionReturnTypeValidator)
+        .validateSdeDefinition(any(SupplementalData.class), anyString());
+
+    Measure output = measureUtil.validateAllMeasureDependencies(measure);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.isCqlErrors(), is(false));
+    assertThat(output.getErrors(), is(notNullValue()));
+    assertThat(
+        output.getErrors().contains(MeasureErrorType.MISMATCH_CQL_SUPPLEMENTAL_DATA), is(true));
+    assertThat(output.getErrors().contains(MeasureErrorType.MISSING_ELM), is(false));
+  }
+
+  @Test
+  public void testCqlDefinitionPresentForSupplementalData_ValidJson()
+      throws JsonProcessingException {
+    SupplementalData supplementalData =
+        SupplementalData.builder()
+            .definition("THIS_DEFINITION")
+            .description("Just a dumb definition")
+            .build();
+    List<SupplementalData> sdes =
+        new ArrayList<>() {
+          {
+            add(supplementalData);
+          }
+        };
+
+    Measure measure = Measure.builder().elmJson("{}").supplementalData(sdes).build();
+
+    doReturn(true)
+        .when(cqlDefinitionReturnTypeValidator)
+        .validateSdeDefinition(any(SupplementalData.class), anyString());
+
+    Measure output = measureUtil.validateAllMeasureDependencies(measure);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.isCqlErrors(), is(false));
+    assertThat(output.getErrors(), is(notNullValue()));
+    assertThat(
+        output.getErrors().contains(MeasureErrorType.MISMATCH_CQL_SUPPLEMENTAL_DATA), is(false));
+    assertThat(output.getErrors().contains(MeasureErrorType.MISSING_ELM), is(false));
+  }
+
+  @Test
+  public void testCqlDefinitionNotPresentForSupplementalData_NullElm()
+      throws JsonProcessingException {
+    SupplementalData supplementalData =
+        SupplementalData.builder()
+            .definition("THIS_DEFINITION")
+            .description("Just a dumb definition")
+            .build();
+    List<SupplementalData> sdes =
+        new ArrayList<>() {
+          {
+            add(supplementalData);
+          }
+        };
+
+    Measure measure = Measure.builder().elmJson(null).supplementalData(sdes).build();
+
+    Measure output = measureUtil.validateAllMeasureDependencies(measure);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.isCqlErrors(), is(true));
+    assertThat(output.getErrors(), is(notNullValue()));
+    assertThat(
+        output.getErrors().contains(MeasureErrorType.MISMATCH_CQL_SUPPLEMENTAL_DATA), is(true));
+    assertThat(output.getErrors().contains(MeasureErrorType.MISSING_ELM), is(true));
   }
 
   @Test
   public void testValidateAllMeasureGroupReturnTypesReturnsNoErrorsForNoGroups() {
     Measure measure = Measure.builder().elmJson("{}").groups(List.of()).build();
-    Measure output = measureUtil.validateAllMeasureGroupReturnTypes(measure);
+    Measure output = measureUtil.validateAllMeasureDependencies(measure);
     assertThat(output, is(notNullValue()));
     assertThat(output.getErrors(), is(notNullValue()));
     assertThat(output.getErrors().isEmpty(), is(true));
@@ -80,7 +183,7 @@ class MeasureUtilTest {
         .when(cqlObservationFunctionValidator)
         .validateObservationFunctions(any(Group.class), anyString());
 
-    Measure output = measureUtil.validateAllMeasureGroupReturnTypes(measure);
+    Measure output = measureUtil.validateAllMeasureDependencies(measure);
     assertThat(output, is(notNullValue()));
     assertThat(output.getErrors(), is(notNullValue()));
     assertThat(output.getErrors().isEmpty(), is(true));
@@ -111,7 +214,7 @@ class MeasureUtilTest {
         .when(cqlObservationFunctionValidator)
         .validateObservationFunctions(any(Group.class), anyString());
 
-    Measure output = measureUtil.validateAllMeasureGroupReturnTypes(measure);
+    Measure output = measureUtil.validateAllMeasureDependencies(measure);
     assertThat(output, is(notNullValue()));
     assertThat(output.getErrors(), is(notNullValue()));
     assertThat(output.getErrors().isEmpty(), is(true));
@@ -138,7 +241,7 @@ class MeasureUtilTest {
         .when(cqlDefinitionReturnTypeValidator)
         .validateCqlDefinitionReturnTypes(any(Group.class), anyString());
 
-    Measure output = measureUtil.validateAllMeasureGroupReturnTypes(measure);
+    Measure output = measureUtil.validateAllMeasureDependencies(measure);
     assertThat(output, is(notNullValue()));
     assertThat(output.getErrors(), is(notNullValue()));
     assertThat(
@@ -170,7 +273,7 @@ class MeasureUtilTest {
         .when(cqlObservationFunctionValidator)
         .validateObservationFunctions(any(Group.class), anyString());
 
-    Measure output = measureUtil.validateAllMeasureGroupReturnTypes(measure);
+    Measure output = measureUtil.validateAllMeasureDependencies(measure);
     assertThat(output, is(notNullValue()));
     assertThat(output.getErrors(), is(notNullValue()));
     assertThat(
@@ -179,8 +282,8 @@ class MeasureUtilTest {
   }
 
   @Test
-  public void
-      testValidateAllMeasureGroupReturnTypesReturnsMeasureWithErrorForGroupsExistButNoElm() {
+  public void testValidateAllMeasureGroupReturnTypesReturnsMeasureWithErrorForGroupsExistButNoElm()
+      throws JsonProcessingException {
     Measure measure =
         Measure.builder()
             .elmJson(null)
@@ -196,7 +299,12 @@ class MeasureUtilTest {
                         .build()))
             .build();
 
-    Measure output = measureUtil.validateAllMeasureGroupReturnTypes(measure);
+    doThrow(new InvalidReturnTypeException("DEFINITIONS"))
+        .when(cqlDefinitionReturnTypeValidator)
+        .validateCqlDefinitionReturnTypes(any(Group.class), anyString());
+
+    Measure output = measureUtil.validateAllMeasureDependencies(measure);
+
     assertThat(output, is(notNullValue()));
     assertThat(output.isCqlErrors(), is(true));
     assertThat(output.getErrors(), is(notNullValue()));
@@ -211,7 +319,7 @@ class MeasureUtilTest {
       testValidateAllMeasureGroupReturnTypesReturnsMeasureWithNoErrorForNoGroupsExistWithNoElm() {
     Measure measure = Measure.builder().elmJson(null).groups(List.of()).build();
 
-    Measure output = measureUtil.validateAllMeasureGroupReturnTypes(measure);
+    Measure output = measureUtil.validateAllMeasureDependencies(measure);
     assertThat(output, is(notNullValue()));
     assertThat(output.isCqlErrors(), is(false));
     assertThat(output.getErrors(), is(notNullValue()));
@@ -228,11 +336,75 @@ class MeasureUtilTest {
             .error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES)
             .build();
 
-    Measure output = measureUtil.validateAllMeasureGroupReturnTypes(measure);
+    Measure output = measureUtil.validateAllMeasureDependencies(measure);
     assertThat(output, is(notNullValue()));
     assertThat(output.isCqlErrors(), is(false));
     assertThat(output.getErrors(), is(notNullValue()));
     assertThat(output.getErrors().isEmpty(), is(true));
+  }
+
+  @Test
+  public void testIsGroupsExistWithPopulationsReturnsTrue() {
+    Measure measure =
+        Measure.builder()
+            .groups(
+                List.of(
+                    Group.builder().id("Group1").populations(null).build(),
+                    Group.builder()
+                        .id("Group2")
+                        .populations(
+                            List.of(
+                                Population.builder().definition("").build(),
+                                Population.builder().definition("DEFINE HERE").build()))
+                        .build()))
+            .build();
+    boolean output = measureUtil.isGroupsExistWithPopulations(measure);
+    assertThat(output, is(true));
+  }
+
+  @Test
+  public void testIsGroupReturnTypesValidReturnsTrue() throws JsonProcessingException {
+    doNothing()
+        .when(cqlDefinitionReturnTypeValidator)
+        .validateCqlDefinitionReturnTypes(any(Group.class), anyString());
+    doNothing()
+        .when(cqlObservationFunctionValidator)
+        .validateObservationFunctions(any(Group.class), anyString());
+
+    boolean output = measureUtil.isGroupReturnTypesValid(Group.builder().build(), "");
+    assertThat(output, is(true));
+  }
+
+  @Test
+  public void testIsGroupReturnTypesValidReturnsFalseForCqlDefinitionReturnTypesException()
+      throws JsonProcessingException {
+    doThrow(new InvalidReturnTypeException("DEFINITIONS"))
+        .when(cqlDefinitionReturnTypeValidator)
+        .validateCqlDefinitionReturnTypes(any(Group.class), anyString());
+
+    boolean output = measureUtil.isGroupReturnTypesValid(Group.builder().build(), "");
+    assertThat(output, is(false));
+    verify(cqlDefinitionReturnTypeValidator, times(1))
+        .validateCqlDefinitionReturnTypes(any(Group.class), anyString());
+    verifyNoInteractions(cqlObservationFunctionValidator);
+  }
+
+  @Test
+  public void testIsGroupReturnTypesValidReturnsFalseForObservationsReturnTypesException()
+      throws JsonProcessingException {
+    doNothing()
+        .when(cqlDefinitionReturnTypeValidator)
+        .validateCqlDefinitionReturnTypes(any(Group.class), anyString());
+    doThrow(new InvalidReturnTypeException("OBSERVATIONS"))
+        .when(cqlObservationFunctionValidator)
+        .validateObservationFunctions(any(Group.class), anyString());
+
+    boolean output = measureUtil.isGroupReturnTypesValid(Group.builder().build(), "");
+    assertThat(output, is(false));
+    verify(cqlDefinitionReturnTypeValidator, times(1))
+        .validateCqlDefinitionReturnTypes(any(Group.class), anyString());
+    verify(cqlObservationFunctionValidator, times(1))
+        .validateObservationFunctions(any(Group.class), anyString());
   }
 
   @Test
@@ -356,70 +528,6 @@ class MeasureUtilTest {
             .build();
     boolean output = measureUtil.isGroupsExistWithPopulations(measure);
     assertThat(output, is(false));
-  }
-
-  @Test
-  public void testIsGroupsExistWithPopulationsReturnsTrue() {
-    Measure measure =
-        Measure.builder()
-            .groups(
-                List.of(
-                    Group.builder().id("Group1").populations(null).build(),
-                    Group.builder()
-                        .id("Group2")
-                        .populations(
-                            List.of(
-                                Population.builder().definition("").build(),
-                                Population.builder().definition("DEFINE HERE").build()))
-                        .build()))
-            .build();
-    boolean output = measureUtil.isGroupsExistWithPopulations(measure);
-    assertThat(output, is(true));
-  }
-
-  @Test
-  public void testIsGroupReturnTypesValidReturnsTrue() throws JsonProcessingException {
-    doNothing()
-        .when(cqlDefinitionReturnTypeValidator)
-        .validateCqlDefinitionReturnTypes(any(Group.class), anyString());
-    doNothing()
-        .when(cqlObservationFunctionValidator)
-        .validateObservationFunctions(any(Group.class), anyString());
-
-    boolean output = measureUtil.isGroupReturnTypesValid(Group.builder().build(), "");
-    assertThat(output, is(true));
-  }
-
-  @Test
-  public void testIsGroupReturnTypesValidReturnsFalseForCqlDefinitionReturnTypesException()
-      throws JsonProcessingException {
-    doThrow(new InvalidReturnTypeException("DEFINITIONS"))
-        .when(cqlDefinitionReturnTypeValidator)
-        .validateCqlDefinitionReturnTypes(any(Group.class), anyString());
-
-    boolean output = measureUtil.isGroupReturnTypesValid(Group.builder().build(), "");
-    assertThat(output, is(false));
-    verify(cqlDefinitionReturnTypeValidator, times(1))
-        .validateCqlDefinitionReturnTypes(any(Group.class), anyString());
-    verifyNoInteractions(cqlObservationFunctionValidator);
-  }
-
-  @Test
-  public void testIsGroupReturnTypesValidReturnsFalseForObservationsReturnTypesException()
-      throws JsonProcessingException {
-    doNothing()
-        .when(cqlDefinitionReturnTypeValidator)
-        .validateCqlDefinitionReturnTypes(any(Group.class), anyString());
-    doThrow(new InvalidReturnTypeException("OBSERVATIONS"))
-        .when(cqlObservationFunctionValidator)
-        .validateObservationFunctions(any(Group.class), anyString());
-
-    boolean output = measureUtil.isGroupReturnTypesValid(Group.builder().build(), "");
-    assertThat(output, is(false));
-    verify(cqlDefinitionReturnTypeValidator, times(1))
-        .validateCqlDefinitionReturnTypes(any(Group.class), anyString());
-    verify(cqlObservationFunctionValidator, times(1))
-        .validateObservationFunctions(any(Group.class), anyString());
   }
 
   @Test

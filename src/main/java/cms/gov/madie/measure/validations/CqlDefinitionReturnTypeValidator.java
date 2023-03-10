@@ -1,23 +1,24 @@
 package cms.gov.madie.measure.validations;
 
-import cms.gov.madie.measure.exceptions.InvalidIdException;
-import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import gov.cms.madie.models.measure.Group;
-import gov.cms.madie.models.measure.Population;
-import gov.cms.madie.models.measure.Stratification;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Component;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Component;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
+import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.Population;
+import gov.cms.madie.models.measure.Stratification;
+import gov.cms.madie.models.measure.SupplementalData;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
+@Slf4j
 public class CqlDefinitionReturnTypeValidator {
 
   /**
@@ -57,6 +58,19 @@ public class CqlDefinitionReturnTypeValidator {
             }
           });
     }
+  }
+
+  public boolean validateSdeDefinition(SupplementalData sde, String elmJson) {
+    boolean result = false;
+    try {
+      Map<String, String> cqlDefinitionReturnTypes = getCqlDefinitionReturnTypes(elmJson);
+      result = cqlDefinitionReturnTypes.containsKey(sde.getDefinition());
+    } catch (JsonProcessingException e) {
+      log.error("Error reading elmJson", e);
+      result = false;
+    }
+
+    return result;
   }
 
   /**

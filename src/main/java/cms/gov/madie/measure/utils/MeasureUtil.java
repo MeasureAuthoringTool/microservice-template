@@ -10,7 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
-
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -28,50 +28,66 @@ public class MeasureUtil {
    * compared to the population basis of the group. If any mismatches are found, an error is added
    * to the list of errors on the measure object
    *
+   * <p>Validates dependencies in Supplemental Data
+   *
+   * <p>TODO Make this a more generic validation that calls other validation components
+   *
    * @param measure
    * @return
    */
-  public Measure validateAllMeasureGroupReturnTypes(Measure measure) {
+  public Measure validateAllMeasureDependencies(Measure measure) {
     if (measure == null) {
       return null;
     }
 
     final String elmJson = measure.getElmJson();
     boolean groupsExistWithPopulations = isGroupsExistWithPopulations(measure);
-    Measure.MeasureBuilder measureBuilder = measure.toBuilder();
-    measureBuilder
-        .clearErrors()
-        .errors(removeError(measure.getErrors(), MeasureErrorType.MISSING_ELM));
-    if (elmJson == null && groupsExistWithPopulations) {
-      // Measure has groups with populations with definitions, but ELM JSON is missing
-      measureBuilder =
-          measureBuilder
-              .cqlErrors(true)
-              .error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES)
-              .error(MeasureErrorType.MISSING_ELM);
-    } else if (elmJson != null && groupsExistWithPopulations) {
-      if (measure.getGroups().stream()
-          .anyMatch(group -> !isGroupReturnTypesValid(group, elmJson))) {
-        measureBuilder =
-            measureBuilder.error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES);
-      } else {
-        measureBuilder =
-            measureBuilder
-                .clearErrors()
-                .errors(
-                    removeError(
-                        measure.getErrors(),
-                        MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES));
-      }
+    Measure.MeasureBuilder<?, ?> measureBuilder = measure.toBuilder();
+    measureBuilder.clearErrors();
+    Set<MeasureErrorType> errors = new HashSet<>();
+    boolean cqlErrors = false;
+    if (elmJson == null) {
+      cqlErrors = true;
+      errors.add(MeasureErrorType.MISSING_ELM);
+    }
+
+    if (groupsExistWithPopulations
+        && measure.getGroups().stream()
+            .anyMatch(group -> !isGroupReturnTypesValid(group, elmJson))) {
+      errors.add(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES);
+    }
+    // MAT-5369  Adding checks for CQL Definitions present in SupplementalData
+    // if the def in supplemental data isn't in the cql
+
+    if (isCqlDefsToSupplementalDataMismatched(measure, elmJson)) {
+      // errors.add(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES);
+      errors.add(MeasureErrorType.MISMATCH_CQL_SUPPLEMENTAL_DATA);
+    }
+
+    // MAT-5369 If the only error on the stack is MISSING_ELM then remove it and set cqlErrors =
+    // false
+    if (errors.size() == 1
+        && errors.stream().anyMatch(error -> MeasureErrorType.MISSING_ELM.equals(error))) {
+      measureBuilder.clearErrors();
+      measureBuilder.cqlErrors(false);
     } else {
-      measureBuilder =
-          measureBuilder
-              .clearErrors()
-              .errors(
-                  removeError(
-                      measure.getErrors(), MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES));
+      measureBuilder.errors(errors);
+      measureBuilder.cqlErrors(cqlErrors);
     }
     return measureBuilder.build();
+  }
+
+  private boolean isCqlDefsToSupplementalDataMismatched(Measure measure, String elmJson) {
+    boolean result = false;
+    if (measure.getSupplementalData().isEmpty()) {
+      result = false;
+    } else {
+      result =
+          !measure.getSupplementalData().stream()
+              .anyMatch(
+                  sde -> cqlDefinitionReturnTypeValidator.validateSdeDefinition(sde, elmJson));
+    }
+    return result;
   }
 
   /**
