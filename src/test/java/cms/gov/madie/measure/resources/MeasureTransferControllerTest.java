@@ -117,8 +117,9 @@ public class MeasureTransferControllerTest {
     List<Endorsement> endorsements =
         List.of(
             Endorsement.builder()
-                .endorser("test endorser")
-                .endorsementId("NQF")
+                .endorserSystemId("test endorsement system id")
+                .endorser("NQF")
+                .endorsementId("test EndorsementId")
                 .build());
 
     measureMetaData.setSteward(Organization.builder().name("SB").url("sb-url").build());
