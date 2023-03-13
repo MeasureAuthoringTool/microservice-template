@@ -137,7 +137,8 @@ public class MeasureControllerMvcTest {
 
     String measureId = "f225481c-921e-4015-9e14-e5046bfac9ff";
     String measureName = "TestMeasure";
-    Organization steward = Organization.builder().name("d0cc18ce-63fd-4b94-b713-c1d9fd6b2329").build();
+    Organization steward =
+        Organization.builder().name("d0cc18ce-63fd-4b94-b713-c1d9fd6b2329").build();
     String description = "TestDescription";
     String copyright = "TestCopyright";
     String disclaimer = "TestDisclaimer";
@@ -220,7 +221,8 @@ public class MeasureControllerMvcTest {
   public void testUpdatePassedLogDeleted() throws Exception {
     String measureId = "f225481c-921e-4015-9e14-e5046bfac9ff";
     String measureName = "TestMeasure";
-    Organization steward = Organization.builder().name("d0cc18ce-63fd-4b94-b713-c1d9fd6b2329").build();
+    Organization steward =
+        Organization.builder().name("d0cc18ce-63fd-4b94-b713-c1d9fd6b2329").build();
     String description = "TestDescription";
     String copyright = "TestCopyright";
     String disclaimer = "TestDisclaimer";
