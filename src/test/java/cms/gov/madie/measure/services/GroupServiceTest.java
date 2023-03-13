@@ -231,7 +231,7 @@ public class GroupServiceTest implements ResourceUtil {
     doReturn(optional).when(measureRepository).findById(any(String.class));
 
     doReturn(measure).when(measureRepository).save(any(Measure.class));
-    when(measureUtil.validateAllMeasureGroupReturnTypes(any(Measure.class)))
+    when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
 
     Group persistedGroup = groupService.createOrUpdateGroup(group1, measure.getId(), "test.user");
@@ -259,7 +259,7 @@ public class GroupServiceTest implements ResourceUtil {
     doReturn(optional).when(measureRepository).findById(any(String.class));
 
     doReturn(measure).when(measureRepository).save(any(Measure.class));
-    when(measureUtil.validateAllMeasureGroupReturnTypes(any(Measure.class)))
+    when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
 
     Group persistedGroup = groupService.createOrUpdateGroup(group1, measure.getId(), "test.user");
@@ -288,7 +288,7 @@ public class GroupServiceTest implements ResourceUtil {
 
     doReturn(measure).when(measureRepository).save(any(Measure.class));
 
-    when(measureUtil.validateAllMeasureGroupReturnTypes(any(Measure.class)))
+    when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
 
     Group persistedGroup =
@@ -323,7 +323,7 @@ public class GroupServiceTest implements ResourceUtil {
 
     doReturn(measure).when(measureRepository).save(any(Measure.class));
 
-    when(measureUtil.validateAllMeasureGroupReturnTypes(any(Measure.class)))
+    when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
 
     // before update
@@ -535,7 +535,7 @@ public class GroupServiceTest implements ResourceUtil {
 
     doReturn(measure).when(measureRepository).save(any(Measure.class));
 
-    when(measureUtil.validateAllMeasureGroupReturnTypes(any(Measure.class)))
+    when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
 
     // before update
@@ -688,7 +688,7 @@ public class GroupServiceTest implements ResourceUtil {
 
     doReturn(measure).when(measureRepository).save(any(Measure.class));
 
-    when(measureUtil.validateAllMeasureGroupReturnTypes(any(Measure.class)))
+    when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
 
     // before update
@@ -763,7 +763,7 @@ public class GroupServiceTest implements ResourceUtil {
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     doReturn(optional).when(measureRepository).findById(any(String.class));
     doReturn(measure).when(measureRepository).save(any(Measure.class));
-    when(measureUtil.validateAllMeasureGroupReturnTypes(any(Measure.class)))
+    when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
 
     Group group = groupService.createOrUpdateGroup(group2, measure.getId(), "test.user");
@@ -778,7 +778,7 @@ public class GroupServiceTest implements ResourceUtil {
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     doReturn(optional).when(measureRepository).findById(any(String.class));
     doReturn(measure).when(measureRepository).save(any(Measure.class));
-    when(measureUtil.validateAllMeasureGroupReturnTypes(any(Measure.class)))
+    when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
 
     Group group = groupService.createOrUpdateGroup(group2, measure.getId(), "test.user");
@@ -833,7 +833,7 @@ public class GroupServiceTest implements ResourceUtil {
     measure.setElmJson(getData("/test_elm_no_functions.json"));
     Optional<Measure> optional = Optional.of(measure);
     doReturn(optional).when(measureRepository).findById(any(String.class));
-    when(measureUtil.validateAllMeasureGroupReturnTypes(any(Measure.class)))
+    when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
 
     Group group = groupService.createOrUpdateGroup(group1, measure.getId(), "test.user");
