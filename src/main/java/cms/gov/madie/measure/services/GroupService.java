@@ -90,7 +90,7 @@ public class GroupService {
       }
     }
     updateGroupForTestCases(group, measure.getTestCases());
-    measure = measureUtil.validateAllMeasureGroupReturnTypes(measure);
+    measure = measureUtil.validateAllMeasureDependencies(measure);
     measure.setLastModifiedBy(username);
     measure.setLastModifiedAt(Instant.now());
     measureRepository.save(measure);

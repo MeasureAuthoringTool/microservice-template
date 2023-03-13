@@ -433,7 +433,7 @@ public class MeasureServiceTest implements ResourceUtil {
 
     Measure expected =
         updated.toBuilder().error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES).build();
-    when(measureUtil.validateAllMeasureGroupReturnTypes(any(Measure.class))).thenReturn(expected);
+    when(measureUtil.validateAllMeasureDependencies(any(Measure.class))).thenReturn(expected);
     when(measureRepository.save(any(Measure.class))).thenReturn(expected);
 
     Measure output = measureService.updateMeasure(original, "User1", updated, "Access Token");

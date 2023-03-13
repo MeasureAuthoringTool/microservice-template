@@ -123,7 +123,7 @@ public class MeasureService {
     if (measureUtil.isMeasureCqlChanged(existingMeasure, updatingMeasure)) {
       try {
         outputMeasure =
-            measureUtil.validateAllMeasureGroupReturnTypes(updateElm(updatingMeasure, accessToken));
+            measureUtil.validateAllMeasureDependencies(updateElm(updatingMeasure, accessToken));
         // no errors were encountered so remove the ELM JSON error
         // TODO: remove this when backend validations for CQL/ELM are enhanced
         outputMeasure.setErrors(
