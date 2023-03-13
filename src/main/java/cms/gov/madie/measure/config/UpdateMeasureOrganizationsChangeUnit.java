@@ -45,13 +45,8 @@ public class UpdateMeasureOrganizationsChangeUnit {
                 updateRequired = true;
                 Organization stewardOrg = orgMap.get(measureMetaData.getSteward().getName());
                 if (stewardOrg != null) {
-                  log.info("steward org found: {}", stewardOrg);
                   measureMetaData.setSteward(stewardOrg);
                 } else {
-                  log.info(
-                      "Detected measure [{}] has invalid organization for Steward, [{}]",
-                      measure.getId(),
-                      measureMetaData.getSteward());
                   measureMetaData.setSteward(null);
                 }
               }
@@ -63,17 +58,12 @@ public class UpdateMeasureOrganizationsChangeUnit {
                         .filter(developer -> orgMap.containsKey(developer.getName()))
                         .map(developer -> orgMap.get(developer.getName()))
                         .collect(Collectors.toList());
-                log.info(
-                    "Developers before update: [{}], after: [{}]",
-                    measureMetaData.getDevelopers(),
-                    updatedOrgs);
                 measure.getMeasureMetaData().setDevelopers(updatedOrgs);
               }
 
               if (updateRequired) {
                 log.info(
-                    "MADiE System updating measure with ID [{}] to remove organizations on "
-                        + "steward and/or developer that no longer exist in the system",
+                    "[MADiE System] updating steward and/or developers on measure with ID [{}]. Any invalid orgs will be removed, additional org data for valid orgs will be added.",
                     measure.getId());
                 measureRepository.save(measure);
               }
