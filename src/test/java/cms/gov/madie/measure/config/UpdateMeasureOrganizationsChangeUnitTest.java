@@ -338,4 +338,14 @@ class UpdateMeasureOrganizationsChangeUnitTest {
         allValues.get(2).getMeasureName(),
         is(equalTo(measureWithStewardAndMultipleDevelopers.getMeasureName())));
   }
+
+  @Test
+  void rollbackExecutionDoesNothing() throws Exception {
+    // given - nothing
+    // when
+    changeUnit.rollbackExecution(measureRepository);
+
+    // then
+    verifyNoInteractions(measureRepository);
+  }
 }

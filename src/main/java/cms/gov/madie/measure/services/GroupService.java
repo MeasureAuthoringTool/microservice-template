@@ -54,10 +54,8 @@ public class GroupService {
     try {
       new CqlDefinitionReturnTypeValidator()
           .validateCqlDefinitionReturnTypes(group, measure.getElmJson());
-      if (group.getMeasureObservations() != null && group.getMeasureObservations().isEmpty()) {
-        new CqlObservationFunctionValidator()
-            .validateObservationFunctions(group, measure.getElmJson());
-      }
+      new CqlObservationFunctionValidator()
+          .validateObservationFunctions(group, measure.getElmJson());
     } catch (JsonProcessingException ex) {
       log.error(
           "An error occurred while validating population "
