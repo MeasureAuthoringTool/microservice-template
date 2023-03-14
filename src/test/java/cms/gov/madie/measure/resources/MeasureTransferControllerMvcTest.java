@@ -112,7 +112,7 @@ public class MeasureTransferControllerMvcTest {
             Endorsement.builder()
                 .endorserSystemId("test endorsement system id")
                 .endorser("NQF")
-                .endorsementId("test EndorsementId")
+                .endorsementId("testEndorsementId")
                 .build());
 
     measureMetaData.setSteward(Organization.builder().name("SB").url("sb-url").build());
