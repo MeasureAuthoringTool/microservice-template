@@ -120,7 +120,8 @@ public class MeasureService {
     }
 
     Measure outputMeasure = updatingMeasure;
-    if (measureUtil.isMeasureCqlChanged(existingMeasure, updatingMeasure)) {
+    if (measureUtil.isMeasureCqlChanged(existingMeasure, updatingMeasure)
+        || measureUtil.isSupplementalDataChanged(existingMeasure, updatingMeasure)) {
       try {
         outputMeasure =
             measureUtil.validateAllMeasureDependencies(updateElm(updatingMeasure, accessToken));

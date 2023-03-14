@@ -8,12 +8,14 @@ import gov.cms.madie.models.measure.MeasureErrorType;
 import gov.cms.madie.models.measure.Population;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -159,5 +161,16 @@ public class MeasureUtil {
             persistedMeasure.getMeasurementPeriodStart(), measure.getMeasurementPeriodStart())
         || !Objects.equals(
             persistedMeasure.getMeasurementPeriodEnd(), measure.getMeasurementPeriodEnd());
+  }
+
+  public boolean isSupplementalDataChanged(Measure changed, Measure original) {
+    boolean retVal = false;
+
+    // If the lists match, then we didn't change anything
+    // changed<sde>[] == original<sde>[]
+    retVal =
+        !CollectionUtils.isEqualCollection(
+            changed.getSupplementalData(), original.getSupplementalData());
+    return retVal;
   }
 }
