@@ -607,10 +607,54 @@ class MeasureUtilTest {
   }
 
   @Test
+  public void testIsSupplementalDataChanged_ReturnsFalseForNotChanged() {
+    final Measure original = Measure.builder().cqlLibraryName("ORIGINAL").build();
+    final Measure changed = original.toBuilder().cqlLibraryName("CHANGED").build();
+    boolean output = measureUtil.isSupplementalDataChanged(changed, original);
+    assertThat(output, is(false));
+  }
+
+  @Test
+  public void testIsSupplementalDataChanged_ReturnsTrueForChanged() {
+
+    SupplementalData supplementalData1 =
+        SupplementalData.builder()
+            .definition("THIS_DEFINITION")
+            .description("Just a dumb definition")
+            .build();
+    List<SupplementalData> sde1 =
+        new ArrayList<>() {
+          {
+            add(supplementalData1);
+          }
+        };
+
+    SupplementalData supplementalData2 =
+        SupplementalData.builder()
+            .definition("THAT_DEFINITION")
+            .description("Just aother dumb definition")
+            .build();
+
+    List<SupplementalData> sde2 =
+        new ArrayList<>() {
+          {
+            add(supplementalData2);
+          }
+        };
+
+    Measure original = Measure.builder().elmJson("{}").supplementalData(sde1).build();
+    Measure changed = original.toBuilder().build();
+    changed.setSupplementalData(sde2);
+
+    boolean output = measureUtil.isSupplementalDataChanged(changed, original);
+    assertThat(output, is(true));
+  }
+
+  @Test
   public void testIsMeasurementPeriodChangedReturnsFalseForBothNull() {
     final Measure original = Measure.builder().build();
-    final Measure changed = original.toBuilder().build();
-    boolean output = measureUtil.isMeasurementPeriodChanged(changed, original);
+    final Measure notChanged = original.toBuilder().build();
+    boolean output = measureUtil.isMeasurementPeriodChanged(notChanged, original);
     assertThat(output, is(false));
   }
 
