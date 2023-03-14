@@ -1,5 +1,13 @@
 package cms.gov.madie.measure.utils;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Service;
 import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeValidator;
 import cms.gov.madie.measure.validations.CqlObservationFunctionValidator;
 import gov.cms.madie.models.measure.Group;
@@ -8,15 +16,6 @@ import gov.cms.madie.models.measure.MeasureErrorType;
 import gov.cms.madie.models.measure.Population;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Service;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service

@@ -63,9 +63,9 @@ public class UpdateMeasureOrganizationsChangeUnit {
 
               if (updateRequired) {
                 log.info(
-                    "[MADiE System] updating steward and/or developers on measure with ID [{}]. " +
-                        "Any invalid orgs will be removed, " +
-                        "additional org data for valid orgs will be added.",
+                    "[MADiE System] updating steward and/or developers on measure with ID [{}]. "
+                        + "Any invalid orgs will be removed, "
+                        + "additional org data for valid orgs will be added.",
                     measure.getId());
                 measureRepository.save(measure);
               }
