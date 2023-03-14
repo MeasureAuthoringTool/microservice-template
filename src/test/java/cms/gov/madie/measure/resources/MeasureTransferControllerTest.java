@@ -6,6 +6,7 @@ import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.ElmTranslatorClient;
 import cms.gov.madie.measure.services.MeasureService;
 import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.common.Organization;
 import gov.cms.madie.models.measure.AggregateMethodType;
 import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Endorsement;
@@ -121,7 +122,7 @@ public class MeasureTransferControllerTest {
                 .endorsementId("test EndorsementId")
                 .build());
 
-    measureMetaData.setSteward("SB");
+    measureMetaData.setSteward(Organization.builder().name("SB").url("sb-url").build());
     measureMetaData.setCopyright("Copyright@SB");
     measureMetaData.setReferences(references);
     measureMetaData.setDraft(false);
