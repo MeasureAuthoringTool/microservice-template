@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.client.RestClientException;
 
 @Slf4j
@@ -50,6 +51,11 @@ public class BundleService {
   }
 
   protected void retrieveElmJson(Measure measure, String accessToken) {
+    if (StringUtils.isBlank(measure.getCql())) {
+      throw new InvalidResourceBundleStateException(
+          "Measure", measure.getId(), "since there is no associated CQL.");
+    }
+
     if (measure.isCqlErrors()) {
       throw new InvalidResourceBundleStateException(
           "Measure", measure.getId(), "since CQL errors exist.");

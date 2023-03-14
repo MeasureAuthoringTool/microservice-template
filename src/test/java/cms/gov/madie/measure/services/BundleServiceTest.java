@@ -84,6 +84,14 @@ class BundleServiceTest implements ResourceUtil {
   }
 
   @Test
+  void testBundleMeasureWhenThereIsNoCql() {
+    measure.setCql(null);
+    assertThrows(
+        InvalidResourceBundleStateException.class,
+        () -> bundleService.bundleMeasure(measure, "Bearer TOKEN", "calculation"));
+  }
+
+  @Test
   void testBundleMeasureWhenThereAreCqlErrors() {
     measure.setCqlErrors(true);
     assertThrows(
