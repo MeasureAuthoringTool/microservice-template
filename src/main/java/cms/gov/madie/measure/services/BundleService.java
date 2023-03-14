@@ -55,6 +55,7 @@ public class BundleService {
       throw new InvalidResourceBundleStateException(
           "Measure", measure.getId(), "since there is no associated CQL.");
     }
+
     if (measure.isCqlErrors()) {
       throw new InvalidResourceBundleStateException(
           "Measure", measure.getId(), "since CQL errors exist.");
