@@ -2,6 +2,7 @@ package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.repositories.OrganizationRepository;
 import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.ElmTranslatorClient;
 import cms.gov.madie.measure.services.MeasureService;
@@ -32,16 +33,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -57,10 +55,14 @@ public class MeasureTransferControllerTest {
 
   private Measure measure;
 
+  private List<Organization> organizationList;
+
   @Mock private MeasureService measureService;
   @Mock private MeasureRepository repository;
   @Mock private ActionLogService actionLogService;
   @Mock private ElmTranslatorClient elmTranslatorClient;
+
+  @Mock private OrganizationRepository organizationRepository;
   @Mock private ElmJson elmJson;
   private static final String CQL =
       "library MedicationDispenseTest version '0.0.001' using FHIR version '4.0.1'";
@@ -80,7 +82,6 @@ public class MeasureTransferControllerTest {
   @BeforeEach
   public void setUp() {
     request = new MockHttpServletRequest();
-    MeasureMetaData measureMetaData = new MeasureMetaData();
     List<Group> groups =
         List.of(
             new Group(
@@ -122,16 +123,24 @@ public class MeasureTransferControllerTest {
                 .endorsementId("test EndorsementId")
                 .build());
 
-    measureMetaData.setSteward(Organization.builder().name("SB").url("sb-url").build());
-    measureMetaData.setCopyright("Copyright@SB");
-    measureMetaData.setReferences(references);
-    measureMetaData.setDraft(false);
-    measureMetaData.setEndorsements(endorsements);
-    measureMetaData.setRiskAdjustment("test risk adjustment");
-    measureMetaData.setDefinition("test definition");
-    measureMetaData.setExperimental(false);
-    measureMetaData.setTransmissionFormat("test transmission format");
-    measureMetaData.setSupplementalDataElements("test supplemental data elements");
+    List<Organization> developersList = new ArrayList<>();
+    developersList.add(Organization.builder().name("SB 2").build());
+    developersList.add(Organization.builder().name("SB 3").build());
+
+    var measureMetaData =
+        MeasureMetaData.builder()
+            .steward(Organization.builder().name("SB").build())
+            .developers(developersList)
+            .copyright("Copyright@SB")
+            .references(references)
+            .draft(false)
+            .endorsements(endorsements)
+            .riskAdjustment("test risk adjustment")
+            .definition("test definition")
+            .experimental(false)
+            .transmissionFormat("test transmission format")
+            .supplementalDataElements("test supplemental data elements")
+            .build();
 
     measure =
         Measure.builder()
@@ -148,6 +157,12 @@ public class MeasureTransferControllerTest {
             .cqlErrors(false)
             .elmJson(ELM_JSON_SUCCESS)
             .build();
+
+    organizationList = new ArrayList<>();
+    organizationList.add(Organization.builder().name("SB").url("SB Url").build());
+    organizationList.add(Organization.builder().name("SB 2").url("SB 2 Url").build());
+    organizationList.add(Organization.builder().name("CancerLinQ").url("CancerLinQ Url").build());
+    organizationList.add(Organization.builder().name("Innovaccer").url("Innovaccer Url").build());
   }
 
   @Test
@@ -155,6 +170,7 @@ public class MeasureTransferControllerTest {
     ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
     doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
     doReturn(measure).when(repository).save(any(Measure.class));
+    when(organizationRepository.findAll()).thenReturn(organizationList);
 
     ResponseEntity<Measure> response =
         controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
@@ -193,6 +209,9 @@ public class MeasureTransferControllerTest {
     assertEquals(
         measure.getMeasureMetaData().getSupplementalDataElements(),
         persistedMeasure.getMeasureMetaData().getSupplementalDataElements());
+    assertEquals("SB Url", persistedMeasure.getMeasureMetaData().getSteward().getUrl());
+    assertEquals(1, persistedMeasure.getMeasureMetaData().getDevelopers().size());
+    assertEquals("SB 2 Url", persistedMeasure.getMeasureMetaData().getDevelopers().get(0).getUrl());
 
     verify(actionLogService, times(1))
         .logAction(
@@ -212,6 +231,7 @@ public class MeasureTransferControllerTest {
     doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
     measure.setMeasureMetaData(null);
     doReturn(measure).when(repository).save(any(Measure.class));
+    when(organizationRepository.findAll()).thenReturn(organizationList);
 
     ResponseEntity<Measure> response =
         controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
@@ -264,6 +284,7 @@ public class MeasureTransferControllerTest {
         .getElmJsonForMatMeasure(CQL, LAMBDA_TEST_API_KEY, null);
     doReturn(false).when(elmTranslatorClient).hasErrors(elmJson);
     doReturn(measure).when(repository).save(any(Measure.class));
+    when(organizationRepository.findAll()).thenReturn(organizationList);
 
     ResponseEntity<Measure> response =
         controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
@@ -299,6 +320,7 @@ public class MeasureTransferControllerTest {
     measure.setCqlErrors(true);
     measure.setElmJson(ELM_JSON_FAIL);
     doReturn(measure).when(repository).save(any(Measure.class));
+    when(organizationRepository.findAll()).thenReturn(organizationList);
 
     ResponseEntity<Measure> response =
         controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
@@ -317,5 +339,83 @@ public class MeasureTransferControllerTest {
             performedByArgumentCaptor.capture());
     assertNotNull(targetIdArgumentCaptor.getValue());
     assertThat(targetClassArgumentCaptor.getValue(), is(equalTo(Measure.class)));
+  }
+
+  @Test
+  public void removesStewardIfOrganizationIsNotFound() {
+    measure.getMeasureMetaData().getSteward().setName("Random steward name");
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
+    doReturn(measure).when(repository).save(any(Measure.class));
+    when(organizationRepository.findAll()).thenReturn(organizationList);
+
+    ResponseEntity<Measure> response =
+        controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
+
+    Measure persistedMeasure = response.getBody();
+    assertNotNull(persistedMeasure);
+    assertNull(persistedMeasure.getMeasureMetaData().getSteward());
+  }
+
+  @Test
+  public void removesDeveloperIfOrganizationIsNotFound() {
+    measure
+        .getMeasureMetaData()
+        .setDevelopers(List.of(Organization.builder().name("Random steward name").build()));
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
+    doReturn(measure).when(repository).save(any(Measure.class));
+    when(organizationRepository.findAll()).thenReturn(organizationList);
+
+    ResponseEntity<Measure> response =
+        controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
+
+    Measure persistedMeasure = response.getBody();
+    assertNotNull(persistedMeasure);
+    assertEquals(0, persistedMeasure.getMeasureMetaData().getDevelopers().size());
+  }
+
+  @Test
+  public void throwsExceptionWhenOrganizationListIsEmpty() {
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
+    when(organizationRepository.findAll()).thenReturn(null);
+
+    assertThrows(
+        RuntimeException.class,
+        () -> controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY));
+  }
+
+  @Test
+  public void verifyIfOrganizationNamesAreUpdated() {
+    // CancerLin Q is updated to CancerLinQ & Innovaccer Anylytics should be updated to Innovaccer
+    measure.getMeasureMetaData().getSteward().setName("CancerLin Q");
+    measure
+        .getMeasureMetaData()
+        .getDevelopers()
+        .add(Organization.builder().name("CancerLin Q").build());
+    measure
+        .getMeasureMetaData()
+        .getDevelopers()
+        .add(Organization.builder().name("Innovaccer Anylytics").build());
+
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
+    doReturn(measure).when(repository).save(any(Measure.class));
+    when(organizationRepository.findAll()).thenReturn(organizationList);
+
+    ResponseEntity<Measure> response =
+        controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
+
+    Measure persistedMeasure = response.getBody();
+    assertNotNull(persistedMeasure);
+    assertEquals("CancerLinQ", persistedMeasure.getMeasureMetaData().getSteward().getName());
+    assertEquals("CancerLinQ Url", persistedMeasure.getMeasureMetaData().getSteward().getUrl());
+
+    assertEquals(3, persistedMeasure.getMeasureMetaData().getDevelopers().size());
+    assertEquals(
+        "CancerLinQ", persistedMeasure.getMeasureMetaData().getDevelopers().get(1).getName());
+    assertEquals(
+        "CancerLinQ Url", persistedMeasure.getMeasureMetaData().getDevelopers().get(1).getUrl());
+    assertEquals(
+        "Innovaccer", persistedMeasure.getMeasureMetaData().getDevelopers().get(2).getName());
+    assertEquals(
+        "Innovaccer Url", persistedMeasure.getMeasureMetaData().getDevelopers().get(2).getUrl());
   }
 }
