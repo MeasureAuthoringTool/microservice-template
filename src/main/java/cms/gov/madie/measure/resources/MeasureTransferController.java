@@ -26,19 +26,16 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/measure-transfer")
 public class MeasureTransferController {
-  private static String HARP_ID_HEADER = "harp-id";
+  private static final String HARP_ID_HEADER = "harp-id";
   private final MeasureRepository repository;
   private final MeasureService measureService;
   private final ActionLogService actionLogService;
