@@ -609,6 +609,36 @@ class MeasureUtilTest {
 
   @Test
   public void testIsSupplementalDataChanged_ReturnsFalseForNullSupplementalData() {
+    boolean output = measureUtil.isSupplementalDataChanged(new Measure(), new Measure());
+    assertThat(output, is(false));
+  }
+
+  @Test
+  public void testIsSupplementalDataChanged_ReturnsTrueForAddNonNullSupplementalData() {
+    SupplementalData supplementalData1 =
+        SupplementalData.builder()
+            .definition("THIS_DEFINITION")
+            .description("Just a dumb definition")
+            .build();
+    final Measure changed = Measure.builder().supplementalData(List.of(supplementalData1)).build();
+    boolean output = measureUtil.isSupplementalDataChanged(new Measure(), changed);
+    assertThat(output, is(true));
+  }
+
+  @Test
+  public void testIsSupplementalDataChanged_ReturnsTrueForSupplementalDataToNull() {
+    SupplementalData supplementalData1 =
+        SupplementalData.builder()
+            .definition("THIS_DEFINITION")
+            .description("Just a dumb definition")
+            .build();
+    final Measure original = Measure.builder().supplementalData(List.of(supplementalData1)).build();
+    boolean output = measureUtil.isSupplementalDataChanged(original, new Measure());
+    assertThat(output, is(true));
+  }
+
+  @Test
+  public void testIsSupplementalDataChanged_ReturnsFalseForEmptySupplementalData() {
     final Measure original = Measure.builder().supplementalData(Collections.emptyList()).build();
     final Measure changed = original.toBuilder().supplementalData(Collections.emptyList()).build();
     boolean output = measureUtil.isSupplementalDataChanged(changed, original);
