@@ -2,6 +2,7 @@ package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.repositories.OrganizationRepository;
 import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.ElmTranslatorClient;
 import cms.gov.madie.measure.services.MeasureService;
@@ -35,6 +36,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -59,6 +61,8 @@ public class MeasureTransferControllerMvcTest {
   @MockBean private MeasureService measureService;
   @MockBean private ActionLogService actionLogService;
   @MockBean private ElmTranslatorClient elmTranslatorClient;
+
+  @MockBean private OrganizationRepository organizationRepository;
   @Mock private ElmJson elmJson;
   private static final String ELM_JSON_SUCCESS = "{\"result\":\"success\"}";
   private static final String ELM_JSON_FAIL =
@@ -75,9 +79,10 @@ public class MeasureTransferControllerMvcTest {
 
   Measure measure;
 
+  private List<Organization> organizationList;
+
   @BeforeEach
   public void setUp() {
-    MeasureMetaData measureMetaData = new MeasureMetaData();
     Stratification strat = new Stratification();
     strat.setAssociation(PopulationType.INITIAL_POPULATION);
     List<Group> groups =
@@ -115,16 +120,24 @@ public class MeasureTransferControllerMvcTest {
                 .endorsementId("testEndorsementId")
                 .build());
 
-    measureMetaData.setSteward(Organization.builder().name("SB").url("sb-url").build());
-    measureMetaData.setCopyright("Copyright@SB");
-    measureMetaData.setReferences(references);
-    measureMetaData.setDraft(true);
-    measureMetaData.setEndorsements(endorsements);
-    measureMetaData.setRiskAdjustment("test risk adjustment");
-    measureMetaData.setDefinition("test definition");
-    measureMetaData.setExperimental(false);
-    measureMetaData.setTransmissionFormat("test transmission format");
-    measureMetaData.setSupplementalDataElements("test supplemental data elements");
+    List<Organization> developersList = new ArrayList<>();
+    developersList.add(Organization.builder().name("SB 2").build());
+    developersList.add(Organization.builder().name("SB 3").build());
+
+    var measureMetaData =
+        MeasureMetaData.builder()
+            .steward(Organization.builder().name("SB").build())
+            .developers(developersList)
+            .copyright("Copyright@SB")
+            .references(references)
+            .draft(true)
+            .endorsements(endorsements)
+            .riskAdjustment("test risk adjustment")
+            .definition("test definition")
+            .experimental(false)
+            .transmissionFormat("test transmission format")
+            .supplementalDataElements("test supplemental data elements")
+            .build();
 
     measure =
         Measure.builder()
@@ -141,6 +154,12 @@ public class MeasureTransferControllerMvcTest {
             .groups(groups)
             .cql("library MedicationDispenseTest version '0.0.001' using FHIR version '4.0.1'")
             .build();
+
+    organizationList = new ArrayList<>();
+    organizationList.add(Organization.builder().name("SB").url("SB Url").build());
+    organizationList.add(Organization.builder().name("SB 2").url("SB 2 Url").build());
+    organizationList.add(Organization.builder().name("CancerLinQ").url("CancerLinQ Url").build());
+    organizationList.add(Organization.builder().name("Innovaccer").url("Innovaccer Url").build());
   }
 
   @Test
@@ -151,6 +170,7 @@ public class MeasureTransferControllerMvcTest {
 
     doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
     doReturn(measure).when(measureRepository).save(any(Measure.class));
+    when(organizationRepository.findAll()).thenReturn(organizationList);
 
     mockMvc
         .perform(
@@ -196,6 +216,10 @@ public class MeasureTransferControllerMvcTest {
     assertEquals(
         measure.getMeasureMetaData().getSupplementalDataElements(),
         persistedMeasure.getMeasureMetaData().getSupplementalDataElements());
+
+    assertEquals("SB Url", persistedMeasure.getMeasureMetaData().getSteward().getUrl());
+    assertEquals(1, persistedMeasure.getMeasureMetaData().getDevelopers().size());
+    assertEquals("SB 2 Url", persistedMeasure.getMeasureMetaData().getDevelopers().get(0).getUrl());
 
     verify(actionLogService, times(1))
         .logAction(
@@ -260,6 +284,7 @@ public class MeasureTransferControllerMvcTest {
         .thenReturn(elmJson);
     when(elmTranslatorClient.hasErrors(elmJson)).thenReturn(false);
     doReturn(measure).when(measureRepository).save(any(Measure.class));
+    when(organizationRepository.findAll()).thenReturn(organizationList);
 
     MvcResult result =
         mockMvc
@@ -286,6 +311,7 @@ public class MeasureTransferControllerMvcTest {
         .thenReturn(elmJson);
     when(elmTranslatorClient.hasErrors(elmJson)).thenReturn(true);
     doReturn(measure).when(measureRepository).save(any(Measure.class));
+    when(organizationRepository.findAll()).thenReturn(organizationList);
 
     MvcResult result =
         mockMvc
@@ -313,6 +339,7 @@ public class MeasureTransferControllerMvcTest {
         .when(elmTranslatorClient)
         .getElmJsonForMatMeasure(any(String.class), any(String.class), any(String.class));
     doReturn(measure).when(measureRepository).save(any(Measure.class));
+    when(organizationRepository.findAll()).thenReturn(organizationList);
 
     MvcResult result =
         mockMvc
