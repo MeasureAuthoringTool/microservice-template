@@ -80,7 +80,7 @@ public class MeasureUtil {
 
   private boolean isCqlDefsToSupplementalDataMismatched(Measure measure, String elmJson) {
     boolean result = false;
-    if (measure.getSupplementalData().isEmpty()) {
+    if (CollectionUtils.isEmpty(measure.getSupplementalData())) {
       result = false;
     } else {
       result =
@@ -172,6 +172,6 @@ public class MeasureUtil {
     // If the lists match, then we didn't change anything
     // changed<sde>[] == original<sde>[]
     return !CollectionUtils.isEqualCollection(
-            changed.getSupplementalData(), original.getSupplementalData());
+        changed.getSupplementalData(), original.getSupplementalData());
   }
 }
