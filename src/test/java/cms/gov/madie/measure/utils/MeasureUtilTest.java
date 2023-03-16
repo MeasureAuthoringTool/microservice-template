@@ -616,7 +616,7 @@ class MeasureUtilTest {
   }
 
   @Test
-  public void testIsSupplementalDataChanged_ReturnsFalseForOriginalNonNullSupplementalData() {
+  public void testIsSupplementalDataChanged_ReturnsTrueForRemovedSupplementalData() {
     SupplementalData supplementalData1 =
         SupplementalData.builder()
             .definition("THIS_DEFINITION")
