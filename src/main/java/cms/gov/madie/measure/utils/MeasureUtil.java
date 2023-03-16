@@ -165,11 +165,24 @@ public class MeasureUtil {
   public boolean isSupplementalDataChanged(Measure changed, Measure original) {
     boolean retVal = false;
 
-    // If the lists match, then we didn't change anything
-    // changed<sde>[] == original<sde>[]
-    retVal =
-        !CollectionUtils.isEqualCollection(
-            changed.getSupplementalData(), original.getSupplementalData());
+    if (CollectionUtils.isEmpty(changed.getSupplementalData())) {
+      if (CollectionUtils.isEmpty(original.getSupplementalData())) {
+        retVal = false;
+      } else {
+        retVal = true;
+      }
+    } else {
+      if (CollectionUtils.isEmpty(original.getSupplementalData())) {
+        retVal = true;
+      } else {
+        // If the lists match, then we didn't change anything
+        // changed<sde>[] == original<sde>[]
+        retVal =
+            !CollectionUtils.isEqualCollection(
+                changed.getSupplementalData(), original.getSupplementalData());
+      }
+    }
+
     return retVal;
   }
 }
