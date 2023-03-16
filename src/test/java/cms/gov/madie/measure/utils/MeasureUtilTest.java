@@ -629,7 +629,7 @@ class MeasureUtilTest {
   }
 
   @Test
-  public void testIsSupplementalDataChanged_ReturnsFalseForChangedNonNullSupplementalData() {
+  public void testIsSupplementalDataChanged_ReturnsTrueForNewNonNullSupplementalData() {
     final Measure original = Measure.builder().supplementalData(Collections.emptyList()).build();
     SupplementalData supplementalData1 =
         SupplementalData.builder()
