@@ -14,7 +14,7 @@
   <name>Measure Service</name>
   <description>Measure Service for MADiE</description>
   <properties>
-    <java.version>16</java.version>
+    <java.version>17</java.version>
     <junit-jupiter.version>5.7.2</junit-jupiter.version>
     <mvn.checkstyle.file>madie-checkstyle.xml</mvn.checkstyle.file>
     <mvn.checkstyle.version>3.1.2</mvn.checkstyle.version>
@@ -100,7 +100,7 @@
     <dependency>
       <groupId>gov.cms.madie</groupId>
       <artifactId>madie-java-models</artifactId>
-      <version>0.3.1</version>
+      <version>0.3.2-SNAPSHOT</version>
     </dependency>
 
     <dependency>
