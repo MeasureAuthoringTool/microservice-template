@@ -19,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -638,6 +639,71 @@ class MeasureUtilTest {
   }
 
   @Test
+  public void testIsSupplementalDataChanged_ReturnsFalseForNullSupplementalData() {
+    boolean output = measureUtil.isSupplementalDataChanged(new Measure(), new Measure());
+    assertThat(output, is(false));
+  }
+
+  @Test
+  public void testIsSupplementalDataChanged_ReturnsTrueForAddNonNullSupplementalData() {
+    DefDescPair supplementalData1 =
+        SupplementalData.builder()
+            .definition("THIS_DEFINITION")
+            .description("Just a dumb definition")
+            .build();
+    final Measure changed = Measure.builder().supplementalData(List.of(supplementalData1)).build();
+    boolean output = measureUtil.isSupplementalDataChanged(new Measure(), changed);
+    assertThat(output, is(true));
+  }
+
+  @Test
+  public void testIsSupplementalDataChanged_ReturnsTrueForSupplementalDataToNull() {
+    DefDescPair supplementalData1 =
+        SupplementalData.builder()
+            .definition("THIS_DEFINITION")
+            .description("Just a dumb definition")
+            .build();
+    final Measure original = Measure.builder().supplementalData(List.of(supplementalData1)).build();
+    boolean output = measureUtil.isSupplementalDataChanged(original, new Measure());
+    assertThat(output, is(true));
+  }
+
+  @Test
+  public void testIsSupplementalDataChanged_ReturnsFalseForEmptySupplementalData() {
+    final Measure original = Measure.builder().supplementalData(Collections.emptyList()).build();
+    final Measure changed = original.toBuilder().supplementalData(Collections.emptyList()).build();
+    boolean output = measureUtil.isSupplementalDataChanged(changed, original);
+    assertThat(output, is(false));
+  }
+
+  @Test
+  public void testIsSupplementalDataChanged_ReturnsTrueForRemovedSupplementalData() {
+    DefDescPair supplementalData1 =
+        SupplementalData.builder()
+            .definition("THIS_DEFINITION")
+            .description("Just a dumb definition")
+            .build();
+    final Measure original = Measure.builder().supplementalData(List.of(supplementalData1)).build();
+    final Measure changed = Measure.builder().supplementalData(Collections.emptyList()).build();
+    boolean output = measureUtil.isSupplementalDataChanged(changed, original);
+    assertThat(output, is(true));
+  }
+
+  @Test
+  public void testIsSupplementalDataChanged_ReturnsTrueForNewNonNullSupplementalData() {
+    final Measure original = Measure.builder().supplementalData(Collections.emptyList()).build();
+    DefDescPair supplementalData1 =
+        SupplementalData.builder()
+            .definition("THIS_DEFINITION")
+            .description("Just a dumb definition")
+            .build();
+    final Measure changed =
+        original.toBuilder().supplementalData(List.of(supplementalData1)).build();
+    boolean output = measureUtil.isSupplementalDataChanged(changed, original);
+    assertThat(output, is(true));
+  }
+
+  @Test
   public void testIsSupplementalDataChanged_ReturnsFalseForNotChanged() {
     final Measure original = Measure.builder().cqlLibraryName("ORIGINAL").build();
     final Measure changed = original.toBuilder().cqlLibraryName("CHANGED").build();
@@ -679,6 +745,29 @@ class MeasureUtilTest {
 
     boolean output = measureUtil.isSupplementalDataChanged(changed, original);
     assertThat(output, is(true));
+  }
+
+  @Test
+  public void testIsSupplementalDataChanged_ReturnsFalseForUnchanged() {
+
+    DefDescPair supplementalData1 =
+        SupplementalData.builder()
+            .definition("THIS_DEFINITION")
+            .description("Just a dumb definition")
+            .build();
+    List<DefDescPair> sde1 =
+        new ArrayList<>() {
+          {
+            add(supplementalData1);
+          }
+        };
+
+    Measure original = Measure.builder().elmJson("{}").supplementalData(sde1).build();
+    Measure changed = original.toBuilder().build();
+    changed.setSupplementalData(sde1);
+
+    boolean output = measureUtil.isSupplementalDataChanged(changed, original);
+    assertThat(output, is(false));
   }
 
   @Test
