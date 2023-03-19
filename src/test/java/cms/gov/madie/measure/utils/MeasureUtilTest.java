@@ -98,7 +98,7 @@ class MeasureUtilTest {
   }
 
   @Test
-  public void testCqlDefinitionNotPresentForRiskAdjustment_ValidJson()
+  public void testCqlDefinitionNotPresentForRiskAdjustmentValidJson()
       throws JsonProcessingException {
     DefDescPair riskAdjustmentVariables =
         SupplementalData.builder()
@@ -128,7 +128,7 @@ class MeasureUtilTest {
   }
 
   @Test
-  public void testCqlDefinitionPresentForSupplementalData_ValidJson()
+  public void testCqlDefinitionPresentForSupplementalDataValidJson()
       throws JsonProcessingException {
     DefDescPair supplementalData =
         SupplementalData.builder()
@@ -158,7 +158,7 @@ class MeasureUtilTest {
   }
 
   @Test
-  public void testCqlDefinitionNotPresentForSupplementalData_NullElm()
+  public void testCqlDefinitionNotPresentForSupplementalDataNullElm()
       throws JsonProcessingException {
     DefDescPair supplementalData =
         SupplementalData.builder()
