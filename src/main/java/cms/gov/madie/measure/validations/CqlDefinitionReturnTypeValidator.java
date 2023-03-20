@@ -68,7 +68,7 @@ public class CqlDefinitionReturnTypeValidator {
    * @param elmJson
    * @return true if the def is contained in the elmJson, false otherwise
    */
-  public boolean validateDefDescription(DefDescPair sde, String elmJson) {
+  public boolean isDefineInElm(DefDescPair sde, String elmJson) {
     boolean result = false;
     try {
       Map<String, String> cqlDefinitionReturnTypes = getCqlDefinitionReturnTypes(elmJson);

@@ -61,7 +61,7 @@ public class MeasureUtil {
     // MAT-5369  Adding checks for CQL Definitions present in SupplementalData
     // if the def in supplemental data isn't in the cql
 
-    if (isCqlDefsaMismatched(measure.getSupplementalData(), elmJson)) {
+    if (isCqlDefsMismatched(measure.getSupplementalData(), elmJson)) {
       // errors.add(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES);
       errors.add(MeasureErrorType.MISMATCH_CQL_SUPPLEMENTAL_DATA);
     }
@@ -69,7 +69,7 @@ public class MeasureUtil {
     // MAT-5464  Adding checks for CQL Definitions present in Risk Adjustment Variables
     // if the def in Risk Adjustment Variables isn't in the cql
 
-    if (isCqlDefsaMismatched(measure.getRiskAdjustments(), elmJson)) {
+    if (isCqlDefsMismatched(measure.getRiskAdjustments(), elmJson)) {
       // errors.add(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES);
       errors.add(MeasureErrorType.MISMATCH_CQL_RISK_ADJUSTMENT);
     }
@@ -87,15 +87,14 @@ public class MeasureUtil {
     return measureBuilder.build();
   }
 
-  private boolean isCqlDefsaMismatched(List<DefDescPair> defDescPairs, String elmJson) {
+  private boolean isCqlDefsMismatched(List<DefDescPair> defDescPairs, String elmJson) {
     boolean result = false;
     if (CollectionUtils.isEmpty(defDescPairs)) {
       result = false;
     } else {
       result =
           !defDescPairs.stream()
-              .anyMatch(
-                  sde -> cqlDefinitionReturnTypeValidator.validateDefDescription(sde, elmJson));
+              .anyMatch(def -> cqlDefinitionReturnTypeValidator.isDefineInElm(def, elmJson));
     }
     return result;
   }

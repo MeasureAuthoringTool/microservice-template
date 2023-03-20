@@ -46,7 +46,7 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
     CqlDefinitionReturnTypeValidator validator = new CqlDefinitionReturnTypeValidator();
     DefDescPair sde =
         SupplementalData.builder().definition("fun23").description("Please Help Me").build();
-    boolean isValid = validator.validateDefDescription(sde, elmJson);
+    boolean isValid = validator.isDefineInElm(sde, elmJson);
     assertThat(isValid, is(true));
   }
 
@@ -57,7 +57,7 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
     CqlDefinitionReturnTypeValidator validator = new CqlDefinitionReturnTypeValidator();
     DefDescPair sde =
         SupplementalData.builder().definition("fun34").description("Please Help Me").build();
-    boolean isValid = validator.validateDefDescription(sde, elmJson);
+    boolean isValid = validator.isDefineInElm(sde, elmJson);
     assertThat(isValid, is(false));
   }
 
@@ -68,7 +68,7 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
     CqlDefinitionReturnTypeValidator validator = new CqlDefinitionReturnTypeValidator();
     DefDescPair sde =
         SupplementalData.builder().definition("fun34").description("Please Help Me").build();
-    boolean isValid = validator.validateDefDescription(sde, elmJson);
+    boolean isValid = validator.isDefineInElm(sde, elmJson);
     assertThat(isValid, is(false));
   }
 }

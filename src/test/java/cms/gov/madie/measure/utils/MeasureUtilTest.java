@@ -86,7 +86,7 @@ class MeasureUtilTest {
 
     doReturn(false)
         .when(cqlDefinitionReturnTypeValidator)
-        .validateDefDescription(any(DefDescPair.class), anyString());
+        .isDefineInElm(any(DefDescPair.class), anyString());
 
     Measure output = measureUtil.validateAllMeasureDependencies(measure);
     assertThat(output, is(notNullValue()));
@@ -116,7 +116,7 @@ class MeasureUtilTest {
 
     doReturn(false)
         .when(cqlDefinitionReturnTypeValidator)
-        .validateDefDescription(any(DefDescPair.class), anyString());
+        .isDefineInElm(any(DefDescPair.class), anyString());
 
     Measure output = measureUtil.validateAllMeasureDependencies(measure);
     assertThat(output, is(notNullValue()));
@@ -146,7 +146,7 @@ class MeasureUtilTest {
 
     doReturn(true)
         .when(cqlDefinitionReturnTypeValidator)
-        .validateDefDescription(any(DefDescPair.class), anyString());
+        .isDefineInElm(any(DefDescPair.class), anyString());
 
     Measure output = measureUtil.validateAllMeasureDependencies(measure);
     assertThat(output, is(notNullValue()));
