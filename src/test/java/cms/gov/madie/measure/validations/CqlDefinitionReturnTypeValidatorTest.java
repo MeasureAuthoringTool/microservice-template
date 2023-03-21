@@ -1,17 +1,16 @@
 package cms.gov.madie.measure.validations;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import cms.gov.madie.measure.utils.ResourceUtil;
+import gov.cms.madie.models.measure.DefDescPair;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
 import gov.cms.madie.models.measure.SupplementalData;
-import static org.hamcrest.MatcherAssert.assertThat;
-
-import static org.hamcrest.CoreMatchers.is;
 
 class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
 
@@ -45,9 +44,9 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
     String elmJson = getData("/test_elm.json");
 
     CqlDefinitionReturnTypeValidator validator = new CqlDefinitionReturnTypeValidator();
-    SupplementalData sde =
+    DefDescPair sde =
         SupplementalData.builder().definition("fun23").description("Please Help Me").build();
-    boolean isValid = validator.validateSdeDefinition(sde, elmJson);
+    boolean isValid = validator.isDefineInElm(sde, elmJson);
     assertThat(isValid, is(true));
   }
 
@@ -56,9 +55,9 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
     String elmJson = getData("/test_elm.json");
 
     CqlDefinitionReturnTypeValidator validator = new CqlDefinitionReturnTypeValidator();
-    SupplementalData sde =
+    DefDescPair sde =
         SupplementalData.builder().definition("fun34").description("Please Help Me").build();
-    boolean isValid = validator.validateSdeDefinition(sde, elmJson);
+    boolean isValid = validator.isDefineInElm(sde, elmJson);
     assertThat(isValid, is(false));
   }
 
@@ -67,9 +66,9 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
     String elmJson = "{ curroped: json";
 
     CqlDefinitionReturnTypeValidator validator = new CqlDefinitionReturnTypeValidator();
-    SupplementalData sde =
+    DefDescPair sde =
         SupplementalData.builder().definition("fun34").description("Please Help Me").build();
-    boolean isValid = validator.validateSdeDefinition(sde, elmJson);
+    boolean isValid = validator.isDefineInElm(sde, elmJson);
     assertThat(isValid, is(false));
   }
 }

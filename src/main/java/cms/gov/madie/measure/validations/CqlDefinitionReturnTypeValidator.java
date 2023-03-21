@@ -11,10 +11,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
+import gov.cms.madie.models.measure.DefDescPair;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.Stratification;
-import gov.cms.madie.models.measure.SupplementalData;
 import lombok.extern.slf4j.Slf4j;
 
 @Component
@@ -60,7 +60,15 @@ public class CqlDefinitionReturnTypeValidator {
     }
   }
 
-  public boolean validateSdeDefinition(SupplementalData sde, String elmJson) {
+  /**
+   * This method can handle any type that inherits from DefDescPair and is intended to compare the
+   * pair with the CQL Definitions provided in the elmJson.
+   *
+   * @param sde
+   * @param elmJson
+   * @return true if the def is contained in the elmJson, false otherwise
+   */
+  public boolean isDefineInElm(DefDescPair sde, String elmJson) {
     boolean result = false;
     try {
       Map<String, String> cqlDefinitionReturnTypes = getCqlDefinitionReturnTypes(elmJson);
