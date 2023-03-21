@@ -17,6 +17,7 @@ import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
@@ -45,32 +46,25 @@ public class VersionService {
 
   public Measure createVersion(String id, String versionType, String username, String accessToken)
       throws Exception {
-
     Measure measure =
         measureRepository
             .findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Measure", id));
-
     if (!VERSION_TYPE_MAJOR.equalsIgnoreCase(versionType)
         && !VERSION_TYPE_MINOR.equalsIgnoreCase(versionType)
         && !VERSION_TYPE_PATCH.equalsIgnoreCase(versionType)) {
       throw new BadVersionRequestException(
           "Measure", measure.getId(), username, "Invalid version request.");
     }
-
     ControllerUtil.verifyAuthorization(username, measure);
-
     validateMeasureForVersioning(measure, username, accessToken);
-
     measure.getMeasureMetaData().setDraft(false);
     measure.setLastModifiedAt(Instant.now());
     measure.setLastModifiedBy(username);
     setMeasureReviewMetaData(measure);
-
     Version oldVersion = measure.getVersion();
     Version newVersion = getNextVersion(measure, versionType);
     measure.setVersion(newVersion);
-
     String newCql =
         measure
             .getCql()
@@ -78,9 +72,7 @@ public class VersionService {
                 generateLibraryContentLine(measure.getCqlLibraryName(), oldVersion),
                 generateLibraryContentLine(measure.getCqlLibraryName(), newVersion));
     measure.setCql(newCql);
-
     Measure savedMeasure = measureRepository.save(measure);
-
     actionLogService.logAction(
         measure.getId(),
         Measure.class,
@@ -90,18 +82,21 @@ public class VersionService {
                 ? ActionType.VERSIONED_MINOR
                 : ActionType.VERSIONED_REVISIONNUMBER),
         username);
-
     log.info(
         "User [{}] successfully versioned measure with ID [{}]", username, savedMeasure.getId());
-
     ResponseEntity<String> result =
         fhirServicesClient.saveMeasureInHapiFhir(savedMeasure, accessToken);
-
-    log.info(
-        "User [{}] successfully saved versioned measure with ID [{}] in HAPI FHIR",
-        username,
-        (result != null ? result.getBody() : " null"));
-
+    if (result.getStatusCode() == HttpStatus.OK) {
+      log.info(
+          "User [{}] successfully saved versioned measure with ID [{}] in HAPI FHIR",
+          username,
+          result.getBody());
+    } else {
+      log.info(
+          "User [{}] failed to save versioned measure in HAPI FHIR: {}",
+          username,
+          result.getBody());
+    }
     return savedMeasure;
   }
 

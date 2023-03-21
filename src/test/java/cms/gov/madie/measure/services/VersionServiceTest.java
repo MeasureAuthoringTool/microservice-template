@@ -21,6 +21,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.time.Instant;
@@ -412,7 +413,8 @@ public class VersionServiceTest {
     updatedMeasure.setMeasureMetaData(updatedMetaData);
     when(measureRepository.save(any(Measure.class))).thenReturn(updatedMeasure);
 
-    when(fhirServicesClient.saveMeasureInHapiFhir(any(), anyString())).thenReturn(null);
+    when(fhirServicesClient.saveMeasureInHapiFhir(any(), anyString()))
+        .thenReturn(new ResponseEntity<>(HttpStatus.OK));
 
     versionService.createVersion("testMeasureId", "PATCH", "testUser", "accesstoken");
 
