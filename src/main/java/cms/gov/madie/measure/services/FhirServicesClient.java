@@ -8,10 +8,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientResponseException;import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Slf4j
@@ -72,9 +74,9 @@ public class FhirServicesClient {
     try {
       return fhirServicesRestTemplate.exchange(uri, HttpMethod.POST, measureEntity, String.class);
     } catch (RestClientResponseException e) {
-    // Ignore errors when saving Measures to HAPI as they're never retrieved.
-    return new ResponseEntity<>(
-        e.getResponseBodyAsString(), HttpStatus.valueOf(e.getRawStatusCode()));
+      // Ignore errors when saving Measures to HAPI as they're never retrieved.
+      return new ResponseEntity<>(
+          e.getResponseBodyAsString(), HttpStatus.valueOf(e.getRawStatusCode()));
     }
   }
 
