@@ -524,6 +524,55 @@ public class MeasureControllerMvcTest {
   }
 
   @Test
+  public void testNewQdmMeasurePassed() throws Exception {
+    Measure saved = new Measure();
+    String measureId = "id456";
+    saved.setId(measureId);
+    String measureName = "SavedMeasureQDM";
+    String libraryName = "QDMLib1";
+    String ecqmTitle = "ecqmTitleQDM";
+    String measureSetId = "cooltimeQDM";
+    saved.setMeasureName(measureName);
+    saved.setCqlLibraryName(libraryName);
+    saved.setModel(ModelType.QDM_5_6.toString());
+    saved.setEcqmTitle(ecqmTitle);
+    saved.setVersionId(measureId);
+    when(measureService.createMeasure(any(Measure.class), anyString(), anyString()))
+        .thenReturn(saved);
+
+    final String measureAsJson =
+        "{\"measureName\": \"%s\",\"measureSetId\":\"%s\", \"cqlLibraryName\": \"%s\" , \"ecqmTitle\": \"%s\", \"model\": \"%s\", \"versionId\":\"%s\"}"
+            .formatted(measureName, measureSetId, libraryName, ecqmTitle, ModelType.QDM_5_6.toString(), measureId);
+
+    mockMvc
+        .perform(
+            post("/measure")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .header("Authorization", TEST_USER_ID)
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.measureName").value(measureName))
+        .andExpect(jsonPath("$.cqlLibraryName").value(libraryName))
+        .andExpect(jsonPath("$.ecqmTitle").value(ecqmTitle))
+        .andExpect(jsonPath("$.model").value(ModelType.QDM_5_6.toString()))
+        .andExpect(jsonPath("$.id").value(measureId))
+        .andExpect(jsonPath("$.versionId").value(measureId));
+
+    verify(measureService, times(1))
+        .createMeasure(measureArgumentCaptor.capture(), anyString(), anyString());
+    verifyNoMoreInteractions(measureRepository);
+    Measure savedMeasure = measureArgumentCaptor.getValue();
+    assertEquals(measureName, savedMeasure.getMeasureName());
+    assertEquals(libraryName, savedMeasure.getCqlLibraryName());
+    assertEquals(ecqmTitle, savedMeasure.getEcqmTitle());
+    assertEquals(ModelType.QDM_5_6.toString(), savedMeasure.getModel());
+    assertNotEquals(measureId, savedMeasure.getId());
+  }
+
+  @Test
   public void testNewMeasureFailsForMeasureSetIdRequired() throws Exception {
     Measure saved = new Measure();
     String measureId = "id123";
