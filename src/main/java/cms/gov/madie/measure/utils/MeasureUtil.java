@@ -10,6 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeValidator;
 import cms.gov.madie.measure.validations.CqlObservationFunctionValidator;
+import gov.cms.madie.models.measure.DefDescPair;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureErrorType;
@@ -60,9 +61,17 @@ public class MeasureUtil {
     // MAT-5369  Adding checks for CQL Definitions present in SupplementalData
     // if the def in supplemental data isn't in the cql
 
-    if (isCqlDefsToSupplementalDataMismatched(measure, elmJson)) {
+    if (isCqlDefsMismatched(measure.getSupplementalData(), elmJson)) {
       // errors.add(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES);
       errors.add(MeasureErrorType.MISMATCH_CQL_SUPPLEMENTAL_DATA);
+    }
+
+    // MAT-5464  Adding checks for CQL Definitions present in Risk Adjustment Variables
+    // if the def in Risk Adjustment Variables isn't in the cql
+
+    if (isCqlDefsMismatched(measure.getRiskAdjustments(), elmJson)) {
+      // errors.add(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES);
+      errors.add(MeasureErrorType.MISMATCH_CQL_RISK_ADJUSTMENT);
     }
 
     // MAT-5369 If the only error on the stack is MISSING_ELM then remove it and set cqlErrors =
@@ -78,15 +87,14 @@ public class MeasureUtil {
     return measureBuilder.build();
   }
 
-  private boolean isCqlDefsToSupplementalDataMismatched(Measure measure, String elmJson) {
+  private boolean isCqlDefsMismatched(List<DefDescPair> defDescPairs, String elmJson) {
     boolean result = false;
-    if (measure.getSupplementalData().isEmpty()) {
+    if (CollectionUtils.isEmpty(defDescPairs)) {
       result = false;
     } else {
       result =
-          !measure.getSupplementalData().stream()
-              .anyMatch(
-                  sde -> cqlDefinitionReturnTypeValidator.validateSdeDefinition(sde, elmJson));
+          !defDescPairs.stream()
+              .anyMatch(def -> cqlDefinitionReturnTypeValidator.isDefineInElm(def, elmJson));
     }
     return result;
   }
@@ -172,6 +180,6 @@ public class MeasureUtil {
     // If the lists match, then we didn't change anything
     // changed<sde>[] == original<sde>[]
     return !CollectionUtils.isEqualCollection(
-            changed.getSupplementalData(), original.getSupplementalData());
+        changed.getSupplementalData(), original.getSupplementalData());
   }
 }

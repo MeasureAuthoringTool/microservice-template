@@ -8,6 +8,7 @@ import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureErrorType;
 import gov.cms.madie.models.measure.Population;
+import gov.cms.madie.models.measure.DefDescPair;
 import gov.cms.madie.models.measure.SupplementalData;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -69,12 +70,12 @@ class MeasureUtilTest {
   @Test
   public void testCqlDefinitionNotPresentForSupplementalData_ValidJson()
       throws JsonProcessingException {
-    SupplementalData supplementalData =
+    DefDescPair supplementalData =
         SupplementalData.builder()
             .definition("THIS_DEFINITION")
             .description("Just a dumb definition")
             .build();
-    List<SupplementalData> sdes =
+    List<DefDescPair> sdes =
         new ArrayList<>() {
           {
             add(supplementalData);
@@ -85,7 +86,7 @@ class MeasureUtilTest {
 
     doReturn(false)
         .when(cqlDefinitionReturnTypeValidator)
-        .validateSdeDefinition(any(SupplementalData.class), anyString());
+        .isDefineInElm(any(DefDescPair.class), anyString());
 
     Measure output = measureUtil.validateAllMeasureDependencies(measure);
     assertThat(output, is(notNullValue()));
@@ -97,14 +98,44 @@ class MeasureUtilTest {
   }
 
   @Test
-  public void testCqlDefinitionPresentForSupplementalData_ValidJson()
+  public void testCqlDefinitionNotPresentForRiskAdjustmentValidJson()
       throws JsonProcessingException {
-    SupplementalData supplementalData =
+    DefDescPair riskAdjustmentVariables =
         SupplementalData.builder()
             .definition("THIS_DEFINITION")
             .description("Just a dumb definition")
             .build();
-    List<SupplementalData> sdes =
+    List<DefDescPair> ravs =
+        new ArrayList<>() {
+          {
+            add(riskAdjustmentVariables);
+          }
+        };
+
+    Measure measure = Measure.builder().elmJson("{}").riskAdjustments(ravs).build();
+
+    doReturn(false)
+        .when(cqlDefinitionReturnTypeValidator)
+        .isDefineInElm(any(DefDescPair.class), anyString());
+
+    Measure output = measureUtil.validateAllMeasureDependencies(measure);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.isCqlErrors(), is(false));
+    assertThat(output.getErrors(), is(notNullValue()));
+    assertThat(
+        output.getErrors().contains(MeasureErrorType.MISMATCH_CQL_RISK_ADJUSTMENT), is(true));
+    assertThat(output.getErrors().contains(MeasureErrorType.MISSING_ELM), is(false));
+  }
+
+  @Test
+  public void testCqlDefinitionPresentForSupplementalDataValidJson()
+      throws JsonProcessingException {
+    DefDescPair supplementalData =
+        SupplementalData.builder()
+            .definition("THIS_DEFINITION")
+            .description("Just a dumb definition")
+            .build();
+    List<DefDescPair> sdes =
         new ArrayList<>() {
           {
             add(supplementalData);
@@ -115,7 +146,7 @@ class MeasureUtilTest {
 
     doReturn(true)
         .when(cqlDefinitionReturnTypeValidator)
-        .validateSdeDefinition(any(SupplementalData.class), anyString());
+        .isDefineInElm(any(DefDescPair.class), anyString());
 
     Measure output = measureUtil.validateAllMeasureDependencies(measure);
     assertThat(output, is(notNullValue()));
@@ -127,14 +158,14 @@ class MeasureUtilTest {
   }
 
   @Test
-  public void testCqlDefinitionNotPresentForSupplementalData_NullElm()
+  public void testCqlDefinitionNotPresentForSupplementalDataNullElm()
       throws JsonProcessingException {
-    SupplementalData supplementalData =
+    DefDescPair supplementalData =
         SupplementalData.builder()
             .definition("THIS_DEFINITION")
             .description("Just a dumb definition")
             .build();
-    List<SupplementalData> sdes =
+    List<DefDescPair> sdes =
         new ArrayList<>() {
           {
             add(supplementalData);
@@ -615,7 +646,7 @@ class MeasureUtilTest {
 
   @Test
   public void testIsSupplementalDataChanged_ReturnsTrueForAddNonNullSupplementalData() {
-    SupplementalData supplementalData1 =
+    DefDescPair supplementalData1 =
         SupplementalData.builder()
             .definition("THIS_DEFINITION")
             .description("Just a dumb definition")
@@ -627,7 +658,7 @@ class MeasureUtilTest {
 
   @Test
   public void testIsSupplementalDataChanged_ReturnsTrueForSupplementalDataToNull() {
-    SupplementalData supplementalData1 =
+    DefDescPair supplementalData1 =
         SupplementalData.builder()
             .definition("THIS_DEFINITION")
             .description("Just a dumb definition")
@@ -647,7 +678,7 @@ class MeasureUtilTest {
 
   @Test
   public void testIsSupplementalDataChanged_ReturnsTrueForRemovedSupplementalData() {
-    SupplementalData supplementalData1 =
+    DefDescPair supplementalData1 =
         SupplementalData.builder()
             .definition("THIS_DEFINITION")
             .description("Just a dumb definition")
@@ -661,7 +692,7 @@ class MeasureUtilTest {
   @Test
   public void testIsSupplementalDataChanged_ReturnsTrueForNewNonNullSupplementalData() {
     final Measure original = Measure.builder().supplementalData(Collections.emptyList()).build();
-    SupplementalData supplementalData1 =
+    DefDescPair supplementalData1 =
         SupplementalData.builder()
             .definition("THIS_DEFINITION")
             .description("Just a dumb definition")
@@ -683,25 +714,25 @@ class MeasureUtilTest {
   @Test
   public void testIsSupplementalDataChanged_ReturnsTrueForChanged() {
 
-    SupplementalData supplementalData1 =
+    DefDescPair supplementalData1 =
         SupplementalData.builder()
             .definition("THIS_DEFINITION")
             .description("Just a dumb definition")
             .build();
-    List<SupplementalData> sde1 =
+    List<DefDescPair> sde1 =
         new ArrayList<>() {
           {
             add(supplementalData1);
           }
         };
 
-    SupplementalData supplementalData2 =
+    DefDescPair supplementalData2 =
         SupplementalData.builder()
             .definition("THAT_DEFINITION")
             .description("Just aother dumb definition")
             .build();
 
-    List<SupplementalData> sde2 =
+    List<DefDescPair> sde2 =
         new ArrayList<>() {
           {
             add(supplementalData2);
@@ -719,12 +750,12 @@ class MeasureUtilTest {
   @Test
   public void testIsSupplementalDataChanged_ReturnsFalseForUnchanged() {
 
-    SupplementalData supplementalData1 =
+    DefDescPair supplementalData1 =
         SupplementalData.builder()
             .definition("THIS_DEFINITION")
             .description("Just a dumb definition")
             .build();
-    List<SupplementalData> sde1 =
+    List<DefDescPair> sde1 =
         new ArrayList<>() {
           {
             add(supplementalData1);
