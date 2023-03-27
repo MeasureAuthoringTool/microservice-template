@@ -47,7 +47,7 @@ class BundleControllerTest {
     assertThrows(
         ResourceNotFoundException.class,
         () ->
-            bundleController.getMeasureBundle(
+            bundleController.getMeasureBundle(git a
                 "MeasureID", principal, "Bearer TOKEN", "calculation"));
   }
 
