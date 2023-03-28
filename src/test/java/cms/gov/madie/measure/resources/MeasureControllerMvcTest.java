@@ -542,7 +542,13 @@ public class MeasureControllerMvcTest {
 
     final String measureAsJson =
         "{\"measureName\": \"%s\",\"measureSetId\":\"%s\", \"cqlLibraryName\": \"%s\" , \"ecqmTitle\": \"%s\", \"model\": \"%s\", \"versionId\":\"%s\"}"
-            .formatted(measureName, measureSetId, libraryName, ecqmTitle, ModelType.QDM_5_6.toString(), measureId);
+            .formatted(
+                measureName,
+                measureSetId,
+                libraryName,
+                ecqmTitle,
+                ModelType.QDM_5_6.toString(),
+                measureId);
 
     mockMvc
         .perform(
