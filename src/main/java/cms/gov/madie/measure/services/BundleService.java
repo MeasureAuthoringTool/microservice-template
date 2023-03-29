@@ -47,7 +47,7 @@ public class BundleService {
       if (CollectionUtils.isEmpty(measure.getMeasureMetaData().getDevelopers())) {
         throw new InvalidResourceBundleStateException(
             "Measure", measure.getId(), "since there are no associated developers in metadata.");
-      } else if (measure.getMeasureMetaData().getSteward() == null) {
+      } else if (StringUtils.isBlank(measure.getMeasureMetaData().getSteward())) {
         throw new InvalidResourceBundleStateException(
             "Measure", measure.getId(), "since there is no associated steward in metadata.");
       } else if (measure.getMeasureMetaData().getDescription() == null) {
@@ -55,10 +55,7 @@ public class BundleService {
             "Measure", measure.getId(), "since there is no description in metadata.");
       }
     }
-    if (!measure.getGroups().stream()
-        .filter(group -> group.getMeasureGroupTypes() == null)
-        .collect(Collectors.toList())
-        .isEmpty()) {
+    if (measure.getGroups().stream().anyMatch(g -> CollectionUtils.isEmpty(g.getMeasureGroupTypes()))) {
       throw new InvalidResourceBundleStateException(
           "Measure",
           measure.getId(),
