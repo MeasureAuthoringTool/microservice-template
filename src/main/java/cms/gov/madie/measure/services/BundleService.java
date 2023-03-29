@@ -45,8 +45,7 @@ public class BundleService {
       return null;
     }
     if (measure.getMeasureMetaData() != null) {
-      if (measure.getMeasureMetaData().getDevelopers() == null
-          || measure.getMeasureMetaData().getDevelopers().isEmpty()) {
+      if (CollectionUtils.isEmpty(measure.getMeasureMetaData().getDevelopers())) {
         throw new InvalidResourceBundleStateException(
             "Measure", measure.getId(), "since there are no associated developers in metadata.");
       } else if (measure.getMeasureMetaData().getSteward() == null) {
