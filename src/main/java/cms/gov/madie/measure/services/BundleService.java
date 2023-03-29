@@ -11,8 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.util.stream.Collectors;
-
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.client.RestClientException;
 
@@ -47,16 +45,17 @@ public class BundleService {
       if (CollectionUtils.isEmpty(measure.getMeasureMetaData().getDevelopers())) {
         throw new InvalidResourceBundleStateException(
             "Measure", measure.getId(), "since there are no associated developers in metadata.");
-      } else if (measure.getMeasureMetaData().getSteward()==null) {
+      } else if (measure.getMeasureMetaData().getSteward() == null) {
         throw new InvalidResourceBundleStateException(
             "Measure", measure.getId(), "since there is no associated steward in metadata.");
       } else if (StringUtils.isBlank(measure.getMeasureMetaData().getDescription())) {
-        
+
         throw new InvalidResourceBundleStateException(
             "Measure", measure.getId(), "since there is no description in metadata.");
       }
     }
-    if (measure.getGroups().stream().anyMatch(g -> CollectionUtils.isEmpty(g.getMeasureGroupTypes()))) {
+    if (measure.getGroups().stream()
+        .anyMatch(g -> CollectionUtils.isEmpty(g.getMeasureGroupTypes()))) {
       throw new InvalidResourceBundleStateException(
           "Measure",
           measure.getId(),
