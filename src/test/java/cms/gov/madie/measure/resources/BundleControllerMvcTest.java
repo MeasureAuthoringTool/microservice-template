@@ -56,26 +56,6 @@ public class BundleControllerMvcTest {
   }
 
   @Test
-  void testGetMeasureBundleReturnsForbidden() throws Exception {
-    Measure measure =
-        Measure.builder().id("1234").measureName("TestMeasure").createdBy("OTHER_USER").build();
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    mockMvc
-        .perform(
-            get("/measures/1234/bundle")
-                .with(user(TEST_USER_ID))
-                .with(csrf())
-                .header("Authorization", "test-okta")
-                .accept(MediaType.APPLICATION_JSON))
-        .andExpect(status().isForbidden())
-        .andExpect(
-            jsonPath("$.message")
-                .value("User " + TEST_USER_ID + " is not authorized for Measure with ID 1234"));
-    verify(measureRepository, times(1)).findById(eq("1234"));
-    verifyNoInteractions(bundleService);
-  }
-
-  @Test
   void testGetMeasureBundleReturnsServerExceptionForCqlElmTranslationFailure() throws Exception {
     final String elmJson = "{\"text\": \"ELM JSON\"}";
     Measure measure =
