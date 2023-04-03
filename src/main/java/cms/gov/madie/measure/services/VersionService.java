@@ -4,11 +4,13 @@ import cms.gov.madie.measure.exceptions.BadVersionRequestException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.MeasureNotDraftableException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.repositories.ExportRepository;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.utils.ControllerUtil;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.ElmJson;
+import gov.cms.madie.models.measure.Export;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.ReviewMetaData;
@@ -39,6 +41,7 @@ public class VersionService {
   private final MeasureRepository measureRepository;
   private final ElmTranslatorClient elmTranslatorClient;
   private final FhirServicesClient fhirServicesClient;
+  private final ExportRepository exportRepository;
 
   private static final String VERSION_TYPE_MAJOR = "MAJOR";
   private static final String VERSION_TYPE_MINOR = "MINOR";
@@ -84,19 +87,9 @@ public class VersionService {
         username);
     log.info(
         "User [{}] successfully versioned measure with ID [{}]", username, savedMeasure.getId());
-    ResponseEntity<String> result =
-        fhirServicesClient.saveMeasureInHapiFhir(savedMeasure, accessToken);
-    if (result.getStatusCode() == HttpStatus.OK) {
-      log.info(
-          "User [{}] successfully saved versioned measure with ID [{}] in HAPI FHIR",
-          username,
-          result.getBody());
-    } else {
-      log.info(
-          "User [{}] failed to save versioned measure in HAPI FHIR: {}",
-          username,
-          result.getBody());
-    }
+
+    var measureBundle = fhirServicesClient.getMeasureBundle(savedMeasure, accessToken, "export");
+    saveMeasureBundle(savedMeasure, measureBundle, accessToken, username);
     return savedMeasure;
   }
 
@@ -274,6 +267,32 @@ public class VersionService {
     if (measure.getReviewMetaData() != null) {
       measure.getReviewMetaData().setApprovalDate(null);
       measure.getReviewMetaData().setLastReviewDate(null);
+    }
+  }
+
+  private void saveMeasureBundle(Measure savedMeasure, String measureBundle, String accessToken, String username) {
+    Export export =
+        Export.builder()
+            .measureId(savedMeasure.getId())
+            .measureBundleJson(measureBundle)
+            .build();
+    Export savedExport = exportRepository.save(export);
+    log.info(
+        "User [{}] successfully saved versioned measure's export data with ID [{}]",
+        username,
+        savedExport.getId());
+    ResponseEntity<String> result =
+        fhirServicesClient.saveMeasureInHapiFhir(savedMeasure, accessToken);
+    if (result.getStatusCode() == HttpStatus.OK) {
+      log.info(
+          "User [{}] successfully saved versioned measure with ID [{}] in HAPI FHIR",
+          username,
+          result.getBody());
+    } else {
+      log.info(
+          "User [{}] failed to save versioned measure in HAPI FHIR: {}",
+          username,
+          result.getBody());
     }
   }
 }

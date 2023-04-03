@@ -5,6 +5,7 @@ import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.MeasureNotDraftableException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
+import cms.gov.madie.measure.repositories.ExportRepository;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.ElmJson;
@@ -55,9 +56,13 @@ public class VersionServiceTest {
 
   @Mock FhirServicesClient fhirServicesClient;
 
+  @Mock ExportRepository exportRepository;
+
   @InjectMocks VersionService versionService;
 
   @Captor private ArgumentCaptor<Measure> measureCaptor;
+
+  @Captor private ArgumentCaptor<Export> exportArgumentCaptor;
 
   private final String ELMJON_ERROR =
       "{\n" + "\"errorExceptions\" : \n" + "[ {\"error\":\"error translating cql\" } ]\n" + "}";
@@ -289,6 +294,16 @@ public class VersionServiceTest {
     when(fhirServicesClient.saveMeasureInHapiFhir(any(), anyString()))
         .thenReturn(ResponseEntity.ok("Created"));
 
+    Export measureExport =
+        Export.builder()
+            .id("testId")
+            .measureId("testMeasureId")
+            .measureBundleJson("test measure json")
+            .build();
+    when(exportRepository.save(any(Export.class))).thenReturn(measureExport);
+    when(fhirServicesClient.getMeasureBundle(any(), anyString(), anyString()))
+        .thenReturn("test measure json");
+
     versionService.createVersion("testMeasureId", "MAJOR", "testUser", "accesstoken");
 
     verify(measureRepository, times(1)).save(measureCaptor.capture());
@@ -311,6 +326,11 @@ public class VersionServiceTest {
             .truncatedTo(ChronoUnit.MINUTES)
             .compareTo(today.truncatedTo(ChronoUnit.MINUTES)),
         is(0));
+
+    verify(exportRepository, times(1)).save(exportArgumentCaptor.capture());
+    Export capturedExport = exportArgumentCaptor.getValue();
+    assertEquals(savedValue.getId(), capturedExport.getMeasureId());
+    assertEquals(measureExport.getMeasureBundleJson(), capturedExport.getMeasureBundleJson());
 
     verify(fhirServicesClient, times(1)).saveMeasureInHapiFhir(updatedMeasure, "accesstoken");
   }
@@ -352,6 +372,16 @@ public class VersionServiceTest {
     when(fhirServicesClient.saveMeasureInHapiFhir(any(), anyString()))
         .thenReturn(ResponseEntity.ok("Created"));
 
+    Export measureExport =
+        Export.builder()
+            .id("testId")
+            .measureId("testMeasureId")
+            .measureBundleJson("test measure json")
+            .build();
+    when(exportRepository.save(any(Export.class))).thenReturn(measureExport);
+    when(fhirServicesClient.getMeasureBundle(any(), anyString(), anyString()))
+        .thenReturn("test measure json");
+
     versionService.createVersion("testMeasureId", "MINOR", "testUser", "accesstoken");
 
     verify(measureRepository, times(1)).save(measureCaptor.capture());
@@ -374,6 +404,11 @@ public class VersionServiceTest {
             .truncatedTo(ChronoUnit.MINUTES)
             .compareTo(today.truncatedTo(ChronoUnit.MINUTES)),
         is(0));
+
+    verify(exportRepository, times(1)).save(exportArgumentCaptor.capture());
+    Export savedExport = exportArgumentCaptor.getValue();
+    assertEquals(savedExport.getMeasureId(), savedValue.getId());
+    assertEquals(measureExport.getMeasureBundleJson(), savedExport.getMeasureBundleJson());
 
     verify(fhirServicesClient, times(1)).saveMeasureInHapiFhir(updatedMeasure, "accesstoken");
   }
@@ -416,6 +451,16 @@ public class VersionServiceTest {
     when(fhirServicesClient.saveMeasureInHapiFhir(any(), anyString()))
         .thenReturn(new ResponseEntity<>(HttpStatus.OK));
 
+    Export measureExport =
+        Export.builder()
+            .id("testId")
+            .measureId("testMeasureId")
+            .measureBundleJson("test measure json")
+            .build();
+    when(exportRepository.save(any(Export.class))).thenReturn(measureExport);
+    when(fhirServicesClient.getMeasureBundle(any(), anyString(), anyString()))
+        .thenReturn("test measure json");
+
     versionService.createVersion("testMeasureId", "PATCH", "testUser", "accesstoken");
 
     verify(measureRepository, times(1)).save(measureCaptor.capture());
@@ -438,6 +483,11 @@ public class VersionServiceTest {
             .truncatedTo(ChronoUnit.MINUTES)
             .compareTo(today.truncatedTo(ChronoUnit.MINUTES)),
         is(0));
+
+    verify(exportRepository, times(1)).save(exportArgumentCaptor.capture());
+    Export savedExport = exportArgumentCaptor.getValue();
+    assertEquals(savedValue.getId(), savedExport.getMeasureId());
+    assertEquals(measureExport.getMeasureBundleJson(), savedExport.getMeasureBundleJson());
 
     verify(fhirServicesClient, times(1)).saveMeasureInHapiFhir(updatedMeasure, "accesstoken");
   }

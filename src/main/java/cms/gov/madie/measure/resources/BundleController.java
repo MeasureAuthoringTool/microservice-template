@@ -43,7 +43,6 @@ public class BundleController {
       throw new ResourceNotFoundException("Measure", measureId);
     }
     Measure measure = measureOptional.get();
-    ControllerUtil.verifyAuthorization(principal.getName(), measure);
 
     return ResponseEntity.ok(bundleService.bundleMeasure(measure, accessToken, bundleType));
   }
