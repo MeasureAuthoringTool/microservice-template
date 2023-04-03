@@ -87,7 +87,9 @@ public class VersionService {
         username);
     log.info(
         "User [{}] successfully versioned measure with ID [{}]", username, savedMeasure.getId());
-    saveMeasureBundle(savedMeasure, accessToken, username);
+
+    var measureBundle = fhirServicesClient.getMeasureBundle(savedMeasure, accessToken, "export")
+    saveMeasureBundle(savedMeasure, measureBundle, accessToken, username);
     return savedMeasure;
   }
 
@@ -268,12 +270,11 @@ public class VersionService {
     }
   }
 
-  private void saveMeasureBundle(Measure savedMeasure, String accessToken, String username) {
+  private void saveMeasureBundle(Measure savedMeasure, String measureBundle, String accessToken, String username) {
     Export export =
         Export.builder()
             .measureId(savedMeasure.getId())
-            .measureBundleJson(
-                fhirServicesClient.getMeasureBundle(savedMeasure, accessToken, "export"))
+            .measureBundleJson(measureBundle)
             .build();
     Export savedExport = exportRepository.save(export);
     log.info(
