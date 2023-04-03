@@ -88,7 +88,7 @@ public class VersionService {
     log.info(
         "User [{}] successfully versioned measure with ID [{}]", username, savedMeasure.getId());
 
-    var measureBundle = fhirServicesClient.getMeasureBundle(savedMeasure, accessToken, "export")
+    var measureBundle = fhirServicesClient.getMeasureBundle(savedMeasure, accessToken, "export");
     saveMeasureBundle(savedMeasure, measureBundle, accessToken, username);
     return savedMeasure;
   }
