@@ -87,27 +87,7 @@ public class VersionService {
         username);
     log.info(
         "User [{}] successfully versioned measure with ID [{}]", username, savedMeasure.getId());
-    Export export =
-        Export.builder()
-            .measureId(savedMeasure.getId())
-            .measureBundleJson(fhirServicesClient.getMeasureBundle(measure, accessToken, "export"))
-            .build();
-    Export savedExport = exportRepository.save(export);
-    log.info(
-        "User [{}] successfully saved versioned measure's export data with ID [{}]", username, savedExport.getId());
-    ResponseEntity<String> result =
-        fhirServicesClient.saveMeasureInHapiFhir(savedMeasure, accessToken);
-    if (result.getStatusCode() == HttpStatus.OK) {
-      log.info(
-          "User [{}] successfully saved versioned measure with ID [{}] in HAPI FHIR",
-          username,
-          result.getBody());
-    } else {
-      log.info(
-          "User [{}] failed to save versioned measure in HAPI FHIR: {}",
-          username,
-          result.getBody());
-    }
+    saveMeasureBundle(savedMeasure, accessToken, username);
     return savedMeasure;
   }
 
@@ -285,6 +265,33 @@ public class VersionService {
     if (measure.getReviewMetaData() != null) {
       measure.getReviewMetaData().setApprovalDate(null);
       measure.getReviewMetaData().setLastReviewDate(null);
+    }
+  }
+
+  private void saveMeasureBundle(Measure savedMeasure, String accessToken, String username) {
+    Export export =
+        Export.builder()
+            .measureId(savedMeasure.getId())
+            .measureBundleJson(
+                fhirServicesClient.getMeasureBundle(savedMeasure, accessToken, "export"))
+            .build();
+    Export savedExport = exportRepository.save(export);
+    log.info(
+        "User [{}] successfully saved versioned measure's export data with ID [{}]",
+        username,
+        savedExport.getId());
+    ResponseEntity<String> result =
+        fhirServicesClient.saveMeasureInHapiFhir(savedMeasure, accessToken);
+    if (result.getStatusCode() == HttpStatus.OK) {
+      log.info(
+          "User [{}] successfully saved versioned measure with ID [{}] in HAPI FHIR",
+          username,
+          result.getBody());
+    } else {
+      log.info(
+          "User [{}] failed to save versioned measure in HAPI FHIR: {}",
+          username,
+          result.getBody());
     }
   }
 }
