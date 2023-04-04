@@ -54,6 +54,10 @@ public class BundleService {
             "Measure", measure.getId(), "since there is no description in metadata.");
       }
     }
+    if (CollectionUtils.isEmpty(measure.getGroups())) {
+      throw new InvalidResourceBundleStateException(
+          "Measure", measure.getId(), "since there is no population criteria on the measure.");
+    }
     if (measure.getGroups().stream()
         .anyMatch(g -> CollectionUtils.isEmpty(g.getMeasureGroupTypes()))) {
       throw new InvalidResourceBundleStateException(
