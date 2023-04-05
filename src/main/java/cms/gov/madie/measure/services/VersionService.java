@@ -270,12 +270,10 @@ public class VersionService {
     }
   }
 
-  private void saveMeasureBundle(Measure savedMeasure, String measureBundle, String accessToken, String username) {
+  private void saveMeasureBundle(
+      Measure savedMeasure, String measureBundle, String accessToken, String username) {
     Export export =
-        Export.builder()
-            .measureId(savedMeasure.getId())
-            .measureBundleJson(measureBundle)
-            .build();
+        Export.builder().measureId(savedMeasure.getId()).measureBundleJson(measureBundle).build();
     Export savedExport = exportRepository.save(export);
     log.info(
         "User [{}] successfully saved versioned measure's export data with ID [{}]",
