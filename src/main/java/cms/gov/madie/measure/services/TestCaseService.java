@@ -129,16 +129,13 @@ public class TestCaseService {
 
   public TestCase validateTestCaseAsResource(final TestCase testCase, final String accessToken) {
     final HapiOperationOutcome hapiOperationOutcome = validateTestCaseJson(testCase, accessToken);
-    TestCase.TestCaseBuilder testCaseBuilder =
-        testCase.toBuilder().hapiOperationOutcome(hapiOperationOutcome);
-    if (hapiOperationOutcome != null
-        && (hapiOperationOutcome.getCode() >= 200 || hapiOperationOutcome.getCode() <= 299)
-        && hapiOperationOutcome.isSuccessful()) {
-      testCaseBuilder.validResource(true);
-    } else {
-      testCaseBuilder.validResource(false);
-    }
-    return testCaseBuilder.build();
+    return testCase == null
+        ? null
+        : testCase
+        .toBuilder()
+        .hapiOperationOutcome(hapiOperationOutcome)
+        .validResource(hapiOperationOutcome != null && hapiOperationOutcome.isSuccessful())
+        .build();
   }
 
   public TestCase updateTestCase(
@@ -172,21 +169,8 @@ public class TestCaseService {
       testCase.setCreatedBy(username);
     }
 
-    // try to persist the Patient Bundle to HAPI FHIR
-    if (testCase == null || StringUtils.isBlank(testCase.getJson())) {
-      testCase.setValidResource(false);
-    } else {
-      HapiOperationOutcome hapiOperationOutcome = validateTestCaseJson(testCase, accessToken);
-      testCase.setHapiOperationOutcome(hapiOperationOutcome);
-      if ((hapiOperationOutcome.getCode() >= 200 || hapiOperationOutcome.getCode() <= 299)
-          && hapiOperationOutcome.isSuccessful()) {
-        testCase.setValidResource(true);
-      } else {
-        testCase.setValidResource(false);
-      }
-    }
-
-    measure.getTestCases().add(testCase);
+    TestCase validatedTestCase = validateTestCaseAsResource(testCase, accessToken);
+    measure.getTestCases().add(validatedTestCase);
 
     measureRepository.save(measure);
 
@@ -195,7 +179,7 @@ public class TestCaseService {
         username,
         testCase.getId(),
         measureId);
-    return testCase;
+    return validatedTestCase;
   }
 
   public TestCase getTestCase(
