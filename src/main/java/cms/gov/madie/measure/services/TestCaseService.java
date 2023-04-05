@@ -179,7 +179,7 @@ public class TestCaseService {
         username,
         testCase.getId(),
         measureId);
-    return testCase;
+    return validatedTestCase;
   }
 
   public TestCase getTestCase(
