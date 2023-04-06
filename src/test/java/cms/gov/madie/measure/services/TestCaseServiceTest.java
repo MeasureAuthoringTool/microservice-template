@@ -197,6 +197,15 @@ public class TestCaseServiceTest {
   }
 
   @Test
+  public void testValidateTestCaseAsResourceHandlesNullTestCase() {
+    TestCase testCase = null;
+    final String accessToken = "Bearer Token";
+
+    TestCase output = testCaseService.validateTestCaseAsResource(testCase, accessToken);
+    assertThat(output, is(nullValue()));
+  }
+
+  @Test
   public void testPersistTestCasesThrowsResourceNotFoundExceptionForUnknownId() {
     List<TestCase> newTestCases = List.of(TestCase.builder().title("Test1").build());
     String measureId = measure.getId();
@@ -474,7 +483,17 @@ public class TestCaseServiceTest {
     assertEquals(measure.getLastModifiedAt(), savedMeasure.getLastModifiedAt());
     assertNotNull(savedMeasure.getTestCases());
     assertEquals(1, savedMeasure.getTestCases().size());
-    assertEquals(updatedTestCase, savedMeasure.getTestCases().get(0));
+    TestCase expectedTestCase =
+        updatedTestCase
+            .toBuilder()
+            .hapiOperationOutcome(
+                HapiOperationOutcome.builder()
+                    .code(500)
+                    .message("An unknown exception occurred while validating the test case JSON.")
+                    .build())
+            .build();
+
+    assertEquals(expectedTestCase, savedMeasure.getTestCases().get(0));
 
     int lastModCompareTo =
         updatedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
@@ -568,7 +587,16 @@ public class TestCaseServiceTest {
     Measure savedMeasure = measureCaptor.getValue();
     assertNotNull(savedMeasure.getTestCases());
     assertEquals(1, savedMeasure.getTestCases().size());
-    assertEquals(updatedTestCase, savedMeasure.getTestCases().get(0));
+    TestCase expectedTestCase =
+        upsertingTestCase
+            .toBuilder()
+            .hapiOperationOutcome(
+                HapiOperationOutcome.builder()
+                    .code(500)
+                    .message("An unknown exception occurred while validating the test case JSON.")
+                    .build())
+            .build();
+    assertEquals(expectedTestCase, savedMeasure.getTestCases().get(0));
   }
 
   @Test
@@ -604,7 +632,17 @@ public class TestCaseServiceTest {
     Measure savedMeasure = measureCaptor.getValue();
     assertNotNull(savedMeasure.getTestCases());
     assertEquals(1, savedMeasure.getTestCases().size());
-    assertEquals(updatedTestCase, savedMeasure.getTestCases().get(0));
+
+    TestCase expectedTestCase =
+        updatedTestCase
+            .toBuilder()
+            .hapiOperationOutcome(
+                HapiOperationOutcome.builder()
+                    .code(500)
+                    .message("An unknown exception occurred while validating the test case JSON.")
+                    .build())
+            .build();
+    assertEquals(expectedTestCase, savedMeasure.getTestCases().get(0));
   }
 
   @Test
@@ -644,7 +682,17 @@ public class TestCaseServiceTest {
     assertNotNull(savedMeasure.getTestCases());
     assertEquals(2, savedMeasure.getTestCases().size());
     assertEquals(otherExistingTC, savedMeasure.getTestCases().get(0));
-    assertEquals(updatedTestCase, savedMeasure.getTestCases().get(1));
+
+    TestCase expectedTestCase =
+        updatedTestCase
+            .toBuilder()
+            .hapiOperationOutcome(
+                HapiOperationOutcome.builder()
+                    .code(500)
+                    .message("An unknown exception occurred while validating the test case JSON.")
+                    .build())
+            .build();
+    assertEquals(expectedTestCase, savedMeasure.getTestCases().get(1));
   }
 
   @Test
