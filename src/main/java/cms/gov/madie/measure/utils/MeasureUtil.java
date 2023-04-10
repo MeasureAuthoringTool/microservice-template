@@ -62,7 +62,6 @@ public class MeasureUtil {
     // if the def in supplemental data isn't in the cql
 
     if (isCqlDefsMismatched(measure.getSupplementalData(), elmJson)) {
-      // errors.add(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES);
       errors.add(MeasureErrorType.MISMATCH_CQL_SUPPLEMENTAL_DATA);
     }
 
@@ -70,7 +69,6 @@ public class MeasureUtil {
     // if the def in Risk Adjustment Variables isn't in the cql
 
     if (isCqlDefsMismatched(measure.getRiskAdjustments(), elmJson)) {
-      // errors.add(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES);
       errors.add(MeasureErrorType.MISMATCH_CQL_RISK_ADJUSTMENT);
     }
 
@@ -181,5 +179,18 @@ public class MeasureUtil {
     // changed<sde>[] == original<sde>[]
     return !CollectionUtils.isEqualCollection(
         changed.getSupplementalData(), original.getSupplementalData());
+  }
+
+  public boolean isRiskAdjustmentChanged(Measure changed, Measure original) {
+    if (CollectionUtils.isEmpty(original.getRiskAdjustments())) {
+      return !CollectionUtils.isEmpty(changed.getRiskAdjustments());
+    }
+    if (CollectionUtils.isEmpty(changed.getRiskAdjustments())) {
+      return !CollectionUtils.isEmpty(original.getRiskAdjustments());
+    }
+    // If the lists match, then we didn't change anything
+    // changed<sde>[] == original<sde>[]
+    return !CollectionUtils.isEqualCollection(
+        changed.getRiskAdjustments(), original.getRiskAdjustments());
   }
 }
