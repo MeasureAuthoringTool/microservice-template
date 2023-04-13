@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.TestCaseService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,6 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class TestCaseControllerMvcTest {
 
   @MockBean private TestCaseService testCaseService;
+  @MockBean private MeasureRepository measureRepository;
   @Autowired private MockMvc mockMvc;
   @Captor ArgumentCaptor<TestCase> testCaseCaptor;
   @Captor ArgumentCaptor<String> measureIdCaptor;

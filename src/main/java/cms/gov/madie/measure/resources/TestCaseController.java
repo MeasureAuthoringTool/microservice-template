@@ -1,12 +1,15 @@
 package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.TestCase;
 import cms.gov.madie.measure.services.TestCaseService;
 import cms.gov.madie.measure.utils.ControllerUtil;
 import cms.gov.madie.measure.utils.UserInputSanitizeUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import java.util.Optional;
+import cms.gov.madie.measure.repositories.MeasureRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -23,6 +26,7 @@ import java.util.List;
 public class TestCaseController {
 
   @Autowired private final TestCaseService testCaseService;
+  @Autowired private final MeasureRepository measureRepository;
 
   @PostMapping(ControllerUtil.TEST_CASES)
   public ResponseEntity<TestCase> addTestCase(
@@ -44,6 +48,11 @@ public class TestCaseController {
       @PathVariable String measureId,
       @RequestHeader("Authorization") String accessToken,
       Principal principal) {
+    final String username = principal.getName();
+
+    Optional<Measure> measureOptional = measureRepository.findById(measureId);
+    Measure measure = measureOptional.get();
+    ControllerUtil.verifyAuthorization(username, measure);
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(
             testCaseService.persistTestCases(
