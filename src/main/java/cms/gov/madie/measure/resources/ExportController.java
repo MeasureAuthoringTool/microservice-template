@@ -42,8 +42,6 @@ public class ExportController {
     }
 
     Measure measure = measureOptional.get();
-    // We may not want to have this check, Confirm with Stan.
-    ControllerUtil.verifyAuthorization(username, measure);
 
     return bundleService.exportBundleMeasure(measure, accessToken);
   }
