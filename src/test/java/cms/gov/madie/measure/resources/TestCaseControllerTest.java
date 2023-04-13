@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.repositories.MeasureRepository;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.common.Version;
@@ -19,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import java.security.Principal;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -33,6 +35,7 @@ import static org.mockito.Mockito.times;
 @ExtendWith(MockitoExtension.class)
 public class TestCaseControllerTest {
   @Mock private TestCaseService testCaseService;
+  @Mock private MeasureRepository repository;
 
   @InjectMocks private TestCaseController controller;
 
@@ -97,6 +100,9 @@ public class TestCaseControllerTest {
     when(testCaseService.persistTestCases(anyList(), anyString(), anyString(), anyString()))
         .thenReturn(savedTestCases);
 
+    doReturn(Optional.of(new Measure().toBuilder().createdBy("test.user").build()))
+        .when(repository)
+        .findById(any());
     List<TestCase> testCases =
         List.of(
             TestCase.builder()

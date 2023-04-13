@@ -1,9 +1,11 @@
 package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.TestCaseService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureScoring;
 import gov.cms.madie.models.measure.PopulationType;
 import gov.cms.madie.models.measure.TestCase;
@@ -23,6 +25,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -42,6 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class TestCaseControllerMvcTest {
 
   @MockBean private TestCaseService testCaseService;
+  @MockBean private MeasureRepository repository;
   @Autowired private MockMvc mockMvc;
   @Captor ArgumentCaptor<TestCase> testCaseCaptor;
   @Captor ArgumentCaptor<String> measureIdCaptor;
@@ -109,6 +113,9 @@ public class TestCaseControllerMvcTest {
 
   @Test
   public void testAddTestCases() throws Exception {
+    doReturn(Optional.of(new Measure().toBuilder().createdBy(TEST_USER_ID).build()))
+        .when(repository)
+        .findById("1234");
     ArgumentCaptor<List> testCaseListCaptor = ArgumentCaptor.forClass(List.class);
     List<TestCase> savedTestCases =
         List.of(
