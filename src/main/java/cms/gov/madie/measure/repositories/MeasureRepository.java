@@ -40,7 +40,8 @@ public interface MeasureRepository
   @Query(
       collation = "{ 'locale': 'en_US', 'strength': 2}",
       value =
-          " {$and: [{'createdBy' : ?1, active : true} ,  "
+          " {$and: [{$or:[{'createdBy' : ?1, active : true},"
+              + "{'acls.userId' : ?1 , 'acls.roles' : 'SHARED_WITH'}]},"
               + "{$or: [{'measureName' : { $regex : /\\Q?0\\E/, $options: 'i' } },"
               + "{'ecqmTitle' : { $regex : /\\Q?0\\E/, $options: 'i' }}]} "
               + "]}")

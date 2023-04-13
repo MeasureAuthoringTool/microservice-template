@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.client.RestClientException;
 
@@ -40,7 +41,30 @@ public class BundleService {
     if (measure == null) {
       return null;
     }
+    if (measure.getMeasureMetaData() != null) {
+      if (CollectionUtils.isEmpty(measure.getMeasureMetaData().getDevelopers())) {
+        throw new InvalidResourceBundleStateException(
+            "Measure", measure.getId(), "since there are no associated developers in metadata.");
+      } else if (measure.getMeasureMetaData().getSteward() == null) {
+        throw new InvalidResourceBundleStateException(
+            "Measure", measure.getId(), "since there is no associated steward in metadata.");
+      } else if (StringUtils.isBlank(measure.getMeasureMetaData().getDescription())) {
 
+        throw new InvalidResourceBundleStateException(
+            "Measure", measure.getId(), "since there is no description in metadata.");
+      }
+    }
+    if (CollectionUtils.isEmpty(measure.getGroups())) {
+      throw new InvalidResourceBundleStateException(
+          "Measure", measure.getId(), "since there is no population criteria on the measure.");
+    }
+    if (measure.getGroups().stream()
+        .anyMatch(g -> CollectionUtils.isEmpty(g.getMeasureGroupTypes()))) {
+      throw new InvalidResourceBundleStateException(
+          "Measure",
+          measure.getId(),
+          "since there is at least one Population Criteria with no type.");
+    }
     try {
       retrieveElmJson(measure, accessToken);
       return fhirServicesClient.getMeasureBundleExport(measure, accessToken);
