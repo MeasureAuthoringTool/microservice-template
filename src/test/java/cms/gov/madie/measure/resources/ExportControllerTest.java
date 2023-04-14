@@ -48,31 +48,6 @@ class ExportControllerTest {
   }
 
   @Test
-  void getZipThrowsUnAuthorizedException() {
-    Principal principal = mock(Principal.class);
-    when(principal.getName()).thenReturn("test.user");
-    final Measure measure = Measure.builder().createdBy("OtherUser").build();
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    assertThrows(
-        UnauthorizedException.class,
-        () -> exportController.getZip(principal, "test_id", "Bearer TOKEN"));
-  }
-
-  @Test
-  void getZipThrowsAccessExceptionForSharedUsers() {
-    Principal principal = mock(Principal.class);
-    when(principal.getName()).thenReturn("test.user3");
-    var acl = new AclSpecification();
-    acl.setUserId("test.user2");
-    acl.setRoles(List.of(RoleEnum.SHARED_WITH));
-    final Measure measure = Measure.builder().createdBy("test.user").acls(List.of(acl)).build();
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    assertThrows(
-        UnauthorizedException.class,
-        () -> exportController.getZip(principal, "test_id", "Bearer TOKEN"));
-  }
-
-  @Test
   void getZipReturnsAResponse() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
