@@ -24,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,6 +38,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -312,6 +314,38 @@ public class TestCaseControllerMvcTest {
         .andExpect(content().string("[]"));
     verify(testCaseService, times(1)).findTestCaseSeriesByMeasureId(measureIdCaptor.capture());
     assertEquals("1234", measureIdCaptor.getValue());
+  }
+
+  @Test
+  public void testAddListThrowsResourceNotFoundException() throws Exception {
+    mockMvc
+        .perform(
+            post("/measures/1234/test-cases/list")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .header("Authorization", "test-okta")
+                .content(asJsonString(new ArrayList<TestCase>()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.message").value("Could not find Measure with id: 1234"));
+  }
+  
+  @Test
+  public void testAddListThrowsUserUnauthorized() throws Exception {
+    doReturn(Optional.of(Measure.builder().createdBy("good.user").id("1234").build()))
+        .when(repository).findById("1234");
+    mockMvc
+        .perform(
+            post("/measures/1234/test-cases/list")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .header("Authorization", "test-okta")
+                .content(asJsonString(new ArrayList<TestCase>()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.message").value("User "+TEST_USER_ID+" is not authorized for Measure with ID 1234"));
   }
 
   @Test
