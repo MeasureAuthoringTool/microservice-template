@@ -146,6 +146,8 @@ class ValidationControllerTest {
     assertThat(output.getBody().getError(), is(notNullValue()));
     assertThat(
         output.getBody().getError().getDefaultMessage(),
-        is(equalTo("File validation failed with error code V100.")));
+        is(
+            equalTo(
+                "There was an error importing this file. Please contact the help desk for error code V100")));
   }
 }
