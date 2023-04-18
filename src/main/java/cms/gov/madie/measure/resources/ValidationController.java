@@ -82,7 +82,8 @@ public class ValidationController {
                       fileName,
                       new String[] {"V100"},
                       null,
-                      "There was an error importing this file. Please contact the help desk for error code V100"))
+                      "There was an error importing this file. " +
+                        "Please contact the help desk for error code V100"))
               .build());
     }
   }
