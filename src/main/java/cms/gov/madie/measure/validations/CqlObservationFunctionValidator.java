@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.validations;
 
+import cms.gov.madie.measure.exceptions.InvalidMeasureObservationException;
 import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -7,6 +8,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.MeasureObservation;
+
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
@@ -18,12 +21,20 @@ public class CqlObservationFunctionValidator {
   public void validateObservationFunctions(Group group, String elmJson)
       throws JsonProcessingException {
     Map<String, String> observationsToValidPopBasis = mapObservationsToValidPopBasis(elmJson);
+
+    List<MeasureObservation> observations = group.getMeasureObservations();
+
     if (observationsToValidPopBasis.isEmpty()) {
-      return; // observations are optional for scoring types other than Continuous Variable.
+      if (!CollectionUtils.isEmpty(observations)) {
+        throw new InvalidMeasureObservationException(
+            "Measure CQL does not have observation definition");
+      } else {
+        return; // observations are optional for scoring types other than Continuous Variable.
+      }
     }
 
     String groupPopulationBasis = group.getPopulationBasis().replaceAll("\\s", "");
-    List<MeasureObservation> observations = group.getMeasureObservations();
+
     if (observations != null) {
       observations.forEach(
           observation -> {
