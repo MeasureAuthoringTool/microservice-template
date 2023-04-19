@@ -27,6 +27,11 @@ import org.springframework.util.CollectionUtils;
 
 import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -52,6 +57,7 @@ public class MeasureService {
     checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
     validateMeasurementPeriod(
         measure.getMeasurementPeriodStart(), measure.getMeasurementPeriodEnd());
+    updateMeasurementPeriods(measure);
     Measure measureCopy = measure.toBuilder().build();
     Set<MeasureErrorType> errorTypes = new HashSet<>();
     try {
@@ -113,10 +119,10 @@ public class MeasureService {
     }
 
     checkCmsIdChanged(updatingMeasure.getCmsId(), existingMeasure.getCmsId());
-
     if (measureUtil.isMeasurementPeriodChanged(updatingMeasure, existingMeasure)) {
       validateMeasurementPeriod(
           updatingMeasure.getMeasurementPeriodStart(), updatingMeasure.getMeasurementPeriodEnd());
+      updateMeasurementPeriods(updatingMeasure);
     }
 
     Measure outputMeasure = updatingMeasure;
@@ -154,13 +160,23 @@ public class MeasureService {
     return measureRepository.save(outputMeasure);
   }
 
+  private void updateMeasurementPeriods(Measure measure) {
+    Date startDate = measure.getMeasurementPeriodStart();
+    Instant startInstant =
+        startDate.toInstant().atOffset(ZoneOffset.UTC).with(LocalTime.MIN).toInstant();
+    measure.setMeasurementPeriodStart(Date.from(startInstant));
+
+    Date endDate = measure.getMeasurementPeriodEnd();
+    Instant endInstant =
+        endDate.toInstant().atOffset(ZoneOffset.UTC).with(LocalTime.MAX).toInstant();
+    measure.setMeasurementPeriodEnd(Date.from(endInstant));
+  }
+
   public Page<Measure> getMeasures(boolean filterByCurrentUser, Pageable pageReq, String username) {
-    Page<Measure> measures =
-        filterByCurrentUser
-            ? measureRepository.findAllByCreatedByAndActiveOrShared(
-                username, true, RoleEnum.SHARED_WITH.toString(), pageReq)
-            : measureRepository.findAllByActive(true, pageReq);
-    return measures;
+    return filterByCurrentUser
+        ? measureRepository.findAllByCreatedByAndActiveOrShared(
+            username, true, RoleEnum.SHARED_WITH.toString(), pageReq)
+        : measureRepository.findAllByActive(true, pageReq);
   }
 
   public void checkDuplicateCqlLibraryName(String cqlLibraryName) {
