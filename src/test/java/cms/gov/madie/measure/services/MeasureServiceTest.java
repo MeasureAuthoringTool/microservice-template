@@ -35,13 +35,8 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalAmount;
-import java.time.temporal.TemporalField;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -616,86 +611,64 @@ public class MeasureServiceTest implements ResourceUtil {
 
   @Test
   public void testValidateMeasureMeasurementPeriodWithNullStartDate() {
-    try {
+    LocalDate endDate = LocalDate.parse("2022-12-31");
 
-      LocalDate endDate = LocalDate.parse("2022-12-31");
-
-      assertThrows(
-          InvalidMeasurementPeriodException.class,
-          () ->
-              measureService.validateMeasurementPeriod(
-                  null,
-                  Date.from(endDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant())));
-
-    } catch (Exception e) {
-    }
+    assertThrows(
+        InvalidMeasurementPeriodException.class,
+        () ->
+            measureService.validateMeasurementPeriod(
+                null, Date.from(endDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant())));
   }
 
   @Test
   public void testValidateMeasureMeasurementPeriodWithNullEndDate() {
-    try {
-      LocalDate startDate = LocalDate.parse("2022-01-01");
+    LocalDate startDate = LocalDate.parse("2022-01-01");
 
-      assertThrows(
-          InvalidMeasurementPeriodException.class,
-          () ->
-              measureService.validateMeasurementPeriod(
-                  Date.from(startDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant()),
-                  null));
-
-    } catch (Exception e) {
-    }
+    assertThrows(
+        InvalidMeasurementPeriodException.class,
+        () ->
+            measureService.validateMeasurementPeriod(
+                Date.from(startDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant()),
+                null));
   }
 
   @Test
   public void testValidateMeasureMeasurementPeriodTooEarlyDate() {
-    try {
-      LocalDate startDate = LocalDate.parse("0001-01-01");
-      LocalDate endDate = LocalDate.parse("2022-12-31");
+    LocalDate startDate = LocalDate.parse("0001-01-01");
+    LocalDate endDate = LocalDate.parse("2022-12-31");
 
-      assertThrows(
-          InvalidMeasurementPeriodException.class,
-          () ->
-              measureService.validateMeasurementPeriod(
-                  Date.from(startDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant()),
-                  Date.from(endDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant())));
-
-    } catch (Exception e) {
-    }
+    assertThrows(
+        InvalidMeasurementPeriodException.class,
+        () ->
+            measureService.validateMeasurementPeriod(
+                Date.from(startDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant()),
+                Date.from(endDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant())));
   }
 
   @Test
   public void testValidateMeasureMeasurementPeriodFlippedDates() {
-    try {
-      LocalDate startDate = LocalDate.parse("2022-01-01");
-      LocalDate endDate = LocalDate.parse("2022-12-31");
+    LocalDate startDate = LocalDate.parse("2022-01-01");
+    LocalDate endDate = LocalDate.parse("2022-12-31");
 
-      assertThrows(
-          InvalidMeasurementPeriodException.class,
-          () ->
-              measureService.validateMeasurementPeriod(
-                  Date.from(endDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant()),
-                  Date.from(startDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant())));
-
-    } catch (Exception e) {
-    }
+    assertThrows(
+        InvalidMeasurementPeriodException.class,
+        () ->
+            measureService.validateMeasurementPeriod(
+                Date.from(endDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant()),
+                Date.from(startDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant())));
   }
 
   @Test
   public void testValidateMeasureMeasurementPeriodEndDateEqualStartDate() {
-    try {
-      LocalDate startDate = LocalDate.parse("2022-12-31");
-      LocalDate endDate = LocalDate.parse("2022-12-31");
+    LocalDate startDate = LocalDate.parse("2022-12-31");
+    LocalDate endDate = LocalDate.parse("2022-12-31");
 
-      assertThrows(
-          InvalidMeasurementPeriodException.class,
-          () ->
-              measureService.validateMeasurementPeriod(
-                  Date.from(startDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant()),
-                  Date.from(endDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant())));
-
-    } catch (Exception e) {
-    }
+    assertThrows(
+        InvalidMeasurementPeriodException.class,
+        () ->
+            measureService.validateMeasurementPeriod(
+                Date.from(startDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant()),
+                Date.from(endDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant())));
   }
 
   @Test
