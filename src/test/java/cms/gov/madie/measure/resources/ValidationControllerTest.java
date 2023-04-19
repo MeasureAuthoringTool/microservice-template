@@ -149,6 +149,6 @@ class ValidationControllerTest {
         is(
             equalTo(
                 "There was an error importing this file. "
-                    + "Please contact the help desk for error code V100")));
+                    + "Please contact the help desk for error code V100.")));
   }
 }
