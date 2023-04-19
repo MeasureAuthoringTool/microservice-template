@@ -1,6 +1,8 @@
 package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.exceptions.UnauthorizedException;
+import cms.gov.madie.measure.repositories.MeasureRepository;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.common.Version;
@@ -17,8 +19,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -33,6 +38,7 @@ import static org.mockito.Mockito.times;
 @ExtendWith(MockitoExtension.class)
 public class TestCaseControllerTest {
   @Mock private TestCaseService testCaseService;
+  @Mock private MeasureRepository repository;
 
   @InjectMocks private TestCaseController controller;
 
@@ -54,6 +60,7 @@ public class TestCaseControllerTest {
     measure.setMeasureSetId("IDIDID");
     measure.setMeasureName("MSR01");
     measure.setVersion(new Version(0, 0, 1));
+    measure.setCreatedBy("test.user");
   }
 
   @Test
@@ -78,6 +85,8 @@ public class TestCaseControllerTest {
   void setTestCaseList() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
+
+    doReturn(Optional.of(measure)).when(repository).findById("MeasureID");
 
     List<TestCase> savedTestCases =
         List.of(
@@ -112,6 +121,27 @@ public class TestCaseControllerTest {
     assertThat(output, is(notNullValue()));
     assertThat(output.getStatusCode(), is(equalTo(HttpStatus.CREATED)));
     assertThat(output.getBody(), is(equalTo(savedTestCases)));
+  }
+
+  @Test
+  void testAddTestCasesThrowWhenUserIsUnauthorized() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("evil.user");
+
+    doReturn(Optional.of(measure)).when(repository).findById("MeasureID");
+    assertThrows(
+        UnauthorizedException.class,
+        () -> controller.addTestCases(Collections.emptyList(), "MeasureID", "Bearer Token", principal));
+  }
+
+  @Test
+  void testAddTestCasesThrowsWhenMeasureNotFound() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> controller.addTestCases(new ArrayList<TestCase>(), "1234", "Bearer Token", principal));
   }
 
   @Test
