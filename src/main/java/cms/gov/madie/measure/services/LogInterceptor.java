@@ -6,6 +6,8 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Slf4j(topic = "action_audit")
 @Component
@@ -16,7 +18,8 @@ public class LogInterceptor implements HandlerInterceptor {
     final String username =
         request.getUserPrincipal() == null ? "" : request.getUserPrincipal().getName();
     log.info(
-        "User [{}] calling [{}] on path [{}].",
+        "[{}] User [{}] calling [{}] on path [{}].",
+        LocalDateTime.now(),
         username,
         request.getMethod(),
         request.getRequestURI());
