@@ -1,6 +1,8 @@
 package cms.gov.madie.measure.services;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -10,6 +12,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Slf4j(topic = "action_audit")
+@Order(value = Ordered.HIGHEST_PRECEDENCE)
 @Component
 public class LogInterceptor implements HandlerInterceptor {
 
