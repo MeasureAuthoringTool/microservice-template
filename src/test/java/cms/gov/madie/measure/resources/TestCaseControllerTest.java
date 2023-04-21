@@ -131,7 +131,9 @@ public class TestCaseControllerTest {
     doReturn(Optional.of(measure)).when(repository).findById("MeasureID");
     assertThrows(
         UnauthorizedException.class,
-        () -> controller.addTestCases(Collections.emptyList(), "MeasureID", "Bearer Token", principal));
+        () ->
+            controller.addTestCases(
+                Collections.emptyList(), "MeasureID", "Bearer Token", principal));
   }
 
   @Test
@@ -141,7 +143,8 @@ public class TestCaseControllerTest {
 
     assertThrows(
         ResourceNotFoundException.class,
-        () -> controller.addTestCases(new ArrayList<TestCase>(), "1234", "Bearer Token", principal));
+        () ->
+            controller.addTestCases(new ArrayList<TestCase>(), "1234", "Bearer Token", principal));
   }
 
   @Test
