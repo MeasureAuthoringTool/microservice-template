@@ -34,6 +34,7 @@ import org.springframework.data.domain.PageRequest;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
@@ -285,6 +286,37 @@ public class MeasureServiceTest implements ResourceUtil {
         DuplicateKeyException.class,
         () -> measureService.createMeasure(measureToSave, "john rao", "token"),
         "CQL library with given name already exists");
+  }
+
+  @Test
+  public void testCreateMeasureToHaveUpdatedMeasurementPeriods() {
+    Instant startInstant = Instant.now();
+    Instant endInstant = startInstant.plus(2, ChronoUnit.DAYS);
+    Measure measureToSave =
+        measure1
+            .toBuilder()
+            .measurementPeriodStart(Date.from(startInstant))
+            .measurementPeriodEnd(Date.from(endInstant))
+            .cqlLibraryName("VTE")
+            .build();
+    when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
+    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+        .thenReturn(ElmJson.builder().json(elmJson).build());
+    when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(false);
+    doNothing().when(terminologyValidationService).validateTerminology(anyString(), anyString());
+    when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
+    when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
+
+    Measure savedMeasure = measureService.createMeasure(measureToSave, "john rao", "token");
+    Instant savedStartInstant = savedMeasure.getMeasurementPeriodStart().toInstant();
+    assertEquals(0, savedStartInstant.atZone(ZoneOffset.UTC).getHour());
+    assertEquals(0, savedStartInstant.atZone(ZoneOffset.UTC).getMinute());
+    assertEquals(0, savedStartInstant.atZone(ZoneOffset.UTC).getSecond());
+
+    Instant savedEndInstant = savedMeasure.getMeasurementPeriodEnd().toInstant();
+    assertEquals(23, savedEndInstant.atZone(ZoneOffset.UTC).getHour());
+    assertEquals(59, savedEndInstant.atZone(ZoneOffset.UTC).getMinute());
+    assertEquals(59, savedEndInstant.atZone(ZoneOffset.UTC).getSecond());
   }
 
   @Test
@@ -579,86 +611,64 @@ public class MeasureServiceTest implements ResourceUtil {
 
   @Test
   public void testValidateMeasureMeasurementPeriodWithNullStartDate() {
-    try {
+    LocalDate endDate = LocalDate.parse("2022-12-31");
 
-      LocalDate endDate = LocalDate.parse("2022-12-31");
-
-      assertThrows(
-          InvalidMeasurementPeriodException.class,
-          () ->
-              measureService.validateMeasurementPeriod(
-                  null,
-                  Date.from(endDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant())));
-
-    } catch (Exception e) {
-    }
+    assertThrows(
+        InvalidMeasurementPeriodException.class,
+        () ->
+            measureService.validateMeasurementPeriod(
+                null, Date.from(endDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant())));
   }
 
   @Test
   public void testValidateMeasureMeasurementPeriodWithNullEndDate() {
-    try {
-      LocalDate startDate = LocalDate.parse("2022-01-01");
+    LocalDate startDate = LocalDate.parse("2022-01-01");
 
-      assertThrows(
-          InvalidMeasurementPeriodException.class,
-          () ->
-              measureService.validateMeasurementPeriod(
-                  Date.from(startDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant()),
-                  null));
-
-    } catch (Exception e) {
-    }
+    assertThrows(
+        InvalidMeasurementPeriodException.class,
+        () ->
+            measureService.validateMeasurementPeriod(
+                Date.from(startDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant()),
+                null));
   }
 
   @Test
   public void testValidateMeasureMeasurementPeriodTooEarlyDate() {
-    try {
-      LocalDate startDate = LocalDate.parse("0001-01-01");
-      LocalDate endDate = LocalDate.parse("2022-12-31");
+    LocalDate startDate = LocalDate.parse("0001-01-01");
+    LocalDate endDate = LocalDate.parse("2022-12-31");
 
-      assertThrows(
-          InvalidMeasurementPeriodException.class,
-          () ->
-              measureService.validateMeasurementPeriod(
-                  Date.from(startDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant()),
-                  Date.from(endDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant())));
-
-    } catch (Exception e) {
-    }
+    assertThrows(
+        InvalidMeasurementPeriodException.class,
+        () ->
+            measureService.validateMeasurementPeriod(
+                Date.from(startDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant()),
+                Date.from(endDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant())));
   }
 
   @Test
   public void testValidateMeasureMeasurementPeriodFlippedDates() {
-    try {
-      LocalDate startDate = LocalDate.parse("2022-01-01");
-      LocalDate endDate = LocalDate.parse("2022-12-31");
+    LocalDate startDate = LocalDate.parse("2022-01-01");
+    LocalDate endDate = LocalDate.parse("2022-12-31");
 
-      assertThrows(
-          InvalidMeasurementPeriodException.class,
-          () ->
-              measureService.validateMeasurementPeriod(
-                  Date.from(endDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant()),
-                  Date.from(startDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant())));
-
-    } catch (Exception e) {
-    }
+    assertThrows(
+        InvalidMeasurementPeriodException.class,
+        () ->
+            measureService.validateMeasurementPeriod(
+                Date.from(endDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant()),
+                Date.from(startDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant())));
   }
 
   @Test
   public void testValidateMeasureMeasurementPeriodEndDateEqualStartDate() {
-    try {
-      LocalDate startDate = LocalDate.parse("2022-12-31");
-      LocalDate endDate = LocalDate.parse("2022-12-31");
+    LocalDate startDate = LocalDate.parse("2022-12-31");
+    LocalDate endDate = LocalDate.parse("2022-12-31");
 
-      assertThrows(
-          InvalidMeasurementPeriodException.class,
-          () ->
-              measureService.validateMeasurementPeriod(
-                  Date.from(startDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant()),
-                  Date.from(endDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant())));
-
-    } catch (Exception e) {
-    }
+    assertThrows(
+        InvalidMeasurementPeriodException.class,
+        () ->
+            measureService.validateMeasurementPeriod(
+                Date.from(startDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant()),
+                Date.from(endDate.atStartOfDay(ZoneId.of("America/Sao_Paulo")).toInstant())));
   }
 
   @Test
