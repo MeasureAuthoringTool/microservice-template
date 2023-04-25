@@ -26,8 +26,8 @@ public class BundleService {
   private final ExportRepository exportRepository;
 
   /**
-   * Get the bundle for measure. for draft measure: generate bundle because for draft measure,
-   * bundles are not available in DB. for versioned measure: fetch the bundle from measure export
+   * Get the bundle for measure. For draft measure- generate bundle because for draft measure,
+   * bundles are not available in DB. For versioned measure- fetch the bundle from measure export
    * that was saved in DB.
    */
   public String bundleMeasure(Measure measure, String accessToken, String bundleType) {
