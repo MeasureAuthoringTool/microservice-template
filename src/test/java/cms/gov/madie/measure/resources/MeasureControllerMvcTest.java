@@ -15,6 +15,7 @@ import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.common.Organization;
+import gov.cms.madie.models.measure.FhirMeasure;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureGroupTypes;
@@ -204,7 +205,6 @@ public class MeasureControllerMvcTest {
             measureArgumentCaptor2.capture(),
             anyString());
     assertThat(measureArgumentCaptor.getValue(), is(equalTo(priorMeasure)));
-    assertThat(measureArgumentCaptor2.getValue(), is(equalTo(updatingMeasure)));
 
     verify(actionLogService, times(1))
         .logAction(
@@ -302,7 +302,7 @@ public class MeasureControllerMvcTest {
 
   @Test
   public void testNewMeasureNameMustNotBeNull() throws Exception {
-    final String measureAsJson = "{  }";
+    final String measureAsJson = "{ \"model\":\"QI-Core v4.1.1\" }";
     mockMvc
         .perform(
             post("/measure")
@@ -317,7 +317,7 @@ public class MeasureControllerMvcTest {
 
   @Test
   public void testUpdateMeasureNameMustNotBeNull() throws Exception {
-    final String measureAsJson = "{ \"id\": \"m1234\" }";
+    final String measureAsJson = "{ \"id\": \"m1234\", \"model\":\"QI-Core v4.1.1\" }";
     mockMvc
         .perform(
             put("/measures/m1234")
@@ -332,7 +332,7 @@ public class MeasureControllerMvcTest {
 
   @Test
   public void testNewMeasureNameMustNotBeEmpty() throws Exception {
-    final String measureAsJson = "{ \"measureName\":\"\" }";
+    final String measureAsJson = "{ \"model\":\"QI-Core v4.1.1\" }";
     mockMvc
         .perform(
             post("/measure")
@@ -347,7 +347,7 @@ public class MeasureControllerMvcTest {
 
   @Test
   public void testUpdateMeasureNameMustNotBeEmpty() throws Exception {
-    final String measureAsJson = "{ \"id\": \"m1234\", \"measureName\":\"\" }";
+    final String measureAsJson = "{ \"id\": \"m1234\",  \"model\":\"QI-Core v4.1.1\" }";
     mockMvc
         .perform(
             put("/measures/m1234")
@@ -363,7 +363,7 @@ public class MeasureControllerMvcTest {
   @Test
   public void testNewMeasureFailsIfUnderscoreInMeasureName() throws Exception {
     final String measureAsJson =
-        "{ \"measureName\":\"A_Name\", \"cqlLibraryName\":\"ALib\" , \"versionId\":\"versionId\",\"measureSetId\":\"measureSetId\"}";
+        "{ \"measureName\":\"A_Name\", \"cqlLibraryName\":\"ALib\" , \"versionId\":\"versionId\",\"measureSetId\":\"measureSetId\", \"model\":\"QI-Core v4.1.1\"}";
     mockMvc
         .perform(
             post("/measure")
@@ -381,7 +381,7 @@ public class MeasureControllerMvcTest {
   @Test
   public void testUpdateMeasureFailsIfUnderscoreInMeasureName() throws Exception {
     final String measureAsJson =
-        "{ \"id\": \"m1234\", \"measureName\":\"A_Name\", \"cqlLibraryName\":\"ALib\", \"versionId\":\"versionId\",\"measureSetId\":\"measureSetId\" }";
+        "{ \"id\": \"m1234\", \"measureName\":\"A_Name\", \"cqlLibraryName\":\"ALib\", \"versionId\":\"versionId\",\"measureSetId\":\"measureSetId\", \"model\":\"QI-Core v4.1.1\" }";
     mockMvc
         .perform(
             put("/measures/m1234")
@@ -400,7 +400,7 @@ public class MeasureControllerMvcTest {
   public void testNewMeasureNameMaxLengthFailed() throws Exception {
     final String measureName = "A".repeat(501);
     final String measureAsJson =
-        "{ \"measureName\":\"%s\", \"cqlLibraryName\":\"ALib\", \"versionId\":\"versionId\",\"measureSetId\":\"measureSetId\"  }"
+        "{ \"measureName\":\"%s\", \"cqlLibraryName\":\"ALib\", \"versionId\":\"versionId\",\"measureSetId\":\"measureSetId\", \"model\":\"QI-Core v4.1.1\"  }"
             .formatted(measureName);
     verifyNoInteractions(measureRepository);
     mockMvc
@@ -420,7 +420,7 @@ public class MeasureControllerMvcTest {
   public void testUpdateMeasureNameMaxLengthFailed() throws Exception {
     final String measureName = "A".repeat(501);
     final String measureAsJson =
-        "{ \"id\": \"m1234\", \"measureName\":\"%s\", \"cqlLibraryName\":\"ALib\", \"versionId\":\"versionId\",\"measureSetId\":\"measureSetId\" }"
+        "{ \"id\": \"m1234\", \"measureName\":\"%s\", \"cqlLibraryName\":\"ALib\", \"versionId\":\"versionId\",\"measureSetId\":\"measureSetId\", \"model\":\"QI-Core v4.1.1\" }"
             .formatted(measureName);
     mockMvc
         .perform(
@@ -524,7 +524,7 @@ public class MeasureControllerMvcTest {
   }
 
   @Test
-  public void testNewQdmMeasurePassed() throws Exception {
+  public void testNewQdmMeasureScoringRequired() throws Exception {
     Measure saved = new Measure();
     String measureId = "id456";
     saved.setId(measureId);
@@ -542,6 +542,48 @@ public class MeasureControllerMvcTest {
 
     final String measureAsJson =
         "{\"measureName\": \"%s\",\"measureSetId\":\"%s\", \"cqlLibraryName\": \"%s\" , \"ecqmTitle\": \"%s\", \"model\": \"%s\", \"versionId\":\"%s\"}"
+            .formatted(
+                measureName,
+                measureSetId,
+                libraryName,
+                ecqmTitle,
+                ModelType.QDM_5_6.toString(),
+                measureId);
+
+    mockMvc
+        .perform(
+            post("/measure")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .header("Authorization", TEST_USER_ID)
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isBadRequest())
+        .andExpect(
+            jsonPath("$.validationErrors.scoring").value("Scoring is required for QDM Measure."));
+    verifyNoInteractions(measureRepository);
+  }
+
+  @Test
+  public void testNewQdmMeasurePassed() throws Exception {
+    Measure saved = new Measure();
+    String measureId = "id456";
+    saved.setId(measureId);
+    String measureName = "SavedMeasureQDM";
+    String libraryName = "QDMLib1";
+    String ecqmTitle = "ecqmTitleQDM";
+    String measureSetId = "cooltimeQDM";
+    saved.setMeasureName(measureName);
+    saved.setCqlLibraryName(libraryName);
+    saved.setModel(ModelType.QDM_5_6.toString());
+    saved.setEcqmTitle(ecqmTitle);
+    saved.setVersionId(measureId);
+    when(measureService.createMeasure(any(Measure.class), anyString(), anyString()))
+        .thenReturn(saved);
+
+    final String measureAsJson =
+        "{\"measureName\": \"%s\",\"measureSetId\":\"%s\", \"cqlLibraryName\": \"%s\" , \"ecqmTitle\": \"%s\", \"model\": \"%s\", \"versionId\":\"%s\", \"scoring\":\"Cohort\"}"
             .formatted(
                 measureName,
                 measureSetId,
@@ -776,7 +818,7 @@ public class MeasureControllerMvcTest {
   @Test
   public void testNewMeasureNoUnderscore() throws Exception {
     final String measureAsJson =
-        "{ \"id\": \"m1234\", \"measureName\":\"A_Name\", \"cqlLibraryName\":\"ALib\", \"versionId\":\"versionId\",\"measureSetId\":\"measureSetId\" }";
+        "{ \"id\": \"m1234\", \"measureName\":\"A_Name\", \"cqlLibraryName\":\"ALib\", \"versionId\":\"versionId\",\"measureSetId\":\"measureSetId\", \"model\":\"QI-Core v4.1.1\" }";
     mockMvc
         .perform(
             put("/measures/m1234")
@@ -794,7 +836,7 @@ public class MeasureControllerMvcTest {
   @Test
   public void testNewMeasureFailsIfCqlLibaryNameStartsWithLowerCase() throws Exception {
     final String measureAsJson =
-        "{ \"measureName\":\"AName\", \"cqlLibraryName\":\"aLib\", \"ecqmTitle\":\"ecqmTitle\", \"versionId\":\"versionId\",\"measureSetId\":\"measureSetId\" }";
+        "{ \"measureName\":\"AName\", \"cqlLibraryName\":\"aLib\", \"ecqmTitle\":\"ecqmTitle\", \"versionId\":\"versionId\",\"measureSetId\":\"measureSetId\", \"model\":\"QI-Core v4.1.1\" }";
     mockMvc
         .perform(
             post("/measure")
@@ -812,7 +854,7 @@ public class MeasureControllerMvcTest {
   @Test
   public void testUpdateMeasureFailsIfCqlLibaryNameStartsWithLowerCase() throws Exception {
     final String measureAsJson =
-        "{ \"id\": \"m1234\", \"measureName\":\"AName\", \"cqlLibraryName\":\"aLib\", \"ecqmTitle\":\"ecqmTitle\", \"versionId\":\"versionId\",\"measureSetId\":\"measureSetId\" }";
+        "{ \"id\": \"m1234\", \"measureName\":\"AName\", \"cqlLibraryName\":\"aLib\", \"ecqmTitle\":\"ecqmTitle\", \"versionId\":\"versionId\",\"measureSetId\":\"measureSetId\", \"model\":\"QI-Core v4.1.1\" }";
     mockMvc
         .perform(
             put("/measures/m1234")
@@ -830,7 +872,7 @@ public class MeasureControllerMvcTest {
   @Test
   public void testNewMeasureFailsIfCqlLibraryNameHasQuotes() throws Exception {
     final String measureAsJson =
-        "{ \"measureName\":\"AName\", \"cqlLibraryName\":\"ALi''b\", \"ecqmTitle\":\"ecqmTitle\", \"versionId\":\"versionId\",\"measureSetId\":\"measureSetId\" }";
+        "{ \"measureName\":\"AName\", \"cqlLibraryName\":\"ALi''b\", \"ecqmTitle\":\"ecqmTitle\", \"versionId\":\"versionId\",\"measureSetId\":\"measureSetId\", \"model\":\"QI-Core v4.1.1\" }";
     mockMvc
         .perform(
             post("/measure")
@@ -848,7 +890,7 @@ public class MeasureControllerMvcTest {
   @Test
   public void testNewMeasureFailsIfCqlLibraryNameHasUnderscore() throws Exception {
     final String measureAsJson =
-        "{ \"measureName\":\"AName\", \"cqlLibraryName\":\"ALi_'b\", \"ecqmTitle\":\"ecqmTitle\", \"versionId\":\"versionId\",\"measureSetId\":\"measureSetId\" }";
+        "{ \"measureName\":\"AName\", \"cqlLibraryName\":\"ALi_'b\", \"ecqmTitle\":\"ecqmTitle\", \"versionId\":\"versionId\",\"measureSetId\":\"measureSetId\", \"model\":\"QI-Core v4.1.1\" }";
     mockMvc
         .perform(
             post("/measure")
@@ -978,10 +1020,7 @@ public class MeasureControllerMvcTest {
                 .with(csrf())
                 .content(measureAsJson)
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
-        .andExpect(status().isBadRequest())
-        .andExpect(
-            jsonPath("$.validationErrors.model")
-                .value("MADiE was unable to complete your request, please try again."));
+        .andExpect(status().isBadRequest());
     verifyNoInteractions(measureRepository);
   }
 

@@ -138,14 +138,15 @@ public class MeasureVersionControllerMvcTest {
 
   @Test
   public void testCreateDraftSuccessfully() throws Exception {
-    Measure measure = Measure.builder().id("testMeasureId").createdBy("testUser").build();
+    Measure measure =
+        Measure.builder().id("testMeasureId").createdBy("testUser").model("QI-Core v4.1.1").build();
     measure.setMeasureName("Test");
     when(versionService.createDraft(anyString(), anyString(), anyString())).thenReturn(measure);
 
     mockMvc
         .perform(
             post("/measures/testMeasureId/draft")
-                .content("{\"measureName\": \"Test\"}")
+                .content("{\"measureName\": \"Test\", \"model\":\"QI-Core v4.1.1\"}")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .header("Authorization", "test-okta-token")
@@ -162,7 +163,7 @@ public class MeasureVersionControllerMvcTest {
         mockMvc
             .perform(
                 post("/measures/testMeasureId/draft")
-                    .content("{\"measureName\": \"\"}")
+                    .content("{\"measureName\": \"\", \"model\":\"QDM v5.6\"}")
                     .with(user(TEST_USER_ID))
                     .with(csrf())
                     .header("Authorization", "test-okta-token")
@@ -182,7 +183,7 @@ public class MeasureVersionControllerMvcTest {
         mockMvc
             .perform(
                 post("/measures/testMeasureId/draft")
-                    .content("{\"measureName\": \"Test\"}")
+                    .content("{\"measureName\": \"Test\", \"model\":\"QI-Core v4.1.1\"}")
                     .with(user(TEST_USER_ID))
                     .with(csrf())
                     .header("Authorization", "test-okta-token")
