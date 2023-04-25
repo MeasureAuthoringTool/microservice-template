@@ -1,9 +1,11 @@
 package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.TestCaseService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureScoring;
 import gov.cms.madie.models.measure.PopulationType;
 import gov.cms.madie.models.measure.TestCase;
@@ -22,7 +24,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -34,6 +38,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -42,6 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class TestCaseControllerMvcTest {
 
   @MockBean private TestCaseService testCaseService;
+  @MockBean private MeasureRepository repository;
   @Autowired private MockMvc mockMvc;
   @Captor ArgumentCaptor<TestCase> testCaseCaptor;
   @Captor ArgumentCaptor<String> measureIdCaptor;
@@ -109,6 +115,9 @@ public class TestCaseControllerMvcTest {
 
   @Test
   public void testAddTestCases() throws Exception {
+    doReturn(Optional.of(new Measure().toBuilder().createdBy(TEST_USER_ID).build()))
+        .when(repository)
+        .findById("1234");
     ArgumentCaptor<List> testCaseListCaptor = ArgumentCaptor.forClass(List.class);
     List<TestCase> savedTestCases =
         List.of(
@@ -305,6 +314,48 @@ public class TestCaseControllerMvcTest {
         .andExpect(content().string("[]"));
     verify(testCaseService, times(1)).findTestCaseSeriesByMeasureId(measureIdCaptor.capture());
     assertEquals("1234", measureIdCaptor.getValue());
+  }
+
+  @Test
+  public void testAddListThrowsResourceNotFoundException() throws Exception {
+    MvcResult result =
+        mockMvc
+            .perform(
+                post("/measures/1234/test-cases/list")
+                    .with(user(TEST_USER_ID))
+                    .with(csrf())
+                    .header("Authorization", "test-okta")
+                    .content(asJsonString(new ArrayList<TestCase>()))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+    String response = result.getResponse().getContentAsString();
+    assertTrue(response.contains("Could not find Measure with id: 1234"));
+  }
+
+  @Test
+  public void testAddListThrowsUserUnauthorized() throws Exception {
+    doReturn(Optional.of(Measure.builder().createdBy("good.user").id("1234").build()))
+        .when(repository)
+        .findById("1234");
+    MvcResult result =
+        mockMvc
+            .perform(
+                post("/measures/1234/test-cases/list")
+                    .with(user(TEST_USER_ID))
+                    .with(csrf())
+                    .header("Authorization", "test-okta")
+                    .content(asJsonString(new ArrayList<TestCase>()))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isForbidden())
+            .andReturn();
+
+    String response = result.getResponse().getContentAsString();
+    assertTrue(
+        response.contains("User " + TEST_USER_ID + " is not authorized for Measure with ID 1234"));
   }
 
   @Test
