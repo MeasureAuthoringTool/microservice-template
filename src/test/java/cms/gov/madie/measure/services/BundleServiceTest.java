@@ -4,10 +4,13 @@ import cms.gov.madie.measure.exceptions.BundleOperationException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
 import cms.gov.madie.measure.exceptions.InvalidResourceBundleStateException;
+import cms.gov.madie.measure.repositories.ExportRepository;
 import cms.gov.madie.measure.utils.ResourceUtil;
 import gov.cms.madie.models.measure.ElmJson;
+import gov.cms.madie.models.measure.Export;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureMetaData;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
 import gov.cms.madie.models.common.Version;
@@ -23,6 +26,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -35,8 +39,8 @@ import static org.mockito.Mockito.when;
 class BundleServiceTest implements ResourceUtil {
 
   @Mock private FhirServicesClient fhirServicesClient;
-
   @Mock private ElmTranslatorClient elmTranslatorClient;
+  @Mock private ExportRepository exportRepository;
 
   @InjectMocks private BundleService bundleService;
 
@@ -59,6 +63,7 @@ class BundleServiceTest implements ResourceUtil {
     List<Group> groups = new ArrayList<>();
     groups.add(group);
     String elmJson = getData("/test_elm.json");
+    MeasureMetaData metaData = MeasureMetaData.builder().draft(true).build();
     measure =
         Measure.builder()
             .active(true)
@@ -70,6 +75,7 @@ class BundleServiceTest implements ResourceUtil {
             .measureName("MSR01")
             .version(new Version(0, 0, 1))
             .groups(groups)
+            .measureMetaData(metaData)
             .createdAt(Instant.now())
             .createdBy("test user")
             .lastModifiedAt(Instant.now())
@@ -140,13 +146,42 @@ class BundleServiceTest implements ResourceUtil {
   }
 
   @Test
-  void testBundleMeasureReturnsBundleString() {
+  void testBundleMeasureReturnsBundleStringForDraftMeasure() {
     final String json = "{\"message\": \"GOOD JSON\"}";
     when(fhirServicesClient.getMeasureBundle(any(Measure.class), anyString(), anyString()))
         .thenReturn(json);
     when(elmTranslatorClient.getElmJson(anyString(), anyString()))
         .thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
+    assertThat(measure.getMeasureMetaData().isDraft(), is(equalTo(true)));
     String output = bundleService.bundleMeasure(measure, "Bearer TOKEN", "calculation");
     assertThat(output, is(equalTo(json)));
+  }
+
+  @Test
+  void testBundleMeasureReturnsBundleStringForVersionedMeasure() {
+    final String json = "{\"message\": \"GOOD JSON\"}";
+    Export export = Export.builder().measureId(measure.getId()).measureBundleJson(json).build();
+    measure.getMeasureMetaData().setDraft(false);
+    when(exportRepository.findByMeasureId(anyString())).thenReturn(Optional.of(export));
+
+    String output = bundleService.bundleMeasure(measure, "Bearer TOKEN", null);
+    assertThat(output, is(equalTo(json)));
+  }
+
+  @Test
+  void testBundleMeasureReturnsBundleStringForVersionedMeasureIfExportUnavailable() {
+    measure.getMeasureMetaData().setDraft(false);
+    when(exportRepository.findByMeasureId(anyString())).thenReturn(Optional.ofNullable(null));
+
+    Exception ex =
+        assertThrows(
+            BundleOperationException.class,
+            () -> bundleService.bundleMeasure(measure, "Bearer TOKEN", null));
+    assertThat(
+        ex.getMessage(),
+        is(
+            equalTo(
+                "An error occurred while bundling Measure with ID xyz-p13r-13ert."
+                    + " Please try again later or contact a System Administrator if this continues to occur.")));
   }
 }
