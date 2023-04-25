@@ -3,7 +3,9 @@ package cms.gov.madie.measure.services;
 import cms.gov.madie.measure.exceptions.BundleOperationException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.InvalidResourceBundleStateException;
+import cms.gov.madie.measure.repositories.ExportRepository;
 import gov.cms.madie.models.measure.ElmJson;
+import gov.cms.madie.models.measure.Export;
 import gov.cms.madie.models.measure.Measure;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,21 +22,36 @@ import org.springframework.web.client.RestClientException;
 public class BundleService {
 
   private final FhirServicesClient fhirServicesClient;
-
   private final ElmTranslatorClient elmTranslatorClient;
+  private final ExportRepository exportRepository;
 
+  /**
+   * Get the bundle for measure. For draft measure- generate bundle because for draft measure,
+   * bundles are not available in DB. For versioned measure- fetch the bundle from measure export
+   * that was saved in DB.
+   */
   public String bundleMeasure(Measure measure, String accessToken, String bundleType) {
     if (measure == null) {
       return null;
     }
 
-    try {
-      retrieveElmJson(measure, accessToken);
-      return fhirServicesClient.getMeasureBundle(measure, accessToken, bundleType);
-    } catch (RestClientException | IllegalArgumentException ex) {
-      log.error("An error occurred while bundling measure {}", measure.getId(), ex);
-      throw new BundleOperationException("Measure", measure.getId(), ex);
+    // for draft measures
+    if (measure.getMeasureMetaData().isDraft()) {
+      try {
+        retrieveElmJson(measure, accessToken);
+        return fhirServicesClient.getMeasureBundle(measure, accessToken, bundleType);
+      } catch (RestClientException | IllegalArgumentException ex) {
+        log.error("An error occurred while bundling measure {}", measure.getId(), ex);
+        throw new BundleOperationException("Measure", measure.getId(), ex);
+      }
     }
+    // for versioned measures
+    Export export = exportRepository.findByMeasureId(measure.getId()).orElse(null);
+    if (export == null) {
+      log.error("Export not available for versioned measure with id: {}", measure.getId());
+      throw new BundleOperationException("Measure", measure.getId(), null);
+    }
+    return export.getMeasureBundleJson();
   }
 
   public ResponseEntity<byte[]> exportBundleMeasure(Measure measure, String accessToken) {
