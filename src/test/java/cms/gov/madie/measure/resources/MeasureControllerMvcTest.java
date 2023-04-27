@@ -524,7 +524,7 @@ public class MeasureControllerMvcTest {
   }
 
   @Test
-  public void testNewQdmMeasureScoringRequired() throws Exception {
+  public void testNewQdmMeasureScoringInValid() throws Exception {
     Measure saved = new Measure();
     String measureId = "id456";
     saved.setId(measureId);
@@ -542,13 +542,7 @@ public class MeasureControllerMvcTest {
 
     final String measureAsJson =
         "{\"measureName\": \"%s\",\"measureSetId\":\"%s\", \"cqlLibraryName\": \"%s\" , \"ecqmTitle\": \"%s\", \"model\": \"%s\", \"versionId\":\"%s\"}"
-            .formatted(
-                measureName,
-                measureSetId,
-                libraryName,
-                ecqmTitle,
-                ModelType.QDM_5_6.toString(),
-                measureId);
+            .formatted(measureName, measureSetId, libraryName, ecqmTitle, "invalidModel", measureId);
 
     mockMvc
         .perform(
@@ -559,9 +553,7 @@ public class MeasureControllerMvcTest {
                 .content(measureAsJson)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON))
-        .andExpect(status().isBadRequest())
-        .andExpect(
-            jsonPath("$.validationErrors.scoring").value("Scoring is required for QDM Measure."));
+        .andExpect(status().isBadRequest());
     verifyNoInteractions(measureRepository);
   }
 
@@ -812,6 +804,63 @@ public class MeasureControllerMvcTest {
     verify(measureRepository, times(1)).findById(eq(priorMeasure.getId()));
     verify(measureService, times(1))
         .updateMeasure(any(Measure.class), anyString(), any(Measure.class), anyString());
+    verifyNoMoreInteractions(measureRepository);
+  }
+
+  @Test
+  public void testUpdateQDMMeasureFailsIfScoringNotMatching() throws Exception {
+    String qdmMeasureString =
+        "{\n"
+            + "    \"id\": \"testMeasureId\",\n"
+            + "    \"model\": \"QDM v5.6\",\n"
+            + "    \"measureSetId\":\"testMeasureSetId\",\n"
+            + "    \"cqlLibraryName\": \"TestLibraryName\",\n"
+            + "    \"ecqmTitle\":  \"testEcqmTitle\",\n"
+            + "    \"measureName\": \"test QDM measure\",\n"
+            + "    \"versionId\": \"0.0.000\",    \n"
+            + "    \"scoring\": \"Proportion\",\n"
+            + "    \"groups\": [\n"
+            + "        {\n"
+            + "            \"populationBasis\": \"boolean\",\n"
+            + "            \"scoring\":\"Cohort\",\n"
+            + "            \"populations\":[\n"
+            + "                {\n"
+            + "                    \"id\":\"4b990763-860b-4ad5-aa05-f23bceb43618\",\n"
+            + "                    \"name\":\"initialPopulation\",\n"
+            + "                    \"definition\":\"boolIpp\",\n"
+            + "                    \"associationType\":null,\n"
+            + "                    \"description\":\"\"\n"
+            + "                }\n"
+            + "            ],\n"
+            + "            \"measureGroupTypes\": [\"Outcome\"]\n"
+            + "            \n"
+            + "        },\n"
+            + "        {\n"
+            + "            \"populationBasis\": \"boolean\",\n"
+            + "            \"scoring\":\"Cohort\",\n"
+            + "            \"populations\":[\n"
+            + "                {\n"
+            + "                    \"id\":\"4b990763-860b-4ad5-aa05-f23bceb43619\",\n"
+            + "                    \"name\":\"initialPopulation\",\n"
+            + "                    \"definition\":\"boolIpp\",\n"
+            + "                    \"associationType\":null,\n"
+            + "                    \"description\":\"\"\n"
+            + "                }\n"
+            + "            ],\n"
+            + "            \"measureGroupTypes\": [\"Outcome\"]\n"
+            + "            \n"
+            + "        }\n"
+            + "    ]\n"
+            + "}";
+    mockMvc
+        .perform(
+            put("/measures/testMeasureId")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .header("Authorization", "test-okta")
+                .content(qdmMeasureString)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+        .andExpect(status().isBadRequest());
     verifyNoMoreInteractions(measureRepository);
   }
 
