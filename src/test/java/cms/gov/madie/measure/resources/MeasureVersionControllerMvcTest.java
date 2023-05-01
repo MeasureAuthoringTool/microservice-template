@@ -53,7 +53,7 @@ public class MeasureVersionControllerMvcTest {
         .thenThrow(new ResourceNotFoundException("Measure", "testMeasureId"));
     mockMvc
         .perform(
-            put("/measures/testMeasureId/version/?versionType=MAJOR")
+            put("/measures/testMeasureId/version?versionType=MAJOR")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .header("Authorization", "test-okta-token")
@@ -75,7 +75,7 @@ public class MeasureVersionControllerMvcTest {
 
     mockMvc
         .perform(
-            put("/measures/testMeasureId/version/?versionType=NOTVALIDVERSIONTYPE")
+            put("/measures/testMeasureId/version?versionType=NOTVALIDVERSIONTYPE")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .header("Authorization", "test-okta-token")
@@ -99,7 +99,7 @@ public class MeasureVersionControllerMvcTest {
 
     mockMvc
         .perform(
-            put("/measures/testMeasureId/version/?versionType=MAJOR")
+            put("/measures/testMeasureId/version?versionType=MAJOR")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .header("Authorization", "test-okta-token")
@@ -124,7 +124,7 @@ public class MeasureVersionControllerMvcTest {
 
     mockMvc
         .perform(
-            put("/measures/testMeasureId/version/?versionType=MAJOR")
+            put("/measures/123/version?versionType=MAJOR")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .header("Authorization", "test-okta-token")
@@ -133,7 +133,7 @@ public class MeasureVersionControllerMvcTest {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE));
 
     verify(versionService, times(1))
-        .createVersion(eq("testMeasureId"), eq("MAJOR"), eq(TEST_USER_ID), eq("test-okta-token"));
+        .createVersion(eq("123"), eq("MAJOR"), eq(TEST_USER_ID), eq("test-okta-token"));
   }
 
   @Test
