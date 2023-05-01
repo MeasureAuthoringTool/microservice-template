@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.resources;
 
+import cms.gov.madie.measure.dto.ValidList;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import gov.cms.madie.models.measure.Measure;
@@ -15,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +24,7 @@ import java.util.Optional;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
+@Validated(TestCase.ValidationSequence.class)
 public class TestCaseController {
 
   private final TestCaseService testCaseService;
@@ -43,7 +46,7 @@ public class TestCaseController {
 
   @PostMapping(ControllerUtil.TEST_CASES + "/list")
   public ResponseEntity<List<TestCase>> addTestCases(
-      @RequestBody List<TestCase> testCases,
+      @RequestBody @Valid ValidList<TestCase> testCases,
       @PathVariable String measureId,
       @RequestHeader("Authorization") String accessToken,
       Principal principal) {

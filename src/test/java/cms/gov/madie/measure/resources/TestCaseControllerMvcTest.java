@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.resources;
 
+import cms.gov.madie.measure.dto.ValidList;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.TestCaseService;
@@ -171,7 +172,7 @@ public class TestCaseControllerMvcTest {
             measureIdCaptor.capture(),
             usernameCaptor.capture(),
             anyString());
-    assertThat(testCaseListCaptor.getValue(), is(equalTo(testCases)));
+    assertThat(testCaseListCaptor.getValue(), is(equalTo(new ValidList<>(testCases))));
     assertThat(usernameCaptor.getValue(), is(equalTo(TEST_USER_ID)));
   }
 
