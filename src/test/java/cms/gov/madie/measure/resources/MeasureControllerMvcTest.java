@@ -867,6 +867,34 @@ public class MeasureControllerMvcTest {
   }
 
   @Test
+  public void testUpdateQDMMeasureFailsIfBaseConfigurationTypesAreInvalid() throws Exception {
+    String qdmMeasureString =
+        "{\n"
+            + "    \"id\": \"testMeasureId\",\n"
+            + "    \"model\": \"QDM v5.6\",\n"
+            + "    \"measureSetId\":\"testMeasureSetId\",\n"
+            + "    \"cqlLibraryName\": \"TestLibraryName\",\n"
+            + "    \"ecqmTitle\":  \"testEcqmTitle\",\n"
+            + "    \"measureName\": \"test QDM measure\",\n"
+            + "    \"versionId\": \"0.0.000\",    \n"
+            + "    \"scoring\": \"Proportion\",\n"
+            + "    \"baseConfigurationTypes\": [\n"
+            + "            \"invalidBaseConfigurationType\", \"\"   \n"
+            + "    ]\n"
+            + "}";
+    mockMvc
+        .perform(
+            put("/measures/testMeasureId")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .header("Authorization", "test-okta")
+                .content(qdmMeasureString)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+        .andExpect(status().isBadRequest());
+    verifyNoMoreInteractions(measureRepository);
+  }
+
+  @Test
   public void testNewMeasureNoUnderscore() throws Exception {
     final String measureAsJson =
         "{ \"id\": \"m1234\", \"measureName\":\"A_Name\", \"cqlLibraryName\":\"ALib\", \"versionId\":\"versionId\",\"measureSetId\":\"measureSetId\", \"model\":\"QI-Core v4.1.1\" }";
