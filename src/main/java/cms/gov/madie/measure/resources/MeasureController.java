@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
 import java.util.HashMap;
@@ -150,8 +150,7 @@ public class MeasureController {
       HttpServletRequest request,
       @PathVariable("id") String id,
       @RequestParam(required = true, name = "userid") String userid,
-      @Value("${lambda-api-key}") String apiKey,
-      Principal principal) {
+      @Value("${lambda-api-key}") String apiKey) {
     ResponseEntity<String> response = ResponseEntity.badRequest().body("Measure does not exist.");
 
     log.info("getMeasureId [{}] using apiKey ", id, "apikey");
