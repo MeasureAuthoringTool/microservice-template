@@ -115,6 +115,54 @@ public class TestCaseControllerMvcTest {
   }
 
   @Test
+  public void testAddTestCasesTitle251Characters() throws Exception {
+    testCase.setTitle(TEXT_251_CHARACTORS);
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.post("/measures/1234/test-cases/list")
+                    .with(user(TEST_USER_ID))
+                    .with(csrf())
+                    .header("Authorization", "test-okta")
+                    .content(asJsonString(List.of(testCase)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(
+                jsonPath("$.validationErrors.['list[0].title']")
+                    .value("Test Case Title can not be more than 250 characters."))
+            .andReturn();
+
+    String response = result.getResponse().getContentAsString();
+    assertTrue(response.contains("Test Case Title can not be more than 250 characters."));
+  }
+
+  @Test
+  public void testAddTestCasesNotEmpty() throws Exception {
+    testCase.setTitle(TEXT_251_CHARACTORS);
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.post("/measures/1234/test-cases/list")
+                    .with(user(TEST_USER_ID))
+                    .with(csrf())
+                    .header("Authorization", "test-okta")
+                    .content(asJsonString(List.of()))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.validationErrors.['list']").value("must not be empty"))
+            .andReturn();
+
+    String response = result.getResponse().getContentAsString();
+    assertTrue(response.contains("must not be empty"));
+  }
+
+  @Test
   public void testAddTestCases() throws Exception {
     doReturn(Optional.of(new Measure().toBuilder().createdBy(TEST_USER_ID).build()))
         .when(repository)
@@ -326,7 +374,7 @@ public class TestCaseControllerMvcTest {
                     .with(user(TEST_USER_ID))
                     .with(csrf())
                     .header("Authorization", "test-okta")
-                    .content(asJsonString(new ArrayList<TestCase>()))
+                    .content(asJsonString(List.of(testCase)))
                     .contentType(MediaType.APPLICATION_JSON)
                     .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound())
@@ -348,7 +396,7 @@ public class TestCaseControllerMvcTest {
                     .with(user(TEST_USER_ID))
                     .with(csrf())
                     .header("Authorization", "test-okta")
-                    .content(asJsonString(new ArrayList<TestCase>()))
+                    .content(asJsonString(List.of(testCase)))
                     .contentType(MediaType.APPLICATION_JSON)
                     .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isForbidden())
