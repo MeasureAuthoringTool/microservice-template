@@ -1,37 +1,38 @@
 package cms.gov.madie.measure;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
-@EnableGlobalMethodSecurity(prePostEnabled = true)
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+@EnableMethodSecurity
+public class SecurityConfig {
 
   private static final String[] CSRF_WHITELIST = {
-    "/measure-transfer/**", "/log/**", "/measures/**/grant", "/organizations/**"
+    "/measure-transfer/**", "/log/**", "/measures/*/grant", "/organizations/**"
   };
   private static final String[] AUTH_WHITELIST = {
-    "/measure-transfer/**", "/actuator/**", "/log/**", "/measures/**/grant"
+    "/measure-transfer/**", "/actuator/**", "/log/**", "/measures/*/grant"
   };
 
-  @Override
-  protected void configure(HttpSecurity http) throws Exception {
+  @Bean
+  protected SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http.cors()
         .and()
         .csrf()
-        .ignoringAntMatchers(CSRF_WHITELIST)
+        .ignoringRequestMatchers(CSRF_WHITELIST)
         .and()
-        .authorizeRequests()
-        .antMatchers(HttpMethod.POST, "/organizations/**")
+        .authorizeHttpRequests()
+        .requestMatchers(HttpMethod.POST, "/organizations/**")
         .permitAll()
-        .antMatchers(AUTH_WHITELIST)
+        .requestMatchers(AUTH_WHITELIST)
         .permitAll()
         .and()
-        .authorizeRequests()
+        .authorizeHttpRequests()
         .anyRequest()
         .authenticated()
         .and()
@@ -46,5 +47,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .xssProtection()
         .and()
         .contentSecurityPolicy("script-src 'self'");
+    return http.build();
   }
 }
