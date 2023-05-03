@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.resources;
 
+import cms.gov.madie.measure.dto.ValidList;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import gov.cms.madie.models.measure.Measure;
@@ -43,7 +44,7 @@ public class TestCaseController {
 
   @PostMapping(ControllerUtil.TEST_CASES + "/list")
   public ResponseEntity<List<TestCase>> addTestCases(
-      @RequestBody List<TestCase> testCases,
+      @RequestBody @Validated(TestCase.ValidationSequence.class) ValidList<TestCase> testCases,
       @PathVariable String measureId,
       @RequestHeader("Authorization") String accessToken,
       Principal principal) {
