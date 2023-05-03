@@ -89,7 +89,6 @@ public class MeasureService {
       metaData.setDraft(true);
       measureCopy.setMeasureMetaData(metaData);
     }
-    //
     MeasureSet measureSet = new MeasureSet();
     measureSet.setOwner(username);
     measureSet.setMeasureSetId(measureCopy.getMeasureSetId());
@@ -107,7 +106,6 @@ public class MeasureService {
         savedMeasureSet.getId());
     actionLogService.logAction(
         savedMeasureSet.getId(), Measure.class, ActionType.CREATED, username);
-
     return savedMeasure;
   }
 
