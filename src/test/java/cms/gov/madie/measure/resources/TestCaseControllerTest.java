@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.resources;
 
+import cms.gov.madie.measure.dto.ValidList;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
@@ -19,8 +20,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -106,16 +105,20 @@ public class TestCaseControllerTest {
     when(testCaseService.persistTestCases(anyList(), anyString(), anyString(), anyString()))
         .thenReturn(savedTestCases);
 
-    List<TestCase> testCases =
-        List.of(
-            TestCase.builder()
-                .title("Test1")
-                .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
-                .build(),
-            TestCase.builder()
-                .title("Test2")
-                .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
-                .build());
+    ValidList<TestCase> testCases =
+        ValidList.<TestCase>builder()
+            .list(
+                List.of(
+                    TestCase.builder()
+                        .title("Test1")
+                        .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
+                        .build(),
+                    TestCase.builder()
+                        .title("Test2")
+                        .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
+                        .build()))
+            .build();
+
     ResponseEntity<List<TestCase>> output =
         controller.addTestCases(testCases, "MeasureID", "Bearer Token", principal);
     assertThat(output, is(notNullValue()));
@@ -131,9 +134,7 @@ public class TestCaseControllerTest {
     doReturn(Optional.of(measure)).when(repository).findById("MeasureID");
     assertThrows(
         UnauthorizedException.class,
-        () ->
-            controller.addTestCases(
-                Collections.emptyList(), "MeasureID", "Bearer Token", principal));
+        () -> controller.addTestCases(new ValidList<>(), "MeasureID", "Bearer Token", principal));
   }
 
   @Test
@@ -143,8 +144,7 @@ public class TestCaseControllerTest {
 
     assertThrows(
         ResourceNotFoundException.class,
-        () ->
-            controller.addTestCases(new ArrayList<TestCase>(), "1234", "Bearer Token", principal));
+        () -> controller.addTestCases(new ValidList<>(), "1234", "Bearer Token", principal));
   }
 
   @Test
