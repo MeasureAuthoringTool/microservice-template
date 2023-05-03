@@ -20,7 +20,6 @@
     <mvn.checkstyle.version>3.1.2</mvn.checkstyle.version>
     <mvnreports.version>3.1.1</mvnreports.version>
     <mvnsite.version>3.9.1</mvnsite.version>
-    <springboot.version>2.6.14</springboot.version>
     <springdoc.version>1.6.14</springdoc.version>
   </properties>
 
