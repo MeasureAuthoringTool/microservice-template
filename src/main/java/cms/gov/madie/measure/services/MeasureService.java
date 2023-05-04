@@ -7,16 +7,14 @@ import cms.gov.madie.measure.exceptions.InvalidMeasurementPeriodException;
 import cms.gov.madie.measure.exceptions.InvalidTerminologyException;
 import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
 import cms.gov.madie.measure.utils.MeasureUtil;
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.Version;
-import gov.cms.madie.models.measure.ElmJson;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.MeasureErrorType;
-import gov.cms.madie.models.measure.MeasureMetaData;
+import gov.cms.madie.models.measure.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -48,6 +46,7 @@ public class MeasureService {
   private final MeasureUtil measureUtil;
   private final ActionLogService actionLogService;
   private final TerminologyValidationService terminologyValidationService;
+  private final MeasureSetRepository measureSetRepository;
 
   public Measure createMeasure(Measure measure, final String username, String accessToken) {
     log.info("User [{}] is attempting to create a new measure", username);
@@ -90,12 +89,23 @@ public class MeasureService {
       metaData.setDraft(true);
       measureCopy.setMeasureMetaData(metaData);
     }
+    MeasureSet measureSet = new MeasureSet();
+    measureSet.setOwner(username);
+    measureSet.setMeasureSetId(measureCopy.getMeasureSetId());
 
     Measure savedMeasure = measureRepository.save(measureCopy);
     log.info(
         "User [{}] successfully created new measure with ID [{}]", username, savedMeasure.getId());
     actionLogService.logAction(savedMeasure.getId(), Measure.class, ActionType.CREATED, username);
 
+    MeasureSet savedMeasureSet = measureSetRepository.save(measureSet);
+    log.info(
+        "User [{}] successfully created new measureSet with ID [{}] for the measure [{}] ",
+        username,
+        savedMeasure.getId(),
+        savedMeasureSet.getId());
+    actionLogService.logAction(
+        savedMeasureSet.getId(), Measure.class, ActionType.CREATED, username);
     return savedMeasure;
   }
 
