@@ -44,18 +44,8 @@ public class ResourceUtilityImpl implements ResourceUtility {
     if (bundle == null) {
       return null;
     }
-    var measureEntry =
-        bundle.getEntry().stream()
-            .filter(
-                entry ->
-                    StringUtils.equalsIgnoreCase(
-                        "Measure", entry.getResource().getResourceType().toString()))
-            .findFirst();
     org.hl7.fhir.r4.model.DomainResource measure =
-        (org.hl7.fhir.r4.model.DomainResource)
-            measureEntry
-                .map(org.hl7.fhir.r4.model.Bundle.BundleEntryComponent::getResource)
-                .orElse(null);
+            (DomainResource) ResourceUtils.getResource(bundle, "Measure");
     if (measure == null) {
       throw new InternalServerException("Measure is Null");
     }
