@@ -2,24 +2,14 @@ package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.repositories.OrganizationRepository;
 import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.ElmTranslatorClient;
 import cms.gov.madie.measure.services.MeasureService;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.Organization;
-import gov.cms.madie.models.measure.AggregateMethodType;
-import gov.cms.madie.models.measure.ElmJson;
-import gov.cms.madie.models.measure.Endorsement;
-import gov.cms.madie.models.measure.Group;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.MeasureGroupTypes;
-import gov.cms.madie.models.measure.MeasureMetaData;
-import gov.cms.madie.models.measure.MeasureObservation;
-import gov.cms.madie.models.measure.Population;
-import gov.cms.madie.models.measure.PopulationType;
-import gov.cms.madie.models.measure.Reference;
-import gov.cms.madie.models.measure.Stratification;
+import gov.cms.madie.models.measure.*;
 import gov.cms.madie.models.common.Version;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -54,11 +44,13 @@ public class MeasureTransferControllerTest {
   private static final String LAMBDA_TEST_API_KEY = "TOUCH-DOWN";
 
   private Measure measure;
+  private MeasureSet measureSet;
 
   private List<Organization> organizationList;
 
   @Mock private MeasureService measureService;
   @Mock private MeasureRepository repository;
+  @Mock private MeasureSetRepository measureSetRepository;
   @Mock private ActionLogService actionLogService;
   @Mock private ElmTranslatorClient elmTranslatorClient;
 
@@ -158,6 +150,13 @@ public class MeasureTransferControllerTest {
             .elmJson(ELM_JSON_SUCCESS)
             .build();
 
+    measureSet =
+        MeasureSet.builder()
+            .id("msid-xyz-p12r-12ert")
+            .measureSetId("abc-pqr-xyz")
+            .owner("user-1")
+            .build();
+
     organizationList = new ArrayList<>();
     organizationList.add(Organization.builder().name("SB").url("SB Url").build());
     organizationList.add(Organization.builder().name("SB 2").url("SB 2 Url").build());
@@ -170,6 +169,7 @@ public class MeasureTransferControllerTest {
     ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
     doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
     doReturn(measure).when(repository).save(any(Measure.class));
+    doReturn(measureSet).when(measureSetRepository).save(any(MeasureSet.class));
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
     ResponseEntity<Measure> response =
@@ -213,7 +213,7 @@ public class MeasureTransferControllerTest {
     assertEquals(1, persistedMeasure.getMeasureMetaData().getDevelopers().size());
     assertEquals("SB 2 Url", persistedMeasure.getMeasureMetaData().getDevelopers().get(0).getUrl());
 
-    verify(actionLogService, times(1))
+    verify(actionLogService, times(2))
         .logAction(
             targetIdArgumentCaptor.capture(),
             targetClassArgumentCaptor.capture(),
@@ -221,8 +221,7 @@ public class MeasureTransferControllerTest {
             performedByArgumentCaptor.capture());
     assertNotNull(targetIdArgumentCaptor.getValue());
     assertThat(targetClassArgumentCaptor.getValue(), is(equalTo(Measure.class)));
-    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.IMPORTED)));
-    assertThat(performedByArgumentCaptor.getValue(), is(equalTo("testCreatedBy")));
+    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.CREATED)));
   }
 
   @Test
@@ -231,6 +230,7 @@ public class MeasureTransferControllerTest {
     doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
     measure.setMeasureMetaData(null);
     doReturn(measure).when(repository).save(any(Measure.class));
+    doReturn(measureSet).when(measureSetRepository).save(any(MeasureSet.class));
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
     ResponseEntity<Measure> response =
@@ -250,7 +250,7 @@ public class MeasureTransferControllerTest {
         persistedMeasure.getGroups().get(0).getPopulations().get(0).getDescription());
     assertTrue(persistedMeasure.getMeasureMetaData().isDraft());
 
-    verify(actionLogService, times(1))
+    verify(actionLogService, times(2))
         .logAction(
             targetIdArgumentCaptor.capture(),
             targetClassArgumentCaptor.capture(),
@@ -258,8 +258,7 @@ public class MeasureTransferControllerTest {
             performedByArgumentCaptor.capture());
     assertNotNull(targetIdArgumentCaptor.getValue());
     assertThat(targetClassArgumentCaptor.getValue(), is(equalTo(Measure.class)));
-    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.IMPORTED)));
-    assertThat(performedByArgumentCaptor.getValue(), is(equalTo("testCreatedBy")));
+    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.CREATED)));
   }
 
   @Test
@@ -284,6 +283,7 @@ public class MeasureTransferControllerTest {
         .getElmJsonForMatMeasure(CQL, LAMBDA_TEST_API_KEY, null);
     doReturn(false).when(elmTranslatorClient).hasErrors(elmJson);
     doReturn(measure).when(repository).save(any(Measure.class));
+    doReturn(measureSet).when(measureSetRepository).save(any(MeasureSet.class));
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
     ResponseEntity<Measure> response =
@@ -296,7 +296,7 @@ public class MeasureTransferControllerTest {
     assertFalse(measure.isCqlErrors());
     assertEquals(measure.getElmJson(), ELM_JSON_SUCCESS);
 
-    verify(actionLogService, times(1))
+    verify(actionLogService, times(2))
         .logAction(
             targetIdArgumentCaptor.capture(),
             targetClassArgumentCaptor.capture(),
@@ -320,6 +320,7 @@ public class MeasureTransferControllerTest {
     measure.setCqlErrors(true);
     measure.setElmJson(ELM_JSON_FAIL);
     doReturn(measure).when(repository).save(any(Measure.class));
+    doReturn(measureSet).when(measureSetRepository).save(any(MeasureSet.class));
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
     ResponseEntity<Measure> response =
@@ -331,7 +332,7 @@ public class MeasureTransferControllerTest {
     assertTrue(measure.isCqlErrors());
     assertEquals(measure.getElmJson(), ELM_JSON_FAIL);
 
-    verify(actionLogService, times(1))
+    verify(actionLogService, times(2))
         .logAction(
             targetIdArgumentCaptor.capture(),
             targetClassArgumentCaptor.capture(),
@@ -346,6 +347,7 @@ public class MeasureTransferControllerTest {
     measure.getMeasureMetaData().getSteward().setName("Random steward name");
     doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
     doReturn(measure).when(repository).save(any(Measure.class));
+    doReturn(measureSet).when(measureSetRepository).save(any(MeasureSet.class));
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
     ResponseEntity<Measure> response =
@@ -363,6 +365,7 @@ public class MeasureTransferControllerTest {
         .setDevelopers(List.of(Organization.builder().name("Random steward name").build()));
     doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
     doReturn(measure).when(repository).save(any(Measure.class));
+    doReturn(measureSet).when(measureSetRepository).save(any(MeasureSet.class));
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
     ResponseEntity<Measure> response =
@@ -398,6 +401,7 @@ public class MeasureTransferControllerTest {
 
     doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
     doReturn(measure).when(repository).save(any(Measure.class));
+    doReturn(measureSet).when(measureSetRepository).save(any(MeasureSet.class));
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
     ResponseEntity<Measure> response =

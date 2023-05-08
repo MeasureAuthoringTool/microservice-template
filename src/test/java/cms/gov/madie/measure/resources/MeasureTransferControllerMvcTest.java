@@ -3,6 +3,7 @@ package cms.gov.madie.measure.resources;
 import cms.gov.madie.measure.SecurityConfig;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.repositories.OrganizationRepository;
 import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.ElmTranslatorClient;
@@ -11,16 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.common.Organization;
-import gov.cms.madie.models.measure.ElmJson;
-import gov.cms.madie.models.measure.Endorsement;
-import gov.cms.madie.models.measure.Group;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.MeasureGroupTypes;
-import gov.cms.madie.models.measure.MeasureMetaData;
-import gov.cms.madie.models.measure.Population;
-import gov.cms.madie.models.measure.PopulationType;
-import gov.cms.madie.models.measure.Reference;
-import gov.cms.madie.models.measure.Stratification;
+import gov.cms.madie.models.measure.*;
 import gov.cms.madie.models.common.Version;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -61,6 +53,7 @@ public class MeasureTransferControllerMvcTest {
   private static final String LAMBDA_TEST_API_KEY_HEADER_VALUE = "9202c9fa";
 
   @MockBean private MeasureRepository measureRepository;
+  @MockBean private MeasureSetRepository measureSetRepository;
   @MockBean private MeasureService measureService;
   @MockBean private ActionLogService actionLogService;
   @MockBean private ElmTranslatorClient elmTranslatorClient;
@@ -81,6 +74,7 @@ public class MeasureTransferControllerMvcTest {
   @Autowired private MockMvc mockMvc;
 
   Measure measure;
+  MeasureSet measureSet;
 
   private List<Organization> organizationList;
 
@@ -163,6 +157,13 @@ public class MeasureTransferControllerMvcTest {
     organizationList.add(Organization.builder().name("SB 2").url("SB 2 Url").build());
     organizationList.add(Organization.builder().name("CancerLinQ").url("CancerLinQ Url").build());
     organizationList.add(Organization.builder().name("Innovaccer").url("Innovaccer Url").build());
+
+    measureSet =
+        MeasureSet.builder()
+            .id("msid-xyz-p12r-12ert")
+            .measureSetId("abc-pqr-xyz")
+            .owner("user-1")
+            .build();
   }
 
   @Test
@@ -173,6 +174,7 @@ public class MeasureTransferControllerMvcTest {
 
     doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
     doReturn(measure).when(measureRepository).save(any(Measure.class));
+    doReturn(measureSet).when(measureSetRepository).save(any(MeasureSet.class));
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
     mockMvc
@@ -224,7 +226,7 @@ public class MeasureTransferControllerMvcTest {
     assertEquals(1, persistedMeasure.getMeasureMetaData().getDevelopers().size());
     assertEquals("SB 2 Url", persistedMeasure.getMeasureMetaData().getDevelopers().get(0).getUrl());
 
-    verify(actionLogService, times(1))
+    verify(actionLogService, times(2))
         .logAction(
             targetIdArgumentCaptor.capture(),
             targetClassArgumentCaptor.capture(),
@@ -232,8 +234,7 @@ public class MeasureTransferControllerMvcTest {
             performedByArgumentCaptor.capture());
     assertNotNull(targetIdArgumentCaptor.getValue());
     assertThat(targetClassArgumentCaptor.getValue(), is(equalTo(Measure.class)));
-    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.IMPORTED)));
-    assertThat(performedByArgumentCaptor.getValue(), is(equalTo("testCreatedBy")));
+    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.CREATED)));
   }
 
   @Test
@@ -287,6 +288,7 @@ public class MeasureTransferControllerMvcTest {
         .thenReturn(elmJson);
     when(elmTranslatorClient.hasErrors(elmJson)).thenReturn(false);
     doReturn(measure).when(measureRepository).save(any(Measure.class));
+    doReturn(measureSet).when(measureSetRepository).save(any(MeasureSet.class));
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
     MvcResult result =
@@ -314,6 +316,7 @@ public class MeasureTransferControllerMvcTest {
         .thenReturn(elmJson);
     when(elmTranslatorClient.hasErrors(elmJson)).thenReturn(true);
     doReturn(measure).when(measureRepository).save(any(Measure.class));
+    doReturn(measureSet).when(measureSetRepository).save(any(MeasureSet.class));
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
     MvcResult result =
@@ -342,6 +345,7 @@ public class MeasureTransferControllerMvcTest {
         .when(elmTranslatorClient)
         .getElmJsonForMatMeasure(any(String.class), any(String.class), any(String.class));
     doReturn(measure).when(measureRepository).save(any(Measure.class));
+    doReturn(measureSet).when(measureSetRepository).save(any(MeasureSet.class));
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
     MvcResult result =

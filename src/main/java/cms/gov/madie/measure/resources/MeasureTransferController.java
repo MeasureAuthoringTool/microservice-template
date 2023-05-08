@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.resources;
 
+import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.repositories.OrganizationRepository;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.Organization;
@@ -12,6 +13,7 @@ import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.ElmTranslatorClient;
 import cms.gov.madie.measure.services.MeasureService;
+import gov.cms.madie.models.measure.MeasureSet;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
@@ -37,6 +39,7 @@ import java.util.Optional;
 public class MeasureTransferController {
   private static final String HARP_ID_HEADER = "harp-id";
   private final MeasureRepository repository;
+  private final MeasureSetRepository measureSetRepository;
   private final MeasureService measureService;
   private final ActionLogService actionLogService;
   private final ElmTranslatorClient elmTranslatorClient;
@@ -75,10 +78,27 @@ public class MeasureTransferController {
     measure.getGroups().forEach(group -> group.setId(ObjectId.get().toString()));
     Measure savedMeasure = repository.save(measure);
     log.info("Measure [{}] transfer complete", measure.getMeasureName());
-
     actionLogService.logAction(
         savedMeasure.getId(), Measure.class, ActionType.IMPORTED, savedMeasure.getCreatedBy());
 
+    boolean isMeasureSetPresent =
+        measureSetRepository.findMeasureSetByMeasureSetId(measure.getMeasureSetId()).isPresent();
+
+    if (!isMeasureSetPresent) {
+      // set measureSet for the transfered measures,
+      // only measure owners can transfer in MAT
+      MeasureSet measureSet = new MeasureSet();
+      measureSet.setOwner(harpId);
+      measureSet.setMeasureSetId(measure.getMeasureSetId());
+
+      MeasureSet savedMeasureSet = measureSetRepository.save(measureSet);
+      log.info(
+          "Measure set [{}] is successfully created for the transferred measure [{}]",
+          savedMeasureSet.getId(),
+          savedMeasure.getId());
+      actionLogService.logAction(
+          savedMeasureSet.getId(), Measure.class, ActionType.CREATED, harpId);
+    }
     return ResponseEntity.status(HttpStatus.CREATED).body(savedMeasure);
   }
 

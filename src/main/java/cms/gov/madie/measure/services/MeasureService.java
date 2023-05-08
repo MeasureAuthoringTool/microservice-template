@@ -70,7 +70,6 @@ public class MeasureService {
       measureCopy.setCqlErrors(true);
       measureCopy.setErrors(errorTypes);
     }
-
     Instant now = Instant.now();
     // Clear ID so that the unique GUID from MongoDB will be applied
     measureCopy.setId(null);
@@ -81,7 +80,6 @@ public class MeasureService {
     measureCopy.setVersion(new Version(0, 0, 0));
     measureCopy.setVersionId(UUID.randomUUID().toString());
     measureCopy.setMeasureSetId(UUID.randomUUID().toString());
-
     if (measureCopy.getMeasureMetaData() != null) {
       measureCopy.getMeasureMetaData().setDraft(true);
     } else {
@@ -89,23 +87,25 @@ public class MeasureService {
       metaData.setDraft(true);
       measureCopy.setMeasureMetaData(metaData);
     }
-    MeasureSet measureSet = new MeasureSet();
-    measureSet.setOwner(username);
-    measureSet.setMeasureSetId(measureCopy.getMeasureSetId());
-
     Measure savedMeasure = measureRepository.save(measureCopy);
     log.info(
         "User [{}] successfully created new measure with ID [{}]", username, savedMeasure.getId());
     actionLogService.logAction(savedMeasure.getId(), Measure.class, ActionType.CREATED, username);
-
-    MeasureSet savedMeasureSet = measureSetRepository.save(measureSet);
-    log.info(
-        "User [{}] successfully created new measureSet with ID [{}] for the measure [{}] ",
-        username,
-        savedMeasure.getId(),
-        savedMeasureSet.getId());
-    actionLogService.logAction(
-        savedMeasureSet.getId(), Measure.class, ActionType.CREATED, username);
+    boolean isMeasureSetPresent =
+        measureSetRepository.findMeasureSetByMeasureSetId(measure.getMeasureSetId()).isPresent();
+    if (!isMeasureSetPresent) {
+      MeasureSet measureSet = new MeasureSet();
+      measureSet.setOwner(username);
+      measureSet.setMeasureSetId(measureCopy.getMeasureSetId());
+      MeasureSet savedMeasureSet = measureSetRepository.save(measureSet);
+      log.info(
+          "User [{}] successfully created new measureSet with ID [{}] for the measure [{}] ",
+          username,
+          savedMeasureSet.getId(),
+          savedMeasure.getId());
+      actionLogService.logAction(
+          savedMeasureSet.getId(), Measure.class, ActionType.CREATED, username);
+    }
     return savedMeasure;
   }
 
