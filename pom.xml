@@ -99,7 +99,7 @@
     <dependency>
       <groupId>gov.cms.madie</groupId>
       <artifactId>madie-java-models</artifactId>
-      <version>0.4.4-SNAPSHOT</version>
+      <version>0.4.5-SNAPSHOT</version>
     </dependency>
 
     <dependency>
