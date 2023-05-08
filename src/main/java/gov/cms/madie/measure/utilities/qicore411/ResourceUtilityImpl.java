@@ -45,7 +45,7 @@ public class ResourceUtilityImpl implements ResourceUtility {
       return null;
     }
     org.hl7.fhir.r4.model.DomainResource measure =
-            (DomainResource) ResourceUtils.getResource(bundle, "Measure");
+        (org.hl7.fhir.r4.model.DomainResource) ResourceUtils.getResource(bundle, "Measure");
     if (measure == null) {
       throw new InternalServerException("Measure is Null");
     }
