@@ -70,7 +70,7 @@ public class BundleService {
     isMetadataValid(measure);
     areGroupsValid(measure);
     try {
-      retrieveElmJson(measure, accessToken);
+
       // for draft measures
       if (measure.getMeasureMetaData().isDraft()) {
         try {
