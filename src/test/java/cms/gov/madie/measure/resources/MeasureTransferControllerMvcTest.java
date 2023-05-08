@@ -8,6 +8,7 @@ import cms.gov.madie.measure.repositories.OrganizationRepository;
 import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.ElmTranslatorClient;
 import cms.gov.madie.measure.services.MeasureService;
+import cms.gov.madie.measure.services.MeasureSetService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
@@ -56,6 +57,7 @@ public class MeasureTransferControllerMvcTest {
   @MockBean private MeasureSetRepository measureSetRepository;
   @MockBean private MeasureService measureService;
   @MockBean private ActionLogService actionLogService;
+  @MockBean private MeasureSetService measureSetService;
   @MockBean private ElmTranslatorClient elmTranslatorClient;
 
   @MockBean private OrganizationRepository organizationRepository;
@@ -173,8 +175,10 @@ public class MeasureTransferControllerMvcTest {
     ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
 
     doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
+    doNothing()
+        .when(measureSetService)
+        .createMeasureSet(any(String.class), any(String.class), any(String.class));
     doReturn(measure).when(measureRepository).save(any(Measure.class));
-    doReturn(measureSet).when(measureSetRepository).save(any(MeasureSet.class));
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
     mockMvc
@@ -226,7 +230,7 @@ public class MeasureTransferControllerMvcTest {
     assertEquals(1, persistedMeasure.getMeasureMetaData().getDevelopers().size());
     assertEquals("SB 2 Url", persistedMeasure.getMeasureMetaData().getDevelopers().get(0).getUrl());
 
-    verify(actionLogService, times(2))
+    verify(actionLogService, times(1))
         .logAction(
             targetIdArgumentCaptor.capture(),
             targetClassArgumentCaptor.capture(),
@@ -234,7 +238,8 @@ public class MeasureTransferControllerMvcTest {
             performedByArgumentCaptor.capture());
     assertNotNull(targetIdArgumentCaptor.getValue());
     assertThat(targetClassArgumentCaptor.getValue(), is(equalTo(Measure.class)));
-    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.CREATED)));
+    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.IMPORTED)));
+    assertThat(performedByArgumentCaptor.getValue(), is(equalTo("testCreatedBy")));
   }
 
   @Test
@@ -287,6 +292,9 @@ public class MeasureTransferControllerMvcTest {
             CQL, LAMBDA_TEST_API_KEY_HEADER_VALUE, HARP_ID_HEADER_VALUE))
         .thenReturn(elmJson);
     when(elmTranslatorClient.hasErrors(elmJson)).thenReturn(false);
+    doNothing()
+        .when(measureSetService)
+        .createMeasureSet(any(String.class), any(String.class), any(String.class));
     doReturn(measure).when(measureRepository).save(any(Measure.class));
     doReturn(measureSet).when(measureSetRepository).save(any(MeasureSet.class));
     when(organizationRepository.findAll()).thenReturn(organizationList);

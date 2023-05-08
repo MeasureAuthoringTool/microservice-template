@@ -71,6 +71,7 @@ public class MeasureServiceTest implements ResourceUtil {
   @Mock private MeasureUtil measureUtil;
 
   @Mock private ActionLogService actionLogService;
+  @Mock private MeasureSetService measureSetService;
   @Mock private TerminologyValidationService terminologyValidationService;
 
   @InjectMocks private MeasureService measureService;
@@ -197,10 +198,9 @@ public class MeasureServiceTest implements ResourceUtil {
             .measureMetaData(new MeasureMetaData())
             .createdBy(usr)
             .build();
-    MeasureSet measureSetToSave = measureSet1.toBuilder().owner(usr).measureSetId("msid-1").build();
+    doNothing().when(measureSetService).createMeasureSet(any(String.class),any(String.class),any(String.class));
     when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
-    when(measureSetRepository.save(any(MeasureSet.class))).thenReturn(measureSetToSave);
     when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
 
     Measure savedMeasure = measureService.createMeasure(measureToSave, usr, "token");
@@ -222,15 +222,14 @@ public class MeasureServiceTest implements ResourceUtil {
             .measureSetId("msid-1")
             .cqlLibraryName("VTE")
             .build();
-    MeasureSet measureSetToSave =
-        measureSet1.toBuilder().owner("john rao").measureSetId("msid-1").build();
+
     when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
     when(elmTranslatorClient.getElmJson(anyString(), anyString()))
         .thenReturn(ElmJson.builder().json(elmJson).build());
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(false);
     doNothing().when(terminologyValidationService).validateTerminology(anyString(), anyString());
+    doNothing().when(measureSetService).createMeasureSet(any(String.class),any(String.class),any(String.class));
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
-    when(measureSetRepository.save(any(MeasureSet.class))).thenReturn(measureSetToSave);
     when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
 
     Measure savedMeasure = measureService.createMeasure(measureToSave, "john rao", "token");
@@ -256,7 +255,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .errors(errors)
             .createdBy(usr)
             .build();
-    MeasureSet measureSetToSave = measureSet1.toBuilder().owner(usr).measureSetId("msid-1").build();
+
     when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
     when(elmTranslatorClient.getElmJson(anyString(), anyString()))
         .thenReturn(ElmJson.builder().json(elmJson).build());
@@ -264,8 +263,8 @@ public class MeasureServiceTest implements ResourceUtil {
     doThrow(InvalidTerminologyException.class)
         .when(terminologyValidationService)
         .validateTerminology(anyString(), anyString());
+    doNothing().when(measureSetService).createMeasureSet(any(String.class),any(String.class),any(String.class));
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
-    when(measureSetRepository.save(any(MeasureSet.class))).thenReturn(measureSetToSave);
     when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
 
     Measure savedMeasure = measureService.createMeasure(measureToSave, usr, "token");
@@ -308,15 +307,14 @@ public class MeasureServiceTest implements ResourceUtil {
             .measurementPeriodEnd(Date.from(endInstant))
             .cqlLibraryName("VTE")
             .build();
-    MeasureSet measureSetToSave =
-        measureSet1.toBuilder().owner("test user").measureSetId("msid-1").build();
+
     when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
     when(elmTranslatorClient.getElmJson(anyString(), anyString()))
         .thenReturn(ElmJson.builder().json(elmJson).build());
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(false);
     doNothing().when(terminologyValidationService).validateTerminology(anyString(), anyString());
+    doNothing().when(measureSetService).createMeasureSet(any(String.class),any(String.class),any(String.class));
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
-    when(measureSetRepository.save(any(MeasureSet.class))).thenReturn(measureSetToSave);
     when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
 
     Measure savedMeasure = measureService.createMeasure(measureToSave, "john rao", "token");

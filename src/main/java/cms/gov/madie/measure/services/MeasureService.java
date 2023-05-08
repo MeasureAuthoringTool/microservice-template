@@ -45,6 +45,7 @@ public class MeasureService {
   private final ElmTranslatorClient elmTranslatorClient;
   private final MeasureUtil measureUtil;
   private final ActionLogService actionLogService;
+  private final MeasureSetService measureSetService;
   private final TerminologyValidationService terminologyValidationService;
   private final MeasureSetRepository measureSetRepository;
 
@@ -94,17 +95,8 @@ public class MeasureService {
     boolean isMeasureSetPresent =
         measureSetRepository.findMeasureSetByMeasureSetId(measure.getMeasureSetId()).isPresent();
     if (!isMeasureSetPresent) {
-      MeasureSet measureSet = new MeasureSet();
-      measureSet.setOwner(username);
-      measureSet.setMeasureSetId(measureCopy.getMeasureSetId());
-      MeasureSet savedMeasureSet = measureSetRepository.save(measureSet);
-      log.info(
-          "User [{}] successfully created new measureSet with ID [{}] for the measure [{}] ",
-          username,
-          savedMeasureSet.getId(),
-          savedMeasure.getId());
-      actionLogService.logAction(
-          savedMeasureSet.getId(), Measure.class, ActionType.CREATED, username);
+      measureSetService.createMeasureSet(
+          username, savedMeasure.getId(), savedMeasure.getMeasureSetId());
     }
     return savedMeasure;
   }

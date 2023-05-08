@@ -2,6 +2,7 @@ package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.repositories.OrganizationRepository;
+import cms.gov.madie.measure.services.MeasureSetService;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.Organization;
 import gov.cms.madie.models.measure.ElmJson;
@@ -42,6 +43,7 @@ public class MeasureTransferController {
   private final MeasureSetRepository measureSetRepository;
   private final MeasureService measureService;
   private final ActionLogService actionLogService;
+  private final MeasureSetService measureSetService;
   private final ElmTranslatorClient elmTranslatorClient;
 
   private final OrganizationRepository organizationRepository;
@@ -87,17 +89,8 @@ public class MeasureTransferController {
     if (!isMeasureSetPresent) {
       // set measureSet for the transfered measures,
       // only measure owners can transfer in MAT
-      MeasureSet measureSet = new MeasureSet();
-      measureSet.setOwner(harpId);
-      measureSet.setMeasureSetId(measure.getMeasureSetId());
-
-      MeasureSet savedMeasureSet = measureSetRepository.save(measureSet);
-      log.info(
-          "Measure set [{}] is successfully created for the transferred measure [{}]",
-          savedMeasureSet.getId(),
-          savedMeasure.getId());
-      actionLogService.logAction(
-          savedMeasureSet.getId(), Measure.class, ActionType.CREATED, harpId);
+      measureSetService.createMeasureSet(
+          harpId, savedMeasure.getId(), savedMeasure.getMeasureSetId());
     }
     return ResponseEntity.status(HttpStatus.CREATED).body(savedMeasure);
   }
