@@ -79,19 +79,11 @@ public class MeasureTransferController {
     // set ids for groups
     measure.getGroups().forEach(group -> group.setId(ObjectId.get().toString()));
     Measure savedMeasure = repository.save(measure);
+    measureSetService.createMeasureSet(
+        harpId, savedMeasure.getId(), savedMeasure.getMeasureSetId());
     log.info("Measure [{}] transfer complete", measure.getMeasureName());
     actionLogService.logAction(
         savedMeasure.getId(), Measure.class, ActionType.IMPORTED, savedMeasure.getCreatedBy());
-
-    boolean isMeasureSetPresent =
-        measureSetRepository.findMeasureSetByMeasureSetId(measure.getMeasureSetId()).isPresent();
-
-    if (!isMeasureSetPresent) {
-      // set measureSet for the transfered measures,
-      // only measure owners can transfer in MAT
-      measureSetService.createMeasureSet(
-          harpId, savedMeasure.getId(), savedMeasure.getMeasureSetId());
-    }
     return ResponseEntity.status(HttpStatus.CREATED).body(savedMeasure);
   }
 

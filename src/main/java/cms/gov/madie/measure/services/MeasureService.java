@@ -92,12 +92,9 @@ public class MeasureService {
     log.info(
         "User [{}] successfully created new measure with ID [{}]", username, savedMeasure.getId());
     actionLogService.logAction(savedMeasure.getId(), Measure.class, ActionType.CREATED, username);
-    boolean isMeasureSetPresent =
-        measureSetRepository.findMeasureSetByMeasureSetId(measure.getMeasureSetId()).isPresent();
-    if (!isMeasureSetPresent) {
-      measureSetService.createMeasureSet(
-          username, savedMeasure.getId(), savedMeasure.getMeasureSetId());
-    }
+
+    measureSetService.createMeasureSet(
+        username, savedMeasure.getId(), savedMeasure.getMeasureSetId());
     return savedMeasure;
   }
 

@@ -19,13 +19,19 @@ public class MeasureSetService {
   public void createMeasureSet(
       final String harpId, final String measureId, final String savedMeasureSetId) {
 
-    MeasureSet measureSet =
-        MeasureSet.builder().owner(harpId).measureSetId(savedMeasureSetId).build();
-    MeasureSet savedMeasureSet = measureSetRepository.save(measureSet);
-    log.info(
-        "Measure set [{}] is successfully created for the measure [{}]",
-        savedMeasureSet.getId(),
-        measureId);
-    actionLogService.logAction(savedMeasureSet.getId(), Measure.class, ActionType.CREATED, harpId);
+    boolean isMeasureSetPresent =
+        measureSetRepository.findMeasureSetByMeasureSetId(savedMeasureSetId).isPresent();
+    if (!isMeasureSetPresent) {
+      // only measure owners can transfer in MAT
+      MeasureSet measureSet =
+          MeasureSet.builder().owner(harpId).measureSetId(savedMeasureSetId).build();
+      MeasureSet savedMeasureSet = measureSetRepository.save(measureSet);
+      log.info(
+          "Measure set [{}] is successfully created for the measure [{}]",
+          savedMeasureSet.getId(),
+          measureId);
+      actionLogService.logAction(
+          savedMeasureSet.getId(), Measure.class, ActionType.CREATED, harpId);
+    }
   }
 }

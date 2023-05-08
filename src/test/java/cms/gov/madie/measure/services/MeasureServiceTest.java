@@ -198,7 +198,9 @@ public class MeasureServiceTest implements ResourceUtil {
             .measureMetaData(new MeasureMetaData())
             .createdBy(usr)
             .build();
-    doNothing().when(measureSetService).createMeasureSet(any(String.class),any(String.class),any(String.class));
+    doNothing()
+        .when(measureSetService)
+        .createMeasureSet(any(String.class), any(String.class), any(String.class));
     when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
     when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
@@ -228,7 +230,9 @@ public class MeasureServiceTest implements ResourceUtil {
         .thenReturn(ElmJson.builder().json(elmJson).build());
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(false);
     doNothing().when(terminologyValidationService).validateTerminology(anyString(), anyString());
-    doNothing().when(measureSetService).createMeasureSet(any(String.class),any(String.class),any(String.class));
+    doNothing()
+        .when(measureSetService)
+        .createMeasureSet(any(String.class), any(String.class), any(String.class));
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
     when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
 
@@ -263,7 +267,9 @@ public class MeasureServiceTest implements ResourceUtil {
     doThrow(InvalidTerminologyException.class)
         .when(terminologyValidationService)
         .validateTerminology(anyString(), anyString());
-    doNothing().when(measureSetService).createMeasureSet(any(String.class),any(String.class),any(String.class));
+    doNothing()
+        .when(measureSetService)
+        .createMeasureSet(any(String.class), any(String.class), any(String.class));
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
     when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
 
@@ -313,7 +319,9 @@ public class MeasureServiceTest implements ResourceUtil {
         .thenReturn(ElmJson.builder().json(elmJson).build());
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(false);
     doNothing().when(terminologyValidationService).validateTerminology(anyString(), anyString());
-    doNothing().when(measureSetService).createMeasureSet(any(String.class),any(String.class),any(String.class));
+    doNothing()
+        .when(measureSetService)
+        .createMeasureSet(any(String.class), any(String.class), any(String.class));
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
     when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
 
