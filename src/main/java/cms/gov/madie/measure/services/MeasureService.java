@@ -47,7 +47,6 @@ public class MeasureService {
   private final ActionLogService actionLogService;
   private final MeasureSetService measureSetService;
   private final TerminologyValidationService terminologyValidationService;
-  private final MeasureSetRepository measureSetRepository;
 
   public Measure createMeasure(Measure measure, final String username, String accessToken) {
     log.info("User [{}] is attempting to create a new measure", username);

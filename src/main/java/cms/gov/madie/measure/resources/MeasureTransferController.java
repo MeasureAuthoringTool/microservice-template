@@ -40,12 +40,10 @@ import java.util.Optional;
 public class MeasureTransferController {
   private static final String HARP_ID_HEADER = "harp-id";
   private final MeasureRepository repository;
-  private final MeasureSetRepository measureSetRepository;
   private final MeasureService measureService;
   private final ActionLogService actionLogService;
   private final MeasureSetService measureSetService;
   private final ElmTranslatorClient elmTranslatorClient;
-
   private final OrganizationRepository organizationRepository;
 
   @PostMapping("/mat-measures")
