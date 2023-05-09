@@ -4,14 +4,23 @@ import cms.gov.madie.measure.exceptions.BundleOperationException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.InvalidResourceBundleStateException;
 import cms.gov.madie.measure.repositories.ExportRepository;
+
+import cms.gov.madie.measure.utils.ExportFileNamesUtil;
+import cms.gov.madie.measure.utils.ResourceUtility;
 import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Export;
 import gov.cms.madie.models.measure.Measure;
+
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+
+import java.lang.reflect.InvocationTargetException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.client.RestClientException;
@@ -58,6 +67,69 @@ public class BundleService {
     if (measure == null) {
       return null;
     }
+    isMetadataValid(measure);
+    areGroupsValid(measure);
+    try {
+
+      // for draft measures
+      if (measure.getMeasureMetaData().isDraft()) {
+        try {
+          retrieveElmJson(measure, accessToken);
+          return fhirServicesClient.getMeasureBundleExport(measure, accessToken);
+        } catch (RestClientException | IllegalArgumentException ex) {
+          log.error("An error occurred while bundling measure {}", measure.getId(), ex);
+          throw new BundleOperationException("Measure", measure.getId(), ex);
+        }
+      }
+      // for versioned measures
+      Export export = exportRepository.findByMeasureId(measure.getId()).orElse(null);
+
+      if (export == null) {
+        log.error("Export not available for versioned measure with id: {}", measure.getId());
+        throw new BundleOperationException("Measure", measure.getId(), null);
+      }
+      String exportFileName = ExportFileNamesUtil.getExportFileName(measure);
+
+      // get a Utility for this model
+      String model = measure.getModel();
+
+      ResourceUtility utility = ResourceUtilityFactory.getInstance(model);
+      byte[] result = utility.getZipBundle(export, exportFileName);
+      return ResponseEntity.ok()
+          .header(
+              HttpHeaders.CONTENT_DISPOSITION,
+              "attachment;filename=\"" + ExportFileNamesUtil.getExportFileName(measure) + ".zip\"")
+          .contentType(MediaType.APPLICATION_OCTET_STREAM)
+          .body(result);
+
+    } catch (RestClientException
+        | IllegalArgumentException
+        | InstantiationException
+        | IllegalAccessException
+        | InvocationTargetException
+        | NoSuchMethodException
+        | SecurityException
+        | ClassNotFoundException ex) {
+      log.error("An error occurred while bundling measure {}", measure.getId(), ex);
+      throw new BundleOperationException("Measure", measure.getId(), ex);
+    }
+  }
+
+  private void areGroupsValid(Measure measure) {
+    if (CollectionUtils.isEmpty(measure.getGroups())) {
+      throw new InvalidResourceBundleStateException(
+          "Measure", measure.getId(), "since there is no population criteria on the measure.");
+    }
+    if (measure.getGroups().stream()
+        .anyMatch(g -> CollectionUtils.isEmpty(g.getMeasureGroupTypes()))) {
+      throw new InvalidResourceBundleStateException(
+          "Measure",
+          measure.getId(),
+          "since there is at least one Population Criteria with no type.");
+    }
+  }
+
+  private void isMetadataValid(Measure measure) {
     if (measure.getMeasureMetaData() != null) {
       if (CollectionUtils.isEmpty(measure.getMeasureMetaData().getDevelopers())) {
         throw new InvalidResourceBundleStateException(
@@ -70,24 +142,6 @@ public class BundleService {
         throw new InvalidResourceBundleStateException(
             "Measure", measure.getId(), "since there is no description in metadata.");
       }
-    }
-    if (CollectionUtils.isEmpty(measure.getGroups())) {
-      throw new InvalidResourceBundleStateException(
-          "Measure", measure.getId(), "since there is no population criteria on the measure.");
-    }
-    if (measure.getGroups().stream()
-        .anyMatch(g -> CollectionUtils.isEmpty(g.getMeasureGroupTypes()))) {
-      throw new InvalidResourceBundleStateException(
-          "Measure",
-          measure.getId(),
-          "since there is at least one Population Criteria with no type.");
-    }
-    try {
-      retrieveElmJson(measure, accessToken);
-      return fhirServicesClient.getMeasureBundleExport(measure, accessToken);
-    } catch (RestClientException | IllegalArgumentException ex) {
-      log.error("An error occurred while bundling measure {}", measure.getId(), ex);
-      throw new BundleOperationException("Measure", measure.getId(), ex);
     }
   }
 
