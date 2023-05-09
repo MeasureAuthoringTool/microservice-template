@@ -7,5 +7,5 @@ import org.springframework.data.mongodb.repository.MongoRepository;;
 
 public interface MeasureSetRepository extends MongoRepository<MeasureSet, String> {
   @Query("{measureSetId : ?0}")
-  Optional<MeasureSet> findMeasureSetByMeasureSetId(String measureSetId);
+  Optional<MeasureSet> findByMeasureSetId(String measureSetId);
 }

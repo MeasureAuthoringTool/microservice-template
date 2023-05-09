@@ -20,7 +20,7 @@ public class MeasureSetService {
       final String harpId, final String measureId, final String savedMeasureSetId) {
 
     boolean isMeasureSetPresent =
-        measureSetRepository.findMeasureSetByMeasureSetId(savedMeasureSetId).isPresent();
+        measureSetRepository.findByMeasureSetId(savedMeasureSetId).isPresent();
     if (!isMeasureSetPresent) {
       // only measure owners can transfer in MAT
       MeasureSet measureSet =

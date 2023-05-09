@@ -52,8 +52,8 @@ public class MeasureTransferControllerTest {
   @Mock private MeasureService measureService;
   @Mock private MeasureRepository repository;
   @Mock private MeasureSetRepository measureSetRepository;
-  @Mock private ActionLogService actionLogService;
   @Mock private MeasureSetService measureSetService;
+  @Mock private ActionLogService actionLogService;
   @Mock private ElmTranslatorClient elmTranslatorClient;
 
   @Mock private OrganizationRepository organizationRepository;
@@ -152,12 +152,7 @@ public class MeasureTransferControllerTest {
             .elmJson(ELM_JSON_SUCCESS)
             .build();
 
-    measureSet =
-        MeasureSet.builder()
-            .id("msid-xyz-p12r-12ert")
-            .measureSetId("abc-pqr-xyz")
-            .owner("user-1")
-            .build();
+    measureSet = MeasureSet.builder().id(null).measureSetId("abc-pqr-xyz").owner("testID").build();
 
     organizationList = new ArrayList<>();
     organizationList.add(Organization.builder().name("SB").url("SB Url").build());
