@@ -7,6 +7,7 @@ import cms.gov.madie.measure.repositories.OrganizationRepository;
 import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.ElmTranslatorClient;
 import cms.gov.madie.measure.services.MeasureService;
+import cms.gov.madie.measure.services.MeasureSetService;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.Organization;
 import gov.cms.madie.models.measure.*;
@@ -52,6 +53,7 @@ public class MeasureTransferControllerTest {
   @Mock private MeasureService measureService;
   @Mock private MeasureRepository repository;
   @Mock private MeasureSetRepository measureSetRepository;
+  @Mock private MeasureSetService measureSetService;
   @Mock private ActionLogService actionLogService;
   @Mock private ElmTranslatorClient elmTranslatorClient;
 
