@@ -7,7 +7,6 @@ import cms.gov.madie.measure.exceptions.InvalidMeasurementPeriodException;
 import cms.gov.madie.measure.exceptions.InvalidTerminologyException;
 import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
-import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
 import cms.gov.madie.measure.utils.MeasureUtil;
 import gov.cms.madie.models.access.AclSpecification;

@@ -174,10 +174,8 @@ public class MeasureTransferControllerMvcTest {
 
     ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
 
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
-    doNothing()
-        .when(measureSetService)
-        .createMeasureSet(any(String.class), any(String.class), any(String.class));
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
+    doNothing().when(measureSetService).createMeasureSet(anyString(), anyString(), anyString());
     doReturn(measure).when(measureRepository).save(any(Measure.class));
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
@@ -248,7 +246,7 @@ public class MeasureTransferControllerMvcTest {
 
     doThrow(new DuplicateKeyException("cqlLibraryName", "CQL library already exists."))
         .when(measureService)
-        .checkDuplicateCqlLibraryName(any(String.class));
+        .checkDuplicateCqlLibraryName(anyString());
 
     mockMvc
         .perform(
@@ -286,15 +284,13 @@ public class MeasureTransferControllerMvcTest {
   public void testCreateMeasureSuccessWithNoElmJsonError() throws Exception {
     String measureJson = new ObjectMapper().writeValueAsString(measure);
 
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
     when(elmJson.getJson()).thenReturn(ELM_JSON_SUCCESS);
     when(elmTranslatorClient.getElmJsonForMatMeasure(
             CQL, LAMBDA_TEST_API_KEY_HEADER_VALUE, HARP_ID_HEADER_VALUE))
         .thenReturn(elmJson);
     when(elmTranslatorClient.hasErrors(elmJson)).thenReturn(false);
-    doNothing()
-        .when(measureSetService)
-        .createMeasureSet(any(String.class), any(String.class), any(String.class));
+    doNothing().when(measureSetService).createMeasureSet(anyString(), anyString(), anyString());
     doReturn(measure).when(measureRepository).save(any(Measure.class));
     doReturn(measureSet).when(measureSetRepository).save(any(MeasureSet.class));
     when(organizationRepository.findAll()).thenReturn(organizationList);
@@ -317,7 +313,7 @@ public class MeasureTransferControllerMvcTest {
   public void testCreateMeasureSuccessWithElmJsonError() throws Exception {
     String measureJson = new ObjectMapper().writeValueAsString(measure);
 
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
     when(elmJson.getJson()).thenReturn(ELM_JSON_FAIL);
     when(elmTranslatorClient.getElmJsonForMatMeasure(
             CQL, LAMBDA_TEST_API_KEY_HEADER_VALUE, HARP_ID_HEADER_VALUE))
@@ -345,13 +341,13 @@ public class MeasureTransferControllerMvcTest {
   public void testCreateMeasureSuccessWithElmTranslatorException() throws Exception {
     String measureJson = new ObjectMapper().writeValueAsString(measure);
 
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
     doThrow(
             new CqlElmTranslationServiceException(
                 "There was an error calling CQL-ELM translation service for MAT transferred measure",
                 null))
         .when(elmTranslatorClient)
-        .getElmJsonForMatMeasure(any(String.class), any(String.class), any(String.class));
+        .getElmJsonForMatMeasure(anyString(), anyString(), anyString());
     doReturn(measure).when(measureRepository).save(any(Measure.class));
     doReturn(measureSet).when(measureSetRepository).save(any(MeasureSet.class));
     when(organizationRepository.findAll()).thenReturn(organizationList);

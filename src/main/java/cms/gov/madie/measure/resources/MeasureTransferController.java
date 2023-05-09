@@ -1,6 +1,5 @@
 package cms.gov.madie.measure.resources;
 
-import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.repositories.OrganizationRepository;
 import cms.gov.madie.measure.services.MeasureSetService;
 import gov.cms.madie.models.common.ActionType;
@@ -14,7 +13,6 @@ import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.ElmTranslatorClient;
 import cms.gov.madie.measure.services.MeasureService;
-import gov.cms.madie.models.measure.MeasureSet;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;

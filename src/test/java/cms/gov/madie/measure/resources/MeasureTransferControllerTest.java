@@ -7,7 +7,6 @@ import cms.gov.madie.measure.repositories.OrganizationRepository;
 import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.ElmTranslatorClient;
 import cms.gov.madie.measure.services.MeasureService;
-import cms.gov.madie.measure.services.MeasureSetService;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.Organization;
 import gov.cms.madie.models.measure.*;
@@ -32,6 +31,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -52,7 +52,6 @@ public class MeasureTransferControllerTest {
   @Mock private MeasureService measureService;
   @Mock private MeasureRepository repository;
   @Mock private MeasureSetRepository measureSetRepository;
-  @Mock private MeasureSetService measureSetService;
   @Mock private ActionLogService actionLogService;
   @Mock private ElmTranslatorClient elmTranslatorClient;
 
@@ -164,7 +163,7 @@ public class MeasureTransferControllerTest {
   @Test
   public void createMeasureSuccessTest() {
     ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
     doReturn(measure).when(repository).save(any(Measure.class));
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
@@ -224,7 +223,7 @@ public class MeasureTransferControllerTest {
   @Test
   public void createMeasureSuccessDefaultToDraftTest() {
     ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
     measure.setMeasureMetaData(null);
     doReturn(measure).when(repository).save(any(Measure.class));
     when(organizationRepository.findAll()).thenReturn(organizationList);
@@ -262,7 +261,7 @@ public class MeasureTransferControllerTest {
   public void createMeasureDuplicateCqlLibraryTest() {
     doThrow(new DuplicateKeyException("cqlLibraryName", "CQL library already exists."))
         .when(measureService)
-        .checkDuplicateCqlLibraryName(any(String.class));
+        .checkDuplicateCqlLibraryName(anyString());
 
     assertThrows(
         DuplicateKeyException.class,
@@ -272,7 +271,7 @@ public class MeasureTransferControllerTest {
   @Test
   public void createMeasureNoElmJsonErrorTest() {
     ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
 
     when(elmJson.getJson()).thenReturn(ELM_JSON_SUCCESS);
     doReturn(elmJson)
@@ -305,13 +304,13 @@ public class MeasureTransferControllerTest {
   @Test
   public void createMeasureElmJsonExceptionTest() {
     ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
     doThrow(
             new CqlElmTranslationServiceException(
                 "There was an error calling CQL-ELM translation service for MAT transferred measure",
                 null))
         .when(elmTranslatorClient)
-        .getElmJsonForMatMeasure(any(String.class), any(String.class), any(String.class));
+        .getElmJsonForMatMeasure(anyString(), anyString(), anyString());
 
     measure.setCqlErrors(true);
     measure.setElmJson(ELM_JSON_FAIL);
@@ -341,7 +340,7 @@ public class MeasureTransferControllerTest {
   @Test
   public void removesStewardIfOrganizationIsNotFound() {
     measure.getMeasureMetaData().getSteward().setName("Random steward name");
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
     doReturn(measure).when(repository).save(any(Measure.class));
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
@@ -358,7 +357,7 @@ public class MeasureTransferControllerTest {
     measure
         .getMeasureMetaData()
         .setDevelopers(List.of(Organization.builder().name("Random steward name").build()));
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
     doReturn(measure).when(repository).save(any(Measure.class));
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
@@ -372,7 +371,7 @@ public class MeasureTransferControllerTest {
 
   @Test
   public void throwsExceptionWhenOrganizationListIsEmpty() {
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
     when(organizationRepository.findAll()).thenReturn(null);
 
     assertThrows(
@@ -393,7 +392,7 @@ public class MeasureTransferControllerTest {
         .getDevelopers()
         .add(Organization.builder().name("Innovaccer Anylytics").build());
 
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(any(String.class));
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
     doReturn(measure).when(repository).save(any(Measure.class));
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
