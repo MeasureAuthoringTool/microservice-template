@@ -9,8 +9,4 @@ public class InvalidFhirGroupException extends RuntimeException {
   public InvalidFhirGroupException() {
     super(MESSAGE);
   }
-
-  public InvalidFhirGroupException(String message) {
-    super(message);
-  }
 }
