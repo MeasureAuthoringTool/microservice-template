@@ -109,9 +109,7 @@ public class MeasureControllerMvcTest {
   public void testGrantAccess() throws Exception {
     String measureId = "f225481c-921e-4015-9e14-e5046bfac9ff";
 
-    doReturn(true)
-        .when(measureService)
-        .grantAccess(eq(measureId), eq("akinsgre"), eq(TEST_API_KEY_HEADER_VALUE));
+    doReturn(true).when(measureService).grantAccess(eq(measureId), eq("akinsgre"));
 
     mockMvc
         .perform(
@@ -120,8 +118,7 @@ public class MeasureControllerMvcTest {
         .andExpect(status().isOk())
         .andExpect(content().string("akinsgre granted access to Measure successfully."));
 
-    verify(measureService, times(1))
-        .grantAccess(eq(measureId), eq("akinsgre"), eq(TEST_API_KEY_HEADER_VALUE));
+    verify(measureService, times(1)).grantAccess(eq(measureId), eq("akinsgre"));
 
     verify(actionLogService, times(1))
         .logAction(

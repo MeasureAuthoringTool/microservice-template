@@ -2,10 +2,14 @@ package cms.gov.madie.measure.services;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.Optional;
+
+import gov.cms.madie.models.measure.MeasureSet;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,67 +24,27 @@ import gov.cms.madie.models.measure.Measure;
 public class MeasureServiceAclTest {
 
   @Mock private MeasureRepository measureRepository;
+  @Mock private MeasureSetService measureSetService;
 
   @InjectMocks private MeasureService measureService;
 
   @Test
   public void testGrantAccess() {
-
-    Measure measure = new Measure();
+    Measure measure = Measure.builder().id("123").measureSetId("1-2-3").build();
     Optional<Measure> persistedMeasure = Optional.of(measure);
+    when(measureRepository.findById(anyString())).thenReturn(persistedMeasure);
+    when(measureSetService.updateMeasureSetAcls(anyString(), any(AclSpecification.class)))
+        .thenReturn(new MeasureSet());
 
-    when(measureRepository.findById(eq("123"))).thenReturn(persistedMeasure);
-    boolean result = measureService.grantAccess("123", "akinsgre", "gakins");
-
-    assertTrue(result);
-  }
-
-  @Test
-  public void testGrantAccessExistingAclSizeZero() {
-
-    Measure measure = new Measure();
-    measure.setAcls(new ArrayList<AclSpecification>() {});
-    Optional<Measure> persistedMeasure = Optional.of(measure);
-
-    when(measureRepository.findById(eq("123"))).thenReturn(persistedMeasure);
-    boolean result = measureService.grantAccess("123", "akinsgre", "gakins");
-
-    assertTrue(result);
-  }
-
-  @Test
-  public void testGrantAccessExistingAclSizeGreaterThanZero() {
-
-    Measure measure = new Measure();
-    AclSpecification spec = new AclSpecification();
-    spec.setUserId("akinsgre");
-    spec.setRoles(
-        new ArrayList<RoleEnum>() {
-          {
-            add(RoleEnum.SHARED_WITH);
-          }
-        });
-    measure.setAcls(
-        new ArrayList<AclSpecification>() {
-          {
-            add(spec);
-          }
-        });
-    Optional<Measure> persistedMeasure = Optional.of(measure);
-
-    when(measureRepository.findById(eq("123"))).thenReturn(persistedMeasure);
-    boolean result = measureService.grantAccess("123", "akinsgre", "gakins");
-
+    boolean result = measureService.grantAccess(measure.getId(), "akinsgre");
     assertTrue(result);
   }
 
   @Test
   public void testGrantAccessNoMeasure() {
-
     Optional<Measure> persistedMeasure = Optional.empty();
-
     when(measureRepository.findById(eq("123"))).thenReturn(persistedMeasure);
-    boolean result = measureService.grantAccess("123", "akinsgre", "gakins");
+    boolean result = measureService.grantAccess("123", "akinsgre");
 
     assertFalse(result);
   }

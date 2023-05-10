@@ -243,16 +243,11 @@ public class MeasureService {
     }
   }
 
-  public boolean grantAccess(String measureid, String userid, String username) {
+  public boolean grantAccess(String measureId, String userid) {
     boolean result = false;
-    Optional<Measure> persistedMeasure = measureRepository.findById(measureid);
+    Optional<Measure> persistedMeasure = measureRepository.findById(measureId);
     if (persistedMeasure.isPresent()) {
-
       Measure measure = persistedMeasure.get();
-      measure.setLastModifiedBy(username);
-      measure.setLastModifiedAt(Instant.now());
-      List<AclSpecification> acls;
-      acls = measure.getAcls();
       AclSpecification spec = new AclSpecification();
       spec.setUserId(userid);
       spec.setRoles(
@@ -261,19 +256,17 @@ public class MeasureService {
               add(RoleEnum.SHARED_WITH);
             }
           });
-      if (acls == null || acls.size() == 0) {
-        acls =
-            new ArrayList<>() {
-              {
-                add(spec);
-              }
-            };
+      MeasureSet measureSet =
+          measureSetService.updateMeasureSetAcls(measure.getMeasureSetId(), spec);
+      if (measureSet == null) {
+        log.info(
+            "Failed to share the Measure [{}] with user [{}], measure set may not exists",
+            measure.getId(),
+            userid);
       } else {
-        acls.add(spec);
+        log.info("Measure [{}] is shared with user [{}]", measure.getId(), userid);
+        result = true;
       }
-      measure.setAcls(acls);
-      measureRepository.save(measure);
-      result = true;
     }
     return result;
   }
