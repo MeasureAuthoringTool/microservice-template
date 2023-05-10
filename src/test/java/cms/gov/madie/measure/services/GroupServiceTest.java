@@ -19,11 +19,13 @@ import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
 import gov.cms.madie.models.measure.MeasureMetaData;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import cms.gov.madie.measure.utils.MeasureUtil;
 import gov.cms.madie.models.measure.TestCaseStratificationValue;
+import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.common.Version;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,15 +47,16 @@ import cms.gov.madie.measure.utils.ResourceUtil;
 import gov.cms.madie.models.measure.AggregateMethodType;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureGroupTypes;
 import gov.cms.madie.models.measure.MeasureObservation;
 import gov.cms.madie.models.measure.MeasureScoring;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
+import gov.cms.madie.models.measure.QdmMeasure;
 import gov.cms.madie.models.measure.Stratification;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import gov.cms.madie.models.measure.TestCasePopulationValue;
-import gov.cms.madie.models.common.Version;
 
 @ExtendWith(MockitoExtension.class)
 public class GroupServiceTest implements ResourceUtil {
@@ -86,6 +89,7 @@ public class GroupServiceTest implements ResourceUtil {
         Group.builder()
             .scoring("Cohort")
             .populationBasis("Encounter")
+            .measureGroupTypes(Arrays.asList(MeasureGroupTypes.OUTCOME))
             .populations(
                 List.of(
                     new Population(
@@ -102,6 +106,7 @@ public class GroupServiceTest implements ResourceUtil {
         Group.builder()
             .id("xyz-p12r-12ert")
             .populationBasis("Encounter")
+            .measureGroupTypes(Arrays.asList(MeasureGroupTypes.OUTCOME))
             .scoring("Continuous Variable")
             .populations(
                 List.of(
@@ -130,6 +135,7 @@ public class GroupServiceTest implements ResourceUtil {
         Group.builder()
             .scoring("Ratio")
             .populationBasis("Encounter")
+            .measureGroupTypes(Arrays.asList(MeasureGroupTypes.OUTCOME))
             .populations(
                 List.of(
                     new Population(
@@ -168,6 +174,7 @@ public class GroupServiceTest implements ResourceUtil {
     String elmJson = getData("/test_elm.json");
     measure =
         Measure.builder()
+            .model(ModelType.QI_CORE.getValue())
             .active(true)
             .id("xyz-p13r-13ert")
             .cql("test cql")
@@ -1143,5 +1150,99 @@ public class GroupServiceTest implements ResourceUtil {
   private TestCasePopulationValue buildTestCasePopulation(
       String id, PopulationType populationType) {
     return TestCasePopulationValue.builder().id(id).name(populationType).expected(true).build();
+  }
+
+  @Test
+  public void testHandleQdmGroupReturnTypesNonPatientBasisSuccess() {
+    Population population =
+        Population.builder()
+            .id("testId")
+            .name(PopulationType.INITIAL_POPULATION)
+            .definition("ipp")
+            .build();
+    Group qdmGroup =
+        Group.builder()
+            .scoring(MeasureScoring.COHORT.toString())
+            .populations(Arrays.asList(population))
+            .build();
+    String elmJson = getData("/test_elm_with_boolean.json");
+    Measure qdmMeasure =
+        QdmMeasure.builder()
+            .model(ModelType.QDM_5_6.getValue())
+            .patientBasis(false)
+            .elmJson(elmJson)
+            .build();
+    groupService.handleQdmGroupReturnTypes(qdmGroup, qdmMeasure);
+  }
+
+  @Test
+  public void testHandleQdmGroupReturnTypesNonPatientBasisThrowsException() {
+    Population population =
+        Population.builder()
+            .id("testId")
+            .name(PopulationType.INITIAL_POPULATION)
+            .definition("ipp")
+            .build();
+    Group qdmGroup =
+        Group.builder()
+            .scoring(MeasureScoring.COHORT.toString())
+            .populations(Arrays.asList(population))
+            .build();
+    String elmJson = "{ curroped: json";
+    Measure qdmMeasure =
+        QdmMeasure.builder()
+            .model(ModelType.QDM_5_6.getValue())
+            .patientBasis(false)
+            .elmJson(elmJson)
+            .build();
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> groupService.handleQdmGroupReturnTypes(qdmGroup, qdmMeasure),
+        "Invalid elm json");
+  }
+
+  @Test
+  public void testCreateGroupQdmMeasure() {
+    String elmJson = getData("/test_elm_with_boolean.json");
+    Measure qdmMeasure =
+        QdmMeasure.builder()
+            .id("testId")
+            .measureMetaData(MeasureMetaData.builder().draft(true).build())
+            .model(ModelType.QDM_5_6.getValue())
+            .scoring(MeasureScoring.COHORT.toString())
+            .patientBasis(false)
+            .elmJson(elmJson)
+            .build();
+
+    ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
+    Optional<Measure> optional = Optional.of(qdmMeasure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+
+    doReturn(qdmMeasure).when(measureRepository).save(any(Measure.class));
+
+    Population population =
+        Population.builder()
+            .id("testId1")
+            .name(PopulationType.INITIAL_POPULATION)
+            .definition("ipp")
+            .build();
+    Group qdmGroup =
+        Group.builder()
+            .scoring(MeasureScoring.COHORT.toString())
+            .populations(Arrays.asList(population))
+            .build();
+    Group persistedGroup = groupService.createOrUpdateGroup(qdmGroup, measure.getId(), "test.user");
+
+    verify(measureRepository, times(1)).save(measureCaptor.capture());
+    assertEquals(qdmGroup.getId(), persistedGroup.getId());
+    Measure savedMeasure = measureCaptor.getValue();
+    assertNotNull(savedMeasure.getGroups());
+    assertEquals(1, savedMeasure.getGroups().size());
+    Group capturedGroup = savedMeasure.getGroups().get(0);
+    assertEquals("Cohort", capturedGroup.getScoring());
+    assertEquals(
+        PopulationType.INITIAL_POPULATION, capturedGroup.getPopulations().get(0).getName());
+    assertEquals("ipp", capturedGroup.getPopulations().get(0).getDefinition());
   }
 }

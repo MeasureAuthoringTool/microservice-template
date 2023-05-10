@@ -1,16 +1,22 @@
 package cms.gov.madie.measure.validations;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+
+import cms.gov.madie.measure.exceptions.InvalidFhirGroup;
 import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
+import cms.gov.madie.measure.exceptions.InvalidReturnTypeForQdmException;
 import gov.cms.madie.models.measure.DefDescPair;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Population;
@@ -30,6 +36,10 @@ public class CqlDefinitionReturnTypeValidator {
     Map<String, String> cqlDefinitionReturnTypes = getCqlDefinitionReturnTypes(elmJson);
     if (cqlDefinitionReturnTypes.isEmpty()) {
       throw new IllegalArgumentException("No definitions found.");
+    }
+    if (StringUtils.isBlank(group.getPopulationBasis())
+        || CollectionUtils.isEmpty(group.getMeasureGroupTypes())) {
+      throw new InvalidFhirGroup();
     }
 
     List<Population> populations = group.getPopulations();
@@ -114,5 +124,46 @@ public class CqlDefinitionReturnTypeValidator {
       returnTypes.putIfAbsent(node.get("name").asText(), "NA");
     }
     return returnTypes;
+  }
+
+  public void validateCqlDefinitionReturnTypesForQdm(
+      Group group, String elmJson, boolean patientBased) throws JsonProcessingException {
+    Map<String, String> cqlDefinitionReturnTypes = getCqlDefinitionReturnTypes(elmJson);
+    if (cqlDefinitionReturnTypes.isEmpty()) {
+      throw new IllegalArgumentException("No definitions found.");
+    }
+
+    List<Population> populations = group.getPopulations();
+    if (populations != null) {
+      HashSet<String> returnValues = new HashSet<String>();
+
+      populations.forEach(
+          population -> {
+            if (StringUtils.isNotBlank(population.getDefinition())) {
+              String returnType = cqlDefinitionReturnTypes.get(population.getDefinition());
+
+              if (patientBased) {
+
+                if (!StringUtils.equalsIgnoreCase(returnType, "boolean")) {
+                  throw new InvalidReturnTypeForQdmException(
+                      "For Patient-based Measures, selected definitions must return a Boolean.");
+                }
+              } else {
+                returnValues.add(returnType);
+
+                if (StringUtils.equalsIgnoreCase(returnType, "boolean")) {
+                  throw new InvalidReturnTypeForQdmException(
+                      "The selected definition does not align with the Episode-based Measure.");
+                }
+              }
+            }
+          });
+
+      if (returnValues.size() > 1) {
+        throw new InvalidReturnTypeForQdmException(
+            "For Episode-based Measures, "
+                + "selected definitions must return a list of the same type.");
+      }
+    }
   }
 }
