@@ -24,7 +24,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import cms.gov.madie.measure.utils.ControllerUtil;
 import cms.gov.madie.measure.utils.MeasureUtil;
 import gov.cms.madie.models.measure.TestCaseStratificationValue;
 import gov.cms.madie.models.common.ModelType;
