@@ -7,7 +7,6 @@ import cms.gov.madie.measure.exceptions.InvalidMeasurementPeriodException;
 import cms.gov.madie.measure.exceptions.InvalidTerminologyException;
 import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
-import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
 import cms.gov.madie.measure.utils.MeasureUtil;
 import cms.gov.madie.measure.utils.ResourceUtil;
@@ -63,14 +62,10 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class MeasureServiceTest implements ResourceUtil {
   @Mock private MeasureRepository measureRepository;
-
-  @Mock private MeasureSetRepository measureSetRepository;
-
   @Mock private ElmTranslatorClient elmTranslatorClient;
-
   @Mock private MeasureUtil measureUtil;
-
   @Mock private ActionLogService actionLogService;
+  @Mock private MeasureSetService measureSetService;
   @Mock private TerminologyValidationService terminologyValidationService;
 
   @InjectMocks private MeasureService measureService;
@@ -82,7 +77,6 @@ public class MeasureServiceTest implements ResourceUtil {
   private String elmJson;
   private Measure measure1;
   private Measure measure2;
-  private MeasureSet measureSet1;
 
   @BeforeEach
   public void setUp() {
@@ -149,8 +143,6 @@ public class MeasureServiceTest implements ResourceUtil {
             .lastModifiedBy("test user")
             .measureMetaData(measureMetaData)
             .build();
-
-    measureSet1 = MeasureSet.builder().id("msid-xyz-p12r-12ert").build();
   }
 
   @Test
@@ -197,10 +189,9 @@ public class MeasureServiceTest implements ResourceUtil {
             .measureMetaData(new MeasureMetaData())
             .createdBy(usr)
             .build();
-    MeasureSet measureSetToSave = measureSet1.toBuilder().owner(usr).measureSetId("msid-1").build();
+    doNothing().when(measureSetService).createMeasureSet(anyString(), anyString(), anyString());
     when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
-    when(measureSetRepository.save(any(MeasureSet.class))).thenReturn(measureSetToSave);
     when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
 
     Measure savedMeasure = measureService.createMeasure(measureToSave, usr, "token");
@@ -222,15 +213,14 @@ public class MeasureServiceTest implements ResourceUtil {
             .measureSetId("msid-1")
             .cqlLibraryName("VTE")
             .build();
-    MeasureSet measureSetToSave =
-        measureSet1.toBuilder().owner("john rao").measureSetId("msid-1").build();
+
     when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
     when(elmTranslatorClient.getElmJson(anyString(), anyString()))
         .thenReturn(ElmJson.builder().json(elmJson).build());
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(false);
     doNothing().when(terminologyValidationService).validateTerminology(anyString(), anyString());
+    doNothing().when(measureSetService).createMeasureSet(anyString(), anyString(), anyString());
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
-    when(measureSetRepository.save(any(MeasureSet.class))).thenReturn(measureSetToSave);
     when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
 
     Measure savedMeasure = measureService.createMeasure(measureToSave, "john rao", "token");
@@ -256,7 +246,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .errors(errors)
             .createdBy(usr)
             .build();
-    MeasureSet measureSetToSave = measureSet1.toBuilder().owner(usr).measureSetId("msid-1").build();
+
     when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
     when(elmTranslatorClient.getElmJson(anyString(), anyString()))
         .thenReturn(ElmJson.builder().json(elmJson).build());
@@ -264,8 +254,8 @@ public class MeasureServiceTest implements ResourceUtil {
     doThrow(InvalidTerminologyException.class)
         .when(terminologyValidationService)
         .validateTerminology(anyString(), anyString());
+    doNothing().when(measureSetService).createMeasureSet(anyString(), anyString(), anyString());
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
-    when(measureSetRepository.save(any(MeasureSet.class))).thenReturn(measureSetToSave);
     when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
 
     Measure savedMeasure = measureService.createMeasure(measureToSave, usr, "token");
@@ -308,15 +298,14 @@ public class MeasureServiceTest implements ResourceUtil {
             .measurementPeriodEnd(Date.from(endInstant))
             .cqlLibraryName("VTE")
             .build();
-    MeasureSet measureSetToSave =
-        measureSet1.toBuilder().owner("test user").measureSetId("msid-1").build();
+
     when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
     when(elmTranslatorClient.getElmJson(anyString(), anyString()))
         .thenReturn(ElmJson.builder().json(elmJson).build());
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(false);
     doNothing().when(terminologyValidationService).validateTerminology(anyString(), anyString());
+    doNothing().when(measureSetService).createMeasureSet(anyString(), anyString(), anyString());
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
-    when(measureSetRepository.save(any(MeasureSet.class))).thenReturn(measureSetToSave);
     when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
 
     Measure savedMeasure = measureService.createMeasure(measureToSave, "john rao", "token");
