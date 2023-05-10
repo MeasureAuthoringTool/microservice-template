@@ -2,6 +2,7 @@ package cms.gov.madie.measure.validations;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Arrays;
@@ -177,7 +178,8 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
 
     String elmJson = getData("/test_elm_with_boolean.json");
 
-    validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, true);
+    assertDoesNotThrow(
+        () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, true));
   }
 
   @Test
@@ -230,7 +232,8 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
 
     String elmJson = getData("/test_elm.json");
 
-    validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, false);
+    assertDoesNotThrow(
+        () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, false));
   }
 
   @Test
@@ -245,7 +248,8 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
 
     String elmJson = getData("/test_elm.json");
 
-    validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, false);
+    assertDoesNotThrow(
+        () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, false));
   }
 
   @Test
@@ -263,7 +267,8 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
 
     String elmJson = getData("/test_elm.json");
 
-    validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, false);
+    assertDoesNotThrow(
+        () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, false));
   }
 
   @Test

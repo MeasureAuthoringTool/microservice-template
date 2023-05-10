@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.services;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -23,6 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import cms.gov.madie.measure.utils.ControllerUtil;
 import cms.gov.madie.measure.utils.MeasureUtil;
 import gov.cms.madie.models.measure.TestCaseStratificationValue;
 import gov.cms.madie.models.common.ModelType;
@@ -1172,7 +1174,7 @@ public class GroupServiceTest implements ResourceUtil {
             .patientBasis(false)
             .elmJson(elmJson)
             .build();
-    groupService.handleQdmGroupReturnTypes(qdmGroup, qdmMeasure);
+    assertDoesNotThrow(() -> groupService.handleQdmGroupReturnTypes(qdmGroup, qdmMeasure));
   }
 
   @Test
