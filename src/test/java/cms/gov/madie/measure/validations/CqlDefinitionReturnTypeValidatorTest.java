@@ -9,7 +9,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import cms.gov.madie.measure.exceptions.InvalidFhirGroup;
+import cms.gov.madie.measure.exceptions.InvalidFhirGroupException;
 import cms.gov.madie.measure.exceptions.InvalidReturnTypeForQdmException;
 import cms.gov.madie.measure.utils.ResourceUtil;
 import gov.cms.madie.models.measure.DefDescPair;
@@ -98,14 +98,14 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
 
     String elmJson = getData("/test_elm.json");
     assertThrows(
-        InvalidFhirGroup.class,
+        InvalidFhirGroupException.class,
         () -> validator.validateCqlDefinitionReturnTypes(group1, elmJson),
         "Measure Group Types and Population Basis are required for FHIR Measure Group.");
 
     group1.setPopulationBasis(null);
     group1.setMeasureGroupTypes(Arrays.asList(MeasureGroupTypes.OUTCOME));
     assertThrows(
-        InvalidFhirGroup.class,
+        InvalidFhirGroupException.class,
         () -> validator.validateCqlDefinitionReturnTypes(group1, elmJson),
         "Measure Group Types and Population Basis are required for FHIR Measure Group.");
   }

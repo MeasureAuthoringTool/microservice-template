@@ -14,7 +14,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
-import cms.gov.madie.measure.exceptions.InvalidFhirGroup;
+import cms.gov.madie.measure.exceptions.InvalidFhirGroupException;
 import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
 import cms.gov.madie.measure.exceptions.InvalidReturnTypeForQdmException;
 import gov.cms.madie.models.measure.DefDescPair;
@@ -39,7 +39,7 @@ public class CqlDefinitionReturnTypeValidator {
     }
     if (StringUtils.isBlank(group.getPopulationBasis())
         || CollectionUtils.isEmpty(group.getMeasureGroupTypes())) {
-      throw new InvalidFhirGroup();
+      throw new InvalidFhirGroupException();
     }
 
     List<Population> populations = group.getPopulations();
