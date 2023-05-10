@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import cms.gov.madie.measure.exceptions.InvalidFhirGroupException;
+import cms.gov.madie.measure.exceptions.InvalidGroupException;
 import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
 import cms.gov.madie.measure.exceptions.InvalidReturnTypeForQdmException;
 import gov.cms.madie.models.measure.DefDescPair;
@@ -164,6 +165,8 @@ public class CqlDefinitionReturnTypeValidator {
             "For Episode-based Measures, "
                 + "selected definitions must return a list of the same type.");
       }
+    } else {
+      throw new InvalidGroupException("Populations are required for a Group.");
     }
   }
 }

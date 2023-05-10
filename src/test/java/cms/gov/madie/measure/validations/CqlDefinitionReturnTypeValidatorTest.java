@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import cms.gov.madie.measure.exceptions.InvalidFhirGroupException;
+import cms.gov.madie.measure.exceptions.InvalidGroupException;
 import cms.gov.madie.measure.exceptions.InvalidReturnTypeForQdmException;
 import cms.gov.madie.measure.utils.ResourceUtil;
 import gov.cms.madie.models.measure.DefDescPair;
@@ -163,26 +164,6 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
   }
 
   @Test
-  void testValidateCqlDefinitionReturnTypesForQdmPatientBasedSuccess()
-      throws JsonProcessingException {
-    Group group1 =
-        Group.builder()
-            .scoring("Cohort")
-            .populations(
-                List.of(
-                    new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "boolIpp", null, null)))
-            .groupDescription("Description")
-            .scoringUnit("test-scoring-unit")
-            .build();
-
-    String elmJson = getData("/test_elm_with_boolean.json");
-
-    assertDoesNotThrow(
-        () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, true));
-  }
-
-  @Test
   void testValidateCqlDefinitionReturnTypesForQdmNonPatientBasedThrowsException()
       throws JsonProcessingException {
     Group group1 =
@@ -211,7 +192,27 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
   }
 
   @Test
-  void testValidateCqlDefinitionReturnTypesForNonQdmPatientBasedSuccess()
+  void testValidateCqlDefinitionReturnTypesForQdmPatientBasedSuccess()
+      throws JsonProcessingException {
+    Group group1 =
+        Group.builder()
+            .scoring("Cohort")
+            .populations(
+                List.of(
+                    new Population(
+                        "id-1", PopulationType.INITIAL_POPULATION, "boolIpp", null, null)))
+            .groupDescription("Description")
+            .scoringUnit("test-scoring-unit")
+            .build();
+
+    String elmJson = getData("/test_elm_with_boolean.json");
+
+    assertDoesNotThrow(
+        () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, true));
+  }
+
+  @Test
+  void testValidateCqlDefinitionReturnTypesForQdmNonPatientBasedSuccess()
       throws JsonProcessingException {
     Group group1 =
         Group.builder()
@@ -237,7 +238,7 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
   }
 
   @Test
-  void testValidateCqlDefinitionReturnTypesForNonQdmPatientBasedSuccessNoPopulations()
+  void testValidateCqlDefinitionReturnTypesForQdmFailNoPopulations()
       throws JsonProcessingException {
     Group group1 =
         Group.builder()
@@ -248,12 +249,13 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
 
     String elmJson = getData("/test_elm.json");
 
-    assertDoesNotThrow(
+    assertThrows(
+        InvalidGroupException.class,
         () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, false));
   }
 
   @Test
-  void testValidateCqlDefinitionReturnTypesForNonQdmPatientBasedSuccessNoDefinition()
+  void testValidateCqlDefinitionReturnTypesForQdmSuccessNoDefinition()
       throws JsonProcessingException {
     Group group1 =
         Group.builder()

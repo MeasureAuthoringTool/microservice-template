@@ -126,7 +126,8 @@ public class ErrorHandlingControllerAdvice {
   @ExceptionHandler({
     InvalidReturnTypeException.class,
     InvalidReturnTypeForQdmException.class,
-    InvalidFhirGroupException.class
+    InvalidFhirGroupException.class,
+    InvalidGroupException.class
   })
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ResponseBody
