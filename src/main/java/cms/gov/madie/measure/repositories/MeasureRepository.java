@@ -27,10 +27,10 @@ public interface MeasureRepository
 
   @Aggregation(
       pipeline = {
-        "{'$sort': {'createdAt':1}}",
         "{'$group': {'_id': '$_id',"
             + "'measureSetId': {'$first':'$measureSetId'},"
-            + "'createdBy': {'$first':'$createdBy'}}}"
+            + "'createdBy': {'$first':'$createdBy'}}}",
+        "{'$sort': {'createdAt':1}}"
       })
   List<Measure> findOldestMeasureSet();
 
