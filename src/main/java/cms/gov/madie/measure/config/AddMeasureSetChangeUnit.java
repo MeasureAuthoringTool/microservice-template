@@ -7,6 +7,7 @@ import gov.cms.madie.models.measure.MeasureSet;
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
+import java.io.IOException;
 import java.util.List;
 
 @ChangeUnit(id = "add_measure_set", order = "1", author = "madie_dev")
@@ -14,7 +15,8 @@ public class AddMeasureSetChangeUnit {
 
   @Execution
   public void addPopulationBasisValues(
-      MeasureSetRepository measureSetRepository, MeasureRepository measureRepository) {
+      MeasureSetRepository measureSetRepository, MeasureRepository measureRepository)
+      throws IOException {
     List<Measure> distinctMeasures = measureRepository.findDistinctByMeasureSetField();
     distinctMeasures.forEach(
         distinctMeasure -> {
