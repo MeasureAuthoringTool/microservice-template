@@ -10,12 +10,14 @@ import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeValidator;
 import cms.gov.madie.measure.validations.CqlObservationFunctionValidator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import gov.cms.madie.models.access.RoleEnum;
+import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureObservation;
 import gov.cms.madie.models.measure.MeasureScoring;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
+import gov.cms.madie.models.measure.QdmMeasure;
 import gov.cms.madie.models.measure.Stratification;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
@@ -51,18 +53,11 @@ public class GroupService {
     if (!measure.getMeasureMetaData().isDraft()) {
       throw new InvalidDraftStatusException(measure.getId());
     }
-    try {
-      new CqlDefinitionReturnTypeValidator()
-          .validateCqlDefinitionReturnTypes(group, measure.getElmJson());
-      new CqlObservationFunctionValidator()
-          .validateObservationFunctions(group, measure.getElmJson());
-    } catch (JsonProcessingException ex) {
-      log.error(
-          "An error occurred while validating population "
-              + "definition return types for measure {}",
-          measure.getId(),
-          ex);
-      throw new IllegalArgumentException("Invalid elm json");
+
+    if (measure.getModel().equalsIgnoreCase(ModelType.QDM_5_6.getValue())) {
+      handleQdmGroupReturnTypes(group, measure);
+    } else {
+      handleFhirGroupReturnTypes(group, measure);
     }
     // no group present, this is the first group
     if (CollectionUtils.isEmpty(measure.getGroups())) {
@@ -90,7 +85,9 @@ public class GroupService {
       }
     }
     updateGroupForTestCases(group, measure.getTestCases());
-    measure = measureUtil.validateAllMeasureDependencies(measure);
+    if (measure.getModel().equalsIgnoreCase(ModelType.QI_CORE.getValue())) {
+      measure = measureUtil.validateAllMeasureDependencies(measure);
+    }
     measure.setLastModifiedBy(username);
     measure.setLastModifiedAt(Instant.now());
     measureRepository.save(measure);
@@ -339,6 +336,39 @@ public class GroupService {
               .filter(group -> !groupId.equals(group.getGroupId()))
               .toList();
       testCase.setGroupPopulations(remainingGroups);
+    }
+  }
+
+  protected void handleFhirGroupReturnTypes(Group group, Measure measure) {
+    try {
+      new CqlDefinitionReturnTypeValidator()
+          .validateCqlDefinitionReturnTypes(group, measure.getElmJson());
+      new CqlObservationFunctionValidator()
+          .validateObservationFunctions(group, measure.getElmJson());
+    } catch (JsonProcessingException ex) {
+      log.error(
+          "An error occurred while validating population "
+              + "definition return types for FHIR measure {}",
+          measure.getId(),
+          ex);
+      throw new IllegalArgumentException("Invalid elm json");
+    }
+  }
+
+  protected void handleQdmGroupReturnTypes(Group group, Measure measure) {
+    QdmMeasure qdmMeasure = (QdmMeasure) measure;
+
+    try {
+      new CqlDefinitionReturnTypeValidator()
+          .validateCqlDefinitionReturnTypesForQdm(
+              group, measure.getElmJson(), qdmMeasure.isPatientBasis());
+    } catch (JsonProcessingException ex) {
+      log.error(
+          "An error occurred while validating population "
+              + "definition return types for QDM measure {}",
+          measure.getId(),
+          ex);
+      throw new IllegalArgumentException("Invalid elm json");
     }
   }
 }
