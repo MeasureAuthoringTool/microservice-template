@@ -2,15 +2,12 @@ package cms.gov.madie.measure.config;
 
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureSet;
 import org.junit.jupiter.api.Test;
 import org.mockito.internal.verification.Times;
-import java.io.IOException;
 import java.util.List;
 import static org.mockito.Mockito.*;
-
 
 public class AddMeasureSetChangeUnitTest {
 
@@ -19,7 +16,7 @@ public class AddMeasureSetChangeUnitTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  void addMeasureSetValues() throws IOException {
+  void addMeasureSetValues() {
 
     measure =
         Measure.builder().id(null).createdBy("testCreatedBy").measureSetId("abc-pqr-xyz").build();
@@ -29,15 +26,14 @@ public class AddMeasureSetChangeUnitTest {
     MeasureRepository measureRepository = mock(MeasureRepository.class);
     when(measureSetRepository.existsByMeasureSetId("abc-pqr-xyz")).thenReturn(false);
     when(measureRepository.findDistinctByMeasureSetField()).thenReturn((List.of(measure)));
-    new AddMeasureSetChangeUnit(new ObjectMapper())
-        .addMeasureSetValues(measureSetRepository, measureRepository);
+    new AddMeasureSetChangeUnit().addMeasureSetValues(measureSetRepository, measureRepository);
     verify(measureSetRepository, new Times(1)).save(measureSet);
   }
 
   @Test
   void rollbackExecution() {
     MeasureSetRepository measureSetRepository = mock(MeasureSetRepository.class);
-    new AddMeasureSetChangeUnit(new ObjectMapper()).rollbackExecution(measureSetRepository);
+    new AddMeasureSetChangeUnit().rollbackExecution(measureSetRepository);
     verify(measureSetRepository, new Times(1)).deleteAll();
   }
 }
