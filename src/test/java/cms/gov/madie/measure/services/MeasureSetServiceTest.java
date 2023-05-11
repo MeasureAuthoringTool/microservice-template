@@ -62,7 +62,7 @@ public class MeasureSetServiceTest {
   }
 
   @Test
-  public void testMeasureSetAcls() {
+  public void testUpdateMeasureSetAcls() {
     AclSpecification aclSpec = new AclSpecification();
     aclSpec.setUserId("john_1");
     aclSpec.setRoles(List.of(RoleEnum.SHARED_WITH));
@@ -78,7 +78,7 @@ public class MeasureSetServiceTest {
   }
 
   @Test
-  public void testMeasureSetAclsWhenMeasureSetNotFound() {
+  public void testUpdateMeasureSetAclsWhenMeasureSetNotFound() {
     when(measureSetRepository.findByMeasureSetId(anyString())).thenReturn(Optional.empty());
 
     Exception ex =
