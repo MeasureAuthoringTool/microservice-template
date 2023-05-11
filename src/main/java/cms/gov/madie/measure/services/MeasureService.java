@@ -256,17 +256,8 @@ public class MeasureService {
               add(RoleEnum.SHARED_WITH);
             }
           });
-      MeasureSet measureSet =
-          measureSetService.updateMeasureSetAcls(measure.getMeasureSetId(), spec);
-      if (measureSet == null) {
-        log.info(
-            "Failed to share the Measure [{}] with user [{}], measure set may not exists",
-            measure.getId(),
-            userid);
-      } else {
-        log.info("Measure [{}] is shared with user [{}]", measure.getId(), userid);
-        result = true;
-      }
+      measureSetService.updateMeasureSetAcls(measure.getMeasureSetId(), spec);
+      result = true;
     }
     return result;
   }

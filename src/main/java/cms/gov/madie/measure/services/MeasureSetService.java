@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.common.ActionType;
@@ -54,7 +55,13 @@ public class MeasureSetService {
       MeasureSet updatedMeasureSet = measureSetRepository.save(measureSet);
       log.info("SHARED acl added to Measure set [{}]", updatedMeasureSet.getId());
       return updatedMeasureSet;
+    } else {
+      String error =
+          String.format(
+              "Measure with set id `%s` can not be shared with `%s`, measure set may not exists.",
+              measureSetId, aclSpec.getUserId());
+      log.error(error);
+      throw new ResourceNotFoundException(error);
     }
-    return null;
   }
 }

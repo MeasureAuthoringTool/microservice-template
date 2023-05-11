@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
@@ -19,6 +20,8 @@ import java.util.Optional;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.times;
@@ -78,8 +81,11 @@ public class MeasureSetServiceTest {
   public void testMeasureSetAclsWhenMeasureSetNotFound() {
     when(measureSetRepository.findByMeasureSetId(anyString())).thenReturn(Optional.empty());
 
-    MeasureSet measureSet = measureSetService.updateMeasureSetAcls("1", new AclSpecification());
-    assertThat(measureSet, is(equalTo(null)));
+    Exception ex =
+        assertThrows(
+            ResourceNotFoundException.class,
+            () -> measureSetService.updateMeasureSetAcls("1", new AclSpecification()));
+    assertTrue(ex.getMessage().contains("measure set may not exists."));
     verify(measureSetRepository, times(1)).findByMeasureSetId(anyString());
     verify(measureSetRepository, times(0)).save(any(MeasureSet.class));
   }
