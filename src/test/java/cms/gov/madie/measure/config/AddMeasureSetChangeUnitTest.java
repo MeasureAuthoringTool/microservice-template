@@ -25,7 +25,7 @@ public class AddMeasureSetChangeUnitTest {
     MeasureSetRepository measureSetRepository = mock(MeasureSetRepository.class);
     MeasureRepository measureRepository = mock(MeasureRepository.class);
     when(measureSetRepository.existsByMeasureSetId("abc-pqr-xyz")).thenReturn(false);
-    when(measureRepository.findDistinctByMeasureSetField()).thenReturn((List.of(measure)));
+    when(measureRepository.findOldestMeasureSet()).thenReturn((List.of(measure)));
     new AddMeasureSetChangeUnit().addMeasureSetValues(measureSetRepository, measureRepository);
     verify(measureSetRepository, new Times(1)).save(measureSet);
   }

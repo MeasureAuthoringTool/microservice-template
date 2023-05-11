@@ -32,7 +32,7 @@ public interface MeasureRepository
             + "'measureSetId': {'$first':'$measureSetId'},"
             + "'createdBy': {'$first':'$createdBy'}}}"
       })
-  List<Measure> findDistinctByMeasureSetField();
+  List<Measure> findOldestMeasureSet();
 
   @Query(value = "{_id: ?0}", fields = "{'testCases.series': 1, _id: 0}")
   Optional<Measure> findAllTestCaseSeriesByMeasureId(String measureId);

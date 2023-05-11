@@ -15,14 +15,14 @@ public class AddMeasureSetChangeUnit {
   @Execution
   public void addMeasureSetValues(
       MeasureSetRepository measureSetRepository, MeasureRepository measureRepository) {
-    List<Measure> distinctMeasures = measureRepository.findDistinctByMeasureSetField();
-    distinctMeasures.forEach(
-        distinctMeasure -> {
-          if (!measureSetRepository.existsByMeasureSetId(distinctMeasure.getMeasureSetId())) {
+    List<Measure> oldestMeasures = measureRepository.findOldestMeasureSet();
+    oldestMeasures.forEach(
+        oldestMeasure -> {
+          if (!measureSetRepository.existsByMeasureSetId(oldestMeasure.getMeasureSetId())) {
             MeasureSet measureSet =
                 MeasureSet.builder()
-                    .measureSetId(distinctMeasure.getMeasureSetId())
-                    .owner(distinctMeasure.getCreatedBy())
+                    .measureSetId(oldestMeasure.getMeasureSetId())
+                    .owner(oldestMeasure.getCreatedBy())
                     .build();
             measureSetRepository.save(measureSet);
           }
