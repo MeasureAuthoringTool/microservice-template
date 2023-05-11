@@ -10,7 +10,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import java.util.Optional;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -28,11 +27,11 @@ public class MeasureSetServiceTest {
 
   @Test
   public void testCreateMeasureSet() {
-    when(measureSetRepository.findByMeasureSetId("msid-2")).thenReturn(Optional.empty());
+    when(measureSetRepository.existsByMeasureSetId("msid-2")).thenReturn(false);
     when(measureSetRepository.save(measureSet)).thenReturn(measureSet);
     measureSetService.createMeasureSet("user-1", "msid-xyz-p12r-12ert", "msid-2");
 
-    verify(measureSetRepository, times(1)).findByMeasureSetId("msid-2");
+    verify(measureSetRepository, times(1)).existsByMeasureSetId("msid-2");
     verify(measureSetRepository, times(1)).save(measureSet);
     verify(actionLogService, times(1))
         .logAction(measureSet.getId(), Measure.class, ActionType.CREATED, "user-1");
@@ -40,9 +39,9 @@ public class MeasureSetServiceTest {
 
   @Test
   public void testNotCreateMeasureSetWhenMeasureSetIdExists() {
-    when(measureSetRepository.findByMeasureSetId("msid-2")).thenReturn(Optional.of(measureSet));
+    when(measureSetRepository.existsByMeasureSetId("msid-2")).thenReturn(true);
     measureSetService.createMeasureSet("user-1", "msid-xyz-p12r-12ert", "msid-2");
-    verify(measureSetRepository, times(1)).findByMeasureSetId("msid-2");
+    verify(measureSetRepository, times(1)).existsByMeasureSetId("msid-2");
     verify(measureSetRepository, times(0)).save(measureSet);
   }
 }
