@@ -25,8 +25,7 @@ public class MeasureSetService {
   public void createMeasureSet(
       final String harpId, final String measureId, final String savedMeasureSetId) {
 
-    boolean isMeasureSetPresent =
-        measureSetRepository.findByMeasureSetId(savedMeasureSetId).isPresent();
+    boolean isMeasureSetPresent = measureSetRepository.existsByMeasureSetId(savedMeasureSetId);
     if (!isMeasureSetPresent) {
       MeasureSet measureSet =
           MeasureSet.builder().owner(harpId).measureSetId(savedMeasureSetId).build();
