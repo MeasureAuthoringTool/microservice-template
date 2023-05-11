@@ -2,36 +2,27 @@ package cms.gov.madie.measure.config;
 
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureSet;
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
-import java.io.IOException;
 import java.util.List;
 
 @ChangeUnit(id = "add_measure_set", order = "1", author = "madie_dev")
 public class AddMeasureSetChangeUnit {
 
-  private final ObjectMapper objectMapper;
-
-  public AddMeasureSetChangeUnit(ObjectMapper objectMapper) {
-    this.objectMapper = objectMapper;
-  }
-
   @Execution
   public void addMeasureSetValues(
-      MeasureSetRepository measureSetRepository, MeasureRepository measureRepository)
-      throws IOException {
-    List<Measure> distinctMeasures = measureRepository.findDistinctByMeasureSetField();
-    distinctMeasures.forEach(
-        distinctMeasure -> {
-          if (!measureSetRepository.existsByMeasureSetId(distinctMeasure.getMeasureSetId())) {
+      MeasureSetRepository measureSetRepository, MeasureRepository measureRepository) {
+    List<Measure> oldestMeasures = measureRepository.findOldestMeasureSet();
+    oldestMeasures.forEach(
+        oldestMeasure -> {
+          if (!measureSetRepository.existsByMeasureSetId(oldestMeasure.getMeasureSetId())) {
             MeasureSet measureSet =
                 MeasureSet.builder()
-                    .measureSetId(distinctMeasure.getMeasureSetId())
-                    .owner(distinctMeasure.getCreatedBy())
+                    .measureSetId(oldestMeasure.getMeasureSetId())
+                    .owner(oldestMeasure.getCreatedBy())
                     .build();
             measureSetRepository.save(measureSet);
           }
