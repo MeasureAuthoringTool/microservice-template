@@ -14,7 +14,7 @@ import java.util.List;
 public class AddMeasureSetChangeUnit {
 
   @Execution
-  public void addPopulationBasisValues(
+  public void addMeasureSetValues(
       MeasureSetRepository measureSetRepository, MeasureRepository measureRepository)
       throws IOException {
     List<Measure> distinctMeasures = measureRepository.findDistinctByMeasureSetField();
