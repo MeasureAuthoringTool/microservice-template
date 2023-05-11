@@ -5,7 +5,6 @@ import java.util.Optional;
 import org.springframework.data.mongodb.repository.MongoRepository;;
 
 public interface MeasureSetRepository extends MongoRepository<MeasureSet, String> {
-  Optional<MeasureSet> findByMeasureSetId(String measureSetId);
 
   boolean existsByMeasureSetId(String measureSetId);
 }
