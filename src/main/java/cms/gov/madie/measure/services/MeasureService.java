@@ -7,7 +7,6 @@ import cms.gov.madie.measure.exceptions.InvalidMeasurementPeriodException;
 import cms.gov.madie.measure.exceptions.InvalidTerminologyException;
 import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
-import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
 import cms.gov.madie.measure.utils.MeasureUtil;
 import gov.cms.madie.models.access.AclSpecification;
@@ -45,8 +44,8 @@ public class MeasureService {
   private final ElmTranslatorClient elmTranslatorClient;
   private final MeasureUtil measureUtil;
   private final ActionLogService actionLogService;
+  private final MeasureSetService measureSetService;
   private final TerminologyValidationService terminologyValidationService;
-  private final MeasureSetRepository measureSetRepository;
 
   public Measure createMeasure(Measure measure, final String username, String accessToken) {
     log.info("User [{}] is attempting to create a new measure", username);
@@ -70,7 +69,6 @@ public class MeasureService {
       measureCopy.setCqlErrors(true);
       measureCopy.setErrors(errorTypes);
     }
-
     Instant now = Instant.now();
     // Clear ID so that the unique GUID from MongoDB will be applied
     measureCopy.setId(null);
@@ -81,7 +79,6 @@ public class MeasureService {
     measureCopy.setVersion(new Version(0, 0, 0));
     measureCopy.setVersionId(UUID.randomUUID().toString());
     measureCopy.setMeasureSetId(UUID.randomUUID().toString());
-
     if (measureCopy.getMeasureMetaData() != null) {
       measureCopy.getMeasureMetaData().setDraft(true);
     } else {
@@ -89,23 +86,14 @@ public class MeasureService {
       metaData.setDraft(true);
       measureCopy.setMeasureMetaData(metaData);
     }
-    MeasureSet measureSet = new MeasureSet();
-    measureSet.setOwner(username);
-    measureSet.setMeasureSetId(measureCopy.getMeasureSetId());
 
     Measure savedMeasure = measureRepository.save(measureCopy);
     log.info(
         "User [{}] successfully created new measure with ID [{}]", username, savedMeasure.getId());
     actionLogService.logAction(savedMeasure.getId(), Measure.class, ActionType.CREATED, username);
 
-    MeasureSet savedMeasureSet = measureSetRepository.save(measureSet);
-    log.info(
-        "User [{}] successfully created new measureSet with ID [{}] for the measure [{}] ",
-        username,
-        savedMeasure.getId(),
-        savedMeasureSet.getId());
-    actionLogService.logAction(
-        savedMeasureSet.getId(), Measure.class, ActionType.CREATED, username);
+    measureSetService.createMeasureSet(
+        username, savedMeasure.getId(), savedMeasure.getMeasureSetId());
     return savedMeasure;
   }
 

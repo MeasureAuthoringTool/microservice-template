@@ -123,7 +123,12 @@ public class ErrorHandlingControllerAdvice {
     return getErrorAttributes(request, HttpStatus.BAD_REQUEST);
   }
 
-  @ExceptionHandler(InvalidReturnTypeException.class)
+  @ExceptionHandler({
+    InvalidReturnTypeException.class,
+    InvalidReturnTypeForQdmException.class,
+    InvalidFhirGroupException.class,
+    InvalidGroupException.class
+  })
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ResponseBody
   Map<String, Object> onInvalidReturnTypeException(WebRequest request) {

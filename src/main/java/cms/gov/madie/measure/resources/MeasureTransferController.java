@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.repositories.OrganizationRepository;
+import cms.gov.madie.measure.services.MeasureSetService;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.Organization;
 import gov.cms.madie.models.measure.ElmJson;
@@ -39,8 +40,8 @@ public class MeasureTransferController {
   private final MeasureRepository repository;
   private final MeasureService measureService;
   private final ActionLogService actionLogService;
+  private final MeasureSetService measureSetService;
   private final ElmTranslatorClient elmTranslatorClient;
-
   private final OrganizationRepository organizationRepository;
 
   @PostMapping("/mat-measures")
@@ -74,11 +75,11 @@ public class MeasureTransferController {
     // set ids for groups
     measure.getGroups().forEach(group -> group.setId(ObjectId.get().toString()));
     Measure savedMeasure = repository.save(measure);
+    measureSetService.createMeasureSet(
+        harpId, savedMeasure.getId(), savedMeasure.getMeasureSetId());
     log.info("Measure [{}] transfer complete", measure.getMeasureName());
-
     actionLogService.logAction(
         savedMeasure.getId(), Measure.class, ActionType.IMPORTED, savedMeasure.getCreatedBy());
-
     return ResponseEntity.status(HttpStatus.CREATED).body(savedMeasure);
   }
 
