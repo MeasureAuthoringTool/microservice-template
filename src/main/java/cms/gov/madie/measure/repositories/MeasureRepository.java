@@ -26,12 +26,12 @@ public interface MeasureRepository
       String user, Boolean active, String shared, Pageable page);
 
   @Aggregation(
-          pipeline = {
-                  "{'$group': {'_id': '$measureSetId',"
-                          + "'measureSetId': {'$first':'$measureSetId'},"
-                          + "'createdBy': {'$first':'$createdBy'}}}",
-                  "{'$sort': {'createdAt':1}}"
-          })
+      pipeline = {
+        "{'$group': {'_id': '$measureSetId',"
+            + "'measureSetId': {'$first':'$measureSetId'},"
+            + "'createdBy': {'$first':'$createdBy'}}}",
+        "{'$sort': {'createdAt':1}}"
+      })
   List<Measure> findOldestMeasureSet();
 
   @Query(value = "{_id: ?0}", fields = "{'testCases.series': 1, _id: 0}")
