@@ -20,7 +20,7 @@ import java.util.Optional;
 public class MoveMeasureAclsToMeasureSetChangeUnit {
 
   @Execution
-  public void addMeasureSetValues(
+  public void moveMeasureAClsToMeasureSet(
       MeasureSetRepository measureSetRepository, MeasureRepository measureRepository) {
     List<Measure> measures = measureRepository.findAll();
     measures.forEach(
@@ -33,20 +33,23 @@ public class MoveMeasureAclsToMeasureSetChangeUnit {
               // if no ACLs present in measure set, add all measure ACLs to set
               if (CollectionUtils.isEmpty(measureSet.getAcls())) {
                 measureSet.setAcls(acls);
+                measureSetRepository.save(measureSet);
               } else {
-                // if measure set has acls, filter acls that do not exist
+                // if measure set has acls, filter measure acls that do not exist
                 List<AclSpecification> aclsToMove =
                     acls.stream().filter(acl -> !isAclExists(measureSet.getAcls(), acl)).toList();
                 measureSet.getAcls().addAll(aclsToMove);
+                if (CollectionUtils.isNotEmpty(aclsToMove)) {
+                  measureSetRepository.save(measureSet);
+                }
               }
-              measureSetRepository.save(measureSet);
             }
           }
         });
   }
 
   @RollbackExecution
-  public void rollbackExecution() {
+  public void rollbackExecution(MeasureSetRepository measureSetRepository) {
     log.debug("Entering rollbackExecution()");
   }
 

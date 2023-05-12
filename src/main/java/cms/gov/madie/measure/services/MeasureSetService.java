@@ -43,11 +43,10 @@ public class MeasureSetService {
     Optional<MeasureSet> OptionalMeasureSet = measureSetRepository.findByMeasureSetId(measureSetId);
     if (OptionalMeasureSet.isPresent()) {
       MeasureSet measureSet = OptionalMeasureSet.get();
-      List<AclSpecification> acls = measureSet.getAcls();
-      if (CollectionUtils.isEmpty(acls)) {
-        acls = List.of(aclSpec);
+      if (CollectionUtils.isEmpty(measureSet.getAcls())) {
+        measureSet.setAcls(List.of(aclSpec));
       } else {
-        acls.add(aclSpec);
+        measureSet.getAcls().add(aclSpec);
       }
       MeasureSet updatedMeasureSet = measureSetRepository.save(measureSet);
       log.info("SHARED acl added to Measure set [{}]", updatedMeasureSet.getId());

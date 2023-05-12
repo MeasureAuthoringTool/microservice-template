@@ -78,6 +78,28 @@ public class MeasureSetServiceTest {
   }
 
   @Test
+  public void testUpdateMeasureSetToAddSecondAcl() {
+    AclSpecification aclSpec1 = new AclSpecification();
+    measureSet.setAcls(List.of());
+    AclSpecification aclSpec2 = new AclSpecification();
+    aclSpec2.setUserId("john_1");
+    aclSpec2.setRoles(List.of(RoleEnum.SHARED_WITH));
+    MeasureSet updatedMeasureSet =
+        MeasureSet.builder()
+            .measureSetId("1")
+            .owner("john_1")
+            .acls(List.of(aclSpec1, aclSpec2))
+            .build();
+    when(measureSetRepository.findByMeasureSetId(anyString())).thenReturn(Optional.of(measureSet));
+    when(measureSetRepository.save(any(MeasureSet.class))).thenReturn(updatedMeasureSet);
+
+    MeasureSet measureSet = measureSetService.updateMeasureSetAcls("1", aclSpec2);
+    assertThat(measureSet.getId(), is(equalTo(updatedMeasureSet.getId())));
+    assertThat(measureSet.getOwner(), is(equalTo(updatedMeasureSet.getOwner())));
+    assertThat(measureSet.getAcls().size(), is(equalTo(2)));
+  }
+
+  @Test
   public void testUpdateMeasureSetAclsWhenMeasureSetNotFound() {
     when(measureSetRepository.findByMeasureSetId(anyString())).thenReturn(Optional.empty());
 
