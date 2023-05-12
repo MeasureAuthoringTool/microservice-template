@@ -3,7 +3,6 @@ package cms.gov.madie.measure.config;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import gov.cms.madie.models.access.AclSpecification;
-import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureSet;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,9 +21,13 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 public class MoveMeasureAclsToMeasureSetChangeUnitTest {
-  Measure measure1, measure2, measure3, measure4,  measure5;
-  MeasureSetRepository measureSetRepository;
-  MeasureRepository measureRepository;
+  private MeasureSetRepository measureSetRepository;
+  private MeasureRepository measureRepository;
+  private Measure measure1;
+  private Measure measure2;
+  private Measure measure3;
+  private Measure measure4;
+  private Measure measure5;
 
   @BeforeEach
   void setup() {

@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-@ChangeUnit(id = "move_measure_acls", order = "1", author = "madie_dev")
+@ChangeUnit(id = "move_measure_acls", order = "2", author = "madie_dev")
 public class MoveMeasureAclsToMeasureSetChangeUnit {
 
   @Execution
