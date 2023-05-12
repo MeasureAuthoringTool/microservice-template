@@ -155,7 +155,7 @@ public class MeasureController {
 
     log.info("getMeasureId [{}] using apiKey ", id, "apikey");
 
-    if (measureService.grantAccess(id, userid, apiKey)) {
+    if (measureService.grantAccess(id, userid)) {
       response =
           ResponseEntity.ok()
               .body(String.format("%s granted access to Measure successfully.", userid));

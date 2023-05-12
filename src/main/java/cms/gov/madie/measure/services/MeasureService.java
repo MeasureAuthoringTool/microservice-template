@@ -243,16 +243,11 @@ public class MeasureService {
     }
   }
 
-  public boolean grantAccess(String measureid, String userid, String username) {
+  public boolean grantAccess(String measureId, String userid) {
     boolean result = false;
-    Optional<Measure> persistedMeasure = measureRepository.findById(measureid);
+    Optional<Measure> persistedMeasure = measureRepository.findById(measureId);
     if (persistedMeasure.isPresent()) {
-
       Measure measure = persistedMeasure.get();
-      measure.setLastModifiedBy(username);
-      measure.setLastModifiedAt(Instant.now());
-      List<AclSpecification> acls;
-      acls = measure.getAcls();
       AclSpecification spec = new AclSpecification();
       spec.setUserId(userid);
       spec.setRoles(
@@ -261,18 +256,7 @@ public class MeasureService {
               add(RoleEnum.SHARED_WITH);
             }
           });
-      if (acls == null || acls.size() == 0) {
-        acls =
-            new ArrayList<>() {
-              {
-                add(spec);
-              }
-            };
-      } else {
-        acls.add(spec);
-      }
-      measure.setAcls(acls);
-      measureRepository.save(measure);
+      measureSetService.updateMeasureSetAcls(measure.getMeasureSetId(), spec);
       result = true;
     }
     return result;
