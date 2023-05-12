@@ -14,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -80,7 +81,11 @@ public class MeasureSetServiceTest {
   @Test
   public void testUpdateMeasureSetToAddSecondAcl() {
     AclSpecification aclSpec1 = new AclSpecification();
-    measureSet.setAcls(List.of());
+    measureSet.setAcls(new ArrayList<>() {
+      {
+        add(aclSpec1);
+      }
+    });
     AclSpecification aclSpec2 = new AclSpecification();
     aclSpec2.setUserId("john_1");
     aclSpec2.setRoles(List.of(RoleEnum.SHARED_WITH));
