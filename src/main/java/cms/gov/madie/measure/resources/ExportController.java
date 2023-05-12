@@ -5,7 +5,11 @@ import java.security.Principal;
 import java.util.Optional;
 
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import cms.gov.madie.measure.utils.ControllerUtil;
+
+import cms.gov.madie.measure.utils.ExportFileNamesUtil;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -43,6 +47,11 @@ public class ExportController {
 
     Measure measure = measureOptional.get();
 
-    return bundleService.exportBundleMeasure(measure, accessToken);
+    return ResponseEntity.ok()
+          .header(
+          HttpHeaders.CONTENT_DISPOSITION,
+          "attachment;filename=\"" + ExportFileNamesUtil.getExportFileName(measure) + ".zip\"")
+      .contentType(MediaType.APPLICATION_OCTET_STREAM)
+      .body(bundleService.exportBundleMeasure(measure, accessToken));
   }
 }

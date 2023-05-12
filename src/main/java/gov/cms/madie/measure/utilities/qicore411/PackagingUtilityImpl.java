@@ -1,31 +1,31 @@
 package gov.cms.madie.measure.utilities.qicore411;
 
 import org.apache.commons.lang3.StringUtils;
+import cms.gov.madie.measure.utils.ZipUtility;
 import org.hl7.fhir.r4.model.Attachment;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Library;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import cms.gov.madie.measure.exceptions.InternalServerException;
-import cms.gov.madie.measure.utils.ResourceUtility;
+import cms.gov.madie.measure.utils.PackagingUtility;
 import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.library.CqlLibrary;
 import gov.cms.madie.models.measure.Export;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
+import java.util.HashMap;
 
-public class ResourceUtilityImpl implements ResourceUtility {
+@Slf4j
+public class PackagingUtilityImpl implements PackagingUtility {
   private FhirContext context;
 
-  public ResourceUtilityImpl() {
+  public PackagingUtilityImpl() {
     context = FhirContext.forR4();
   }
 
@@ -54,92 +54,52 @@ public class ResourceUtilityImpl implements ResourceUtility {
     String template = ResourceUtils.getData("/templates/HumanReadable.liquid");
     String humanReadableWithCSS = template.replace("human_readable_content_holder", humanReadable);
 
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    zipEntries(exportFileName, jsonParser, xmlParser, bundle, humanReadableWithCSS, baos);
-    return baos.toByteArray();
+    byte[] result = zipEntries(exportFileName, jsonParser, xmlParser, bundle, humanReadableWithCSS);
+    return result;
   }
 
-  private void zipEntries(
+  private byte[] zipEntries(
       String exportFileName,
       IParser jsonParser,
       IParser xmlParser,
       org.hl7.fhir.r4.model.Bundle bundle,
-      String humanReadableWithCSS,
-      ByteArrayOutputStream baos) {
-    ZipOutputStream zos = new ZipOutputStream(baos);
+      String humanReadableWithCSS) {
+
+    Map<String, byte[]> entries = new HashMap<String, byte[]>();
     try {
 
       // Add Json
       byte[] jsonBytes = jsonParser.setPrettyPrint(true).encodeResourceToString(bundle).getBytes();
-      ZipEntry entry = new ZipEntry(exportFileName + ".json");
-      entry.setSize(jsonBytes.length);
-      zos.putNextEntry(entry);
-      zos.write(jsonBytes);
-      zos.closeEntry();
+      entries.put(exportFileName + ".json", jsonBytes);
+
       // Add Xml
       byte[] xmlBytes = xmlParser.setPrettyPrint(true).encodeResourceToString(bundle).getBytes();
-      entry = new ZipEntry(exportFileName + ".xml");
-      entry.setSize(xmlBytes.length);
-      zos.putNextEntry(entry);
-      zos.write(xmlBytes);
-      zos.closeEntry();
+      entries.put(exportFileName + ".xml", xmlBytes);
+
       // add Library Cql Files to Export
       List<CqlLibrary> cqlLibraries = getCQLForLibraries(bundle);
       for (CqlLibrary library : cqlLibraries) {
         String filePath =
             CQL_DIRECTORY + library.getCqlLibraryName() + "-" + library.getVersion() + ".cql";
         String data = library.getCql();
-        entry = new ZipEntry(filePath);
-        entry.setSize(data.getBytes().length);
-        zos.putNextEntry(entry);
-        zos.write(data.getBytes());
-        zos.closeEntry();
+
+        entries.put(filePath, xmlBytes);
       }
       // add Library Resources to Export
-      addLibraryResources(jsonParser, xmlParser, bundle, zos);
-
-      entry = new ZipEntry(exportFileName + ".html");
-      entry.setSize(humanReadableWithCSS.getBytes().length);
-      zos.putNextEntry(entry);
-      zos.write(humanReadableWithCSS.getBytes());
-      zos.closeEntry();
-    } catch (InternalServerException | IOException ex) {
-      // TODO Auto-generated catch block
-      ex.printStackTrace();
-    } finally {
-      try {
-        zos.close();
-      } catch (IOException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
+      List<Library> libraries = getLibraryResources(bundle);
+      for (Library library1 : libraries) {
+        String json = jsonParser.setPrettyPrint(true).encodeResourceToString(library1);
+        String xml = xmlParser.setPrettyPrint(true).encodeResourceToString(library1);
+        String fileName = RESOURCES_DIRECTORY + library1.getName() + "-" + library1.getVersion();
+        entries.put(fileName + ".json", json.getBytes());
+        entries.put(fileName + ".xml", xml.getBytes());
       }
-    }
-  }
 
-  private void addLibraryResources(
-      IParser jsonParser,
-      IParser xmlParser,
-      org.hl7.fhir.r4.model.Bundle bundle,
-      ZipOutputStream zos)
-      throws IOException {
-    ZipEntry entry;
-    List<Library> libraries = getLibraryResources(bundle);
-    for (Library library : libraries) {
-      String json = jsonParser.setPrettyPrint(true).encodeResourceToString(library);
-      String xml = xmlParser.setPrettyPrint(true).encodeResourceToString(library);
-
-      String fileName = RESOURCES_DIRECTORY + library.getName() + "-" + library.getVersion();
-      entry = new ZipEntry(fileName + ".json");
-      entry.setSize(json.getBytes().length);
-      zos.putNextEntry(entry);
-      zos.write(json.getBytes());
-      zos.closeEntry();
-      entry = new ZipEntry(fileName + ".xml");
-      entry.setSize(xml.getBytes().length);
-      zos.putNextEntry(entry);
-      zos.write(xml.getBytes());
-      zos.closeEntry();
+      entries.put(exportFileName + ".html", humanReadableWithCSS.getBytes());
+    } catch (InternalServerException ex) {
     }
+    byte[] zipFileBytes = new ZipUtility().zipEntries(entries);
+    return zipFileBytes;
   }
 
   private List<CqlLibrary> getCQLForLibraries(Bundle measureBundle) {

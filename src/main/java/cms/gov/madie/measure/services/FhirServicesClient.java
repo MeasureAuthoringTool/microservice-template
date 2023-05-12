@@ -37,7 +37,7 @@ public class FhirServicesClient {
         .getBody();
   }
 
-  public ResponseEntity<byte[]> getMeasureBundleExport(Measure measure, String accessToken) {
+  public byte[] getMeasureBundleExport(Measure measure, String accessToken) {
     URI uri =
         URI.create(
             fhirServicesConfig.getMadieFhirServiceBaseUrl()
@@ -47,7 +47,7 @@ public class FhirServicesClient {
     headers.set(HttpHeaders.ACCEPT, MediaType.ALL_VALUE);
     headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
     HttpEntity<Measure> measureEntity = new HttpEntity<>(measure, headers);
-    return fhirServicesRestTemplate.exchange(uri, HttpMethod.PUT, measureEntity, byte[].class);
+    return fhirServicesRestTemplate.exchange(uri, HttpMethod.PUT, measureEntity, byte[].class).getBody();
   }
 
   public ResponseEntity<String> validateBundle(String testCaseJson, String accessToken) {

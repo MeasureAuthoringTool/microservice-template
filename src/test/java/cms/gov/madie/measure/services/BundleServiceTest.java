@@ -10,9 +10,11 @@ import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Export;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureGroupTypes;
 import gov.cms.madie.models.measure.MeasureMetaData;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
+import gov.cms.madie.models.common.Organization;
 import gov.cms.madie.models.common.Version;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,8 +25,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpClientErrorException;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,8 +39,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 @ExtendWith(MockitoExtension.class)
 class BundleServiceTest implements ResourceUtil {
 
@@ -52,6 +63,7 @@ class BundleServiceTest implements ResourceUtil {
         Group.builder()
             .id("xyz-p12r-12ert")
             .populationBasis("Encounter")
+            .measureGroupTypes(List.of(MeasureGroupTypes.PROCESS))
             .populations(
                 List.of(
                     new Population(
@@ -184,4 +196,120 @@ class BundleServiceTest implements ResourceUtil {
                 "An error occurred while bundling Measure with ID xyz-p13r-13ert."
                     + " Please try again later or contact a System Administrator if this continues to occur.")));
   }
+  
+  @Test
+  void testExportBundleMeasureForVersionedMeasure() throws IOException {
+
+	    final String json = cms.gov.madie.measure.JsonBits.BUNDLE;
+	    Export export = Export.builder().measureId(measure.getId()).measureBundleJson(json).build();
+	    measure.setEcqmTitle("MEAS");
+	    measure.setMeasureMetaData( 
+            MeasureMetaData.builder().draft(false)
+            .steward(Organization.builder().name("SemanticBits").build())
+            .description("This is a description")
+            .developers(List.of(Organization.builder().name("ICF").build()))
+            .build());
+	    measure.setModel("QI-Core v4.1.1");
+	    when(exportRepository.findByMeasureId(anyString())).thenReturn(Optional.of(export));
+
+	    byte[] output = bundleService.exportBundleMeasure(measure, "Bearer TOKEN");
+	    assertNotNull(output);
+	    ZipInputStream z = new ZipInputStream(new ByteArrayInputStream(output)) ; 
+	    ZipEntry entry = z.getNextEntry();
+	    String fileName = entry.getName();
+	    assertEquals(fileName, "resources/TestCreateNewLibrary-1.0.000.xml");
+
+  }
+  
+  @Test
+  void testExportBundleMeasureForVersionedMeasureDoesntExistInMongo() throws IOException {
+	    
+	    measure.setEcqmTitle("MEAS");
+	    measure.setMeasureMetaData( 
+            MeasureMetaData.builder().draft(false)
+            .steward(Organization.builder().name("SemanticBits").build())
+            .description("This is a description")
+            .developers(List.of(Organization.builder().name("ICF").build()))
+            .build());
+	    measure.setModel("QI-Core v4.1.1");
+	    doReturn( Optional.empty()).when(exportRepository).findByMeasureId(anyString());
+	    
+	    Exception ex =
+	            assertThrows(
+	                BundleOperationException.class,
+	                () -> bundleService.exportBundleMeasure(measure, "Bearer TOKEN"));
+        assertThat(
+            ex.getMessage(),
+            is(
+                equalTo(
+                    "An error occurred while bundling Measure with ID xyz-p13r-13ert."
+                        + " Please try again later or contact a System Administrator if this continues to occur.")));
+
+  }
+  
+  @Test
+  void testExportBundleMeasureForDraftMeasure() throws IOException {
+
+	    //final String json = cms.gov.madie.measure.JsonBits.BUNDLE;
+	    //Export export = Export.builder().measureId(measure.getId()).measureBundleJson(json).build();
+	    measure.setEcqmTitle("MEAS");
+	    measure.setMeasureMetaData( 
+            MeasureMetaData.builder().draft(true)
+            .steward(Organization.builder().name("SemanticBits").build())
+            .description("This is a description")
+            .developers(List.of(Organization.builder().name("ICF").build()))
+            .build());
+	    measure.setModel("QI-Core v4.1.1");
+	    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+        	.thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
+	    //doThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN)).when(fhirServicesClient).getMeasureBundleExport(any(Measure.class), eq("")))
+	    byte[] exportBytes = "TEST".getBytes();
+	    doReturn(exportBytes).when(fhirServicesClient).getMeasureBundleExport(any(Measure.class), eq("Bearer TOKEN"));
+	    
+	    byte[] output = bundleService.exportBundleMeasure(measure, "Bearer TOKEN");
+	    assertNotNull(output);	    
+	    assertTrue(Arrays.equals("TEST".getBytes(), output));
+
+  }
+  
+  @Test
+  void testExportBundleMeasureForDraftMeasureThrowsException() throws IOException {
+
+	    measure.setEcqmTitle("MEAS");
+	    measure.setMeasureMetaData( 
+            MeasureMetaData.builder().draft(true)
+            .steward(Organization.builder().name("SemanticBits").build())
+            .description("This is a description")
+            .developers(List.of(Organization.builder().name("ICF").build()))
+            .build());
+	    measure.setModel("QI-Core v4.1.1");
+	    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+        	.thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
+	    doThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN))
+	    	.when(fhirServicesClient).getMeasureBundleExport(any(Measure.class), eq("Bearer TOKEN"));
+
+	    Exception ex =
+	            assertThrows(
+	                BundleOperationException.class,
+	                () -> bundleService.exportBundleMeasure(measure, "Bearer TOKEN"));
+        assertThat(
+            ex.getMessage(),
+            is(
+                equalTo(
+                    "An error occurred while bundling Measure with ID xyz-p13r-13ert."
+                        + " Please try again later or contact a System Administrator if this continues to occur.")));
+
+
+  }
+  
+  @Test
+  void testExportBundleMeasureForNullMeasureReturnsNull() throws IOException {
+
+	    byte[] output = bundleService.exportBundleMeasure(null, "Bearer TOKEN");
+	    assertNull(output);
+	    
+
+  }
+  
+  
 }
