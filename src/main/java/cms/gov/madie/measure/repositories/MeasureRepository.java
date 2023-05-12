@@ -27,7 +27,7 @@ public interface MeasureRepository
 
   @Aggregation(
       pipeline = {
-        "{'$group': {'_id': '$_id',"
+        "{'$group': {'_id': '$measureSetId',"
             + "'measureSetId': {'$first':'$measureSetId'},"
             + "'createdBy': {'$first':'$createdBy'}}}",
         "{'$sort': {'createdAt':1}}"
