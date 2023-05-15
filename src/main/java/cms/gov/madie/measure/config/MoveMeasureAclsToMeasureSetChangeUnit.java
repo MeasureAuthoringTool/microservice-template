@@ -14,6 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @ChangeUnit(id = "move_measure_acls", order = "2", author = "madie_dev")
@@ -25,8 +26,10 @@ public class MoveMeasureAclsToMeasureSetChangeUnit {
     List<Measure> measures = measureRepository.findAll();
     measures.forEach(
         measure -> {
-          List<AclSpecification> acls = measure.getAcls();
-          if (CollectionUtils.isNotEmpty(acls)) {
+          if (CollectionUtils.isNotEmpty(measure.getAcls())) {
+            // there are measures that have duplicate ACLs, remove duplicates.
+            List<AclSpecification> acls =
+              measure.getAcls().stream().distinct().collect(Collectors.toList());
             MeasureSet measureSet =
                 measureSetRepository.findByMeasureSetId(measure.getMeasureSetId()).orElse(null);
             if (measureSet != null) {

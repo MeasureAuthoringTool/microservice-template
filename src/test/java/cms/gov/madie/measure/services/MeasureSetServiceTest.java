@@ -81,11 +81,12 @@ public class MeasureSetServiceTest {
   @Test
   public void testUpdateMeasureSetToAddSecondAcl() {
     AclSpecification aclSpec1 = new AclSpecification();
-    measureSet.setAcls(new ArrayList<>() {
-      {
-        add(aclSpec1);
-      }
-    });
+    measureSet.setAcls(
+        new ArrayList<>() {
+          {
+            add(aclSpec1);
+          }
+        });
     AclSpecification aclSpec2 = new AclSpecification();
     aclSpec2.setUserId("john_1");
     aclSpec2.setRoles(List.of(RoleEnum.SHARED_WITH));
