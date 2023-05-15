@@ -35,17 +35,19 @@ public class MoveMeasureAclsToMeasureSetChangeUnitTest {
     spec1.setUserId("john");
     AclSpecification spec2 = new AclSpecification();
     spec2.setUserId("jane");
-    List<AclSpecification> aclSpecs1 = new ArrayList<>() {
-      {
-        add(spec1);
-      }
-    };
+    List<AclSpecification> aclSpecs1 =
+        new ArrayList<>() {
+          {
+            add(spec1);
+          }
+        };
 
-    List<AclSpecification> aclSpecs2 = new ArrayList<>() {
-      {
-        add(spec2);
-      }
-    };
+    List<AclSpecification> aclSpecs2 =
+        new ArrayList<>() {
+          {
+            add(spec2);
+          }
+        };
     measure1 = Measure.builder().id("1").measureSetId("1").build(); // Set 1, no ACL
     measure2 =
         Measure.builder().id("2").measureSetId("1").acls(aclSpecs1).build(); // Set: 1, ACL: spec1
@@ -65,7 +67,7 @@ public class MoveMeasureAclsToMeasureSetChangeUnitTest {
     MeasureSet set1 = MeasureSet.builder().measureSetId("1").build();
     MeasureSet set2 = MeasureSet.builder().measureSetId("2").build();
     when(measureRepository.findAll())
-      .thenReturn((List.of(measure1, measure2, measure3, measure4, measure5)));
+        .thenReturn((List.of(measure1, measure2, measure3, measure4, measure5)));
     when(measureSetRepository.findByMeasureSetId(anyString()))
         .thenReturn(Optional.of(set1))
         .thenReturn(Optional.of(set1))
