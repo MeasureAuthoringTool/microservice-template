@@ -29,7 +29,7 @@ public class MoveMeasureAclsToMeasureSetChangeUnit {
           if (CollectionUtils.isNotEmpty(measure.getAcls())) {
             // there are measures that have duplicate ACLs, remove duplicates.
             List<AclSpecification> acls =
-                measure.getAcls().stream().distinct().collect(Collectors.toList());
+              measure.getAcls().stream().distinct().collect(Collectors.toList());
             MeasureSet measureSet =
                 measureSetRepository.findByMeasureSetId(measure.getMeasureSetId()).orElse(null);
             if (measureSet != null) {
