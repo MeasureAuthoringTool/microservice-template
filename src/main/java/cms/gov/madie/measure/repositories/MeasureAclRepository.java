@@ -13,5 +13,5 @@ public interface MeasureAclRepository {
    * @param pageable- instance of Pageable
    * @return Pageable List of measures
    */
-  Page<Measure> findMyActiveMeasures(String userId, Pageable pageable);
+  Page<Measure> findMyActiveMeasures(String userId, Pageable pageable, String searchTerm);
 }
