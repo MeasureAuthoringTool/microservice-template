@@ -13,7 +13,10 @@ import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.Version;
-import gov.cms.madie.models.measure.*;
+import gov.cms.madie.models.measure.ElmJson;
+import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureErrorType;
+import gov.cms.madie.models.measure.MeasureMetaData;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -169,8 +172,7 @@ public class MeasureService {
 
   public Page<Measure> getMeasures(boolean filterByCurrentUser, Pageable pageReq, String username) {
     return filterByCurrentUser
-        ? measureRepository.findAllByCreatedByAndActiveOrShared(
-            username, true, RoleEnum.SHARED_WITH.toString(), pageReq)
+        ? measureRepository.findMyActiveMeasures(username, pageReq)
         : measureRepository.findAllByActive(true, pageReq);
   }
 

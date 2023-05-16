@@ -10,7 +10,7 @@ import org.springframework.data.mongodb.repository.Query;
 import gov.cms.madie.models.measure.Measure;
 
 public interface MeasureRepository
-    extends MongoRepository<Measure, String>, MeasureVersionRepository {
+    extends MongoRepository<Measure, String>, MeasureVersionRepository, MeasureAclRepository {
   @Query("{cqlLibraryName : ?0, active : true}")
   Optional<Measure> findByCqlLibraryName(String cqlLibraryName);
 
