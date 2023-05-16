@@ -27,11 +27,7 @@
   <!--  https://github.com/mongock/mongock-examples -->
   <dependencyManagement>
     <dependencies>
-      <dependency>
-        <groupId>gov.cms.madie.packaging</groupId>
-        <artifactId>packaging-utility</artifactId>
-        <version>0.1-SNAPSHOT</version>
-      </dependency>
+
       <!-- START: needed to fix mismatched versions coming from above mongock -->
       <dependency>
         <groupId>org.junit.jupiter</groupId>
@@ -125,7 +121,11 @@
       <groupId>io.mongock</groupId>
       <artifactId>mongodb-springdata-v4-driver</artifactId>
     </dependency>
-
+    <dependency>
+      <groupId>gov.cms.madie.packaging</groupId>
+      <artifactId>packaging-utility</artifactId>
+      <version>0.1-SNAPSHOT</version>
+    </dependency>
     <dependency>
       <groupId>org.springdoc</groupId>
       <artifactId>springdoc-openapi-ui</artifactId>
@@ -135,11 +135,6 @@
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-collections4</artifactId>
       <version>4.4</version>
-    </dependency>
-    <dependency>
-      <groupId>gov.cms.madie.packaging</groupId>
-      <artifactId>packaging-utility</artifactId>
-      <version>0.1-SNAPSHOT</version>
     </dependency>
 
     <dependency>
@@ -153,6 +148,7 @@
       <artifactId>spring-security-test</artifactId>
       <scope>test</scope>
     </dependency>
+
   </dependencies>
 
   <repositories>
