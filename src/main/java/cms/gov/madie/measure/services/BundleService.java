@@ -91,7 +91,6 @@ public class BundleService {
       byte[] result = utility.getZipBundle(export, exportFileName);
       return result;
 
-
     } catch (RestClientException
         | IllegalArgumentException
         | InstantiationException
@@ -112,7 +111,7 @@ public class BundleService {
     }
     if (measure.getGroups().stream()
         .anyMatch(g -> CollectionUtils.isEmpty(g.getMeasureGroupTypes()))) {
-    	
+
       throw new InvalidResourceBundleStateException(
           "Measure",
           measure.getId(),

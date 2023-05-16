@@ -1,7 +1,6 @@
 package gov.cms.madie.measure.utilities.qicore411;
 
 import org.apache.commons.lang3.StringUtils;
-import cms.gov.madie.measure.utils.ZipUtility;
 import org.hl7.fhir.r4.model.Attachment;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Library;
@@ -13,12 +12,14 @@ import cms.gov.madie.measure.utils.PackagingUtility;
 import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.library.CqlLibrary;
 import gov.cms.madie.models.measure.Export;
+import gov.cms.madie.packaging.utils.ZipUtility;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
+import java.io.ByteArrayOutputStream;
+import java.util.zip.ZipOutputStream;
 import java.util.HashMap;
 
 @Slf4j
@@ -98,7 +99,8 @@ public class PackagingUtilityImpl implements PackagingUtility {
       entries.put(exportFileName + ".html", humanReadableWithCSS.getBytes());
     } catch (InternalServerException ex) {
     }
-    byte[] zipFileBytes = new ZipUtility().zipEntries(entries);
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    byte[] zipFileBytes = new ZipUtility(baos, new ZipOutputStream(baos)).zipEntries(entries);
     return zipFileBytes;
   }
 

@@ -48,10 +48,10 @@ public class ExportController {
     Measure measure = measureOptional.get();
 
     return ResponseEntity.ok()
-          .header(
-          HttpHeaders.CONTENT_DISPOSITION,
-          "attachment;filename=\"" + ExportFileNamesUtil.getExportFileName(measure) + ".zip\"")
-      .contentType(MediaType.APPLICATION_OCTET_STREAM)
-      .body(bundleService.exportBundleMeasure(measure, accessToken));
+        .header(
+            HttpHeaders.CONTENT_DISPOSITION,
+            "attachment;filename=\"" + ExportFileNamesUtil.getExportFileName(measure) + ".zip\"")
+        .contentType(MediaType.APPLICATION_OCTET_STREAM)
+        .body(bundleService.exportBundleMeasure(measure, accessToken));
   }
 }

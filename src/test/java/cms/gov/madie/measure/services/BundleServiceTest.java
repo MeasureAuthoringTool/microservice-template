@@ -46,6 +46,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
 @ExtendWith(MockitoExtension.class)
 class BundleServiceTest implements ResourceUtil {
 
@@ -196,120 +197,119 @@ class BundleServiceTest implements ResourceUtil {
                 "An error occurred while bundling Measure with ID xyz-p13r-13ert."
                     + " Please try again later or contact a System Administrator if this continues to occur.")));
   }
-  
+
   @Test
   void testExportBundleMeasureForVersionedMeasure() throws IOException {
 
-	    final String json = cms.gov.madie.measure.JsonBits.BUNDLE;
-	    Export export = Export.builder().measureId(measure.getId()).measureBundleJson(json).build();
-	    measure.setEcqmTitle("MEAS");
-	    measure.setMeasureMetaData( 
-            MeasureMetaData.builder().draft(false)
+    final String json = cms.gov.madie.measure.JsonBits.BUNDLE;
+    Export export = Export.builder().measureId(measure.getId()).measureBundleJson(json).build();
+    measure.setEcqmTitle("MEAS");
+    measure.setMeasureMetaData(
+        MeasureMetaData.builder()
+            .draft(false)
             .steward(Organization.builder().name("SemanticBits").build())
             .description("This is a description")
             .developers(List.of(Organization.builder().name("ICF").build()))
             .build());
-	    measure.setModel("QI-Core v4.1.1");
-	    when(exportRepository.findByMeasureId(anyString())).thenReturn(Optional.of(export));
+    measure.setModel("QI-Core v4.1.1");
+    when(exportRepository.findByMeasureId(anyString())).thenReturn(Optional.of(export));
 
-	    byte[] output = bundleService.exportBundleMeasure(measure, "Bearer TOKEN");
-	    assertNotNull(output);
-	    ZipInputStream z = new ZipInputStream(new ByteArrayInputStream(output)) ; 
-	    ZipEntry entry = z.getNextEntry();
-	    String fileName = entry.getName();
-	    assertEquals(fileName, "resources/TestCreateNewLibrary-1.0.000.xml");
-
+    byte[] output = bundleService.exportBundleMeasure(measure, "Bearer TOKEN");
+    assertNotNull(output);
+    ZipInputStream z = new ZipInputStream(new ByteArrayInputStream(output));
+    ZipEntry entry = z.getNextEntry();
+    String fileName = entry.getName();
+    assertEquals(fileName, "resources/TestCreateNewLibrary-1.0.000.xml");
   }
-  
+
   @Test
   void testExportBundleMeasureForVersionedMeasureDoesntExistInMongo() throws IOException {
-	    
-	    measure.setEcqmTitle("MEAS");
-	    measure.setMeasureMetaData( 
-            MeasureMetaData.builder().draft(false)
+
+    measure.setEcqmTitle("MEAS");
+    measure.setMeasureMetaData(
+        MeasureMetaData.builder()
+            .draft(false)
             .steward(Organization.builder().name("SemanticBits").build())
             .description("This is a description")
             .developers(List.of(Organization.builder().name("ICF").build()))
             .build());
-	    measure.setModel("QI-Core v4.1.1");
-	    doReturn( Optional.empty()).when(exportRepository).findByMeasureId(anyString());
-	    
-	    Exception ex =
-	            assertThrows(
-	                BundleOperationException.class,
-	                () -> bundleService.exportBundleMeasure(measure, "Bearer TOKEN"));
-        assertThat(
-            ex.getMessage(),
-            is(
-                equalTo(
-                    "An error occurred while bundling Measure with ID xyz-p13r-13ert."
-                        + " Please try again later or contact a System Administrator if this continues to occur.")));
+    measure.setModel("QI-Core v4.1.1");
+    doReturn(Optional.empty()).when(exportRepository).findByMeasureId(anyString());
 
+    Exception ex =
+        assertThrows(
+            BundleOperationException.class,
+            () -> bundleService.exportBundleMeasure(measure, "Bearer TOKEN"));
+    assertThat(
+        ex.getMessage(),
+        is(
+            equalTo(
+                "An error occurred while bundling Measure with ID xyz-p13r-13ert."
+                    + " Please try again later or contact a System Administrator if this continues to occur.")));
   }
-  
+
   @Test
   void testExportBundleMeasureForDraftMeasure() throws IOException {
 
-	    //final String json = cms.gov.madie.measure.JsonBits.BUNDLE;
-	    //Export export = Export.builder().measureId(measure.getId()).measureBundleJson(json).build();
-	    measure.setEcqmTitle("MEAS");
-	    measure.setMeasureMetaData( 
-            MeasureMetaData.builder().draft(true)
+    // final String json = cms.gov.madie.measure.JsonBits.BUNDLE;
+    // Export export = Export.builder().measureId(measure.getId()).measureBundleJson(json).build();
+    measure.setEcqmTitle("MEAS");
+    measure.setMeasureMetaData(
+        MeasureMetaData.builder()
+            .draft(true)
             .steward(Organization.builder().name("SemanticBits").build())
             .description("This is a description")
             .developers(List.of(Organization.builder().name("ICF").build()))
             .build());
-	    measure.setModel("QI-Core v4.1.1");
-	    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
-        	.thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
-	    //doThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN)).when(fhirServicesClient).getMeasureBundleExport(any(Measure.class), eq("")))
-	    byte[] exportBytes = "TEST".getBytes();
-	    doReturn(exportBytes).when(fhirServicesClient).getMeasureBundleExport(any(Measure.class), eq("Bearer TOKEN"));
-	    
-	    byte[] output = bundleService.exportBundleMeasure(measure, "Bearer TOKEN");
-	    assertNotNull(output);	    
-	    assertTrue(Arrays.equals("TEST".getBytes(), output));
+    measure.setModel("QI-Core v4.1.1");
+    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+        .thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
+    // doThrow(new
+    // HttpClientErrorException(HttpStatus.FORBIDDEN)).when(fhirServicesClient).getMeasureBundleExport(any(Measure.class), eq("")))
+    byte[] exportBytes = "TEST".getBytes();
+    doReturn(exportBytes)
+        .when(fhirServicesClient)
+        .getMeasureBundleExport(any(Measure.class), eq("Bearer TOKEN"));
 
+    byte[] output = bundleService.exportBundleMeasure(measure, "Bearer TOKEN");
+    assertNotNull(output);
+    assertTrue(Arrays.equals("TEST".getBytes(), output));
   }
-  
+
   @Test
   void testExportBundleMeasureForDraftMeasureThrowsException() throws IOException {
 
-	    measure.setEcqmTitle("MEAS");
-	    measure.setMeasureMetaData( 
-            MeasureMetaData.builder().draft(true)
+    measure.setEcqmTitle("MEAS");
+    measure.setMeasureMetaData(
+        MeasureMetaData.builder()
+            .draft(true)
             .steward(Organization.builder().name("SemanticBits").build())
             .description("This is a description")
             .developers(List.of(Organization.builder().name("ICF").build()))
             .build());
-	    measure.setModel("QI-Core v4.1.1");
-	    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
-        	.thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
-	    doThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN))
-	    	.when(fhirServicesClient).getMeasureBundleExport(any(Measure.class), eq("Bearer TOKEN"));
+    measure.setModel("QI-Core v4.1.1");
+    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+        .thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
+    doThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN))
+        .when(fhirServicesClient)
+        .getMeasureBundleExport(any(Measure.class), eq("Bearer TOKEN"));
 
-	    Exception ex =
-	            assertThrows(
-	                BundleOperationException.class,
-	                () -> bundleService.exportBundleMeasure(measure, "Bearer TOKEN"));
-        assertThat(
-            ex.getMessage(),
-            is(
-                equalTo(
-                    "An error occurred while bundling Measure with ID xyz-p13r-13ert."
-                        + " Please try again later or contact a System Administrator if this continues to occur.")));
-
-
+    Exception ex =
+        assertThrows(
+            BundleOperationException.class,
+            () -> bundleService.exportBundleMeasure(measure, "Bearer TOKEN"));
+    assertThat(
+        ex.getMessage(),
+        is(
+            equalTo(
+                "An error occurred while bundling Measure with ID xyz-p13r-13ert."
+                    + " Please try again later or contact a System Administrator if this continues to occur.")));
   }
-  
+
   @Test
   void testExportBundleMeasureForNullMeasureReturnsNull() throws IOException {
 
-	    byte[] output = bundleService.exportBundleMeasure(null, "Bearer TOKEN");
-	    assertNull(output);
-	    
-
+    byte[] output = bundleService.exportBundleMeasure(null, "Bearer TOKEN");
+    assertNull(output);
   }
-  
-  
 }

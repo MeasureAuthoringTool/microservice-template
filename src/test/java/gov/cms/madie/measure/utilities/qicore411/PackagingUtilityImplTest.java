@@ -13,8 +13,8 @@ class PackagingUtilityImplTest {
   void testGetZipBundle() {
     PackagingUtility utility = new PackagingUtilityImpl();
     Export export = new Export();
-    export.setMeasureBundleJson(cms.gov.madie.measure.JsonBits.BUNDLE) ; 
-        
+    export.setMeasureBundleJson(cms.gov.madie.measure.JsonBits.BUNDLE);
+
     byte[] results = null;
     try {
       results = utility.getZipBundle(export, "file");
