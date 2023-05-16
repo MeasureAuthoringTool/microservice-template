@@ -10,20 +10,13 @@ import org.springframework.data.mongodb.repository.Query;
 import gov.cms.madie.models.measure.Measure;
 
 public interface MeasureRepository
-    extends MongoRepository<Measure, String>, MeasureVersionRepository {
+    extends MongoRepository<Measure, String>, MeasureVersionRepository, MeasureAclRepository {
   @Query("{cqlLibraryName : ?0, active : true}")
   Optional<Measure> findByCqlLibraryName(String cqlLibraryName);
 
   Optional<Measure> findByIdAndActive(String id, Boolean active);
 
   Page<Measure> findAllByActive(Boolean active, Pageable page);
-
-  @Query(
-      collation = "{ 'locale': 'en_US', 'strength': 2}",
-      value =
-          "{$or: [{createdBy: ?0 , active : ?1}, " + "{'acls.userId' : ?0 , 'acls.roles' : ?2}]}")
-  Page<Measure> findAllByCreatedByAndActiveOrShared(
-      String user, Boolean active, String shared, Pageable page);
 
   @Aggregation(
       pipeline = {
