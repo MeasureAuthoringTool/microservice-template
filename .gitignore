@@ -37,3 +37,5 @@ build/
 
 ### Ignore .bak files
 *.bak
+
+.DS_Store
