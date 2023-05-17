@@ -2,6 +2,9 @@ package cms.gov.madie.measure.repositories;
 
 import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.measure.Measure;
+
+import org.apache.commons.lang3.StringUtils;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -29,7 +32,7 @@ public class MeasureAclRepositoryImpl implements MeasureAclRepository {
   }
 
   @Override
-  public Page<Measure> findMyActiveMeasures(String userId, Pageable pageable) {
+  public Page<Measure> findMyActiveMeasures(String userId, Pageable pageable, String searchTerm) {
     // join measure and measure_set to lookup owner and ACL info
     LookupOperation lookupOperation =
         LookupOperation.newLookup()
@@ -38,20 +41,29 @@ public class MeasureAclRepositoryImpl implements MeasureAclRepository {
             .foreignField("measureSetId")
             .as("measureSet");
 
-    Criteria activeMeasureCriteria = Criteria.where("active").is(true);
-    Criteria ownerCriteria = Criteria.where("measureSet.owner").is(userId);
-    Criteria sharedWithCriteria =
-        Criteria.where("measureSet.acls.userId")
-            .is(userId)
-            .and("measureSet.acls.roles")
-            .in(RoleEnum.SHARED_WITH);
+    // prepare measure search criteria
+    Criteria measureCriteria = Criteria.where("active").is(true);
+    if (StringUtils.isNotBlank(searchTerm)) {
+      measureCriteria.andOperator(
+          new Criteria()
+              .orOperator(
+                  Criteria.where("measureName").regex(searchTerm, "i"),
+                  Criteria.where("ecqmTitle").regex(searchTerm, "i")));
+    }
 
-    Criteria ownerOrSharedWithCriteria =
-        new Criteria().orOperator(ownerCriteria, sharedWithCriteria);
+    // prepare measure set search criteria(user is either owner or shared with)
+    Criteria measureSetCriteria =
+        new Criteria()
+            .orOperator(
+                Criteria.where("measureSet.owner").is(userId),
+                Criteria.where("measureSet.acls.userId")
+                    .is(userId)
+                    .and("measureSet.acls.roles")
+                    .in(RoleEnum.SHARED_WITH));
 
-    // measure should be active and user should be owner or shared with user
+    // combine measure and measure set criteria
     MatchOperation matchOperation =
-        match(new Criteria().andOperator(activeMeasureCriteria, ownerOrSharedWithCriteria));
+        match(new Criteria().andOperator(measureCriteria, measureSetCriteria));
 
     Aggregation countAggregation = newAggregation(lookupOperation, matchOperation);
 

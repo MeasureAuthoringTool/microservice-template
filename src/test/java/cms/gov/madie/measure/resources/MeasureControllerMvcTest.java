@@ -1644,7 +1644,7 @@ public class MeasureControllerMvcTest {
 
     final Page<Measure> measures = new PageImpl<>(List.of(m1, m2, m3));
 
-    when(measureRepository.findAllByMeasureNameOrEcqmTitleForCurrentUser(
+    when(measureRepository.findMyActiveMeasures(
             any(String.class), any(Pageable.class), any(String.class)))
         .thenReturn(measures);
 
@@ -1666,8 +1666,7 @@ public class MeasureControllerMvcTest {
 
     assertThat(resultStr, is(equalTo(expectedJsonStr)));
     verify(measureRepository, times(1))
-        .findAllByMeasureNameOrEcqmTitleForCurrentUser(
-            eq("measure"), any(PageRequest.class), eq(TEST_USER_ID));
+        .findMyActiveMeasures(eq(TEST_USER_ID), any(PageRequest.class), eq("measure"));
     verifyNoMoreInteractions(measureRepository);
   }
 }
