@@ -59,9 +59,9 @@ class ExportControllerTest {
             .createdBy("test.user")
             .build();
 
-    ResponseEntity<byte[]> respone = ResponseEntity.ok(new byte[0]);
+    byte[] response = new byte[0];
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    when(bundleService.exportBundleMeasure(eq(measure), anyString())).thenReturn(respone);
+    when(bundleService.exportBundleMeasure(eq(measure), anyString())).thenReturn(response);
     ResponseEntity<byte[]> output = exportController.getZip(principal, "test_id", "Bearer TOKEN");
     assertEquals(HttpStatus.OK, output.getStatusCode());
   }

@@ -6,14 +6,14 @@ import java.lang.reflect.InvocationTargetException;
 
 import org.junit.jupiter.api.Test;
 
-import cms.gov.madie.measure.utils.ResourceUtility;
+import cms.gov.madie.measure.utils.PackagingUtility;
 
 class ResourceUtilityFactoryTest {
 
   @Test
   void testGetInstance_fails() {
     try {
-      ResourceUtility utility = ResourceUtilityFactory.getInstance("QI-Core");
+      PackagingUtility utility = PackagingUtilityFactory.getInstance("QI-Core");
       fail("Should not be set " + utility.toString());
 
     } catch (InstantiationException
@@ -30,7 +30,7 @@ class ResourceUtilityFactoryTest {
   @Test
   void testGetInstance() {
     try {
-      ResourceUtility utility = ResourceUtilityFactory.getInstance("QI-Core v4.1.1");
+      PackagingUtility utility = PackagingUtilityFactory.getInstance("QI-Core v4.1.1");
       assertNotNull(utility);
 
     } catch (InstantiationException
