@@ -34,7 +34,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
-import java.io.UnsupportedEncodingException;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
@@ -217,14 +216,13 @@ public class MeasureController {
           boolean filterByCurrentUser,
       @PathVariable("criteria") String criteria,
       @RequestParam(required = false, defaultValue = "10", name = "limit") int limit,
-      @RequestParam(required = false, defaultValue = "0", name = "page") int page)
-      throws UnsupportedEncodingException {
+      @RequestParam(required = false, defaultValue = "0", name = "page") int page) {
 
     final String username = principal.getName();
     final Pageable pageReq = PageRequest.of(page, limit, Sort.by("lastModifiedAt").descending());
     Page<Measure> measures =
         filterByCurrentUser
-            ? repository.findAllByMeasureNameOrEcqmTitleForCurrentUser(criteria, pageReq, username)
+            ? repository.findMyActiveMeasures(username, pageReq, criteria)
             : repository.findAllByMeasureNameOrEcqmTitle(criteria, pageReq);
     return ResponseEntity.ok(measures);
   }
