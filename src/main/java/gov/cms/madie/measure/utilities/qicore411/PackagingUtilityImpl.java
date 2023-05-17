@@ -67,38 +67,36 @@ public class PackagingUtilityImpl implements PackagingUtility {
       String humanReadableWithCSS) {
 
     Map<String, byte[]> entries = new HashMap<String, byte[]>();
-    try {
 
-      // Add Json
-      byte[] jsonBytes = jsonParser.setPrettyPrint(true).encodeResourceToString(bundle).getBytes();
-      entries.put(exportFileName + ".json", jsonBytes);
+    // Add Json
+    byte[] jsonBytes = jsonParser.setPrettyPrint(true).encodeResourceToString(bundle).getBytes();
+    entries.put(exportFileName + ".json", jsonBytes);
 
-      // Add Xml
-      byte[] xmlBytes = xmlParser.setPrettyPrint(true).encodeResourceToString(bundle).getBytes();
-      entries.put(exportFileName + ".xml", xmlBytes);
+    // Add Xml
+    byte[] xmlBytes = xmlParser.setPrettyPrint(true).encodeResourceToString(bundle).getBytes();
+    entries.put(exportFileName + ".xml", xmlBytes);
 
-      // add Library Cql Files to Export
-      List<CqlLibrary> cqlLibraries = getCQLForLibraries(bundle);
-      for (CqlLibrary library : cqlLibraries) {
-        String filePath =
-            CQL_DIRECTORY + library.getCqlLibraryName() + "-" + library.getVersion() + ".cql";
-        String data = library.getCql();
+    // add Library Cql Files to Export
+    List<CqlLibrary> cqlLibraries = getCQLForLibraries(bundle);
+    for (CqlLibrary library : cqlLibraries) {
+      String filePath =
+          CQL_DIRECTORY + library.getCqlLibraryName() + "-" + library.getVersion() + ".cql";
+      String data = library.getCql();
 
-        entries.put(filePath, xmlBytes);
-      }
-      // add Library Resources to Export
-      List<Library> libraries = getLibraryResources(bundle);
-      for (Library library1 : libraries) {
-        String json = jsonParser.setPrettyPrint(true).encodeResourceToString(library1);
-        String xml = xmlParser.setPrettyPrint(true).encodeResourceToString(library1);
-        String fileName = RESOURCES_DIRECTORY + library1.getName() + "-" + library1.getVersion();
-        entries.put(fileName + ".json", json.getBytes());
-        entries.put(fileName + ".xml", xml.getBytes());
-      }
-
-      entries.put(exportFileName + ".html", humanReadableWithCSS.getBytes());
-    } catch (InternalServerException ex) {
+      entries.put(filePath, xmlBytes);
     }
+    // add Library Resources to Export
+    List<Library> libraries = getLibraryResources(bundle);
+    for (Library library1 : libraries) {
+      String json = jsonParser.setPrettyPrint(true).encodeResourceToString(library1);
+      String xml = xmlParser.setPrettyPrint(true).encodeResourceToString(library1);
+      String fileName = RESOURCES_DIRECTORY + library1.getName() + "-" + library1.getVersion();
+      entries.put(fileName + ".json", json.getBytes());
+      entries.put(fileName + ".xml", xml.getBytes());
+    }
+
+    entries.put(exportFileName + ".html", humanReadableWithCSS.getBytes());
+
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     byte[] zipFileBytes = new ZipUtility(baos, new ZipOutputStream(baos)).zipEntries(entries);
     return zipFileBytes;
