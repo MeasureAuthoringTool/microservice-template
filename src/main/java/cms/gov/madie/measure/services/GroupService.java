@@ -46,6 +46,7 @@ public class GroupService {
   private final MeasureRepository measureRepository;
 
   public Group createOrUpdateGroup(Group group, String measureId, String username) {
+
     Measure measure = measureRepository.findById(measureId).orElse(null);
     if (measure == null) {
       throw new ResourceNotFoundException("Measure", measureId);
@@ -54,11 +55,10 @@ public class GroupService {
       throw new InvalidDraftStatusException(measure.getId());
     }
 
-    if (measure.getModel().equalsIgnoreCase(ModelType.QDM_5_6.getValue())) {
-      handleQdmGroupReturnTypes(group, measure);
-    } else {
-      handleFhirGroupReturnTypes(group, measure);
-    }
+    Measure errors = measureUtil.validateAllMeasureDependencies(measure);
+    measure.setErrors(errors.getErrors());
+    measure.setCqlErrors(errors.isCqlErrors());
+
     // no group present, this is the first group
     if (CollectionUtils.isEmpty(measure.getGroups())) {
       group.setId(ObjectId.get().toString());
@@ -85,9 +85,7 @@ public class GroupService {
       }
     }
     updateGroupForTestCases(group, measure.getTestCases());
-    if (measure.getModel().equalsIgnoreCase(ModelType.QI_CORE.getValue())) {
-      measure = measureUtil.validateAllMeasureDependencies(measure);
-    }
+
     measure.setLastModifiedBy(username);
     measure.setLastModifiedAt(Instant.now());
     measureRepository.save(measure);
@@ -336,39 +334,6 @@ public class GroupService {
               .filter(group -> !groupId.equals(group.getGroupId()))
               .toList();
       testCase.setGroupPopulations(remainingGroups);
-    }
-  }
-
-  protected void handleFhirGroupReturnTypes(Group group, Measure measure) {
-    try {
-      new CqlDefinitionReturnTypeValidator()
-          .validateCqlDefinitionReturnTypes(group, measure.getElmJson());
-      new CqlObservationFunctionValidator()
-          .validateObservationFunctions(group, measure.getElmJson());
-    } catch (JsonProcessingException ex) {
-      log.error(
-          "An error occurred while validating population "
-              + "definition return types for FHIR measure {}",
-          measure.getId(),
-          ex);
-      throw new IllegalArgumentException("Invalid elm json");
-    }
-  }
-
-  protected void handleQdmGroupReturnTypes(Group group, Measure measure) {
-    QdmMeasure qdmMeasure = (QdmMeasure) measure;
-
-    try {
-      new CqlDefinitionReturnTypeValidator()
-          .validateCqlDefinitionReturnTypesForQdm(
-              group, measure.getElmJson(), qdmMeasure.isPatientBasis());
-    } catch (JsonProcessingException ex) {
-      log.error(
-          "An error occurred while validating population "
-              + "definition return types for QDM measure {}",
-          measure.getId(),
-          ex);
-      throw new IllegalArgumentException("Invalid elm json");
     }
   }
 }
