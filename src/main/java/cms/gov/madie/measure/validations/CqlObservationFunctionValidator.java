@@ -35,7 +35,7 @@ public class CqlObservationFunctionValidator {
 
     String groupPopulationBasis = group.getPopulationBasis().replaceAll("\\s", "");
 
-    if (observations != null) {
+    if (CollectionUtils.isNotEmpty(observations)) {
       observations.forEach(
           observation -> {
             if (StringUtils.isNotBlank(observation.getDefinition())) {
@@ -122,7 +122,7 @@ public class CqlObservationFunctionValidator {
       }
     }
 
-    if (observations != null) {
+    if (CollectionUtils.isNotEmpty(observations)) {
       observations.forEach(
           observation -> {
             if (StringUtils.isNotBlank(observation.getDefinition())) {

@@ -45,7 +45,7 @@ public class CqlDefinitionReturnTypeValidator {
 
     List<Population> populations = group.getPopulations();
     String populationBasis = group.getPopulationBasis().replaceAll("\\s", "");
-    if (populations != null) {
+    if (CollectionUtils.isNotEmpty(populations)) {
       populations.forEach(
           population -> {
             if (StringUtils.isNotBlank(population.getDefinition())) {
@@ -58,7 +58,7 @@ public class CqlDefinitionReturnTypeValidator {
     }
 
     List<Stratification> stratifications = group.getStratifications();
-    if (stratifications != null) {
+    if (CollectionUtils.isNotEmpty(stratifications)) {
       stratifications.forEach(
           stratification -> {
             if (StringUtils.isNotBlank(stratification.getCqlDefinition())) {
@@ -134,7 +134,7 @@ public class CqlDefinitionReturnTypeValidator {
       throw new IllegalArgumentException("No definitions found.");
     }
     List<Population> populations = group.getPopulations();
-    if (populations != null) {
+    if (CollectionUtils.isNotEmpty(populations)) {
       HashSet<String> returnValues = new HashSet<String>();
       populations.forEach(
           population -> {
@@ -155,7 +155,7 @@ public class CqlDefinitionReturnTypeValidator {
             }
           });
       List<Stratification> stratifications = group.getStratifications();
-      if (stratifications != null) {
+      if (CollectionUtils.isNotEmpty(stratifications)) {
         stratifications.forEach(
             stratification -> {
               if (StringUtils.isNotBlank(stratification.getCqlDefinition())) {
