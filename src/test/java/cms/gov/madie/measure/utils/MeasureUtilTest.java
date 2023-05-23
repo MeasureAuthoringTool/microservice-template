@@ -868,6 +868,34 @@ class MeasureUtilTest {
   }
 
   @Test
+  public void testQdmMismatchCqlPopulationReturnTypesAdded() throws Exception {
+    Group group =
+        Group.builder()
+            .id("Group1")
+            .populations(
+                List.of(
+                    Population.builder().definition("").build(),
+                    Population.builder().definition("GOOD DEFINE HERE").build()))
+            .build();
+    QdmMeasure measure =
+        QdmMeasure.builder()
+            .elmJson("{}")
+            .model(ModelType.QDM_5_6.getValue())
+            .error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES)
+            .groups(List.of(group))
+            .build();
+
+    doThrow(new IllegalArgumentException("No definitions found."))
+        .when(cqlDefinitionReturnTypeValidator)
+        .validateCqlDefinitionReturnTypesForQdm(group, "{}", true);
+
+    Measure output = measureUtil.validateAllMeasureDependencies(measure);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.getErrors(), is(notNullValue()));
+    assertThat(output.getErrors().isEmpty(), is(false));
+  }
+
+  @Test
   public void testIsQDMGroupReturnTypesValidReturnsFalseWithNoDefinitions() throws Exception {
 
     Group group = Group.builder().build();
