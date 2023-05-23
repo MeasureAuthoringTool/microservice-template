@@ -5,6 +5,7 @@ import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.GroupService;
 import cms.gov.madie.measure.services.MeasureService;
@@ -12,6 +13,7 @@ import cms.gov.madie.measure.utils.ControllerUtil;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureSet;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +22,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -49,6 +52,7 @@ public class MeasureController {
   private final MeasureService measureService;
   private final GroupService groupService;
   private final ActionLogService actionLogService;
+  private final MeasureSetRepository measureSetRepository;
 
   @GetMapping("/measures/draftstatus")
   public ResponseEntity<Map<String, Boolean>> getDraftStatuses(
@@ -74,10 +78,15 @@ public class MeasureController {
 
   @GetMapping("/measures/{id}")
   public ResponseEntity<Measure> getMeasure(@PathVariable("id") String id) {
-    Optional<Measure> measure = repository.findByIdAndActive(id, true);
-    return measure
-        .map(ResponseEntity::ok)
-        .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    Optional<Measure> measureOptional = repository.findByIdAndActive(id, true);
+    if (measureOptional.isPresent()) {
+      Measure measure = measureOptional.get();
+      MeasureSet measureSet =
+          measureSetRepository.findByMeasureSetId(measure.getMeasureSetId()).orElse(null);
+      measure.setMeasureSet(measureSet);
+      return ResponseEntity.status(HttpStatus.OK).body(measure);
+    }
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
   }
 
   @PostMapping("/measure")
