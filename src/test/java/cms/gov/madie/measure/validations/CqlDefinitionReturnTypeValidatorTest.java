@@ -19,6 +19,7 @@ import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.MeasureGroupTypes;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
+import gov.cms.madie.models.measure.Stratification;
 import gov.cms.madie.models.measure.SupplementalData;
 
 class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
@@ -293,5 +294,89 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
         InvalidReturnTypeForQdmException.class,
         () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, false),
         "The selected definition does not align with the Episode-based Measure.");
+  }
+
+  @Test
+  void testValidateCqlDefinitionReturnTypesForQdmPatientBasedWithStrats()
+      throws JsonProcessingException {
+    Stratification strat = new Stratification();
+    strat.setId("id-2");
+    strat.setDescription("test desc");
+    strat.setCqlDefinition("ipp2");
+    strat.setAssociation(PopulationType.INITIAL_POPULATION);
+    Group group1 =
+        Group.builder()
+            .scoring("Cohort")
+            .populations(
+                List.of(
+                    new Population(
+                        "id-1", PopulationType.INITIAL_POPULATION, "boolIpp", null, null),
+                    new Population(
+                        "id-2", PopulationType.INITIAL_POPULATION, "boolIpp2", null, null)))
+            .stratifications(List.of(strat))
+            .groupDescription("Description")
+            .scoringUnit("test-scoring-unit")
+            .build();
+
+    String elmJson = getData("/test_elm_with_boolean.json");
+
+    assertThrows(
+        InvalidReturnTypeForQdmException.class,
+        () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, true),
+        "For Patient-based Measures, selected definitions must return a Boolean.");
+  }
+
+  @Test
+  void testValidateCqlDefinitionReturnTypesForQdmNonPatientBasedWithStrats()
+      throws JsonProcessingException {
+    Stratification strat = new Stratification();
+    strat.setId("id-2");
+    strat.setDescription("test desc");
+    strat.setCqlDefinition("boolIpp");
+    strat.setAssociation(PopulationType.INITIAL_POPULATION);
+    Group group1 =
+        Group.builder()
+            .scoring("Cohort")
+            .populations(
+                List.of(
+                    new Population("id-1", PopulationType.INITIAL_POPULATION, "ipp", null, null),
+                    new Population("id-2", PopulationType.INITIAL_POPULATION, "denom", null, null)))
+            .stratifications(List.of(strat))
+            .groupDescription("Description")
+            .scoringUnit("test-scoring-unit")
+            .build();
+
+    String elmJson = getData("/test_elm_with_boolean.json");
+
+    assertThrows(
+        InvalidReturnTypeForQdmException.class,
+        () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, false),
+        "For Episode-based Measures, selected definitions must return a list of the same type.");
+  }
+
+  @Test
+  void testValidateCqlDefinitionReturnTypesForQdmNonPatientBasedWithStratsSuccess()
+      throws JsonProcessingException {
+    Stratification strat = new Stratification();
+    strat.setId("id-2");
+    strat.setDescription("test desc");
+    strat.setCqlDefinition("ipp");
+    strat.setAssociation(PopulationType.INITIAL_POPULATION);
+    Group group1 =
+        Group.builder()
+            .scoring("Cohort")
+            .populations(
+                List.of(
+                    new Population("id-1", PopulationType.INITIAL_POPULATION, "ipp", null, null),
+                    new Population("id-2", PopulationType.INITIAL_POPULATION, "denom", null, null)))
+            .stratifications(List.of(strat))
+            .groupDescription("Description")
+            .scoringUnit("test-scoring-unit")
+            .build();
+
+    String elmJson = getData("/test_elm_with_boolean.json");
+
+    assertDoesNotThrow(
+        () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, false));
   }
 }

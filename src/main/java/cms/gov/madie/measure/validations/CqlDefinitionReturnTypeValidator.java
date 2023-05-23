@@ -127,31 +127,26 @@ public class CqlDefinitionReturnTypeValidator {
     return returnTypes;
   }
 
-  public void validateCqlDefinitionReturnTypesForQdm(
+  public String validateCqlDefinitionReturnTypesForQdm(
       Group group, String elmJson, boolean patientBased) throws JsonProcessingException {
     Map<String, String> cqlDefinitionReturnTypes = getCqlDefinitionReturnTypes(elmJson);
     if (cqlDefinitionReturnTypes.isEmpty()) {
       throw new IllegalArgumentException("No definitions found.");
     }
-
     List<Population> populations = group.getPopulations();
     if (populations != null) {
       HashSet<String> returnValues = new HashSet<String>();
-
       populations.forEach(
           population -> {
             if (StringUtils.isNotBlank(population.getDefinition())) {
               String returnType = cqlDefinitionReturnTypes.get(population.getDefinition());
-
               if (patientBased) {
-
                 if (!StringUtils.equalsIgnoreCase(returnType, "boolean")) {
                   throw new InvalidReturnTypeForQdmException(
                       "For Patient-based Measures, selected definitions must return a Boolean.");
                 }
               } else {
                 returnValues.add(returnType);
-
                 if (StringUtils.equalsIgnoreCase(returnType, "boolean")) {
                   throw new InvalidReturnTypeForQdmException(
                       "The selected definition does not align with the Episode-based Measure.");
@@ -159,14 +154,37 @@ public class CqlDefinitionReturnTypeValidator {
               }
             }
           });
-
+      List<Stratification> stratifications = group.getStratifications();
+      if (stratifications != null) {
+        stratifications.forEach(
+            stratification -> {
+              if (StringUtils.isNotBlank(stratification.getCqlDefinition())) {
+                String returnType = cqlDefinitionReturnTypes.get(stratification.getCqlDefinition());
+                if (patientBased) {
+                  if (!StringUtils.equalsIgnoreCase(returnType, "boolean")) {
+                    throw new InvalidReturnTypeForQdmException(
+                        "For Patient-based Measures, selected definitions must return a Boolean.");
+                  }
+                } else {
+                  returnValues.add(returnType);
+                  if (StringUtils.equalsIgnoreCase(returnType, "boolean")) {
+                    throw new InvalidReturnTypeForQdmException(
+                        "The selected definition does not align with the Episode-based Measure.");
+                  }
+                }
+              }
+            });
+      }
       if (returnValues.size() > 1) {
         throw new InvalidReturnTypeForQdmException(
             "For Episode-based Measures, "
                 + "selected definitions must return a list of the same type.");
+      } else if (returnValues.size() == 1) {
+        return returnValues.stream().findFirst().get();
       }
     } else {
       throw new InvalidGroupException("Populations are required for a Group.");
     }
+    return null;
   }
 }

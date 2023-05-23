@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.utils;
 
+import cms.gov.madie.measure.exceptions.InvalidMeasureObservationException;
 import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
 import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeValidator;
 import cms.gov.madie.measure.validations.CqlObservationFunctionValidator;
@@ -8,8 +9,11 @@ import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureErrorType;
 import gov.cms.madie.models.measure.Population;
+import gov.cms.madie.models.measure.QdmMeasure;
+import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.DefDescPair;
 import gov.cms.madie.models.measure.SupplementalData;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,6 +32,8 @@ import java.util.Set;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.is;
 import static org.mockito.ArgumentMatchers.any;
@@ -208,12 +214,6 @@ class MeasureUtilTest {
                                 Population.builder().definition("GOOD DEFINE HERE").build()))
                         .build()))
             .build();
-    doNothing()
-        .when(cqlDefinitionReturnTypeValidator)
-        .validateCqlDefinitionReturnTypes(any(Group.class), anyString());
-    doNothing()
-        .when(cqlObservationFunctionValidator)
-        .validateObservationFunctions(any(Group.class), anyString());
 
     Measure output = measureUtil.validateAllMeasureDependencies(measure);
     assertThat(output, is(notNullValue()));
@@ -227,6 +227,7 @@ class MeasureUtilTest {
     Measure measure =
         Measure.builder()
             .elmJson("{}")
+            .model(ModelType.QI_CORE.getValue())
             .error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES)
             .groups(
                 List.of(
@@ -258,6 +259,7 @@ class MeasureUtilTest {
     Measure measure =
         Measure.builder()
             .elmJson("{}")
+            .model(ModelType.QI_CORE.getValue())
             .groups(
                 List.of(
                     Group.builder().id("Group1").populations(null).build(),
@@ -287,6 +289,7 @@ class MeasureUtilTest {
     Measure measure =
         Measure.builder()
             .elmJson("{}")
+            .model(ModelType.QI_CORE.getValue())
             .groups(
                 List.of(
                     Group.builder().id("Group1").populations(null).build(),
@@ -319,6 +322,7 @@ class MeasureUtilTest {
     Measure measure =
         Measure.builder()
             .elmJson(null)
+            .model(ModelType.QI_CORE.getValue())
             .groups(
                 List.of(
                     Group.builder().id("Group1").populations(null).build(),
@@ -820,5 +824,141 @@ class MeasureUtilTest {
             .build();
     boolean output = measureUtil.isMeasurementPeriodChanged(changed, original);
     assertThat(output, is(true));
+  }
+
+  @Test
+  public void testValidateAllMeasureGroupReturnTypesNoGroupForQdm() throws Exception {
+    QdmMeasure measure =
+        QdmMeasure.builder()
+            .elmJson("{}")
+            .model(ModelType.QDM_5_6.getValue())
+            .error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES)
+            .build();
+
+    Measure output = measureUtil.validateAllMeasureDependencies(measure);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.getErrors(), is(notNullValue()));
+    assertThat(output.getErrors().isEmpty(), is(true));
+  }
+
+  @Test
+  public void testValidateAllMeasureGroupReturnTypesReturnsMeasureWithErrorsRemovedForQdm()
+      throws Exception {
+    QdmMeasure measure =
+        QdmMeasure.builder()
+            .elmJson("{}")
+            .model(ModelType.QDM_5_6.getValue())
+            .error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES)
+            .groups(
+                List.of(
+                    Group.builder().id("Group1").populations(null).build(),
+                    Group.builder()
+                        .id("Group2")
+                        .populations(
+                            List.of(
+                                Population.builder().definition("").build(),
+                                Population.builder().definition("GOOD DEFINE HERE").build()))
+                        .build()))
+            .build();
+
+    Measure output = measureUtil.validateAllMeasureDependencies(measure);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.getErrors(), is(notNullValue()));
+    assertThat(output.getErrors().isEmpty(), is(true));
+  }
+
+  @Test
+  public void testIsQDMGroupReturnTypesValidReturnsFalseWithNoDefinitions() throws Exception {
+
+    Group group = Group.builder().build();
+
+    doThrow(new IllegalArgumentException("No definitions found."))
+        .when(cqlDefinitionReturnTypeValidator)
+        .validateCqlDefinitionReturnTypesForQdm(group, "{}", true);
+
+    boolean output = measureUtil.isQDMGroupReturnTypesValid(group, "{}", true);
+    assertThat(output, is(false));
+  }
+
+  @Test
+  public void testIsQDMGroupReturnTypesValidReturnsFalseWithNoObservationDefinition()
+      throws Exception {
+    Group group = Group.builder().build();
+    doThrow(
+            new InvalidMeasureObservationException(
+                "Measure CQL does not have observation definition"))
+        .when(cqlObservationFunctionValidator)
+        .validateObservationFunctionsForQdm(group, "{}", true, "");
+
+    boolean output = measureUtil.isQDMGroupReturnTypesValid(group, "{}", true);
+    assertThat(output, is(false));
+  }
+
+  @Test
+  public void testIsSupplementalDataChanged() throws Exception {
+    DefDescPair supplementalData1 =
+        DefDescPair.builder().definition("test 1").description("desc 1").build();
+    List<DefDescPair> sdes =
+        new ArrayList<>() {
+          {
+            add(supplementalData1);
+          }
+        };
+    Measure original = Measure.builder().build();
+    Measure changed = Measure.builder().build();
+
+    boolean result = measureUtil.isSupplementalDataChanged(changed, original);
+    assertFalse(result);
+
+    original.setSupplementalData(sdes);
+    result = measureUtil.isSupplementalDataChanged(changed, original);
+    assertTrue(result);
+
+    DefDescPair supplementalData2 =
+        DefDescPair.builder().definition("test 2").description("desc 2").build();
+    List<DefDescPair> sdes2 =
+        new ArrayList<>() {
+          {
+            add(supplementalData1);
+          }
+        };
+    original.setSupplementalData(sdes2);
+
+    result = measureUtil.isSupplementalDataChanged(changed, original);
+    assertTrue(result);
+  }
+
+  @Test
+  public void testIsRiskAdjustmentChanged() throws Exception {
+    DefDescPair riskAdjustment1 =
+        DefDescPair.builder().definition("test 1").description("desc 1").build();
+    List<DefDescPair> ravs =
+        new ArrayList<>() {
+          {
+            add(riskAdjustment1);
+          }
+        };
+    Measure original = Measure.builder().build();
+    Measure changed = Measure.builder().build();
+
+    boolean result = measureUtil.isRiskAdjustmentChanged(changed, original);
+    assertFalse(result);
+
+    original.setRiskAdjustments(ravs);
+    result = measureUtil.isRiskAdjustmentChanged(changed, original);
+    assertTrue(result);
+
+    DefDescPair riskAdjustment2 =
+        DefDescPair.builder().definition("test 2").description("desc 2").build();
+    List<DefDescPair> ravs2 =
+        new ArrayList<>() {
+          {
+            add(riskAdjustment2);
+          }
+        };
+    changed.setRiskAdjustments(ravs2);
+
+    result = measureUtil.isRiskAdjustmentChanged(changed, original);
+    assertTrue(result);
   }
 }

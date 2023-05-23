@@ -10,11 +10,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeValidator;
 import cms.gov.madie.measure.validations.CqlObservationFunctionValidator;
+import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.DefDescPair;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureErrorType;
 import gov.cms.madie.models.measure.Population;
+import gov.cms.madie.models.measure.QdmMeasure;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,33 +43,45 @@ public class MeasureUtil {
     if (measure == null) {
       return null;
     }
-
     final String elmJson = measure.getElmJson();
     boolean groupsExistWithPopulations = isGroupsExistWithPopulations(measure);
     Measure.MeasureBuilder<?, ?> measureBuilder = measure.toBuilder();
     measureBuilder.clearErrors();
     Set<MeasureErrorType> errors = new HashSet<>();
+
     boolean cqlErrors = false;
     if (elmJson == null) {
       cqlErrors = true;
       errors.add(MeasureErrorType.MISSING_ELM);
     }
 
-    if (groupsExistWithPopulations
-        && measure.getGroups().stream()
-            .anyMatch(group -> !isGroupReturnTypesValid(group, elmJson))) {
-      errors.add(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES);
+    if (ModelType.QI_CORE.getValue().equalsIgnoreCase(measure.getModel())) {
+      if (groupsExistWithPopulations
+          && measure.getGroups().stream()
+              .anyMatch(group -> !isGroupReturnTypesValid(group, elmJson))) {
+        errors.add(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES);
+      }
+    } else if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(measure.getModel())) {
+
+      QdmMeasure qdmMeasure = (QdmMeasure) measure;
+      if (groupsExistWithPopulations
+          && measure.getGroups().stream()
+              .anyMatch(
+                  group ->
+                      !isQDMGroupReturnTypesValid(group, elmJson, qdmMeasure.isPatientBasis()))) {
+
+        errors.add(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES);
+      }
     }
+
     // MAT-5369  Adding checks for CQL Definitions present in SupplementalData
     // if the def in supplemental data isn't in the cql
-
     if (isCqlDefsMismatched(measure.getSupplementalData(), elmJson)) {
       errors.add(MeasureErrorType.MISMATCH_CQL_SUPPLEMENTAL_DATA);
     }
 
     // MAT-5464  Adding checks for CQL Definitions present in Risk Adjustment Variables
     // if the def in Risk Adjustment Variables isn't in the cql
-
     if (isCqlDefsMismatched(measure.getRiskAdjustments(), elmJson)) {
       errors.add(MeasureErrorType.MISMATCH_CQL_RISK_ADJUSTMENT);
     }
@@ -75,7 +89,7 @@ public class MeasureUtil {
     // MAT-5369 If the only error on the stack is MISSING_ELM then remove it and set cqlErrors =
     // false
     if (errors.size() == 1
-        && errors.stream().anyMatch(error -> MeasureErrorType.MISSING_ELM.equals(error))) {
+        && (errors.stream().anyMatch(error -> MeasureErrorType.MISSING_ELM.equals(error)))) {
       measureBuilder.clearErrors();
       measureBuilder.cqlErrors(false);
     } else {
@@ -192,5 +206,29 @@ public class MeasureUtil {
     // changed<sde>[] == original<sde>[]
     return !CollectionUtils.isEqualCollection(
         changed.getRiskAdjustments(), original.getRiskAdjustments());
+  }
+
+  public boolean isQDMGroupReturnTypesValid(
+      final Group group, final String elmJson, boolean patientBasis) {
+
+    String cqlDefinitionReturnType = null;
+    try {
+      cqlDefinitionReturnType =
+          cqlDefinitionReturnTypeValidator.validateCqlDefinitionReturnTypesForQdm(
+              group, elmJson, patientBasis);
+    } catch (Exception ex) {
+      // Either no return types were found in ELM, or return type mismatch exists
+      log.error("An error occurred while validating QDM population return types", ex);
+      return false;
+    }
+    try {
+      cqlObservationFunctionValidator.validateObservationFunctionsForQdm(
+          group, elmJson, patientBasis, cqlDefinitionReturnType);
+    } catch (Exception ex) {
+      // Either no return types were found in ELM, or return type mismatch exists
+      log.error("An error occurred while validating QDM observation return types", ex);
+      return false;
+    }
+    return true;
   }
 }
