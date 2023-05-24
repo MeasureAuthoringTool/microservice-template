@@ -6,6 +6,7 @@ import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.GroupService;
 import cms.gov.madie.measure.services.MeasureService;
@@ -71,7 +72,7 @@ class MeasureControllerTest {
   @Mock private MeasureService measureService;
   @Mock private GroupService groupService;
   @Mock private ActionLogService actionLogService;
-
+  @Mock private MeasureSetRepository measureSetRepository;
   @InjectMocks private MeasureController controller;
 
   private Measure measure1;
