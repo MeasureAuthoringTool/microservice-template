@@ -149,7 +149,8 @@ public class CqlDefinitionReturnTypeValidator {
                 returnValues.add(returnType);
                 if (StringUtils.equalsIgnoreCase(returnType, "boolean")) {
                   throw new InvalidReturnTypeForQdmException(
-                      "For Episode-based Measures, selected definitions must return a list of the same type (Non-Boolean).");
+                      "For Episode-based Measures, "
+                      + "selected definitions must return a list of the same type (Non-Boolean).");
                 }
               }
             }
@@ -169,7 +170,8 @@ public class CqlDefinitionReturnTypeValidator {
                   returnValues.add(returnType);
                   if (StringUtils.equalsIgnoreCase(returnType, "boolean")) {
                     throw new InvalidReturnTypeForQdmException(
-                        "For Episode-based Measures, selected definitions must return a list of the same type (Non-Boolean).");
+                        "For Episode-based Measures, "
+                        + "selected definitions must return a list of the same type (Non-Boolean).");
                   }
                 }
               }
