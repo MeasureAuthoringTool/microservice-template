@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.services;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -39,6 +40,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
+import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
@@ -719,6 +721,50 @@ public class GroupServiceTest implements ResourceUtil {
   }
 
   @Test
+  public void testUpdateGroupWhenPopulationDefinitionReturnTypeNotMatchingWithPopulationBasis() {
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+
+    assertThrows(
+        InvalidReturnTypeException.class,
+        () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+  }
+
+  @Test
+  public void testUpdateGroupWhenPopulationFunctionReturnTypeNotMatchingWithPopulationBasis() {
+    group2.setPopulations(null);
+    group2.setPopulationBasis("Boolean");
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+
+    assertThrows(
+        InvalidReturnTypeException.class,
+        () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+  }
+
+  @Test
+  public void testUpdateGroupWhenElmJsonIsInvalid() {
+    measure.setElmJson("UnpardonableElmJson");
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+  }
+
+  @Test
+  public void testUpdateGroupWhenElmJsonIsNull() {
+    measure.setElmJson(null);
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+  }
+
+  @Test
   public void testUpdateGroupWithValidStratification() {
     group2.setPopulations(null);
     Optional<Measure> optional = Optional.of(measure);
@@ -778,6 +824,19 @@ public class GroupServiceTest implements ResourceUtil {
   }
 
   @Test
+  public void testCreateGroupWithEmptyElm() {
+    group2.setPopulations(null);
+    group2.setPopulationBasis("Boolean");
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+
+    measure.setElmJson("");
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+  }
+
+  @Test
   public void testUpdateGroupWithNoFunctions() {
     measure.setElmJson(getData("/test_elm_no_functions.json"));
     Optional<Measure> optional = Optional.of(measure);
@@ -787,6 +846,35 @@ public class GroupServiceTest implements ResourceUtil {
 
     Group group = groupService.createOrUpdateGroup(group1, measure.getId(), "test.user");
     assertNotNull(group);
+  }
+
+  @Test
+  public void testUpdateGroupWithBooleanAsOperandTypeSpecifierName() {
+    group2.setMeasureObservations(
+        List.of(
+            new MeasureObservation(
+                "id-1",
+                "fun23",
+                "a description of fun23",
+                "id-2",
+                AggregateMethodType.MAXIMUM.getValue())));
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+    assertThrows(
+        InvalidReturnTypeException.class,
+        () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+  }
+
+  @Test
+  public void testUpdateGroupWithStratificationWhenReturnTypeNotEqualToPopulationBasis() {
+    group2.setPopulations(null);
+    // non-boolean define for strat cql definition
+    group2.getStratifications().get(1).setCqlDefinition("SDE Race");
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+    assertThrows(
+        InvalidReturnTypeException.class,
+        () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
   }
 
   @Test
@@ -1110,5 +1198,55 @@ public class GroupServiceTest implements ResourceUtil {
     assertEquals(
         PopulationType.INITIAL_POPULATION, capturedGroup.getPopulations().get(0).getName());
     assertEquals("ipp", capturedGroup.getPopulations().get(0).getDefinition());
+  }
+
+  @Test
+  public void testHandleQdmGroupReturnTypesNonPatientBasisSuccess() {
+    Population population =
+        Population.builder()
+            .id("testId")
+            .name(PopulationType.INITIAL_POPULATION)
+            .definition("ipp")
+            .build();
+    Group qdmGroup =
+        Group.builder()
+            .scoring(MeasureScoring.COHORT.toString())
+            .populations(Arrays.asList(population))
+            .build();
+    String elmJson = getData("/test_elm_with_boolean.json");
+    Measure qdmMeasure =
+        QdmMeasure.builder()
+            .model(ModelType.QDM_5_6.getValue())
+            .patientBasis(false)
+            .elmJson(elmJson)
+            .build();
+    assertDoesNotThrow(() -> groupService.handleQdmGroupReturnTypes(qdmGroup, qdmMeasure));
+  }
+
+  @Test
+  public void testHandleQdmGroupReturnTypesNonPatientBasisThrowsException() {
+    Population population =
+        Population.builder()
+            .id("testId")
+            .name(PopulationType.INITIAL_POPULATION)
+            .definition("ipp")
+            .build();
+    Group qdmGroup =
+        Group.builder()
+            .scoring(MeasureScoring.COHORT.toString())
+            .populations(Arrays.asList(population))
+            .build();
+    String elmJson = "{ curroped: json";
+    Measure qdmMeasure =
+        QdmMeasure.builder()
+            .model(ModelType.QDM_5_6.getValue())
+            .patientBasis(false)
+            .elmJson(elmJson)
+            .build();
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> groupService.handleQdmGroupReturnTypes(qdmGroup, qdmMeasure),
+        "Invalid elm json");
   }
 }
