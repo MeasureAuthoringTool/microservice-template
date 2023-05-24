@@ -512,7 +512,7 @@ class MeasureControllerTest {
                 .toBuilder()
                 .measureSet(MeasureSet.builder().owner("test.user").build())
                 .build());
-    Mockito.doThrow(new UnauthorizedException("Measure", "testid", "unAuthorized user"))
+    doThrow(new UnauthorizedException("Measure", "testid", "unAuthorized user"))
         .when(measureService)
         .verifyAuthorization(anyString(), any(Measure.class));
 
