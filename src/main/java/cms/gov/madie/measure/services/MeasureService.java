@@ -130,6 +130,7 @@ public class MeasureService {
       try {
         outputMeasure =
             measureUtil.validateAllMeasureDependencies(updateElm(updatingMeasure, accessToken));
+
         // remove this condition when we validate for teminology service errors in backend
         if (!outputMeasure.isCqlErrors()) {
           outputMeasure.setCqlErrors(updatingMeasure.isCqlErrors());
