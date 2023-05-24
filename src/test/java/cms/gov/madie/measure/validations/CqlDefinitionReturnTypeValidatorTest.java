@@ -255,7 +255,7 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
     assertThrows(
         InvalidReturnTypeForQdmException.class,
         () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, false),
-        "For Episode-based Measures, selected definitions must return a list of the same type.");
+        "For Episode-based Measures, selected definitions must return a list of the same type (Non-Boolean).");
   }
 
   @Test
@@ -359,7 +359,7 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
     assertThrows(
         InvalidReturnTypeForQdmException.class,
         () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, false),
-        "The selected definition does not align with the Episode-based Measure.");
+        "For Episode-based Measures, selected definitions must return a list of the same type (Non-Boolean).");
   }
 
   @Test
@@ -417,7 +417,7 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
     assertThrows(
         InvalidReturnTypeForQdmException.class,
         () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, false),
-        "For Episode-based Measures, selected definitions must return a list of the same type.");
+        "For Episode-based Measures, selected definitions must return a list of the same type (Non-Boolean).");
   }
 
   @Test
