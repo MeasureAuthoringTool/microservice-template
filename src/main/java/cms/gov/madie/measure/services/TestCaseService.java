@@ -152,7 +152,14 @@ public class TestCaseService {
     if (measure.getTestCases() == null) {
       measure.setTestCases(new ArrayList<>());
     }
-
+    if (!hasPermissionToDelete(username, measure)) {
+      log.info(
+          "User [{}] is not authorized to delete the test case with ID [{}] from measure [{}]",
+          username,
+          testCase.getId(),
+          measureId);
+      throw new UnauthorizedException("Measure", measureId, username);
+    }
     Instant now = Instant.now();
     testCase.setLastModifiedAt(now);
     testCase.setLastModifiedBy(username);
