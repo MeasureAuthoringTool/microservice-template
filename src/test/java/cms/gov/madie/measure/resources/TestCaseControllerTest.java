@@ -4,6 +4,7 @@ import cms.gov.madie.measure.dto.ValidList;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.services.MeasureService;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.common.Version;
@@ -38,6 +39,7 @@ import static org.mockito.Mockito.times;
 public class TestCaseControllerTest {
   @Mock private TestCaseService testCaseService;
   @Mock private MeasureRepository repository;
+  @Mock private MeasureService measureService;
 
   @InjectMocks private TestCaseController controller;
 
@@ -132,6 +134,9 @@ public class TestCaseControllerTest {
     when(principal.getName()).thenReturn("evil.user");
 
     doReturn(Optional.of(measure)).when(repository).findById("MeasureID");
+    doThrow(new UnauthorizedException("Measure", "MeasureID", "evil.user"))
+        .when(measureService)
+        .verifyAuthorization(anyString(), any(Measure.class));
     assertThrows(
         UnauthorizedException.class,
         () -> controller.addTestCases(new ValidList<>(), "MeasureID", "Bearer Token", principal));

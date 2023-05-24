@@ -41,9 +41,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class VersionServiceTest {
@@ -57,6 +55,8 @@ public class VersionServiceTest {
   @Mock FhirServicesClient fhirServicesClient;
 
   @Mock ExportRepository exportRepository;
+
+  @Mock MeasureService measureService;
 
   @InjectMocks VersionService versionService;
 
@@ -138,6 +138,9 @@ public class VersionServiceTest {
     Measure existingMeasure =
         Measure.builder().id("testMeasureId").createdBy("anotherUser").build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+    doThrow(new UnauthorizedException("Measure", "testMeasureId", "testUser"))
+        .when(measureService)
+        .verifyAuthorization(anyString(), any(Measure.class));
 
     assertThrows(
         UnauthorizedException.class,
@@ -619,6 +622,9 @@ public class VersionServiceTest {
     String user = "bad guy";
     Measure measure = buildBasicMeasure();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    doThrow(new UnauthorizedException("Measure", "1", user))
+        .when(measureService)
+        .verifyAuthorization(anyString(), any(Measure.class));
 
     Exception ex =
         assertThrows(

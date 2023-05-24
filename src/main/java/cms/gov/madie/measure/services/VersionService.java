@@ -6,7 +6,6 @@ import cms.gov.madie.measure.exceptions.MeasureNotDraftableException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.ExportRepository;
 import cms.gov.madie.measure.repositories.MeasureRepository;
-import cms.gov.madie.measure.utils.ControllerUtil;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.ElmJson;
@@ -42,6 +41,7 @@ public class VersionService {
   private final ElmTranslatorClient elmTranslatorClient;
   private final FhirServicesClient fhirServicesClient;
   private final ExportRepository exportRepository;
+  private final MeasureService measureService;
 
   private static final String VERSION_TYPE_MAJOR = "MAJOR";
   private static final String VERSION_TYPE_MINOR = "MINOR";
@@ -59,7 +59,7 @@ public class VersionService {
       throw new BadVersionRequestException(
           "Measure", measure.getId(), username, "Invalid version request.");
     }
-    ControllerUtil.verifyAuthorization(username, measure);
+    measureService.verifyAuthorization(username, measure);
     validateMeasureForVersioning(measure, username, accessToken);
     measure.getMeasureMetaData().setDraft(false);
     measure.setLastModifiedAt(Instant.now());
@@ -99,7 +99,7 @@ public class VersionService {
             .findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Measure", id));
 
-    ControllerUtil.verifyAuthorization(username, measure);
+    measureService.verifyAuthorization(username, measure);
     if (!isDraftable(measure)) {
       throw new MeasureNotDraftableException(measure.getMeasureName());
     }

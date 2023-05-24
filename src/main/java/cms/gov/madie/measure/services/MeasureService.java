@@ -1,11 +1,6 @@
 package cms.gov.madie.measure.services;
 
-import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
-import cms.gov.madie.measure.exceptions.InvalidCmsIdException;
-import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
-import cms.gov.madie.measure.exceptions.InvalidMeasurementPeriodException;
-import cms.gov.madie.measure.exceptions.InvalidTerminologyException;
-import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
+import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
 import cms.gov.madie.measure.utils.MeasureUtil;
@@ -13,10 +8,7 @@ import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.Version;
-import gov.cms.madie.models.measure.ElmJson;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.MeasureErrorType;
-import gov.cms.madie.models.measure.MeasureMetaData;
+import gov.cms.madie.models.measure.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -49,6 +41,44 @@ public class MeasureService {
   private final ActionLogService actionLogService;
   private final MeasureSetService measureSetService;
   private final TerminologyValidationService terminologyValidationService;
+
+  /**
+   * Throws unAuthorizedException, if the measure is not owned by the user or if the measure is not
+   * shared with the user
+   */
+  public void verifyAuthorization(String username, Measure measure) {
+    MeasureSet measureSet =
+        measure.getMeasureSet() == null
+            ? measureSetService.findByMeasureSetId(measure.getMeasureSetId())
+            : measure.getMeasureSet();
+    if (measureSet == null) {
+      throw new InvalidMeasureStateException(
+          "No measure set exists for measure with ID " + measure.getId());
+    }
+    if (!measureSet.getOwner().equalsIgnoreCase(username)
+        && (CollectionUtils.isEmpty(measureSet.getAcls())
+            || measureSet.getAcls().stream()
+                .noneMatch(
+                    acl ->
+                        acl.getUserId().equalsIgnoreCase(username)
+                            && acl.getRoles().stream()
+                                .anyMatch(role -> role.equals(RoleEnum.SHARED_WITH))))) {
+      throw new UnauthorizedException("Measure", measure.getId(), username);
+    }
+  }
+
+  // TODO: start replacing usage of measureRepository.findById with this method
+  public Measure findMeasureById(final String id) {
+    return measureRepository
+        .findById(id)
+        .map(
+            m -> {
+              MeasureSet measureSet = measureSetService.findByMeasureSetId(m.getMeasureSetId());
+              m.setMeasureSet(measureSet);
+              return m;
+            })
+        .orElse(null);
+  }
 
   public Measure createMeasure(Measure measure, final String username, String accessToken) {
     log.info("User [{}] is attempting to create a new measure", username);
