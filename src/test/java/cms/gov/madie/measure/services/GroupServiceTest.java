@@ -1154,6 +1154,53 @@ public class GroupServiceTest implements ResourceUtil {
   }
 
   @Test
+  public void testCreateGroupQdmMeasure() {
+    String elmJson = getData("/test_elm_with_boolean.json");
+    Measure qdmMeasure =
+        QdmMeasure.builder()
+            .id("testId")
+            .measureMetaData(MeasureMetaData.builder().draft(true).build())
+            .model(ModelType.QDM_5_6.getValue())
+            .scoring(MeasureScoring.COHORT.toString())
+            .patientBasis(false)
+            .elmJson(elmJson)
+            .build();
+
+    ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
+    Optional<Measure> optional = Optional.of(qdmMeasure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+
+    doReturn(qdmMeasure).when(measureRepository).save(any(Measure.class));
+
+    when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
+        .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
+
+    Population population =
+        Population.builder()
+            .id("testId1")
+            .name(PopulationType.INITIAL_POPULATION)
+            .definition("ipp")
+            .build();
+    Group qdmGroup =
+        Group.builder()
+            .scoring(MeasureScoring.COHORT.toString())
+            .populations(Arrays.asList(population))
+            .build();
+    Group persistedGroup = groupService.createOrUpdateGroup(qdmGroup, measure.getId(), "test.user");
+
+    verify(measureRepository, times(1)).save(measureCaptor.capture());
+    assertEquals(qdmGroup.getId(), persistedGroup.getId());
+    Measure savedMeasure = measureCaptor.getValue();
+    assertNotNull(savedMeasure.getGroups());
+    assertEquals(1, savedMeasure.getGroups().size());
+    Group capturedGroup = savedMeasure.getGroups().get(0);
+    assertEquals("Cohort", capturedGroup.getScoring());
+    assertEquals(
+        PopulationType.INITIAL_POPULATION, capturedGroup.getPopulations().get(0).getName());
+    assertEquals("ipp", capturedGroup.getPopulations().get(0).getDefinition());
+  }
+
+  @Test
   public void testHandleQdmGroupReturnTypesNonPatientBasisSuccess() {
     Population population =
         Population.builder()
@@ -1201,49 +1248,5 @@ public class GroupServiceTest implements ResourceUtil {
         IllegalArgumentException.class,
         () -> groupService.handleQdmGroupReturnTypes(qdmGroup, qdmMeasure),
         "Invalid elm json");
-  }
-
-  @Test
-  public void testCreateGroupQdmMeasure() {
-    String elmJson = getData("/test_elm_with_boolean.json");
-    Measure qdmMeasure =
-        QdmMeasure.builder()
-            .id("testId")
-            .measureMetaData(MeasureMetaData.builder().draft(true).build())
-            .model(ModelType.QDM_5_6.getValue())
-            .scoring(MeasureScoring.COHORT.toString())
-            .patientBasis(false)
-            .elmJson(elmJson)
-            .build();
-
-    ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
-    Optional<Measure> optional = Optional.of(qdmMeasure);
-    doReturn(optional).when(measureRepository).findById(any(String.class));
-
-    doReturn(qdmMeasure).when(measureRepository).save(any(Measure.class));
-
-    Population population =
-        Population.builder()
-            .id("testId1")
-            .name(PopulationType.INITIAL_POPULATION)
-            .definition("ipp")
-            .build();
-    Group qdmGroup =
-        Group.builder()
-            .scoring(MeasureScoring.COHORT.toString())
-            .populations(Arrays.asList(population))
-            .build();
-    Group persistedGroup = groupService.createOrUpdateGroup(qdmGroup, measure.getId(), "test.user");
-
-    verify(measureRepository, times(1)).save(measureCaptor.capture());
-    assertEquals(qdmGroup.getId(), persistedGroup.getId());
-    Measure savedMeasure = measureCaptor.getValue();
-    assertNotNull(savedMeasure.getGroups());
-    assertEquals(1, savedMeasure.getGroups().size());
-    Group capturedGroup = savedMeasure.getGroups().get(0);
-    assertEquals("Cohort", capturedGroup.getScoring());
-    assertEquals(
-        PopulationType.INITIAL_POPULATION, capturedGroup.getPopulations().get(0).getName());
-    assertEquals("ipp", capturedGroup.getPopulations().get(0).getDefinition());
   }
 }

@@ -5,6 +5,7 @@ import cms.gov.madie.measure.exceptions.InvalidCmsIdException;
 import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
 import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.GroupService;
 import cms.gov.madie.measure.services.MeasureService;
@@ -78,6 +79,7 @@ public class MeasureControllerMvcTest {
   @MockBean private ActionLogService actionLogService;
 
   @Autowired private MockMvc mockMvc;
+  @MockBean private MeasureSetRepository measureSetRepository;
   @Captor private ArgumentCaptor<Measure> measureArgumentCaptor;
   @Captor private ArgumentCaptor<Measure> measureArgumentCaptor2;
 
@@ -1644,7 +1646,7 @@ public class MeasureControllerMvcTest {
 
     final Page<Measure> measures = new PageImpl<>(List.of(m1, m2, m3));
 
-    when(measureRepository.findAllByMeasureNameOrEcqmTitleForCurrentUser(
+    when(measureRepository.findMyActiveMeasures(
             any(String.class), any(Pageable.class), any(String.class)))
         .thenReturn(measures);
 
@@ -1666,8 +1668,7 @@ public class MeasureControllerMvcTest {
 
     assertThat(resultStr, is(equalTo(expectedJsonStr)));
     verify(measureRepository, times(1))
-        .findAllByMeasureNameOrEcqmTitleForCurrentUser(
-            eq("measure"), any(PageRequest.class), eq(TEST_USER_ID));
+        .findMyActiveMeasures(eq(TEST_USER_ID), any(PageRequest.class), eq("measure"));
     verifyNoMoreInteractions(measureRepository);
   }
 }

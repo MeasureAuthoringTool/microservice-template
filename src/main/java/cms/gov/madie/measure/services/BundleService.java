@@ -1,29 +1,23 @@
 package cms.gov.madie.measure.services;
 
+import java.lang.reflect.InvocationTargetException;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import org.springframework.web.client.RestClientException;
+
 import cms.gov.madie.measure.exceptions.BundleOperationException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.InvalidResourceBundleStateException;
 import cms.gov.madie.measure.repositories.ExportRepository;
-
 import cms.gov.madie.measure.utils.ExportFileNamesUtil;
-import cms.gov.madie.measure.utils.ResourceUtility;
+import cms.gov.madie.measure.utils.PackagingUtility;
 import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Export;
 import gov.cms.madie.models.measure.Measure;
-
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-
-import java.lang.reflect.InvocationTargetException;
-
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.web.client.RestClientException;
 
 @Slf4j
 @Service
@@ -63,7 +57,7 @@ public class BundleService {
     return export.getMeasureBundleJson();
   }
 
-  public ResponseEntity<byte[]> exportBundleMeasure(Measure measure, String accessToken) {
+  public byte[] exportBundleMeasure(Measure measure, String accessToken) {
     if (measure == null) {
       return null;
     }
@@ -93,14 +87,9 @@ public class BundleService {
       // get a Utility for this model
       String model = measure.getModel();
 
-      ResourceUtility utility = ResourceUtilityFactory.getInstance(model);
+      PackagingUtility utility = PackagingUtilityFactory.getInstance(model);
       byte[] result = utility.getZipBundle(export, exportFileName);
-      return ResponseEntity.ok()
-          .header(
-              HttpHeaders.CONTENT_DISPOSITION,
-              "attachment;filename=\"" + ExportFileNamesUtil.getExportFileName(measure) + ".zip\"")
-          .contentType(MediaType.APPLICATION_OCTET_STREAM)
-          .body(result);
+      return result;
 
     } catch (RestClientException
         | IllegalArgumentException
@@ -122,6 +111,7 @@ public class BundleService {
     }
     if (measure.getGroups().stream()
         .anyMatch(g -> CollectionUtils.isEmpty(g.getMeasureGroupTypes()))) {
+
       throw new InvalidResourceBundleStateException(
           "Measure",
           measure.getId(),

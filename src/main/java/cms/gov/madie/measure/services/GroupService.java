@@ -46,6 +46,7 @@ public class GroupService {
   private final MeasureRepository measureRepository;
 
   public Group createOrUpdateGroup(Group group, String measureId, String username) {
+
     Measure measure = measureRepository.findById(measureId).orElse(null);
     if (measure == null) {
       throw new ResourceNotFoundException("Measure", measureId);
@@ -59,6 +60,7 @@ public class GroupService {
     } else {
       handleFhirGroupReturnTypes(group, measure);
     }
+
     // no group present, this is the first group
     if (CollectionUtils.isEmpty(measure.getGroups())) {
       group.setId(ObjectId.get().toString());
@@ -85,9 +87,11 @@ public class GroupService {
       }
     }
     updateGroupForTestCases(group, measure.getTestCases());
-    if (measure.getModel().equalsIgnoreCase(ModelType.QI_CORE.getValue())) {
-      measure = measureUtil.validateAllMeasureDependencies(measure);
-    }
+
+    Measure errors = measureUtil.validateAllMeasureDependencies(measure);
+    measure.setErrors(errors.getErrors());
+    measure.setCqlErrors(errors.isCqlErrors());
+
     measure.setLastModifiedBy(username);
     measure.setLastModifiedAt(Instant.now());
     measureRepository.save(measure);

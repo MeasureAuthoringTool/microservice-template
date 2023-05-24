@@ -3,13 +3,13 @@ package cms.gov.madie.measure.services;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
-import cms.gov.madie.measure.utils.ResourceUtility;
+import cms.gov.madie.measure.utils.PackagingUtility;
 
 import java.util.HashMap;
 
-public class ResourceUtilityFactory {
+public class PackagingUtilityFactory {
 
-  public static ResourceUtility getInstance(String model)
+  public static PackagingUtility getInstance(String model)
       throws InstantiationException, IllegalAccessException, IllegalArgumentException,
           InvocationTargetException, NoSuchMethodException, SecurityException,
           ClassNotFoundException {
@@ -21,9 +21,9 @@ public class ResourceUtilityFactory {
         };
 
     String className =
-        "gov.cms.madie.measure.utilities." + modelMap.get(model) + ".ResourceUtilityImpl";
-    ResourceUtility newObject =
-        (ResourceUtility) Class.forName(className).getConstructor().newInstance();
+        "gov.cms.madie.measure.utilities." + modelMap.get(model) + ".PackagingUtilityImpl";
+    PackagingUtility newObject =
+        (PackagingUtility) Class.forName(className).getConstructor().newInstance();
     return newObject;
   }
 }

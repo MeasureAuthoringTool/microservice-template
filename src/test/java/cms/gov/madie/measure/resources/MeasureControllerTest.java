@@ -6,6 +6,7 @@ import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.GroupService;
 import cms.gov.madie.measure.services.MeasureService;
@@ -71,7 +72,7 @@ class MeasureControllerTest {
   @Mock private MeasureService measureService;
   @Mock private GroupService groupService;
   @Mock private ActionLogService actionLogService;
-
+  @Mock private MeasureSetRepository measureSetRepository;
   @InjectMocks private MeasureController controller;
 
   private Measure measure1;
@@ -592,10 +593,9 @@ class MeasureControllerTest {
   }
 
   @Test
-  void searchMeasuresByNameOrEcqmTitleWithCurrentUserFilter() throws UnsupportedEncodingException {
+  void searchMeasuresByNameOrEcqmTitleWithCurrentUserFilter() {
     Page<Measure> measures = new PageImpl<>(List.of(measure1));
-    when(repository.findAllByMeasureNameOrEcqmTitleForCurrentUser(
-            any(String.class), any(Pageable.class), anyString()))
+    when(repository.findMyActiveMeasures(any(String.class), any(Pageable.class), anyString()))
         .thenReturn(measures);
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
@@ -603,8 +603,7 @@ class MeasureControllerTest {
     ResponseEntity<Page<Measure>> response =
         controller.findAllByMeasureNameOrEcqmTitle(principal, true, "test criteria", 10, 0);
     verify(repository, times(1))
-        .findAllByMeasureNameOrEcqmTitleForCurrentUser(
-            eq("test criteria"), any(Pageable.class), eq("test.user"));
+        .findMyActiveMeasures(eq("test.user"), any(Pageable.class), eq("test criteria"));
     verifyNoMoreInteractions(repository);
     assertNotNull(response.getBody().getContent());
     assertNotNull(response.getBody().getContent().get(0));

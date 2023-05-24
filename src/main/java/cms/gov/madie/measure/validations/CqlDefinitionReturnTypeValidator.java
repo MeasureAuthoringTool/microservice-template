@@ -45,7 +45,7 @@ public class CqlDefinitionReturnTypeValidator {
 
     List<Population> populations = group.getPopulations();
     String populationBasis = group.getPopulationBasis().replaceAll("\\s", "");
-    if (populations != null) {
+    if (CollectionUtils.isNotEmpty(populations)) {
       populations.forEach(
           population -> {
             if (StringUtils.isNotBlank(population.getDefinition())) {
@@ -58,7 +58,7 @@ public class CqlDefinitionReturnTypeValidator {
     }
 
     List<Stratification> stratifications = group.getStratifications();
-    if (stratifications != null) {
+    if (CollectionUtils.isNotEmpty(stratifications)) {
       stratifications.forEach(
           stratification -> {
             if (StringUtils.isNotBlank(stratification.getCqlDefinition())) {
@@ -127,46 +127,75 @@ public class CqlDefinitionReturnTypeValidator {
     return returnTypes;
   }
 
-  public void validateCqlDefinitionReturnTypesForQdm(
+  public String validateCqlDefinitionReturnTypesForQdm(
       Group group, String elmJson, boolean patientBased) throws JsonProcessingException {
     Map<String, String> cqlDefinitionReturnTypes = getCqlDefinitionReturnTypes(elmJson);
     if (cqlDefinitionReturnTypes.isEmpty()) {
       throw new IllegalArgumentException("No definitions found.");
     }
-
     List<Population> populations = group.getPopulations();
-    if (populations != null) {
+    if (CollectionUtils.isNotEmpty(populations)) {
       HashSet<String> returnValues = new HashSet<String>();
-
       populations.forEach(
           population -> {
             if (StringUtils.isNotBlank(population.getDefinition())) {
               String returnType = cqlDefinitionReturnTypes.get(population.getDefinition());
-
               if (patientBased) {
-
                 if (!StringUtils.equalsIgnoreCase(returnType, "boolean")) {
                   throw new InvalidReturnTypeForQdmException(
                       "For Patient-based Measures, selected definitions must return a Boolean.");
                 }
               } else {
                 returnValues.add(returnType);
-
                 if (StringUtils.equalsIgnoreCase(returnType, "boolean")) {
                   throw new InvalidReturnTypeForQdmException(
-                      "The selected definition does not align with the Episode-based Measure.");
+                      "For Episode-based Measures, selected definitions "
+                          + "must return a list of the same type (Non-Boolean).");
                 }
               }
             }
           });
+      validateQDMStratifications(group, cqlDefinitionReturnTypes, patientBased, returnValues);
 
       if (returnValues.size() > 1) {
         throw new InvalidReturnTypeForQdmException(
             "For Episode-based Measures, "
-                + "selected definitions must return a list of the same type.");
+                + "selected definitions must return a list of the same type  (Non-Boolean).");
+      } else if (returnValues.size() == 1) {
+        return returnValues.stream().findFirst().get();
       }
     } else {
       throw new InvalidGroupException("Populations are required for a Group.");
+    }
+    return null;
+  }
+
+  private void validateQDMStratifications(
+      Group group,
+      Map<String, String> cqlDefinitionReturnTypes,
+      boolean patientBased,
+      HashSet<String> returnValues) {
+    List<Stratification> stratifications = group.getStratifications();
+    if (CollectionUtils.isNotEmpty(stratifications)) {
+      stratifications.forEach(
+          stratification -> {
+            if (StringUtils.isNotBlank(stratification.getCqlDefinition())) {
+              String returnType = cqlDefinitionReturnTypes.get(stratification.getCqlDefinition());
+              if (patientBased) {
+                if (!StringUtils.equalsIgnoreCase(returnType, "boolean")) {
+                  throw new InvalidReturnTypeForQdmException(
+                      "For Patient-based Measures, selected definitions must return a Boolean.");
+                }
+              } else {
+                returnValues.add(returnType);
+                if (StringUtils.equalsIgnoreCase(returnType, "boolean")) {
+                  throw new InvalidReturnTypeForQdmException(
+                      "For Episode-based Measures, selected definitions "
+                          + "must return a list of the same type (Non-Boolean).");
+                }
+              }
+            }
+          });
     }
   }
 }

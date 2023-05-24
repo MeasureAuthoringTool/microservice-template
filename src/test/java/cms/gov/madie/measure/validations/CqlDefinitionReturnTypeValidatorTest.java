@@ -12,6 +12,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import cms.gov.madie.measure.exceptions.InvalidFhirGroupException;
 import cms.gov.madie.measure.exceptions.InvalidGroupException;
+import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
 import cms.gov.madie.measure.exceptions.InvalidReturnTypeForQdmException;
 import cms.gov.madie.measure.utils.ResourceUtil;
 import gov.cms.madie.models.measure.DefDescPair;
@@ -19,6 +20,7 @@ import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.MeasureGroupTypes;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
+import gov.cms.madie.models.measure.Stratification;
 import gov.cms.madie.models.measure.SupplementalData;
 
 class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
@@ -26,7 +28,43 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
   CqlDefinitionReturnTypeValidator validator = new CqlDefinitionReturnTypeValidator();
 
   @Test
-  void testValidateCqlDefinitionReturnTypes() throws JsonProcessingException {
+  void testValidateCqlDefinitionReturnTypesNullElm() {
+    Group group1 =
+        Group.builder()
+            .scoring("Cohort")
+            .measureGroupTypes(Arrays.asList(MeasureGroupTypes.OUTCOME))
+            .populations(
+                List.of(
+                    new Population(
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        "Initial Population",
+                        null,
+                        null),
+                    new Population(
+                        "id-2", PopulationType.INITIAL_POPULATION, "Denominator", null, null)))
+            .groupDescription("Description")
+            .scoringUnit("test-scoring-unit")
+            .build();
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> validator.validateCqlDefinitionReturnTypes(group1, null),
+        "No definitions found.");
+  }
+
+  @Test
+  void testValidateCqlDefinitionReturnTypesInvalidForStratification()
+      throws JsonProcessingException {
+    Stratification strat = new Stratification();
+    strat.setId("id-2");
+    strat.setDescription("test desc");
+    strat.setCqlDefinition("ipp2");
+    strat.setAssociation(PopulationType.INITIAL_POPULATION);
+    Stratification strat2 = new Stratification();
+    strat2.setId("id-3");
+    strat2.setDescription("test desc");
+    strat2.setCqlDefinition("ipp2");
+    strat2.setAssociation(PopulationType.INITIAL_POPULATION);
     // new group, not in DB, so no ID
     Group group1 =
         Group.builder()
@@ -43,11 +81,40 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
                         null)))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
+            .stratifications(Arrays.asList(strat, strat2))
             .build();
 
     String elmJson = getData("/test_elm.json");
 
-    validator.validateCqlDefinitionReturnTypes(group1, elmJson);
+    assertThrows(
+        InvalidReturnTypeException.class,
+        () -> validator.validateCqlDefinitionReturnTypes(group1, elmJson),
+        "Return type for the CQL definition selected for the Stratification(s) does not match with population basis.");
+  }
+
+  @Test
+  void testValidateCqlDefinitionReturnTypesThrowsInvalidReturnTypeException()
+      throws JsonProcessingException {
+    // new group, not in DB, so no ID
+    Group group1 =
+        Group.builder()
+            .scoring("Cohort")
+            .populationBasis("Encounter")
+            .measureGroupTypes(Arrays.asList(MeasureGroupTypes.OUTCOME))
+            .populations(
+                List.of(
+                    new Population(
+                        "id-1", PopulationType.INITIAL_POPULATION, "SDE Race", null, null)))
+            .groupDescription("Description")
+            .scoringUnit("test-scoring-unit")
+            .build();
+
+    String elmJson = getData("/test_elm.json");
+
+    assertThrows(
+        InvalidReturnTypeException.class,
+        () -> validator.validateCqlDefinitionReturnTypes(group1, elmJson),
+        "Return type for the CQL definition selected for the Initial Population does not match with population basis.");
   }
 
   @Test
@@ -188,7 +255,7 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
     assertThrows(
         InvalidReturnTypeForQdmException.class,
         () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, false),
-        "For Episode-based Measures, selected definitions must return a list of the same type.");
+        "For Episode-based Measures, selected definitions must return a list of the same type (Non-Boolean).");
   }
 
   @Test
@@ -292,6 +359,90 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
     assertThrows(
         InvalidReturnTypeForQdmException.class,
         () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, false),
-        "The selected definition does not align with the Episode-based Measure.");
+        "For Episode-based Measures, selected definitions must return a list of the same type (Non-Boolean).");
+  }
+
+  @Test
+  void testValidateCqlDefinitionReturnTypesForQdmPatientBasedWithStrats()
+      throws JsonProcessingException {
+    Stratification strat = new Stratification();
+    strat.setId("id-2");
+    strat.setDescription("test desc");
+    strat.setCqlDefinition("ipp2");
+    strat.setAssociation(PopulationType.INITIAL_POPULATION);
+    Group group1 =
+        Group.builder()
+            .scoring("Cohort")
+            .populations(
+                List.of(
+                    new Population(
+                        "id-1", PopulationType.INITIAL_POPULATION, "boolIpp", null, null),
+                    new Population(
+                        "id-2", PopulationType.INITIAL_POPULATION, "boolIpp2", null, null)))
+            .stratifications(List.of(strat))
+            .groupDescription("Description")
+            .scoringUnit("test-scoring-unit")
+            .build();
+
+    String elmJson = getData("/test_elm_with_boolean.json");
+
+    assertThrows(
+        InvalidReturnTypeForQdmException.class,
+        () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, true),
+        "For Patient-based Measures, selected definitions must return a Boolean.");
+  }
+
+  @Test
+  void testValidateCqlDefinitionReturnTypesForQdmNonPatientBasedWithStrats()
+      throws JsonProcessingException {
+    Stratification strat = new Stratification();
+    strat.setId("id-2");
+    strat.setDescription("test desc");
+    strat.setCqlDefinition("boolIpp");
+    strat.setAssociation(PopulationType.INITIAL_POPULATION);
+    Group group1 =
+        Group.builder()
+            .scoring("Cohort")
+            .populations(
+                List.of(
+                    new Population("id-1", PopulationType.INITIAL_POPULATION, "ipp", null, null),
+                    new Population("id-2", PopulationType.INITIAL_POPULATION, "denom", null, null)))
+            .stratifications(List.of(strat))
+            .groupDescription("Description")
+            .scoringUnit("test-scoring-unit")
+            .build();
+
+    String elmJson = getData("/test_elm_with_boolean.json");
+
+    assertThrows(
+        InvalidReturnTypeForQdmException.class,
+        () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, false),
+        "For Episode-based Measures, selected definitions must return a list of the same type (Non-Boolean).");
+  }
+
+  @Test
+  void testValidateCqlDefinitionReturnTypesForQdmNonPatientBasedWithStratsSuccess()
+      throws JsonProcessingException {
+    Stratification strat = new Stratification();
+    strat.setId("id-2");
+    strat.setDescription("test desc");
+    strat.setCqlDefinition("ipp");
+    strat.setAssociation(PopulationType.INITIAL_POPULATION);
+    Group group1 =
+        Group.builder()
+            .scoring("Cohort")
+            .populations(
+                List.of(
+                    new Population("id-1", PopulationType.INITIAL_POPULATION, "ipp", null, null),
+                    new Population("id-2", PopulationType.INITIAL_POPULATION, "denom", null, null)))
+            .stratifications(List.of(strat))
+            .groupDescription("Description")
+            .scoringUnit("test-scoring-unit")
+            .build();
+
+    String elmJson = getData("/test_elm_with_boolean.json");
+
+    assertDoesNotThrow(
+        () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, false));
   }
 }

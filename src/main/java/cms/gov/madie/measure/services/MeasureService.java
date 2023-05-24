@@ -176,7 +176,7 @@ public class MeasureService {
 
   public Page<Measure> getMeasures(boolean filterByCurrentUser, Pageable pageReq, String username) {
     return filterByCurrentUser
-        ? measureRepository.findMyActiveMeasures(username, pageReq)
+        ? measureRepository.findMyActiveMeasures(username, pageReq, null)
         : measureRepository.findAllByActive(true, pageReq);
   }
 
