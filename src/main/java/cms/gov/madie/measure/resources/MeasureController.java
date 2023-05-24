@@ -72,6 +72,13 @@ public class MeasureController {
     Page<Measure> measures;
     final Pageable pageReq = PageRequest.of(page, limit, Sort.by("lastModifiedAt").descending());
     measures = measureService.getMeasures(filterByCurrentUser, pageReq, username);
+    measures.map(
+        measure -> {
+          MeasureSet measureSet =
+              measureSetRepository.findByMeasureSetId(measure.getMeasureSetId()).orElse(null);
+          measure.setMeasureSet(measureSet);
+          return measure;
+        });
     return ResponseEntity.ok(measures);
   }
 
