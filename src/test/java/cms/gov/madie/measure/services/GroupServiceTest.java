@@ -11,13 +11,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
-import gov.cms.madie.models.measure.MeasureMetaData;
+import gov.cms.madie.models.measure.*;
+
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,7 +23,6 @@ import java.util.List;
 import java.util.Optional;
 
 import cms.gov.madie.measure.utils.MeasureUtil;
-import gov.cms.madie.models.measure.TestCaseStratificationValue;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.common.Version;
 import org.apache.commons.lang3.StringUtils;
@@ -45,25 +42,14 @@ import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.utils.ResourceUtil;
-import gov.cms.madie.models.measure.AggregateMethodType;
-import gov.cms.madie.models.measure.Group;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.MeasureGroupTypes;
-import gov.cms.madie.models.measure.MeasureObservation;
-import gov.cms.madie.models.measure.MeasureScoring;
-import gov.cms.madie.models.measure.Population;
-import gov.cms.madie.models.measure.PopulationType;
-import gov.cms.madie.models.measure.QdmMeasure;
-import gov.cms.madie.models.measure.Stratification;
-import gov.cms.madie.models.measure.TestCase;
-import gov.cms.madie.models.measure.TestCaseGroupPopulation;
-import gov.cms.madie.models.measure.TestCasePopulationValue;
 
 @ExtendWith(MockitoExtension.class)
 public class GroupServiceTest implements ResourceUtil {
   @Mock private MeasureRepository measureRepository;
 
   @Mock private MeasureUtil measureUtil;
+
+  @Mock private MeasureService measureService;
 
   @InjectMocks private GroupService groupService;
 
@@ -376,8 +362,9 @@ public class GroupServiceTest implements ResourceUtil {
             .createdBy("test.user")
             .groups(List.of(group))
             .measureMetaData(MeasureMetaData.builder().draft(true).build())
+            .measureSet(MeasureSet.builder().owner("test.user").build())
             .build();
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+    when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
 
     doReturn(existingMeasure).when(measureRepository).save(any(Measure.class));
 
@@ -409,9 +396,10 @@ public class GroupServiceTest implements ResourceUtil {
             .createdBy("test.user")
             .groups(List.of(group))
             .testCases(testCases)
+            .measureSet(MeasureSet.builder().owner("test.user").build())
             .measureMetaData(MeasureMetaData.builder().draft(true).build())
             .build();
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+    when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
 
     doReturn(existingMeasure).when(measureRepository).save(any(Measure.class));
     // before deletion
@@ -436,8 +424,11 @@ public class GroupServiceTest implements ResourceUtil {
             .id("measure-id")
             .createdBy("OtherUser")
             .measureMetaData(MeasureMetaData.builder().draft(true).build())
+            .measureSet(MeasureSet.builder().owner("OtherUser").build())
             .build();
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(measureService.findMeasureById(anyString())).thenReturn(measure);
+    doThrow(new UnauthorizedException("Measure", measure.getId(), "user2"))
+            .when(measureService).verifyAuthorization(anyString(), any(Measure.class));
     assertThrows(
         UnauthorizedException.class,
         () -> groupService.deleteMeasureGroup("measure-id", groupId, "user2"));
@@ -451,8 +442,9 @@ public class GroupServiceTest implements ResourceUtil {
             .id("measure-id")
             .createdBy("OtherUser")
             .measureMetaData(MeasureMetaData.builder().draft(false).build())
+            .measureSet(MeasureSet.builder().owner("OtherUser").build())
             .build();
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(measureService.findMeasureById(anyString())).thenReturn(measure);
     assertThrows(
         InvalidDraftStatusException.class,
         () -> groupService.deleteMeasureGroup("measure-id", groupId, "user2"));
@@ -472,8 +464,9 @@ public class GroupServiceTest implements ResourceUtil {
             .id("measure-id")
             .createdBy("OtherUser")
             .measureMetaData(MeasureMetaData.builder().draft(true).build())
+            .measureSet(MeasureSet.builder().owner("OtherUser").build())
             .build();
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(measureService.findMeasureById(anyString())).thenReturn(measure);
 
     assertThrows(
         InvalidIdException.class,
@@ -502,8 +495,9 @@ public class GroupServiceTest implements ResourceUtil {
             .createdBy("test.user")
             .groups(List.of(group))
             .measureMetaData(MeasureMetaData.builder().draft(true).build())
+            .measureSet(MeasureSet.builder().owner("test.user").build())
             .build();
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+    when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
 
     assertThrows(
         ResourceNotFoundException.class,
