@@ -2,7 +2,6 @@ package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
-import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
 import cms.gov.madie.measure.utils.MeasureUtil;
 import cms.gov.madie.measure.utils.ResourceUtil;
@@ -183,8 +182,10 @@ public class MeasureServiceTest implements ResourceUtil {
     acl2.setUserId("User2");
     acl2.setRoles(List.of(RoleEnum.SHARED_WITH));
     MeasureSet measureSet = MeasureSet.builder().owner("THEUSER").acls(List.of(acl1, acl2)).build();
-    Measure measure = Measure.builder().measureSet(measureSet).build();
+    Measure measure = Measure.builder().measureSetId("MsID").build();
+    when(measureSetService.findByMeasureSetId(anyString())).thenReturn(measureSet);
     measureService.verifyAuthorization("THEUSER", measure);
+    verify(measureSetService, times(1)).findByMeasureSetId(anyString());
   }
 
   @Test
@@ -196,8 +197,10 @@ public class MeasureServiceTest implements ResourceUtil {
     acl2.setUserId("THEUSER");
     acl2.setRoles(List.of(RoleEnum.SHARED_WITH));
     MeasureSet measureSet = MeasureSet.builder().owner("OWNER").acls(List.of(acl1, acl2)).build();
-    Measure measure = Measure.builder().measureSet(measureSet).build();
+    Measure measure = Measure.builder().measureSetId("MsID").build();
+    when(measureSetService.findByMeasureSetId(anyString())).thenReturn(measureSet);
     measureService.verifyAuthorization("THEUSER", measure);
+    verify(measureSetService, times(1)).findByMeasureSetId(anyString());
   }
 
   @Test
