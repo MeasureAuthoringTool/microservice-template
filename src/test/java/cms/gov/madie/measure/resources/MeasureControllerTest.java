@@ -1,6 +1,5 @@
 package cms.gov.madie.measure.resources;
 
-import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
 import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
@@ -421,11 +420,10 @@ class MeasureControllerTest {
     testMeasure.setMeasureName("MSR01");
     testMeasure.setVersion(new Version(0, 0, 1));
     testMeasure.setActive(false);
-    doThrow(new InvalidDeletionCredentialsException("invalidUser@gmail.com"))
-        .when(measureService)
-        .checkDeletionCredentials(anyString(), anyString());
+    doThrow(new UnauthorizedException("Measure", measure1.getId(), "invalidUser@gmail.com"))
+            .when(measureService).verifyAuthorization(anyString(), any(Measure.class), isNull());
     assertThrows(
-        InvalidDeletionCredentialsException.class,
+            UnauthorizedException.class,
         () -> controller.updateMeasure("testid", testMeasure, principal, "Bearer TOKEN"));
   }
 

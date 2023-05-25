@@ -135,9 +135,9 @@ public class MeasureController {
         if (!existingMeasure.isActive()) {
           throw new UnauthorizedException("Measure", existingMeasure.getId(), username);
         }
-        // shared user should be able to edit Measure but won’t have delete access
+        // shared user should be able to edit Measure but won’t have delete access, only owner can delete
         if (!measure.isActive()) {
-          measureService.checkDeletionCredentials(username, existingMeasure.getCreatedBy());
+          measureService.verifyAuthorization(username, measure, null);
         }
       }
 
