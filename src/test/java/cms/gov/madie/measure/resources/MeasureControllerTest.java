@@ -14,18 +14,11 @@ import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.Version;
-import gov.cms.madie.models.measure.Group;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.MeasureMetaData;
-import gov.cms.madie.models.measure.Population;
-import gov.cms.madie.models.measure.PopulationType;
+import gov.cms.madie.models.measure.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -57,13 +50,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class MeasureControllerTest {
@@ -219,8 +206,12 @@ class MeasureControllerTest {
     when(measureService.updateMeasure(
             any(Measure.class), anyString(), any(Measure.class), anyString()))
         .thenReturn(m1);
-
-    when(repository.findById(anyString())).thenReturn(Optional.of(originalMeasure));
+    when(measureService.findMeasureById(anyString()))
+        .thenReturn(
+            originalMeasure
+                .toBuilder()
+                .measureSet(MeasureSet.builder().owner("test.user").build())
+                .build());
 
     ResponseEntity<Measure> response =
         controller.updateMeasure(m1.getId(), m1, principal, "Bearer TOKEN");
@@ -282,7 +273,13 @@ class MeasureControllerTest {
             .active(false)
             .build();
 
-    doReturn(Optional.of(originalMeasure)).when(repository).findById(eq(originalMeasure.getId()));
+    when(measureService.findMeasureById(anyString()))
+        .thenReturn(
+            originalMeasure
+                .toBuilder()
+                .measureSet(MeasureSet.builder().owner("test.user2").build())
+                .build());
+    doNothing().when(measureService).verifyAuthorization(anyString(), any(Measure.class));
 
     when(measureService.updateMeasure(
             any(Measure.class), anyString(), any(Measure.class), anyString()))
@@ -326,7 +323,12 @@ class MeasureControllerTest {
     measure1.setCreatedBy("MSR01");
     measure1.setActive(true);
     measure1.setAcls(null);
-    when(repository.findById(anyString())).thenReturn(Optional.of(measure1));
+    when(measureService.findMeasureById(anyString()))
+        .thenReturn(
+            measure1.toBuilder().measureSet(MeasureSet.builder().owner("MSR01").build()).build());
+    doThrow(new UnauthorizedException("Measure", measure1.getId(), "aninvalidUser@gmail.com"))
+        .when(measureService)
+        .verifyAuthorization(anyString(), any(Measure.class));
 
     var testMeasure = new Measure();
     testMeasure.setActive(false);
@@ -348,7 +350,13 @@ class MeasureControllerTest {
     measure1.setActive(false);
     measure1.setAcls(null);
     measure1.setMeasureMetaData(MeasureMetaData.builder().draft(true).build());
-    when(repository.findById(anyString())).thenReturn(Optional.of(measure1));
+    when(measureService.findMeasureById(anyString()))
+        .thenReturn(
+            measure1
+                .toBuilder()
+                .measureSet(MeasureSet.builder().owner("validuser@gmail.com").build())
+                .build());
+    doNothing().when(measureService).verifyAuthorization(anyString(), any(Measure.class));
 
     var testMeasure = new Measure();
     testMeasure.setActive(false);
@@ -368,7 +376,13 @@ class MeasureControllerTest {
     when(principal.getName()).thenReturn("validUser@gmail.com");
     measure1.setCreatedBy("MSR01");
     measure1.setActive(false);
-    when(repository.findById(anyString())).thenReturn(Optional.of(measure1));
+    when(measureService.findMeasureById(anyString()))
+        .thenReturn(
+            measure1.toBuilder().measureSet(MeasureSet.builder().owner("MSR01").build()).build());
+
+    doThrow(new UnauthorizedException("Measure", measure1.getId(), "validUser@gmail.com"))
+        .when(measureService)
+        .verifyAuthorization(anyString(), any(Measure.class));
 
     var testMeasure = new Measure();
     testMeasure.setActive(true);
@@ -392,8 +406,13 @@ class MeasureControllerTest {
     AclSpecification acl = new AclSpecification();
     acl.setUserId("sharedUser@gmail.com");
     acl.setRoles(List.of(RoleEnum.SHARED_WITH));
-    measure1.setAcls(List.of(acl));
-    when(repository.findById(anyString())).thenReturn(Optional.of(measure1));
+    when(measureService.findMeasureById(anyString()))
+        .thenReturn(
+            measure1
+                .toBuilder()
+                .measureSet(MeasureSet.builder().owner("MSR01").acls(List.of(acl)).build())
+                .build());
+    doNothing().when(measureService).verifyAuthorization(anyString(), any(Measure.class));
 
     var testMeasure = new Measure();
     testMeasure.setActive(false);
@@ -420,8 +439,12 @@ class MeasureControllerTest {
     AclSpecification acl = new AclSpecification();
     acl.setUserId("sharedUser@gmail.com");
     acl.setRoles(List.of(RoleEnum.SHARED_WITH));
-    measure1.setAcls(List.of(acl));
-    when(repository.findById(anyString())).thenReturn(Optional.of(measure1));
+    when(measureService.findMeasureById(anyString()))
+        .thenReturn(
+            measure1
+                .toBuilder()
+                .measureSet(MeasureSet.builder().owner("test.user").acls(List.of(acl)).build())
+                .build());
 
     var testMeasure = new Measure();
     testMeasure.setActive(false);
@@ -467,9 +490,8 @@ class MeasureControllerTest {
         () -> controller.updateMeasure(measure1.getId(), measure1, principal, "Bearer TOKEN"));
     // non-existing measure or measure with fake id
     measure1.setId("5399aba6e4b0ae375bfdca88");
-    Optional<Measure> empty = Optional.empty();
 
-    doReturn(empty).when(repository).findById(measure1.getId());
+    when(measureService.findMeasureById(anyString())).thenReturn(null);
 
     assertThrows(
         ResourceNotFoundException.class,
@@ -484,7 +506,15 @@ class MeasureControllerTest {
     measure1.setActive(true);
     measure1.setMeasurementPeriodStart(new Date());
     measure1.setId("testid");
-    when(repository.findById(anyString())).thenReturn(Optional.of(measure1));
+    when(measureService.findMeasureById(anyString()))
+        .thenReturn(
+            measure1
+                .toBuilder()
+                .measureSet(MeasureSet.builder().owner("test.user").build())
+                .build());
+    doThrow(new UnauthorizedException("Measure", "testid", "unAuthorized user"))
+        .when(measureService)
+        .verifyAuthorization(anyString(), any(Measure.class));
 
     var testMeasure = new Measure();
     testMeasure.setActive(true);

@@ -149,36 +149,18 @@ public class CqlDefinitionReturnTypeValidator {
                 returnValues.add(returnType);
                 if (StringUtils.equalsIgnoreCase(returnType, "boolean")) {
                   throw new InvalidReturnTypeForQdmException(
-                      "The selected definition does not align with the Episode-based Measure.");
+                      "For Episode-based Measures, selected definitions "
+                          + "must return a list of the same type (Non-Boolean).");
                 }
               }
             }
           });
-      List<Stratification> stratifications = group.getStratifications();
-      if (CollectionUtils.isNotEmpty(stratifications)) {
-        stratifications.forEach(
-            stratification -> {
-              if (StringUtils.isNotBlank(stratification.getCqlDefinition())) {
-                String returnType = cqlDefinitionReturnTypes.get(stratification.getCqlDefinition());
-                if (patientBased) {
-                  if (!StringUtils.equalsIgnoreCase(returnType, "boolean")) {
-                    throw new InvalidReturnTypeForQdmException(
-                        "For Patient-based Measures, selected definitions must return a Boolean.");
-                  }
-                } else {
-                  returnValues.add(returnType);
-                  if (StringUtils.equalsIgnoreCase(returnType, "boolean")) {
-                    throw new InvalidReturnTypeForQdmException(
-                        "The selected definition does not align with the Episode-based Measure.");
-                  }
-                }
-              }
-            });
-      }
+      validateQDMStratifications(group, cqlDefinitionReturnTypes, patientBased, returnValues);
+
       if (returnValues.size() > 1) {
         throw new InvalidReturnTypeForQdmException(
             "For Episode-based Measures, "
-                + "selected definitions must return a list of the same type.");
+                + "selected definitions must return a list of the same type  (Non-Boolean).");
       } else if (returnValues.size() == 1) {
         return returnValues.stream().findFirst().get();
       }
@@ -186,5 +168,34 @@ public class CqlDefinitionReturnTypeValidator {
       throw new InvalidGroupException("Populations are required for a Group.");
     }
     return null;
+  }
+
+  private void validateQDMStratifications(
+      Group group,
+      Map<String, String> cqlDefinitionReturnTypes,
+      boolean patientBased,
+      HashSet<String> returnValues) {
+    List<Stratification> stratifications = group.getStratifications();
+    if (CollectionUtils.isNotEmpty(stratifications)) {
+      stratifications.forEach(
+          stratification -> {
+            if (StringUtils.isNotBlank(stratification.getCqlDefinition())) {
+              String returnType = cqlDefinitionReturnTypes.get(stratification.getCqlDefinition());
+              if (patientBased) {
+                if (!StringUtils.equalsIgnoreCase(returnType, "boolean")) {
+                  throw new InvalidReturnTypeForQdmException(
+                      "For Patient-based Measures, selected definitions must return a Boolean.");
+                }
+              } else {
+                returnValues.add(returnType);
+                if (StringUtils.equalsIgnoreCase(returnType, "boolean")) {
+                  throw new InvalidReturnTypeForQdmException(
+                      "For Episode-based Measures, selected definitions "
+                          + "must return a list of the same type (Non-Boolean).");
+                }
+              }
+            }
+          });
+    }
   }
 }

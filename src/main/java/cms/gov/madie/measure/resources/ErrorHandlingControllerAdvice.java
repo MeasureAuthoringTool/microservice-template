@@ -101,7 +101,8 @@ public class ErrorHandlingControllerAdvice {
     InvalidResourceBundleStateException.class,
     CqlElmTranslationErrorException.class,
     InvalidDraftStatusException.class,
-    InvalidMeasureObservationException.class
+    InvalidMeasureObservationException.class,
+    InvalidMeasureStateException.class
   })
   @ResponseStatus(HttpStatus.CONFLICT)
   @ResponseBody

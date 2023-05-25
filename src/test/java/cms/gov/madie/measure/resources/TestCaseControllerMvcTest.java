@@ -2,7 +2,9 @@ package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.dto.ValidList;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.services.MeasureService;
 import cms.gov.madie.measure.services.TestCaseService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,7 +27,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,6 +51,7 @@ public class TestCaseControllerMvcTest {
   @MockBean private TestCaseService testCaseService;
   @MockBean private MeasureRepository repository;
   @Autowired private MockMvc mockMvc;
+  @MockBean private MeasureService measureService;
   @Captor ArgumentCaptor<TestCase> testCaseCaptor;
   @Captor ArgumentCaptor<String> measureIdCaptor;
   @Captor ArgumentCaptor<String> testCaseIdCaptor;
@@ -389,6 +391,9 @@ public class TestCaseControllerMvcTest {
     doReturn(Optional.of(Measure.builder().createdBy("good.user").id("1234").build()))
         .when(repository)
         .findById("1234");
+    doThrow(new UnauthorizedException("Measure", "1234", TEST_USER_ID))
+        .when(measureService)
+        .verifyAuthorization(anyString(), any(Measure.class));
     MvcResult result =
         mockMvc
             .perform(
