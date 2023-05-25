@@ -200,7 +200,7 @@ class BundleServiceTest implements ResourceUtil {
   @Test
   void testExportBundleMeasureForVersionedMeasure() throws IOException {
 
-    final String json = cms.gov.madie.measure.JsonBits.BUNDLE;
+    final String json = gov.cms.madie.packaging.utils.JsonBits.BUNDLE;
     Export export = Export.builder().measureId(measure.getId()).measureBundleJson(json).build();
     measure.setEcqmTitle("MEAS");
     measure.setMeasureMetaData(
