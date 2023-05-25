@@ -9,7 +9,6 @@ import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.GroupService;
 import cms.gov.madie.measure.services.MeasureService;
-import cms.gov.madie.measure.utils.ControllerUtil;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
@@ -120,14 +119,13 @@ public class MeasureController {
 
     log.info("getMeasureId [{}]", id);
 
-    Optional<Measure> persistedMeasureOpt = repository.findById(id);
+    final Measure existingMeasure = measureService.findMeasureById(id);
 
-    if (persistedMeasureOpt.isPresent()) {
-      final Measure existingMeasure = persistedMeasureOpt.get();
+    if (existingMeasure != null) {
       if (username != null && existingMeasure.getCreatedBy() != null) {
         log.info("got username [{}] vs createdBy: [{}]", username, existingMeasure.getCreatedBy());
         // either owner or shared-with role
-        ControllerUtil.verifyAuthorization(username, existingMeasure);
+        measureService.verifyAuthorization(username, existingMeasure);
 
         if (!existingMeasure.getMeasureMetaData().isDraft()) {
           throw new InvalidDraftStatusException(measure.getId());

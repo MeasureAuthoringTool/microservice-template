@@ -3,6 +3,7 @@ package cms.gov.madie.measure.resources;
 import cms.gov.madie.measure.dto.ValidList;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.services.MeasureService;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.TestCase;
 import cms.gov.madie.measure.services.TestCaseService;
@@ -27,6 +28,7 @@ public class TestCaseController {
 
   private final TestCaseService testCaseService;
   private final MeasureRepository measureRepository;
+  private final MeasureService measureService;
 
   @PostMapping(ControllerUtil.TEST_CASES)
   public ResponseEntity<TestCase> addTestCase(
@@ -54,7 +56,7 @@ public class TestCaseController {
       throw new ResourceNotFoundException("Measure", measureId);
     }
     Measure measure = measureOptional.get();
-    ControllerUtil.verifyAuthorization(username, measure);
+    measureService.verifyAuthorization(username, measure);
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(
             testCaseService.persistTestCases(

@@ -60,4 +60,8 @@ public class MeasureSetService {
       throw new ResourceNotFoundException(error);
     }
   }
+
+  public MeasureSet findByMeasureSetId(final String measureSetId) {
+    return measureSetRepository.findByMeasureSetId(measureSetId).orElse(null);
+  }
 }
