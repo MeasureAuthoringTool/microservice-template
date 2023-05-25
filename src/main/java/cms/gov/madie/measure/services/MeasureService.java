@@ -159,6 +159,11 @@ public class MeasureService {
       try {
         outputMeasure =
             measureUtil.validateAllMeasureDependencies(updateElm(updatingMeasure, accessToken));
+
+        // remove this condition when we validate for teminology service errors in backend
+        if (!outputMeasure.isCqlErrors()) {
+          outputMeasure.setCqlErrors(updatingMeasure.isCqlErrors());
+        }
         // no errors were encountered so remove the ELM JSON error
         // TODO: remove this when backend validations for CQL/ELM are enhanced
         outputMeasure.setErrors(
