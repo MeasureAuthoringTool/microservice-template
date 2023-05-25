@@ -72,11 +72,10 @@ public class MeasureService {
     return measureRepository
         .findById(id)
         .map(
-            m -> {
-              MeasureSet measureSet = measureSetService.findByMeasureSetId(m.getMeasureSetId());
-              m.setMeasureSet(measureSet);
-              return m;
-            })
+            m ->
+                m.toBuilder()
+                    .measureSet(measureSetService.findByMeasureSetId(m.getMeasureSetId()))
+                    .build())
         .orElse(null);
   }
 
