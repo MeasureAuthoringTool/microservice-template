@@ -75,6 +75,7 @@ public class TestCaseServiceTest {
     testCase.setJson("{\"resourceType\":\"Patient\"}");
 
     measure = new Measure();
+    measure.setCreatedBy("test.user5");
     measure.setId(ObjectId.get().toString());
     measure.setMeasureSetId("IDIDID");
     measure.setMeasureName("MSR01");
@@ -474,7 +475,7 @@ public class TestCaseServiceTest {
     Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(any(Measure.class));
 
     TestCase updatedTestCase =
-        testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user", "TOKEN");
+        testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user5", "TOKEN");
     assertNotNull(updatedTestCase);
 
     verify(repository, times(1)).save(measureCaptor.capture());
@@ -498,7 +499,7 @@ public class TestCaseServiceTest {
 
     int lastModCompareTo =
         updatedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
-    assertEquals("test.user", updatedTestCase.getLastModifiedBy());
+    assertEquals("test.user5", updatedTestCase.getLastModifiedBy());
     assertEquals(originalTestCase.getCreatedBy(), updatedTestCase.getCreatedBy());
     assertEquals(1, lastModCompareTo);
     assertNotEquals(updatedTestCase.getLastModifiedAt(), updatedTestCase.getCreatedAt());
@@ -532,12 +533,12 @@ public class TestCaseServiceTest {
     Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(any(Measure.class));
 
     TestCase updatedTestCase =
-        testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user", "TOKEN");
+        testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user5", "TOKEN");
     assertNotNull(updatedTestCase);
 
     int lastModCompareTo =
         updatedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
-    assertEquals("test.user", updatedTestCase.getLastModifiedBy());
+    assertEquals("test.user5", updatedTestCase.getLastModifiedBy());
     assertEquals(1, lastModCompareTo);
     assertNotEquals(updatedTestCase.getLastModifiedAt(), updatedTestCase.getCreatedAt());
     assertEquals(originalTestCase.getCreatedAt(), updatedTestCase.getCreatedAt());
@@ -573,7 +574,7 @@ public class TestCaseServiceTest {
             .build();
 
     TestCase updatedTestCase =
-        testCaseService.updateTestCase(upsertingTestCase, measure.getId(), "test.user", "TOKEN");
+        testCaseService.updateTestCase(upsertingTestCase, measure.getId(), "test.user5", "TOKEN");
     assertNotNull(updatedTestCase);
 
     int lastModCompareTo =
@@ -581,8 +582,8 @@ public class TestCaseServiceTest {
     assertEquals(1, lastModCompareTo);
     assertNotNull(updatedTestCase.getId());
     assertEquals(updatedTestCase.getLastModifiedAt(), updatedTestCase.getCreatedAt());
-    assertEquals("test.user", updatedTestCase.getCreatedBy());
-    assertEquals("test.user", updatedTestCase.getLastModifiedBy());
+    assertEquals("test.user5", updatedTestCase.getCreatedBy());
+    assertEquals("test.user5", updatedTestCase.getLastModifiedBy());
 
     verify(repository, times(1)).save(measureCaptor.capture());
     Measure savedMeasure = measureCaptor.getValue();
@@ -618,7 +619,7 @@ public class TestCaseServiceTest {
             .build();
 
     TestCase updatedTestCase =
-        testCaseService.updateTestCase(upsertingTestCase, measure.getId(), "test.user", "TOKEN");
+        testCaseService.updateTestCase(upsertingTestCase, measure.getId(), "test.user5", "TOKEN");
     assertNotNull(updatedTestCase);
 
     int lastModCompareTo =
@@ -626,8 +627,8 @@ public class TestCaseServiceTest {
     assertEquals(1, lastModCompareTo);
     assertNotNull(updatedTestCase.getId());
     assertEquals(updatedTestCase.getLastModifiedAt(), updatedTestCase.getCreatedAt());
-    assertEquals("test.user", updatedTestCase.getCreatedBy());
-    assertEquals("test.user", updatedTestCase.getLastModifiedBy());
+    assertEquals("test.user5", updatedTestCase.getCreatedBy());
+    assertEquals("test.user5", updatedTestCase.getLastModifiedBy());
 
     verify(repository, times(1)).save(measureCaptor.capture());
     Measure savedMeasure = measureCaptor.getValue();
@@ -667,7 +668,7 @@ public class TestCaseServiceTest {
             .build();
 
     TestCase updatedTestCase =
-        testCaseService.updateTestCase(upsertingTestCase, measure.getId(), "test.user", "TOKEN");
+        testCaseService.updateTestCase(upsertingTestCase, measure.getId(), "test.user5", "TOKEN");
     assertNotNull(updatedTestCase);
 
     int lastModCompareTo =
@@ -675,8 +676,8 @@ public class TestCaseServiceTest {
     assertEquals(1, lastModCompareTo);
     assertNotNull(updatedTestCase.getId());
     assertEquals(updatedTestCase.getLastModifiedAt(), updatedTestCase.getCreatedAt());
-    assertEquals("test.user", updatedTestCase.getCreatedBy());
-    assertEquals("test.user", updatedTestCase.getLastModifiedBy());
+    assertEquals("test.user5", updatedTestCase.getCreatedBy());
+    assertEquals("test.user5", updatedTestCase.getLastModifiedBy());
 
     verify(repository, times(1)).save(measureCaptor.capture());
     Measure savedMeasure = measureCaptor.getValue();
