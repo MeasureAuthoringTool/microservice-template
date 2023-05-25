@@ -152,9 +152,16 @@ public class TestCaseService {
     if (measure.getTestCases() == null) {
       measure.setTestCases(new ArrayList<>());
     }
-    if (!hasPermissionToDelete(username, measure)) {
+    if (!username.equalsIgnoreCase(measure.getCreatedBy())
+        && (CollectionUtils.isEmpty(measure.getAcls())
+            || !measure.getAcls().stream()
+                .anyMatch(
+                    acl ->
+                        acl.getUserId().equalsIgnoreCase(username)
+                            && acl.getRoles().stream()
+                                .anyMatch(role -> role.equals(RoleEnum.SHARED_WITH))))) {
       log.info(
-          "User [{}] is not authorized to delete the test case with ID [{}] from measure [{}]",
+          "User [{}] is not authorized to update the test case with ID [{}] from measure [{}]",
           username,
           testCase.getId(),
           measureId);
