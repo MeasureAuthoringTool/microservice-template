@@ -1,15 +1,12 @@
 package cms.gov.madie.measure.services;
 
-import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
-import cms.gov.madie.measure.exceptions.InvalidCmsIdException;
-import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
-import cms.gov.madie.measure.exceptions.InvalidMeasurementPeriodException;
-import cms.gov.madie.measure.exceptions.InvalidTerminologyException;
-import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
+import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
 import cms.gov.madie.measure.utils.MeasureUtil;
 import cms.gov.madie.measure.utils.ResourceUtil;
+import gov.cms.madie.models.access.AclSpecification;
+import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,6 +37,7 @@ import static java.util.Collections.emptySet;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -52,6 +50,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -143,6 +142,83 @@ public class MeasureServiceTest implements ResourceUtil {
             .lastModifiedBy("test user")
             .measureMetaData(measureMetaData)
             .build();
+  }
+
+  @Test
+  public void testVerifyAuthorizationThrowsExceptionForMissingMeasureSet() {
+    assertThrows(
+        InvalidMeasureStateException.class,
+        () -> measureService.verifyAuthorization("THEUSER", new Measure()));
+  }
+
+  @Test
+  public void testVerifyAuthorizationThrowsExceptionForEmptyAclsAndNonOwner() {
+    MeasureSet measureSet = MeasureSet.builder().owner("OWNER").build();
+    Measure measure = Measure.builder().measureSet(measureSet).build();
+    assertThrows(
+        UnauthorizedException.class, () -> measureService.verifyAuthorization("THEUSER", measure));
+  }
+
+  @Test
+  public void testVerifyAuthorizationThrowsExceptionForNotInAclsAndNonOwner() {
+    AclSpecification acl1 = new AclSpecification();
+    acl1.setUserId("User1");
+    acl1.setRoles(List.of(RoleEnum.SHARED_WITH));
+    AclSpecification acl2 = new AclSpecification();
+    acl2.setUserId("User2");
+    acl2.setRoles(List.of(RoleEnum.SHARED_WITH));
+    MeasureSet measureSet = MeasureSet.builder().owner("OWNER").acls(List.of(acl1, acl2)).build();
+    Measure measure = Measure.builder().measureSet(measureSet).build();
+    assertThrows(
+        UnauthorizedException.class, () -> measureService.verifyAuthorization("THEUSER", measure));
+  }
+
+  @Test
+  public void testVerifyAuthorizationDoesNothingForNotInAclsAndOwner() {
+    AclSpecification acl1 = new AclSpecification();
+    acl1.setUserId("User1");
+    acl1.setRoles(List.of(RoleEnum.SHARED_WITH));
+    AclSpecification acl2 = new AclSpecification();
+    acl2.setUserId("User2");
+    acl2.setRoles(List.of(RoleEnum.SHARED_WITH));
+    MeasureSet measureSet = MeasureSet.builder().owner("THEUSER").acls(List.of(acl1, acl2)).build();
+    Measure measure = Measure.builder().measureSetId("MsID").build();
+    when(measureSetService.findByMeasureSetId(anyString())).thenReturn(measureSet);
+    measureService.verifyAuthorization("THEUSER", measure);
+    verify(measureSetService, times(1)).findByMeasureSetId(anyString());
+  }
+
+  @Test
+  public void testVerifyAuthorizationDoesNothingForInAclsAndNonOwner() {
+    AclSpecification acl1 = new AclSpecification();
+    acl1.setUserId("User1");
+    acl1.setRoles(List.of(RoleEnum.SHARED_WITH));
+    AclSpecification acl2 = new AclSpecification();
+    acl2.setUserId("THEUSER");
+    acl2.setRoles(List.of(RoleEnum.SHARED_WITH));
+    MeasureSet measureSet = MeasureSet.builder().owner("OWNER").acls(List.of(acl1, acl2)).build();
+    Measure measure = Measure.builder().measureSetId("MsID").build();
+    when(measureSetService.findByMeasureSetId(anyString())).thenReturn(measureSet);
+    measureService.verifyAuthorization("THEUSER", measure);
+    verify(measureSetService, times(1)).findByMeasureSetId(anyString());
+  }
+
+  @Test
+  public void testFindMeasureByIdReturnsNullForEmptyOptional() {
+    when(measureRepository.findById(isNull())).thenReturn(Optional.empty());
+    Measure output = measureService.findMeasureById(null);
+    assertThat(output, is(nullValue()));
+  }
+
+  @Test
+  public void testFindMeasureByIdIncludesMeasureSet() {
+    MeasureSet measureSet = MeasureSet.builder().build();
+    Measure measure = Measure.builder().measureSetId("MsetID").build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(measureSetService.findByMeasureSetId(anyString())).thenReturn(measureSet);
+    Measure output = measureService.findMeasureById("MID");
+    assertThat(output, is(notNullValue()));
+    assertThat(output.getMeasureSet(), is(equalTo(measureSet)));
   }
 
   @Test
