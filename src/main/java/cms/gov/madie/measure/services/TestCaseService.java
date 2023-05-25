@@ -38,17 +38,20 @@ public class TestCaseService {
   private ActionLogService actionLogService;
   private FhirServicesClient fhirServicesClient;
   private ObjectMapper mapper;
+  private MeasureService measureService;
 
   @Autowired
   public TestCaseService(
       MeasureRepository measureRepository,
       ActionLogService actionLogService,
       FhirServicesClient fhirServicesClient,
-      ObjectMapper mapper) {
+      ObjectMapper mapper,
+      MeasureService measureService) {
     this.measureRepository = measureRepository;
     this.actionLogService = actionLogService;
     this.fhirServicesClient = fhirServicesClient;
     this.mapper = mapper;
+    this.measureService = measureService;
   }
 
   protected TestCase enrichNewTestCase(TestCase testCase, String username) {
@@ -214,14 +217,7 @@ public class TestCaseService {
       throw new InvalidDraftStatusException(measure.getId());
     }
 
-    if (!hasPermissionToDelete(username, measure)) {
-      log.info(
-          "User [{}] is not authorized to delete the test case with ID [{}] from measure [{}]",
-          username,
-          testCaseId,
-          measureId);
-      throw new UnauthorizedException("Measure", measureId, username);
-    }
+    measureService.verifyAuthorization(username, measure);
     if (CollectionUtils.isEmpty(measure.getTestCases())) {
       log.info("Measure with ID [{}] doesn't have any test cases", measureId);
       throw new InvalidIdException("Test case cannot be deleted, please contact the helpdesk");
@@ -251,17 +247,6 @@ public class TestCaseService {
       throw new ResourceNotFoundException("Measure", measureId);
     }
     return measure;
-  }
-
-  private Boolean hasPermissionToDelete(String username, Measure measure) {
-    return username.equalsIgnoreCase(measure.getCreatedBy())
-        || (!CollectionUtils.isEmpty(measure.getAcls())
-            && measure.getAcls().stream()
-                .anyMatch(
-                    acl ->
-                        acl.getUserId().equalsIgnoreCase(username)
-                            && acl.getRoles().stream()
-                                .anyMatch(role -> role.equals(RoleEnum.SHARED_WITH))));
   }
 
   public List<String> findTestCaseSeriesByMeasureId(String measureId) {
