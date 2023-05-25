@@ -53,6 +53,7 @@ public class TestCaseServiceTest {
   @Spy private ObjectMapper mapper;
 
   @Mock private FhirServicesClient fhirServicesClient;
+  @Mock private MeasureService measureService;
 
   @InjectMocks private TestCaseService testCaseService;
 
@@ -824,6 +825,9 @@ public class TestCaseServiceTest {
             .measureMetaData(MeasureMetaData.builder().draft(true).build())
             .build();
     when(repository.findById(anyString())).thenReturn(Optional.of(measure));
+    doThrow(new UnauthorizedException("Measure", "measure-id", "user2"))
+        .when(measureService)
+        .verifyAuthorization(anyString(), any(Measure.class));
     assertThrows(
         UnauthorizedException.class,
         () -> testCaseService.deleteTestCase("measure-id", "testCaseId", "user2"));
