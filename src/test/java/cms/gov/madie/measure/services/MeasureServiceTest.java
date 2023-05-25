@@ -204,6 +204,20 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
+  public void testVerifyAuthorizationByRoleDoesNothingForOwnerEmptyAcls() {
+    // given
+    MeasureSet measureSet = MeasureSet.builder().owner("OWNER").acls(null).build();
+    Measure measure = Measure.builder().measureSetId("MsID").build();
+    when(measureSetService.findByMeasureSetId(anyString())).thenReturn(measureSet);
+
+    // when
+    measureService.verifyAuthorization("OWNER", measure, null);
+
+    // then
+    verify(measureSetService, times(1)).findByMeasureSetId(anyString());
+  }
+
+  @Test
   public void testFindMeasureByIdReturnsNullForEmptyOptional() {
     when(measureRepository.findById(isNull())).thenReturn(Optional.empty());
     Measure output = measureService.findMeasureById(null);
