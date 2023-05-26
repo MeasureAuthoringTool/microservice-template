@@ -152,7 +152,7 @@ public class TestCaseService {
     if (measure.getTestCases() == null) {
       measure.setTestCases(new ArrayList<>());
     }
-    measureService.verifyAuthorization(username, measure);
+    measureService.verifyAuthorization(username, measureService.findMeasureById(measureId));
     Instant now = Instant.now();
     testCase.setLastModifiedAt(now);
     testCase.setLastModifiedBy(username);
