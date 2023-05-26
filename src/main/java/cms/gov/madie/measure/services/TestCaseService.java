@@ -143,7 +143,7 @@ public class TestCaseService {
 
   public TestCase updateTestCase(
       TestCase testCase, String measureId, String username, String accessToken) {
-    Measure measure = findMeasureById(measureId);
+    Measure measure = measureService.findMeasureById(measureId);
 
     if (!measure.getMeasureMetaData().isDraft()) {
       throw new InvalidDraftStatusException(measure.getId());
