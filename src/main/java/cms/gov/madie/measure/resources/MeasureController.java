@@ -5,13 +5,14 @@ import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.GroupService;
 import cms.gov.madie.measure.services.MeasureService;
-import cms.gov.madie.measure.utils.ControllerUtil;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureSet;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -49,6 +50,7 @@ public class MeasureController {
   private final MeasureService measureService;
   private final GroupService groupService;
   private final ActionLogService actionLogService;
+  private final MeasureSetRepository measureSetRepository;
 
   @GetMapping("/measures/draftstatus")
   public ResponseEntity<Map<String, Boolean>> getDraftStatuses(
@@ -69,15 +71,27 @@ public class MeasureController {
     Page<Measure> measures;
     final Pageable pageReq = PageRequest.of(page, limit, Sort.by("lastModifiedAt").descending());
     measures = measureService.getMeasures(filterByCurrentUser, pageReq, username);
+    measures.map(
+        measure -> {
+          MeasureSet measureSet =
+              measureSetRepository.findByMeasureSetId(measure.getMeasureSetId()).orElse(null);
+          measure.setMeasureSet(measureSet);
+          return measure;
+        });
     return ResponseEntity.ok(measures);
   }
 
   @GetMapping("/measures/{id}")
   public ResponseEntity<Measure> getMeasure(@PathVariable("id") String id) {
-    Optional<Measure> measure = repository.findByIdAndActive(id, true);
-    return measure
-        .map(ResponseEntity::ok)
-        .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    Optional<Measure> measureOptional = repository.findByIdAndActive(id, true);
+    if (measureOptional.isPresent()) {
+      Measure measure = measureOptional.get();
+      MeasureSet measureSet =
+          measureSetRepository.findByMeasureSetId(measure.getMeasureSetId()).orElse(null);
+      measure.setMeasureSet(measureSet);
+      return ResponseEntity.status(HttpStatus.OK).body(measure);
+    }
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
   }
 
   @PostMapping("/measure")
@@ -105,14 +119,13 @@ public class MeasureController {
 
     log.info("getMeasureId [{}]", id);
 
-    Optional<Measure> persistedMeasureOpt = repository.findById(id);
+    final Measure existingMeasure = measureService.findMeasureById(id);
 
-    if (persistedMeasureOpt.isPresent()) {
-      final Measure existingMeasure = persistedMeasureOpt.get();
+    if (existingMeasure != null) {
       if (username != null && existingMeasure.getCreatedBy() != null) {
         log.info("got username [{}] vs createdBy: [{}]", username, existingMeasure.getCreatedBy());
         // either owner or shared-with role
-        ControllerUtil.verifyAuthorization(username, existingMeasure);
+        measureService.verifyAuthorization(username, existingMeasure);
 
         if (!existingMeasure.getMeasureMetaData().isDraft()) {
           throw new InvalidDraftStatusException(measure.getId());
@@ -122,9 +135,9 @@ public class MeasureController {
         if (!existingMeasure.isActive()) {
           throw new UnauthorizedException("Measure", existingMeasure.getId(), username);
         }
-        // shared user should be able to edit Measure but won’t have delete access
+        // shared user should be able to edit Measure but won’t have delete access, only owner can delete
         if (!measure.isActive()) {
-          measureService.checkDeletionCredentials(username, existingMeasure.getCreatedBy());
+          measureService.verifyAuthorization(username, measure, null);
         }
       }
 

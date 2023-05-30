@@ -5,6 +5,7 @@ import cms.gov.madie.measure.exceptions.InvalidCmsIdException;
 import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
 import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.GroupService;
 import cms.gov.madie.measure.services.MeasureService;
@@ -78,6 +79,7 @@ public class MeasureControllerMvcTest {
   @MockBean private ActionLogService actionLogService;
 
   @Autowired private MockMvc mockMvc;
+  @MockBean private MeasureSetRepository measureSetRepository;
   @Captor private ArgumentCaptor<Measure> measureArgumentCaptor;
   @Captor private ArgumentCaptor<Measure> measureArgumentCaptor2;
 
@@ -169,7 +171,8 @@ public class MeasureControllerMvcTest {
     final Measure updatingMeasure =
         priorMeasure.toBuilder().ecqmTitle(ecqmTitle).measureMetaData(metaData).build();
 
-    when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(priorMeasure));
+    when(measureService.findMeasureById(anyString())).thenReturn(priorMeasure);
+    doNothing().when(measureService).verifyAuthorization(anyString(), any(Measure.class));
     when(measureService.updateMeasure(
             any(Measure.class), anyString(), any(Measure.class), anyString()))
         .thenReturn(updatingMeasure);
@@ -195,7 +198,7 @@ public class MeasureControllerMvcTest {
         .andExpect(jsonPath("$.measureMetaData.copyright").value(copyright))
         .andExpect(jsonPath("$.measureMetaData.disclaimer").value(disclaimer));
 
-    verify(measureRepository, times(1)).findById(eq(measureId));
+    verify(measureService, times(1)).findMeasureById(eq(measureId));
     verify(measureService, times(1))
         .updateMeasure(
             measureArgumentCaptor.capture(),
@@ -259,7 +262,8 @@ public class MeasureControllerMvcTest {
 
     final String measureAsJson = toJsonString(updatingMeasure);
 
-    when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(priorMeasure));
+    when(measureService.findMeasureById(anyString())).thenReturn(priorMeasure);
+    doNothing().when(measureService).verifyAuthorization(anyString(), any(Measure.class));
     when(measureService.updateMeasure(
             any(Measure.class), anyString(), any(Measure.class), anyString()))
         .thenReturn(updatingMeasure);
@@ -284,7 +288,7 @@ public class MeasureControllerMvcTest {
         .andExpect(jsonPath("$.measureMetaData.copyright").value(copyright))
         .andExpect(jsonPath("$.measureMetaData.disclaimer").value(disclaimer));
 
-    verify(measureRepository, times(1)).findById(eq(measureId));
+    verify(measureService, times(1)).findMeasureById(eq(measureId));
 
     verify(actionLogService, times(1))
         .logAction(
@@ -656,8 +660,8 @@ public class MeasureControllerMvcTest {
     priorMeasure.setEcqmTitle("ecqmTitle");
     priorMeasure.setVersionId(priorMeasure.getId());
     priorMeasure.setMeasureSetId("measureSetId");
-    when(measureRepository.findById(eq(priorMeasure.getId())))
-        .thenReturn(Optional.of(priorMeasure));
+    when(measureService.findMeasureById(anyString())).thenReturn(priorMeasure);
+    doNothing().when(measureService).verifyAuthorization(anyString(), any(Measure.class));
 
     Measure existingMeasure = new Measure();
     existingMeasure.setId("id1");
@@ -695,7 +699,7 @@ public class MeasureControllerMvcTest {
             jsonPath("$.validationErrors.cqlLibraryName")
                 .value("CQL library with given name already exists."));
 
-    verify(measureRepository, times(1)).findById(eq(priorMeasure.getId()));
+    verify(measureService, times(1)).findMeasureById(eq(priorMeasure.getId()));
     verify(measureService, times(1))
         .updateMeasure(eq(priorMeasure), anyString(), any(Measure.class), anyString());
     verifyNoMoreInteractions(measureRepository);
@@ -711,8 +715,8 @@ public class MeasureControllerMvcTest {
     priorMeasure.setEcqmTitle("ecqmTitle");
     priorMeasure.setMeasureSetId("measureSetId");
     priorMeasure.setVersionId(priorMeasure.getId());
-    when(measureRepository.findById(eq(priorMeasure.getId())))
-        .thenReturn(Optional.of(priorMeasure));
+    when(measureService.findMeasureById(anyString())).thenReturn(priorMeasure);
+    doNothing().when(measureService).verifyAuthorization(anyString(), any(Measure.class));
 
     Measure existingMeasure = new Measure();
     existingMeasure.setId("id0");
@@ -746,7 +750,7 @@ public class MeasureControllerMvcTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest());
 
-    verify(measureRepository, times(1)).findById(eq(priorMeasure.getId()));
+    verify(measureService, times(1)).findMeasureById(eq(priorMeasure.getId()));
     verify(measureService, times(1))
         .updateMeasure(any(Measure.class), anyString(), any(Measure.class), anyString());
     verifyNoMoreInteractions(measureRepository);
@@ -763,8 +767,8 @@ public class MeasureControllerMvcTest {
     priorMeasure.setVersionId(priorMeasure.getId());
     priorMeasure.setCmsId("testCmsId");
     priorMeasure.setMeasureSetId("measureSetId");
-    when(measureRepository.findById(eq(priorMeasure.getId())))
-        .thenReturn(Optional.of(priorMeasure));
+    when(measureService.findMeasureById(anyString())).thenReturn(priorMeasure);
+    doNothing().when(measureService).verifyAuthorization(anyString(), any(Measure.class));
 
     Measure existingMeasure = new Measure();
     existingMeasure.setId("id0");
@@ -800,7 +804,7 @@ public class MeasureControllerMvcTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest());
 
-    verify(measureRepository, times(1)).findById(eq(priorMeasure.getId()));
+    verify(measureService, times(1)).findMeasureById(eq(priorMeasure.getId()));
     verify(measureService, times(1))
         .updateMeasure(any(Measure.class), anyString(), any(Measure.class), anyString());
     verifyNoMoreInteractions(measureRepository);
@@ -999,7 +1003,8 @@ public class MeasureControllerMvcTest {
     saved.setVersionId(measureId);
     saved.setMeasureSetId(measureSetId);
 
-    when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(saved));
+    when(measureService.findMeasureById(anyString())).thenReturn(saved);
+    doNothing().when(measureService).verifyAuthorization(anyString(), any(Measure.class));
     when(measureService.updateMeasure(
             any(Measure.class), anyString(), any(Measure.class), anyString()))
         .thenReturn(saved);
@@ -1019,7 +1024,7 @@ public class MeasureControllerMvcTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.measureName").value(measureName));
 
-    verify(measureRepository, times(1)).findById(eq(measureId));
+    verify(measureService, times(1)).findMeasureById(eq(measureId));
     verify(measureService, times(1))
         .updateMeasure(any(Measure.class), anyString(), any(Measure.class), anyString());
     verifyNoMoreInteractions(measureRepository);

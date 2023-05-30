@@ -35,7 +35,7 @@ public class CqlObservationFunctionValidator {
 
     String groupPopulationBasis = group.getPopulationBasis().replaceAll("\\s", "");
 
-    if (observations != null) {
+    if (CollectionUtils.isNotEmpty(observations)) {
       observations.forEach(
           observation -> {
             if (StringUtils.isNotBlank(observation.getDefinition())) {
@@ -104,5 +104,45 @@ public class CqlObservationFunctionValidator {
       }
     }
     return observationPopBasis;
+  }
+
+  public void validateObservationFunctionsForQdm(
+      Group group, String elmJson, boolean patientBasis, String cqlDefinitionReturnType)
+      throws JsonProcessingException {
+    Map<String, String> observationsToValidPopBasis = mapObservationsToValidPopBasis(elmJson);
+
+    List<MeasureObservation> observations = group.getMeasureObservations();
+
+    if (observationsToValidPopBasis.isEmpty()) {
+      if (!CollectionUtils.isEmpty(observations)) {
+        throw new InvalidMeasureObservationException(
+            "Measure CQL does not have observation definition");
+      } else {
+        return; // observations are optional for scoring types other than Continuous Variable.
+      }
+    }
+
+    if (CollectionUtils.isNotEmpty(observations)) {
+      observations.forEach(
+          observation -> {
+            if (StringUtils.isNotBlank(observation.getDefinition())) {
+              String observationValidPopBasis =
+                  observationsToValidPopBasis.get(observation.getDefinition());
+
+              if (patientBasis
+                  && !StringUtils.equalsIgnoreCase(observationValidPopBasis, "boolean")) {
+                throw new InvalidReturnTypeException(
+                    "Selected observation function '%s' can not have parameters",
+                    observation.getDefinition());
+              } else if (!patientBasis
+                  && !StringUtils.equalsIgnoreCase(
+                      observationValidPopBasis, cqlDefinitionReturnType)) {
+                throw new InvalidReturnTypeException(
+                    "Selected observation function must have exactly one parameter of type '%s'",
+                    String.valueOf(patientBasis));
+              }
+            }
+          });
+    }
   }
 }

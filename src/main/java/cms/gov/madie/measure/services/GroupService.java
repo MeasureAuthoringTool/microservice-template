@@ -3,13 +3,11 @@ package cms.gov.madie.measure.services;
 import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.utils.MeasureUtil;
 import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeValidator;
 import cms.gov.madie.measure.validations.CqlObservationFunctionValidator;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
@@ -44,8 +42,10 @@ public class GroupService {
 
   private final MeasureUtil measureUtil;
   private final MeasureRepository measureRepository;
+  private final MeasureService measureService;
 
   public Group createOrUpdateGroup(Group group, String measureId, String username) {
+
     Measure measure = measureRepository.findById(measureId).orElse(null);
     if (measure == null) {
       throw new ResourceNotFoundException("Measure", measureId);
@@ -59,6 +59,7 @@ public class GroupService {
     } else {
       handleFhirGroupReturnTypes(group, measure);
     }
+
     // no group present, this is the first group
     if (CollectionUtils.isEmpty(measure.getGroups())) {
       group.setId(ObjectId.get().toString());
@@ -85,9 +86,11 @@ public class GroupService {
       }
     }
     updateGroupForTestCases(group, measure.getTestCases());
-    if (measure.getModel().equalsIgnoreCase(ModelType.QI_CORE.getValue())) {
-      measure = measureUtil.validateAllMeasureDependencies(measure);
-    }
+
+    Measure errors = measureUtil.validateAllMeasureDependencies(measure);
+    measure.setErrors(errors.getErrors());
+    measure.setCqlErrors(errors.isCqlErrors());
+
     measure.setLastModifiedBy(username);
     measure.setLastModifiedAt(Instant.now());
     measureRepository.save(measure);
@@ -140,7 +143,8 @@ public class GroupService {
     if (measureId == null || measureId.trim().isEmpty()) {
       throw new InvalidIdException("Measure Id cannot be null");
     }
-    Measure measure = measureRepository.findById(measureId).orElse(null);
+//    Measure measure = measureRepository.findById(measureId).orElse(null);
+    Measure measure = measureService.findMeasureById(measureId);
     if (measure == null) {
       throw new ResourceNotFoundException("Measure", measureId);
     }
@@ -149,16 +153,7 @@ public class GroupService {
       throw new InvalidDraftStatusException(measure.getId());
     }
 
-    if (!username.equalsIgnoreCase(measure.getCreatedBy())
-        && (CollectionUtils.isEmpty(measure.getAcls())
-            || !measure.getAcls().stream()
-                .anyMatch(
-                    acl ->
-                        acl.getUserId().equalsIgnoreCase(username)
-                            && acl.getRoles().stream()
-                                .anyMatch(role -> role.equals(RoleEnum.SHARED_WITH))))) {
-      throw new UnauthorizedException("Measure", measureId, username);
-    }
+    measureService.verifyAuthorization(username, measure);
 
     if (groupId == null || groupId.trim().isEmpty()) {
       throw new InvalidIdException("Measure group Id cannot be null");

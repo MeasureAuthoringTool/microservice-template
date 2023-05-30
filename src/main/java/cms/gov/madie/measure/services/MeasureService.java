@@ -1,11 +1,6 @@
 package cms.gov.madie.measure.services;
 
-import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
-import cms.gov.madie.measure.exceptions.InvalidCmsIdException;
-import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
-import cms.gov.madie.measure.exceptions.InvalidMeasurementPeriodException;
-import cms.gov.madie.measure.exceptions.InvalidTerminologyException;
-import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
+import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
 import cms.gov.madie.measure.utils.MeasureUtil;
@@ -13,10 +8,7 @@ import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.Version;
-import gov.cms.madie.models.measure.ElmJson;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.MeasureErrorType;
-import gov.cms.madie.models.measure.MeasureMetaData;
+import gov.cms.madie.models.measure.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -29,15 +21,7 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -49,6 +33,56 @@ public class MeasureService {
   private final ActionLogService actionLogService;
   private final MeasureSetService measureSetService;
   private final TerminologyValidationService terminologyValidationService;
+
+  /**
+   * Throws unAuthorizedException, if the measure is not owned by the user or if the measure is not
+   * shared with the user
+   */
+  public void verifyAuthorization(String username, Measure measure) {
+    verifyAuthorization(username, measure, List.of(RoleEnum.SHARED_WITH));
+  }
+
+  /**
+   * Verifies the specified user has privileges on the given measure based on measure owner and the passed roles.
+   * Providing null or empty roles will perform an authorization check for owner only.
+   * @param username
+   * @param measure
+   * @param roles
+   */
+  public void verifyAuthorization(String username, Measure measure, List<RoleEnum> roles) {
+    MeasureSet measureSet =
+            measure.getMeasureSet() == null
+                    ? measureSetService.findByMeasureSetId(measure.getMeasureSetId())
+                    : measure.getMeasureSet();
+    if (measureSet == null) {
+      throw new InvalidMeasureStateException(
+              "No measure set exists for measure with ID " + measure.getId());
+    }
+
+    List<RoleEnum> allowedRoles = roles == null ? List.of() : roles;
+    if (!measureSet.getOwner().equalsIgnoreCase(username)
+            && (CollectionUtils.isEmpty(measureSet.getAcls())
+            || measureSet.getAcls().stream()
+            .noneMatch(
+                    acl ->
+                            acl.getUserId().equalsIgnoreCase(username)
+                                    && acl.getRoles().stream()
+                                    .anyMatch(allowedRoles::contains)))) {
+      throw new UnauthorizedException("Measure", measure.getId(), username);
+    }
+  }
+
+  // TODO: start replacing usage of measureRepository.findById with this method
+  public Measure findMeasureById(final String id) {
+    return measureRepository
+        .findById(id)
+        .map(
+            m ->
+                m.toBuilder()
+                    .measureSet(measureSetService.findByMeasureSetId(m.getMeasureSetId()))
+                    .build())
+        .orElse(null);
+  }
 
   public Measure createMeasure(Measure measure, final String username, String accessToken) {
     log.info("User [{}] is attempting to create a new measure", username);
@@ -130,6 +164,11 @@ public class MeasureService {
       try {
         outputMeasure =
             measureUtil.validateAllMeasureDependencies(updateElm(updatingMeasure, accessToken));
+
+        // remove this condition when we validate for teminology service errors in backend
+        if (!outputMeasure.isCqlErrors()) {
+          outputMeasure.setCqlErrors(updatingMeasure.isCqlErrors());
+        }
         // no errors were encountered so remove the ELM JSON error
         // TODO: remove this when backend validations for CQL/ELM are enhanced
         outputMeasure.setErrors(
