@@ -158,7 +158,7 @@
       <releases>
         <enabled>true</enabled>
       </releases>
-      <id>github-madie-java-models</id>
+      <id>github</id>
       <name>MADiE java models</name>
       <url>https://maven.pkg.github.com/measureauthoringtool/madie-java-models</url>
     </repository>
