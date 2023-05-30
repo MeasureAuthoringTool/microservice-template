@@ -421,9 +421,10 @@ class MeasureControllerTest {
     testMeasure.setVersion(new Version(0, 0, 1));
     testMeasure.setActive(false);
     doThrow(new UnauthorizedException("Measure", measure1.getId(), "invalidUser@gmail.com"))
-            .when(measureService).verifyAuthorization(anyString(), any(Measure.class), isNull());
+        .when(measureService)
+        .verifyAuthorization(anyString(), any(Measure.class), isNull());
     assertThrows(
-            UnauthorizedException.class,
+        UnauthorizedException.class,
         () -> controller.updateMeasure("testid", testMeasure, principal, "Bearer TOKEN"));
   }
 
