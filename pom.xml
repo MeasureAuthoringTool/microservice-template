@@ -28,7 +28,8 @@
   <dependencyManagement>
     <dependencies>
 
-      <!-- START: needed to fix mismatched versions coming from above mongock -->
+      <!-- START: needed to fix mismatched versions coming from above
+			mongock -->
       <dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter-api</artifactId>
@@ -51,7 +52,8 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      <!-- END: needed to fix mismatched versions coming from above mongock -->
+      <!-- END: needed to fix mismatched versions coming from above
+			mongock -->
     </dependencies>
   </dependencyManagement>
 
@@ -124,7 +126,7 @@
     <dependency>
       <groupId>gov.cms.madie.packaging</groupId>
       <artifactId>packaging-utility</artifactId>
-      <version>0.2-SNAPSHOT</version>
+      <version>0.2</version>
     </dependency>
     <dependency>
       <groupId>org.springdoc</groupId>
@@ -156,9 +158,17 @@
       <releases>
         <enabled>true</enabled>
       </releases>
-      <id>github</id>
+      <id>github-madie-java-models</id>
       <name>MADiE java models</name>
       <url>https://maven.pkg.github.com/measureauthoringtool/madie-java-models</url>
+    </repository>
+    <repository>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <id>github-packaging-utility</id>
+      <name>MADiE packaging utility</name>
+      <url>https://maven.pkg.github.com/measureauthoringtool/packaging-utility</url>
     </repository>
   </repositories>
 
@@ -166,7 +176,8 @@
     <pluginManagement>
       <plugins>
         <plugin>
-          <!-- This will save you frustration if you change checkstyle versions -->
+          <!-- This will save you frustration if you change checkstyle
+					versions -->
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-checkstyle-plugin</artifactId>
           <version>${mvn.checkstyle.version}</version>
