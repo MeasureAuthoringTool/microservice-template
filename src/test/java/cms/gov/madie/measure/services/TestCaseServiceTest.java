@@ -63,6 +63,7 @@ public class TestCaseServiceTest {
 
   private TestCase testCase;
   private Measure measure;
+
   @BeforeEach
   public void setUp() {
     testCase = new TestCase();
