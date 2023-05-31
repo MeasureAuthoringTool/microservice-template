@@ -143,7 +143,7 @@ public class TestCaseService {
 
   public TestCase updateTestCase(
       TestCase testCase, String measureId, String username, String accessToken) {
-    Measure measure = findMeasureById(measureId);
+    Measure measure = measureService.findMeasureById(measureId);
 
     if (!measure.getMeasureMetaData().isDraft()) {
       throw new InvalidDraftStatusException(measure.getId());
@@ -152,7 +152,7 @@ public class TestCaseService {
     if (measure.getTestCases() == null) {
       measure.setTestCases(new ArrayList<>());
     }
-
+    measureService.verifyAuthorization(username, measure);
     Instant now = Instant.now();
     testCase.setLastModifiedAt(now);
     testCase.setLastModifiedBy(username);
