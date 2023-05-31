@@ -63,6 +63,7 @@ public class TestCaseServiceTest {
 
   private TestCase testCase;
   private Measure measure;
+  private Measure otherMeasure;
 
   @BeforeEach
   public void setUp() {
@@ -79,6 +80,14 @@ public class TestCaseServiceTest {
     measure.setId(ObjectId.get().toString());
     measure.setMeasureSetId("IDIDID");
     measure.setMeasureName("MSR01");
+    measure.setVersion(new Version(0, 0, 1));
+    measure.setMeasureMetaData(MeasureMetaData.builder().draft(true).build());
+
+    otherMeasure = new Measure();
+    measure.setCreatedBy("test.user4");
+    measure.setId(ObjectId.get().toString());
+    measure.setMeasureSetId("id2");
+    measure.setMeasureName("MSR02");
     measure.setVersion(new Version(0, 0, 1));
     measure.setMeasureMetaData(MeasureMetaData.builder().draft(true).build());
   }
@@ -467,13 +476,11 @@ public class TestCaseServiceTest {
     List<TestCase> testCases = new ArrayList<>();
     testCases.add(originalTestCase);
     Measure originalMeasure = measure.toBuilder().testCases(testCases).build();
-    Optional<Measure> optional = Optional.of(originalMeasure);
-    Mockito.doReturn(optional).when(repository).findById(any(String.class));
+    when(measureService.findMeasureById(anyString())).thenReturn(originalMeasure);
 
     TestCase updatingTestCase =
         testCase.toBuilder().title("UpdatedTitle").series("UpdatedSeries").build();
     Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(any(Measure.class));
-
     TestCase updatedTestCase =
         testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user5", "TOKEN");
     assertNotNull(updatedTestCase);
@@ -520,7 +527,7 @@ public class TestCaseServiceTest {
     List<TestCase> testCases = new ArrayList<>();
     testCases.add(originalTestCase);
     Measure originalMeasure = measure.toBuilder().testCases(testCases).build();
-    Mockito.doReturn(Optional.of(originalMeasure)).when(repository).findById(any(String.class));
+    when(measureService.findMeasureById(anyString())).thenReturn(originalMeasure);
 
     TestCase updatingTestCase =
         testCase
@@ -547,9 +554,9 @@ public class TestCaseServiceTest {
 
   @Test
   public void testUpdateTestCaseReturnsInvalidDraftStatusException() {
+    when(measureService.findMeasureById(anyString())).thenReturn(measure);
     measure.setMeasureMetaData(MeasureMetaData.builder().draft(false).build());
     Optional<Measure> optional = Optional.of(measure);
-    Mockito.doReturn(optional).when(repository).findById(any(String.class));
 
     assertThrows(
         InvalidDraftStatusException.class,
@@ -560,8 +567,7 @@ public class TestCaseServiceTest {
   public void testThatUpdateTestCaseHandlesUpsertForNullTestCasesList() {
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     Measure originalMeasure = measure.toBuilder().testCases(null).build();
-    Mockito.doReturn(Optional.of(originalMeasure)).when(repository).findById(any(String.class));
-
+    when(measureService.findMeasureById(anyString())).thenReturn(originalMeasure);
     Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(any(Measure.class));
 
     TestCase upsertingTestCase =
@@ -605,7 +611,6 @@ public class TestCaseServiceTest {
   public void testThatUpdateTestCaseHandlesUpsertForEmptyTestCasesList() {
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     Measure originalMeasure = measure.toBuilder().testCases(new ArrayList<>()).build();
-    Mockito.doReturn(Optional.of(originalMeasure)).when(repository).findById(any(String.class));
 
     Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(any(Measure.class));
 
@@ -617,6 +622,7 @@ public class TestCaseServiceTest {
             .title("UpdatedTitle")
             .series("UpdatedSeries")
             .build();
+    when(measureService.findMeasureById(anyString())).thenReturn(originalMeasure);
 
     TestCase updatedTestCase =
         testCaseService.updateTestCase(upsertingTestCase, measure.getId(), "test.user5", "TOKEN");
@@ -654,8 +660,7 @@ public class TestCaseServiceTest {
         TestCase.builder().id("TC1_ID").title("TC1").series("Series1").build();
     Measure originalMeasure =
         measure.toBuilder().testCases(new ArrayList<>(Arrays.asList(otherExistingTC))).build();
-    Mockito.doReturn(Optional.of(originalMeasure)).when(repository).findById(any(String.class));
-
+    when(measureService.findMeasureById(anyString())).thenReturn(originalMeasure);
     Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(any(Measure.class));
 
     TestCase upsertingTestCase =
