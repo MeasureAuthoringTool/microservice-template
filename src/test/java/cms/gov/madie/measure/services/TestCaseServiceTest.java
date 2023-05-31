@@ -63,8 +63,6 @@ public class TestCaseServiceTest {
 
   private TestCase testCase;
   private Measure measure;
-  private Measure otherMeasure;
-
   @BeforeEach
   public void setUp() {
     testCase = new TestCase();
@@ -80,14 +78,6 @@ public class TestCaseServiceTest {
     measure.setId(ObjectId.get().toString());
     measure.setMeasureSetId("IDIDID");
     measure.setMeasureName("MSR01");
-    measure.setVersion(new Version(0, 0, 1));
-    measure.setMeasureMetaData(MeasureMetaData.builder().draft(true).build());
-
-    otherMeasure = new Measure();
-    measure.setCreatedBy("test.user4");
-    measure.setId(ObjectId.get().toString());
-    measure.setMeasureSetId("id2");
-    measure.setMeasureName("MSR02");
     measure.setVersion(new Version(0, 0, 1));
     measure.setMeasureMetaData(MeasureMetaData.builder().draft(true).build());
   }
