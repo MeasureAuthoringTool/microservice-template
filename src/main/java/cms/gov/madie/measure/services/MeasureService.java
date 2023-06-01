@@ -43,31 +43,31 @@ public class MeasureService {
   }
 
   /**
-   * Verifies the specified user has privileges on the given measure based on measure owner and the passed roles.
-   * Providing null or empty roles will perform an authorization check for owner only.
+   * Verifies the specified user has privileges on the given measure based on measure owner and the
+   * passed roles. Providing null or empty roles will perform an authorization check for owner only.
+   *
    * @param username
    * @param measure
    * @param roles
    */
   public void verifyAuthorization(String username, Measure measure, List<RoleEnum> roles) {
     MeasureSet measureSet =
-            measure.getMeasureSet() == null
-                    ? measureSetService.findByMeasureSetId(measure.getMeasureSetId())
-                    : measure.getMeasureSet();
+        measure.getMeasureSet() == null
+            ? measureSetService.findByMeasureSetId(measure.getMeasureSetId())
+            : measure.getMeasureSet();
     if (measureSet == null) {
       throw new InvalidMeasureStateException(
-              "No measure set exists for measure with ID " + measure.getId());
+          "No measure set exists for measure with ID " + measure.getId());
     }
 
     List<RoleEnum> allowedRoles = roles == null ? List.of() : roles;
     if (!measureSet.getOwner().equalsIgnoreCase(username)
-            && (CollectionUtils.isEmpty(measureSet.getAcls())
+        && (CollectionUtils.isEmpty(measureSet.getAcls())
             || measureSet.getAcls().stream()
-            .noneMatch(
+                .noneMatch(
                     acl ->
-                            acl.getUserId().equalsIgnoreCase(username)
-                                    && acl.getRoles().stream()
-                                    .anyMatch(allowedRoles::contains)))) {
+                        acl.getUserId().equalsIgnoreCase(username)
+                            && acl.getRoles().stream().anyMatch(allowedRoles::contains)))) {
       throw new UnauthorizedException("Measure", measure.getId(), username);
     }
   }

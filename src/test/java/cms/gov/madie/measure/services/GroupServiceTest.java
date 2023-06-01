@@ -428,7 +428,8 @@ public class GroupServiceTest implements ResourceUtil {
             .build();
     when(measureService.findMeasureById(anyString())).thenReturn(measure);
     doThrow(new UnauthorizedException("Measure", measure.getId(), "user2"))
-            .when(measureService).verifyAuthorization(anyString(), any(Measure.class));
+        .when(measureService)
+        .verifyAuthorization(anyString(), any(Measure.class));
     assertThrows(
         UnauthorizedException.class,
         () -> groupService.deleteMeasureGroup("measure-id", groupId, "user2"));

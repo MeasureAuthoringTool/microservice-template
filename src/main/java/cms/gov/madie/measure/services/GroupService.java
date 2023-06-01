@@ -143,7 +143,7 @@ public class GroupService {
     if (measureId == null || measureId.trim().isEmpty()) {
       throw new InvalidIdException("Measure Id cannot be null");
     }
-//    Measure measure = measureRepository.findById(measureId).orElse(null);
+    //    Measure measure = measureRepository.findById(measureId).orElse(null);
     Measure measure = measureService.findMeasureById(measureId);
     if (measure == null) {
       throw new ResourceNotFoundException("Measure", measureId);
