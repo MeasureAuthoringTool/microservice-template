@@ -321,7 +321,6 @@ class MeasureControllerTest {
     when(principal.getName()).thenReturn("aninvalidUser@gmail.com");
     measure1.setCreatedBy("MSR01");
     measure1.setActive(true);
-    measure1.setAcls(null);
     when(measureService.findMeasureById(anyString()))
         .thenReturn(
             measure1.toBuilder().measureSet(MeasureSet.builder().owner("MSR01").build()).build());
@@ -347,7 +346,6 @@ class MeasureControllerTest {
     when(principal.getName()).thenReturn("validuser@gmail.com");
     measure1.setCreatedBy("validuser@gmail.com");
     measure1.setActive(false);
-    measure1.setAcls(null);
     measure1.setMeasureMetaData(MeasureMetaData.builder().draft(true).build());
     when(measureService.findMeasureById(anyString()))
         .thenReturn(

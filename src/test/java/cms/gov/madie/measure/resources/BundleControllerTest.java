@@ -59,7 +59,7 @@ class BundleControllerTest {
     var acl = new AclSpecification();
     acl.setUserId("test.user2");
     acl.setRoles(List.of(RoleEnum.SHARED_WITH));
-    final Measure measure = Measure.builder().createdBy("test.user").acls(List.of(acl)).build();
+    final Measure measure = Measure.builder().createdBy("test.user").build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
     when(bundleService.bundleMeasure(any(Measure.class), anyString(), anyString()))
         .thenReturn(json);
