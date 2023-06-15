@@ -117,4 +117,29 @@ public class MeasureSetServiceTest {
     verify(measureSetRepository, times(1)).findByMeasureSetId(anyString());
     verify(measureSetRepository, times(0)).save(any(MeasureSet.class));
   }
+
+  @Test
+  public void testUpdateOwnership() {
+    MeasureSet updatedMeasureSet = measureSet;
+    updatedMeasureSet.setOwner("testUser");
+    when(measureSetRepository.findByMeasureSetId(anyString())).thenReturn(Optional.of(measureSet));
+    when(measureSetRepository.save(any(MeasureSet.class))).thenReturn(updatedMeasureSet);
+
+    MeasureSet result = measureSetService.updateOwnership("1", "testUser");
+    assertThat(result.getId(), is(equalTo(updatedMeasureSet.getId())));
+    assertThat(result.getOwner(), is(equalTo(updatedMeasureSet.getOwner())));
+  }
+
+  @Test
+  public void testUpdateOwnershipWhenMeasureSetNotFound() {
+    when(measureSetRepository.findByMeasureSetId(anyString())).thenReturn(Optional.empty());
+
+    Exception ex =
+            assertThrows(
+                    ResourceNotFoundException.class,
+                    () -> measureSetService.updateOwnership("1", "testUser"));
+    assertTrue(ex.getMessage().contains("measure set may not exist."));
+    verify(measureSetRepository, times(1)).findByMeasureSetId(anyString());
+    verify(measureSetRepository, times(0)).save(any(MeasureSet.class));
+  }
 }

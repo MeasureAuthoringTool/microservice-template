@@ -13,10 +13,14 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
   private static final String[] CSRF_WHITELIST = {
-    "/measure-transfer/**", "/log/**", "/measures/*/grant", "/organizations/**"
+    "/measure-transfer/**",
+    "/log/**",
+    "/measures/*/grant",
+    "/organizations/**",
+    "/measures/*/ownership"
   };
   private static final String[] AUTH_WHITELIST = {
-    "/measure-transfer/**", "/actuator/**", "/log/**", "/measures/*/grant"
+    "/measure-transfer/**", "/actuator/**", "/log/**", "/measures/*/grant", "/measures/*/ownership"
   };
 
   @Bean
