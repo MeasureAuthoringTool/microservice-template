@@ -134,6 +134,32 @@ public class MeasureControllerMvcTest {
   }
 
   @Test
+  public void testChangeOwnership() throws Exception {
+    String measureId = "f225481c-921e-4015-9e14-e5046bfac9ff";
+
+    doReturn(true).when(measureService).changeOwnership(eq(measureId), eq("testUser"));
+
+    mockMvc
+            .perform(
+                    put("/measures/" + measureId + "/ownership?userid=testUser")
+                            .header(TEST_API_KEY_HEADER, TEST_API_KEY_HEADER_VALUE))
+            .andExpect(status().isOk())
+            .andExpect(content().string("testUser granted ownership to Measure successfully."));
+
+    verify(measureService, times(1)).changeOwnership(eq(measureId), eq("testUser"));
+
+    verify(actionLogService, times(1))
+            .logAction(
+                    targetIdArgumentCaptor.capture(),
+                    targetClassArgumentCaptor.capture(),
+                    actionTypeArgumentCaptor.capture(),
+                    performedByArgumentCaptor.capture());
+    assertNotNull(targetIdArgumentCaptor.getValue());
+    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.UPDATED)));
+    assertThat(performedByArgumentCaptor.getValue(), is(equalTo("apiKey")));
+  }
+
+  @Test
   public void testUpdatePassed() throws Exception {
 
     String measureId = "f225481c-921e-4015-9e14-e5046bfac9ff";

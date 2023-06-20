@@ -178,6 +178,27 @@ public class MeasureController {
     return response;
   }
 
+  @PutMapping("/measures/{id}/ownership")
+  @PreAuthorize("#request.getHeader('api-key') == #apiKey")
+  public ResponseEntity<String> changeOwnership(
+      HttpServletRequest request,
+      @PathVariable("id") String id,
+      @RequestParam(required = true, name = "userid") String userid,
+      @Value("${lambda-api-key}") String apiKey) {
+    ResponseEntity<String> response = ResponseEntity.badRequest().body("Measure does not exist.");
+
+    log.info("getMeasureId [{}] using apiKey ", id, "apikey");
+
+    if (measureService.changeOwnership(id, userid)) {
+      response =
+          ResponseEntity.ok()
+              .body(String.format("%s granted ownership to Measure successfully.", userid));
+      actionLogService.logAction(id, Measure.class, ActionType.UPDATED, "apiKey");
+    }
+
+    return response;
+  }
+
   @GetMapping("/measures/{measureId}/groups")
   public ResponseEntity<List<Group>> getGroups(@PathVariable String measureId) {
     return repository
