@@ -303,6 +303,17 @@ public class MeasureService {
     return result;
   }
 
+  public boolean changeOwnership(String measureId, String userid) {
+    boolean result = false;
+    Optional<Measure> persistedMeasure = measureRepository.findById(measureId);
+    if (persistedMeasure.isPresent()) {
+      Measure measure = persistedMeasure.get();
+      measureSetService.updateOwnership(measure.getMeasureSetId(), userid);
+      result = true;
+    }
+    return result;
+  }
+
   public Map<String, Boolean> getMeasureDrafts(List<String> measureSetIds) {
     Map<String, Boolean> measureSetMap = new HashMap<>();
     List<Measure> measures =

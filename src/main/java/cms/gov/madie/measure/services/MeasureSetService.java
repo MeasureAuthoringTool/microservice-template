@@ -61,6 +61,24 @@ public class MeasureSetService {
     }
   }
 
+  public MeasureSet updateOwnership(String measureSetId, String userId) {
+    Optional<MeasureSet> OptionalMeasureSet = measureSetRepository.findByMeasureSetId(measureSetId);
+    if (OptionalMeasureSet.isPresent()) {
+      MeasureSet measureSet = OptionalMeasureSet.get();
+      measureSet.setOwner(userId);
+      MeasureSet updatedMeasureSet = measureSetRepository.save(measureSet);
+      log.info("Owner changed in Measure set [{}]", updatedMeasureSet.getId());
+      return updatedMeasureSet;
+    } else {
+      String error =
+          String.format(
+              "Measure with set id `%s` can not change ownership `%s`, measure set may not exist.",
+              measureSetId, userId);
+      log.error(error);
+      throw new ResourceNotFoundException(error);
+    }
+  }
+
   public MeasureSet findByMeasureSetId(final String measureSetId) {
     return measureSetRepository.findByMeasureSetId(measureSetId).orElse(null);
   }
