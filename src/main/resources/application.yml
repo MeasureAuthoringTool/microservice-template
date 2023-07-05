@@ -36,6 +36,10 @@ madie:
       base-url: ${TERMINOLOGY_SSERVICE_URL:http://localhost:8082/api/vsac}
       fetch-value-sets: /value-sets/searches
       validate-codes: /validations/codes
+  validation:
+    service:
+      base-url: ${VALIDATION_SERVICE_URL:http://localhost:8088/api/validation}
+      return-types: /returntypes
 
 management:
   endpoints:

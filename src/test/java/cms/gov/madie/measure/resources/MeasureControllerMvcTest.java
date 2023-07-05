@@ -91,6 +91,7 @@ public class MeasureControllerMvcTest {
   @Captor ArgumentCaptor<Group> groupCaptor;
   @Captor ArgumentCaptor<String> measureIdCaptor;
   @Captor ArgumentCaptor<String> usernameCaptor;
+  @Captor ArgumentCaptor<String> accessTokenCaptor;
   @Captor ArgumentCaptor<PageRequest> pageRequestCaptor;
   @Captor ArgumentCaptor<Boolean> activeCaptor;
   @Captor private ArgumentCaptor<ActionType> actionTypeArgumentCaptor;
@@ -1348,13 +1349,15 @@ public class MeasureControllerMvcTest {
             .build();
     final String groupJson =
         "{\"scoring\":\"Cohort\",\"populations\":[{\"id\":\"id-1\",\"name\":\"initialPopulation\",\"definition\":\"Initial Population\"}],\"measureGroupTypes\":[\"Process\"],\"populationBasis\": \"boolean\"}";
-    when(groupService.createOrUpdateGroup(any(Group.class), any(String.class), any(String.class)))
+    when(groupService.createOrUpdateGroup(
+            any(Group.class), any(String.class), any(String.class), any(String.class)))
         .thenReturn(group);
 
     mockMvc
         .perform(
             post("/measures/1234/groups")
                 .with(user(TEST_USER_ID))
+                .header("Authorization", TEST_USER_ID)
                 .with(csrf())
                 .content(groupJson)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -1364,7 +1367,10 @@ public class MeasureControllerMvcTest {
 
     verify(groupService, times(1))
         .createOrUpdateGroup(
-            groupCaptor.capture(), measureIdCaptor.capture(), usernameCaptor.capture());
+            groupCaptor.capture(),
+            measureIdCaptor.capture(),
+            usernameCaptor.capture(),
+            accessTokenCaptor.capture());
 
     Group persistedGroup = groupCaptor.getValue();
     assertEquals(group.getScoring(), persistedGroup.getScoring());
@@ -1394,13 +1400,15 @@ public class MeasureControllerMvcTest {
 
     final String groupJson =
         "{\"id\":\"test-id\",\"scoring\":\"Cohort\",\"populations\":[{\"id\":\"id-2\",\"name\":\"initialPopulation\",\"definition\":\"FactorialOfFive\"}],\"measureGroupTypes\":[\"Process\"], \"populationBasis\": \"boolean\"}";
-    when(groupService.createOrUpdateGroup(any(Group.class), any(String.class), any(String.class)))
+    when(groupService.createOrUpdateGroup(
+            any(Group.class), any(String.class), any(String.class), any(String.class)))
         .thenReturn(group);
 
     mockMvc
         .perform(
             put("/measures/1234/groups")
                 .with(user(TEST_USER_ID))
+                .header("Authorization", TEST_USER_ID)
                 .with(csrf())
                 .content(groupJson)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -1410,7 +1418,10 @@ public class MeasureControllerMvcTest {
 
     verify(groupService, times(1))
         .createOrUpdateGroup(
-            groupCaptor.capture(), measureIdCaptor.capture(), usernameCaptor.capture());
+            groupCaptor.capture(),
+            measureIdCaptor.capture(),
+            usernameCaptor.capture(),
+            accessTokenCaptor.capture());
 
     Group persistedGroup = groupCaptor.getValue();
     assertEquals(group.getScoring(), persistedGroup.getScoring());
@@ -1424,13 +1435,15 @@ public class MeasureControllerMvcTest {
   public void testUpdateGroupIfPopulationDefinitionReturnTypesAreInvalid() throws Exception {
     final String groupJson =
         "{\"id\":\"test-id\",\"scoring\":\"Cohort\",\"populations\":[{\"id\":\"id-2\",\"name\":\"initialPopulation\",\"definition\":\"FactorialOfFive\"}],\"measureGroupTypes\":[\"Process\"], \"populationBasis\": \"boolean\"}";
-    when(groupService.createOrUpdateGroup(any(Group.class), any(String.class), any(String.class)))
+    when(groupService.createOrUpdateGroup(
+            any(Group.class), any(String.class), any(String.class), any(String.class)))
         .thenThrow(new InvalidReturnTypeException("Initial Population"));
 
     mockMvc
         .perform(
             put("/measures/1234/groups")
                 .with(user(TEST_USER_ID))
+                .header("Authorization", TEST_USER_ID)
                 .with(csrf())
                 .content(groupJson)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -1444,14 +1457,18 @@ public class MeasureControllerMvcTest {
 
     verify(groupService, times(1))
         .createOrUpdateGroup(
-            groupCaptor.capture(), measureIdCaptor.capture(), usernameCaptor.capture());
+            groupCaptor.capture(),
+            measureIdCaptor.capture(),
+            usernameCaptor.capture(),
+            accessTokenCaptor.capture());
   }
 
   @Test
   public void testUpdateGroupIfPopulationFunctionReturnTypesAreInvalid() throws Exception {
     final String groupJson =
         "{\"scoring\":\"Cohort\",\"populations\":[{\"id\":\"id-1\",\"name\":\"initialPopulation\",\"definition\":\"Initial Population\"}],\"measureGroupTypes\":[\"Process\"],\"populationBasis\": \"boolean\"}";
-    when(groupService.createOrUpdateGroup(any(Group.class), any(String.class), any(String.class)))
+    when(groupService.createOrUpdateGroup(
+            any(Group.class), any(String.class), any(String.class), any(String.class)))
         .thenThrow(
             new InvalidReturnTypeException(
                 "Selected observation function '%s' can not have parameters", "fun"));
@@ -1460,6 +1477,7 @@ public class MeasureControllerMvcTest {
         .perform(
             put("/measures/1234/groups")
                 .with(user(TEST_USER_ID))
+                .header("Authorization", TEST_USER_ID)
                 .with(csrf())
                 .content(groupJson)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -1472,7 +1490,10 @@ public class MeasureControllerMvcTest {
 
     verify(groupService, times(1))
         .createOrUpdateGroup(
-            groupCaptor.capture(), measureIdCaptor.capture(), usernameCaptor.capture());
+            groupCaptor.capture(),
+            measureIdCaptor.capture(),
+            usernameCaptor.capture(),
+            accessTokenCaptor.capture());
   }
 
   @Test

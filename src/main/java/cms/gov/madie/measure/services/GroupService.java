@@ -5,9 +5,6 @@ import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.utils.MeasureUtil;
-import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeValidator;
-import cms.gov.madie.measure.validations.CqlObservationFunctionValidator;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
@@ -34,6 +31,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.Arrays;
 
 @Slf4j
 @Service
@@ -43,8 +41,10 @@ public class GroupService {
   private final MeasureUtil measureUtil;
   private final MeasureRepository measureRepository;
   private final MeasureService measureService;
+  private final ValidationServiceClient validationServiceClient;
 
-  public Group createOrUpdateGroup(Group group, String measureId, String username) {
+  public Group createOrUpdateGroup(
+      Group group, String measureId, String username, String accessToken) {
 
     Measure measure = measureRepository.findById(measureId).orElse(null);
     if (measure == null) {
@@ -55,9 +55,9 @@ public class GroupService {
     }
 
     if (measure.getModel().equalsIgnoreCase(ModelType.QDM_5_6.getValue())) {
-      handleQdmGroupReturnTypes(group, measure);
+      handleQdmGroupReturnTypes(group, measure, accessToken);
     } else {
-      handleFhirGroupReturnTypes(group, measure);
+      handleFhirGroupReturnTypes(group, measure, accessToken);
     }
 
     // no group present, this is the first group
@@ -334,36 +334,32 @@ public class GroupService {
     }
   }
 
-  protected void handleFhirGroupReturnTypes(Group group, Measure measure) {
-    try {
-      new CqlDefinitionReturnTypeValidator()
-          .validateCqlDefinitionReturnTypes(group, measure.getElmJson());
-      new CqlObservationFunctionValidator()
-          .validateObservationFunctions(group, measure.getElmJson());
-    } catch (JsonProcessingException ex) {
-      log.error(
-          "An error occurred while validating population "
-              + "definition return types for FHIR measure {}",
-          measure.getId(),
-          ex);
-      throw new IllegalArgumentException("Invalid elm json");
-    }
+  protected void handleFhirGroupReturnTypes(Group group, Measure measure, String accessToken) {
+    Measure valiateMeasure =
+        Measure.builder()
+            .id(measure.getId())
+            .model(measure.getModel())
+            .groups(Arrays.asList(group))
+            .elmJson(measure.getElmJson())
+            .build();
+    valiateMeasure =
+        validationServiceClient.validateReturnTypesAndObservation(valiateMeasure, accessToken);
   }
 
-  protected void handleQdmGroupReturnTypes(Group group, Measure measure) {
+  protected void handleQdmGroupReturnTypes(Group group, Measure measure, String accessToken) {
     QdmMeasure qdmMeasure = (QdmMeasure) measure;
 
-    try {
-      new CqlDefinitionReturnTypeValidator()
-          .validateCqlDefinitionReturnTypesForQdm(
-              group, measure.getElmJson(), qdmMeasure.isPatientBasis());
-    } catch (JsonProcessingException ex) {
-      log.error(
-          "An error occurred while validating population "
-              + "definition return types for QDM measure {}",
-          measure.getId(),
-          ex);
-      throw new IllegalArgumentException("Invalid elm json");
-    }
+    QdmMeasure copyMeasure =
+        QdmMeasure.builder()
+            .id(qdmMeasure.getId())
+            .model(qdmMeasure.getModel())
+            .patientBasis(qdmMeasure.isPatientBasis())
+            .scoring(qdmMeasure.getScoring())
+            .groups(Arrays.asList(group))
+            .elmJson(qdmMeasure.getElmJson())
+            .build();
+    Measure valiateMeasure = (Measure) copyMeasure;
+    valiateMeasure =
+        validationServiceClient.validateReturnTypesAndObservation(valiateMeasure, accessToken);
   }
 }

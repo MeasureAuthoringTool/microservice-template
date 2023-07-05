@@ -540,11 +540,13 @@ class MeasureControllerTest {
 
     doReturn(group)
         .when(groupService)
-        .createOrUpdateGroup(any(Group.class), any(String.class), any(String.class));
+        .createOrUpdateGroup(
+            any(Group.class), any(String.class), any(String.class), any(String.class));
 
     Group newGroup = new Group();
 
-    ResponseEntity<Group> response = controller.createGroup(newGroup, "measure-id", principal);
+    ResponseEntity<Group> response =
+        controller.createGroup(newGroup, "measure-id", principal, "testAccessToken");
     assertNotNull(response.getBody());
     assertEquals(group.getId(), response.getBody().getId());
     assertEquals(group.getScoring(), response.getBody().getScoring());
@@ -588,11 +590,13 @@ class MeasureControllerTest {
 
     doReturn(group)
         .when(groupService)
-        .createOrUpdateGroup(any(Group.class), any(String.class), any(String.class));
+        .createOrUpdateGroup(
+            any(Group.class), any(String.class), any(String.class), any(String.class));
 
     Group newGroup = new Group();
 
-    ResponseEntity<Group> response = controller.updateGroup(newGroup, "measure-id", principal);
+    ResponseEntity<Group> response =
+        controller.updateGroup(newGroup, "measure-id", principal, "testAccessToken");
     assertNotNull(response.getBody());
     assertEquals(group.getId(), response.getBody().getId());
     assertEquals(group.getScoring(), response.getBody().getScoring());

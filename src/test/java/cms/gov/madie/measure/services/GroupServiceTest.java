@@ -36,8 +36,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.web.client.HttpClientErrorException;
+
 import cms.gov.madie.measure.exceptions.InvalidIdException;
-import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
@@ -50,6 +51,8 @@ public class GroupServiceTest implements ResourceUtil {
   @Mock private MeasureUtil measureUtil;
 
   @Mock private MeasureService measureService;
+
+  @Mock private ValidationServiceClient validationServiceClient;
 
   @InjectMocks private GroupService groupService;
 
@@ -228,7 +231,8 @@ public class GroupServiceTest implements ResourceUtil {
     when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
 
-    Group persistedGroup = groupService.createOrUpdateGroup(group1, measure.getId(), "test.user");
+    Group persistedGroup =
+        groupService.createOrUpdateGroup(group1, measure.getId(), "test.user", "testAccesstoken");
 
     verify(measureRepository, times(1)).save(measureCaptor.capture());
     assertEquals(group1.getId(), persistedGroup.getId());
@@ -256,7 +260,8 @@ public class GroupServiceTest implements ResourceUtil {
     when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
 
-    Group persistedGroup = groupService.createOrUpdateGroup(group1, measure.getId(), "test.user");
+    Group persistedGroup =
+        groupService.createOrUpdateGroup(group1, measure.getId(), "test.user", "testAccesstoken");
 
     verify(measureRepository, times(1)).save(measureCaptor.capture());
     assertEquals(group1.getId(), persistedGroup.getId());
@@ -286,7 +291,8 @@ public class GroupServiceTest implements ResourceUtil {
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
 
     Group persistedGroup =
-        groupService.createOrUpdateGroup(ratioGroup, measure.getId(), "test.user");
+        groupService.createOrUpdateGroup(
+            ratioGroup, measure.getId(), "test.user", "testAccesstoken");
 
     verify(measureRepository, times(1)).save(measureCaptor.capture());
     assertEquals(ratioGroup.getId(), persistedGroup.getId());
@@ -324,7 +330,8 @@ public class GroupServiceTest implements ResourceUtil {
     assertEquals(
         "FactorialOfFive", measure.getGroups().get(0).getPopulations().get(0).getDefinition());
 
-    Group persistedGroup = groupService.createOrUpdateGroup(group1, measure.getId(), "test.user");
+    Group persistedGroup =
+        groupService.createOrUpdateGroup(group1, measure.getId(), "test.user", "testAccesstoken");
 
     verify(measureRepository, times(1)).save(measureCaptor.capture());
     assertEquals(group1.getId(), persistedGroup.getId());
@@ -545,7 +552,8 @@ public class GroupServiceTest implements ResourceUtil {
     assertEquals(
         "FactorialOfFive", measure.getGroups().get(0).getPopulations().get(0).getDefinition());
 
-    Group persistedGroup = groupService.createOrUpdateGroup(group1, measure.getId(), "test.user");
+    Group persistedGroup =
+        groupService.createOrUpdateGroup(group1, measure.getId(), "test.user", "testAccesstoken");
 
     verify(measureRepository, times(1)).save(measureCaptor.capture());
     assertEquals(group1.getId(), persistedGroup.getId());
@@ -571,7 +579,7 @@ public class GroupServiceTest implements ResourceUtil {
     when(measureRepository.findById(anyString())).thenReturn(optional);
     assertThrows(
         ResourceNotFoundException.class,
-        () -> groupService.createOrUpdateGroup(group1, "test", "test.user"));
+        () -> groupService.createOrUpdateGroup(group1, "test", "test.user", "testAccesstoken"));
   }
 
   @Test
@@ -698,7 +706,8 @@ public class GroupServiceTest implements ResourceUtil {
     assertEquals(
         "FactorialOfFive", measure.getGroups().get(0).getPopulations().get(0).getDefinition());
 
-    Group persistedGroup = groupService.createOrUpdateGroup(group1, measure.getId(), "test.user");
+    Group persistedGroup =
+        groupService.createOrUpdateGroup(group1, measure.getId(), "test.user", "testAccesstoken");
 
     verify(measureRepository, times(1)).save(measureCaptor.capture());
     assertEquals(group1.getId(), persistedGroup.getId());
@@ -720,9 +729,14 @@ public class GroupServiceTest implements ResourceUtil {
     Optional<Measure> optional = Optional.of(measure);
     doReturn(optional).when(measureRepository).findById(any(String.class));
 
+    when(validationServiceClient.validateReturnTypesAndObservation(any(Measure.class), anyString()))
+        .thenThrow(HttpClientErrorException.class);
+
     assertThrows(
-        InvalidReturnTypeException.class,
-        () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+        HttpClientErrorException.class,
+        () ->
+            groupService.createOrUpdateGroup(
+                group2, measure.getId(), "test.user", "testAccesstoken"));
   }
 
   @Test
@@ -732,9 +746,14 @@ public class GroupServiceTest implements ResourceUtil {
     Optional<Measure> optional = Optional.of(measure);
     doReturn(optional).when(measureRepository).findById(any(String.class));
 
+    when(validationServiceClient.validateReturnTypesAndObservation(any(Measure.class), anyString()))
+        .thenThrow(HttpClientErrorException.class);
+
     assertThrows(
-        InvalidReturnTypeException.class,
-        () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+        HttpClientErrorException.class,
+        () ->
+            groupService.createOrUpdateGroup(
+                group2, measure.getId(), "test.user", "testAccesstoken"));
   }
 
   @Test
@@ -743,9 +762,14 @@ public class GroupServiceTest implements ResourceUtil {
     Optional<Measure> optional = Optional.of(measure);
     doReturn(optional).when(measureRepository).findById(any(String.class));
 
+    when(validationServiceClient.validateReturnTypesAndObservation(any(Measure.class), anyString()))
+        .thenThrow(HttpClientErrorException.class);
+
     assertThrows(
-        IllegalArgumentException.class,
-        () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+        HttpClientErrorException.class,
+        () ->
+            groupService.createOrUpdateGroup(
+                group2, measure.getId(), "test.user", "testAccesstoken"));
   }
 
   @Test
@@ -754,9 +778,14 @@ public class GroupServiceTest implements ResourceUtil {
     Optional<Measure> optional = Optional.of(measure);
     doReturn(optional).when(measureRepository).findById(any(String.class));
 
+    when(validationServiceClient.validateReturnTypesAndObservation(any(Measure.class), anyString()))
+        .thenThrow(HttpClientErrorException.class);
+
     assertThrows(
-        IllegalArgumentException.class,
-        () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+        HttpClientErrorException.class,
+        () ->
+            groupService.createOrUpdateGroup(
+                group2, measure.getId(), "test.user", "testAccesstoken"));
   }
 
   @Test
@@ -769,7 +798,8 @@ public class GroupServiceTest implements ResourceUtil {
     when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
 
-    Group group = groupService.createOrUpdateGroup(group2, measure.getId(), "test.user");
+    Group group =
+        groupService.createOrUpdateGroup(group2, measure.getId(), "test.user", "testAccesstoken");
     assertEquals(group.getStratifications().size(), group2.getStratifications().size());
     verify(measureRepository, times(1)).save(measureCaptor.capture());
   }
@@ -784,7 +814,8 @@ public class GroupServiceTest implements ResourceUtil {
     when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
 
-    Group group = groupService.createOrUpdateGroup(group2, measure.getId(), "test.user");
+    Group group =
+        groupService.createOrUpdateGroup(group2, measure.getId(), "test.user", "testAccesstoken");
     assertEquals(group.getMeasureObservations().size(), group2.getMeasureObservations().size());
     verify(measureRepository, times(1)).save(measureCaptor.capture());
   }
@@ -793,7 +824,7 @@ public class GroupServiceTest implements ResourceUtil {
   void testUpdateGroupReturnsExceptionForResourceNotFound() {
     assertThrows(
         ResourceNotFoundException.class,
-        () -> groupService.createOrUpdateGroup(group2, "testid", "test.user"));
+        () -> groupService.createOrUpdateGroup(group2, "testid", "test.user", "testAccesstoken"));
   }
 
   @Test
@@ -804,7 +835,7 @@ public class GroupServiceTest implements ResourceUtil {
 
     assertThrows(
         InvalidDraftStatusException.class,
-        () -> groupService.createOrUpdateGroup(group2, "testid", "test.user"));
+        () -> groupService.createOrUpdateGroup(group2, "testid", "test.user", "testAccesstoken"));
   }
 
   @Test
@@ -815,7 +846,7 @@ public class GroupServiceTest implements ResourceUtil {
 
     assertThrows(
         InvalidDraftStatusException.class,
-        () -> groupService.createOrUpdateGroup(group2, "testid", "test.user"));
+        () -> groupService.createOrUpdateGroup(group2, "testid", "test.user", "testAccesstoken"));
   }
 
   @Test
@@ -826,9 +857,15 @@ public class GroupServiceTest implements ResourceUtil {
     doReturn(optional).when(measureRepository).findById(any(String.class));
 
     measure.setElmJson("");
+
+    when(validationServiceClient.validateReturnTypesAndObservation(any(Measure.class), anyString()))
+        .thenThrow(HttpClientErrorException.class);
+
     assertThrows(
-        IllegalArgumentException.class,
-        () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+        HttpClientErrorException.class,
+        () ->
+            groupService.createOrUpdateGroup(
+                group2, measure.getId(), "test.user", "testAccesstoken"));
   }
 
   @Test
@@ -839,7 +876,8 @@ public class GroupServiceTest implements ResourceUtil {
     when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
 
-    Group group = groupService.createOrUpdateGroup(group1, measure.getId(), "test.user");
+    Group group =
+        groupService.createOrUpdateGroup(group1, measure.getId(), "test.user", "testAccesstoken");
     assertNotNull(group);
   }
 
@@ -855,9 +893,15 @@ public class GroupServiceTest implements ResourceUtil {
                 AggregateMethodType.MAXIMUM.getValue())));
     Optional<Measure> optional = Optional.of(measure);
     doReturn(optional).when(measureRepository).findById(any(String.class));
+
+    when(validationServiceClient.validateReturnTypesAndObservation(any(Measure.class), anyString()))
+        .thenThrow(HttpClientErrorException.class);
+
     assertThrows(
-        InvalidReturnTypeException.class,
-        () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+        HttpClientErrorException.class,
+        () ->
+            groupService.createOrUpdateGroup(
+                group2, measure.getId(), "test.user", "testAccesstoken"));
   }
 
   @Test
@@ -867,9 +911,15 @@ public class GroupServiceTest implements ResourceUtil {
     group2.getStratifications().get(1).setCqlDefinition("SDE Race");
     Optional<Measure> optional = Optional.of(measure);
     doReturn(optional).when(measureRepository).findById(any(String.class));
+
+    when(validationServiceClient.validateReturnTypesAndObservation(any(Measure.class), anyString()))
+        .thenThrow(HttpClientErrorException.class);
+
     assertThrows(
-        InvalidReturnTypeException.class,
-        () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
+        HttpClientErrorException.class,
+        () ->
+            groupService.createOrUpdateGroup(
+                group2, measure.getId(), "test.user", "testAccesstoken"));
   }
 
   @Test
@@ -1181,7 +1231,8 @@ public class GroupServiceTest implements ResourceUtil {
             .scoring(MeasureScoring.COHORT.toString())
             .populations(Arrays.asList(population))
             .build();
-    Group persistedGroup = groupService.createOrUpdateGroup(qdmGroup, measure.getId(), "test.user");
+    Group persistedGroup =
+        groupService.createOrUpdateGroup(qdmGroup, measure.getId(), "test.user", "testAccesstoken");
 
     verify(measureRepository, times(1)).save(measureCaptor.capture());
     assertEquals(qdmGroup.getId(), persistedGroup.getId());
@@ -1215,7 +1266,8 @@ public class GroupServiceTest implements ResourceUtil {
             .patientBasis(false)
             .elmJson(elmJson)
             .build();
-    assertDoesNotThrow(() -> groupService.handleQdmGroupReturnTypes(qdmGroup, qdmMeasure));
+    assertDoesNotThrow(
+        () -> groupService.handleQdmGroupReturnTypes(qdmGroup, qdmMeasure, "testAccesstoken"));
   }
 
   @Test
@@ -1239,9 +1291,12 @@ public class GroupServiceTest implements ResourceUtil {
             .elmJson(elmJson)
             .build();
 
+    when(validationServiceClient.validateReturnTypesAndObservation(any(Measure.class), anyString()))
+        .thenThrow(HttpClientErrorException.class);
+
     assertThrows(
-        IllegalArgumentException.class,
-        () -> groupService.handleQdmGroupReturnTypes(qdmGroup, qdmMeasure),
+        HttpClientErrorException.class,
+        () -> groupService.handleQdmGroupReturnTypes(qdmGroup, qdmMeasure, "testAccesstoken"),
         "Invalid elm json");
   }
 }
