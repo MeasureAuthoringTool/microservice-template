@@ -1,29 +1,33 @@
 package cms.gov.madie.measure.services;
 
-import cms.gov.madie.measure.HapiFhirConfig;
 import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import cms.gov.madie.measure.exceptions.UnauthorizedException;
-import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.HapiOperationOutcome;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.TestCase;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.CaseUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,6 +43,9 @@ public class TestCaseService {
   private FhirServicesClient fhirServicesClient;
   private ObjectMapper mapper;
   private MeasureService measureService;
+
+  @Value("${feature-flag.enforcePatientId}")
+  private boolean enforcePatientIdFeatureFlag;
 
   @Autowired
   public TestCaseService(
@@ -173,6 +180,11 @@ public class TestCaseService {
     }
 
     TestCase validatedTestCase = validateTestCaseAsResource(testCase, accessToken);
+
+    if (enforcePatientIdFeatureFlag
+        && ModelType.QI_CORE.getValue().equalsIgnoreCase(measure.getModel())) {
+      validatedTestCase.setJson(enforcePatientId(testCase.getJson(), measure, validatedTestCase));
+    }
     measure.getTestCases().add(validatedTestCase);
 
     measureRepository.save(measure);
@@ -300,5 +312,52 @@ public class TestCaseService {
             "Unable to validate test case JSON due to errors, "
                 + "but outcome not able to be interpreted!")
         .build();
+  }
+
+  protected String enforcePatientId(String testCaseJson, Measure measure, TestCase testCase) {
+    if (!StringUtils.isEmpty(testCaseJson)) {
+      ObjectMapper objectMapper = new ObjectMapper();
+      String modifiedjsonString = testCaseJson;
+      try {
+        JsonNode rootNode = objectMapper.readTree(testCaseJson);
+        ArrayNode allEntries = (ArrayNode) rootNode.get("entry");
+        if (allEntries != null) {
+          for (JsonNode node : allEntries) {
+            if (node.get("resource") != null
+                && node.get("resource").get("resourceType") != null
+                && node.get("resource").get("resourceType").asText().equalsIgnoreCase("Patient")) {
+              JsonNode resourceNode = node.get("resource");
+              ObjectNode o = (ObjectNode) resourceNode;
+              String patientId =
+                  CaseUtils.toCamelCase(testCase.getTitle(), true, ' ')
+                      + "-"
+                      + (!StringUtils.isBlank(testCase.getSeries())
+                          ? CaseUtils.toCamelCase(testCase.getSeries(), true, ' ') + "-"
+                          : "")
+                      + measure.getCqlLibraryName()
+                      + "-"
+                      + measure.getVersion().getMajor()
+                      + "."
+                      + measure.getVersion().getMinor()
+                      + "."
+                      + measure.getVersion().getRevisionNumber();
+              o.put("id", patientId);
+
+              ByteArrayOutputStream bout = new ByteArrayOutputStream();
+              objectMapper.writerWithDefaultPrettyPrinter().writeValue(bout, rootNode);
+              byte[] objectBytes = bout.toByteArray();
+              modifiedjsonString = new String(objectBytes);
+            }
+          }
+        }
+
+        return modifiedjsonString;
+      } catch (JsonProcessingException e) {
+        log.error("Error reading testCaseJson", e);
+      } catch (IOException ioe) {
+        log.error("IOException: " + ioe.getMessage());
+      }
+    }
+    return testCaseJson;
   }
 }
