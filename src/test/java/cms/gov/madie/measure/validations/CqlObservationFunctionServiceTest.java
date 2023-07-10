@@ -23,7 +23,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 @ExtendWith(MockitoExtension.class)
 public class CqlObservationFunctionServiceTest implements ResourceUtil {
 
-  // private CqlObservationFunctionService validator = new CqlObservationFunctionService();
   @InjectMocks private CqlObservationFunctionService cqlObservationFunctionService;
 
   @Test

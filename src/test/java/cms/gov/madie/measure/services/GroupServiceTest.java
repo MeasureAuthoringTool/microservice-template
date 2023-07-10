@@ -616,6 +616,46 @@ public class GroupServiceTest implements ResourceUtil {
   }
 
   @Test
+  public void testUpdateTestCaseGroupGroupScoringNotChanged() {
+    final Group group =
+        Group.builder()
+            .id("Group1_ID")
+            .scoring("Proportion")
+            .populationBasis("Encounter")
+            .populations(
+                List.of(
+                    new Population(
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        "Initial Population",
+                        null,
+                        null)))
+            .build();
+    final List<TestCase> testCases =
+        List.of(
+            TestCase.builder()
+                .groupPopulations(
+                    List.of(
+                        TestCaseGroupPopulation.builder()
+                            .groupId("Group1_ID")
+                            .scoring("Proportion")
+                            .populationBasis("Encounter")
+                            .populationValues(
+                                List.of(
+                                    TestCasePopulationValue.builder()
+                                        .name(PopulationType.INITIAL_POPULATION)
+                                        .expected(true)
+                                        .build()))
+                            .build()))
+                .build());
+    // before updates
+    assertEquals(1, testCases.get(0).getGroupPopulations().size());
+    groupService.updateGroupForTestCases(group, testCases);
+    // group should not be removed from test case as  measure group scoring was not changed
+    assertEquals(1, testCases.get(0).getGroupPopulations().size());
+  }
+
+  @Test
   public void testUpdateTestCaseGroupGroupPopulationBasisChanged() {
     final Group group =
         Group.builder().id("Group1_ID").scoring("Cohort").populationBasis("Encounter").build();
