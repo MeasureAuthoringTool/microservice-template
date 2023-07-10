@@ -30,7 +30,6 @@ import gov.cms.madie.models.measure.SupplementalData;
 @ExtendWith(MockitoExtension.class)
 class CqlDefinitionReturnTypeServiceTest implements ResourceUtil {
 
-  // CqlDefinitionReturnTypeService validator = new CqlDefinitionReturnTypeService();
   @InjectMocks private CqlDefinitionReturnTypeService qlDefinitionReturnTypeService;
 
   @Test
