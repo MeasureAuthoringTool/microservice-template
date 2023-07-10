@@ -8,6 +8,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import cms.gov.madie.measure.exceptions.InvalidFhirGroupException;
@@ -23,9 +27,11 @@ import gov.cms.madie.models.measure.PopulationType;
 import gov.cms.madie.models.measure.Stratification;
 import gov.cms.madie.models.measure.SupplementalData;
 
-class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
+@ExtendWith(MockitoExtension.class)
+class CqlDefinitionReturnTypeServiceTest implements ResourceUtil {
 
-  CqlDefinitionReturnTypeValidator validator = new CqlDefinitionReturnTypeValidator();
+  // CqlDefinitionReturnTypeService validator = new CqlDefinitionReturnTypeService();
+  @InjectMocks private CqlDefinitionReturnTypeService qlDefinitionReturnTypeService;
 
   @Test
   void testValidateCqlDefinitionReturnTypesNullElm() {
@@ -48,7 +54,7 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
             .build();
     assertThrows(
         IllegalArgumentException.class,
-        () -> validator.validateCqlDefinitionReturnTypes(group1, null),
+        () -> qlDefinitionReturnTypeService.validateCqlDefinitionReturnTypes(group1, null),
         "No definitions found.");
   }
 
@@ -88,7 +94,7 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
 
     assertThrows(
         InvalidReturnTypeException.class,
-        () -> validator.validateCqlDefinitionReturnTypes(group1, elmJson),
+        () -> qlDefinitionReturnTypeService.validateCqlDefinitionReturnTypes(group1, elmJson),
         "Return type for the CQL definition selected for the Stratification(s) does not match with population basis.");
   }
 
@@ -113,7 +119,7 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
 
     assertThrows(
         InvalidReturnTypeException.class,
-        () -> validator.validateCqlDefinitionReturnTypes(group1, elmJson),
+        () -> qlDefinitionReturnTypeService.validateCqlDefinitionReturnTypes(group1, elmJson),
         "Return type for the CQL definition selected for the Initial Population does not match with population basis.");
   }
 
@@ -123,7 +129,7 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
 
     DefDescPair sde =
         SupplementalData.builder().definition("fun23").description("Please Help Me").build();
-    boolean isValid = validator.isDefineInElm(sde, elmJson);
+    boolean isValid = qlDefinitionReturnTypeService.isDefineInElm(sde, elmJson);
     assertThat(isValid, is(true));
   }
 
@@ -133,7 +139,7 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
 
     DefDescPair sde =
         SupplementalData.builder().definition("fun34").description("Please Help Me").build();
-    boolean isValid = validator.isDefineInElm(sde, elmJson);
+    boolean isValid = qlDefinitionReturnTypeService.isDefineInElm(sde, elmJson);
     assertThat(isValid, is(false));
   }
 
@@ -143,7 +149,7 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
 
     DefDescPair sde =
         SupplementalData.builder().definition("fun34").description("Please Help Me").build();
-    boolean isValid = validator.isDefineInElm(sde, elmJson);
+    boolean isValid = qlDefinitionReturnTypeService.isDefineInElm(sde, elmJson);
     assertThat(isValid, is(false));
   }
 
@@ -168,14 +174,14 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
     String elmJson = getData("/test_elm.json");
     assertThrows(
         InvalidFhirGroupException.class,
-        () -> validator.validateCqlDefinitionReturnTypes(group1, elmJson),
+        () -> qlDefinitionReturnTypeService.validateCqlDefinitionReturnTypes(group1, elmJson),
         "Measure Group Types and Population Basis are required for FHIR Measure Group.");
 
     group1.setPopulationBasis(null);
     group1.setMeasureGroupTypes(Arrays.asList(MeasureGroupTypes.OUTCOME));
     assertThrows(
         InvalidFhirGroupException.class,
-        () -> validator.validateCqlDefinitionReturnTypes(group1, elmJson),
+        () -> qlDefinitionReturnTypeService.validateCqlDefinitionReturnTypes(group1, elmJson),
         "Measure Group Types and Population Basis are required for FHIR Measure Group.");
   }
 
@@ -200,7 +206,9 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
             .build();
     assertThrows(
         IllegalArgumentException.class,
-        () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, null, true),
+        () ->
+            qlDefinitionReturnTypeService.validateCqlDefinitionReturnTypesForQdm(
+                group1, null, true),
         "No definitions found.");
   }
 
@@ -226,7 +234,9 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
 
     assertThrows(
         InvalidReturnTypeForQdmException.class,
-        () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, true),
+        () ->
+            qlDefinitionReturnTypeService.validateCqlDefinitionReturnTypesForQdm(
+                group1, elmJson, true),
         "For Patient-based Measures, selected definitions must return a Boolean.");
   }
 
@@ -254,7 +264,9 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
 
     assertThrows(
         InvalidReturnTypeForQdmException.class,
-        () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, false),
+        () ->
+            qlDefinitionReturnTypeService.validateCqlDefinitionReturnTypesForQdm(
+                group1, elmJson, false),
         "For Episode-based Measures, selected definitions must return a list of the same type (Non-Boolean).");
   }
 
@@ -275,7 +287,9 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
     String elmJson = getData("/test_elm_with_boolean.json");
 
     assertDoesNotThrow(
-        () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, true));
+        () ->
+            qlDefinitionReturnTypeService.validateCqlDefinitionReturnTypesForQdm(
+                group1, elmJson, true));
   }
 
   @Test
@@ -301,7 +315,9 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
     String elmJson = getData("/test_elm.json");
 
     assertDoesNotThrow(
-        () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, false));
+        () ->
+            qlDefinitionReturnTypeService.validateCqlDefinitionReturnTypesForQdm(
+                group1, elmJson, false));
   }
 
   @Test
@@ -318,7 +334,9 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
 
     assertThrows(
         InvalidGroupException.class,
-        () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, false));
+        () ->
+            qlDefinitionReturnTypeService.validateCqlDefinitionReturnTypesForQdm(
+                group1, elmJson, false));
   }
 
   @Test
@@ -337,7 +355,9 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
     String elmJson = getData("/test_elm.json");
 
     assertDoesNotThrow(
-        () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, false));
+        () ->
+            qlDefinitionReturnTypeService.validateCqlDefinitionReturnTypesForQdm(
+                group1, elmJson, false));
   }
 
   @Test
@@ -358,7 +378,9 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
 
     assertThrows(
         InvalidReturnTypeForQdmException.class,
-        () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, false),
+        () ->
+            qlDefinitionReturnTypeService.validateCqlDefinitionReturnTypesForQdm(
+                group1, elmJson, false),
         "For Episode-based Measures, selected definitions must return a list of the same type (Non-Boolean).");
   }
 
@@ -388,7 +410,9 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
 
     assertThrows(
         InvalidReturnTypeForQdmException.class,
-        () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, true),
+        () ->
+            qlDefinitionReturnTypeService.validateCqlDefinitionReturnTypesForQdm(
+                group1, elmJson, true),
         "For Patient-based Measures, selected definitions must return a Boolean.");
   }
 
@@ -416,7 +440,9 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
 
     assertThrows(
         InvalidReturnTypeForQdmException.class,
-        () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, false),
+        () ->
+            qlDefinitionReturnTypeService.validateCqlDefinitionReturnTypesForQdm(
+                group1, elmJson, false),
         "For Episode-based Measures, selected definitions must return a list of the same type (Non-Boolean).");
   }
 
@@ -443,6 +469,8 @@ class CqlDefinitionReturnTypeValidatorTest implements ResourceUtil {
     String elmJson = getData("/test_elm_with_boolean.json");
 
     assertDoesNotThrow(
-        () -> validator.validateCqlDefinitionReturnTypesForQdm(group1, elmJson, false));
+        () ->
+            qlDefinitionReturnTypeService.validateCqlDefinitionReturnTypesForQdm(
+                group1, elmJson, false));
   }
 }

@@ -2,8 +2,8 @@ package cms.gov.madie.measure.utils;
 
 import cms.gov.madie.measure.exceptions.InvalidMeasureObservationException;
 import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
-import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeValidator;
-import cms.gov.madie.measure.validations.CqlObservationFunctionValidator;
+import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeService;
+import cms.gov.madie.measure.validations.CqlObservationFunctionService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
@@ -48,8 +48,8 @@ import static org.mockito.Mockito.verifyNoInteractions;
 @ExtendWith(MockitoExtension.class)
 class MeasureUtilTest {
 
-  @Mock private CqlDefinitionReturnTypeValidator cqlDefinitionReturnTypeValidator;
-  @Mock private CqlObservationFunctionValidator cqlObservationFunctionValidator;
+  @Mock private CqlDefinitionReturnTypeService cqlDefinitionReturnTypeService;
+  @Mock private CqlObservationFunctionService cqlObservationFunctionService;
 
   @InjectMocks private MeasureUtil measureUtil;
 
@@ -91,7 +91,7 @@ class MeasureUtilTest {
     Measure measure = Measure.builder().elmJson("{}").supplementalData(sdes).build();
 
     doReturn(false)
-        .when(cqlDefinitionReturnTypeValidator)
+        .when(cqlDefinitionReturnTypeService)
         .isDefineInElm(any(DefDescPair.class), anyString());
 
     Measure output = measureUtil.validateAllMeasureDependencies(measure);
@@ -121,7 +121,7 @@ class MeasureUtilTest {
     Measure measure = Measure.builder().elmJson("{}").riskAdjustments(ravs).build();
 
     doReturn(false)
-        .when(cqlDefinitionReturnTypeValidator)
+        .when(cqlDefinitionReturnTypeService)
         .isDefineInElm(any(DefDescPair.class), anyString());
 
     Measure output = measureUtil.validateAllMeasureDependencies(measure);
@@ -151,7 +151,7 @@ class MeasureUtilTest {
     Measure measure = Measure.builder().elmJson("{}").supplementalData(sdes).build();
 
     doReturn(true)
-        .when(cqlDefinitionReturnTypeValidator)
+        .when(cqlDefinitionReturnTypeService)
         .isDefineInElm(any(DefDescPair.class), anyString());
 
     Measure output = measureUtil.validateAllMeasureDependencies(measure);
@@ -241,10 +241,10 @@ class MeasureUtilTest {
                         .build()))
             .build();
     doNothing()
-        .when(cqlDefinitionReturnTypeValidator)
+        .when(cqlDefinitionReturnTypeService)
         .validateCqlDefinitionReturnTypes(any(Group.class), anyString());
     doNothing()
-        .when(cqlObservationFunctionValidator)
+        .when(cqlObservationFunctionService)
         .validateObservationFunctions(any(Group.class), anyString());
 
     Measure output = measureUtil.validateAllMeasureDependencies(measure);
@@ -272,7 +272,7 @@ class MeasureUtilTest {
                         .build()))
             .build();
     doThrow(new InvalidReturnTypeException("DEFINITIONS"))
-        .when(cqlDefinitionReturnTypeValidator)
+        .when(cqlDefinitionReturnTypeService)
         .validateCqlDefinitionReturnTypes(any(Group.class), anyString());
 
     Measure output = measureUtil.validateAllMeasureDependencies(measure);
@@ -302,10 +302,10 @@ class MeasureUtilTest {
                         .build()))
             .build();
     doNothing()
-        .when(cqlDefinitionReturnTypeValidator)
+        .when(cqlDefinitionReturnTypeService)
         .validateCqlDefinitionReturnTypes(any(Group.class), anyString());
     doThrow(new InvalidReturnTypeException("OBSERVATIONS"))
-        .when(cqlObservationFunctionValidator)
+        .when(cqlObservationFunctionService)
         .validateObservationFunctions(any(Group.class), anyString());
 
     Measure output = measureUtil.validateAllMeasureDependencies(measure);
@@ -336,7 +336,7 @@ class MeasureUtilTest {
             .build();
 
     doThrow(new InvalidReturnTypeException("DEFINITIONS"))
-        .when(cqlDefinitionReturnTypeValidator)
+        .when(cqlDefinitionReturnTypeService)
         .validateCqlDefinitionReturnTypes(any(Group.class), anyString());
 
     Measure output = measureUtil.validateAllMeasureDependencies(measure);
@@ -401,10 +401,10 @@ class MeasureUtilTest {
   @Test
   public void testIsGroupReturnTypesValidReturnsTrue() throws JsonProcessingException {
     doNothing()
-        .when(cqlDefinitionReturnTypeValidator)
+        .when(cqlDefinitionReturnTypeService)
         .validateCqlDefinitionReturnTypes(any(Group.class), anyString());
     doNothing()
-        .when(cqlObservationFunctionValidator)
+        .when(cqlObservationFunctionService)
         .validateObservationFunctions(any(Group.class), anyString());
 
     boolean output = measureUtil.isGroupReturnTypesValid(Group.builder().build(), "");
@@ -415,31 +415,31 @@ class MeasureUtilTest {
   public void testIsGroupReturnTypesValidReturnsFalseForCqlDefinitionReturnTypesException()
       throws JsonProcessingException {
     doThrow(new InvalidReturnTypeException("DEFINITIONS"))
-        .when(cqlDefinitionReturnTypeValidator)
+        .when(cqlDefinitionReturnTypeService)
         .validateCqlDefinitionReturnTypes(any(Group.class), anyString());
 
     boolean output = measureUtil.isGroupReturnTypesValid(Group.builder().build(), "");
     assertThat(output, is(false));
-    verify(cqlDefinitionReturnTypeValidator, times(1))
+    verify(cqlDefinitionReturnTypeService, times(1))
         .validateCqlDefinitionReturnTypes(any(Group.class), anyString());
-    verifyNoInteractions(cqlObservationFunctionValidator);
+    verifyNoInteractions(cqlObservationFunctionService);
   }
 
   @Test
   public void testIsGroupReturnTypesValidReturnsFalseForObservationsReturnTypesException()
       throws JsonProcessingException {
     doNothing()
-        .when(cqlDefinitionReturnTypeValidator)
+        .when(cqlDefinitionReturnTypeService)
         .validateCqlDefinitionReturnTypes(any(Group.class), anyString());
     doThrow(new InvalidReturnTypeException("OBSERVATIONS"))
-        .when(cqlObservationFunctionValidator)
+        .when(cqlObservationFunctionService)
         .validateObservationFunctions(any(Group.class), anyString());
 
     boolean output = measureUtil.isGroupReturnTypesValid(Group.builder().build(), "");
     assertThat(output, is(false));
-    verify(cqlDefinitionReturnTypeValidator, times(1))
+    verify(cqlDefinitionReturnTypeService, times(1))
         .validateCqlDefinitionReturnTypes(any(Group.class), anyString());
-    verify(cqlObservationFunctionValidator, times(1))
+    verify(cqlObservationFunctionService, times(1))
         .validateObservationFunctions(any(Group.class), anyString());
   }
 
@@ -886,7 +886,7 @@ class MeasureUtilTest {
             .build();
 
     doThrow(new IllegalArgumentException("No definitions found."))
-        .when(cqlDefinitionReturnTypeValidator)
+        .when(cqlDefinitionReturnTypeService)
         .validateCqlDefinitionReturnTypesForQdm(group, "{}", true);
 
     Measure output = measureUtil.validateAllMeasureDependencies(measure);
@@ -901,7 +901,7 @@ class MeasureUtilTest {
     Group group = Group.builder().build();
 
     doThrow(new IllegalArgumentException("No definitions found."))
-        .when(cqlDefinitionReturnTypeValidator)
+        .when(cqlDefinitionReturnTypeService)
         .validateCqlDefinitionReturnTypesForQdm(group, "{}", true);
 
     boolean output = measureUtil.isQDMGroupReturnTypesValid(group, "{}", true);
@@ -915,7 +915,7 @@ class MeasureUtilTest {
     doThrow(
             new InvalidMeasureObservationException(
                 "Measure CQL does not have observation definition"))
-        .when(cqlObservationFunctionValidator)
+        .when(cqlObservationFunctionService)
         .validateObservationFunctionsForQdm(group, "{}", true, "");
 
     boolean output = measureUtil.isQDMGroupReturnTypesValid(group, "{}", true);

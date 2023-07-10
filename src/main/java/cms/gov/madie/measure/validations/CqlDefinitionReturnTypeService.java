@@ -8,7 +8,8 @@ import java.util.Map;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,9 +25,9 @@ import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.Stratification;
 import lombok.extern.slf4j.Slf4j;
 
-@Component
+@Service
 @Slf4j
-public class CqlDefinitionReturnTypeValidator {
+public class CqlDefinitionReturnTypeService {
 
   /**
    * Validate cql definition return types of a group against population basis. Group can have cql

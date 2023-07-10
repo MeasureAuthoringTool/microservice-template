@@ -965,11 +965,11 @@ public class MeasureServiceTest implements ResourceUtil {
   @Test
   public void testChangeOwnership() {
     MeasureSet measureSet = MeasureSet.builder().measureSetId("123").owner("testUser").build();
-    Measure measure = Measure.builder().id("123").measureSetId("123").measureSet(measureSet).build();
+    Measure measure =
+        Measure.builder().id("123").measureSetId("123").measureSet(measureSet).build();
     Optional<Measure> persistedMeasure = Optional.of(measure);
     when(measureRepository.findById(anyString())).thenReturn(persistedMeasure);
-    when(measureSetService.updateOwnership(anyString(), anyString()))
-            .thenReturn(new MeasureSet());
+    when(measureSetService.updateOwnership(anyString(), anyString())).thenReturn(new MeasureSet());
 
     boolean result = measureService.changeOwnership(measure.getId(), "user123");
     assertTrue(result);
