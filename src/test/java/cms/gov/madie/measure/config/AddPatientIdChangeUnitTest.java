@@ -4,14 +4,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -50,10 +55,49 @@ public class AddPatientIdChangeUnitTest {
   }
 
   @Test
+  public void testAddPatientIdChangeUnitNoMeasures() {
+    ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
+    when(measureRepository.findAll()).thenReturn(new ArrayList<Measure>());
+    addPatientIdChangeUnit.addTestCasePatientId(measureRepository);
+
+    verify(measureRepository, times(0)).save(measureCaptor.capture());
+  }
+
+  @Test
+  public void testAddPatientIdChangeUnitTestCasePatientIdNotNull() {
+    UUID patientId = UUID.fromString("b8e59126-fa80-4264-a71c-b0b24f4939ef");
+    testTestCase =
+        TestCase.builder().id("testCaseId").title("testCaseTitle").patientId(patientId).build();
+    testMeasure = Measure.builder().id("testMeasureId").testCases(List.of(testTestCase)).build();
+
+    when(measureRepository.findAll()).thenReturn(List.of(testMeasure));
+    addPatientIdChangeUnit.addTestCasePatientId(measureRepository);
+
+    assertEquals(testMeasure.getTestCases().get(0).getPatientId(), patientId);
+  }
+
+  @Test
+  public void testAddPatientIdChangeUnitNoTestCases() {
+    testMeasure.setTestCases(new ArrayList<TestCase>());
+    when(measureRepository.findAll()).thenReturn(List.of(testMeasure));
+    addPatientIdChangeUnit.addTestCasePatientId(measureRepository);
+
+    assertTrue(CollectionUtils.isEmpty(testMeasure.getTestCases()));
+  }
+
+  @Test
   public void testRollbackExecutionSuccess() {
     addPatientIdChangeUnit.rollbackExecution(measureRepository);
 
     UUID patientId = testMeasure.getTestCases().get(0).getPatientId();
     assertNull(patientId);
+  }
+
+  @Test
+  public void testRollbackExecutionNoMeasures() {
+    ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
+    addPatientIdChangeUnit.rollbackExecution(measureRepository);
+
+    verify(measureRepository, times(0)).save(measureCaptor.capture());
   }
 }
