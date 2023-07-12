@@ -88,4 +88,14 @@ class ExportControllerTest {
             principal, "access-token", "example-measure-id", "example-test-case-id");
     assertEquals(HttpStatus.OK, output.getStatusCode());
   }
+
+  @Test
+  void getTestCaseExportThrowsResourceNotFoundException() {
+    Principal principal = mock(Principal.class);
+    when(measureRepository.findById(anyString())).thenReturn(Optional.empty());
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> exportController.getTestCaseExport(
+            principal, "access-token", "example-measure-id", "example-test-case-id"));
+  }
 }
