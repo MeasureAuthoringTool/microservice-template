@@ -20,6 +20,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import gov.cms.madie.models.measure.Measure;
@@ -86,7 +87,9 @@ public class AddPatientIdChangeUnitTest {
   }
 
   @Test
-  public void testRollbackExecutionSuccess() {
+  public void testRollbackExecutionHasMeasures() {
+    ReflectionTestUtils.setField(addPatientIdChangeUnit, "tempMeasures", List.of(testMeasure));
+
     addPatientIdChangeUnit.rollbackExecution(measureRepository);
 
     UUID patientId = testMeasure.getTestCases().get(0).getPatientId();
