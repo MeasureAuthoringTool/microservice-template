@@ -109,9 +109,13 @@ public class TestCaseServiceTest {
     assertEquals("test.user", capturedTestCase.getCreatedBy());
     assertEquals(1, lastModCompareTo);
     assertEquals(capturedTestCase.getLastModifiedAt(), capturedTestCase.getCreatedAt());
+    assertEquals(
+        UUID.fromString(capturedTestCase.getPatientId().toString()).toString(),
+        capturedTestCase.getPatientId().toString());
 
     assertNotNull(persistTestCase.getHapiOperationOutcome());
     assertEquals(200, persistTestCase.getHapiOperationOutcome().getCode());
+    assertNotNull(persistTestCase.getPatientId());
 
     verify(actionLogService, times(1))
         .logAction(

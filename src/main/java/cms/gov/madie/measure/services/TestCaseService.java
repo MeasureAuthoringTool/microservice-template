@@ -1,11 +1,8 @@
 package cms.gov.madie.measure.services;
 
-import cms.gov.madie.measure.HapiFhirConfig;
 import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import cms.gov.madie.measure.exceptions.UnauthorizedException;
-import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.HapiOperationOutcome;
 import gov.cms.madie.models.measure.Measure;
@@ -17,18 +14,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -65,6 +61,7 @@ public class TestCaseService {
     enrichedTestCase.setResourceUri(null);
     enrichedTestCase.setHapiOperationOutcome(null);
     enrichedTestCase.setValidResource(false);
+    enrichedTestCase.setPatientId(UUID.randomUUID());
     return enrichedTestCase;
   }
 
