@@ -21,6 +21,7 @@ madie:
           save-measure-uri: /fhir/measures/save
         validation:
           bundle-uri: /fhir/validations/bundles
+      test-cases: /fhir/test-cases
   cql-elm:
     service:
       base-url: ${ELM_TRANSLATOR_SERVICE_URL:http://localhost:8084/api}

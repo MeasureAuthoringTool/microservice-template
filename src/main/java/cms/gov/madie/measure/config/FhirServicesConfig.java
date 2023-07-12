@@ -26,6 +26,9 @@ public class FhirServicesConfig {
   @Value("${madie.fhir.service.hapi-fhir.measures.save-measure-uri}")
   private String madieFhirServiceSaveMeasureUri;
 
+  @Value("${madie.fhir.service.test-cases}")
+  public String madieFhirServiceTestCaseUri;
+
   @Bean
   public RestTemplate fhirServicesRestTemplate() {
     RestTemplate restTemplate = new RestTemplate();

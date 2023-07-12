@@ -82,6 +82,24 @@ public class FhirServicesClient {
     }
   }
 
+  public byte[] getTestCaseExport(Measure measure, String accessToken, String testCaseId) {
+    URI uri =
+        URI.create(
+            fhirServicesConfig.getMadieFhirServiceBaseUrl()
+                + fhirServicesConfig.madieFhirServiceTestCaseUri
+                + "/"
+                + testCaseId
+                + "/exports");
+    HttpHeaders headers = new HttpHeaders();
+    headers.set(HttpHeaders.AUTHORIZATION, accessToken);
+    headers.set(HttpHeaders.ACCEPT, MediaType.ALL_VALUE);
+    headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+    HttpEntity<Measure> measureEntity = new HttpEntity<>(measure, headers);
+    return fhirServicesRestTemplate
+        .exchange(uri, HttpMethod.PUT, measureEntity, byte[].class)
+        .getBody();
+  }
+
   private URI buildMadieFhirServiceUri(String bundleType, String fhirServiceUri) {
     return UriComponentsBuilder.fromHttpUrl(
             fhirServicesConfig.getMadieFhirServiceBaseUrl() + fhirServiceUri)
