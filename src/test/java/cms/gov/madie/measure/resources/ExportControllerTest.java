@@ -81,9 +81,11 @@ class ExportControllerTest {
             .createdBy("test.user")
             .build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    when(fhirServicesClient.getTestCaseExport(any(Measure.class), anyString(), anyString())).thenReturn(new byte[0]);
-    ResponseEntity<byte[]> output = exportController.getTestCaseExport(
-        principal, "access-token", "example-measure-id", "example-test-case-id");
+    when(fhirServicesClient.getTestCaseExport(any(Measure.class), anyString(), anyString()))
+        .thenReturn(new byte[0]);
+    ResponseEntity<byte[]> output =
+        exportController.getTestCaseExport(
+            principal, "access-token", "example-measure-id", "example-test-case-id");
     assertEquals(HttpStatus.OK, output.getStatusCode());
   }
 }

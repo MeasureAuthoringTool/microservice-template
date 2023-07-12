@@ -162,14 +162,6 @@
       <name>MADiE java models</name>
       <url>https://maven.pkg.github.com/measureauthoringtool/madie-java-models</url>
     </repository>
-    <repository>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <id>github-packaging-utility</id>
-      <name>MADiE packaging utility</name>
-      <url>https://maven.pkg.github.com/measureauthoringtool/packaging-utility</url>
-    </repository>
   </repositories>
 
   <build>
