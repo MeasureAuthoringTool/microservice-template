@@ -95,7 +95,8 @@ class ExportControllerTest {
     when(measureRepository.findById(anyString())).thenReturn(Optional.empty());
     assertThrows(
         ResourceNotFoundException.class,
-        () -> exportController.getTestCaseExport(
-            principal, "access-token", "example-measure-id", "example-test-case-id"));
+        () ->
+            exportController.getTestCaseExport(
+                principal, "access-token", "example-measure-id", "example-test-case-id"));
   }
 }

@@ -213,8 +213,8 @@ class FhirServicesClientTest {
             .cql("library Test1CQLLib version '2.3.001'")
             .build();
     when(fhirServicesConfig
-        .fhirServicesRestTemplate()
-        .exchange(any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+            .fhirServicesRestTemplate()
+            .exchange(any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
         .thenReturn(ResponseEntity.ok(new byte[0]));
     byte[] output = fhirServicesClient.getTestCaseExport(measure, accessToken, "test-case-id");
     assertNotNull(output);
