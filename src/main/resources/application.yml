@@ -62,3 +62,6 @@ hapi-fhir:
     uri: /Patient
   bundle:
     uri: /Bundle
+
+feature-flag:    
+  enforcePatientId: true

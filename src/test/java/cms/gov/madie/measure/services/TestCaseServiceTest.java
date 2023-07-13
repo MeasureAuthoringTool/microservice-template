@@ -9,9 +9,12 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.*;
 import gov.cms.madie.models.common.Version;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,9 +28,11 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.*;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.ByteArrayOutputStream;
 import java.nio.charset.Charset;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -81,6 +86,8 @@ public class TestCaseServiceTest {
     measure.setMeasureName("MSR01");
     measure.setVersion(new Version(0, 0, 1));
     measure.setMeasureMetaData(MeasureMetaData.builder().draft(true).build());
+
+    ReflectionTestUtils.setField(testCaseService, "enforcePatientIdFeatureFlag", true);
   }
 
   @Test
@@ -221,6 +228,20 @@ public class TestCaseServiceTest {
 
     assertThrows(
         ResourceNotFoundException.class,
+        () -> testCaseService.persistTestCases(newTestCases, measureId, username, accessToken));
+  }
+
+  @Test
+  public void testPersistTestCasesThrowsInvalidDraftStatusExceptionForNonDraftMeasure() {
+    List<TestCase> newTestCases = List.of(TestCase.builder().title("Test1").build());
+    String measureId = measure.getId();
+    String username = "user01";
+    String accessToken = "Bearer Token";
+    measure.getMeasureMetaData().setDraft(false);
+    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
+
+    assertThrows(
+        InvalidDraftStatusException.class,
         () -> testCaseService.persistTestCases(newTestCases, measureId, username, accessToken));
   }
 
@@ -506,6 +527,308 @@ public class TestCaseServiceTest {
     assertEquals(1, lastModCompareTo);
     assertNotEquals(updatedTestCase.getLastModifiedAt(), updatedTestCase.getCreatedAt());
     assertEquals("test.user5", updatedTestCase.getCreatedBy());
+  }
+
+  @Test
+  public void testUpdateTestCaseWithEnforcedPatientIdSuccess() {
+    String patientId = "3d2abb9d-c10a-4ab3-ae1a-1684ab61c07e";
+    ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
+    Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
+    String json =
+        "{\"resourceType\": \"Bundle\", \"type\": \"collection\", \n"
+            + "  \"entry\" : [ {\n"
+            + "    \"fullUrl\" : \"http://local/Patient/1\",\n"
+            + "    \"resource\" : {\n"
+            + "      \"id\" : \"testUniqueId\",\n"
+            + "      \"resourceType\" : \"Patient\"    \n"
+            + "    }\n"
+            + "  } ]             }";
+    TestCase originalTestCase =
+        testCase
+            .toBuilder()
+            .createdAt(createdAt)
+            .createdBy("test.user5")
+            .lastModifiedAt(createdAt)
+            .lastModifiedBy("test.user5")
+            .json(json)
+            .patientId(UUID.fromString(patientId))
+            .build();
+    List<TestCase> testCases = new ArrayList<>();
+    testCases.add(originalTestCase);
+    Measure originalMeasure =
+        measure
+            .toBuilder()
+            .model(ModelType.QI_CORE.getValue())
+            .cqlLibraryName("Test1CQLLibraryName")
+            .testCases(testCases)
+            .build();
+    when(measureService.findMeasureById(anyString())).thenReturn(originalMeasure);
+
+    when(fhirServicesClient.validateBundle(anyString(), anyString()))
+        .thenReturn(
+            ResponseEntity.ok(
+                "{\n"
+                    + "    \"code\": 200,\n"
+                    + "    \"message\": null,\n"
+                    + "    \"successful\": true,\n"
+                    + "    \"outcomeResponse\": {\n"
+                    + "        \"resourceType\": \"OperationOutcome\",\n"
+                    + "        \"issue\": [\n"
+                    + "            {\n"
+                    + "                \"severity\": \"information\",\n"
+                    + "                \"code\": \"informational\",\n"
+                    + "                \"diagnostics\": \"No issues detected during validation\"\n"
+                    + "            }\n"
+                    + "        ]\n"
+                    + "    }\n"
+                    + "}"));
+
+    TestCase updatingTestCase =
+        testCase.toBuilder().title("UpdatedTitle").series("UpdatedSeries").json(json).build();
+    Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(any(Measure.class));
+    TestCase updatedTestCase =
+        testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user5", "TOKEN");
+    assertNotNull(updatedTestCase);
+
+    verify(repository, times(1)).save(measureCaptor.capture());
+    assertEquals(updatingTestCase.getId(), updatedTestCase.getId());
+    Measure savedMeasure = measureCaptor.getValue();
+    assertEquals(measure.getLastModifiedBy(), savedMeasure.getLastModifiedBy());
+    assertEquals(measure.getLastModifiedAt(), savedMeasure.getLastModifiedAt());
+    assertNotNull(savedMeasure.getTestCases());
+    assertEquals(1, savedMeasure.getTestCases().size());
+
+    assertTrue(savedMeasure.getTestCases().get(0).getJson().contains(patientId));
+
+    int lastModCompareTo =
+        updatedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
+    assertEquals("test.user5", updatedTestCase.getLastModifiedBy());
+    assertEquals(originalTestCase.getCreatedBy(), updatedTestCase.getCreatedBy());
+    assertEquals(1, lastModCompareTo);
+    assertNotEquals(updatedTestCase.getLastModifiedAt(), updatedTestCase.getCreatedAt());
+    assertEquals("test.user5", updatedTestCase.getCreatedBy());
+  }
+
+  @Test
+  public void testUpdateTestCaseWithFeatureFlagFalse() {
+    ReflectionTestUtils.setField(testCaseService, "enforcePatientIdFeatureFlag", false);
+
+    ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
+    Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
+    String json =
+        "{\"resourceType\": \"Bundle\", \"type\": \"collection\", \n"
+            + "  \"entry\" : [ {\n"
+            + "    \"fullUrl\" : \"http://local/Patient/1\",\n"
+            + "    \"resource\" : {\n"
+            + "      \"id\" : \"testUniqueId\",\n"
+            + "      \"resourceType\" : \"Patient\"    \n"
+            + "    }\n"
+            + "  } ]             }";
+    TestCase originalTestCase =
+        testCase
+            .toBuilder()
+            .createdAt(createdAt)
+            .createdBy("test.user5")
+            .lastModifiedAt(createdAt)
+            .lastModifiedBy("test.user5")
+            .json(json)
+            .build();
+    List<TestCase> testCases = new ArrayList<>();
+    testCases.add(originalTestCase);
+    Measure originalMeasure =
+        measure
+            .toBuilder()
+            .model(ModelType.QI_CORE.getValue())
+            .cqlLibraryName("Test1CQLLibraryName")
+            .testCases(testCases)
+            .build();
+    when(measureService.findMeasureById(anyString())).thenReturn(originalMeasure);
+
+    when(fhirServicesClient.validateBundle(anyString(), anyString()))
+        .thenReturn(
+            ResponseEntity.ok(
+                "{\n"
+                    + "    \"code\": 200,\n"
+                    + "    \"message\": null,\n"
+                    + "    \"successful\": true,\n"
+                    + "    \"outcomeResponse\": {\n"
+                    + "        \"resourceType\": \"OperationOutcome\",\n"
+                    + "        \"issue\": [\n"
+                    + "            {\n"
+                    + "                \"severity\": \"information\",\n"
+                    + "                \"code\": \"informational\",\n"
+                    + "                \"diagnostics\": \"No issues detected during validation\"\n"
+                    + "            }\n"
+                    + "        ]\n"
+                    + "    }\n"
+                    + "}"));
+
+    TestCase updatingTestCase =
+        testCase.toBuilder().title("UpdatedTitle").series("UpdatedSeries").json(json).build();
+    Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(any(Measure.class));
+    TestCase updatedTestCase =
+        testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user5", "TOKEN");
+    assertNotNull(updatedTestCase);
+
+    verify(repository, times(1)).save(measureCaptor.capture());
+    assertEquals(updatingTestCase.getId(), updatedTestCase.getId());
+    Measure savedMeasure = measureCaptor.getValue();
+    assertEquals(measure.getLastModifiedBy(), savedMeasure.getLastModifiedBy());
+    assertEquals(measure.getLastModifiedAt(), savedMeasure.getLastModifiedAt());
+    assertNotNull(savedMeasure.getTestCases());
+    assertEquals(1, savedMeasure.getTestCases().size());
+
+    assertFalse(
+        savedMeasure
+            .getTestCases()
+            .get(0)
+            .getJson()
+            .contains("Updatedtitle-Updatedseries-Test1CQLLibraryName-0.0.1"));
+    assertTrue(savedMeasure.getTestCases().get(0).getJson().contains("testUniqueId"));
+    assertEquals(savedMeasure.getTestCases().get(0).getJson(), json);
+
+    int lastModCompareTo =
+        updatedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
+    assertEquals("test.user5", updatedTestCase.getLastModifiedBy());
+    assertEquals(originalTestCase.getCreatedBy(), updatedTestCase.getCreatedBy());
+    assertEquals(1, lastModCompareTo);
+    assertNotEquals(updatedTestCase.getLastModifiedAt(), updatedTestCase.getCreatedAt());
+    assertEquals("test.user5", updatedTestCase.getCreatedBy());
+  }
+
+  @Test
+  public void testUpdateTestCaseEnforcingdPatientIdFail() {
+    ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
+    Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
+    String json = "invalid test case json";
+    TestCase originalTestCase =
+        testCase
+            .toBuilder()
+            .createdAt(createdAt)
+            .createdBy("test.user5")
+            .lastModifiedAt(createdAt)
+            .lastModifiedBy("test.user5")
+            .json(json)
+            .build();
+    List<TestCase> testCases = new ArrayList<>();
+    testCases.add(originalTestCase);
+    Measure originalMeasure =
+        measure
+            .toBuilder()
+            .model(ModelType.QI_CORE.getValue())
+            .cqlLibraryName("Test1CQLLibraryName")
+            .testCases(testCases)
+            .build();
+    when(measureService.findMeasureById(anyString())).thenReturn(originalMeasure);
+
+    when(fhirServicesClient.validateBundle(anyString(), anyString()))
+        .thenReturn(
+            ResponseEntity.ok(
+                "{\n"
+                    + "    \"code\": 200,\n"
+                    + "    \"message\": null,\n"
+                    + "    \"successful\": true,\n"
+                    + "    \"outcomeResponse\": {\n"
+                    + "        \"resourceType\": \"OperationOutcome\",\n"
+                    + "        \"issue\": [\n"
+                    + "            {\n"
+                    + "                \"severity\": \"information\",\n"
+                    + "                \"code\": \"informational\",\n"
+                    + "                \"diagnostics\": \"No issues detected during validation\"\n"
+                    + "            }\n"
+                    + "        ]\n"
+                    + "    }\n"
+                    + "}"));
+
+    TestCase updatingTestCase =
+        testCase.toBuilder().title("UpdatedTitle").series("UpdatedSeries").json(json).build();
+    Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(any(Measure.class));
+    TestCase updatedTestCase =
+        testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user5", "TOKEN");
+
+    assertNotNull(updatedTestCase);
+
+    verify(repository, times(1)).save(measureCaptor.capture());
+    assertEquals(updatingTestCase.getId(), updatedTestCase.getId());
+    Measure savedMeasure = measureCaptor.getValue();
+    assertEquals(measure.getLastModifiedBy(), savedMeasure.getLastModifiedBy());
+    assertEquals(measure.getLastModifiedAt(), savedMeasure.getLastModifiedAt());
+    assertNotNull(savedMeasure.getTestCases());
+    assertEquals(1, savedMeasure.getTestCases().size());
+
+    assertFalse(
+        savedMeasure
+            .getTestCases()
+            .get(0)
+            .getJson()
+            .contains("Updatedtitle-Updatedseries-Test1CQLLibraryName-0.0.1"));
+
+    int lastModCompareTo =
+        updatedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
+    assertEquals("test.user5", updatedTestCase.getLastModifiedBy());
+    assertEquals(originalTestCase.getCreatedBy(), updatedTestCase.getCreatedBy());
+    assertEquals(1, lastModCompareTo);
+    assertNotEquals(updatedTestCase.getLastModifiedAt(), updatedTestCase.getCreatedAt());
+    assertEquals("test.user5", updatedTestCase.getCreatedBy());
+  }
+
+  @Test
+  public void testEnforcePatientIdEmptyJson() {
+    String modifiedJson = testCaseService.enforcePatientId(null, testCase);
+    assertNull(modifiedJson);
+  }
+
+  @Test
+  public void testEnforcePatientIdNoEntry() {
+    String json = "{\"resourceType\": \"Bundle\", \"type\": \"collection\"}";
+    String modifiedJson = testCaseService.enforcePatientId(json, testCase);
+    assertEquals(modifiedJson, json);
+  }
+
+  @Test
+  public void testEnforcePatientIdNoResource() {
+    String json =
+        "{\"resourceType\": \"Bundle\", \"type\": \"collection\", \n"
+            + "  \"entry\" : [ {\n"
+            + "    \"fullUrl\" : \"http://local/Patient/1\"\n"
+            + "  } ]             }";
+    String modifiedJson = testCaseService.enforcePatientId(json, testCase);
+    assertEquals(modifiedJson, json);
+  }
+
+  @Test
+  public void testEnforcePatientIdNoResourceType() {
+    String json =
+        "{\"resourceType\": \"Bundle\", \"type\": \"collection\", \n"
+            + "  \"entry\" : [ {\n"
+            + "    \"fullUrl\" : \"http://local/Patient/1\",\n"
+            + "    \"resource\" : {\n"
+            + "      \"id\" : \"testUniqueId\"\n"
+            + "    }\n"
+            + "  } ]             }";
+    String modifiedJson = testCaseService.enforcePatientId(json, testCase);
+    assertEquals(modifiedJson, json);
+  }
+
+  @Test
+  public void testEnforcePatientIdNoPatientResourceType() {
+    String json =
+        "{\"resourceType\": \"Bundle\", \"type\": \"collection\", \n"
+            + "  \"entry\" : [ {\n"
+            + "    \"fullUrl\" : \"http://local/Patient/1\",\n"
+            + "    \"resource\" : {\n"
+            + "      \"id\" : \"testUniqueId\",\n"
+            + "      \"resourceType\" : \"NOTPatient\"    \n"
+            + "    }\n"
+            + "  } ]             }";
+    String modifiedJson = testCaseService.enforcePatientId(json, testCase);
+    assertEquals(modifiedJson, json);
+  }
+
+  @Test
+  public void testGetByteArrayOutputStreamThrowsException() {
+    ByteArrayOutputStream bout = testCaseService.getByteArrayOutputStream(null, null);
+    assertTrue(StringUtils.isAllBlank(bout.toString()));
   }
 
   @Test
