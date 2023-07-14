@@ -4,21 +4,28 @@ import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.HapiOperationOutcome;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.TestCase;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.HttpClientErrorException;
 
+import java.io.ByteArrayOutputStream;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +43,9 @@ public class TestCaseService {
   private ObjectMapper mapper;
   private MeasureService measureService;
 
+  @Value("${enforcePatientIdFeatureFlag}")
+  private String enforcePatientIdFeatureFlag;
+
   @Autowired
   public TestCaseService(
       MeasureRepository measureRepository,
@@ -48,6 +58,7 @@ public class TestCaseService {
     this.fhirServicesClient = fhirServicesClient;
     this.mapper = mapper;
     this.measureService = measureService;
+    log.info("enforcePatientIdFeatureFlag = "+enforcePatientIdFeatureFlag);
   }
 
   protected TestCase enrichNewTestCase(TestCase testCase, String username) {
@@ -161,15 +172,22 @@ public class TestCaseService {
       testCase.setCreatedAt(existing.getCreatedAt());
       testCase.setCreatedBy(existing.getCreatedBy());
       testCase.setResourceUri(existing.getResourceUri());
+      // assure patientId is not overwritten
+      testCase.setPatientId(existing.getPatientId());
       measure.getTestCases().remove(existing);
     } else {
       // still allowing upsert
       testCase.setId(ObjectId.get().toString());
       testCase.setCreatedAt(now);
       testCase.setCreatedBy(username);
+      testCase.setPatientId(UUID.randomUUID());
     }
 
     TestCase validatedTestCase = validateTestCaseAsResource(testCase, accessToken);
+    if (Boolean.valueOf(enforcePatientIdFeatureFlag)
+        && ModelType.QI_CORE.getValue().equalsIgnoreCase(measure.getModel())) {
+      validatedTestCase.setJson(enforcePatientId(validatedTestCase));
+    }
     measure.getTestCases().add(validatedTestCase);
 
     measureRepository.save(measure);
@@ -297,5 +315,49 @@ public class TestCaseService {
             "Unable to validate test case JSON due to errors, "
                 + "but outcome not able to be interpreted!")
         .build();
+  }
+
+  protected String enforcePatientId(TestCase testCase) {
+    String testCaseJson = testCase.getJson();
+    if (!StringUtils.isEmpty(testCaseJson)) {
+      ObjectMapper objectMapper = new ObjectMapper();
+      String modifiedjsonString = testCaseJson;
+      try {
+        JsonNode rootNode = objectMapper.readTree(testCaseJson);
+        ArrayNode allEntries = (ArrayNode) rootNode.get("entry");
+        if (allEntries != null) {
+          for (JsonNode node : allEntries) {
+            if (node.get("resource") != null
+                && node.get("resource").get("resourceType") != null
+                && node.get("resource").get("resourceType").asText().equalsIgnoreCase("Patient")) {
+              JsonNode resourceNode = node.get("resource");
+              ObjectNode o = (ObjectNode) resourceNode;
+
+              o.put("id", testCase.getPatientId().toString());
+
+              ByteArrayOutputStream bout = getByteArrayOutputStream(objectMapper, rootNode);
+              byte[] objectBytes = bout.toByteArray();
+              modifiedjsonString = new String(objectBytes);
+            }
+          }
+        }
+
+        return modifiedjsonString;
+      } catch (JsonProcessingException e) {
+        log.error("Error reading testCaseJson testCaseId = " + testCase.getId(), e);
+      }
+    }
+    return testCaseJson;
+  }
+
+  protected ByteArrayOutputStream getByteArrayOutputStream(
+      ObjectMapper objectMapper, JsonNode rootNode) {
+    ByteArrayOutputStream bout = new ByteArrayOutputStream();
+    try {
+      objectMapper.writerWithDefaultPrettyPrinter().writeValue(bout, rootNode);
+    } catch (Exception ex) {
+      log.error("Exception : " + ex.getMessage());
+    }
+    return bout;
   }
 }
