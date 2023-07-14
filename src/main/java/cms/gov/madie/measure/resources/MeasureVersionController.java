@@ -38,6 +38,16 @@ public class MeasureVersionController {
         versionService.createVersion(id, versionType, principal.getName(), accessToken));
   }
 
+  @PostMapping("/{id}/version")
+  public ResponseEntity<Measure> checkValidVersion(
+      @PathVariable("id") String id,
+      @RequestParam String versionType,
+      Principal principal,
+      @RequestHeader("Authorization") String accessToken)
+      throws Exception {
+    return versionService.checkValidVersioning(id, versionType, principal.getName(), accessToken);
+  }
+
   @PostMapping("/{id}/draft")
   public ResponseEntity<Measure> createDraft(
       @PathVariable("id") String id, @RequestBody final Measure measure, Principal principal) {

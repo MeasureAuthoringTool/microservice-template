@@ -47,12 +47,43 @@ public class VersionService {
   private static final String VERSION_TYPE_MINOR = "MINOR";
   private static final String VERSION_TYPE_PATCH = "PATCH";
 
+  public ResponseEntity<Measure> checkValidVersioning(
+      String id, String versionType, String username, String accessToken) throws Exception {
+    Measure measure =
+        measureRepository
+            .findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Measure", id));
+
+    if (!VERSION_TYPE_MAJOR.equalsIgnoreCase(versionType)
+        && !VERSION_TYPE_MINOR.equalsIgnoreCase(versionType)
+        && !VERSION_TYPE_PATCH.equalsIgnoreCase(versionType)) {
+      throw new BadVersionRequestException(
+          "Measure", measure.getId(), username, "Invalid version request.");
+    }
+    measureService.verifyAuthorization(username, measure);
+    validateMeasureForVersioning(measure, username, accessToken);
+    //    if test cases are invalid but no exception has been thrown we send an ok 202.
+    if (measure.getTestCases() != null
+        && measure.getTestCases().stream()
+            .filter(p -> !p.isValidResource())
+            .findFirst()
+            .isPresent()) {
+      log.warn(
+          "User [{}] attempted to version measure with id [{}] which has invalid test cases",
+          username,
+          measure.getId());
+      return new ResponseEntity<>(HttpStatus.ACCEPTED);
+    }
+    return new ResponseEntity<>(HttpStatus.OK);
+  }
+
   public Measure createVersion(String id, String versionType, String username, String accessToken)
       throws Exception {
     Measure measure =
         measureRepository
             .findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Measure", id));
+
     if (!VERSION_TYPE_MAJOR.equalsIgnoreCase(versionType)
         && !VERSION_TYPE_MINOR.equalsIgnoreCase(versionType)
         && !VERSION_TYPE_PATCH.equalsIgnoreCase(versionType)) {
@@ -201,18 +232,20 @@ public class VersionService {
         throw new CqlElmTranslationErrorException(measure.getMeasureName());
       }
     }
-    if (measure.getTestCases() != null
-        && measure.getTestCases().stream()
-            .filter(p -> !p.isValidResource())
-            .findFirst()
-            .isPresent()) {
-      log.error(
-          "User [{}] attempted to version measure with id [{}] which has invalid test cases",
-          username,
-          measure.getId());
-      throw new BadVersionRequestException(
-          "Measure", measure.getId(), username, "Measure has invalid test cases.");
-    }
+
+    //    if (measure.getTestCases() != null
+    //        && measure.getTestCases().stream()
+    //            .filter(p -> !p.isValidResource())
+    //            .findFirst()
+    //            .isPresent()) {
+    ////      we need to return something else here
+    //      log.error(
+    //          "User [{}] attempted to version measure with id [{}] which has invalid test cases",
+    //          username,
+    //          measure.getId());
+    //      throw new BadVersionRequestException(
+    //          "Measure", measure.getId(), username, "Measure has invalid test cases.");
+    //    }
   }
 
   protected Version getNextVersion(Measure measure, String versionType) throws Exception {
