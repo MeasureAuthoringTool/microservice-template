@@ -87,7 +87,7 @@ public class TestCaseServiceTest {
     measure.setVersion(new Version(0, 0, 1));
     measure.setMeasureMetaData(MeasureMetaData.builder().draft(true).build());
 
-    ReflectionTestUtils.setField(testCaseService, "enforcePatientIdFeatureFlag", true);
+    ReflectionTestUtils.setField(testCaseService, "enforcePatientIdFeatureFlag", "true");
   }
 
   @Test
@@ -611,7 +611,7 @@ public class TestCaseServiceTest {
 
   @Test
   public void testUpdateTestCaseWithFeatureFlagFalse() {
-    ReflectionTestUtils.setField(testCaseService, "enforcePatientIdFeatureFlag", false);
+    ReflectionTestUtils.setField(testCaseService, "enforcePatientIdFeatureFlag", "false");
 
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
@@ -774,14 +774,16 @@ public class TestCaseServiceTest {
 
   @Test
   public void testEnforcePatientIdEmptyJson() {
-    String modifiedJson = testCaseService.enforcePatientId(null, testCase);
+    testCase.setJson(null);
+    String modifiedJson = testCaseService.enforcePatientId(testCase);
     assertNull(modifiedJson);
   }
 
   @Test
   public void testEnforcePatientIdNoEntry() {
     String json = "{\"resourceType\": \"Bundle\", \"type\": \"collection\"}";
-    String modifiedJson = testCaseService.enforcePatientId(json, testCase);
+    testCase.setJson(json);
+    String modifiedJson = testCaseService.enforcePatientId(testCase);
     assertEquals(modifiedJson, json);
   }
 
@@ -792,7 +794,8 @@ public class TestCaseServiceTest {
             + "  \"entry\" : [ {\n"
             + "    \"fullUrl\" : \"http://local/Patient/1\"\n"
             + "  } ]             }";
-    String modifiedJson = testCaseService.enforcePatientId(json, testCase);
+    testCase.setJson(json);
+    String modifiedJson = testCaseService.enforcePatientId(testCase);
     assertEquals(modifiedJson, json);
   }
 
@@ -806,7 +809,8 @@ public class TestCaseServiceTest {
             + "      \"id\" : \"testUniqueId\"\n"
             + "    }\n"
             + "  } ]             }";
-    String modifiedJson = testCaseService.enforcePatientId(json, testCase);
+    testCase.setJson(json);
+    String modifiedJson = testCaseService.enforcePatientId(testCase);
     assertEquals(modifiedJson, json);
   }
 
@@ -821,7 +825,8 @@ public class TestCaseServiceTest {
             + "      \"resourceType\" : \"NOTPatient\"    \n"
             + "    }\n"
             + "  } ]             }";
-    String modifiedJson = testCaseService.enforcePatientId(json, testCase);
+    testCase.setJson(json);
+    String modifiedJson = testCaseService.enforcePatientId(testCase);
     assertEquals(modifiedJson, json);
   }
 
