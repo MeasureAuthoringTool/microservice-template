@@ -38,6 +38,8 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class FhirServicesClientTest {
 
+  private static final String accessToken = "Bearer TOKEN";
+
   @Mock private FhirServicesConfig fhirServicesConfig;
 
   @Mock private RestTemplate restTemplate;
@@ -67,7 +69,6 @@ class FhirServicesClientTest {
   @Test
   void testFhirServicesClientThrowsException() {
     Measure measure = Measure.builder().build();
-    final String accessToken = "Bearer TOKEN";
     when(fhirServicesConfig
             .fhirServicesRestTemplate()
             .exchange(any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
@@ -88,7 +89,6 @@ class FhirServicesClientTest {
   @Test
   void testFhirServicesClientReturnsStringData() {
     Measure measure = Measure.builder().build();
-    final String accessToken = "Bearer TOKEN";
     final String json = "{\"message\": \"GOOD JSON\"}";
     when(fhirServicesConfig
             .fhirServicesRestTemplate()
@@ -110,7 +110,6 @@ class FhirServicesClientTest {
   void testValidateBundleThrowsException() {
     final String testCaseJson = "{ \"resourceType\": \"foo\" }";
 
-    final String accessToken = "Bearer TOKEN";
     when(fhirServicesConfig
             .fhirServicesRestTemplate()
             .exchange(any(URI.class), eq(HttpMethod.POST), any(HttpEntity.class), any(Class.class)))
@@ -131,7 +130,6 @@ class FhirServicesClientTest {
 
   @Test
   void testValidateBundleReturnsStringData() {
-    final String accessToken = "Bearer TOKEN";
     final String testCaseJson = "{ \"resourceType\": \"GOOD JSON\" }";
     final String goodOutcomeJson = "{ \"code\": 200, \"successful\": true }";
 
@@ -156,7 +154,6 @@ class FhirServicesClientTest {
 
   @Test
   void testSaveMeasureInHapiFhirsStringData() {
-    final String accessToken = "Bearer TOKEN";
     final String goodOutcomeJson = "{ \"code\": 200, \"successful\": true }";
     Measure measure =
         Measure.builder()
@@ -187,7 +184,6 @@ class FhirServicesClientTest {
 
   @Test
   void testSaveMeasureInHapiFhirsExceptionIgnored() {
-    final String accessToken = "Bearer TOKEN";
     Measure measure =
         Measure.builder()
             .id("testMeasureId")
@@ -205,5 +201,22 @@ class FhirServicesClientTest {
     ResponseEntity<String> output = fhirServicesClient.saveMeasureInHapiFhir(measure, accessToken);
     assertThat(output.getStatusCode(), not(HttpStatus.OK));
     assertNotNull(output.getBody());
+  }
+
+  @Test
+  void testGetTestCaseExport() {
+    Measure measure =
+        Measure.builder()
+            .id("testMeasureId")
+            .measureSetId("testMeasureSetId")
+            .createdBy("testUser")
+            .cql("library Test1CQLLib version '2.3.001'")
+            .build();
+    when(fhirServicesConfig
+            .fhirServicesRestTemplate()
+            .exchange(any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+        .thenReturn(ResponseEntity.ok(new byte[0]));
+    byte[] output = fhirServicesClient.getTestCaseExport(measure, accessToken, "test-case-id");
+    assertNotNull(output);
   }
 }

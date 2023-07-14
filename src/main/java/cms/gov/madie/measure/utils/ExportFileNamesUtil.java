@@ -10,4 +10,13 @@ public class ExportFileNamesUtil {
     }
     return measure.getEcqmTitle() + "-v" + measure.getVersion() + "-" + measure.getModel();
   }
+
+  public static String getTestCaseExportZipName(Measure measure) {
+    return measure.getEcqmTitle()
+        + "-v"
+        + measure.getVersion().toString()
+        + "-"
+        + measure.getModel()
+        + "-TestCases";
+  }
 }
