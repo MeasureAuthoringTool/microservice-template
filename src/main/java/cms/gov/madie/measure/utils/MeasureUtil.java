@@ -8,8 +8,8 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
-import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeValidator;
-import cms.gov.madie.measure.validations.CqlObservationFunctionValidator;
+import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeService;
+import cms.gov.madie.measure.validations.CqlObservationFunctionService;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.DefDescPair;
 import gov.cms.madie.models.measure.Group;
@@ -24,8 +24,8 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @AllArgsConstructor
 public class MeasureUtil {
-  private final CqlDefinitionReturnTypeValidator cqlDefinitionReturnTypeValidator;
-  private final CqlObservationFunctionValidator cqlObservationFunctionValidator;
+  private final CqlDefinitionReturnTypeService cqlDefinitionReturnTypeService;
+  private final CqlObservationFunctionService cqlObservationFunctionService;
 
   /**
    * Validates measure group population define return types and observation function return types
@@ -106,7 +106,7 @@ public class MeasureUtil {
     } else {
       result =
           !defDescPairs.stream()
-              .anyMatch(def -> cqlDefinitionReturnTypeValidator.isDefineInElm(def, elmJson));
+              .anyMatch(def -> cqlDefinitionReturnTypeService.isDefineInElm(def, elmJson));
     }
     return result;
   }
@@ -146,14 +146,14 @@ public class MeasureUtil {
 
   public boolean isGroupReturnTypesValid(final Group group, final String elmJson) {
     try {
-      cqlDefinitionReturnTypeValidator.validateCqlDefinitionReturnTypes(group, elmJson);
+      cqlDefinitionReturnTypeService.validateCqlDefinitionReturnTypes(group, elmJson);
     } catch (Exception ex) {
       // Either no return types were found in ELM, or return type mismatch exists
       log.error("An error occurred while validating population return types", ex);
       return false;
     }
     try {
-      cqlObservationFunctionValidator.validateObservationFunctions(group, elmJson);
+      cqlObservationFunctionService.validateObservationFunctions(group, elmJson);
     } catch (Exception ex) {
       // Either no return types were found in ELM, or return type mismatch exists
       log.error("An error occurred while validating observation return types", ex);
@@ -214,7 +214,7 @@ public class MeasureUtil {
     String cqlDefinitionReturnType = null;
     try {
       cqlDefinitionReturnType =
-          cqlDefinitionReturnTypeValidator.validateCqlDefinitionReturnTypesForQdm(
+          cqlDefinitionReturnTypeService.validateCqlDefinitionReturnTypesForQdm(
               group, elmJson, patientBasis);
     } catch (Exception ex) {
       // Either no return types were found in ELM, or return type mismatch exists
@@ -222,7 +222,7 @@ public class MeasureUtil {
       return false;
     }
     try {
-      cqlObservationFunctionValidator.validateObservationFunctionsForQdm(
+      cqlObservationFunctionService.validateObservationFunctionsForQdm(
           group, elmJson, patientBasis, cqlDefinitionReturnType);
     } catch (Exception ex) {
       // Either no return types were found in ELM, or return type mismatch exists

@@ -14,12 +14,16 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-public class CqlObservationFunctionValidatorTest implements ResourceUtil {
+@ExtendWith(MockitoExtension.class)
+public class CqlObservationFunctionServiceTest implements ResourceUtil {
 
-  private CqlObservationFunctionValidator validator = new CqlObservationFunctionValidator();
+  @InjectMocks private CqlObservationFunctionService cqlObservationFunctionService;
 
   @Test
   public void testValidateObservationFunctionsThrowsInvalidMeasureObservationException() {
@@ -44,7 +48,7 @@ public class CqlObservationFunctionValidatorTest implements ResourceUtil {
 
     assertThrows(
         InvalidMeasureObservationException.class,
-        () -> validator.validateObservationFunctions(group, elmJson),
+        () -> cqlObservationFunctionService.validateObservationFunctions(group, elmJson),
         "Measure CQL does not have observation definition");
   }
 
@@ -68,7 +72,8 @@ public class CqlObservationFunctionValidatorTest implements ResourceUtil {
             .measureObservations(List.of(observation))
             .build();
 
-    assertDoesNotThrow(() -> validator.validateObservationFunctions(group, elmJson));
+    assertDoesNotThrow(
+        () -> cqlObservationFunctionService.validateObservationFunctions(group, elmJson));
   }
 
   @Test
@@ -88,7 +93,7 @@ public class CqlObservationFunctionValidatorTest implements ResourceUtil {
             .groupDescription("Description")
             .measureObservations(null)
             .build();
-    assertDoesNotThrow(() -> validator.validateObservationFunctions(group, ""));
+    assertDoesNotThrow(() -> cqlObservationFunctionService.validateObservationFunctions(group, ""));
   }
 
   @Test
@@ -116,7 +121,7 @@ public class CqlObservationFunctionValidatorTest implements ResourceUtil {
 
     assertThrows(
         InvalidReturnTypeException.class,
-        () -> validator.validateObservationFunctions(group, elmJson),
+        () -> cqlObservationFunctionService.validateObservationFunctions(group, elmJson),
         "Selected observation function boolFunc can not have parameters");
   }
 
@@ -144,7 +149,7 @@ public class CqlObservationFunctionValidatorTest implements ResourceUtil {
 
     assertThrows(
         InvalidReturnTypeException.class,
-        () -> validator.validateObservationFunctions(group, elmJson),
+        () -> cqlObservationFunctionService.validateObservationFunctions(group, elmJson),
         "Selected observation function boolFunc can not have parameters");
   }
 
@@ -171,7 +176,9 @@ public class CqlObservationFunctionValidatorTest implements ResourceUtil {
 
     assertThrows(
         InvalidMeasureObservationException.class,
-        () -> validator.validateObservationFunctionsForQdm(group, elmJson, true, ""),
+        () ->
+            cqlObservationFunctionService.validateObservationFunctionsForQdm(
+                group, elmJson, true, ""),
         "Measure CQL does not have observation definition");
   }
 
@@ -192,7 +199,9 @@ public class CqlObservationFunctionValidatorTest implements ResourceUtil {
             .groupDescription("Description")
             .measureObservations(null)
             .build();
-    assertDoesNotThrow(() -> validator.validateObservationFunctionsForQdm(group, "", true, ""));
+    assertDoesNotThrow(
+        () ->
+            cqlObservationFunctionService.validateObservationFunctionsForQdm(group, "", true, ""));
   }
 
   @Test
@@ -217,7 +226,9 @@ public class CqlObservationFunctionValidatorTest implements ResourceUtil {
             .build();
 
     assertDoesNotThrow(
-        () -> validator.validateObservationFunctionsForQdm(group, elmJson, true, ""));
+        () ->
+            cqlObservationFunctionService.validateObservationFunctionsForQdm(
+                group, elmJson, true, ""));
   }
 
   @Test
@@ -245,7 +256,9 @@ public class CqlObservationFunctionValidatorTest implements ResourceUtil {
 
     assertThrows(
         InvalidReturnTypeException.class,
-        () -> validator.validateObservationFunctionsForQdm(group, elmJson, true, ""),
+        () ->
+            cqlObservationFunctionService.validateObservationFunctionsForQdm(
+                group, elmJson, true, ""),
         "Selected observation function boolFunc can not have parameters");
   }
 
@@ -273,7 +286,9 @@ public class CqlObservationFunctionValidatorTest implements ResourceUtil {
 
     assertThrows(
         InvalidReturnTypeException.class,
-        () -> validator.validateObservationFunctionsForQdm(group, elmJson, false, "test"),
+        () ->
+            cqlObservationFunctionService.validateObservationFunctionsForQdm(
+                group, elmJson, false, "test"),
         "Selected observation function boolFunc can not have parameters");
   }
 
@@ -302,7 +317,9 @@ public class CqlObservationFunctionValidatorTest implements ResourceUtil {
 
     assertThrows(
         InvalidReturnTypeException.class,
-        () -> validator.validateObservationFunctionsForQdm(group, elmJson, false, "boolFunc"),
+        () ->
+            cqlObservationFunctionService.validateObservationFunctionsForQdm(
+                group, elmJson, false, "boolFunc"),
         "Selected observation function must have exactly one parameter of type 'false'");
   }
 }
