@@ -126,7 +126,7 @@
     <dependency>
       <groupId>gov.cms.madie.packaging</groupId>
       <artifactId>packaging-utility</artifactId>
-      <version>0.2</version>
+      <version>0.2.2</version>
     </dependency>
     <dependency>
       <groupId>org.springdoc</groupId>
@@ -161,14 +161,6 @@
       <id>github</id>
       <name>MADiE java models</name>
       <url>https://maven.pkg.github.com/measureauthoringtool/madie-java-models</url>
-    </repository>
-    <repository>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <id>github-packaging-utility</id>
-      <name>MADiE packaging utility</name>
-      <url>https://maven.pkg.github.com/measureauthoringtool/packaging-utility</url>
     </repository>
   </repositories>
 
