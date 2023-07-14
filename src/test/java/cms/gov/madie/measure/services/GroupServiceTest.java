@@ -36,12 +36,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import cms.gov.madie.measure.exceptions.InvalidIdException;
-import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.utils.ResourceUtil;
+import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeService;
+import cms.gov.madie.measure.validations.CqlObservationFunctionService;
 
 @ExtendWith(MockitoExtension.class)
 public class GroupServiceTest implements ResourceUtil {
@@ -50,6 +54,9 @@ public class GroupServiceTest implements ResourceUtil {
   @Mock private MeasureUtil measureUtil;
 
   @Mock private MeasureService measureService;
+
+  @Mock private CqlDefinitionReturnTypeService cqlDefinitionReturnTypeService;
+  @Mock private CqlObservationFunctionService cqlObservationFunctionService;
 
   @InjectMocks private GroupService groupService;
 
@@ -609,6 +616,46 @@ public class GroupServiceTest implements ResourceUtil {
   }
 
   @Test
+  public void testUpdateTestCaseGroupGroupScoringNotChanged() {
+    final Group group =
+        Group.builder()
+            .id("Group1_ID")
+            .scoring("Proportion")
+            .populationBasis("Encounter")
+            .populations(
+                List.of(
+                    new Population(
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        "Initial Population",
+                        null,
+                        null)))
+            .build();
+    final List<TestCase> testCases =
+        List.of(
+            TestCase.builder()
+                .groupPopulations(
+                    List.of(
+                        TestCaseGroupPopulation.builder()
+                            .groupId("Group1_ID")
+                            .scoring("Proportion")
+                            .populationBasis("Encounter")
+                            .populationValues(
+                                List.of(
+                                    TestCasePopulationValue.builder()
+                                        .name(PopulationType.INITIAL_POPULATION)
+                                        .expected(true)
+                                        .build()))
+                            .build()))
+                .build());
+    // before updates
+    assertEquals(1, testCases.get(0).getGroupPopulations().size());
+    groupService.updateGroupForTestCases(group, testCases);
+    // group should not be removed from test case as  measure group scoring was not changed
+    assertEquals(1, testCases.get(0).getGroupPopulations().size());
+  }
+
+  @Test
   public void testUpdateTestCaseGroupGroupPopulationBasisChanged() {
     final Group group =
         Group.builder().id("Group1_ID").scoring("Cohort").populationBasis("Encounter").build();
@@ -716,43 +763,14 @@ public class GroupServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testUpdateGroupWhenPopulationDefinitionReturnTypeNotMatchingWithPopulationBasis() {
-    Optional<Measure> optional = Optional.of(measure);
-    doReturn(optional).when(measureRepository).findById(any(String.class));
-
-    assertThrows(
-        InvalidReturnTypeException.class,
-        () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
-  }
-
-  @Test
-  public void testUpdateGroupWhenPopulationFunctionReturnTypeNotMatchingWithPopulationBasis() {
-    group2.setPopulations(null);
-    group2.setPopulationBasis("Boolean");
-    Optional<Measure> optional = Optional.of(measure);
-    doReturn(optional).when(measureRepository).findById(any(String.class));
-
-    assertThrows(
-        InvalidReturnTypeException.class,
-        () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
-  }
-
-  @Test
-  public void testUpdateGroupWhenElmJsonIsInvalid() {
+  public void testUpdateGroupWhenElmJsonIsInvalid() throws JsonProcessingException {
     measure.setElmJson("UnpardonableElmJson");
     Optional<Measure> optional = Optional.of(measure);
     doReturn(optional).when(measureRepository).findById(any(String.class));
 
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
-  }
-
-  @Test
-  public void testUpdateGroupWhenElmJsonIsNull() {
-    measure.setElmJson(null);
-    Optional<Measure> optional = Optional.of(measure);
-    doReturn(optional).when(measureRepository).findById(any(String.class));
+    doThrow(new JsonProcessingException("invalid elm json") {})
+        .when(cqlDefinitionReturnTypeService)
+        .validateCqlDefinitionReturnTypes(any(Group.class), anyString());
 
     assertThrows(
         IllegalArgumentException.class,
@@ -819,11 +837,15 @@ public class GroupServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testCreateGroupWithEmptyElm() {
+  public void testCreateGroupWithEmptyElm() throws JsonProcessingException {
     group2.setPopulations(null);
     group2.setPopulationBasis("Boolean");
     Optional<Measure> optional = Optional.of(measure);
     doReturn(optional).when(measureRepository).findById(any(String.class));
+
+    doThrow(new JsonProcessingException("invalid elm json") {})
+        .when(cqlDefinitionReturnTypeService)
+        .validateCqlDefinitionReturnTypes(any(Group.class), anyString());
 
     measure.setElmJson("");
     assertThrows(
@@ -841,35 +863,6 @@ public class GroupServiceTest implements ResourceUtil {
 
     Group group = groupService.createOrUpdateGroup(group1, measure.getId(), "test.user");
     assertNotNull(group);
-  }
-
-  @Test
-  public void testUpdateGroupWithBooleanAsOperandTypeSpecifierName() {
-    group2.setMeasureObservations(
-        List.of(
-            new MeasureObservation(
-                "id-1",
-                "fun23",
-                "a description of fun23",
-                "id-2",
-                AggregateMethodType.MAXIMUM.getValue())));
-    Optional<Measure> optional = Optional.of(measure);
-    doReturn(optional).when(measureRepository).findById(any(String.class));
-    assertThrows(
-        InvalidReturnTypeException.class,
-        () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
-  }
-
-  @Test
-  public void testUpdateGroupWithStratificationWhenReturnTypeNotEqualToPopulationBasis() {
-    group2.setPopulations(null);
-    // non-boolean define for strat cql definition
-    group2.getStratifications().get(1).setCqlDefinition("SDE Race");
-    Optional<Measure> optional = Optional.of(measure);
-    doReturn(optional).when(measureRepository).findById(any(String.class));
-    assertThrows(
-        InvalidReturnTypeException.class,
-        () -> groupService.createOrUpdateGroup(group2, measure.getId(), "test.user"));
   }
 
   @Test
@@ -1219,7 +1212,8 @@ public class GroupServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testHandleQdmGroupReturnTypesNonPatientBasisThrowsException() {
+  public void testHandleQdmGroupReturnTypesNonPatientBasisThrowsException()
+      throws JsonProcessingException {
     Population population =
         Population.builder()
             .id("testId")
@@ -1238,6 +1232,10 @@ public class GroupServiceTest implements ResourceUtil {
             .patientBasis(false)
             .elmJson(elmJson)
             .build();
+
+    doThrow(new JsonProcessingException("invalid elm json") {})
+        .when(cqlDefinitionReturnTypeService)
+        .validateCqlDefinitionReturnTypesForQdm(any(Group.class), anyString(), any(Boolean.class));
 
     assertThrows(
         IllegalArgumentException.class,

@@ -5,8 +5,8 @@ import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.utils.MeasureUtil;
-import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeValidator;
-import cms.gov.madie.measure.validations.CqlObservationFunctionValidator;
+import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeService;
+import cms.gov.madie.measure.validations.CqlObservationFunctionService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.Group;
@@ -43,6 +43,8 @@ public class GroupService {
   private final MeasureUtil measureUtil;
   private final MeasureRepository measureRepository;
   private final MeasureService measureService;
+  private final CqlDefinitionReturnTypeService cqlDefinitionReturnTypeService;
+  private final CqlObservationFunctionService cqlObservationFunctionService;
 
   public Group createOrUpdateGroup(Group group, String measureId, String username) {
 
@@ -336,10 +338,8 @@ public class GroupService {
 
   protected void handleFhirGroupReturnTypes(Group group, Measure measure) {
     try {
-      new CqlDefinitionReturnTypeValidator()
-          .validateCqlDefinitionReturnTypes(group, measure.getElmJson());
-      new CqlObservationFunctionValidator()
-          .validateObservationFunctions(group, measure.getElmJson());
+      cqlDefinitionReturnTypeService.validateCqlDefinitionReturnTypes(group, measure.getElmJson());
+      cqlObservationFunctionService.validateObservationFunctions(group, measure.getElmJson());
     } catch (JsonProcessingException ex) {
       log.error(
           "An error occurred while validating population "
@@ -354,9 +354,8 @@ public class GroupService {
     QdmMeasure qdmMeasure = (QdmMeasure) measure;
 
     try {
-      new CqlDefinitionReturnTypeValidator()
-          .validateCqlDefinitionReturnTypesForQdm(
-              group, measure.getElmJson(), qdmMeasure.isPatientBasis());
+      cqlDefinitionReturnTypeService.validateCqlDefinitionReturnTypesForQdm(
+          group, measure.getElmJson(), qdmMeasure.isPatientBasis());
     } catch (JsonProcessingException ex) {
       log.error(
           "An error occurred while validating population "

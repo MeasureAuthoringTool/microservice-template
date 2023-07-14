@@ -11,12 +11,12 @@ import gov.cms.madie.models.measure.MeasureObservation;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 
-@Component
-public class CqlObservationFunctionValidator {
+@Service
+public class CqlObservationFunctionService {
 
   public void validateObservationFunctions(Group group, String elmJson)
       throws JsonProcessingException {
