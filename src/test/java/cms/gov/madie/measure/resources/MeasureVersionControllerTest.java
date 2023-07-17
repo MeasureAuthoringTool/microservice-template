@@ -4,6 +4,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
@@ -106,6 +107,32 @@ public class MeasureVersionControllerTest {
     assertThat(entity.getStatusCode(), is(HttpStatus.OK));
     assertThat(entity.getBody(), is(equalTo(updatedMeasure)));
   }
+
+  @Test
+  public void testCheckValidVersionioningSuccess() throws Exception {
+    when(principal.getName()).thenReturn("testUser");
+    Measure updatedMeasure = Measure.builder().id("testMeasureId").createdBy("testUser").build();
+    Version updatedVersion = Version.builder().major(3).minor(0).revisionNumber(0).build();
+    updatedMeasure.setVersion(updatedVersion);
+    MeasureMetaData updatedMetaData = new MeasureMetaData();
+    updatedMetaData.setDraft(false);
+    updatedMeasure.setMeasureMetaData(updatedMetaData);
+    ResponseEntity<?> responseEntity = new ResponseEntity<>(
+            "some response body",
+            HttpStatus.OK
+    );
+    when(versionService.checkValidVersioning(anyString(), anyString(), anyString(), anyString()))
+            .thenReturn((ResponseEntity<Measure>) responseEntity);
+
+    ResponseEntity<Measure> entity =
+            measureVersionController.checkValidVersion("testMeasureId", "MAJOR", principal, "accesstoken");
+    assertThat(entity, is(notNullValue()));
+    assertThat(entity.getStatusCode(), is(HttpStatus.OK));
+    ResponseEntity response =
+            measureVersionController.checkValidVersion("testMeasureId", "MAJOR", principal, "accesstoken");
+    assertEquals((HttpStatus.OK), response.getStatusCode());
+  }
+
 
   @Test
   public void testCreateDraftSuccessfully() {
