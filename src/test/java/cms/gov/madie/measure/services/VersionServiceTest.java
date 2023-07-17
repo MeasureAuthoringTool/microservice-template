@@ -207,7 +207,7 @@ public class VersionServiceTest {
     metaData.setDraft(false);
     existingMeasure.setMeasureMetaData(metaData);
 
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure))
 
     assertThrows(
         BadVersionRequestException.class,

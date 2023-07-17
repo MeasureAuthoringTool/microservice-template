@@ -58,7 +58,7 @@ public class TestCaseService {
     this.fhirServicesClient = fhirServicesClient;
     this.mapper = mapper;
     this.measureService = measureService;
-    log.info("enforcePatientIdFeatureFlag = "+enforcePatientIdFeatureFlag);
+    log.info("enforcePatientIdFeatureFlag = " + enforcePatientIdFeatureFlag);
   }
 
   protected TestCase enrichNewTestCase(TestCase testCase, String username) {

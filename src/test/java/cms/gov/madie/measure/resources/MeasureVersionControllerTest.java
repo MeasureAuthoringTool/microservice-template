@@ -117,22 +117,20 @@ public class MeasureVersionControllerTest {
     MeasureMetaData updatedMetaData = new MeasureMetaData();
     updatedMetaData.setDraft(false);
     updatedMeasure.setMeasureMetaData(updatedMetaData);
-    ResponseEntity<?> responseEntity = new ResponseEntity<>(
-            "some response body",
-            HttpStatus.OK
-    );
+    ResponseEntity<?> responseEntity = new ResponseEntity<>("some response body", HttpStatus.OK);
     when(versionService.checkValidVersioning(anyString(), anyString(), anyString(), anyString()))
-            .thenReturn((ResponseEntity<Measure>) responseEntity);
+        .thenReturn((ResponseEntity<Measure>) responseEntity);
 
     ResponseEntity<Measure> entity =
-            measureVersionController.checkValidVersion("testMeasureId", "MAJOR", principal, "accesstoken");
+        measureVersionController.checkValidVersion(
+            "testMeasureId", "MAJOR", principal, "accesstoken");
     assertThat(entity, is(notNullValue()));
     assertThat(entity.getStatusCode(), is(HttpStatus.OK));
     ResponseEntity response =
-            measureVersionController.checkValidVersion("testMeasureId", "MAJOR", principal, "accesstoken");
+        measureVersionController.checkValidVersion(
+            "testMeasureId", "MAJOR", principal, "accesstoken");
     assertEquals((HttpStatus.OK), response.getStatusCode());
   }
-
 
   @Test
   public void testCreateDraftSuccessfully() {
