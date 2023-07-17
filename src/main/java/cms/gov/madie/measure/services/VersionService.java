@@ -232,20 +232,6 @@ public class VersionService {
         throw new CqlElmTranslationErrorException(measure.getMeasureName());
       }
     }
-
-    //    if (measure.getTestCases() != null
-    //        && measure.getTestCases().stream()
-    //            .filter(p -> !p.isValidResource())
-    //            .findFirst()
-    //            .isPresent()) {
-    ////      we need to return something else here
-    //      log.error(
-    //          "User [{}] attempted to version measure with id [{}] which has invalid test cases",
-    //          username,
-    //          measure.getId());
-    //      throw new BadVersionRequestException(
-    //          "Measure", measure.getId(), username, "Measure has invalid test cases.");
-    //    }
   }
 
   protected Version getNextVersion(Measure measure, String versionType) throws Exception {

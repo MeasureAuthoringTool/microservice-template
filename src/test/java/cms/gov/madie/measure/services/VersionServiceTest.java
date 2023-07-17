@@ -320,29 +320,29 @@ public class VersionServiceTest {
                 "testMeasureId", "MAJOR", "testUser", "accesstoken"));
   }
 
-//  @Test
-//  public void testCheckVersionReturns202() throws Exception {
-//    Measure existingMeasure =
-//        Measure.builder()
-//            .id("testMeasureId")
-//            .createdBy("testUser")
-//            .cql("library Test1CQLLib version '2.3.001")
-//            .build();
-//    MeasureMetaData metaData = new MeasureMetaData();
-//    metaData.setDraft(true);
-//    existingMeasure.setMeasureMetaData(metaData);
-//    List<TestCase> testCases = List.of(TestCase.builder().validResource(false).build());
-//    existingMeasure.setTestCases(testCases);
-//
-//    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
-//
-//    ElmJson elmJson = ElmJson.builder().json(ELMJON_NO_ERROR).build();
-//    when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(elmJson);
-//    when(elmTranslatorClient.hasErrors(any())).thenReturn(false);
-//    ResponseEntity response =
-//        versionService.checkValidVersioning("testMeasureId", "MAJOR", "testUser", "accesstoken");
-//    assertEquals(ResponseEntity.ok(HttpStatus.ACCEPTED), response);
-//  }
+  @Test
+  public void testCheckVersionReturns202() throws Exception {
+    Measure existingMeasure =
+        Measure.builder()
+            .id("testMeasureId")
+            .createdBy("testUser")
+            .cql("library Test1CQLLib version '2.3.001")
+            .build();
+    MeasureMetaData metaData = new MeasureMetaData();
+    metaData.setDraft(true);
+    existingMeasure.setMeasureMetaData(metaData);
+    List<TestCase> testCases = List.of(TestCase.builder().validResource(false).build());
+    existingMeasure.setTestCases(testCases);
+
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+
+    ElmJson elmJson = ElmJson.builder().json(ELMJON_NO_ERROR).build();
+    when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(elmJson);
+    when(elmTranslatorClient.hasErrors(any())).thenReturn(false);
+    ResponseEntity response =
+        versionService.checkValidVersioning("testMeasureId", "MAJOR", "testUser", "accesstoken");
+    assertEquals((HttpStatus.ACCEPTED), response.getStatusCode());
+  }
 
   @Test
   public void testGetNextVersionOtherException() throws Exception {
