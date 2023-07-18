@@ -113,6 +113,17 @@ public class VersionServiceTest {
   private Instant today = Instant.now();
 
   @Test
+  public void testCheckValidVersioningThrowsResourceNotFoundException() {
+    when(measureRepository.findById(anyString())).thenReturn(Optional.empty());
+
+    assertThrows(
+        ResourceNotFoundException.class,
+        () ->
+            versionService.checkValidVersioning(
+                "testMeasureId", "MAJOR", "testUser", "accesstoken"));
+  }
+
+  @Test
   public void testCreateVersionThrowsResourceNotFoundException() {
     when(measureRepository.findById(anyString())).thenReturn(Optional.empty());
 
@@ -131,6 +142,34 @@ public class VersionServiceTest {
         () ->
             versionService.createVersion(
                 "testMeasureId", "NOTVALIDVERSIONTYPE", "testUser", "accesstoken"));
+  }
+
+  @Test
+  public void testCheckValidVersioningThrowsBadVersionRequestExceptionForInvalidVersionType() {
+    Measure existingMeasure = Measure.builder().id("testMeasureId").createdBy("testUser").build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+
+    assertThrows(
+        BadVersionRequestException.class,
+        () ->
+            versionService.checkValidVersioning(
+                "testMeasureId", "NOTVALIDVERSIONTYPE", "testUser", "accesstoken"));
+  }
+
+  @Test
+  public void testCheckValidVersioningThrowsUnauthorizedExceptionForNonOwner() {
+    Measure existingMeasure =
+        Measure.builder().id("testMeasureId").createdBy("anotherUser").build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+    doThrow(new UnauthorizedException("Measure", "testMeasureId", "testUser"))
+        .when(measureService)
+        .verifyAuthorization(anyString(), any(Measure.class));
+
+    assertThrows(
+        UnauthorizedException.class,
+        () ->
+            versionService.checkValidVersioning(
+                "testMeasureId", "MAJOR", "testUser", "accesstoken"));
   }
 
   @Test
@@ -162,6 +201,22 @@ public class VersionServiceTest {
   }
 
   @Test
+  public void testCCheckValidVersioningThrowsBadVersionRequestExceptionForNonDraftMeasure() {
+    Measure existingMeasure = Measure.builder().id("testMeasureId").createdBy("testUser").build();
+    MeasureMetaData metaData = new MeasureMetaData();
+    metaData.setDraft(false);
+    existingMeasure.setMeasureMetaData(metaData);
+
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+
+    assertThrows(
+        BadVersionRequestException.class,
+        () ->
+            versionService.checkValidVersioning(
+                "testMeasureId", "MAJOR", "testUser", "accesstoken"));
+  }
+
+  @Test
   public void testCreateVersionThrowsBadVersionRequestExceptionForCqlErrors() {
     Measure existingMeasure =
         Measure.builder().id("testMeasureId").createdBy("testUser").cqlErrors(true).build();
@@ -174,6 +229,23 @@ public class VersionServiceTest {
     assertThrows(
         BadVersionRequestException.class,
         () -> versionService.createVersion("testMeasureId", "MAJOR", "testUser", "accesstoken"));
+  }
+
+  @Test
+  public void testCheckValidVersioningThrowsBadVersionRequestExceptionForCqlErrors() {
+    Measure existingMeasure =
+        Measure.builder().id("testMeasureId").createdBy("testUser").cqlErrors(true).build();
+    MeasureMetaData metaData = new MeasureMetaData();
+    metaData.setDraft(true);
+    existingMeasure.setMeasureMetaData(metaData);
+
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+
+    assertThrows(
+        BadVersionRequestException.class,
+        () ->
+            versionService.checkValidVersioning(
+                "testMeasureId", "MAJOR", "testUser", "accesstoken"));
   }
 
   @Test
@@ -222,7 +294,34 @@ public class VersionServiceTest {
   }
 
   @Test
-  public void testCreateVersionThrowsBadVersionRequestExceptionForInvalidResources() {
+  public void testCheckValidVersioningThrowsCqlElmTranslationErrorExceptionForInvalidCQL() {
+    Measure existingMeasure =
+        Measure.builder()
+            .id("testMeasureId")
+            .measureName("test measure")
+            .createdBy("testUser")
+            .cqlErrors(false)
+            .cql("test cql")
+            .build();
+    MeasureMetaData metaData = new MeasureMetaData();
+    metaData.setDraft(true);
+    existingMeasure.setMeasureMetaData(metaData);
+
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+
+    ElmJson elmJson = ElmJson.builder().json(ELMJON_ERROR).build();
+    when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(elmJson);
+    when(elmTranslatorClient.hasErrors(any())).thenReturn(true);
+
+    assertThrows(
+        CqlElmTranslationErrorException.class,
+        () ->
+            versionService.checkValidVersioning(
+                "testMeasureId", "MAJOR", "testUser", "accesstoken"));
+  }
+
+  @Test
+  public void testCheckVersionReturns202() throws Exception {
     Measure existingMeasure =
         Measure.builder()
             .id("testMeasureId")
@@ -240,10 +339,9 @@ public class VersionServiceTest {
     ElmJson elmJson = ElmJson.builder().json(ELMJON_NO_ERROR).build();
     when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(elmJson);
     when(elmTranslatorClient.hasErrors(any())).thenReturn(false);
-
-    assertThrows(
-        BadVersionRequestException.class,
-        () -> versionService.createVersion("testMeasureId", "MAJOR", "testUser", "accesstoken"));
+    ResponseEntity response =
+        versionService.checkValidVersioning("testMeasureId", "MAJOR", "testUser", "accesstoken");
+    assertEquals((HttpStatus.ACCEPTED), response.getStatusCode());
   }
 
   @Test

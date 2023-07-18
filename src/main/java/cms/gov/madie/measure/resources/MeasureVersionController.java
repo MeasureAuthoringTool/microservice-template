@@ -8,14 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 
@@ -36,6 +29,16 @@ public class MeasureVersionController {
       throws Exception {
     return ResponseEntity.ok(
         versionService.createVersion(id, versionType, principal.getName(), accessToken));
+  }
+
+  @GetMapping("/{id}/version")
+  public ResponseEntity<Measure> checkValidVersion(
+      @PathVariable("id") String id,
+      @RequestParam String versionType,
+      Principal principal,
+      @RequestHeader("Authorization") String accessToken)
+      throws Exception {
+    return versionService.checkValidVersioning(id, versionType, principal.getName(), accessToken);
   }
 
   @PostMapping("/{id}/draft")
