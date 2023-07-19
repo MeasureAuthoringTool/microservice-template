@@ -82,12 +82,12 @@ public class ExportController {
         .body(fhirServicesClient.getTestCaseExport(measure, accessToken, testCaseId));
   }
 
-  @GetMapping(path = ControllerUtil.TEST_CASES + "/exports", produces = "application/zip")
+  @PutMapping(path = ControllerUtil.TEST_CASES + "/exports", produces = "application/zip")
   public ResponseEntity<byte[]> getTestCaseExport(
       Principal principal,
       @RequestHeader("Authorization") String accessToken,
       @PathVariable String measureId,
-      @RequestParam String... testCaseId) {
+      @RequestBody String... testCaseId) {
 
     final String username = principal.getName();
     log.info("User [{}] is attempting to export test cases for [{}]", username, measureId);
