@@ -10,10 +10,7 @@ import cms.gov.madie.measure.utils.ExportFileNamesUtil;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import gov.cms.madie.models.measure.Measure;
 import lombok.RequiredArgsConstructor;
@@ -83,5 +80,33 @@ public class ExportController {
                 + ".zip\"")
         .contentType(MediaType.APPLICATION_OCTET_STREAM)
         .body(fhirServicesClient.getTestCaseExport(measure, accessToken, testCaseId));
+  }
+
+  @GetMapping(path = ControllerUtil.TEST_CASES + "/exports", produces = "application/zip")
+  public ResponseEntity<byte[]> getTestCaseExport(
+      Principal principal,
+      @RequestHeader("Authorization") String accessToken,
+      @PathVariable String measureId,
+      @RequestParam String... testCaseId) {
+
+    final String username = principal.getName();
+    log.info("User [{}] is attempting to export test cases for [{}]", username, measureId);
+
+    Optional<Measure> measureOptional = measureRepository.findById(measureId);
+
+    if (measureOptional.isEmpty()) {
+      throw new ResourceNotFoundException("Measure", measureId);
+    }
+
+    Measure measure = measureOptional.get();
+
+    return ResponseEntity.ok()
+        .header(
+            HttpHeaders.CONTENT_DISPOSITION,
+            "attachment;filename=\""
+                + ExportFileNamesUtil.getTestCaseExportZipName(measure)
+                + ".zip\"")
+        .contentType(MediaType.APPLICATION_OCTET_STREAM)
+        .body(null);
   }
 }
