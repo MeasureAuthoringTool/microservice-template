@@ -71,19 +71,26 @@ public class VersionService {
 
   public Measure createVersion(String id, String versionType, String username, String accessToken)
       throws Exception {
-    Measure measure =
-        measureRepository
-            .findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Measure", id));
+    Measure measure = validateVersionOptions(id, versionType, username, accessToken);
 
-    if (!VERSION_TYPE_MAJOR.equalsIgnoreCase(versionType)
-        && !VERSION_TYPE_MINOR.equalsIgnoreCase(versionType)
-        && !VERSION_TYPE_PATCH.equalsIgnoreCase(versionType)) {
-      throw new BadVersionRequestException(
-          "Measure", measure.getId(), username, "Invalid version request.");
+    if (measure instanceof FhirMeasure) {
+      return versionFhirMeasure(versionType, username, accessToken, measure);
     }
-    measureService.verifyAuthorization(username, measure);
-    validateMeasureForVersioning(measure, username, accessToken);
+    return versionQdmMeasure(versionType, username, measure);
+  }
+
+  private Measure versionQdmMeasure(String versionType, String username, Measure measure) throws Exception {
+    return version(versionType, username, measure);
+  }
+
+  private Measure versionFhirMeasure(String versionType, String username, String accessToken, Measure measure) throws Exception {
+    Measure savedMeasure = version(versionType, username, measure);
+    var measureBundle = fhirServicesClient.getMeasureBundle(savedMeasure, accessToken, "export");
+    saveMeasureBundle(savedMeasure, measureBundle, accessToken, username);
+    return savedMeasure;
+  }
+
+  private Measure version(String versionType, String username, Measure measure) throws Exception {
     measure.getMeasureMetaData().setDraft(false);
     measure.setLastModifiedAt(Instant.now());
     measure.setLastModifiedBy(username);
@@ -110,9 +117,6 @@ public class VersionService {
         username);
     log.info(
         "User [{}] successfully versioned measure with ID [{}]", username, savedMeasure.getId());
-
-    var measureBundle = fhirServicesClient.getMeasureBundle(savedMeasure, accessToken, "export");
-    saveMeasureBundle(savedMeasure, measureBundle, accessToken, username);
     return savedMeasure;
   }
 
