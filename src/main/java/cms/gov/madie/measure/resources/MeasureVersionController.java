@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 
+import static cms.gov.madie.measure.services.VersionService.VersionValidationResult.TEST_CASE_ERROR;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -32,13 +34,17 @@ public class MeasureVersionController {
   }
 
   @GetMapping("/{id}/version")
-  public ResponseEntity<Measure> checkValidVersion(
+  public ResponseEntity<Void> checkValidVersion(
       @PathVariable("id") String id,
       @RequestParam String versionType,
       Principal principal,
-      @RequestHeader("Authorization") String accessToken)
-      throws Exception {
-    return versionService.checkValidVersioning(id, versionType, principal.getName(), accessToken);
+      @RequestHeader("Authorization") String accessToken) {
+    var validationResult =
+        versionService.checkValidVersioning(id, versionType, principal.getName(), accessToken);
+    if (validationResult == TEST_CASE_ERROR) {
+      return new ResponseEntity<>(HttpStatus.ACCEPTED);
+    }
+    return new ResponseEntity<>(HttpStatus.OK);
   }
 
   @PostMapping("/{id}/draft")
