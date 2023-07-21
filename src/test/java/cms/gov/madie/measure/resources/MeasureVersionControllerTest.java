@@ -109,7 +109,7 @@ public class MeasureVersionControllerTest {
   }
 
   @Test
-  public void testCheckValidVersionioningSuccess() throws Exception {
+  public void testCheckValidVersioningSuccess() throws Exception {
     when(principal.getName()).thenReturn("testUser");
     Measure updatedMeasure = Measure.builder().id("testMeasureId").createdBy("testUser").build();
     Version updatedVersion = Version.builder().major(3).minor(0).revisionNumber(0).build();
@@ -117,16 +117,16 @@ public class MeasureVersionControllerTest {
     MeasureMetaData updatedMetaData = new MeasureMetaData();
     updatedMetaData.setDraft(false);
     updatedMeasure.setMeasureMetaData(updatedMetaData);
-    ResponseEntity<?> responseEntity = new ResponseEntity<>("some response body", HttpStatus.OK);
-    when(versionService.checkValidVersioning(anyString(), anyString(), anyString(), anyString()))
-        .thenReturn((ResponseEntity<Measure>) responseEntity);
 
-    ResponseEntity<Measure> entity =
+    when(versionService.checkValidVersioning(anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(VersionService.VersionValidationResult.VALID);
+
+    ResponseEntity<Void> entity =
         measureVersionController.checkValidVersion(
             "testMeasureId", "MAJOR", principal, "accesstoken");
     assertThat(entity, is(notNullValue()));
     assertThat(entity.getStatusCode(), is(HttpStatus.OK));
-    ResponseEntity response =
+    ResponseEntity<Void> response =
         measureVersionController.checkValidVersion(
             "testMeasureId", "MAJOR", principal, "accesstoken");
     assertEquals((HttpStatus.OK), response.getStatusCode());

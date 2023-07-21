@@ -30,6 +30,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
+import static cms.gov.madie.measure.services.VersionService.VersionValidationResult.TEST_CASE_ERROR;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -321,7 +322,7 @@ public class VersionServiceTest {
   }
 
   @Test
-  public void testCheckVersionReturns202() throws Exception {
+  public void testCheckVersionIdentifiesTestCaseErrors() throws Exception {
     Measure existingMeasure =
         Measure.builder()
             .id("testMeasureId")
@@ -339,9 +340,9 @@ public class VersionServiceTest {
     ElmJson elmJson = ElmJson.builder().json(ELMJON_NO_ERROR).build();
     when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(elmJson);
     when(elmTranslatorClient.hasErrors(any())).thenReturn(false);
-    ResponseEntity response =
+    var validationResult =
         versionService.checkValidVersioning("testMeasureId", "MAJOR", "testUser", "accesstoken");
-    assertEquals((HttpStatus.ACCEPTED), response.getStatusCode());
+    assertEquals(TEST_CASE_ERROR, validationResult);
   }
 
   @Test
@@ -361,8 +362,8 @@ public class VersionServiceTest {
 
   @Test
   public void testCreateVersionMajorSuccess() throws Exception {
-    Measure existingMeasure =
-        Measure.builder()
+    FhirMeasure existingMeasure =
+        FhirMeasure.builder()
             .id("testMeasureId")
             .measureSetId("testMeasureSetId")
             .createdBy("testUser")
@@ -438,8 +439,8 @@ public class VersionServiceTest {
 
   @Test
   public void testCreateVersionMinorSuccess() throws Exception {
-    Measure existingMeasure =
-        Measure.builder()
+    FhirMeasure existingMeasure =
+        FhirMeasure.builder()
             .id("testMeasureId")
             .measureSetId("testMeasureSetId")
             .createdBy("testUser")
@@ -515,9 +516,9 @@ public class VersionServiceTest {
   }
 
   @Test
-  public void testCreateVersionPatchSuccess() throws Exception {
-    Measure existingMeasure =
-        Measure.builder()
+  public void testCreateFhirVersionPatchSuccess() throws Exception {
+    FhirMeasure existingMeasure =
+        FhirMeasure.builder()
             .id("testMeasureId")
             .measureSetId("testMeasureSetId")
             .createdBy("testUser")
