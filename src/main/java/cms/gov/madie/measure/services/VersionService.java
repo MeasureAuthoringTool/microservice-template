@@ -10,6 +10,7 @@ import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Export;
+import gov.cms.madie.models.measure.FhirMeasure;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.ReviewMetaData;
@@ -42,6 +43,11 @@ public class VersionService {
   private final FhirServicesClient fhirServicesClient;
   private final ExportRepository exportRepository;
   private final MeasureService measureService;
+
+  public enum VersionValidationResult {
+    VALID,
+    TEST_CASE_ERROR;
+  }
 
   private static final String VERSION_TYPE_MAJOR = "MAJOR";
   private static final String VERSION_TYPE_MINOR = "MINOR";
