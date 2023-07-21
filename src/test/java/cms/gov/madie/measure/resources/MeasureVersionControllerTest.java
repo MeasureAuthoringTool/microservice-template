@@ -109,7 +109,7 @@ public class MeasureVersionControllerTest {
   }
 
   @Test
-  public void testCheckValidVersioningSuccess() throws Exception {
+  public void testCheckValidVersioningSuccess() {
     when(principal.getName()).thenReturn("testUser");
     Measure updatedMeasure = Measure.builder().id("testMeasureId").createdBy("testUser").build();
     Version updatedVersion = Version.builder().major(3).minor(0).revisionNumber(0).build();

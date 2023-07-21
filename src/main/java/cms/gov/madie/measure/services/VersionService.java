@@ -46,7 +46,7 @@ public class VersionService {
 
   public enum VersionValidationResult {
     VALID,
-    TEST_CASE_ERROR;
+    TEST_CASE_ERROR
   }
 
   private static final String VERSION_TYPE_MAJOR = "MAJOR";
@@ -248,7 +248,7 @@ public class VersionService {
     }
   }
 
-  protected Version getNextVersion(Measure measure, String versionType) throws Exception {
+  protected Version getNextVersion(Measure measure, String versionType) {
     Version version;
 
     if (VERSION_TYPE_MAJOR.equalsIgnoreCase(versionType)) {
@@ -281,7 +281,7 @@ public class VersionService {
   }
 
   private String generateLibraryContentLine(String cqlLibraryName, Version version) {
-    return "library " + cqlLibraryName + " version " + "\'" + version + "\'";
+    return "library " + cqlLibraryName + " version " + "'" + version + "'";
   }
 
   protected void setMeasureReviewMetaData(Measure measure) {

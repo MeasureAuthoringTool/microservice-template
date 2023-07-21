@@ -111,7 +111,7 @@ public class VersionServiceTest {
           .scoringUnit("test-scoring-unit")
           .build();
 
-  private Instant today = Instant.now();
+  private final Instant today = Instant.now();
 
   @Test
   public void testCheckValidVersioningThrowsResourceNotFoundException() {
@@ -322,7 +322,7 @@ public class VersionServiceTest {
   }
 
   @Test
-  public void testCheckVersionIdentifiesTestCaseErrors() throws Exception {
+  public void testCheckVersionIdentifiesTestCaseErrors() {
     Measure existingMeasure =
         Measure.builder()
             .id("testMeasureId")
