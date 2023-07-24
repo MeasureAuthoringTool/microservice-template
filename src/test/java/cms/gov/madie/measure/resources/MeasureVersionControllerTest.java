@@ -4,7 +4,6 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
@@ -109,6 +108,26 @@ public class MeasureVersionControllerTest {
   }
 
   @Test
+  public void testCheckVersionTestCaseErrors() {
+    when(principal.getName()).thenReturn("testUser");
+    Measure updatedMeasure = Measure.builder().id("testMeasureId").createdBy("testUser").build();
+    Version updatedVersion = Version.builder().major(3).minor(0).revisionNumber(0).build();
+    updatedMeasure.setVersion(updatedVersion);
+    MeasureMetaData updatedMetaData = new MeasureMetaData();
+    updatedMetaData.setDraft(false);
+    updatedMeasure.setMeasureMetaData(updatedMetaData);
+
+    when(versionService.checkValidVersioning(anyString(), anyString(), anyString(), anyString()))
+            .thenReturn(VersionService.VersionValidationResult.TEST_CASE_ERROR);
+
+    ResponseEntity<Void> entity =
+            measureVersionController.checkValidVersion(
+                    "testMeasureId", "MAJOR", principal, "accesstoken");
+    assertThat(entity, is(notNullValue()));
+    assertThat(entity.getStatusCode(), is(HttpStatus.ACCEPTED));
+  }
+
+  @Test
   public void testCheckValidVersioningSuccess() {
     when(principal.getName()).thenReturn("testUser");
     Measure updatedMeasure = Measure.builder().id("testMeasureId").createdBy("testUser").build();
@@ -121,15 +140,11 @@ public class MeasureVersionControllerTest {
     when(versionService.checkValidVersioning(anyString(), anyString(), anyString(), anyString()))
         .thenReturn(VersionService.VersionValidationResult.VALID);
 
-    ResponseEntity<Void> entity =
-        measureVersionController.checkValidVersion(
-            "testMeasureId", "MAJOR", principal, "accesstoken");
-    assertThat(entity, is(notNullValue()));
-    assertThat(entity.getStatusCode(), is(HttpStatus.OK));
     ResponseEntity<Void> response =
         measureVersionController.checkValidVersion(
             "testMeasureId", "MAJOR", principal, "accesstoken");
-    assertEquals((HttpStatus.OK), response.getStatusCode());
+    assertThat(response, is(notNullValue()));
+    assertThat(response.getStatusCode(), is(HttpStatus.OK));
   }
 
   @Test
