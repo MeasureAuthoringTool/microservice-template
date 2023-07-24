@@ -79,11 +79,13 @@ public class VersionService {
     return versionQdmMeasure(versionType, username, measure);
   }
 
-  private Measure versionQdmMeasure(String versionType, String username, Measure measure) throws Exception {
+  private Measure versionQdmMeasure(String versionType, String username, Measure measure)
+      throws Exception {
     return version(versionType, username, measure);
   }
 
-  private Measure versionFhirMeasure(String versionType, String username, String accessToken, Measure measure) throws Exception {
+  private Measure versionFhirMeasure(
+      String versionType, String username, String accessToken, Measure measure) throws Exception {
     Measure savedMeasure = version(versionType, username, measure);
     var measureBundle = fhirServicesClient.getMeasureBundle(savedMeasure, accessToken, "export");
     saveMeasureBundle(savedMeasure, measureBundle, accessToken, username);
