@@ -107,7 +107,7 @@ public class FhirServicesClient {
         URI.create(
             fhirServicesConfig.getMadieFhirServiceBaseUrl()
                 + fhirServicesConfig.madieFhirServiceTestCaseUri
-                + "/exportAll");
+                + "/export-all");
     HttpHeaders headers = new HttpHeaders();
     headers.set(HttpHeaders.AUTHORIZATION, accessToken);
     headers.set(HttpHeaders.ACCEPT, MediaType.ALL_VALUE);
