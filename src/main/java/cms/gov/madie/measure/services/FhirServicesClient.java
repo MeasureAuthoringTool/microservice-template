@@ -1,8 +1,10 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.config.FhirServicesConfig;
+import gov.cms.madie.models.dto.ExportDTO;
 import gov.cms.madie.models.measure.Measure;
 import java.net.URI;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
@@ -95,6 +97,26 @@ public class FhirServicesClient {
     headers.set(HttpHeaders.ACCEPT, MediaType.ALL_VALUE);
     headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
     HttpEntity<Measure> measureEntity = new HttpEntity<>(measure, headers);
+    return fhirServicesRestTemplate
+        .exchange(uri, HttpMethod.PUT, measureEntity, byte[].class)
+        .getBody();
+  }
+
+  public byte[] getTestCaseExports(Measure measure, String accessToken, List<String> testCaseId) {
+    URI uri =
+        URI.create(
+            fhirServicesConfig.getMadieFhirServiceBaseUrl()
+                + fhirServicesConfig.madieFhirServiceTestCaseUri
+                + "/export-all");
+    HttpHeaders headers = new HttpHeaders();
+    headers.set(HttpHeaders.AUTHORIZATION, accessToken);
+    headers.set(HttpHeaders.ACCEPT, MediaType.ALL_VALUE);
+    headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+
+    ExportDTO dto = ExportDTO.builder().measure(measure).testCaseIds(testCaseId).build();
+
+    HttpEntity<ExportDTO> measureEntity = new HttpEntity<>(dto, headers);
+
     return fhirServicesRestTemplate
         .exchange(uri, HttpMethod.PUT, measureEntity, byte[].class)
         .getBody();

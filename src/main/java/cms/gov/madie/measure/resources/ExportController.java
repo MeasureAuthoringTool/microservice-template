@@ -1,20 +1,21 @@
 package cms.gov.madie.measure.resources;
 
-import cms.gov.madie.measure.services.BundleService;
-import java.security.Principal;
-import java.util.Optional;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.services.BundleService;
 import cms.gov.madie.measure.services.FhirServicesClient;
 import cms.gov.madie.measure.utils.ControllerUtil;
 import cms.gov.madie.measure.utils.ExportFileNamesUtil;
+import gov.cms.madie.models.measure.Measure;
+import java.security.Principal;
+import java.util.List;
+import java.util.Optional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import cms.gov.madie.measure.repositories.MeasureRepository;
-import gov.cms.madie.models.measure.Measure;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
@@ -87,7 +88,7 @@ public class ExportController {
       Principal principal,
       @RequestHeader("Authorization") String accessToken,
       @PathVariable String measureId,
-      @RequestBody String... testCaseId) {
+      @RequestBody List<String> testCaseId) {
 
     final String username = principal.getName();
     log.info("User [{}] is attempting to export test cases for [{}]", username, measureId);
@@ -107,6 +108,6 @@ public class ExportController {
                 + ExportFileNamesUtil.getTestCaseExportZipName(measure)
                 + ".zip\"")
         .contentType(MediaType.APPLICATION_OCTET_STREAM)
-        .body(null);
+        .body(fhirServicesClient.getTestCaseExports(measure, accessToken, testCaseId));
   }
 }
