@@ -22,6 +22,7 @@ import org.springframework.web.client.RestTemplate;
 import java.net.URI;
 import java.util.List;
 
+import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -217,6 +218,23 @@ class FhirServicesClientTest {
             .exchange(any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
         .thenReturn(ResponseEntity.ok(new byte[0]));
     byte[] output = fhirServicesClient.getTestCaseExport(measure, accessToken, "test-case-id");
+    assertNotNull(output);
+  }
+
+  @Test
+  void testGetTestCaseExports() {
+    Measure measure =
+            Measure.builder()
+                    .id("testMeasureId")
+                    .measureSetId("testMeasureSetId")
+                    .createdBy("testUser")
+                    .cql("library Test1CQLLib version '2.3.001'")
+                    .build();
+    when(fhirServicesConfig
+            .fhirServicesRestTemplate()
+            .exchange(any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+            .thenReturn(ResponseEntity.ok(new byte[0]));
+    byte[] output = fhirServicesClient.getTestCaseExports(measure, accessToken, asList("test-case-id-1", "test=case=id-2"));
     assertNotNull(output);
   }
 }

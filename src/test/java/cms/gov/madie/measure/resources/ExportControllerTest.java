@@ -26,6 +26,7 @@ import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 
+import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -98,5 +99,36 @@ class ExportControllerTest {
         () ->
             exportController.getTestCaseExport(
                 principal, "access-token", "example-measure-id", "example-test-case-id"));
+  }
+
+  @Test
+  void getTestCaseExportAll() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+    final Measure measure =
+            Measure.builder()
+                    .ecqmTitle("test_ecqm_title")
+                    .version(new Version(0, 0, 0))
+                    .model("QiCore 4.1.1")
+                    .createdBy("test.user")
+                    .build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(fhirServicesClient.getTestCaseExports(any(Measure.class), anyString(), anyList()))
+            .thenReturn(new byte[0]);
+    ResponseEntity<byte[]> output =
+            exportController.getTestCaseExport(
+                    principal, "access-token", "example-measure-id", asList("example-test-case-id-1", "example-test-case-id-2"));
+    assertEquals(HttpStatus.OK, output.getStatusCode());
+  }
+
+  @Test
+  void getTestCaseExportAllThrowsResourceNotFoundException() {
+    Principal principal = mock(Principal.class);
+    when(measureRepository.findById(anyString())).thenReturn(Optional.empty());
+    assertThrows(
+            ResourceNotFoundException.class,
+            () ->
+                    exportController.getTestCaseExport(
+                            principal, "access-token", "example-measure-id", asList("example-test-case-id-1", "example-test-case-id-2")));
   }
 }
