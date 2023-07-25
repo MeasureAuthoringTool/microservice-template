@@ -10,6 +10,7 @@ import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Export;
+import gov.cms.madie.models.measure.FhirMeasure;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.ReviewMetaData;
@@ -43,55 +44,55 @@ public class VersionService {
   private final ExportRepository exportRepository;
   private final MeasureService measureService;
 
+  public enum VersionValidationResult {
+    VALID,
+    TEST_CASE_ERROR
+  }
+
   private static final String VERSION_TYPE_MAJOR = "MAJOR";
   private static final String VERSION_TYPE_MINOR = "MINOR";
   private static final String VERSION_TYPE_PATCH = "PATCH";
 
-  public ResponseEntity<Measure> checkValidVersioning(
-      String id, String versionType, String username, String accessToken) throws Exception {
-    Measure measure =
-        measureRepository
-            .findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Measure", id));
+  public VersionValidationResult checkValidVersioning(
+      String id, String versionType, String username, String accessToken) {
+    Measure measure = validateVersionOptions(id, versionType, username, accessToken);
 
-    if (!VERSION_TYPE_MAJOR.equalsIgnoreCase(versionType)
-        && !VERSION_TYPE_MINOR.equalsIgnoreCase(versionType)
-        && !VERSION_TYPE_PATCH.equalsIgnoreCase(versionType)) {
-      throw new BadVersionRequestException(
-          "Measure", measure.getId(), username, "Invalid version request.");
-    }
-    measureService.verifyAuthorization(username, measure);
-    validateMeasureForVersioning(measure, username, accessToken);
-    //    if test cases are invalid but no exception has been thrown we send an ok 202.
+    //    if test cases are invalid but no exception has been thrown the versioning may continue.
     if (measure.getTestCases() != null
-        && measure.getTestCases().stream()
-            .filter(p -> !p.isValidResource())
-            .findFirst()
-            .isPresent()) {
+        && measure.getTestCases().stream().anyMatch(p -> !p.isValidResource())) {
       log.warn(
           "User [{}] attempted to version measure with id [{}] which has invalid test cases",
           username,
           measure.getId());
-      return new ResponseEntity<>(HttpStatus.ACCEPTED);
+      return VersionValidationResult.TEST_CASE_ERROR;
     }
-    return new ResponseEntity<>(HttpStatus.OK);
+    return VersionValidationResult.VALID;
   }
 
   public Measure createVersion(String id, String versionType, String username, String accessToken)
       throws Exception {
-    Measure measure =
-        measureRepository
-            .findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Measure", id));
+    Measure measure = validateVersionOptions(id, versionType, username, accessToken);
 
-    if (!VERSION_TYPE_MAJOR.equalsIgnoreCase(versionType)
-        && !VERSION_TYPE_MINOR.equalsIgnoreCase(versionType)
-        && !VERSION_TYPE_PATCH.equalsIgnoreCase(versionType)) {
-      throw new BadVersionRequestException(
-          "Measure", measure.getId(), username, "Invalid version request.");
+    if (measure instanceof FhirMeasure) {
+      return versionFhirMeasure(versionType, username, accessToken, measure);
     }
-    measureService.verifyAuthorization(username, measure);
-    validateMeasureForVersioning(measure, username, accessToken);
+    return versionQdmMeasure(versionType, username, measure);
+  }
+
+  private Measure versionQdmMeasure(String versionType, String username, Measure measure)
+      throws Exception {
+    return version(versionType, username, measure);
+  }
+
+  private Measure versionFhirMeasure(
+      String versionType, String username, String accessToken, Measure measure) throws Exception {
+    Measure savedMeasure = version(versionType, username, measure);
+    var measureBundle = fhirServicesClient.getMeasureBundle(savedMeasure, accessToken, "export");
+    saveMeasureBundle(savedMeasure, measureBundle, accessToken, username);
+    return savedMeasure;
+  }
+
+  private Measure version(String versionType, String username, Measure measure) throws Exception {
     measure.getMeasureMetaData().setDraft(false);
     measure.setLastModifiedAt(Instant.now());
     measure.setLastModifiedBy(username);
@@ -118,10 +119,25 @@ public class VersionService {
         username);
     log.info(
         "User [{}] successfully versioned measure with ID [{}]", username, savedMeasure.getId());
-
-    var measureBundle = fhirServicesClient.getMeasureBundle(savedMeasure, accessToken, "export");
-    saveMeasureBundle(savedMeasure, measureBundle, accessToken, username);
     return savedMeasure;
+  }
+
+  private Measure validateVersionOptions(
+      String id, String versionType, String username, String accessToken) {
+    Measure measure =
+        measureRepository
+            .findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Measure", id));
+
+    if (!VERSION_TYPE_MAJOR.equalsIgnoreCase(versionType)
+        && !VERSION_TYPE_MINOR.equalsIgnoreCase(versionType)
+        && !VERSION_TYPE_PATCH.equalsIgnoreCase(versionType)) {
+      throw new BadVersionRequestException(
+          "Measure", measure.getId(), username, "Invalid version request.");
+    }
+    measureService.verifyAuthorization(username, measure);
+    validateMeasureForVersioning(measure, username, accessToken);
+    return measure;
   }
 
   public Measure createDraft(String id, String measureName, String username) {
@@ -234,7 +250,7 @@ public class VersionService {
     }
   }
 
-  protected Version getNextVersion(Measure measure, String versionType) throws Exception {
+  protected Version getNextVersion(Measure measure, String versionType) {
     Version version;
 
     if (VERSION_TYPE_MAJOR.equalsIgnoreCase(versionType)) {
@@ -267,7 +283,7 @@ public class VersionService {
   }
 
   private String generateLibraryContentLine(String cqlLibraryName, Version version) {
-    return "library " + cqlLibraryName + " version " + "\'" + version + "\'";
+    return "library " + cqlLibraryName + " version " + "'" + version + "'";
   }
 
   protected void setMeasureReviewMetaData(Measure measure) {

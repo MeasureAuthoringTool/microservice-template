@@ -30,6 +30,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
+import static cms.gov.madie.measure.services.VersionService.VersionValidationResult.TEST_CASE_ERROR;
+import static cms.gov.madie.measure.services.VersionService.VersionValidationResult.VALID;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -110,7 +112,7 @@ public class VersionServiceTest {
           .scoringUnit("test-scoring-unit")
           .build();
 
-  private Instant today = Instant.now();
+  private final Instant today = Instant.now();
 
   @Test
   public void testCheckValidVersioningThrowsResourceNotFoundException() {
@@ -321,7 +323,7 @@ public class VersionServiceTest {
   }
 
   @Test
-  public void testCheckVersionReturns202() throws Exception {
+  public void testCheckVersionIdentifiesTestCaseErrors() {
     Measure existingMeasure =
         Measure.builder()
             .id("testMeasureId")
@@ -339,9 +341,31 @@ public class VersionServiceTest {
     ElmJson elmJson = ElmJson.builder().json(ELMJON_NO_ERROR).build();
     when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(elmJson);
     when(elmTranslatorClient.hasErrors(any())).thenReturn(false);
-    ResponseEntity response =
+    var validationResult =
         versionService.checkValidVersioning("testMeasureId", "MAJOR", "testUser", "accesstoken");
-    assertEquals((HttpStatus.ACCEPTED), response.getStatusCode());
+    assertEquals(TEST_CASE_ERROR, validationResult);
+  }
+
+  @Test
+  public void testCheckVersion() {
+    Measure existingMeasure =
+        Measure.builder()
+            .id("testMeasureId")
+            .createdBy("testUser")
+            .cql("library Test1CQLLib version '2.3.001")
+            .build();
+    MeasureMetaData metaData = new MeasureMetaData();
+    metaData.setDraft(true);
+    existingMeasure.setMeasureMetaData(metaData);
+
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+
+    ElmJson elmJson = ElmJson.builder().json(ELMJON_NO_ERROR).build();
+    when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(elmJson);
+    when(elmTranslatorClient.hasErrors(any())).thenReturn(false);
+    var validationResult =
+        versionService.checkValidVersioning("testMeasureId", "MAJOR", "testUser", "accesstoken");
+    assertEquals(VALID, validationResult);
   }
 
   @Test
@@ -361,8 +385,8 @@ public class VersionServiceTest {
 
   @Test
   public void testCreateVersionMajorSuccess() throws Exception {
-    Measure existingMeasure =
-        Measure.builder()
+    FhirMeasure existingMeasure =
+        FhirMeasure.builder()
             .id("testMeasureId")
             .measureSetId("testMeasureSetId")
             .createdBy("testUser")
@@ -438,8 +462,8 @@ public class VersionServiceTest {
 
   @Test
   public void testCreateVersionMinorSuccess() throws Exception {
-    Measure existingMeasure =
-        Measure.builder()
+    QdmMeasure existingMeasure =
+            QdmMeasure.builder()
             .id("testMeasureId")
             .measureSetId("testMeasureSetId")
             .createdBy("testUser")
@@ -470,19 +494,6 @@ public class VersionServiceTest {
     updatedMeasure.setMeasureMetaData(updatedMetaData);
     when(measureRepository.save(any(Measure.class))).thenReturn(updatedMeasure);
 
-    when(fhirServicesClient.saveMeasureInHapiFhir(any(), anyString()))
-        .thenReturn(ResponseEntity.ok("Created"));
-
-    Export measureExport =
-        Export.builder()
-            .id("testId")
-            .measureId("testMeasureId")
-            .measureBundleJson("test measure json")
-            .build();
-    when(exportRepository.save(any(Export.class))).thenReturn(measureExport);
-    when(fhirServicesClient.getMeasureBundle(any(), anyString(), anyString()))
-        .thenReturn("test measure json");
-
     versionService.createVersion("testMeasureId", "MINOR", "testUser", "accesstoken");
 
     verify(measureRepository, times(1)).save(measureCaptor.capture());
@@ -505,19 +516,12 @@ public class VersionServiceTest {
             .truncatedTo(ChronoUnit.MINUTES)
             .compareTo(today.truncatedTo(ChronoUnit.MINUTES)),
         is(0));
-
-    verify(exportRepository, times(1)).save(exportArgumentCaptor.capture());
-    Export savedExport = exportArgumentCaptor.getValue();
-    assertEquals(savedExport.getMeasureId(), savedValue.getId());
-    assertEquals(measureExport.getMeasureBundleJson(), savedExport.getMeasureBundleJson());
-
-    verify(fhirServicesClient, times(1)).saveMeasureInHapiFhir(updatedMeasure, "accesstoken");
   }
 
   @Test
-  public void testCreateVersionPatchSuccess() throws Exception {
-    Measure existingMeasure =
-        Measure.builder()
+  public void testCreateFhirVersionPatchSuccess() throws Exception {
+    FhirMeasure existingMeasure =
+        FhirMeasure.builder()
             .id("testMeasureId")
             .measureSetId("testMeasureSetId")
             .createdBy("testUser")
