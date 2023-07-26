@@ -1,5 +1,7 @@
 package cms.gov.madie.measure.resources;
 
+import static java.util.Arrays.asList;
+
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.BundleService;
@@ -53,6 +55,7 @@ public class ExportController {
         .body(bundleService.exportBundleMeasure(measure, accessToken));
   }
 
+  @Deprecated
   @GetMapping(
       path = ControllerUtil.TEST_CASES + "/{testCaseId}/exports",
       produces = "application/zip")
@@ -80,7 +83,7 @@ public class ExportController {
                 + ExportFileNamesUtil.getTestCaseExportZipName(measure)
                 + ".zip\"")
         .contentType(MediaType.APPLICATION_OCTET_STREAM)
-        .body(fhirServicesClient.getTestCaseExport(measure, accessToken, testCaseId));
+        .body(fhirServicesClient.getTestCaseExports(measure, accessToken, asList(testCaseId)));
   }
 
   @PutMapping(path = ControllerUtil.TEST_CASES + "/exports", produces = "application/zip")
