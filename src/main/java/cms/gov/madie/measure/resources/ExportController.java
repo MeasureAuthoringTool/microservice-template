@@ -1,7 +1,5 @@
 package cms.gov.madie.measure.resources;
 
-import static java.util.Arrays.asList;
-
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.BundleService;
@@ -53,37 +51,6 @@ public class ExportController {
             "attachment;filename=\"" + ExportFileNamesUtil.getExportFileName(measure) + ".zip\"")
         .contentType(MediaType.APPLICATION_OCTET_STREAM)
         .body(bundleService.exportBundleMeasure(measure, accessToken));
-  }
-
-  @Deprecated
-  @GetMapping(
-      path = ControllerUtil.TEST_CASES + "/{testCaseId}/exports",
-      produces = "application/zip")
-  public ResponseEntity<byte[]> getTestCaseExport(
-      Principal principal,
-      @RequestHeader("Authorization") String accessToken,
-      @PathVariable String measureId,
-      @PathVariable String testCaseId) {
-
-    final String username = principal.getName();
-    log.info("User [{}] is attempting to export test case [{}]", username, testCaseId);
-
-    Optional<Measure> measureOptional = measureRepository.findById(measureId);
-
-    if (measureOptional.isEmpty()) {
-      throw new ResourceNotFoundException("Measure", measureId);
-    }
-
-    Measure measure = measureOptional.get();
-
-    return ResponseEntity.ok()
-        .header(
-            HttpHeaders.CONTENT_DISPOSITION,
-            "attachment;filename=\""
-                + ExportFileNamesUtil.getTestCaseExportZipName(measure)
-                + ".zip\"")
-        .contentType(MediaType.APPLICATION_OCTET_STREAM)
-        .body(fhirServicesClient.getTestCaseExports(measure, accessToken, asList(testCaseId)));
   }
 
   @PutMapping(path = ControllerUtil.TEST_CASES + "/exports", produces = "application/zip")

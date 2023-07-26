@@ -61,37 +61,6 @@ class ExportControllerTest {
   }
 
   @Test
-  void getTestCaseExport() {
-    Principal principal = mock(Principal.class);
-    when(principal.getName()).thenReturn("test.user");
-    final Measure measure =
-        Measure.builder()
-            .ecqmTitle("test_ecqm_title")
-            .version(new Version(0, 0, 0))
-            .model("QiCore 4.1.1")
-            .createdBy("test.user")
-            .build();
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    when(fhirServicesClient.getTestCaseExports(any(Measure.class), anyString(), anyList()))
-        .thenReturn(new byte[0]);
-    ResponseEntity<byte[]> output =
-        exportController.getTestCaseExport(
-            principal, "access-token", "example-measure-id", "example-test-case-id");
-    assertEquals(HttpStatus.OK, output.getStatusCode());
-  }
-
-  @Test
-  void getTestCaseExportThrowsResourceNotFoundException() {
-    Principal principal = mock(Principal.class);
-    when(measureRepository.findById(anyString())).thenReturn(Optional.empty());
-    assertThrows(
-        ResourceNotFoundException.class,
-        () ->
-            exportController.getTestCaseExport(
-                principal, "access-token", "example-measure-id", "example-test-case-id"));
-  }
-
-  @Test
   void getTestCaseExportAll() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
