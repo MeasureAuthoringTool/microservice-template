@@ -71,13 +71,6 @@ public class ExportController {
 
     Measure measure = measureOptional.get();
 
-    return ResponseEntity.ok()
-        .header(
-            HttpHeaders.CONTENT_DISPOSITION,
-            "attachment;filename=\""
-                + ExportFileNamesUtil.getTestCaseExportZipName(measure)
-                + ".zip\"")
-        .contentType(MediaType.APPLICATION_OCTET_STREAM)
-        .body(fhirServicesClient.getTestCaseExports(measure, accessToken, testCaseId));
+    return fhirServicesClient.getTestCaseExports(measure, accessToken, testCaseId);
   }
 }

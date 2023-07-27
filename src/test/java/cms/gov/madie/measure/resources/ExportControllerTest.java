@@ -73,7 +73,7 @@ class ExportControllerTest {
             .build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
     when(fhirServicesClient.getTestCaseExports(any(Measure.class), anyString(), anyList()))
-        .thenReturn(new byte[0]);
+        .thenReturn(new ResponseEntity<byte[]>(HttpStatus.OK));
     ResponseEntity<byte[]> output =
         exportController.getTestCaseExport(
             principal,
@@ -81,6 +81,29 @@ class ExportControllerTest {
             "example-measure-id",
             asList("example-test-case-id-1", "example-test-case-id-2"));
     assertEquals(HttpStatus.OK, output.getStatusCode());
+  }
+
+  @Test
+  void getTestCaseExportAllPartialContent() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+    final Measure measure =
+        Measure.builder()
+            .ecqmTitle("test_ecqm_title")
+            .version(new Version(0, 0, 0))
+            .model("QiCore 4.1.1")
+            .createdBy("test.user")
+            .build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(fhirServicesClient.getTestCaseExports(any(Measure.class), anyString(), anyList()))
+        .thenReturn(new ResponseEntity<byte[]>(HttpStatus.PARTIAL_CONTENT));
+    ResponseEntity<byte[]> output =
+        exportController.getTestCaseExport(
+            principal,
+            "access-token",
+            "example-measure-id",
+            asList("example-test-case-id-1", "example-test-case-id-2"));
+    assertEquals(HttpStatus.PARTIAL_CONTENT, output.getStatusCode());
   }
 
   @Test

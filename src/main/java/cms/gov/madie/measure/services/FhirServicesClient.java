@@ -84,7 +84,8 @@ public class FhirServicesClient {
     }
   }
 
-  public byte[] getTestCaseExports(Measure measure, String accessToken, List<String> testCaseId) {
+  public ResponseEntity<byte[]> getTestCaseExports(
+      Measure measure, String accessToken, List<String> testCaseId) {
     URI uri =
         URI.create(
             fhirServicesConfig.getMadieFhirServiceBaseUrl()
@@ -99,9 +100,12 @@ public class FhirServicesClient {
 
     HttpEntity<ExportDTO> measureEntity = new HttpEntity<>(dto, headers);
 
-    return fhirServicesRestTemplate
-        .exchange(uri, HttpMethod.PUT, measureEntity, byte[].class)
-        .getBody();
+    try {
+      return fhirServicesRestTemplate.exchange(uri, HttpMethod.PUT, measureEntity, byte[].class);
+    } catch (RestClientResponseException ex) {
+      return new ResponseEntity<>(
+          ex.getResponseBodyAsByteArray(), HttpStatus.valueOf(ex.getStatusCode().value()));
+    }
   }
 
   private URI buildMadieFhirServiceUri(String bundleType, String fhirServiceUri) {
