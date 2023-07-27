@@ -217,8 +217,30 @@ class FhirServicesClientTest {
             .exchange(any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
         .thenReturn(ResponseEntity.ok(new byte[0]));
     byte[] output =
+        fhirServicesClient
+            .getTestCaseExports(measure, accessToken, asList("test-case-id-1", "test=case=id-2"))
+            .getBody();
+    assertNotNull(output);
+  }
+
+  @Test
+  void testGetTestCaseExportsException() {
+    Measure measure =
+        Measure.builder()
+            .id("testMeasureId")
+            .measureSetId("testMeasureSetId")
+            .createdBy("testUser")
+            .cql("library Test1CQLLib version '2.3.001'")
+            .build();
+    when(fhirServicesConfig
+            .fhirServicesRestTemplate()
+            .exchange(any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+        .thenThrow(
+            new RestClientResponseException(
+                "error occured", HttpStatus.NOT_FOUND, null, null, null, null));
+    ResponseEntity<byte[]> output =
         fhirServicesClient.getTestCaseExports(
             measure, accessToken, asList("test-case-id-1", "test=case=id-2"));
-    assertNotNull(output);
+    assertThat(output.getStatusCode(), is(HttpStatus.NOT_FOUND));
   }
 }
