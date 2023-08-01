@@ -773,6 +773,14 @@ public class TestCaseServiceTest {
   }
 
   @Test
+  public void testUpdateTestCaseWhenMeasureIsNull() {
+    when(measureService.findMeasureById(anyString())).thenReturn(null);
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> testCaseService.updateTestCase(testCase, measure.getId(), "test.user", "TOKEN"));
+  }
+
+  @Test
   public void testEnforcePatientIdEmptyJson() {
     testCase.setJson(null);
     String modifiedJson = testCaseService.enforcePatientId(testCase);
