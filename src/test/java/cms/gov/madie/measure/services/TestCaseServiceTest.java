@@ -1520,7 +1520,8 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
     assertFalse(response.get(0).isSuccessful());
-    assertEquals("Error while processing Test Case Json.", response.get(0).getMessage());
+    assertEquals("Error while processing Test Case Json. " +
+        "Please make sure Test Case JSON is valid and Measure Report is not modified", response.get(0).getMessage());
   }
 
   @Test
