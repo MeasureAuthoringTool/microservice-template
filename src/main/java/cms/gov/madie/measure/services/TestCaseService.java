@@ -327,7 +327,8 @@ public class TestCaseService {
       return TestCaseImportOutcome.builder()
           .patientId(testCaseImportRequest.getPatientId())
           .successful(false)
-          .message("Error while processing Test Case Json.")
+          .message("Error while processing Test Case Json. " +
+              "Please make sure Test Case JSON is valid and Measure Report is not modified")
           .build();
     } catch (ResourceNotFoundException
         | InvalidDraftStatusException
