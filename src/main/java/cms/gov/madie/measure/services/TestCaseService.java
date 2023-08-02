@@ -3,7 +3,6 @@ package cms.gov.madie.measure.services;
 import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import com.google.gson.JsonParser;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.HapiOperationOutcome;
@@ -35,8 +34,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.UUID;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 @Slf4j
 @Service
@@ -192,7 +189,7 @@ public class TestCaseService {
     }
 
     TestCase validatedTestCase = validateTestCaseAsResource(testCase, accessToken);
-    if (Boolean.valueOf(enforcePatientIdFeatureFlag)
+    if (Boolean.parseBoolean(enforcePatientIdFeatureFlag)
         && ModelType.QI_CORE.getValue().equalsIgnoreCase(measure.getModel())) {
       validatedTestCase.setJson(enforcePatientId(validatedTestCase));
     }
@@ -315,7 +312,7 @@ public class TestCaseService {
                   }
                 })
             .toList();
-    // Update this log
+    // Todo Update logging
     log.info("user {} succesfully imported {} test cases", userName, testCaseImportOutcomes.size());
     return testCaseImportOutcomes;
   }
@@ -423,8 +420,7 @@ public class TestCaseService {
               o.put("id", testCase.getPatientId().toString());
 
               ByteArrayOutputStream bout = getByteArrayOutputStream(objectMapper, rootNode);
-              byte[] objectBytes = bout.toByteArray();
-              modifiedjsonString = new String(objectBytes);
+              modifiedjsonString = bout.toString();
             }
           }
         }
