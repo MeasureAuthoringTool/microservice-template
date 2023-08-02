@@ -1478,6 +1478,31 @@ public class TestCaseServiceTest implements ResourceUtil {
   }
 
   @Test
+  void importTestCasesReturnValidOutcomeWithAnyDefaultExceptionsWhileUpdatingTestCases() {
+    measure.setTestCases(List.of(testCase));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
+
+    doThrow(new NullPointerException())
+        .when(testCaseService)
+        .updateTestCase(any(), anyString(), anyString(), anyString());
+    var testCaseImportRequest =
+        TestCaseImportRequest.builder()
+            .patientId(testCase.getPatientId())
+            .json(testCaseImportWithMeasureReport)
+            .build();
+
+    var response =
+        testCaseService.importTestCases(
+            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
+    assertEquals(1, response.size());
+    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
+    assertFalse(response.get(0).isSuccessful());
+    assertEquals(
+        "Unable to import test case, please try again. if the error persists, Please contact helpdesk.",
+        response.get(0).getMessage());
+  }
+
+  @Test
   void importTestCaseReturnValidOutComeWithJsonParseException() {
     var importedJson = "{\n" + "    \"resourceType\": \"Bundle\",\n" + "}";
     measure.setTestCases(List.of(testCase));
@@ -1496,5 +1521,24 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
     assertFalse(response.get(0).isSuccessful());
     assertEquals("Error while processing Test Case Json.", response.get(0).getMessage());
+  }
+
+  @Test
+  void importTestCaseReturnValidOutComeWithExceptionWhenJsonIsNull() {
+    measure.setTestCases(List.of(testCase));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
+
+    var testCaseImportRequest =
+        TestCaseImportRequest.builder().patientId(testCase.getPatientId()).json(null).build();
+
+    var response =
+        testCaseService.importTestCases(
+            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
+    assertEquals(1, response.size());
+    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
+    assertFalse(response.get(0).isSuccessful());
+    assertEquals(
+        "Unable to import test case, please try again. if the error persists, Please contact helpdesk.",
+        response.get(0).getMessage());
   }
 }
