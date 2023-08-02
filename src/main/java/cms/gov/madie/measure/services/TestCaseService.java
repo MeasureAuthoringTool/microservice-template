@@ -3,6 +3,7 @@ package cms.gov.madie.measure.services;
 import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import com.google.gson.JsonParser;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.HapiOperationOutcome;
@@ -15,6 +16,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import gov.cms.madie.models.measure.TestCaseImportOutcome;
+import gov.cms.madie.models.measure.TestCaseImportRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
@@ -32,6 +35,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.UUID;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 @Slf4j
 @Service
@@ -257,6 +262,85 @@ public class TestCaseService {
 
     measureRepository.save(measure);
     return "Test case deleted successfully: " + testCaseId;
+  }
+
+  public List<TestCaseImportOutcome> importTestCases(
+      List<TestCaseImportRequest> testCaseImportRequests,
+      String measureId,
+      String userName,
+      String accessToken) {
+    Measure measure = findMeasureById(measureId);
+    List<TestCaseImportOutcome> testCaseImportOutcomes =
+        testCaseImportRequests.stream()
+            .map(
+                testCaseImportRequest -> {
+                  Optional<TestCase> existingTestCase =
+                      measure.getTestCases().stream()
+                          .filter(
+                              testCase ->
+                                  testCase
+                                      .getPatientId()
+                                      .equals(testCaseImportRequest.getPatientId()))
+                          .findFirst();
+                  if (existingTestCase.isPresent()) {
+                    try {
+                      existingTestCase
+                          .get()
+                          .setJson(removeMeasureReportFromJson(testCaseImportRequest.getJson()));
+                      TestCase updatedTestCase =
+                          updateTestCase(existingTestCase.get(), measureId, userName, accessToken);
+                      return TestCaseImportOutcome.builder()
+                          .patientId(updatedTestCase.getPatientId())
+                          .successful(true)
+                          .build();
+                    } catch (JsonProcessingException e) {
+                      return TestCaseImportOutcome.builder()
+                          .patientId(testCaseImportRequest.getPatientId())
+                          .successful(false)
+                          .message("Error while processing Test Case Json.")
+                          .build();
+                    } catch (Exception e) {
+                      return TestCaseImportOutcome.builder()
+                          .patientId(testCaseImportRequest.getPatientId())
+                          .successful(false)
+                          .message(e.getMessage())
+                          .build();
+                    }
+                  } else {
+                    return TestCaseImportOutcome.builder()
+                        .patientId(testCaseImportRequest.getPatientId())
+                        .successful(false)
+                        .message("Patient Id is not found")
+                        .build();
+                  }
+                })
+            .toList();
+    // Update this log
+    log.info("user {} succesfully imported {} test cases", userName, testCaseImportOutcomes.size());
+    return testCaseImportOutcomes;
+  }
+
+  private String removeMeasureReportFromJson(String testCaseJson) throws JsonProcessingException {
+    if (!StringUtils.isEmpty(testCaseJson)) {
+      ObjectMapper objectMapper = new ObjectMapper();
+
+      JsonNode rootNode = objectMapper.readTree(testCaseJson);
+      ArrayNode entryArray = (ArrayNode) rootNode.get("entry");
+
+      List<JsonNode> filteredList = new ArrayList<>();
+      for (JsonNode entryNode : entryArray) {
+        if (!"MeasureReport"
+            .equalsIgnoreCase(entryNode.get("resource").get("resourceType").asText())) {
+          filteredList.add(entryNode);
+        }
+      }
+
+      entryArray.removeAll();
+      filteredList.forEach(entryArray::add);
+      return objectMapper.writeValueAsString(rootNode);
+    } else {
+      throw new RuntimeException("Unable to find Test case Json");
+    }
   }
 
   public Measure findMeasureById(String measureId) {

@@ -118,11 +118,11 @@ public class MeasureVersionControllerTest {
     updatedMeasure.setMeasureMetaData(updatedMetaData);
 
     when(versionService.checkValidVersioning(anyString(), anyString(), anyString(), anyString()))
-            .thenReturn(VersionService.VersionValidationResult.TEST_CASE_ERROR);
+        .thenReturn(VersionService.VersionValidationResult.TEST_CASE_ERROR);
 
     ResponseEntity<Void> entity =
-            measureVersionController.checkValidVersion(
-                    "testMeasureId", "MAJOR", principal, "accesstoken");
+        measureVersionController.checkValidVersion(
+            "testMeasureId", "MAJOR", principal, "accesstoken");
     assertThat(entity, is(notNullValue()));
     assertThat(entity.getStatusCode(), is(HttpStatus.ACCEPTED));
   }
