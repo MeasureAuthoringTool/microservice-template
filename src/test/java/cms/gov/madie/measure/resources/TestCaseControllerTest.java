@@ -9,6 +9,8 @@ import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.common.Version;
 import cms.gov.madie.measure.services.TestCaseService;
+import gov.cms.madie.models.measure.TestCaseImportOutcome;
+import gov.cms.madie.models.measure.TestCaseImportRequest;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +26,7 @@ import java.security.Principal;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -280,5 +283,30 @@ public class TestCaseControllerTest {
     verify(testCaseService, times(1))
         .updateTestCase(any(TestCase.class), anyString(), usernameCaptor.capture(), anyString());
     assertEquals("test.user2", usernameCaptor.getValue());
+  }
+
+  @Test
+  void importTestCasesSuccesfullyUpdatesAllTestCases() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    UUID testPatientId = UUID.randomUUID();
+
+    var testCaseImportOutcome =
+        TestCaseImportOutcome.builder().successful(true).patientId(testPatientId).build();
+    var testCaseImportRequest =
+        TestCaseImportRequest.builder()
+            .patientId(testPatientId)
+            .json("test case import json")
+            .build();
+
+    when(testCaseService.importTestCases(any(), anyString(), anyString(), anyString()))
+        .thenReturn(List.of(testCaseImportOutcome));
+    var responseEntity =
+        controller.importTestCases(
+            List.of(testCaseImportRequest), measure.getId(), "TOKEN", principal);
+    assertEquals(1, Objects.requireNonNull(responseEntity.getBody()).size());
+    assertEquals(
+        testPatientId, Objects.requireNonNull(responseEntity.getBody()).get(0).getPatientId());
   }
 }

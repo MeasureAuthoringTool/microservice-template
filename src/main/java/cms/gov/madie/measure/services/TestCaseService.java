@@ -2,7 +2,9 @@ package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
+import cms.gov.madie.measure.exceptions.InvalidMeasureStateException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.HapiOperationOutcome;
@@ -15,6 +17,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import gov.cms.madie.models.measure.TestCaseImportOutcome;
+import gov.cms.madie.models.measure.TestCaseImportRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
@@ -152,6 +156,9 @@ public class TestCaseService {
   public TestCase updateTestCase(
       TestCase testCase, String measureId, String username, String accessToken) {
     Measure measure = measureService.findMeasureById(measureId);
+    if (measure == null) {
+      throw new ResourceNotFoundException("Measure", measureId);
+    }
 
     if (!measure.getMeasureMetaData().isDraft()) {
       throw new InvalidDraftStatusException(measure.getId());
@@ -184,7 +191,7 @@ public class TestCaseService {
     }
 
     TestCase validatedTestCase = validateTestCaseAsResource(testCase, accessToken);
-    if (Boolean.valueOf(enforcePatientIdFeatureFlag)
+    if (Boolean.parseBoolean(enforcePatientIdFeatureFlag)
         && ModelType.QI_CORE.getValue().equalsIgnoreCase(measure.getModel())) {
       validatedTestCase.setJson(enforcePatientId(validatedTestCase));
     }
@@ -254,6 +261,127 @@ public class TestCaseService {
 
     measureRepository.save(measure);
     return "Test case deleted successfully: " + testCaseId;
+  }
+
+  public List<TestCaseImportOutcome> importTestCases(
+      List<TestCaseImportRequest> testCaseImportRequests,
+      String measureId,
+      String userName,
+      String accessToken) {
+    Measure measure = findMeasureById(measureId);
+    return testCaseImportRequests.stream()
+        .map(
+            testCaseImportRequest -> {
+              Optional<TestCase> existingTestCase =
+                  measure.getTestCases().stream()
+                      .filter(
+                          testCase ->
+                              testCase.getPatientId().equals(testCaseImportRequest.getPatientId()))
+                      .findFirst();
+              if (existingTestCase.isPresent()) {
+                return updateTestCaseJsonAndSaveTestCase(
+                    existingTestCase.get(),
+                    testCaseImportRequest,
+                    measureId,
+                    userName,
+                    accessToken);
+              } else {
+                log.info(
+                    "User {} is unable to import test case with patient id : "
+                        + "{} because Patient ID is not found ",
+                    userName,
+                    testCaseImportRequest.getPatientId());
+                return TestCaseImportOutcome.builder()
+                    .patientId(testCaseImportRequest.getPatientId())
+                    .successful(false)
+                    .message("Patient Id is not found")
+                    .build();
+              }
+            })
+        .toList();
+  }
+
+  private TestCaseImportOutcome updateTestCaseJsonAndSaveTestCase(
+      TestCase existingTestCase,
+      TestCaseImportRequest testCaseImportRequest,
+      String measureId,
+      String userName,
+      String accessToken) {
+    try {
+      existingTestCase.setJson(removeMeasureReportFromJson(testCaseImportRequest.getJson()));
+      TestCase updatedTestCase = updateTestCase(existingTestCase, measureId, userName, accessToken);
+      log.info(
+          "User {} succesfully imported test case with patient id : {}",
+          userName,
+          updatedTestCase.getPatientId());
+      return TestCaseImportOutcome.builder()
+          .patientId(updatedTestCase.getPatientId())
+          .successful(true)
+          .build();
+    } catch (JsonProcessingException e) {
+      log.info(
+          "User {} is unable to import test case with patient id : "
+              + "{} due to Malformed test case json bundle",
+          userName,
+          testCaseImportRequest.getPatientId());
+      return TestCaseImportOutcome.builder()
+          .patientId(testCaseImportRequest.getPatientId())
+          .successful(false)
+          .message(
+              "Error while processing Test Case Json. "
+                  + "Please make sure Test Case JSON is valid and Measure Report is not modified")
+          .build();
+    } catch (ResourceNotFoundException
+        | InvalidDraftStatusException
+        | InvalidMeasureStateException
+        | UnauthorizedException e) {
+      log.info(
+          "User {} is unable to import test case with patient id : {}; Error Message : {}",
+          userName,
+          testCaseImportRequest.getPatientId(),
+          e.getMessage());
+      return TestCaseImportOutcome.builder()
+          .patientId(testCaseImportRequest.getPatientId())
+          .successful(false)
+          .message(e.getMessage())
+          .build();
+    } catch (Exception e) {
+      log.info(
+          "User {} is unable to import test case with patient id : {}; Error Message : {}",
+          userName,
+          testCaseImportRequest.getPatientId(),
+          e.getMessage());
+      return TestCaseImportOutcome.builder()
+          .patientId(testCaseImportRequest.getPatientId())
+          .successful(false)
+          .message(
+              "Unable to import test case, please try again."
+                  + " if the error persists, Please contact helpdesk.")
+          .build();
+    }
+  }
+
+  private String removeMeasureReportFromJson(String testCaseJson) throws JsonProcessingException {
+    if (!StringUtils.isEmpty(testCaseJson)) {
+      ObjectMapper objectMapper = new ObjectMapper();
+
+      JsonNode rootNode = objectMapper.readTree(testCaseJson);
+      ArrayNode entryArray = (ArrayNode) rootNode.get("entry");
+
+      List<JsonNode> filteredList = new ArrayList<>();
+      for (JsonNode entryNode : entryArray) {
+        if (!"MeasureReport"
+            .equalsIgnoreCase(entryNode.get("resource").get("resourceType").asText())) {
+          filteredList.add(entryNode);
+        }
+      }
+
+      entryArray.removeAll();
+      filteredList.forEach(entryArray::add);
+      return objectMapper.writeValueAsString(rootNode);
+    } else {
+      throw new RuntimeException("Unable to find Test case Json");
+    }
   }
 
   public Measure findMeasureById(String measureId) {
@@ -336,8 +464,7 @@ public class TestCaseService {
               o.put("id", testCase.getPatientId().toString());
 
               ByteArrayOutputStream bout = getByteArrayOutputStream(objectMapper, rootNode);
-              byte[] objectBytes = bout.toByteArray();
-              modifiedjsonString = new String(objectBytes);
+              modifiedjsonString = bout.toString();
             }
           }
         }

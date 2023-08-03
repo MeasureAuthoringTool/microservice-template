@@ -5,6 +5,7 @@ import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
+import cms.gov.madie.measure.utils.ResourceUtil;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -49,8 +50,8 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class TestCaseServiceTest {
-  @Mock private MeasureRepository repository;
+public class TestCaseServiceTest implements ResourceUtil {
+  @Mock private MeasureRepository measureRepository;
   @Mock private HapiFhirConfig hapiFhirConfig;
   @Mock private RestTemplate hapiFhirRestTemplate;
   @Mock private ActionLogService actionLogService;
@@ -60,7 +61,7 @@ public class TestCaseServiceTest {
   @Mock private FhirServicesClient fhirServicesClient;
   @Mock private MeasureService measureService;
 
-  @InjectMocks private TestCaseService testCaseService;
+  @Spy @InjectMocks private TestCaseService testCaseService;
 
   @Captor private ArgumentCaptor<ActionType> actionTypeArgumentCaptor;
   @Captor private ArgumentCaptor<String> targetIdArgumentCaptor;
@@ -68,6 +69,8 @@ public class TestCaseServiceTest {
 
   private TestCase testCase;
   private Measure measure;
+
+  String testCaseImportWithMeasureReport = getData("/test_case_exported_json.json");
 
   @BeforeEach
   public void setUp() {
@@ -78,6 +81,7 @@ public class TestCaseServiceTest {
     testCase.setCreatedBy("TestUser");
     testCase.setLastModifiedBy("TestUser2");
     testCase.setJson("{\"resourceType\":\"Patient\"}");
+    testCase.setPatientId(UUID.randomUUID());
 
     measure = new Measure();
     measure.setCreatedBy("test.user5");
@@ -94,16 +98,16 @@ public class TestCaseServiceTest {
   public void testPersistTestCase() {
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     Optional<Measure> optional = Optional.of(measure);
-    Mockito.doReturn(optional).when(repository).findById(any(String.class));
+    Mockito.doReturn(optional).when(measureRepository).findById(any(String.class));
 
-    Mockito.doReturn(measure).when(repository).save(any(Measure.class));
+    Mockito.doReturn(measure).when(measureRepository).save(any(Measure.class));
 
     when(fhirServicesClient.validateBundle(anyString(), anyString()))
         .thenReturn(ResponseEntity.ok("{ \"code\": 200, \"successful\": true }"));
 
     TestCase persistTestCase =
         testCaseService.persistTestCase(testCase, measure.getId(), "test.user", "TOKEN");
-    verify(repository, times(1)).save(measureCaptor.capture());
+    verify(measureRepository, times(1)).save(measureCaptor.capture());
     Measure savedMeasure = measureCaptor.getValue();
     assertEquals(measure.getLastModifiedBy(), savedMeasure.getLastModifiedBy());
     assertEquals(measure.getLastModifiedAt(), savedMeasure.getLastModifiedAt());
@@ -143,9 +147,9 @@ public class TestCaseServiceTest {
     measure.setTestCases(existingTestCases);
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     Optional<Measure> optional = Optional.of(measure);
-    Mockito.doReturn(optional).when(repository).findById(any(String.class));
+    Mockito.doReturn(optional).when(measureRepository).findById(any(String.class));
 
-    Mockito.doReturn(measure).when(repository).save(any(Measure.class));
+    Mockito.doReturn(measure).when(measureRepository).save(any(Measure.class));
 
     when(fhirServicesClient.validateBundle(anyString(), anyString()))
         .thenReturn(ResponseEntity.ok("{ \"code\": 200, \"successful\": true }"));
@@ -155,7 +159,7 @@ public class TestCaseServiceTest {
     assertThat(persistTestCase, is(notNullValue()));
     assertThat(persistTestCase.getId(), is(notNullValue()));
     assertThat(persistTestCase.getTitle(), is(equalTo(testCase.getTitle())));
-    verify(repository, times(1)).save(measureCaptor.capture());
+    verify(measureRepository, times(1)).save(measureCaptor.capture());
     Measure savedMeasure = measureCaptor.getValue();
     assertEquals(measure.getLastModifiedBy(), savedMeasure.getLastModifiedBy());
     assertEquals(measure.getLastModifiedAt(), savedMeasure.getLastModifiedAt());
@@ -224,7 +228,7 @@ public class TestCaseServiceTest {
     String measureId = measure.getId();
     String username = "user01";
     String accessToken = "Bearer Token";
-    when(repository.findById(anyString())).thenReturn(Optional.empty());
+    when(measureRepository.findById(anyString())).thenReturn(Optional.empty());
 
     assertThrows(
         ResourceNotFoundException.class,
@@ -238,7 +242,7 @@ public class TestCaseServiceTest {
     String username = "user01";
     String accessToken = "Bearer Token";
     measure.getMeasureMetaData().setDraft(false);
-    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
 
     assertThrows(
         InvalidDraftStatusException.class,
@@ -278,7 +282,7 @@ public class TestCaseServiceTest {
     String measureId = measure.getId();
     String username = "user01";
     String accessToken = "Bearer Token";
-    when(repository.findById(eq(measureId))).thenReturn(Optional.of(measure));
+    when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(measure));
 
     List<TestCase> output =
         testCaseService.persistTestCases(newTestCases, measureId, username, accessToken);
@@ -315,7 +319,7 @@ public class TestCaseServiceTest {
     String measureId = measure.getId();
     String username = "user01";
     String accessToken = "Bearer Token";
-    when(repository.findById(eq(measureId))).thenReturn(Optional.of(measure));
+    when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(measure));
 
     List<TestCase> output =
         testCaseService.persistTestCases(newTestCases, measureId, username, accessToken);
@@ -356,7 +360,7 @@ public class TestCaseServiceTest {
     String measureId = measure.getId();
     String username = "user01";
     String accessToken = "Bearer Token";
-    when(repository.findById(eq(measureId))).thenReturn(Optional.of(measure));
+    when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(measure));
     when(mapper.readValue("{}", HapiOperationOutcome.class))
         .thenReturn(HapiOperationOutcome.builder().code(200).successful(true).build())
         .thenReturn(HapiOperationOutcome.builder().code(400).successful(false).build());
@@ -393,7 +397,7 @@ public class TestCaseServiceTest {
   public void testPersistTestCaseReturnsInvalidDraftStatusException() {
     measure.setMeasureMetaData(MeasureMetaData.builder().draft(false).build());
     Optional<Measure> optional = Optional.of(measure);
-    Mockito.doReturn(optional).when(repository).findById(any(String.class));
+    Mockito.doReturn(optional).when(measureRepository).findById(any(String.class));
 
     assertThrows(
         InvalidDraftStatusException.class,
@@ -404,7 +408,7 @@ public class TestCaseServiceTest {
   public void testFindTestCasesByMeasureId() {
     measure.setTestCases(List.of(testCase));
     Optional<Measure> optional = Optional.of(measure);
-    Mockito.doReturn(optional).when(repository).findById(any(String.class));
+    Mockito.doReturn(optional).when(measureRepository).findById(any(String.class));
     List<TestCase> persistTestCase = testCaseService.findTestCasesByMeasureId(measure.getId());
     assertEquals(1, persistTestCase.size());
     assertEquals(testCase.getId(), persistTestCase.get(0).getId());
@@ -413,7 +417,7 @@ public class TestCaseServiceTest {
   @Test
   public void testFindTestCasesByMeasureIdWhenMeasureDoesNotExist() {
     Optional<Measure> optional = Optional.empty();
-    Mockito.doReturn(optional).when(repository).findById(any(String.class));
+    Mockito.doReturn(optional).when(measureRepository).findById(any(String.class));
     assertThrows(
         ResourceNotFoundException.class,
         () -> testCaseService.findTestCasesByMeasureId(measure.getId()));
@@ -422,7 +426,7 @@ public class TestCaseServiceTest {
   @Test
   public void testFindTestCaseSeriesByMeasureIdThrowsExceptionWhenMeasureDoesNotExist() {
     Optional<Measure> optional = Optional.empty();
-    when(repository.findAllTestCaseSeriesByMeasureId(anyString())).thenReturn(optional);
+    when(measureRepository.findAllTestCaseSeriesByMeasureId(anyString())).thenReturn(optional);
     assertThrows(
         ResourceNotFoundException.class,
         () -> testCaseService.findTestCaseSeriesByMeasureId(measure.getId()));
@@ -433,7 +437,7 @@ public class TestCaseServiceTest {
     Measure noTestCases = measure.toBuilder().build();
     measure.setTestCases(null);
     Optional<Measure> optional = Optional.of(noTestCases);
-    when(repository.findAllTestCaseSeriesByMeasureId(anyString())).thenReturn(optional);
+    when(measureRepository.findAllTestCaseSeriesByMeasureId(anyString())).thenReturn(optional);
     List<String> output = testCaseService.findTestCaseSeriesByMeasureId(measure.getId());
     assertEquals(List.of(), output);
   }
@@ -443,7 +447,7 @@ public class TestCaseServiceTest {
     Measure noTestCases = measure.toBuilder().build();
     measure.setTestCases(new ArrayList<>());
     Optional<Measure> optional = Optional.of(noTestCases);
-    when(repository.findAllTestCaseSeriesByMeasureId(anyString())).thenReturn(optional);
+    when(measureRepository.findAllTestCaseSeriesByMeasureId(anyString())).thenReturn(optional);
     List<String> output = testCaseService.findTestCaseSeriesByMeasureId(measure.getId());
     assertEquals(List.of(), output);
   }
@@ -457,7 +461,7 @@ public class TestCaseServiceTest {
             TestCase.builder().id(ObjectId.get().toString()).series("SeriesAAA").build(),
             TestCase.builder().id(ObjectId.get().toString()).series("SeriesBBB").build()));
     Optional<Measure> optional = Optional.of(withTestCases);
-    when(repository.findAllTestCaseSeriesByMeasureId(anyString())).thenReturn(optional);
+    when(measureRepository.findAllTestCaseSeriesByMeasureId(anyString())).thenReturn(optional);
     List<String> output = testCaseService.findTestCaseSeriesByMeasureId(measure.getId());
     assertEquals(List.of("SeriesAAA", "SeriesBBB"), output);
   }
@@ -472,7 +476,7 @@ public class TestCaseServiceTest {
             TestCase.builder().id(ObjectId.get().toString()).series(null).build(),
             TestCase.builder().id(ObjectId.get().toString()).series("SeriesBBB").build()));
     Optional<Measure> optional = Optional.of(withTestCases);
-    when(repository.findAllTestCaseSeriesByMeasureId(anyString())).thenReturn(optional);
+    when(measureRepository.findAllTestCaseSeriesByMeasureId(anyString())).thenReturn(optional);
     List<String> output = testCaseService.findTestCaseSeriesByMeasureId(measure.getId());
     assertEquals(List.of("SeriesAAA", "SeriesBBB"), output);
   }
@@ -496,12 +500,14 @@ public class TestCaseServiceTest {
 
     TestCase updatingTestCase =
         testCase.toBuilder().title("UpdatedTitle").series("UpdatedSeries").build();
-    Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(any(Measure.class));
+    Mockito.doAnswer((args) -> args.getArgument(0))
+        .when(measureRepository)
+        .save(any(Measure.class));
     TestCase updatedTestCase =
         testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user5", "TOKEN");
     assertNotNull(updatedTestCase);
 
-    verify(repository, times(1)).save(measureCaptor.capture());
+    verify(measureRepository, times(1)).save(measureCaptor.capture());
     assertEquals(updatingTestCase.getId(), updatedTestCase.getId());
     Measure savedMeasure = measureCaptor.getValue();
     assertEquals(measure.getLastModifiedBy(), savedMeasure.getLastModifiedBy());
@@ -585,12 +591,14 @@ public class TestCaseServiceTest {
 
     TestCase updatingTestCase =
         testCase.toBuilder().title("UpdatedTitle").series("UpdatedSeries").json(json).build();
-    Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(any(Measure.class));
+    Mockito.doAnswer((args) -> args.getArgument(0))
+        .when(measureRepository)
+        .save(any(Measure.class));
     TestCase updatedTestCase =
         testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user5", "TOKEN");
     assertNotNull(updatedTestCase);
 
-    verify(repository, times(1)).save(measureCaptor.capture());
+    verify(measureRepository, times(1)).save(measureCaptor.capture());
     assertEquals(updatingTestCase.getId(), updatedTestCase.getId());
     Measure savedMeasure = measureCaptor.getValue();
     assertEquals(measure.getLastModifiedBy(), savedMeasure.getLastModifiedBy());
@@ -665,12 +673,14 @@ public class TestCaseServiceTest {
 
     TestCase updatingTestCase =
         testCase.toBuilder().title("UpdatedTitle").series("UpdatedSeries").json(json).build();
-    Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(any(Measure.class));
+    Mockito.doAnswer((args) -> args.getArgument(0))
+        .when(measureRepository)
+        .save(any(Measure.class));
     TestCase updatedTestCase =
         testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user5", "TOKEN");
     assertNotNull(updatedTestCase);
 
-    verify(repository, times(1)).save(measureCaptor.capture());
+    verify(measureRepository, times(1)).save(measureCaptor.capture());
     assertEquals(updatingTestCase.getId(), updatedTestCase.getId());
     Measure savedMeasure = measureCaptor.getValue();
     assertEquals(measure.getLastModifiedBy(), savedMeasure.getLastModifiedBy());
@@ -742,13 +752,15 @@ public class TestCaseServiceTest {
 
     TestCase updatingTestCase =
         testCase.toBuilder().title("UpdatedTitle").series("UpdatedSeries").json(json).build();
-    Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(any(Measure.class));
+    Mockito.doAnswer((args) -> args.getArgument(0))
+        .when(measureRepository)
+        .save(any(Measure.class));
     TestCase updatedTestCase =
         testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user5", "TOKEN");
 
     assertNotNull(updatedTestCase);
 
-    verify(repository, times(1)).save(measureCaptor.capture());
+    verify(measureRepository, times(1)).save(measureCaptor.capture());
     assertEquals(updatingTestCase.getId(), updatedTestCase.getId());
     Measure savedMeasure = measureCaptor.getValue();
     assertEquals(measure.getLastModifiedBy(), savedMeasure.getLastModifiedBy());
@@ -770,6 +782,14 @@ public class TestCaseServiceTest {
     assertEquals(1, lastModCompareTo);
     assertNotEquals(updatedTestCase.getLastModifiedAt(), updatedTestCase.getCreatedAt());
     assertEquals("test.user5", updatedTestCase.getCreatedBy());
+  }
+
+  @Test
+  public void testUpdateTestCaseWhenMeasureIsNull() {
+    when(measureService.findMeasureById(anyString())).thenReturn(null);
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> testCaseService.updateTestCase(testCase, measure.getId(), "test.user", "TOKEN"));
   }
 
   @Test
@@ -860,7 +880,9 @@ public class TestCaseServiceTest {
             .title("UpdatedTitle")
             .series("UpdatedSeries")
             .build();
-    Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(any(Measure.class));
+    Mockito.doAnswer((args) -> args.getArgument(0))
+        .when(measureRepository)
+        .save(any(Measure.class));
 
     TestCase updatedTestCase =
         testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user5", "TOKEN");
@@ -891,7 +913,9 @@ public class TestCaseServiceTest {
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     Measure originalMeasure = measure.toBuilder().testCases(null).build();
     when(measureService.findMeasureById(anyString())).thenReturn(originalMeasure);
-    Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(any(Measure.class));
+    Mockito.doAnswer((args) -> args.getArgument(0))
+        .when(measureRepository)
+        .save(any(Measure.class));
 
     TestCase upsertingTestCase =
         testCase
@@ -914,7 +938,7 @@ public class TestCaseServiceTest {
     assertEquals("test.user5", updatedTestCase.getCreatedBy());
     assertEquals("test.user5", updatedTestCase.getLastModifiedBy());
 
-    verify(repository, times(1)).save(measureCaptor.capture());
+    verify(measureRepository, times(1)).save(measureCaptor.capture());
     Measure savedMeasure = measureCaptor.getValue();
     assertNotNull(savedMeasure.getTestCases());
     assertEquals(1, savedMeasure.getTestCases().size());
@@ -935,7 +959,9 @@ public class TestCaseServiceTest {
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     Measure originalMeasure = measure.toBuilder().testCases(new ArrayList<>()).build();
 
-    Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(any(Measure.class));
+    Mockito.doAnswer((args) -> args.getArgument(0))
+        .when(measureRepository)
+        .save(any(Measure.class));
 
     TestCase upsertingTestCase =
         testCase
@@ -959,7 +985,7 @@ public class TestCaseServiceTest {
     assertEquals("test.user5", updatedTestCase.getCreatedBy());
     assertEquals("test.user5", updatedTestCase.getLastModifiedBy());
 
-    verify(repository, times(1)).save(measureCaptor.capture());
+    verify(measureRepository, times(1)).save(measureCaptor.capture());
     Measure savedMeasure = measureCaptor.getValue();
     assertNotNull(savedMeasure.getTestCases());
     assertEquals(1, savedMeasure.getTestCases().size());
@@ -984,7 +1010,9 @@ public class TestCaseServiceTest {
     Measure originalMeasure =
         measure.toBuilder().testCases(new ArrayList<>(Arrays.asList(otherExistingTC))).build();
     when(measureService.findMeasureById(anyString())).thenReturn(originalMeasure);
-    Mockito.doAnswer((args) -> args.getArgument(0)).when(repository).save(any(Measure.class));
+    Mockito.doAnswer((args) -> args.getArgument(0))
+        .when(measureRepository)
+        .save(any(Measure.class));
 
     TestCase upsertingTestCase =
         testCase
@@ -1007,7 +1035,7 @@ public class TestCaseServiceTest {
     assertEquals("test.user5", updatedTestCase.getCreatedBy());
     assertEquals("test.user5", updatedTestCase.getLastModifiedBy());
 
-    verify(repository, times(1)).save(measureCaptor.capture());
+    verify(measureRepository, times(1)).save(measureCaptor.capture());
     Measure savedMeasure = measureCaptor.getValue();
     assertNotNull(savedMeasure.getTestCases());
     assertEquals(2, savedMeasure.getTestCases().size());
@@ -1029,7 +1057,7 @@ public class TestCaseServiceTest {
   public void testGetTestCaseReturnsTestCaseById() {
     Optional<Measure> optional =
         Optional.of(measure.toBuilder().testCases(Arrays.asList(testCase)).build());
-    Mockito.doReturn(optional).when(repository).findById(any(String.class));
+    Mockito.doReturn(optional).when(measureRepository).findById(any(String.class));
     TestCase output =
         testCaseService.getTestCase(measure.getId(), testCase.getId(), false, "TOKEN");
     assertEquals(testCase, output);
@@ -1042,7 +1070,7 @@ public class TestCaseServiceTest {
 
     Optional<Measure> optional =
         Optional.of(measure.toBuilder().testCases(Arrays.asList(testCase)).build());
-    Mockito.doReturn(optional).when(repository).findById(any(String.class));
+    Mockito.doReturn(optional).when(measureRepository).findById(any(String.class));
     TestCase output = testCaseService.getTestCase(measure.getId(), testCase.getId(), true, "TOKEN");
     assertEquals(testCase, output);
     assertNotNull(output.getHapiOperationOutcome());
@@ -1052,7 +1080,7 @@ public class TestCaseServiceTest {
   @Test
   public void testGetTestCaseThrowsNotFoundExceptionForMeasureWithEmptyListTestCases() {
     Mockito.doReturn(Optional.of(measure.toBuilder().testCases(Lists.emptyList()).build()))
-        .when(repository)
+        .when(measureRepository)
         .findById(any(String.class));
     assertThrows(
         ResourceNotFoundException.class,
@@ -1062,7 +1090,7 @@ public class TestCaseServiceTest {
   @Test
   public void testGetTestCaseThrowsNotFoundExceptionForMeasureWithNullTestCases() {
     Mockito.doReturn(Optional.of(measure.toBuilder().testCases(null).build()))
-        .when(repository)
+        .when(measureRepository)
         .findById(any(String.class));
     assertThrows(
         ResourceNotFoundException.class,
@@ -1076,7 +1104,7 @@ public class TestCaseServiceTest {
             TestCase.builder().id("TC1_ID").title("TC1").build(),
             TestCase.builder().id("TC2_ID").title("TC2").build());
     Mockito.doReturn(Optional.of(measure.toBuilder().testCases(testCases).build()))
-        .when(repository)
+        .when(measureRepository)
         .findById(any(String.class));
     assertThrows(
         ResourceNotFoundException.class,
@@ -1097,9 +1125,9 @@ public class TestCaseServiceTest {
             .testCases(testCases)
             .measureMetaData(MeasureMetaData.builder().draft(true).build())
             .build();
-    when(repository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
 
-    doReturn(existingMeasure).when(repository).save(any(Measure.class));
+    doReturn(existingMeasure).when(measureRepository).save(any(Measure.class));
 
     String output = testCaseService.deleteTestCase("measure-id", "TC2_ID", "test.user");
     assertThat(output, is(equalTo("Test case deleted successfully: TC2_ID")));
@@ -1139,7 +1167,7 @@ public class TestCaseServiceTest {
             .testCases(testCases)
             .measureMetaData(MeasureMetaData.builder().draft(true).build())
             .build();
-    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
     assertThrows(
         InvalidIdException.class,
         () -> testCaseService.deleteTestCase("measure-id", "testCaseId", "OtherUser"));
@@ -1153,7 +1181,7 @@ public class TestCaseServiceTest {
             .createdBy("OtherUser")
             .measureMetaData(MeasureMetaData.builder().draft(true).build())
             .build();
-    when(repository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
     doThrow(new UnauthorizedException("Measure", "measure-id", "user2"))
         .when(measureService)
         .verifyAuthorization(anyString(), any(Measure.class));
@@ -1178,7 +1206,7 @@ public class TestCaseServiceTest {
             .testCases(null)
             .measureMetaData(MeasureMetaData.builder().draft(true).build())
             .build();
-    when(repository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
 
     assertThrows(
         InvalidIdException.class,
@@ -1199,7 +1227,7 @@ public class TestCaseServiceTest {
             .testCases(testCases)
             .measureMetaData(MeasureMetaData.builder().draft(false).build())
             .build();
-    when(repository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
 
     assertThrows(
         InvalidDraftStatusException.class,
@@ -1376,5 +1404,144 @@ public class TestCaseServiceTest {
     assertThat(output.getCode(), is(equalTo(200)));
     assertThat(output.getMessage(), is(nullValue()));
     assertThat(output.isSuccessful(), is(true));
+  }
+
+  @Test
+  void importTestCasesReturnValidOutcomes() {
+    measure.setTestCases(List.of(testCase));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
+
+    TestCase updatedTestCase = testCase;
+    updatedTestCase.setJson(testCaseImportWithMeasureReport);
+
+    doReturn(updatedTestCase)
+        .when(testCaseService)
+        .updateTestCase(any(), anyString(), anyString(), anyString());
+    var testCaseImportRequest =
+        TestCaseImportRequest.builder()
+            .patientId(testCase.getPatientId())
+            .json(testCaseImportWithMeasureReport)
+            .build();
+
+    var response =
+        testCaseService.importTestCases(
+            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
+    assertEquals(1, response.size());
+    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
+    assertTrue(response.get(0).isSuccessful());
+  }
+
+  @Test
+  void importTestCasesReturnValidOutcomeWithMissingPatientId() {
+    measure.setTestCases(List.of(testCase));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
+
+    // new patient ID is different
+    var newPatientId = UUID.randomUUID();
+    var testCaseImportRequest =
+        TestCaseImportRequest.builder()
+            .patientId(newPatientId)
+            .json(testCaseImportWithMeasureReport)
+            .build();
+
+    var response =
+        testCaseService.importTestCases(
+            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
+    assertEquals(1, response.size());
+    assertEquals(newPatientId, response.get(0).getPatientId());
+    assertFalse(response.get(0).isSuccessful());
+    assertEquals("Patient Id is not found", response.get(0).getMessage());
+  }
+
+  @Test
+  void importTestCasesReturnValidOutcomeWithAnyExceptionsWhileUpdatingTestCases() {
+    measure.setTestCases(List.of(testCase));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
+
+    doThrow(new ResourceNotFoundException("Measure", measure.getId()))
+        .when(testCaseService)
+        .updateTestCase(any(), anyString(), anyString(), anyString());
+    var testCaseImportRequest =
+        TestCaseImportRequest.builder()
+            .patientId(testCase.getPatientId())
+            .json(testCaseImportWithMeasureReport)
+            .build();
+
+    var response =
+        testCaseService.importTestCases(
+            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
+    assertEquals(1, response.size());
+    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
+    assertFalse(response.get(0).isSuccessful());
+    assertEquals(
+        "Could not find Measure with id: " + measure.getId(), response.get(0).getMessage());
+  }
+
+  @Test
+  void importTestCasesReturnValidOutcomeWithAnyDefaultExceptionsWhileUpdatingTestCases() {
+    measure.setTestCases(List.of(testCase));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
+
+    doThrow(new NullPointerException())
+        .when(testCaseService)
+        .updateTestCase(any(), anyString(), anyString(), anyString());
+    var testCaseImportRequest =
+        TestCaseImportRequest.builder()
+            .patientId(testCase.getPatientId())
+            .json(testCaseImportWithMeasureReport)
+            .build();
+
+    var response =
+        testCaseService.importTestCases(
+            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
+    assertEquals(1, response.size());
+    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
+    assertFalse(response.get(0).isSuccessful());
+    assertEquals(
+        "Unable to import test case, please try again. if the error persists, Please contact helpdesk.",
+        response.get(0).getMessage());
+  }
+
+  @Test
+  void importTestCaseReturnValidOutComeWithJsonParseException() {
+    var importedJson = "{\n" + "    \"resourceType\": \"Bundle\",\n" + "}";
+    measure.setTestCases(List.of(testCase));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
+
+    var testCaseImportRequest =
+        TestCaseImportRequest.builder()
+            .patientId(testCase.getPatientId())
+            .json(importedJson)
+            .build();
+
+    var response =
+        testCaseService.importTestCases(
+            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
+    assertEquals(1, response.size());
+    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
+    assertFalse(response.get(0).isSuccessful());
+    assertEquals(
+        "Error while processing Test Case Json. "
+            + "Please make sure Test Case JSON is valid and Measure Report is not modified",
+        response.get(0).getMessage());
+  }
+
+  @Test
+  void importTestCaseReturnValidOutComeWithExceptionWhenJsonIsNull() {
+    measure.setTestCases(List.of(testCase));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
+
+    var testCaseImportRequest =
+        TestCaseImportRequest.builder().patientId(testCase.getPatientId()).json(null).build();
+
+    var response =
+        testCaseService.importTestCases(
+            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
+    assertEquals(1, response.size());
+    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
+    assertFalse(response.get(0).isSuccessful());
+    assertEquals(
+        "Unable to import test case, please try again. if the error persists, Please contact helpdesk.",
+        response.get(0).getMessage());
   }
 }
