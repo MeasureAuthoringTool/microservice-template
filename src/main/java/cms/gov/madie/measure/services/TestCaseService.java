@@ -317,12 +317,20 @@ public class TestCaseService {
         .build();
   }
 
-  protected String enforcePatientId(TestCase testCase) {
+  public String updateFullUrlPatientId(final String fullUrl, final String oldPatientId, final String newPatientId) {
+    if (!StringUtils.isBlank(fullUrl) && fullUrl.endsWith(oldPatientId)) {
+      return fullUrl.substring(0, fullUrl.length()-oldPatientId.length()) + newPatientId;
+    }
+    return fullUrl;
+  }
+
+  public String enforcePatientId(TestCase testCase) {
     String testCaseJson = testCase.getJson();
     if (!StringUtils.isEmpty(testCaseJson)) {
       ObjectMapper objectMapper = new ObjectMapper();
       String modifiedjsonString = testCaseJson;
       try {
+        final String newPatientId = testCase.getPatientId() == null ? null : testCase.getPatientId().toString();
         JsonNode rootNode = objectMapper.readTree(testCaseJson);
         ArrayNode allEntries = (ArrayNode) rootNode.get("entry");
         if (allEntries != null) {
@@ -332,8 +340,15 @@ public class TestCaseService {
                 && node.get("resource").get("resourceType").asText().equalsIgnoreCase("Patient")) {
               JsonNode resourceNode = node.get("resource");
               ObjectNode o = (ObjectNode) resourceNode;
+              final String existingPatientId = resourceNode.get("id").textValue();
 
-              o.put("id", testCase.getPatientId().toString());
+              ObjectNode parent = (ObjectNode) node;
+              if (parent.get("fullUrl") != null && !StringUtils.isBlank(parent.get("fullUrl").asText())) {
+                final String fullUrl = parent.get("fullUrl").asText();
+                parent.put("fullUrl", updateFullUrlPatientId(fullUrl, existingPatientId, newPatientId));
+              }
+
+              o.put("id", newPatientId);
 
               ByteArrayOutputStream bout = getByteArrayOutputStream(objectMapper, rootNode);
               byte[] objectBytes = bout.toByteArray();
