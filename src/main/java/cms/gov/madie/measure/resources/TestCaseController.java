@@ -9,6 +9,8 @@ import gov.cms.madie.models.measure.TestCase;
 import cms.gov.madie.measure.services.TestCaseService;
 import cms.gov.madie.measure.utils.ControllerUtil;
 import cms.gov.madie.measure.utils.UserInputSanitizeUtil;
+import gov.cms.madie.models.measure.TestCaseImportOutcome;
+import gov.cms.madie.models.measure.TestCaseImportRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -112,6 +114,18 @@ public class TestCaseController {
         measureId);
     return ResponseEntity.ok(
         testCaseService.deleteTestCase(measureId, testCaseId, principal.getName()));
+  }
+
+  @PutMapping(ControllerUtil.TEST_CASES + "/imports")
+  public ResponseEntity<List<TestCaseImportOutcome>> importTestCases(
+      @RequestBody List<TestCaseImportRequest> testCaseImportRequests,
+      @PathVariable String measureId,
+      @RequestHeader("Authorization") String accessToken,
+      Principal principal) {
+    final String userName = principal.getName();
+    var testCaseImportOutcomes =
+        testCaseService.importTestCases(testCaseImportRequests, measureId, userName, accessToken);
+    return ResponseEntity.ok().body(testCaseImportOutcomes);
   }
 
   private TestCase sanitizeTestCase(TestCase testCase) {

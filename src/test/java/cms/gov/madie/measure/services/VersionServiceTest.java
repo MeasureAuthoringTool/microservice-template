@@ -463,7 +463,7 @@ public class VersionServiceTest {
   @Test
   public void testCreateVersionMinorSuccess() throws Exception {
     QdmMeasure existingMeasure =
-            QdmMeasure.builder()
+        QdmMeasure.builder()
             .id("testMeasureId")
             .measureSetId("testMeasureSetId")
             .createdBy("testUser")
