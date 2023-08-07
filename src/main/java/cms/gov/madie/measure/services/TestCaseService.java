@@ -455,7 +455,7 @@ public class TestCaseService {
       ObjectMapper objectMapper = new ObjectMapper();
       String modifiedjsonString = testCaseJson;
       try {
-        final String newPatientId = testCase.getPatientId() == null ? null : testCase.getPatientId().toString();
+        final String newPatientId = testCase.getPatientId().toString();
         JsonNode rootNode = objectMapper.readTree(testCaseJson);
         ArrayNode allEntries = (ArrayNode) rootNode.get("entry");
         if (allEntries != null) {

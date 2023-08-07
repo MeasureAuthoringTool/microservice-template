@@ -26,6 +26,7 @@ public class UpdateTestCaseJsonPatientUuidChangeUnit {
 
     @Execution
     public void updatedTestCaseJsonWithPatientUuid(MeasureRepository measureRepository, TestCaseService testCaseService) {
+        log.info("STARTING - update_testcase_json_patient_uuid");
         List<Measure> measures = measureRepository.findAll();
         if (CollectionUtils.isNotEmpty(measures)) {
             setTempMeasures(measures);
@@ -33,53 +34,50 @@ public class UpdateTestCaseJsonPatientUuidChangeUnit {
                     .filter(m -> ModelType.QI_CORE.getValue().equals(m.getModel()))
                     .forEach(
                     measure -> {
-                        log.info("processing measure {} with model {}", measure.getMeasureName(), measure.getModel());
                         List<TestCase> testCases = measure.getTestCases();
                         if (CollectionUtils.isNotEmpty(testCases)) {
                             testCases.stream().filter(tc -> !StringUtils.isBlank(tc.getJson())).forEach(
                                     testCase -> {
+                                        if (!QiCoreJsonUtil.isValidJson(testCase.getJson())) {
+                                            log.warn("Skipping test case [{}] on measure [{}] as JSON is invalid", testCase.getId(), measure.getId());
+                                            return;
+                                        }
                                         try {
                                             UUID patientIdUuid = testCase.getPatientId();
                                             if (patientIdUuid == null) {
                                                 patientIdUuid = UUID.randomUUID();
                                                 testCase.setPatientId(patientIdUuid);
+                                                log.warn("Measure [{}], TestCase [{}] - patientId was missing, generated new UUID!",
+                                                        measure.getId(), testCase.getId());
                                             }
                                             final String newPatientId = patientIdUuid.toString();
-
-                                            String oldPatientId = QiCoreJsonUtil.getPatientId(testCase.getJson());
-                                            String oldFullUrl = QiCoreJsonUtil.getPatientFullUrl(testCase.getJson());
+                                            final String oldFullUrl = QiCoreJsonUtil.getPatientFullUrl(testCase.getJson());
 
                                             // Refs update makes the assumption that the ref will start with Patient/
                                             String updatedJson = testCaseService.enforcePatientId(testCase);
-                                            final String previousJson = testCaseService.enforcePatientId(testCase);
-                                            if (QiCoreJsonUtil.isUuid(oldPatientId)) {
-                                                log.info("TestCase {} already had patient ID updated, so falling back to wider regex for patient refs", testCase.getId());
-                                                updatedJson = QiCoreJsonUtil.replacePatientRefs(updatedJson, newPatientId);
-                                            } else {
-                                                log.info("TestCase {} used old ID to update patient refs ", testCase.getId());
-                                                updatedJson = QiCoreJsonUtil.replacePatientRefs(updatedJson, oldPatientId, newPatientId);
-                                            }
+                                            final String previousJson = updatedJson;
+                                            updatedJson = QiCoreJsonUtil.replacePatientRefs(updatedJson, newPatientId);
 
                                             if (!StringUtils.isBlank(oldFullUrl)) {
                                                 updatedJson = QiCoreJsonUtil.replaceFullUrlRefs(updatedJson, oldFullUrl, newPatientId);
                                             }
 
                                             if (previousJson.equals(updatedJson)) {
-                                                log.warn("TestCase {} - no patient refs were updated!", testCase.getId());
+                                                log.warn("Measure [{}], TestCase [{}] - no patient refs were updated!", measure.getId(), testCase.getId());
                                             }
 
                                             testCase.setJson(updatedJson);
 
                                         } catch (Exception ex) {
-                                            log.info("Error updating measure {}, test case {}", measure.getId(), testCase.getId(), ex);
+                                            log.info("Error updating Measure [{}], TestCase [{}]", measure.getId(), testCase.getId(), ex);
                                         }
                                     });
                             measure.setTestCases(testCases);
-
                             measureRepository.save(measure);
                         }
                     });
         }
+        log.info("COMPLETED - update_testcase_json_patient_uuid");
     }
 
 

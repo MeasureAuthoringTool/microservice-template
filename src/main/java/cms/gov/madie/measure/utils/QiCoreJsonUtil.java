@@ -13,6 +13,17 @@ import java.util.regex.Pattern;
 @Slf4j
 public class QiCoreJsonUtil {
 
+    public static boolean isValidJson(String json) {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            mapper.readTree(json);
+            return true;
+        } catch (JsonProcessingException e) {
+            // do nothing
+        }
+        return false;
+    }
+
     public static String getPatientId(String json) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
 
