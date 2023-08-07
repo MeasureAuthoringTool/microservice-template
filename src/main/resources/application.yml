@@ -63,5 +63,3 @@ hapi-fhir:
     uri: /Patient
   bundle:
     uri: /Bundle
-
-enforcePatientIdFeatureFlag: ${ENFORCE_PATIENT_ID_FEATURE_FLAG:true}

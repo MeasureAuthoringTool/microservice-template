@@ -29,7 +29,6 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.*;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
@@ -90,8 +89,6 @@ public class TestCaseServiceTest implements ResourceUtil {
     measure.setMeasureName("MSR01");
     measure.setVersion(new Version(0, 0, 1));
     measure.setMeasureMetaData(MeasureMetaData.builder().draft(true).build());
-
-    ReflectionTestUtils.setField(testCaseService, "enforcePatientIdFeatureFlag", "true");
   }
 
   @Test
@@ -607,95 +604,6 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertEquals(1, savedMeasure.getTestCases().size());
 
     assertTrue(savedMeasure.getTestCases().get(0).getJson().contains(patientId));
-
-    int lastModCompareTo =
-        updatedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
-    assertEquals("test.user5", updatedTestCase.getLastModifiedBy());
-    assertEquals(originalTestCase.getCreatedBy(), updatedTestCase.getCreatedBy());
-    assertEquals(1, lastModCompareTo);
-    assertNotEquals(updatedTestCase.getLastModifiedAt(), updatedTestCase.getCreatedAt());
-    assertEquals("test.user5", updatedTestCase.getCreatedBy());
-  }
-
-  @Test
-  public void testUpdateTestCaseWithFeatureFlagFalse() {
-    ReflectionTestUtils.setField(testCaseService, "enforcePatientIdFeatureFlag", "false");
-
-    ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
-    Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
-    String json =
-        "{\"resourceType\": \"Bundle\", \"type\": \"collection\", \n"
-            + "  \"entry\" : [ {\n"
-            + "    \"fullUrl\" : \"http://local/Patient/1\",\n"
-            + "    \"resource\" : {\n"
-            + "      \"id\" : \"testUniqueId\",\n"
-            + "      \"resourceType\" : \"Patient\"    \n"
-            + "    }\n"
-            + "  } ]             }";
-    TestCase originalTestCase =
-        testCase
-            .toBuilder()
-            .createdAt(createdAt)
-            .createdBy("test.user5")
-            .lastModifiedAt(createdAt)
-            .lastModifiedBy("test.user5")
-            .json(json)
-            .build();
-    List<TestCase> testCases = new ArrayList<>();
-    testCases.add(originalTestCase);
-    Measure originalMeasure =
-        measure
-            .toBuilder()
-            .model(ModelType.QI_CORE.getValue())
-            .cqlLibraryName("Test1CQLLibraryName")
-            .testCases(testCases)
-            .build();
-    when(measureService.findMeasureById(anyString())).thenReturn(originalMeasure);
-
-    when(fhirServicesClient.validateBundle(anyString(), anyString()))
-        .thenReturn(
-            ResponseEntity.ok(
-                "{\n"
-                    + "    \"code\": 200,\n"
-                    + "    \"message\": null,\n"
-                    + "    \"successful\": true,\n"
-                    + "    \"outcomeResponse\": {\n"
-                    + "        \"resourceType\": \"OperationOutcome\",\n"
-                    + "        \"issue\": [\n"
-                    + "            {\n"
-                    + "                \"severity\": \"information\",\n"
-                    + "                \"code\": \"informational\",\n"
-                    + "                \"diagnostics\": \"No issues detected during validation\"\n"
-                    + "            }\n"
-                    + "        ]\n"
-                    + "    }\n"
-                    + "}"));
-
-    TestCase updatingTestCase =
-        testCase.toBuilder().title("UpdatedTitle").series("UpdatedSeries").json(json).build();
-    Mockito.doAnswer((args) -> args.getArgument(0))
-        .when(measureRepository)
-        .save(any(Measure.class));
-    TestCase updatedTestCase =
-        testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user5", "TOKEN");
-    assertNotNull(updatedTestCase);
-
-    verify(measureRepository, times(1)).save(measureCaptor.capture());
-    assertEquals(updatingTestCase.getId(), updatedTestCase.getId());
-    Measure savedMeasure = measureCaptor.getValue();
-    assertEquals(measure.getLastModifiedBy(), savedMeasure.getLastModifiedBy());
-    assertEquals(measure.getLastModifiedAt(), savedMeasure.getLastModifiedAt());
-    assertNotNull(savedMeasure.getTestCases());
-    assertEquals(1, savedMeasure.getTestCases().size());
-
-    assertFalse(
-        savedMeasure
-            .getTestCases()
-            .get(0)
-            .getJson()
-            .contains("Updatedtitle-Updatedseries-Test1CQLLibraryName-0.0.1"));
-    assertTrue(savedMeasure.getTestCases().get(0).getJson().contains("testUniqueId"));
-    assertEquals(savedMeasure.getTestCases().get(0).getJson(), json);
 
     int lastModCompareTo =
         updatedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
