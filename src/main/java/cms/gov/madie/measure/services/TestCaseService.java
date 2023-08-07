@@ -47,6 +47,9 @@ public class TestCaseService {
   private ObjectMapper mapper;
   private MeasureService measureService;
 
+  @Value("${madie.json.resources.base-uri}")
+  private String madieJsonResourcesBaseUri;
+
   @Autowired
   public TestCaseService(
       MeasureRepository measureRepository,
@@ -441,7 +444,7 @@ public class TestCaseService {
   }
 
   public String buildFullUrlForPatient(final String newPatientId) {
-    return "https://madie.cms.gov/Patient/" + newPatientId;
+    return madieJsonResourcesBaseUri + newPatientId;
   }
 
   public String enforcePatientId(TestCase testCase) {
