@@ -10,8 +10,10 @@ import java.util.Iterator;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-@Slf4j
-public class QiCoreJsonUtil {
+public final class QiCoreJsonUtil {
+  private QiCoreJsonUtil() {
+
+  }
 
   public static boolean isValidJson(String json) {
     ObjectMapper mapper = new ObjectMapper();
