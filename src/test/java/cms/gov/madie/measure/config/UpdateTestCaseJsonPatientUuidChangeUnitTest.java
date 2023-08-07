@@ -98,7 +98,6 @@ class UpdateTestCaseJsonPatientUuidChangeUnitTest {
         Measure measure = measureArgumentCaptor1.getValue();
         assertThat(measure.getTestCases(), is(notNullValue()));
         assertThat(measure.getTestCases().size(), is(equalTo(2)));
-
     }
 
 }

@@ -445,11 +445,8 @@ public class TestCaseService {
         .build();
   }
 
-  public String updateFullUrlPatientId(final String fullUrl, final String oldPatientId, final String newPatientId) {
-    if (!StringUtils.isBlank(fullUrl) && fullUrl.endsWith(oldPatientId)) {
-      return fullUrl.substring(0, fullUrl.length()-oldPatientId.length()) + newPatientId;
-    }
-    return fullUrl;
+  public String buildFullUrlForPatient(final String newPatientId) {
+    return "https://madie.cms.gov/Patient/" + newPatientId;
   }
 
   public String enforcePatientId(TestCase testCase) {
@@ -468,13 +465,9 @@ public class TestCaseService {
                 && node.get("resource").get("resourceType").asText().equalsIgnoreCase("Patient")) {
               JsonNode resourceNode = node.get("resource");
               ObjectNode o = (ObjectNode) resourceNode;
-              final String existingPatientId = resourceNode.get("id").textValue();
 
               ObjectNode parent = (ObjectNode) node;
-              if (parent.get("fullUrl") != null && !StringUtils.isBlank(parent.get("fullUrl").asText())) {
-                final String fullUrl = parent.get("fullUrl").asText();
-                parent.put("fullUrl", updateFullUrlPatientId(fullUrl, existingPatientId, newPatientId));
-              }
+              parent.put("fullUrl", buildFullUrlForPatient(newPatientId));
 
               o.put("id", newPatientId);
 

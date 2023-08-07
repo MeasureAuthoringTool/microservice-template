@@ -47,7 +47,7 @@ public class UpdateTestCaseJsonPatientUuidChangeUnit {
                                             final String newPatientId = patientIdUuid.toString();
 
                                             String oldPatientId = QiCoreJsonUtil.getPatientId(testCase.getJson());
-//                                            String updatedTestCase = testCase.getJson(); // testCase.getJson().replaceAll(testCase.getId(), testCase.getPatientId().toString());
+                                            String oldFullUrl = QiCoreJsonUtil.getPatientFullUrl(testCase.getJson());
 
                                             // Refs update makes the assumption that the ref will start with Patient/
                                             String updatedJson = testCaseService.enforcePatientId(testCase);
@@ -58,6 +58,10 @@ public class UpdateTestCaseJsonPatientUuidChangeUnit {
                                             } else {
                                                 log.info("TestCase {} used old ID to update patient refs ", testCase.getId());
                                                 updatedJson = QiCoreJsonUtil.replacePatientRefs(updatedJson, oldPatientId, newPatientId);
+                                            }
+
+                                            if (!StringUtils.isBlank(oldFullUrl)) {
+                                                updatedJson = QiCoreJsonUtil.replaceFullUrlRefs(updatedJson, oldFullUrl, newPatientId);
                                             }
 
                                             if (previousJson.equals(updatedJson)) {
