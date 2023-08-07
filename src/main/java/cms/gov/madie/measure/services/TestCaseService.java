@@ -47,9 +47,6 @@ public class TestCaseService {
   private ObjectMapper mapper;
   private MeasureService measureService;
 
-  @Value("${enforcePatientIdFeatureFlag}")
-  private String enforcePatientIdFeatureFlag;
-
   @Autowired
   public TestCaseService(
       MeasureRepository measureRepository,
@@ -62,7 +59,6 @@ public class TestCaseService {
     this.fhirServicesClient = fhirServicesClient;
     this.mapper = mapper;
     this.measureService = measureService;
-    log.info("enforcePatientIdFeatureFlag = " + enforcePatientIdFeatureFlag);
   }
 
   protected TestCase enrichNewTestCase(TestCase testCase, String username) {
@@ -191,8 +187,7 @@ public class TestCaseService {
     }
 
     TestCase validatedTestCase = validateTestCaseAsResource(testCase, accessToken);
-    if (Boolean.parseBoolean(enforcePatientIdFeatureFlag)
-        && ModelType.QI_CORE.getValue().equalsIgnoreCase(measure.getModel())) {
+    if (ModelType.QI_CORE.getValue().equalsIgnoreCase(measure.getModel())) {
       validatedTestCase.setJson(enforcePatientId(validatedTestCase));
     }
     measure.getTestCases().add(validatedTestCase);
