@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.config;
 
+import ca.uhn.fhir.util.TestUtil;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.TestCaseService;
 import gov.cms.madie.models.common.ModelType;
@@ -13,6 +14,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.UUID;
@@ -246,5 +248,18 @@ class UpdateTestCaseJsonPatientUuidChangeUnitTest {
 
     verify(testCaseService, times(1)).enforcePatientId(eq(tc5));
     verify(testCaseService, times(1)).enforcePatientId(eq(tc1));
+  }
+
+  @Test
+  public void testRollBackEmpty() {
+    changeUnit.rollbackExecution(measureRepository);
+    verifyNoInteractions(measureRepository);
+  }
+
+  @Test
+  public void testRollBackTwo() {
+    ReflectionTestUtils.setField(changeUnit, "tempMeasures", List.of(measure1, measure2));
+    changeUnit.rollbackExecution(measureRepository);
+    verify(measureRepository, times(2)).save(any(Measure.class));
   }
 }

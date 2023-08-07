@@ -35,6 +35,12 @@ public class QiCoreJsonUtilTest {
   }
 
   @Test
+  public void testGetPatientId() throws JsonProcessingException {
+    String output = QiCoreJsonUtil.getPatientId(json);
+    assertThat(output, is(equalTo("1")));
+  }
+
+  @Test
   public void testUpdateFullUrlNoChange() {
     final String fullUrl = "https://something/Patient/foo";
     final String output =
