@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.dto.ValidList;
+import cms.gov.madie.measure.exceptions.NonUniqueTestCaseName;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
@@ -492,6 +493,35 @@ public class TestCaseControllerMvcTest {
 
     String response = result.getResponse().getContentAsString();
     assertTrue(response.contains("Test Case Title is required."));
+  }
+
+  @Test
+  public void testNewTestCaseTitleNotUnique() throws Exception {
+    when(testCaseService.persistTestCase(
+            any(TestCase.class), any(String.class), any(String.class), anyString()))
+        .thenThrow(new NonUniqueTestCaseName());
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.post("/measures/1234/test-cases")
+                    .with(user(TEST_USER_ID))
+                    .with(csrf())
+                    .header("Authorization", "test-okta")
+                    .content(asJsonString(testCase))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(
+                jsonPath("$.message")
+                    .value(
+                        "The Test Case Group and Title combination is not unique. "
+                            + "The combination must be unique (case insensitive, spaces ignored) across all test cases associated with the measure."))
+            .andReturn();
+
+    String response = result.getResponse().getContentAsString();
+    assertTrue(response.contains("must be unique"));
   }
 
   @Test

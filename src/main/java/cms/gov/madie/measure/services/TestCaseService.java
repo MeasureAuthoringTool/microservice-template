@@ -1,30 +1,21 @@
 package cms.gov.madie.measure.services;
 
-import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
-import cms.gov.madie.measure.exceptions.InvalidIdException;
-import cms.gov.madie.measure.exceptions.InvalidMeasureStateException;
-import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import cms.gov.madie.measure.exceptions.UnauthorizedException;
-import gov.cms.madie.models.common.ActionType;
-import gov.cms.madie.models.common.ModelType;
-import gov.cms.madie.models.measure.HapiOperationOutcome;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.TestCase;
+import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import gov.cms.madie.models.measure.TestCaseImportOutcome;
-import gov.cms.madie.models.measure.TestCaseImportRequest;
+import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.common.ModelType;
+import gov.cms.madie.models.measure.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.HttpClientErrorException;
@@ -34,8 +25,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
+import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 
 @Slf4j
 @Service
@@ -79,6 +72,25 @@ public class TestCaseService {
     return enrichedTestCase;
   }
 
+  protected void verifyUniqueTestCaseName(TestCase testCase, Measure measure) {
+    if (isEmpty(measure.getTestCases())) {
+      return;
+    }
+    // ignore spaces
+    final String newName = StringUtils.deleteWhitespace(testCase.getTitle() + testCase.getSeries());
+
+    boolean matchesExistingTestCaseName =
+        measure.getTestCases().stream()
+            // exclude the current test case
+            .filter(tc -> !tc.getId().equals(testCase.getId()))
+            .map(tc -> StringUtils.deleteWhitespace(tc.getTitle() + tc.getSeries()))
+            .anyMatch(existingName -> existingName.equalsIgnoreCase(newName));
+
+    if (matchesExistingTestCaseName) {
+      throw new NonUniqueTestCaseName();
+    }
+  }
+
   public TestCase persistTestCase(
       TestCase testCase, String measureId, String username, String accessToken) {
     final Measure measure = findMeasureById(measureId);
@@ -88,12 +100,15 @@ public class TestCaseService {
     }
 
     TestCase enrichedTestCase = enrichNewTestCase(testCase, username);
+    verifyUniqueTestCaseName(enrichedTestCase, measure);
     enrichedTestCase = validateTestCaseAsResource(enrichedTestCase, accessToken);
+
     if (measure.getTestCases() == null) {
       measure.setTestCases(List.of(enrichedTestCase));
     } else {
       measure.getTestCases().add(enrichedTestCase);
     }
+
     measureRepository.save(measure);
 
     actionLogService.logAction(
@@ -166,6 +181,8 @@ public class TestCaseService {
     if (measure.getTestCases() == null) {
       measure.setTestCases(new ArrayList<>());
     }
+
+    verifyUniqueTestCaseName(testCase, measure);
     measureService.verifyAuthorization(username, measure);
     Instant now = Instant.now();
     testCase.setLastModifiedAt(now);
