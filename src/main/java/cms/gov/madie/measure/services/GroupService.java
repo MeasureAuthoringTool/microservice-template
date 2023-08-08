@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
+import cms.gov.madie.measure.exceptions.InvalidGroupException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
@@ -60,6 +61,10 @@ public class GroupService {
       handleQdmGroupReturnTypes(group, measure);
     } else {
       handleFhirGroupReturnTypes(group, measure);
+    }
+
+    if (!CollectionUtils.isEmpty(group.getStratifications())) {
+      validateGroupdAssociations(measure.getModel(), group);
     }
 
     // no group present, this is the first group
@@ -238,6 +243,25 @@ public class GroupService {
   public void removeGroupFromTestCases(String groupId, List<TestCase> testCases) {
     if (StringUtils.isNotBlank(groupId) && !CollectionUtils.isEmpty(testCases)) {
       testCases.forEach(testCase -> removeGroupFromTestCase(groupId, testCase));
+    }
+  }
+
+  public void validateGroupdAssociations(String model, Group group) {
+    boolean isQdmModel = model.equalsIgnoreCase(ModelType.QDM_5_6.getValue());
+    boolean isAssociated;
+    if (isQdmModel) {
+      isAssociated =
+          group.getStratifications().stream().anyMatch(map -> map.getAssociation() != null);
+
+    } else {
+      isAssociated =
+          group.getStratifications().stream().anyMatch(map -> map.getAssociation() == null);
+    }
+    if (isAssociated) {
+      throw new InvalidGroupException(
+          isQdmModel
+              ? "QDM group stratifications cannot be associated."
+              : "QI-Core group stratifications should be associated to a valid population type.");
     }
   }
 
