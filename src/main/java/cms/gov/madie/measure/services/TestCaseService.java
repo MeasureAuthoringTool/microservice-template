@@ -47,6 +47,9 @@ public class TestCaseService {
   private ObjectMapper mapper;
   private MeasureService measureService;
 
+  @Value("${madie.json.resources.base-uri}")
+  private String madieJsonResourcesBaseUri;
+
   @Autowired
   public TestCaseService(
       MeasureRepository measureRepository,
@@ -440,12 +443,17 @@ public class TestCaseService {
         .build();
   }
 
-  protected String enforcePatientId(TestCase testCase) {
+  public String buildFullUrlForPatient(final String newPatientId) {
+    return madieJsonResourcesBaseUri + newPatientId;
+  }
+
+  public String enforcePatientId(TestCase testCase) {
     String testCaseJson = testCase.getJson();
     if (!StringUtils.isEmpty(testCaseJson)) {
       ObjectMapper objectMapper = new ObjectMapper();
       String modifiedjsonString = testCaseJson;
       try {
+        final String newPatientId = testCase.getPatientId().toString();
         JsonNode rootNode = objectMapper.readTree(testCaseJson);
         ArrayNode allEntries = (ArrayNode) rootNode.get("entry");
         if (allEntries != null) {
@@ -456,7 +464,10 @@ public class TestCaseService {
               JsonNode resourceNode = node.get("resource");
               ObjectNode o = (ObjectNode) resourceNode;
 
-              o.put("id", testCase.getPatientId().toString());
+              ObjectNode parent = (ObjectNode) node;
+              parent.put("fullUrl", buildFullUrlForPatient(newPatientId));
+
+              o.put("id", newPatientId);
 
               ByteArrayOutputStream bout = getByteArrayOutputStream(objectMapper, rootNode);
               modifiedjsonString = bout.toString();
