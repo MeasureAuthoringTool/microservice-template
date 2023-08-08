@@ -64,7 +64,7 @@ public class GroupService {
     }
 
     if (!CollectionUtils.isEmpty(group.getStratifications())) {
-      validateGroupdAssociations(measure.getModel(), group);
+      validateGroupAssociations(measure.getModel(), group);
     }
 
     // no group present, this is the first group
@@ -246,7 +246,7 @@ public class GroupService {
     }
   }
 
-  public void validateGroupdAssociations(String model, Group group) {
+  public void validateGroupAssociations(String model, Group group) {
     boolean isQdmModel = model.equalsIgnoreCase(ModelType.QDM_5_6.getValue());
     boolean isAssociated;
     if (isQdmModel) {
