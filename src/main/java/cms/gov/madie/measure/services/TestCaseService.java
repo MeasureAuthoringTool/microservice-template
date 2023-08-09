@@ -277,7 +277,8 @@ public class TestCaseService {
                     .patientId(testCaseImportRequest.getPatientId())
                     .successful(false)
                     .message(
-                        "Multiple test case files are not supported.  Please make sure only one JSON file is in the folder.")
+                        "Multiple test case files are not supported."
+                            + " Please make sure only one JSON file is in the folder.")
                     .build();
               }
 
@@ -316,7 +317,6 @@ public class TestCaseService {
       String measureId,
       String userName,
       String accessToken) {
-
     if (testCaseImportRequest.getJson() == null || testCaseImportRequest.getJson().isEmpty()) {
       return TestCaseImportOutcome.builder()
           .patientId(testCaseImportRequest.getPatientId())
@@ -324,7 +324,6 @@ public class TestCaseService {
           .message("Test Case file is missing.")
           .build();
     }
-
     try {
       existingTestCase.setJson(removeMeasureReportFromJson(testCaseImportRequest.getJson()));
       TestCase updatedTestCase = updateTestCase(existingTestCase, measureId, userName, accessToken);
