@@ -1472,7 +1472,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
     assertFalse(response.get(0).isSuccessful());
     assertEquals(
-        "Multiple test case files are not supported.  Please make sure only one JSON file is in the folder.",
+        "Multiple test case files are not supported. Please make sure only one JSON file is in the folder.",
         response.get(0).getMessage());
   }
 }
