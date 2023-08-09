@@ -20,10 +20,7 @@ import gov.cms.madie.models.measure.TestCaseImportOutcome;
 import gov.cms.madie.models.measure.TestCaseImportRequest;
 import java.io.ByteArrayOutputStream;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -265,9 +262,14 @@ public class TestCaseService {
       String userName,
       String accessToken) {
     Measure measure = findMeasureById(measureId);
+    Set<UUID> checkedTestCases = new HashSet<>();
     return testCaseImportRequests.stream()
+        .filter(
+            testCaseImportRequest ->
+                !checkedTestCases.contains(testCaseImportRequest.getPatientId()))
         .map(
             testCaseImportRequest -> {
+              checkedTestCases.add(testCaseImportRequest.getPatientId());
               if (testCaseImportRequests.stream()
                       .map(TestCaseImportRequest::getPatientId)
                       .filter(uuid -> uuid.equals(testCaseImportRequest.getPatientId()))
