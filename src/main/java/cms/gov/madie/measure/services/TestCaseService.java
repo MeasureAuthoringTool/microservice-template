@@ -5,20 +5,26 @@ import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.InvalidMeasureStateException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
-import gov.cms.madie.models.common.ActionType;
-import gov.cms.madie.models.common.ModelType;
-import gov.cms.madie.models.measure.HapiOperationOutcome;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.TestCase;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
+import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.common.ModelType;
+import gov.cms.madie.models.measure.HapiOperationOutcome;
+import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseImportOutcome;
 import gov.cms.madie.models.measure.TestCaseImportRequest;
+import java.io.ByteArrayOutputStream;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
@@ -28,14 +34,6 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.HttpClientErrorException;
-
-import java.io.ByteArrayOutputStream;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -270,6 +268,19 @@ public class TestCaseService {
     return testCaseImportRequests.stream()
         .map(
             testCaseImportRequest -> {
+              if (testCaseImportRequests.stream()
+                      .map(TestCaseImportRequest::getPatientId)
+                      .filter(uuid -> uuid.equals(testCaseImportRequest.getPatientId()))
+                      .count()
+                  > 1) {
+                return TestCaseImportOutcome.builder()
+                    .patientId(testCaseImportRequest.getPatientId())
+                    .successful(false)
+                    .message(
+                        "Multiple test case files are not supported.  Please make sure only one JSON file is in the folder.")
+                    .build();
+              }
+
               Optional<TestCase> existingTestCase =
                   measure.getTestCases().stream()
                       .filter(
@@ -305,6 +316,15 @@ public class TestCaseService {
       String measureId,
       String userName,
       String accessToken) {
+
+    if (testCaseImportRequest.getJson() == null || testCaseImportRequest.getJson().isEmpty()) {
+      return TestCaseImportOutcome.builder()
+          .patientId(testCaseImportRequest.getPatientId())
+          .successful(false)
+          .message("Test Case file is missing.")
+          .build();
+    }
+
     try {
       existingTestCase.setJson(removeMeasureReportFromJson(testCaseImportRequest.getJson()));
       TestCase updatedTestCase = updateTestCase(existingTestCase, measureId, userName, accessToken);
@@ -326,8 +346,7 @@ public class TestCaseService {
           .patientId(testCaseImportRequest.getPatientId())
           .successful(false)
           .message(
-              "Error while processing Test Case Json. "
-                  + "Please make sure Test Case JSON is valid and Measure Report is not modified")
+              "Error while processing Test Case JSON.  Please make sure Test Case JSON is valid.")
           .build();
     } catch (ResourceNotFoundException
         | InvalidDraftStatusException
