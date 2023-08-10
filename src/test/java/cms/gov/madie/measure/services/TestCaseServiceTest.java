@@ -1455,22 +1455,22 @@ public class TestCaseServiceTest implements ResourceUtil {
     measure.setTestCases(List.of(testCase));
     TestCase anotherTestCase = testCase.toBuilder().id(null).build();
     assertThrows(
-        NonUniqueTestCaseNameException.class,
+        DuplicateTestCaseNameException.class,
         () -> testCaseService.verifyUniqueTestCaseName(anotherTestCase, measure));
   }
 
   @Test
-  void testUniqueTestCaseNameOnly() {
+  void testUniqueNameCheckCoversNameOnlyCase() {
     TestCase nameOnly = testCase.toBuilder().series(null).build();
     measure.setTestCases(List.of(nameOnly));
     TestCase anotherTestCase = nameOnly.toBuilder().id(null).build();
     assertThrows(
-        NonUniqueTestCaseNameException.class,
+        DuplicateTestCaseNameException.class,
         () -> testCaseService.verifyUniqueTestCaseName(anotherTestCase, measure));
   }
 
   @Test
-  void testNameCheckIgnoredOnSelf() {
+  void testUniqueNameCheckIgnoredOnSelf() {
     measure.setTestCases(List.of(testCase));
     TestCase anotherTestCase = testCase.toBuilder().build();
     assertDoesNotThrow(() -> testCaseService.verifyUniqueTestCaseName(anotherTestCase, measure));

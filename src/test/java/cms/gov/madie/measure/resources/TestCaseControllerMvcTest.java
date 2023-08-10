@@ -1,7 +1,7 @@
 package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.dto.ValidList;
-import cms.gov.madie.measure.exceptions.NonUniqueTestCaseNameException;
+import cms.gov.madie.measure.exceptions.DuplicateTestCaseNameException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
@@ -499,7 +499,7 @@ public class TestCaseControllerMvcTest {
   public void testNewTestCaseTitleNotUnique() throws Exception {
     when(testCaseService.persistTestCase(
             any(TestCase.class), any(String.class), any(String.class), anyString()))
-        .thenThrow(new NonUniqueTestCaseNameException());
+        .thenThrow(new DuplicateTestCaseNameException());
 
     MvcResult result =
         mockMvc

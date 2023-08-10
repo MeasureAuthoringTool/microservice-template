@@ -87,7 +87,7 @@ public class TestCaseService {
             .anyMatch(existingName -> existingName.equalsIgnoreCase(newName));
 
     if (matchesExistingTestCaseName) {
-      throw new NonUniqueTestCaseNameException();
+      throw new DuplicateTestCaseNameException();
     }
   }
 
@@ -99,8 +99,9 @@ public class TestCaseService {
       throw new InvalidDraftStatusException(measure.getId());
     }
 
+    verifyUniqueTestCaseName(testCase, measure);
+
     TestCase enrichedTestCase = enrichNewTestCase(testCase, username);
-    verifyUniqueTestCaseName(enrichedTestCase, measure);
     enrichedTestCase = validateTestCaseAsResource(enrichedTestCase, accessToken);
 
     if (measure.getTestCases() == null) {
