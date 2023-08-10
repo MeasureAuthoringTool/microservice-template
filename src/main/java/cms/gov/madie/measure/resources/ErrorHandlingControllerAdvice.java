@@ -164,7 +164,7 @@ public class ErrorHandlingControllerAdvice {
     return getErrorAttributes(request, HttpStatus.BAD_REQUEST);
   }
 
-  @ExceptionHandler(NonUniqueTestCaseName.class)
+  @ExceptionHandler(NonUniqueTestCaseNameException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ResponseBody
   Map<String, Object> onNonUniqueTestCaseNameException(WebRequest request) {

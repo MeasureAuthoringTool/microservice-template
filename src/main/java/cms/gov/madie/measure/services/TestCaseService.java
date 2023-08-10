@@ -87,7 +87,7 @@ public class TestCaseService {
             .anyMatch(existingName -> existingName.equalsIgnoreCase(newName));
 
     if (matchesExistingTestCaseName) {
-      throw new NonUniqueTestCaseName();
+      throw new NonUniqueTestCaseNameException();
     }
   }
 

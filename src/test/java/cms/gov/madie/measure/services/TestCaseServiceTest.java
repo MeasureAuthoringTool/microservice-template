@@ -1455,7 +1455,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     measure.setTestCases(List.of(testCase));
     TestCase anotherTestCase = testCase.toBuilder().id(null).build();
     assertThrows(
-        NonUniqueTestCaseName.class,
+        NonUniqueTestCaseNameException.class,
         () -> testCaseService.verifyUniqueTestCaseName(anotherTestCase, measure));
   }
 
@@ -1465,7 +1465,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     measure.setTestCases(List.of(nameOnly));
     TestCase anotherTestCase = nameOnly.toBuilder().id(null).build();
     assertThrows(
-        NonUniqueTestCaseName.class,
+        NonUniqueTestCaseNameException.class,
         () -> testCaseService.verifyUniqueTestCaseName(anotherTestCase, measure));
   }
 
