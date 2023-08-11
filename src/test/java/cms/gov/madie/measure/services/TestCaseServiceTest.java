@@ -1140,6 +1140,96 @@ public class TestCaseServiceTest implements ResourceUtil {
   }
 
   @Test
+  void testDeleteTestCasesThrowsInvalidIdExceptionIfMeasureIdIsNull() {
+    measure.setId(null);
+    assertThrows(
+        InvalidIdException.class,
+        () ->
+            testCaseService.deleteTestCases(
+                measure.getId(), List.of("TC1_ID", "TC2_ID"), "test.user"));
+  }
+
+  @Test
+  void testDeleteTestCasesThrowsInvalidIdExceptionIfTestCaseIdsIsAnEmptyList() {
+    assertThrows(
+        InvalidIdException.class,
+        () -> testCaseService.deleteTestCases(measure.getId(), List.of(), "test.user"));
+  }
+
+  @Test
+  void testDeleteTestCasesShouldThrowResourceNotFoundExceptionWhenMeasureIsNotFound() {
+    when(measureRepository.findById(anyString())).thenReturn(Optional.empty());
+
+    assertThrows(
+        ResourceNotFoundException.class,
+        () ->
+            testCaseService.deleteTestCases(
+                measure.getId(), List.of("TC1_ID", "TC2_ID"), "test.user"));
+  }
+
+  @Test
+  void testDeleteTestCasesThrowsInvalidDraftStateException() {
+    measure.getMeasureMetaData().setDraft(false);
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
+
+    assertThrows(
+        InvalidDraftStatusException.class,
+        () ->
+            testCaseService.deleteTestCases(
+                measure.getId(), List.of("TC1_ID", "TC2_ID"), "test.user"));
+  }
+
+  @Test
+  void testDeleteTestCasesThrowsExceptionWhenMeasureDoesNotContainAnyTestCases() {
+    measure.setTestCases(List.of());
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
+
+    assertThrows(
+        InvalidIdException.class,
+        () ->
+            testCaseService.deleteTestCases(
+                measure.getId(), List.of("TC1_ID", "TC2_ID"), "test.user"));
+  }
+
+  @Test
+  void testDeleteTestCases() {
+    List<TestCase> testCases =
+        List.of(
+            TestCase.builder().id("TC1_ID").title("TC1").build(),
+            TestCase.builder().id("TC2_ID").title("TC2").build(),
+            TestCase.builder().id("TC3_ID").title("TC3").build(),
+            TestCase.builder().id("TC4_ID").title("TC4").build());
+
+    measure.setTestCases(testCases);
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    doReturn(measure).when(measureRepository).save(any(Measure.class));
+
+    String output =
+        testCaseService.deleteTestCases(measure.getId(), List.of("TC1_ID", "TC2_ID"), "test.user");
+    assertThat(output, is(equalTo("Succesfully deleted provided test cases")));
+  }
+
+  @Test
+  void testDeleteTestCasesAndReturnNotFoundTestIds() {
+    List<TestCase> testCases =
+        List.of(
+            TestCase.builder().id("TC1_ID").title("TC1").build(),
+            TestCase.builder().id("TC2_ID").title("TC2").build(),
+            TestCase.builder().id("TC3_ID").title("TC3").build(),
+            TestCase.builder().id("TC4_ID").title("TC4").build());
+
+    measure.setTestCases(testCases);
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    doReturn(measure).when(measureRepository).save(any(Measure.class));
+
+    String output =
+        testCaseService.deleteTestCases(
+            measure.getId(), List.of("TC1_ID", "TC2_ID", "TC5_ID", "TC6_ID"), "test.user");
+    assertThat(
+        output, is(equalTo("Succesfully deleted provided test cases except [ TC5_ID, TC6_ID ]")));
+  }
+
+  @Test
   public void testValidateTestCaseJsonHandlesNullTestCase() {
     HapiOperationOutcome output = testCaseService.validateTestCaseJson(null, "TOKEN");
     assertThat(output, is(nullValue()));
