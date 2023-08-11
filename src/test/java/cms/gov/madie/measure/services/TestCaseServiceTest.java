@@ -11,11 +11,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import cms.gov.madie.measure.HapiFhirConfig;
-import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
-import cms.gov.madie.measure.exceptions.InvalidIdException;
-import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import cms.gov.madie.measure.exceptions.UnauthorizedException;
-import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.utils.ResourceUtil;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -73,7 +69,7 @@ public class TestCaseServiceTest implements ResourceUtil {
   public void setUp() {
     testCase = new TestCase();
     testCase.setId("TESTID");
-    testCase.setName("IPPPass");
+    testCase.setTitle("IPPPass");
     testCase.setSeries("BloodPressure>124");
     testCase.setCreatedBy("TestUser");
     testCase.setLastModifiedBy("TestUser2");
@@ -1474,5 +1470,36 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertEquals(
         "Multiple test case files are not supported. Please make sure only one JSON file is in the folder.",
         response.get(0).getMessage());
+  }
+
+  @Test
+  void testUniqueTestCaseName() {
+    measure.setTestCases(List.of(testCase));
+    TestCase anotherTestCase = testCase.toBuilder().id(null).build();
+    assertThrows(
+        DuplicateTestCaseNameException.class,
+        () -> testCaseService.verifyUniqueTestCaseName(anotherTestCase, measure));
+  }
+
+  @Test
+  void testUniqueNameCheckCoversNameOnlyCase() {
+    TestCase nameOnly = testCase.toBuilder().series(null).build();
+    measure.setTestCases(List.of(nameOnly));
+    TestCase anotherTestCase = nameOnly.toBuilder().id(null).build();
+    assertThrows(
+        DuplicateTestCaseNameException.class,
+        () -> testCaseService.verifyUniqueTestCaseName(anotherTestCase, measure));
+  }
+
+  @Test
+  void testUniqueNameCheckIgnoredOnSelf() {
+    measure.setTestCases(List.of(testCase));
+    TestCase anotherTestCase = testCase.toBuilder().build();
+    assertDoesNotThrow(() -> testCaseService.verifyUniqueTestCaseName(anotherTestCase, measure));
+  }
+
+  @Test
+  void testAssumeUniqueNameOnEmptyList() {
+    assertDoesNotThrow(() -> testCaseService.verifyUniqueTestCaseName(testCase, measure));
   }
 }
