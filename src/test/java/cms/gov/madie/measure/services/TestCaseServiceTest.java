@@ -12,6 +12,7 @@ import static org.mockito.Mockito.*;
 
 import cms.gov.madie.measure.HapiFhirConfig;
 import cms.gov.madie.measure.exceptions.*;
+import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.utils.ResourceUtil;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
