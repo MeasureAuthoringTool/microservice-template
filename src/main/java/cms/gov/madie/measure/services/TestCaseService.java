@@ -17,7 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.ByteArrayOutputStream;
@@ -312,7 +311,7 @@ public class TestCaseService {
             .filter(
                 id -> deletedTestCases.stream().noneMatch(tc -> tc.getId().equalsIgnoreCase(id)))
             .toList();
-    if (!CollectionUtils.isEmpty(notDeletedTestCases)) {
+    if (!isEmpty(notDeletedTestCases)) {
       log.info(
           "User [{}] was unable to delete following test cases with Ids [{}] from measure [{}]",
           username,
