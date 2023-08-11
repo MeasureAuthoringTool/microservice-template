@@ -28,6 +28,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -819,5 +820,24 @@ public class TestCaseControllerMvcTest {
         .andExpect(status().isBadRequest());
     verify(testCaseService, never())
         .updateTestCase(any(TestCase.class), anyString(), anyString(), anyString());
+  }
+
+  @Test
+  public void testDeleteTestCases() throws Exception {
+    List<String> testCaseIds = List.of("testCaseId1", "testCaseId1");
+    when(testCaseService.deleteTestCases(anyString(), any(), any(String.class)))
+        .thenReturn("Succesfully deleted provided test cases");
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.delete("/measures/1234/test-cases")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(asJsonString(testCaseIds))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().string("Succesfully deleted provided test cases"))
+        .andReturn();
   }
 }

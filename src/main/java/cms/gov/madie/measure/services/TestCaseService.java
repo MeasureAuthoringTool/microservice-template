@@ -256,7 +256,7 @@ public class TestCaseService {
     }
 
     measureService.verifyAuthorization(username, measure);
-    if (CollectionUtils.isEmpty(measure.getTestCases())) {
+    if (isEmpty(measure.getTestCases())) {
       log.info("Measure with ID [{}] doesn't have any test cases", measureId);
       throw new InvalidIdException("Test case cannot be deleted, please contact the helpdesk");
     }
@@ -280,7 +280,7 @@ public class TestCaseService {
   }
 
   public String deleteTestCases(String measureId, List<String> testCaseIds, String username) {
-    if (CollectionUtils.isEmpty(testCaseIds) || StringUtils.isBlank(measureId)) {
+    if (isEmpty(testCaseIds) || StringUtils.isBlank(measureId)) {
       log.info("Test case Ids or Measure Id is Empty");
       throw new InvalidIdException("Test cases cannot be deleted, please contact the helpdesk");
     }
@@ -292,7 +292,7 @@ public class TestCaseService {
     }
 
     measureService.verifyAuthorization(username, measure);
-    if (CollectionUtils.isEmpty(measure.getTestCases())) {
+    if (isEmpty(measure.getTestCases())) {
       log.info("Measure with ID [{}] doesn't have any test cases", measureId);
       throw new InvalidIdException(
           "Measure {} doesn't have any existing test cases to delete", measureId);
