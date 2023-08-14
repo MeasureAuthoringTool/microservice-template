@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.dto.ValidList;
+import cms.gov.madie.measure.exceptions.DuplicateTestCaseNameException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
@@ -495,6 +496,35 @@ public class TestCaseControllerMvcTest {
   }
 
   @Test
+  public void testNewTestCaseTitleNotUnique() throws Exception {
+    when(testCaseService.persistTestCase(
+            any(TestCase.class), any(String.class), any(String.class), anyString()))
+        .thenThrow(new DuplicateTestCaseNameException());
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.post("/measures/1234/test-cases")
+                    .with(user(TEST_USER_ID))
+                    .with(csrf())
+                    .header("Authorization", "test-okta")
+                    .content(asJsonString(testCase))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(
+                jsonPath("$.message")
+                    .value(
+                        "The Test Case Group and Title combination is not unique. "
+                            + "The combination must be unique (case insensitive, spaces ignored) across all test cases associated with the measure."))
+            .andReturn();
+
+    String response = result.getResponse().getContentAsString();
+    assertTrue(response.contains("must be unique"));
+  }
+
+  @Test
   public void testNewTestCaseTitleRequiredBlank() throws Exception {
     testCase.setTitle("");
 
@@ -789,5 +819,28 @@ public class TestCaseControllerMvcTest {
         .andExpect(status().isBadRequest());
     verify(testCaseService, never())
         .updateTestCase(any(TestCase.class), anyString(), anyString(), anyString());
+  }
+
+  @Test
+  public void testDeleteTestCases() throws Exception {
+    List<String> testCaseIds = List.of("testCaseId1", "testCaseId1");
+    when(testCaseService.deleteTestCases(anyString(), any(), any(String.class)))
+        .thenReturn("Succesfully deleted provided test cases");
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.delete("/measures/1234/test-cases")
+                    .with(user(TEST_USER_ID))
+                    .with(csrf())
+                    .content(asJsonString(testCaseIds))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(content().string("Succesfully deleted provided test cases"))
+            .andReturn();
+
+    String response = result.getResponse().getContentAsString();
+    assertTrue(response.contains("Succesfully deleted provided test cases"));
   }
 }

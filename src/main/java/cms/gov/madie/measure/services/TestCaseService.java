@@ -13,6 +13,8 @@ import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import gov.cms.madie.models.measure.Group;
+
+import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.utils.QiCoreJsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -24,23 +26,23 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import gov.cms.madie.models.measure.TestCaseImportOutcome;
 import gov.cms.madie.models.measure.TestCaseImportRequest;
 import gov.cms.madie.models.measure.TestCasePopulationValue;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.ByteArrayOutputStream;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.UUID;
+
+import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 
 @Slf4j
 @Service
@@ -84,6 +86,25 @@ public class TestCaseService {
     return enrichedTestCase;
   }
 
+  protected void verifyUniqueTestCaseName(TestCase testCase, Measure measure) {
+    if (isEmpty(measure.getTestCases())) {
+      return;
+    }
+    // ignore spaces
+    final String newName = StringUtils.deleteWhitespace(testCase.getTitle() + testCase.getSeries());
+
+    boolean matchesExistingTestCaseName =
+        measure.getTestCases().stream()
+            // exclude the current test case
+            .filter(tc -> !tc.getId().equals(testCase.getId()))
+            .map(tc -> StringUtils.deleteWhitespace(tc.getTitle() + tc.getSeries()))
+            .anyMatch(existingName -> existingName.equalsIgnoreCase(newName));
+
+    if (matchesExistingTestCaseName) {
+      throw new DuplicateTestCaseNameException();
+    }
+  }
+
   public TestCase persistTestCase(
       TestCase testCase, String measureId, String username, String accessToken) {
     final Measure measure = findMeasureById(measureId);
@@ -92,13 +113,17 @@ public class TestCaseService {
       throw new InvalidDraftStatusException(measure.getId());
     }
 
+    verifyUniqueTestCaseName(testCase, measure);
+
     TestCase enrichedTestCase = enrichNewTestCase(testCase, username);
     enrichedTestCase = validateTestCaseAsResource(enrichedTestCase, accessToken);
+
     if (measure.getTestCases() == null) {
       measure.setTestCases(List.of(enrichedTestCase));
     } else {
       measure.getTestCases().add(enrichedTestCase);
     }
+
     measureRepository.save(measure);
 
     actionLogService.logAction(
@@ -171,6 +196,8 @@ public class TestCaseService {
     if (measure.getTestCases() == null) {
       measure.setTestCases(new ArrayList<>());
     }
+
+    verifyUniqueTestCaseName(testCase, measure);
     measureService.verifyAuthorization(username, measure);
     Instant now = Instant.now();
     testCase.setLastModifiedAt(now);
@@ -243,7 +270,7 @@ public class TestCaseService {
     }
 
     measureService.verifyAuthorization(username, measure);
-    if (CollectionUtils.isEmpty(measure.getTestCases())) {
+    if (isEmpty(measure.getTestCases())) {
       log.info("Measure with ID [{}] doesn't have any test cases", measureId);
       throw new InvalidIdException("Test case cannot be deleted, please contact the helpdesk");
     }
@@ -266,15 +293,92 @@ public class TestCaseService {
     return "Test case deleted successfully: " + testCaseId;
   }
 
+  public String deleteTestCases(String measureId, List<String> testCaseIds, String username) {
+    if (isEmpty(testCaseIds) || StringUtils.isBlank(measureId)) {
+      log.info("Test case Ids or Measure Id is Empty");
+      throw new InvalidIdException("Test cases cannot be deleted, please contact the helpdesk");
+    }
+
+    Measure measure = findMeasureById(measureId);
+
+    if (!measure.getMeasureMetaData().isDraft()) {
+      throw new InvalidDraftStatusException(measure.getId());
+    }
+
+    measureService.verifyAuthorization(username, measure);
+    if (isEmpty(measure.getTestCases())) {
+      log.info("Measure with ID [{}] doesn't have any test cases", measureId);
+      throw new InvalidIdException(
+          "Measure {} doesn't have any existing test cases to delete", measureId);
+    }
+
+    List<TestCase> deletedTestCases =
+        measure.getTestCases().stream().filter(tc -> testCaseIds.contains(tc.getId())).toList();
+
+    List<TestCase> remainingTestCases =
+        measure.getTestCases().stream().filter(tc -> !testCaseIds.contains(tc.getId())).toList();
+
+    measure.setTestCases(remainingTestCases);
+    measureRepository.save(measure);
+
+    List<String> notDeletedTestCases =
+        testCaseIds.stream()
+            .filter(
+                id -> deletedTestCases.stream().noneMatch(tc -> tc.getId().equalsIgnoreCase(id)))
+            .toList();
+    if (!isEmpty(notDeletedTestCases)) {
+      log.info(
+          "User [{}] was unable to delete following test cases with Ids [{}] from measure [{}]",
+          username,
+          String.join(", ", notDeletedTestCases),
+          measureId);
+      return "Succesfully deleted provided test cases except [ "
+          + String.join(", ", notDeletedTestCases)
+          + " ]";
+    }
+    log.info(
+        "User [{}] has successfully deleted following test cases with Ids [{}] from measure [{}]",
+        username,
+        String.join(", ", testCaseIds),
+        measureId);
+    return "Succesfully deleted provided test cases";
+  }
+
   public List<TestCaseImportOutcome> importTestCases(
       List<TestCaseImportRequest> testCaseImportRequests,
       String measureId,
       String userName,
       String accessToken) {
     Measure measure = findMeasureById(measureId);
+    Set<UUID> checkedTestCases = new HashSet<>();
     return testCaseImportRequests.stream()
+        .filter(
+            testCaseImportRequest ->
+                !checkedTestCases.contains(testCaseImportRequest.getPatientId()))
         .map(
             testCaseImportRequest -> {
+              checkedTestCases.add(testCaseImportRequest.getPatientId());
+              if (testCaseImportRequests.stream()
+                      .map(TestCaseImportRequest::getPatientId)
+                      .filter(uuid -> uuid.equals(testCaseImportRequest.getPatientId()))
+                      .count()
+                  > 1) {
+                return TestCaseImportOutcome.builder()
+                    .patientId(testCaseImportRequest.getPatientId())
+                    .successful(false)
+                    .message(
+                        "Multiple test case files are not supported."
+                            + " Please make sure only one JSON file is in the folder.")
+                    .build();
+              }
+              if (testCaseImportRequest.getJson() == null
+                  || testCaseImportRequest.getJson().isEmpty()) {
+                return TestCaseImportOutcome.builder()
+                    .patientId(testCaseImportRequest.getPatientId())
+                    .successful(false)
+                    .message("Test Case file is missing.")
+                    .build();
+              }
               Optional<TestCase> existingTestCase =
                   measure.getTestCases().stream()
                       .filter(
@@ -474,8 +578,7 @@ public class TestCaseService {
           .patientId(testCaseImportRequest.getPatientId())
           .successful(false)
           .message(
-              "Error while processing Test Case Json. "
-                  + "Please make sure Test Case JSON is valid and Measure Report is not modified")
+              "Error while processing Test Case JSON.  Please make sure Test Case JSON is valid.")
           .build();
     } catch (ResourceNotFoundException
         | InvalidDraftStatusException
@@ -533,6 +636,7 @@ public class TestCaseService {
   public Measure findMeasureById(String measureId) {
     Measure measure = measureRepository.findById(measureId).orElse(null);
     if (measure == null) {
+      log.info("Could not find Measure with id: {}", measureId);
       throw new ResourceNotFoundException("Measure", measureId);
     }
     return measure;

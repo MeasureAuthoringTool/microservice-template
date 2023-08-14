@@ -1,10 +1,18 @@
 package cms.gov.madie.measure.services;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
 import cms.gov.madie.measure.HapiFhirConfig;
-import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
-import cms.gov.madie.measure.exceptions.InvalidIdException;
-import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import cms.gov.madie.measure.exceptions.UnauthorizedException;
+import cms.gov.madie.measure.exceptions.*;
+import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.utils.ResourceUtil;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -14,10 +22,13 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
-import gov.cms.madie.models.measure.*;
 import gov.cms.madie.models.common.Version;
-import cms.gov.madie.measure.repositories.MeasureRepository;
-
+import gov.cms.madie.models.measure.*;
+import java.io.ByteArrayOutputStream;
+import java.nio.charset.Charset;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.bson.types.ObjectId;
@@ -34,22 +45,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-
-import java.io.ByteArrayOutputStream;
-import java.nio.charset.Charset;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
-
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class TestCaseServiceTest implements ResourceUtil {
@@ -84,7 +79,7 @@ public class TestCaseServiceTest implements ResourceUtil {
   public void setUp() {
     testCase = new TestCase();
     testCase.setId("TESTID");
-    testCase.setName("IPPPass");
+    testCase.setTitle("IPPPass");
     testCase.setSeries("BloodPressure>124");
     testCase.setCreatedBy("TestUser");
     testCase.setLastModifiedBy("TestUser2");
@@ -1152,6 +1147,96 @@ public class TestCaseServiceTest implements ResourceUtil {
   }
 
   @Test
+  void testDeleteTestCasesThrowsInvalidIdExceptionIfMeasureIdIsNull() {
+    measure.setId(null);
+    assertThrows(
+        InvalidIdException.class,
+        () ->
+            testCaseService.deleteTestCases(
+                measure.getId(), List.of("TC1_ID", "TC2_ID"), "test.user"));
+  }
+
+  @Test
+  void testDeleteTestCasesThrowsInvalidIdExceptionIfTestCaseIdsIsAnEmptyList() {
+    assertThrows(
+        InvalidIdException.class,
+        () -> testCaseService.deleteTestCases(measure.getId(), List.of(), "test.user"));
+  }
+
+  @Test
+  void testDeleteTestCasesShouldThrowResourceNotFoundExceptionWhenMeasureIsNotFound() {
+    when(measureRepository.findById(anyString())).thenReturn(Optional.empty());
+
+    assertThrows(
+        ResourceNotFoundException.class,
+        () ->
+            testCaseService.deleteTestCases(
+                measure.getId(), List.of("TC1_ID", "TC2_ID"), "test.user"));
+  }
+
+  @Test
+  void testDeleteTestCasesThrowsInvalidDraftStateException() {
+    measure.getMeasureMetaData().setDraft(false);
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
+
+    assertThrows(
+        InvalidDraftStatusException.class,
+        () ->
+            testCaseService.deleteTestCases(
+                measure.getId(), List.of("TC1_ID", "TC2_ID"), "test.user"));
+  }
+
+  @Test
+  void testDeleteTestCasesThrowsExceptionWhenMeasureDoesNotContainAnyTestCases() {
+    measure.setTestCases(List.of());
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
+
+    assertThrows(
+        InvalidIdException.class,
+        () ->
+            testCaseService.deleteTestCases(
+                measure.getId(), List.of("TC1_ID", "TC2_ID"), "test.user"));
+  }
+
+  @Test
+  void testDeleteTestCases() {
+    List<TestCase> testCases =
+        List.of(
+            TestCase.builder().id("TC1_ID").title("TC1").build(),
+            TestCase.builder().id("TC2_ID").title("TC2").build(),
+            TestCase.builder().id("TC3_ID").title("TC3").build(),
+            TestCase.builder().id("TC4_ID").title("TC4").build());
+
+    measure.setTestCases(testCases);
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    doReturn(measure).when(measureRepository).save(any(Measure.class));
+
+    String output =
+        testCaseService.deleteTestCases(measure.getId(), List.of("TC1_ID", "TC2_ID"), "test.user");
+    assertThat(output, is(equalTo("Succesfully deleted provided test cases")));
+  }
+
+  @Test
+  void testDeleteTestCasesAndReturnNotFoundTestIds() {
+    List<TestCase> testCases =
+        List.of(
+            TestCase.builder().id("TC1_ID").title("TC1").build(),
+            TestCase.builder().id("TC2_ID").title("TC2").build(),
+            TestCase.builder().id("TC3_ID").title("TC3").build(),
+            TestCase.builder().id("TC4_ID").title("TC4").build());
+
+    measure.setTestCases(testCases);
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    doReturn(measure).when(measureRepository).save(any(Measure.class));
+
+    String output =
+        testCaseService.deleteTestCases(
+            measure.getId(), List.of("TC1_ID", "TC2_ID", "TC5_ID", "TC6_ID"), "test.user");
+    assertThat(
+        output, is(equalTo("Succesfully deleted provided test cases except [ TC5_ID, TC6_ID ]")));
+  }
+
+  @Test
   public void testValidateTestCaseJsonHandlesNullTestCase() {
     HapiOperationOutcome output = testCaseService.validateTestCaseJson(null, "TOKEN");
     assertThat(output, is(nullValue()));
@@ -1438,8 +1523,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
     assertFalse(response.get(0).isSuccessful());
     assertEquals(
-        "Error while processing Test Case Json. "
-            + "Please make sure Test Case JSON is valid and Measure Report is not modified",
+        "Error while processing Test Case JSON.  Please make sure Test Case JSON is valid.",
         response.get(0).getMessage());
   }
 
@@ -1457,8 +1541,34 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
     assertFalse(response.get(0).isSuccessful());
+    assertEquals("Test Case file is missing.", response.get(0).getMessage());
+  }
+
+  @Test
+  void importTestCasesReturnValidOutcomesWithMultipleFilesPerPatient() {
+    measure.setTestCases(List.of(testCase));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
+
+    TestCase updatedTestCase = testCase;
+    updatedTestCase.setJson(testCaseImportWithMeasureReport);
+
+    var testCaseImportRequest =
+        TestCaseImportRequest.builder()
+            .patientId(testCase.getPatientId())
+            .json(testCaseImportWithMeasureReport)
+            .build();
+
+    var response =
+        testCaseService.importTestCases(
+            List.of(testCaseImportRequest, testCaseImportRequest),
+            measure.getId(),
+            "test.user",
+            "TOKEN");
+    assertEquals(1, response.size());
+    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
+    assertFalse(response.get(0).isSuccessful());
     assertEquals(
-        "Unable to import test case, please try again. if the error persists, Please contact helpdesk.",
+        "Multiple test case files are not supported. Please make sure only one JSON file is in the folder.",
         response.get(0).getMessage());
   }
 
@@ -1843,5 +1953,36 @@ public class TestCaseServiceTest implements ResourceUtil {
             List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
     assertEquals(1, response.size());
     assertFalse(response.get(0).isSuccessful());
+  }
+
+  @Test
+  void testUniqueTestCaseName() {
+    measure.setTestCases(List.of(testCase));
+    TestCase anotherTestCase = testCase.toBuilder().id(null).build();
+    assertThrows(
+        DuplicateTestCaseNameException.class,
+        () -> testCaseService.verifyUniqueTestCaseName(anotherTestCase, measure));
+  }
+
+  @Test
+  void testUniqueNameCheckCoversNameOnlyCase() {
+    TestCase nameOnly = testCase.toBuilder().series(null).build();
+    measure.setTestCases(List.of(nameOnly));
+    TestCase anotherTestCase = nameOnly.toBuilder().id(null).build();
+    assertThrows(
+        DuplicateTestCaseNameException.class,
+        () -> testCaseService.verifyUniqueTestCaseName(anotherTestCase, measure));
+  }
+
+  @Test
+  void testUniqueNameCheckIgnoredOnSelf() {
+    measure.setTestCases(List.of(testCase));
+    TestCase anotherTestCase = testCase.toBuilder().build();
+    assertDoesNotThrow(() -> testCaseService.verifyUniqueTestCaseName(anotherTestCase, measure));
+  }
+
+  @Test
+  void testAssumeUniqueNameOnEmptyList() {
+    assertDoesNotThrow(() -> testCaseService.verifyUniqueTestCaseName(testCase, measure));
   }
 }

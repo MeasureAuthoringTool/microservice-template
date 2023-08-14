@@ -120,7 +120,7 @@ public class GroupServiceTest implements ResourceUtil {
                         "a description of fun",
                         "id-2",
                         AggregateMethodType.MAXIMUM.getValue())))
-            .stratifications(List.of(strata1, emptyStrat))
+            .stratifications(List.of(strata1))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .build();

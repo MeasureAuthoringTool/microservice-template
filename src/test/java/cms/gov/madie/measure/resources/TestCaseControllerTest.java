@@ -217,6 +217,23 @@ public class TestCaseControllerTest {
   }
 
   @Test
+  void testDeleteTestCases() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    String mockedServiceResponse = "Succesfully deleted provided test cases";
+    doReturn(mockedServiceResponse)
+        .when(testCaseService)
+        .deleteTestCases(any(String.class), any(), any(String.class));
+
+    ResponseEntity<String> output =
+        controller.deleteTestCases("measure.id", List.of("TC1_ID"), principal);
+
+    assertEquals(mockedServiceResponse, output.getBody());
+    assertEquals(HttpStatus.OK, output.getStatusCode());
+  }
+
+  @Test
   public void testGetTestCaseSeriesByMeasureIdReturnsEmptyList() {
     when(testCaseService.findTestCaseSeriesByMeasureId(anyString())).thenReturn(List.of());
     ResponseEntity<List<String>> output = controller.getTestCaseSeriesByMeasureId(measure.getId());
