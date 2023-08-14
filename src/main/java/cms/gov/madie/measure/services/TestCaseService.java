@@ -21,10 +21,7 @@ import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.ByteArrayOutputStream;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
@@ -335,9 +332,28 @@ public class TestCaseService {
       String userName,
       String accessToken) {
     Measure measure = findMeasureById(measureId);
+    Set<UUID> checkedTestCases = new HashSet<>();
     return testCaseImportRequests.stream()
+        .filter(
+            testCaseImportRequest ->
+                !checkedTestCases.contains(testCaseImportRequest.getPatientId()))
         .map(
             testCaseImportRequest -> {
+              checkedTestCases.add(testCaseImportRequest.getPatientId());
+              if (testCaseImportRequests.stream()
+                      .map(TestCaseImportRequest::getPatientId)
+                      .filter(uuid -> uuid.equals(testCaseImportRequest.getPatientId()))
+                      .count()
+                  > 1) {
+                return TestCaseImportOutcome.builder()
+                    .patientId(testCaseImportRequest.getPatientId())
+                    .successful(false)
+                    .message(
+                        "Multiple test case files are not supported."
+                            + " Please make sure only one JSON file is in the folder.")
+                    .build();
+              }
+
               Optional<TestCase> existingTestCase =
                   measure.getTestCases().stream()
                       .filter(
@@ -373,6 +389,13 @@ public class TestCaseService {
       String measureId,
       String userName,
       String accessToken) {
+    if (testCaseImportRequest.getJson() == null || testCaseImportRequest.getJson().isEmpty()) {
+      return TestCaseImportOutcome.builder()
+          .patientId(testCaseImportRequest.getPatientId())
+          .successful(false)
+          .message("Test Case file is missing.")
+          .build();
+    }
     try {
       existingTestCase.setJson(removeMeasureReportFromJson(testCaseImportRequest.getJson()));
       TestCase updatedTestCase = updateTestCase(existingTestCase, measureId, userName, accessToken);
@@ -394,8 +417,7 @@ public class TestCaseService {
           .patientId(testCaseImportRequest.getPatientId())
           .successful(false)
           .message(
-              "Error while processing Test Case Json. "
-                  + "Please make sure Test Case JSON is valid and Measure Report is not modified")
+              "Error while processing Test Case JSON.  Please make sure Test Case JSON is valid.")
           .build();
     } catch (ResourceNotFoundException
         | InvalidDraftStatusException

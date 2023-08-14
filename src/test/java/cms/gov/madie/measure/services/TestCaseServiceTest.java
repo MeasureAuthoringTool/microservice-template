@@ -1,17 +1,31 @@
 package cms.gov.madie.measure.services;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
 import cms.gov.madie.measure.HapiFhirConfig;
 import cms.gov.madie.measure.exceptions.*;
+import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.utils.ResourceUtil;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
-import gov.cms.madie.models.measure.*;
 import gov.cms.madie.models.common.Version;
-import cms.gov.madie.measure.repositories.MeasureRepository;
-
+import gov.cms.madie.models.measure.*;
+import java.io.ByteArrayOutputStream;
+import java.nio.charset.Charset;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.bson.types.ObjectId;
@@ -28,22 +42,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-
-import java.io.ByteArrayOutputStream;
-import java.nio.charset.Charset;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
-
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class TestCaseServiceTest implements ResourceUtil {
@@ -1516,8 +1514,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
     assertFalse(response.get(0).isSuccessful());
     assertEquals(
-        "Error while processing Test Case Json. "
-            + "Please make sure Test Case JSON is valid and Measure Report is not modified",
+        "Error while processing Test Case JSON.  Please make sure Test Case JSON is valid.",
         response.get(0).getMessage());
   }
 
@@ -1535,8 +1532,34 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
     assertFalse(response.get(0).isSuccessful());
+    assertEquals("Test Case file is missing.", response.get(0).getMessage());
+  }
+
+  @Test
+  void importTestCasesReturnValidOutcomesWithMultipleFilesPerPatient() {
+    measure.setTestCases(List.of(testCase));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
+
+    TestCase updatedTestCase = testCase;
+    updatedTestCase.setJson(testCaseImportWithMeasureReport);
+
+    var testCaseImportRequest =
+        TestCaseImportRequest.builder()
+            .patientId(testCase.getPatientId())
+            .json(testCaseImportWithMeasureReport)
+            .build();
+
+    var response =
+        testCaseService.importTestCases(
+            List.of(testCaseImportRequest, testCaseImportRequest),
+            measure.getId(),
+            "test.user",
+            "TOKEN");
+    assertEquals(1, response.size());
+    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
+    assertFalse(response.get(0).isSuccessful());
     assertEquals(
-        "Unable to import test case, please try again. if the error persists, Please contact helpdesk.",
+        "Multiple test case files are not supported. Please make sure only one JSON file is in the folder.",
         response.get(0).getMessage());
   }
 
