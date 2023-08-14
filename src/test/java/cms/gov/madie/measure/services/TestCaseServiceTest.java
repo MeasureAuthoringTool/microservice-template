@@ -1433,28 +1433,6 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertTrue(response.get(0).isSuccessful());
   }
 
-  //  @Test
-  //  void importTestCasesReturnValidOutcomeWithMissingPatientId() {
-  //    measure.setTestCases(List.of(testCase));
-  //    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
-  //
-  //    // new patient ID is different
-  //    var newPatientId = UUID.randomUUID();
-  //    var testCaseImportRequest =
-  //        TestCaseImportRequest.builder()
-  //            .patientId(newPatientId)
-  //            .json(testCaseImportWithMeasureReport)
-  //            .build();
-  //
-  //    var response =
-  //        testCaseService.importTestCases(
-  //            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
-  //    assertEquals(1, response.size());
-  //    assertEquals(newPatientId, response.get(0).getPatientId());
-  //    assertFalse(response.get(0).isSuccessful());
-  //    assertEquals("Patient Id is not found", response.get(0).getMessage());
-  //  }
-
   @Test
   void importTestCasesReturnValidOutcomeWithAnyExceptionsWhileUpdatingTestCases() {
     measure.setTestCases(List.of(testCase));
