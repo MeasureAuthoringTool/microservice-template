@@ -116,6 +116,19 @@ public class TestCaseController {
         testCaseService.deleteTestCase(measureId, testCaseId, principal.getName()));
   }
 
+  @DeleteMapping(ControllerUtil.TEST_CASES)
+  public ResponseEntity<String> deleteTestCases(
+      @PathVariable String measureId, @RequestBody List<String> testCaseIds, Principal principal) {
+
+    log.info(
+        "User [{}] is attempting to delete following test cases with Ids [{}] from measure [{}]",
+        principal.getName(),
+        String.join(", ", testCaseIds),
+        measureId);
+    return ResponseEntity.ok(
+        testCaseService.deleteTestCases(measureId, testCaseIds, principal.getName()));
+  }
+
   @PutMapping(ControllerUtil.TEST_CASES + "/imports")
   public ResponseEntity<List<TestCaseImportOutcome>> importTestCases(
       @RequestBody List<TestCaseImportRequest> testCaseImportRequests,

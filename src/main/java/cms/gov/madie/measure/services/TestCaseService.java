@@ -17,7 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.ByteArrayOutputStream;
@@ -253,7 +252,7 @@ public class TestCaseService {
     }
 
     measureService.verifyAuthorization(username, measure);
-    if (CollectionUtils.isEmpty(measure.getTestCases())) {
+    if (isEmpty(measure.getTestCases())) {
       log.info("Measure with ID [{}] doesn't have any test cases", measureId);
       throw new InvalidIdException("Test case cannot be deleted, please contact the helpdesk");
     }
@@ -274,6 +273,57 @@ public class TestCaseService {
 
     measureRepository.save(measure);
     return "Test case deleted successfully: " + testCaseId;
+  }
+
+  public String deleteTestCases(String measureId, List<String> testCaseIds, String username) {
+    if (isEmpty(testCaseIds) || StringUtils.isBlank(measureId)) {
+      log.info("Test case Ids or Measure Id is Empty");
+      throw new InvalidIdException("Test cases cannot be deleted, please contact the helpdesk");
+    }
+
+    Measure measure = findMeasureById(measureId);
+
+    if (!measure.getMeasureMetaData().isDraft()) {
+      throw new InvalidDraftStatusException(measure.getId());
+    }
+
+    measureService.verifyAuthorization(username, measure);
+    if (isEmpty(measure.getTestCases())) {
+      log.info("Measure with ID [{}] doesn't have any test cases", measureId);
+      throw new InvalidIdException(
+          "Measure {} doesn't have any existing test cases to delete", measureId);
+    }
+
+    List<TestCase> deletedTestCases =
+        measure.getTestCases().stream().filter(tc -> testCaseIds.contains(tc.getId())).toList();
+
+    List<TestCase> remainingTestCases =
+        measure.getTestCases().stream().filter(tc -> !testCaseIds.contains(tc.getId())).toList();
+
+    measure.setTestCases(remainingTestCases);
+    measureRepository.save(measure);
+
+    List<String> notDeletedTestCases =
+        testCaseIds.stream()
+            .filter(
+                id -> deletedTestCases.stream().noneMatch(tc -> tc.getId().equalsIgnoreCase(id)))
+            .toList();
+    if (!isEmpty(notDeletedTestCases)) {
+      log.info(
+          "User [{}] was unable to delete following test cases with Ids [{}] from measure [{}]",
+          username,
+          String.join(", ", notDeletedTestCases),
+          measureId);
+      return "Succesfully deleted provided test cases except [ "
+          + String.join(", ", notDeletedTestCases)
+          + " ]";
+    }
+    log.info(
+        "User [{}] has successfully deleted following test cases with Ids [{}] from measure [{}]",
+        username,
+        String.join(", ", testCaseIds),
+        measureId);
+    return "Succesfully deleted provided test cases";
   }
 
   public List<TestCaseImportOutcome> importTestCases(
@@ -425,6 +475,7 @@ public class TestCaseService {
   public Measure findMeasureById(String measureId) {
     Measure measure = measureRepository.findById(measureId).orElse(null);
     if (measure == null) {
+      log.info("Could not find Measure with id: {}", measureId);
       throw new ResourceNotFoundException("Measure", measureId);
     }
     return measure;
