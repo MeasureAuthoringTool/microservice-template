@@ -353,7 +353,14 @@ public class TestCaseService {
                             + " Please make sure only one JSON file is in the folder.")
                     .build();
               }
-
+              if (testCaseImportRequest.getJson() == null
+                  || testCaseImportRequest.getJson().isEmpty()) {
+                return TestCaseImportOutcome.builder()
+                    .patientId(testCaseImportRequest.getPatientId())
+                    .successful(false)
+                    .message("Test Case file is missing.")
+                    .build();
+              }
               Optional<TestCase> existingTestCase =
                   measure.getTestCases().stream()
                       .filter(
@@ -389,13 +396,6 @@ public class TestCaseService {
       String measureId,
       String userName,
       String accessToken) {
-    if (testCaseImportRequest.getJson() == null || testCaseImportRequest.getJson().isEmpty()) {
-      return TestCaseImportOutcome.builder()
-          .patientId(testCaseImportRequest.getPatientId())
-          .successful(false)
-          .message("Test Case file is missing.")
-          .build();
-    }
     try {
       existingTestCase.setJson(removeMeasureReportFromJson(testCaseImportRequest.getJson()));
       TestCase updatedTestCase = updateTestCase(existingTestCase, measureId, userName, accessToken);
