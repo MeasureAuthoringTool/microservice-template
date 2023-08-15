@@ -1482,6 +1482,31 @@ public class TestCaseServiceTest implements ResourceUtil {
   }
 
   @Test
+  void importTestCasesReturnValidOutcomeWithSpecificExceptionMsgWhileUpdatingTestCases() {
+    measure.setTestCases(List.of(testCase));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
+
+    doThrow(new DuplicateTestCaseNameException())
+        .when(testCaseService)
+        .updateTestCase(any(), anyString(), anyString(), anyString());
+    var testCaseImportRequest =
+        TestCaseImportRequest.builder()
+            .patientId(testCase.getPatientId())
+            .json(testCaseImportWithMeasureReport)
+            .build();
+
+    var response =
+        testCaseService.importTestCases(
+            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
+    assertEquals(1, response.size());
+    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
+    assertFalse(response.get(0).isSuccessful());
+    assertEquals(
+        "The Test Case Group and Title combination is not unique. The combination must be unique (case insensitive, spaces ignored) across all test cases associated with the measure.",
+        response.get(0).getMessage());
+  }
+
+  @Test
   void importTestCaseReturnValidOutComeWithJsonParseException() {
     var importedJson = "{\n" + "    \"resourceType\": \"Bundle\",\n" + "}";
     measure.setTestCases(List.of(testCase));

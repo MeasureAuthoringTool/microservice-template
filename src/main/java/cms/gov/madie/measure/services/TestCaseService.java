@@ -1,10 +1,5 @@
 package cms.gov.madie.measure.services;
 
-import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
-import cms.gov.madie.measure.exceptions.InvalidIdException;
-import cms.gov.madie.measure.exceptions.InvalidMeasureStateException;
-import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.HapiOperationOutcome;
@@ -396,7 +391,11 @@ public class TestCaseService {
       log.info(
           "Test Case title + Test Case Group:  {}", patientGivenName + " " + patientFamilyName);
       TestCase newTestCase =
-          TestCase.builder().title(patientGivenName).series(patientFamilyName).build();
+          TestCase.builder()
+              .title(patientGivenName)
+              .series(patientFamilyName)
+              .patientId(testCaseImportRequest.getPatientId())
+              .build();
       List<TestCaseGroupPopulation> testCaseGroupPopulations =
           QiCoreJsonUtil.getTestCaseGroupPopulationsFromMeasureReport(
               testCaseImportRequest.getJson());
@@ -581,7 +580,8 @@ public class TestCaseService {
     } catch (ResourceNotFoundException
         | InvalidDraftStatusException
         | InvalidMeasureStateException
-        | UnauthorizedException e) {
+        | UnauthorizedException
+        | DuplicateTestCaseNameException e) {
       log.info(
           "User {} is unable to import test case with patient id : {}; Error Message : {}",
           userName,
