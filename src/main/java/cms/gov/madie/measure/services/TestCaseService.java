@@ -184,7 +184,6 @@ public class TestCaseService {
     if (measure.getTestCases() == null) {
       measure.setTestCases(new ArrayList<>());
     }
-
     verifyUniqueTestCaseName(testCase, measure);
     measureService.verifyAuthorization(username, measure);
     Instant now = Instant.now();
@@ -210,7 +209,6 @@ public class TestCaseService {
         testCase.setPatientId(UUID.randomUUID());
       }
     }
-
     TestCase validatedTestCase = validateTestCaseAsResource(testCase, accessToken);
     if (ModelType.QI_CORE.getValue().equalsIgnoreCase(measure.getModel())) {
       validatedTestCase.setJson(enforcePatientId(validatedTestCase));
@@ -357,6 +355,10 @@ public class TestCaseService {
                     .successful(false)
                     .message("Test Case file is missing.")
                     .build();
+              }
+              if (CollectionUtils.isEmpty(measure.getTestCases())) {
+                return validateTestCaseJsonAndCreateTestCase(
+                    testCaseImportRequest, measure, userName, accessToken);
               }
               Optional<TestCase> existingTestCase =
                   measure.getTestCases().stream()
