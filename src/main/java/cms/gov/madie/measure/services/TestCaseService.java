@@ -206,7 +206,9 @@ public class TestCaseService {
       testCase.setId(ObjectId.get().toString());
       testCase.setCreatedAt(now);
       testCase.setCreatedBy(username);
-      testCase.setPatientId(UUID.randomUUID());
+      if (testCase.getPatientId() == null) {
+        testCase.setPatientId(UUID.randomUUID());
+      }
     }
 
     TestCase validatedTestCase = validateTestCaseAsResource(testCase, accessToken);

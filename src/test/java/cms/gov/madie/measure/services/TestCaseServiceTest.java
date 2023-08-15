@@ -932,6 +932,7 @@ public class TestCaseServiceTest implements ResourceUtil {
             .createdAt(Instant.now())
             .title("UpdatedTitle")
             .series("UpdatedSeries")
+            .patientId(null)
             .build();
 
     TestCase updatedTestCase =
