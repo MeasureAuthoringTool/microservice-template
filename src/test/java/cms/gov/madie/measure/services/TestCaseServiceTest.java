@@ -1692,7 +1692,7 @@ public class TestCaseServiceTest implements ResourceUtil {
         .updateTestCase(any(), anyString(), anyString(), anyString());
     var testCaseImportRequest =
         TestCaseImportRequest.builder()
-            .patientId(UUID.fromString("3aa4ea55-9e47-48fb-96b6-9adc08e2ea9b"))
+            .patientId(UUID.randomUUID())
             .json(testCaseImportWithMeasureReport)
             .build();
 
@@ -1703,8 +1703,8 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
     assertFalse(response.get(0).isSuccessful());
     assertEquals(
-        "For Test Case 3aa4ea55-9e47-48fb-96b6-9adc08e2ea9b the measure populations do not match the populations in the import file. "
-        + "The Test Case has been imported, but no expected values have been set.",
+        "The measure populations do not match the populations in the import file. "
+            + "The Test Case has been imported, but no expected values have been set.",
         response.get(0).getMessage());
   }
 

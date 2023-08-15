@@ -405,9 +405,7 @@ public class TestCaseService {
       String warningMessage = null;
       if (!matched) {
         warningMessage =
-            "For Test Case "
-                + testCaseImportRequest.getPatientId()
-                + " the measure populations do not match the populations in the import file. "
+            "The measure populations do not match the populations in the import file. "
                 + "The Test Case has been imported, but no expected values have been set.";
       }
       return updateTestCaseJsonAndSaveTestCase(
