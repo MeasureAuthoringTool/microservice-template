@@ -1,15 +1,32 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
+import cms.gov.madie.measure.exceptions.InvalidIdException;
+import cms.gov.madie.measure.exceptions.InvalidMeasureStateException;
+import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.exceptions.UnauthorizedException;
+import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.common.ModelType;
+import gov.cms.madie.models.measure.HapiOperationOutcome;
+import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.Population;
+import gov.cms.madie.models.measure.TestCase;
+import gov.cms.madie.models.measure.TestCaseGroupPopulation;
+import gov.cms.madie.models.measure.Group;
+
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.utils.QiCoreJsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import gov.cms.madie.models.common.ActionType;
-import gov.cms.madie.models.common.ModelType;
-import gov.cms.madie.models.measure.*;
+
+import gov.cms.madie.models.measure.TestCaseImportOutcome;
+import gov.cms.madie.models.measure.TestCaseImportRequest;
+import gov.cms.madie.models.measure.TestCasePopulationValue;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
@@ -17,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.ByteArrayOutputStream;
@@ -375,19 +393,164 @@ public class TestCaseService {
                     userName,
                     accessToken);
               } else {
-                log.info(
-                    "User {} is unable to import test case with patient id : "
-                        + "{} because Patient ID is not found ",
-                    userName,
-                    testCaseImportRequest.getPatientId());
-                return TestCaseImportOutcome.builder()
-                    .patientId(testCaseImportRequest.getPatientId())
-                    .successful(false)
-                    .message("Patient Id is not found")
-                    .build();
+                return validateTestCaseJsonAndCreateTestCase(
+                    testCaseImportRequest, measure, userName, accessToken);
               }
             })
         .toList();
+  }
+
+  private TestCaseImportOutcome validateTestCaseJsonAndCreateTestCase(
+      TestCaseImportRequest testCaseImportRequest,
+      Measure measure,
+      String userName,
+      String accessToken) {
+    try {
+      String patientFamilyName =
+          QiCoreJsonUtil.getPatientName(testCaseImportRequest.getJson(), "family");
+      String patientGivenName =
+          QiCoreJsonUtil.getPatientName(testCaseImportRequest.getJson(), "given");
+      log.info(
+          "Test Case title + Test Case Group:  {}", patientGivenName + " " + patientFamilyName);
+
+      TestCase newTestCase =
+          TestCase.builder().title(patientGivenName).series(patientFamilyName).build();
+      List<TestCaseGroupPopulation> testCaseGroupPopulations =
+          QiCoreJsonUtil.getTestCaseGroupPopulationsFromMeasureReport(
+              testCaseImportRequest.getJson());
+
+      matchCriteriaGroups(testCaseGroupPopulations, measure.getGroups(), newTestCase);
+
+      return updateTestCaseJsonAndSaveTestCase(
+          newTestCase, testCaseImportRequest, measure.getId(), userName, accessToken);
+    } catch (JsonProcessingException ex) {
+      log.info(
+          "User {} is unable to import test case with patient id : "
+              + "{} because of JsonProcessingException: "
+              + ex.getMessage(),
+          userName,
+          testCaseImportRequest.getPatientId());
+      return TestCaseImportOutcome.builder()
+          .patientId(testCaseImportRequest.getPatientId())
+          .successful(false)
+          .message(
+              "JsonProcessingException:  "
+                  + ex.getMessage()
+                  + " when importing test case with patient id: "
+                  + testCaseImportRequest.getPatientId())
+          .build();
+    }
+  }
+
+  // match criteria groups from MeasureReport in imported json file
+  private boolean matchCriteriaGroups(
+      List<TestCaseGroupPopulation> testCaseGroupPopulations,
+      List<Group> groups,
+      TestCase newTestCase) {
+    boolean isValid = true;
+    List<TestCaseGroupPopulation> groupPopulations = null;
+    // group size has to match
+    if (!CollectionUtils.isEmpty(groups)
+        && !CollectionUtils.isEmpty(testCaseGroupPopulations)
+        && groups.size() == testCaseGroupPopulations.size()) {
+      groupPopulations = new ArrayList<>();
+      for (int i = 0; i < groups.size(); i++) {
+        Group group = groups.get(i);
+        // group population size has to match
+        if (!CollectionUtils.isEmpty(group.getPopulations())
+            && !CollectionUtils.isEmpty(testCaseGroupPopulations.get(i).getPopulationValues())
+            && group.getPopulations().size()
+                == testCaseGroupPopulations.get(i).getPopulationValues().size()) {
+
+          isValid =
+              mapPopulationValues(
+                  group, testCaseGroupPopulations, i, groupPopulations, newTestCase, isValid);
+
+        } else {
+          isValid = false;
+        }
+      }
+    } else {
+      isValid = false;
+    }
+    return isValid;
+  }
+
+  private TestCaseGroupPopulation assignTestCaseGroupPopulation(Group group) {
+    return TestCaseGroupPopulation.builder()
+        .groupId(group.getId())
+        .scoring(group.getScoring())
+        .populationBasis(group.getPopulationBasis())
+        .build();
+  }
+
+  private boolean mapPopulationValues(
+      Group group,
+      List<TestCaseGroupPopulation> testCaseGroupPopulations,
+      int i,
+      List<TestCaseGroupPopulation> groupPopulations,
+      TestCase newTestCase,
+      boolean isValid) {
+    TestCaseGroupPopulation groupPopulation = assignTestCaseGroupPopulation(group);
+    List<TestCasePopulationValue> populationValues = new ArrayList<>();
+    int matchedNumber = 0;
+    for (int j = 0; j < group.getPopulations().size(); j++) {
+      Population population = group.getPopulations().get(j);
+      matchedNumber =
+          assignPopulationValues(
+              population,
+              testCaseGroupPopulations,
+              i,
+              j,
+              matchedNumber,
+              group,
+              populationValues,
+              groupPopulation);
+      // check if matchedNumber is correct
+      if (j == group.getPopulations().size() - 1) {
+        if (matchedNumber == group.getPopulations().size()) {
+          groupPopulations.add(groupPopulation);
+          newTestCase.setGroupPopulations(groupPopulations);
+
+        } else {
+          isValid = false;
+        }
+      }
+    }
+    return isValid;
+  }
+
+  private int assignPopulationValues(
+      Population population,
+      List<TestCaseGroupPopulation> testCaseGroupPopulations,
+      int i,
+      int j,
+      int matchedNumber,
+      Group group,
+      List<TestCasePopulationValue> populationValues,
+      TestCaseGroupPopulation groupPopulation) {
+    if (population
+        .getName()
+        .toCode()
+        .equalsIgnoreCase(
+            testCaseGroupPopulations.get(i).getPopulationValues().get(j).getName().toCode())) {
+      matchedNumber++;
+
+      TestCasePopulationValue populationValue =
+          testCaseGroupPopulations.get(i).getPopulationValues().get(j);
+      if (group.getPopulationBasis() != null
+          && group.getPopulationBasis().equalsIgnoreCase("boolean")) {
+        String originalValue = (String) populationValue.getExpected();
+        if (originalValue.equalsIgnoreCase("1")) {
+          populationValue.setExpected("true");
+        } else {
+          populationValue.setExpected("false");
+        }
+      }
+      populationValues.add(populationValue);
+      groupPopulation.setPopulationValues(populationValues);
+    }
+    return matchedNumber;
   }
 
   private TestCaseImportOutcome updateTestCaseJsonAndSaveTestCase(

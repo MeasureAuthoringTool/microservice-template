@@ -3,9 +3,17 @@ package cms.gov.madie.measure.utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import gov.cms.madie.models.measure.PopulationType;
+import gov.cms.madie.models.measure.TestCaseGroupPopulation;
+import gov.cms.madie.models.measure.TestCasePopulationValue;
+
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -98,5 +106,96 @@ public final class QiCoreJsonUtil {
       // handle the case where string is not valid UUID
     }
     return false;
+  }
+
+  public static String getPatientName(String json, String type) throws JsonProcessingException {
+    ObjectMapper mapper = new ObjectMapper();
+
+    JsonNode jsonNode = mapper.readTree(json);
+    JsonNode entries = jsonNode.get("entry");
+    if (entries != null) {
+      for (JsonNode entry : entries) {
+        var resourceNode = entry.get("resource");
+        if (resourceNode != null) {
+          var resourceType = resourceNode.get("resourceType");
+          if (resourceType != null && "PATIENT".equalsIgnoreCase(resourceType.asText())) {
+            JsonNode names = resourceNode.get("name");
+            if (names != null) {
+              for (JsonNode name : names) {
+                if ("family".equalsIgnoreCase(type)) {
+                  return name.get("family").asText();
+                } else if ("given".equalsIgnoreCase(type)) {
+                  JsonNode givenNames = name.get("given");
+                  if (givenNames != null) {
+                    for (JsonNode givenName : givenNames) {
+                      return givenName.asText();
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
+  public static List<TestCaseGroupPopulation> getTestCaseGroupPopulationsFromMeasureReport(
+      String json) throws JsonProcessingException {
+    List<TestCaseGroupPopulation> groupPopulations = new ArrayList<>();
+    ObjectMapper mapper = new ObjectMapper();
+    JsonNode jsonNode = mapper.readTree(json);
+    JsonNode entries = jsonNode.get("entry");
+    if (entries != null) {
+      for (JsonNode entry : entries) {
+        JsonNode resourceNode = entry.get("resource");
+        if (resourceNode != null) {
+          JsonNode resourceType = resourceNode.get("resourceType");
+          if (resourceType != null && "MeasureReport".equalsIgnoreCase(resourceType.asText())) {
+            JsonNode groups = resourceNode.get("group");
+
+            TestCaseGroupPopulation groupPopulation = null;
+            if (groups != null) {
+              for (JsonNode group : groups) {
+                JsonNode populations = group.get("population");
+                List<TestCasePopulationValue> populationValues = new ArrayList<>();
+                if (populations != null) {
+                  for (JsonNode pouplation : populations) {
+                    JsonNode codeNode = pouplation.get("code");
+                    String count =
+                        pouplation.get("count") != null ? pouplation.get("count").asText() : "";
+                    if (codeNode != null) {
+                      JsonNode codings = codeNode.get("coding");
+                      if (codings != null) {
+                        for (JsonNode coding : codings) {
+                          String code = coding.get("code").asText();
+                          TestCasePopulationValue populationValue =
+                              TestCasePopulationValue.builder()
+                                  .name(PopulationType.fromCode(code))
+                                  .expected(count)
+                                  .build();
+                          populationValues.add(populationValue);
+                        }
+                      }
+                      groupPopulation =
+                          TestCaseGroupPopulation.builder()
+                              .populationValues(populationValues)
+                              .build();
+                    }
+                  }
+                  if (groupPopulation != null
+                      && !CollectionUtils.isEmpty(groupPopulation.getPopulationValues())) {
+                    groupPopulations.add(groupPopulation);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    return groupPopulations;
   }
 }
