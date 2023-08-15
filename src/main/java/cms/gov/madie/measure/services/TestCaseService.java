@@ -311,43 +311,67 @@ public class TestCaseService {
                     .message("Test Case file is missing.")
                     .build();
               }
-              Optional<TestCase> existingTestCase =
-                  measure.getTestCases().stream()
-                      .filter(
-                          testCase ->
-                              testCase.getPatientId().equals(testCaseImportRequest.getPatientId()))
-                      .findFirst();
-              if (existingTestCase.isPresent()) {
-                return updateTestCaseJsonAndSaveTestCase(
-                    existingTestCase.get(),
-                    testCaseImportRequest,
-                    measureId,
-                    userName,
-                    accessToken);
-              } else {
+              String json = null;
+              try {
+                json = removeMeasureReportFromJson(testCaseImportRequest.getJson());
+              } catch (JsonProcessingException e) {
                 log.info(
                     "User {} is unable to import test case with patient id : "
-                        + "{} because Patient ID is not found ",
+                        + "{} due to Malformed test case json bundle",
                     userName,
                     testCaseImportRequest.getPatientId());
                 return TestCaseImportOutcome.builder()
                     .patientId(testCaseImportRequest.getPatientId())
                     .successful(false)
-                    .message("Patient Id is not found")
+                    .message(
+                        "Error while processing Test Case JSON."
+                            + " Please make sure Test Case JSON is valid.")
                     .build();
               }
+              return updateExistingTestCase(
+                  measureId, userName, accessToken, measure, testCaseImportRequest, json);
             })
         .toList();
+  }
+
+  private TestCaseImportOutcome updateExistingTestCase(
+      String measureId,
+      String userName,
+      String accessToken,
+      Measure measure,
+      TestCaseImportRequest testCaseImportRequest,
+      String json) {
+    Optional<TestCase> existingTestCase =
+        measure.getTestCases().stream()
+            .filter(
+                testCase -> testCase.getPatientId().equals(testCaseImportRequest.getPatientId()))
+            .findFirst();
+    if (existingTestCase.isPresent()) {
+      return updateTestCaseJsonAndSaveTestCase(
+          existingTestCase.get(), testCaseImportRequest, json, measureId, userName, accessToken);
+    } else {
+      log.info(
+          "User {} is unable to import test case with patient id : "
+              + "{} because Patient ID is not found ",
+          userName,
+          testCaseImportRequest.getPatientId());
+      return TestCaseImportOutcome.builder()
+          .patientId(testCaseImportRequest.getPatientId())
+          .successful(false)
+          .message("Patient Id is not found")
+          .build();
+    }
   }
 
   private TestCaseImportOutcome updateTestCaseJsonAndSaveTestCase(
       TestCase existingTestCase,
       TestCaseImportRequest testCaseImportRequest,
+      String json,
       String measureId,
       String userName,
       String accessToken) {
     try {
-      existingTestCase.setJson(removeMeasureReportFromJson(testCaseImportRequest.getJson()));
+      existingTestCase.setJson(json);
       TestCase updatedTestCase = updateTestCase(existingTestCase, measureId, userName, accessToken);
       log.info(
           "User {} succesfully imported test case with patient id : {}",
@@ -356,18 +380,6 @@ public class TestCaseService {
       return TestCaseImportOutcome.builder()
           .patientId(updatedTestCase.getPatientId())
           .successful(true)
-          .build();
-    } catch (JsonProcessingException e) {
-      log.info(
-          "User {} is unable to import test case with patient id : "
-              + "{} due to Malformed test case json bundle",
-          userName,
-          testCaseImportRequest.getPatientId());
-      return TestCaseImportOutcome.builder()
-          .patientId(testCaseImportRequest.getPatientId())
-          .successful(false)
-          .message(
-              "Error while processing Test Case JSON.  Please make sure Test Case JSON is valid.")
           .build();
     } catch (ResourceNotFoundException
         | InvalidDraftStatusException
