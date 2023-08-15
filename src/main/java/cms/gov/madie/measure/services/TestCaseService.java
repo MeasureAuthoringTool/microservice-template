@@ -356,7 +356,7 @@ public class TestCaseService {
                     .message("Test Case file is missing.")
                     .build();
               }
-              if (CollectionUtils.isEmpty(measure.getTestCases())) {
+              if (isEmpty(measure.getTestCases())) {
                 return validateTestCaseJsonAndCreateTestCase(
                     testCaseImportRequest, measure, userName, accessToken);
               }
