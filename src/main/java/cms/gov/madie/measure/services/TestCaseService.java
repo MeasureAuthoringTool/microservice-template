@@ -405,7 +405,6 @@ public class TestCaseService {
       Measure measure,
       String userName,
       String accessToken) {
-
     try {
       String patientFamilyName =
           QiCoreJsonUtil.getPatientName(testCaseImportRequest.getJson(), "family");
@@ -416,7 +415,6 @@ public class TestCaseService {
 
       TestCase newTestCase =
           TestCase.builder().title(patientGivenName).series(patientFamilyName).build();
-
       List<TestCaseGroupPopulation> testCaseGroupPopulations =
           QiCoreJsonUtil.getTestCaseGroupPopulationsFromMeasureReport(
               testCaseImportRequest.getJson());
@@ -435,7 +433,11 @@ public class TestCaseService {
       return TestCaseImportOutcome.builder()
           .patientId(testCaseImportRequest.getPatientId())
           .successful(false)
-          .message("Error occurred")
+          .message(
+              "JsonProcessingException:  "
+                  + ex.getMessage()
+                  + " when importing test case with patient id: "
+                  + testCaseImportRequest.getPatientId())
           .build();
     }
   }
