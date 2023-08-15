@@ -19,7 +19,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.common.Version;
@@ -1693,7 +1692,7 @@ public class TestCaseServiceTest implements ResourceUtil {
         .updateTestCase(any(), anyString(), anyString(), anyString());
     var testCaseImportRequest =
         TestCaseImportRequest.builder()
-            .patientId(UUID.randomUUID())
+            .patientId(UUID.fromString("3aa4ea55-9e47-48fb-96b6-9adc08e2ea9b"))
             .json(testCaseImportWithMeasureReport)
             .build();
 
@@ -1702,7 +1701,11 @@ public class TestCaseServiceTest implements ResourceUtil {
             List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertTrue(response.get(0).isSuccessful());
+    assertFalse(response.get(0).isSuccessful());
+    assertEquals(
+        "For Test Case 3aa4ea55-9e47-48fb-96b6-9adc08e2ea9b the measure populations do not match the populations in the import file. "
+        + "The Test Case has been imported, but no expected values have been set.",
+        response.get(0).getMessage());
   }
 
   @Test
@@ -1737,7 +1740,7 @@ public class TestCaseServiceTest implements ResourceUtil {
             List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertTrue(response.get(0).isSuccessful());
+    assertFalse(response.get(0).isSuccessful());
   }
 
   @Test
@@ -1776,7 +1779,7 @@ public class TestCaseServiceTest implements ResourceUtil {
             List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertTrue(response.get(0).isSuccessful());
+    assertFalse(response.get(0).isSuccessful());
   }
 
   @Test
@@ -1809,7 +1812,7 @@ public class TestCaseServiceTest implements ResourceUtil {
             List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertTrue(response.get(0).isSuccessful());
+    assertFalse(response.get(0).isSuccessful());
   }
 
   @Test
@@ -1834,7 +1837,7 @@ public class TestCaseServiceTest implements ResourceUtil {
             List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertTrue(response.get(0).isSuccessful());
+    assertFalse(response.get(0).isSuccessful());
   }
 
   @Test
@@ -1871,7 +1874,7 @@ public class TestCaseServiceTest implements ResourceUtil {
             List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertTrue(response.get(0).isSuccessful());
+    assertFalse(response.get(0).isSuccessful());
   }
 
   private String removeMeasureReportFromJson(String testCaseJson) throws JsonProcessingException {

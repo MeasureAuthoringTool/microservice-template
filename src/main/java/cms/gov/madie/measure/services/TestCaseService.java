@@ -13,7 +13,6 @@ import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import gov.cms.madie.models.measure.Group;
-
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.utils.QiCoreJsonUtil;
@@ -22,7 +21,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import gov.cms.madie.models.measure.TestCaseImportOutcome;
 import gov.cms.madie.models.measure.TestCaseImportRequest;
 import gov.cms.madie.models.measure.TestCasePopulationValue;
@@ -36,12 +34,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.HttpClientErrorException;
-
 import java.io.ByteArrayOutputStream;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
-
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 
 @Slf4j
@@ -99,7 +95,6 @@ public class TestCaseService {
             .filter(tc -> !tc.getId().equals(testCase.getId()))
             .map(tc -> StringUtils.deleteWhitespace(tc.getTitle() + tc.getSeries()))
             .anyMatch(existingName -> existingName.equalsIgnoreCase(newName));
-
     if (matchesExistingTestCaseName) {
       throw new DuplicateTestCaseNameException();
     }
@@ -108,7 +103,6 @@ public class TestCaseService {
   public TestCase persistTestCase(
       TestCase testCase, String measureId, String username, String accessToken) {
     final Measure measure = findMeasureById(measureId);
-
     if (!measure.getMeasureMetaData().isDraft()) {
       throw new InvalidDraftStatusException(measure.getId());
     }
@@ -143,7 +137,6 @@ public class TestCaseService {
       return newTestCases;
     }
     final Measure measure = findMeasureById(measureId);
-
     if (!measure.getMeasureMetaData().isDraft()) {
       throw new InvalidDraftStatusException(measure.getId());
     }
@@ -228,7 +221,6 @@ public class TestCaseService {
     measure.getTestCases().add(validatedTestCase);
 
     measureRepository.save(measure);
-
     log.info(
         "User [{}] successfully updated the test case with ID [{}] for the measure with ID[{}] ",
         username,
@@ -262,13 +254,10 @@ public class TestCaseService {
       log.info("Test case/Measure Id cannot be null");
       throw new InvalidIdException("Test case cannot be deleted, please contact the helpdesk");
     }
-
     Measure measure = findMeasureById(measureId);
-
     if (!measure.getMeasureMetaData().isDraft()) {
       throw new InvalidDraftStatusException(measure.getId());
     }
-
     measureService.verifyAuthorization(username, measure);
     if (isEmpty(measure.getTestCases())) {
       log.info("Measure with ID [{}] doesn't have any test cases", measureId);
@@ -288,7 +277,6 @@ public class TestCaseService {
         username,
         testCaseId,
         measureId);
-
     measureRepository.save(measure);
     return "Test case deleted successfully: " + testCaseId;
   }
@@ -298,26 +286,20 @@ public class TestCaseService {
       log.info("Test case Ids or Measure Id is Empty");
       throw new InvalidIdException("Test cases cannot be deleted, please contact the helpdesk");
     }
-
     Measure measure = findMeasureById(measureId);
-
     if (!measure.getMeasureMetaData().isDraft()) {
       throw new InvalidDraftStatusException(measure.getId());
     }
-
     measureService.verifyAuthorization(username, measure);
     if (isEmpty(measure.getTestCases())) {
       log.info("Measure with ID [{}] doesn't have any test cases", measureId);
       throw new InvalidIdException(
           "Measure {} doesn't have any existing test cases to delete", measureId);
     }
-
     List<TestCase> deletedTestCases =
         measure.getTestCases().stream().filter(tc -> testCaseIds.contains(tc.getId())).toList();
-
     List<TestCase> remainingTestCases =
         measure.getTestCases().stream().filter(tc -> !testCaseIds.contains(tc.getId())).toList();
-
     measure.setTestCases(remainingTestCases);
     measureRepository.save(measure);
 
@@ -391,7 +373,8 @@ public class TestCaseService {
                     testCaseImportRequest,
                     measureId,
                     userName,
-                    accessToken);
+                    accessToken,
+                    null);
               } else {
                 return validateTestCaseJsonAndCreateTestCase(
                     testCaseImportRequest, measure, userName, accessToken);
@@ -412,17 +395,28 @@ public class TestCaseService {
           QiCoreJsonUtil.getPatientName(testCaseImportRequest.getJson(), "given");
       log.info(
           "Test Case title + Test Case Group:  {}", patientGivenName + " " + patientFamilyName);
-
       TestCase newTestCase =
           TestCase.builder().title(patientGivenName).series(patientFamilyName).build();
       List<TestCaseGroupPopulation> testCaseGroupPopulations =
           QiCoreJsonUtil.getTestCaseGroupPopulationsFromMeasureReport(
               testCaseImportRequest.getJson());
-
-      matchCriteriaGroups(testCaseGroupPopulations, measure.getGroups(), newTestCase);
-
+      boolean matched =
+          matchCriteriaGroups(testCaseGroupPopulations, measure.getGroups(), newTestCase);
+      String warningMessage = null;
+      if (!matched) {
+        warningMessage =
+            "For Test Case "
+                + testCaseImportRequest.getPatientId()
+                + " the measure populations do not match the populations in the import file. "
+                + "The Test Case has been imported, but no expected values have been set.";
+      }
       return updateTestCaseJsonAndSaveTestCase(
-          newTestCase, testCaseImportRequest, measure.getId(), userName, accessToken);
+          newTestCase,
+          testCaseImportRequest,
+          measure.getId(),
+          userName,
+          accessToken,
+          warningMessage);
     } catch (JsonProcessingException ex) {
       log.info(
           "User {} is unable to import test case with patient id : "
@@ -461,11 +455,9 @@ public class TestCaseService {
             && !CollectionUtils.isEmpty(testCaseGroupPopulations.get(i).getPopulationValues())
             && group.getPopulations().size()
                 == testCaseGroupPopulations.get(i).getPopulationValues().size()) {
-
           isValid =
               mapPopulationValues(
                   group, testCaseGroupPopulations, i, groupPopulations, newTestCase, isValid);
-
         } else {
           isValid = false;
         }
@@ -511,7 +503,6 @@ public class TestCaseService {
         if (matchedNumber == group.getPopulations().size()) {
           groupPopulations.add(groupPopulation);
           newTestCase.setGroupPopulations(groupPopulations);
-
         } else {
           isValid = false;
         }
@@ -558,7 +549,8 @@ public class TestCaseService {
       TestCaseImportRequest testCaseImportRequest,
       String measureId,
       String userName,
-      String accessToken) {
+      String accessToken,
+      String warningMessage) {
     try {
       existingTestCase.setJson(removeMeasureReportFromJson(testCaseImportRequest.getJson()));
       TestCase updatedTestCase = updateTestCase(existingTestCase, measureId, userName, accessToken);
@@ -566,10 +558,16 @@ public class TestCaseService {
           "User {} succesfully imported test case with patient id : {}",
           userName,
           updatedTestCase.getPatientId());
-      return TestCaseImportOutcome.builder()
-          .patientId(updatedTestCase.getPatientId())
-          .successful(true)
-          .build();
+      TestCaseImportOutcome testCaseImportOutcome =
+          TestCaseImportOutcome.builder()
+              .patientId(updatedTestCase.getPatientId())
+              .successful(true)
+              .build();
+      if (warningMessage != null) {
+        testCaseImportOutcome.setMessage(warningMessage);
+        testCaseImportOutcome.setSuccessful(false);
+      }
+      return testCaseImportOutcome;
     } catch (JsonProcessingException e) {
       log.info(
           "User {} is unable to import test case with patient id : "
