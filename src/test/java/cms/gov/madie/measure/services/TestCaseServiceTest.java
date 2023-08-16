@@ -1594,11 +1594,25 @@ public class TestCaseServiceTest implements ResourceUtil {
 
   @Test
   void importTestCasesCreateNewAllCriteriaMatched() {
-    population1 = Population.builder().name(PopulationType.INITIAL_POPULATION).build();
-    population2 = Population.builder().name(PopulationType.DENOMINATOR).build();
-    population3 = Population.builder().name(PopulationType.DENOMINATOR_EXCLUSION).build();
-    population4 = Population.builder().name(PopulationType.NUMERATOR).build();
-    population5 = Population.builder().name(PopulationType.DENOMINATOR_EXCEPTION).build();
+    population1 =
+        Population.builder()
+            .name(PopulationType.INITIAL_POPULATION)
+            .definition("Initial Population")
+            .build();
+    population2 =
+        Population.builder().name(PopulationType.DENOMINATOR).definition("Denominator").build();
+    population3 =
+        Population.builder()
+            .name(PopulationType.DENOMINATOR_EXCLUSION)
+            .definition("Denominator Exclusion")
+            .build();
+    population4 =
+        Population.builder().name(PopulationType.NUMERATOR).definition("Numerator").build();
+    population5 =
+        Population.builder()
+            .name(PopulationType.DENOMINATOR_EXCEPTION)
+            .definition("Numerator Exception")
+            .build();
     group =
         Group.builder()
             .id("testGroupId")
@@ -1633,11 +1647,25 @@ public class TestCaseServiceTest implements ResourceUtil {
 
   @Test
   void importTestCasesCreateNewWhenMeasureHasNotTestCase() {
-    population1 = Population.builder().name(PopulationType.INITIAL_POPULATION).build();
-    population2 = Population.builder().name(PopulationType.DENOMINATOR).build();
-    population3 = Population.builder().name(PopulationType.DENOMINATOR_EXCLUSION).build();
-    population4 = Population.builder().name(PopulationType.NUMERATOR).build();
-    population5 = Population.builder().name(PopulationType.DENOMINATOR_EXCEPTION).build();
+    population1 =
+        Population.builder()
+            .name(PopulationType.INITIAL_POPULATION)
+            .definition("Initial Population")
+            .build();
+    population2 =
+        Population.builder().name(PopulationType.DENOMINATOR).definition("Denominator").build();
+    population3 =
+        Population.builder()
+            .name(PopulationType.DENOMINATOR_EXCLUSION)
+            .definition("Denominator Exclusiob")
+            .build();
+    population4 =
+        Population.builder().name(PopulationType.NUMERATOR).definition("Numerator").build();
+    population5 =
+        Population.builder()
+            .name(PopulationType.DENOMINATOR_EXCEPTION)
+            .definition("Numerator Exception")
+            .build();
     group =
         Group.builder()
             .id("testGroupId")
@@ -1671,11 +1699,25 @@ public class TestCaseServiceTest implements ResourceUtil {
 
   @Test
   void importTestCasesCreateNewAllCriteriaMatchedNoPopulationBasis() {
-    population1 = Population.builder().name(PopulationType.INITIAL_POPULATION).build();
-    population2 = Population.builder().name(PopulationType.DENOMINATOR).build();
-    population3 = Population.builder().name(PopulationType.DENOMINATOR_EXCLUSION).build();
-    population4 = Population.builder().name(PopulationType.NUMERATOR).build();
-    population5 = Population.builder().name(PopulationType.DENOMINATOR_EXCEPTION).build();
+    population1 =
+        Population.builder()
+            .name(PopulationType.INITIAL_POPULATION)
+            .definition("Initial Population")
+            .build();
+    population2 =
+        Population.builder().name(PopulationType.DENOMINATOR).definition("Denominator").build();
+    population3 =
+        Population.builder()
+            .name(PopulationType.DENOMINATOR_EXCLUSION)
+            .definition("Denominator Exclusion")
+            .build();
+    population4 =
+        Population.builder().name(PopulationType.NUMERATOR).definition("Numerator").build();
+    population5 =
+        Population.builder()
+            .name(PopulationType.DENOMINATOR_EXCEPTION)
+            .definition("Numerator Exclusion")
+            .build();
     group =
         Group.builder()
             .id("testGroupId")
@@ -1709,11 +1751,25 @@ public class TestCaseServiceTest implements ResourceUtil {
 
   @Test
   void importTestCasesCreateNewAllCriteriaMatchedPatientBased() {
-    population1 = Population.builder().name(PopulationType.INITIAL_POPULATION).build();
-    population2 = Population.builder().name(PopulationType.DENOMINATOR).build();
-    population3 = Population.builder().name(PopulationType.DENOMINATOR_EXCLUSION).build();
-    population4 = Population.builder().name(PopulationType.NUMERATOR).build();
-    population5 = Population.builder().name(PopulationType.DENOMINATOR_EXCEPTION).build();
+    population1 =
+        Population.builder()
+            .name(PopulationType.INITIAL_POPULATION)
+            .definition("Initial Population")
+            .build();
+    population2 =
+        Population.builder().name(PopulationType.DENOMINATOR).definition("Denominator").build();
+    population3 =
+        Population.builder()
+            .name(PopulationType.DENOMINATOR_EXCLUSION)
+            .definition("Denominator Exclusion")
+            .build();
+    population4 =
+        Population.builder().name(PopulationType.NUMERATOR).definition("Numerator").build();
+    population5 =
+        Population.builder()
+            .name(PopulationType.DENOMINATOR_EXCEPTION)
+            .definition("Numerator Exceptiob")
+            .build();
     group =
         Group.builder()
             .id("testGroupId")

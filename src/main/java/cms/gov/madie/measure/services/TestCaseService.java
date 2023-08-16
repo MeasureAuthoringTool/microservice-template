@@ -403,8 +403,8 @@ public class TestCaseService {
       List<TestCaseGroupPopulation> testCaseGroupPopulations =
           QiCoreJsonUtil.getTestCaseGroupPopulationsFromMeasureReport(
               testCaseImportRequest.getJson());
-      boolean matched =
-          matchCriteriaGroups(testCaseGroupPopulations, measure.getGroups(), newTestCase);
+      List<Group> groups = getGroupsWithValidPopulations(measure.getGroups());
+      boolean matched = matchCriteriaGroups(testCaseGroupPopulations, groups, newTestCase);
       String warningMessage = null;
       if (!matched) {
         warningMessage =
@@ -435,6 +435,26 @@ public class TestCaseService {
                   + testCaseImportRequest.getPatientId())
           .build();
     }
+  }
+
+  private List<Group> getGroupsWithValidPopulations(List<Group> originalGroups) {
+    List<Group> changedGroups = null;
+    if (!CollectionUtils.isEmpty(originalGroups)) {
+      changedGroups = new ArrayList<>();
+      for (Group group : originalGroups) {
+        if (!CollectionUtils.isEmpty(group.getPopulations())) {
+          List<Population> changedPopulations = new ArrayList<>();
+          for (Population population : group.getPopulations()) {
+            if (!StringUtils.isBlank(population.getDefinition())) {
+              changedPopulations.add(population);
+            }
+          }
+          group.setPopulations(changedPopulations);
+        }
+        changedGroups.add(group);
+      }
+    }
+    return changedGroups;
   }
 
   // match criteria groups from MeasureReport in imported json file
