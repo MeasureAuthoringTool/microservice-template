@@ -437,10 +437,10 @@ public class TestCaseService {
 
   private List<Group> getGroupsWithValidPopulations(List<Group> originalGroups) {
     List<Group> changedGroups = null;
-    if (!CollectionUtils.isEmpty(originalGroups)) {
+    if (!isEmpty(originalGroups)) {
       changedGroups = new ArrayList<>();
       for (Group group : originalGroups) {
-        if (!CollectionUtils.isEmpty(group.getPopulations())) {
+        if (!isEmpty(group.getPopulations())) {
           List<Population> changedPopulations = new ArrayList<>();
           for (Population population : group.getPopulations()) {
             if (!StringUtils.isBlank(population.getDefinition())) {
