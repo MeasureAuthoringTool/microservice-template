@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @AllArgsConstructor
-public class TestCaseUtil {
+public class TestCaseServiceUtil {
 
   public List<Group> getGroupsWithValidPopulations(List<Group> originalGroups) {
     List<Group> changedGroups = null;

@@ -11,7 +11,7 @@ import gov.cms.madie.models.measure.Group;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.utils.QiCoreJsonUtil;
-import cms.gov.madie.measure.utils.TestCaseUtil;
+import cms.gov.madie.measure.utils.TestCaseServiceUtil;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -46,7 +46,7 @@ public class TestCaseService {
   private FhirServicesClient fhirServicesClient;
   private ObjectMapper mapper;
   private MeasureService measureService;
-  private TestCaseUtil testCaseUtil;
+  private TestCaseServiceUtil testCaseServiceUtil;
 
   @Value("${madie.json.resources.base-uri}")
   private String madieJsonResourcesBaseUri;
@@ -58,13 +58,13 @@ public class TestCaseService {
       FhirServicesClient fhirServicesClient,
       ObjectMapper mapper,
       MeasureService measureService,
-      TestCaseUtil testCaseUtil) {
+      TestCaseServiceUtil testCaseServiceUtil) {
     this.measureRepository = measureRepository;
     this.actionLogService = actionLogService;
     this.fhirServicesClient = fhirServicesClient;
     this.mapper = mapper;
     this.measureService = measureService;
-    this.testCaseUtil = testCaseUtil;
+    this.testCaseServiceUtil = testCaseServiceUtil;
   }
 
   protected TestCase enrichNewTestCase(TestCase testCase, String username) {
@@ -408,7 +408,7 @@ public class TestCaseService {
       List<TestCaseGroupPopulation> testCaseGroupPopulations =
           QiCoreJsonUtil.getTestCaseGroupPopulationsFromMeasureReport(
               testCaseImportRequest.getJson());
-      List<Group> groups = testCaseUtil.getGroupsWithValidPopulations(measure.getGroups());
+      List<Group> groups = testCaseServiceUtil.getGroupsWithValidPopulations(measure.getGroups());
       boolean matched = matchCriteriaGroups(testCaseGroupPopulations, groups, newTestCase);
       String warningMessage = null;
       if (!matched) {

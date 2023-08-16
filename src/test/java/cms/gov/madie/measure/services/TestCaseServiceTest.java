@@ -14,7 +14,7 @@ import cms.gov.madie.measure.HapiFhirConfig;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.utils.ResourceUtil;
-import cms.gov.madie.measure.utils.TestCaseUtil;
+import cms.gov.madie.measure.utils.TestCaseServiceUtil;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -53,7 +53,7 @@ public class TestCaseServiceTest implements ResourceUtil {
   @Mock private HapiFhirConfig hapiFhirConfig;
   @Mock private RestTemplate hapiFhirRestTemplate;
   @Mock private ActionLogService actionLogService;
-  @Mock private TestCaseUtil testCaseUtil;
+  @Mock private TestCaseServiceUtil testCaseServiceUtil;
 
   @Spy private ObjectMapper mapper;
 
@@ -1631,7 +1631,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     TestCase updatedTestCase = testCase;
     updatedTestCase.setJson(testCaseImportWithMeasureReport);
 
-    when(testCaseUtil.getGroupsWithValidPopulations(any(List.class))).thenReturn(List.of(group));
+    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class))).thenReturn(List.of(group));
 
     doReturn(updatedTestCase)
         .when(testCaseService)
@@ -1685,7 +1685,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     TestCase updatedTestCase = testCase;
     updatedTestCase.setJson(testCaseImportWithMeasureReport);
 
-    when(testCaseUtil.getGroupsWithValidPopulations(any(List.class))).thenReturn(List.of(group));
+    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class))).thenReturn(List.of(group));
 
     doReturn(updatedTestCase)
         .when(testCaseService)
@@ -1739,7 +1739,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     TestCase updatedTestCase = testCase;
     updatedTestCase.setJson(testCaseImportWithMeasureReport);
 
-    when(testCaseUtil.getGroupsWithValidPopulations(any(List.class))).thenReturn(List.of(group));
+    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class))).thenReturn(List.of(group));
 
     doReturn(updatedTestCase)
         .when(testCaseService)
@@ -1794,7 +1794,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     TestCase updatedTestCase = testCase;
     updatedTestCase.setJson(testCaseImportWithMeasureReport);
 
-    when(testCaseUtil.getGroupsWithValidPopulations(any(List.class))).thenReturn(List.of(group));
+    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class))).thenReturn(List.of(group));
 
     doReturn(updatedTestCase)
         .when(testCaseService)
