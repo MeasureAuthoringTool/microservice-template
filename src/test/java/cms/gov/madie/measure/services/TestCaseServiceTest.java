@@ -1631,7 +1631,8 @@ public class TestCaseServiceTest implements ResourceUtil {
     TestCase updatedTestCase = testCase;
     updatedTestCase.setJson(testCaseImportWithMeasureReport);
 
-    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class))).thenReturn(List.of(group));
+    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
+        .thenReturn(List.of(group));
 
     doReturn(updatedTestCase)
         .when(testCaseService)
@@ -1685,7 +1686,8 @@ public class TestCaseServiceTest implements ResourceUtil {
     TestCase updatedTestCase = testCase;
     updatedTestCase.setJson(testCaseImportWithMeasureReport);
 
-    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class))).thenReturn(List.of(group));
+    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
+        .thenReturn(List.of(group));
 
     doReturn(updatedTestCase)
         .when(testCaseService)
@@ -1739,7 +1741,8 @@ public class TestCaseServiceTest implements ResourceUtil {
     TestCase updatedTestCase = testCase;
     updatedTestCase.setJson(testCaseImportWithMeasureReport);
 
-    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class))).thenReturn(List.of(group));
+    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
+        .thenReturn(List.of(group));
 
     doReturn(updatedTestCase)
         .when(testCaseService)
@@ -1794,7 +1797,8 @@ public class TestCaseServiceTest implements ResourceUtil {
     TestCase updatedTestCase = testCase;
     updatedTestCase.setJson(testCaseImportWithMeasureReport);
 
-    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class))).thenReturn(List.of(group));
+    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
+        .thenReturn(List.of(group));
 
     doReturn(updatedTestCase)
         .when(testCaseService)
