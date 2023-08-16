@@ -1483,7 +1483,7 @@ public class TestCaseServiceTest implements ResourceUtil {
   }
 
   @Test
-  void importTestCasesReturnValidOutcomeWithSpecificExceptionMsgWhileUpdatingTestCases() {
+  void importTestCasesReturnInvalidOutcomeWithSpecificExceptionMsgWhileUpdatingTestCases() {
     measure.setTestCases(List.of(testCase));
     when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
 
@@ -1548,7 +1548,7 @@ public class TestCaseServiceTest implements ResourceUtil {
   }
 
   @Test
-  void importTestCaseReturnValidOutComeWithExceptionWhenJsonIsEmpty() {
+  void importTestCaseReturnInvalidOutComeWithExceptionWhenJsonIsEmpty() {
     measure.setTestCases(List.of(testCase));
     when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
 
@@ -1632,7 +1632,7 @@ public class TestCaseServiceTest implements ResourceUtil {
   }
 
   @Test
-  void importTestCasesCreateNewMeasureHasNotTestCase() {
+  void importTestCasesCreateNewWhenMeasureHasNotTestCase() {
     population1 = Population.builder().name(PopulationType.INITIAL_POPULATION).build();
     population2 = Population.builder().name(PopulationType.DENOMINATOR).build();
     population3 = Population.builder().name(PopulationType.DENOMINATOR_EXCLUSION).build();
