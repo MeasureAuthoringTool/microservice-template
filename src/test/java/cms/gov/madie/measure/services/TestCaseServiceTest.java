@@ -14,6 +14,8 @@ import cms.gov.madie.measure.HapiFhirConfig;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.utils.ResourceUtil;
+import cms.gov.madie.measure.utils.TestCaseUtil;
+
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -51,6 +53,7 @@ public class TestCaseServiceTest implements ResourceUtil {
   @Mock private HapiFhirConfig hapiFhirConfig;
   @Mock private RestTemplate hapiFhirRestTemplate;
   @Mock private ActionLogService actionLogService;
+  @Mock private TestCaseUtil testCaseUtil;
 
   @Spy private ObjectMapper mapper;
 
@@ -1628,6 +1631,8 @@ public class TestCaseServiceTest implements ResourceUtil {
     TestCase updatedTestCase = testCase;
     updatedTestCase.setJson(testCaseImportWithMeasureReport);
 
+    when(testCaseUtil.getGroupsWithValidPopulations(any(List.class))).thenReturn(List.of(group));
+
     doReturn(updatedTestCase)
         .when(testCaseService)
         .updateTestCase(any(), anyString(), anyString(), anyString());
@@ -1680,6 +1685,8 @@ public class TestCaseServiceTest implements ResourceUtil {
     TestCase updatedTestCase = testCase;
     updatedTestCase.setJson(testCaseImportWithMeasureReport);
 
+    when(testCaseUtil.getGroupsWithValidPopulations(any(List.class))).thenReturn(List.of(group));
+
     doReturn(updatedTestCase)
         .when(testCaseService)
         .updateTestCase(any(), anyString(), anyString(), anyString());
@@ -1731,6 +1738,8 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     TestCase updatedTestCase = testCase;
     updatedTestCase.setJson(testCaseImportWithMeasureReport);
+
+    when(testCaseUtil.getGroupsWithValidPopulations(any(List.class))).thenReturn(List.of(group));
 
     doReturn(updatedTestCase)
         .when(testCaseService)
@@ -1785,6 +1794,8 @@ public class TestCaseServiceTest implements ResourceUtil {
     TestCase updatedTestCase = testCase;
     updatedTestCase.setJson(testCaseImportWithMeasureReport);
 
+    when(testCaseUtil.getGroupsWithValidPopulations(any(List.class))).thenReturn(List.of(group));
+
     doReturn(updatedTestCase)
         .when(testCaseService)
         .updateTestCase(any(), anyString(), anyString(), anyString());
@@ -1838,7 +1849,7 @@ public class TestCaseServiceTest implements ResourceUtil {
             List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertFalse(response.get(0).isSuccessful());
+    assertTrue(response.get(0).isSuccessful());
     assertEquals(
         "The measure populations do not match the populations in the import file. "
             + "The Test Case has been imported, but no expected values have been set.",
@@ -1877,7 +1888,7 @@ public class TestCaseServiceTest implements ResourceUtil {
             List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertFalse(response.get(0).isSuccessful());
+    assertTrue(response.get(0).isSuccessful());
   }
 
   @Test
@@ -1916,7 +1927,7 @@ public class TestCaseServiceTest implements ResourceUtil {
             List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertFalse(response.get(0).isSuccessful());
+    assertTrue(response.get(0).isSuccessful());
   }
 
   @Test
@@ -1949,7 +1960,7 @@ public class TestCaseServiceTest implements ResourceUtil {
             List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertFalse(response.get(0).isSuccessful());
+    assertTrue(response.get(0).isSuccessful());
   }
 
   @Test
@@ -1974,7 +1985,7 @@ public class TestCaseServiceTest implements ResourceUtil {
             List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertFalse(response.get(0).isSuccessful());
+    assertTrue(response.get(0).isSuccessful());
   }
 
   @Test
@@ -2011,7 +2022,7 @@ public class TestCaseServiceTest implements ResourceUtil {
             List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertFalse(response.get(0).isSuccessful());
+    assertTrue(response.get(0).isSuccessful());
   }
 
   private String removeMeasureReportFromJson(String testCaseJson) throws JsonProcessingException {

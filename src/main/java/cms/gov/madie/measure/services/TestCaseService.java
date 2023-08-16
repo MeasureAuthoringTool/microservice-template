@@ -11,6 +11,8 @@ import gov.cms.madie.models.measure.Group;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.utils.QiCoreJsonUtil;
+import cms.gov.madie.measure.utils.TestCaseUtil;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,6 +46,7 @@ public class TestCaseService {
   private FhirServicesClient fhirServicesClient;
   private ObjectMapper mapper;
   private MeasureService measureService;
+  private TestCaseUtil testCaseUtil;
 
   @Value("${madie.json.resources.base-uri}")
   private String madieJsonResourcesBaseUri;
@@ -54,12 +57,14 @@ public class TestCaseService {
       ActionLogService actionLogService,
       FhirServicesClient fhirServicesClient,
       ObjectMapper mapper,
-      MeasureService measureService) {
+      MeasureService measureService,
+      TestCaseUtil testCaseUtil) {
     this.measureRepository = measureRepository;
     this.actionLogService = actionLogService;
     this.fhirServicesClient = fhirServicesClient;
     this.mapper = mapper;
     this.measureService = measureService;
+    this.testCaseUtil = testCaseUtil;
   }
 
   protected TestCase enrichNewTestCase(TestCase testCase, String username) {
@@ -403,7 +408,7 @@ public class TestCaseService {
       List<TestCaseGroupPopulation> testCaseGroupPopulations =
           QiCoreJsonUtil.getTestCaseGroupPopulationsFromMeasureReport(
               testCaseImportRequest.getJson());
-      List<Group> groups = getGroupsWithValidPopulations(measure.getGroups());
+      List<Group> groups = testCaseUtil.getGroupsWithValidPopulations(measure.getGroups());
       boolean matched = matchCriteriaGroups(testCaseGroupPopulations, groups, newTestCase);
       String warningMessage = null;
       if (!matched) {
@@ -433,26 +438,6 @@ public class TestCaseService {
                   + " Please make sure Test Case JSON is valid.")
           .build();
     }
-  }
-
-  private List<Group> getGroupsWithValidPopulations(List<Group> originalGroups) {
-    List<Group> changedGroups = null;
-    if (!isEmpty(originalGroups)) {
-      changedGroups = new ArrayList<>();
-      for (Group group : originalGroups) {
-        if (!isEmpty(group.getPopulations())) {
-          List<Population> changedPopulations = new ArrayList<>();
-          for (Population population : group.getPopulations()) {
-            if (!StringUtils.isBlank(population.getDefinition())) {
-              changedPopulations.add(population);
-            }
-          }
-          group.setPopulations(changedPopulations);
-        }
-        changedGroups.add(group);
-      }
-    }
-    return changedGroups;
   }
 
   // match criteria groups from MeasureReport in imported json file
@@ -584,7 +569,6 @@ public class TestCaseService {
               .build();
       if (warningMessage != null) {
         testCaseImportOutcome.setMessage(warningMessage);
-        testCaseImportOutcome.setSuccessful(false);
       }
       return testCaseImportOutcome;
     } catch (JsonProcessingException e) {
@@ -644,7 +628,6 @@ public class TestCaseService {
           filteredList.add(entryNode);
         }
       }
-
       entryArray.removeAll();
       filteredList.forEach(entryArray::add);
       return objectMapper.writeValueAsString(rootNode);
@@ -746,7 +729,6 @@ public class TestCaseService {
             }
           }
         }
-
         return modifiedjsonString;
       } catch (JsonProcessingException e) {
         log.error("Error reading testCaseJson testCaseId = " + testCase.getId(), e);
