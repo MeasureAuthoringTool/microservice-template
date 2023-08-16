@@ -429,10 +429,8 @@ public class TestCaseService {
           .patientId(testCaseImportRequest.getPatientId())
           .successful(false)
           .message(
-              "JsonProcessingException:  "
-                  + ex.getMessage()
-                  + " when importing test case with patient id: "
-                  + testCaseImportRequest.getPatientId())
+              "Error while processing Test Case JSON."
+                  + " Please make sure Test Case JSON is valid.")
           .build();
     }
   }
