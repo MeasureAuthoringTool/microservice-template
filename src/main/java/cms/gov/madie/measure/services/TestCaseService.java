@@ -556,7 +556,8 @@ public class TestCaseService {
       String accessToken,
       String warningMessage) {
     try {
-      existingTestCase.setJson(removeMeasureReportFromJson(testCaseImportRequest.getJson()));
+      existingTestCase.setJson(
+          QiCoreJsonUtil.removeMeasureReportFromJson(testCaseImportRequest.getJson()));
       TestCase updatedTestCase = updateTestCase(existingTestCase, measureId, userName, accessToken);
       log.info(
           "User {} succesfully imported test case with patient id : {}",
@@ -611,28 +612,6 @@ public class TestCaseService {
               "Unable to import test case, please try again."
                   + " if the error persists, Please contact helpdesk.")
           .build();
-    }
-  }
-
-  private String removeMeasureReportFromJson(String testCaseJson) throws JsonProcessingException {
-    if (!StringUtils.isEmpty(testCaseJson)) {
-      ObjectMapper objectMapper = new ObjectMapper();
-
-      JsonNode rootNode = objectMapper.readTree(testCaseJson);
-      ArrayNode entryArray = (ArrayNode) rootNode.get("entry");
-
-      List<JsonNode> filteredList = new ArrayList<>();
-      for (JsonNode entryNode : entryArray) {
-        if (!"MeasureReport"
-            .equalsIgnoreCase(entryNode.get("resource").get("resourceType").asText())) {
-          filteredList.add(entryNode);
-        }
-      }
-      entryArray.removeAll();
-      filteredList.forEach(entryArray::add);
-      return objectMapper.writeValueAsString(rootNode);
-    } else {
-      throw new RuntimeException("Unable to find Test case Json");
     }
   }
 
