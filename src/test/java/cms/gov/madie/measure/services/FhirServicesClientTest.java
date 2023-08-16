@@ -15,6 +15,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import cms.gov.madie.measure.config.FhirServicesConfig;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import gov.cms.madie.models.measure.HapiOperationOutcome;
 import gov.cms.madie.models.measure.Measure;
 import java.net.URI;
 import java.util.List;
@@ -129,18 +131,20 @@ class FhirServicesClientTest {
   }
 
   @Test
-  void testValidateBundleReturnsStringData() {
+  void testValidateBundleReturnsStringData() throws JsonProcessingException {
     final String testCaseJson = "{ \"resourceType\": \"GOOD JSON\" }";
-    final String goodOutcomeJson = "{ \"code\": 200, \"successful\": true }";
+    final HapiOperationOutcome goodOutcome =
+        HapiOperationOutcome.builder().code(200).successful(true).build();
 
     when(fhirServicesConfig
             .fhirServicesRestTemplate()
             .exchange(any(URI.class), eq(HttpMethod.POST), any(HttpEntity.class), any(Class.class)))
-        .thenReturn(ResponseEntity.ok(goodOutcomeJson));
-    ResponseEntity<String> output = fhirServicesClient.validateBundle(testCaseJson, accessToken);
+        .thenReturn(ResponseEntity.ok(goodOutcome));
+    ResponseEntity<HapiOperationOutcome> output =
+        fhirServicesClient.validateBundle(testCaseJson, accessToken);
     assertThat(output, is(notNullValue()));
     assertThat(output.getBody(), is(notNullValue()));
-    assertThat(output.getBody(), is(equalTo(goodOutcomeJson)));
+    assertThat(output.getBody(), is(equalTo(goodOutcome)));
     verify(fhirServicesConfig.fhirServicesRestTemplate(), times(1))
         .exchange(
             any(URI.class), eq(HttpMethod.POST), httpEntityCaptor.capture(), any(Class.class));

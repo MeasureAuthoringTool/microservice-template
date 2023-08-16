@@ -660,9 +660,7 @@ public class TestCaseService {
     }
 
     try {
-      ResponseEntity<String> output =
-          fhirServicesClient.validateBundle(testCase.getJson(), accessToken);
-      return mapper.readValue(output.getBody(), HapiOperationOutcome.class);
+      return fhirServicesClient.validateBundle(testCase.getJson(), accessToken).getBody();
     } catch (HttpClientErrorException ex) {
       log.warn("HAPI FHIR returned response code [{}]", ex.getRawStatusCode(), ex);
       try {
@@ -674,9 +672,6 @@ public class TestCaseService {
       } catch (JsonProcessingException e) {
         return handleJsonProcessingException();
       }
-    } catch (JsonProcessingException e) {
-      log.error("An error occurred while processing test case JSON validation outcome", e);
-      return handleJsonProcessingException();
     } catch (Exception ex) {
       log.error("Exception occurred validating bundle with FHIR Service:", ex);
       return HapiOperationOutcome.builder()

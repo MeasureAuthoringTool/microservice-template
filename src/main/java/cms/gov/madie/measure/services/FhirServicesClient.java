@@ -2,6 +2,7 @@ package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.config.FhirServicesConfig;
 import gov.cms.madie.models.dto.ExportDTO;
+import gov.cms.madie.models.measure.HapiOperationOutcome;
 import gov.cms.madie.models.measure.Measure;
 import java.net.URI;
 import java.util.List;
@@ -54,7 +55,8 @@ public class FhirServicesClient {
         .getBody();
   }
 
-  public ResponseEntity<String> validateBundle(String testCaseJson, String accessToken) {
+  public ResponseEntity<HapiOperationOutcome> validateBundle(
+      String testCaseJson, String accessToken) {
     URI uri =
         URI.create(
             fhirServicesConfig.getMadieFhirServiceBaseUrl()
@@ -64,7 +66,8 @@ public class FhirServicesClient {
     headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
     headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
     HttpEntity<String> measureEntity = new HttpEntity<>(testCaseJson, headers);
-    return fhirServicesRestTemplate.exchange(uri, HttpMethod.POST, measureEntity, String.class);
+    return fhirServicesRestTemplate.exchange(
+        uri, HttpMethod.POST, measureEntity, HapiOperationOutcome.class);
   }
 
   public ResponseEntity<String> saveMeasureInHapiFhir(Measure measure, String accessToken) {

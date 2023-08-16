@@ -103,7 +103,8 @@ public class TestCaseServiceTest implements ResourceUtil {
     Mockito.doReturn(measure).when(measureRepository).save(any(Measure.class));
 
     when(fhirServicesClient.validateBundle(anyString(), anyString()))
-        .thenReturn(ResponseEntity.ok("{ \"code\": 200, \"successful\": true }"));
+        .thenReturn(
+            ResponseEntity.ok(HapiOperationOutcome.builder().code(200).successful(true).build()));
 
     TestCase persistTestCase =
         testCaseService.persistTestCase(testCase, measure.getId(), "test.user", "TOKEN");
@@ -152,7 +153,8 @@ public class TestCaseServiceTest implements ResourceUtil {
     Mockito.doReturn(measure).when(measureRepository).save(any(Measure.class));
 
     when(fhirServicesClient.validateBundle(anyString(), anyString()))
-        .thenReturn(ResponseEntity.ok("{ \"code\": 200, \"successful\": true }"));
+        .thenReturn(
+            ResponseEntity.ok(HapiOperationOutcome.builder().code(200).successful(true).build()));
 
     TestCase persistTestCase =
         testCaseService.persistTestCase(testCase, measure.getId(), "test.user", "TOKEN");
@@ -202,9 +204,8 @@ public class TestCaseServiceTest implements ResourceUtil {
     final String accessToken = "Bearer Token";
 
     when(fhirServicesClient.validateBundle(anyString(), anyString()))
-        .thenReturn(ResponseEntity.ok("{}"));
-    when(mapper.readValue("{}", HapiOperationOutcome.class))
-        .thenReturn(HapiOperationOutcome.builder().code(200).successful(true).build());
+        .thenReturn(
+            ResponseEntity.ok(HapiOperationOutcome.builder().code(200).successful(true).build()));
 
     TestCase output = testCaseService.validateTestCaseAsResource(testCase, accessToken);
     assertThat(output, is(notNullValue()));
@@ -361,11 +362,11 @@ public class TestCaseServiceTest implements ResourceUtil {
     String username = "user01";
     String accessToken = "Bearer Token";
     when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(measure));
-    when(mapper.readValue("{}", HapiOperationOutcome.class))
-        .thenReturn(HapiOperationOutcome.builder().code(200).successful(true).build())
-        .thenReturn(HapiOperationOutcome.builder().code(400).successful(false).build());
     when(fhirServicesClient.validateBundle(anyString(), anyString()))
-        .thenReturn(ResponseEntity.ok("{}"));
+        .thenReturn(
+            ResponseEntity.ok(HapiOperationOutcome.builder().code(200).successful(true).build()))
+        .thenReturn(
+            ResponseEntity.ok(HapiOperationOutcome.builder().code(400).successful(false).build()));
 
     List<TestCase> output =
         testCaseService.persistTestCases(newTestCases, measureId, username, accessToken);
@@ -486,8 +487,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
     TestCase originalTestCase =
-        testCase
-            .toBuilder()
+        testCase.toBuilder()
             .createdAt(createdAt)
             .createdBy("test.user5")
             .lastModifiedAt(createdAt)
@@ -515,8 +515,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertNotNull(savedMeasure.getTestCases());
     assertEquals(1, savedMeasure.getTestCases().size());
     TestCase expectedTestCase =
-        updatedTestCase
-            .toBuilder()
+        updatedTestCase.toBuilder()
             .hapiOperationOutcome(
                 HapiOperationOutcome.builder()
                     .code(500)
@@ -550,8 +549,7 @@ public class TestCaseServiceTest implements ResourceUtil {
             + "    }\n"
             + "  } ]             }";
     TestCase originalTestCase =
-        testCase
-            .toBuilder()
+        testCase.toBuilder()
             .createdAt(createdAt)
             .createdBy("test.user5")
             .lastModifiedAt(createdAt)
@@ -562,8 +560,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     List<TestCase> testCases = new ArrayList<>();
     testCases.add(originalTestCase);
     Measure originalMeasure =
-        measure
-            .toBuilder()
+        measure.toBuilder()
             .model(ModelType.QI_CORE.getValue())
             .cqlLibraryName("Test1CQLLibraryName")
             .testCases(testCases)
@@ -573,21 +570,21 @@ public class TestCaseServiceTest implements ResourceUtil {
     when(fhirServicesClient.validateBundle(anyString(), anyString()))
         .thenReturn(
             ResponseEntity.ok(
-                "{\n"
-                    + "    \"code\": 200,\n"
-                    + "    \"message\": null,\n"
-                    + "    \"successful\": true,\n"
-                    + "    \"outcomeResponse\": {\n"
-                    + "        \"resourceType\": \"OperationOutcome\",\n"
-                    + "        \"issue\": [\n"
-                    + "            {\n"
-                    + "                \"severity\": \"information\",\n"
-                    + "                \"code\": \"informational\",\n"
-                    + "                \"diagnostics\": \"No issues detected during validation\"\n"
-                    + "            }\n"
-                    + "        ]\n"
-                    + "    }\n"
-                    + "}"));
+                HapiOperationOutcome.builder()
+                    .code(200)
+                    .successful(true)
+                    .outcomeResponse(
+                        "{\n"
+                            + "        \"resourceType\": \"OperationOutcome\",\n"
+                            + "        \"issue\": [\n"
+                            + "            {\n"
+                            + "                \"severity\": \"information\",\n"
+                            + "                \"code\": \"informational\",\n"
+                            + "                \"diagnostics\": \"No issues detected during validation\"\n"
+                            + "            }\n"
+                            + "        ]\n"
+                            + "    }\n")
+                    .build()));
 
     TestCase updatingTestCase =
         testCase.toBuilder().title("UpdatedTitle").series("UpdatedSeries").json(json).build();
@@ -623,8 +620,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
     String json = "invalid test case json";
     TestCase originalTestCase =
-        testCase
-            .toBuilder()
+        testCase.toBuilder()
             .createdAt(createdAt)
             .createdBy("test.user5")
             .lastModifiedAt(createdAt)
@@ -634,8 +630,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     List<TestCase> testCases = new ArrayList<>();
     testCases.add(originalTestCase);
     Measure originalMeasure =
-        measure
-            .toBuilder()
+        measure.toBuilder()
             .model(ModelType.QI_CORE.getValue())
             .cqlLibraryName("Test1CQLLibraryName")
             .testCases(testCases)
@@ -645,21 +640,21 @@ public class TestCaseServiceTest implements ResourceUtil {
     when(fhirServicesClient.validateBundle(anyString(), anyString()))
         .thenReturn(
             ResponseEntity.ok(
-                "{\n"
-                    + "    \"code\": 200,\n"
-                    + "    \"message\": null,\n"
-                    + "    \"successful\": true,\n"
-                    + "    \"outcomeResponse\": {\n"
-                    + "        \"resourceType\": \"OperationOutcome\",\n"
-                    + "        \"issue\": [\n"
-                    + "            {\n"
-                    + "                \"severity\": \"information\",\n"
-                    + "                \"code\": \"informational\",\n"
-                    + "                \"diagnostics\": \"No issues detected during validation\"\n"
-                    + "            }\n"
-                    + "        ]\n"
-                    + "    }\n"
-                    + "}"));
+                HapiOperationOutcome.builder()
+                    .code(200)
+                    .successful(true)
+                    .outcomeResponse(
+                        "{\n"
+                            + "        \"resourceType\": \"OperationOutcome\",\n"
+                            + "        \"issue\": [\n"
+                            + "            {\n"
+                            + "                \"severity\": \"information\",\n"
+                            + "                \"code\": \"informational\",\n"
+                            + "                \"diagnostics\": \"No issues detected during validation\"\n"
+                            + "            }\n"
+                            + "        ]\n"
+                            + "    }\n")
+                    .build()));
 
     TestCase updatingTestCase =
         testCase.toBuilder().title("UpdatedTitle").series("UpdatedSeries").json(json).build();
@@ -771,8 +766,7 @@ public class TestCaseServiceTest implements ResourceUtil {
   public void testUpdateTestCasePreventsModificationOfCreatedByFields() {
     Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
     TestCase originalTestCase =
-        testCase
-            .toBuilder()
+        testCase.toBuilder()
             .createdAt(createdAt)
             .createdBy("test.user5")
             .lastModifiedAt(createdAt)
@@ -784,8 +778,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     when(measureService.findMeasureById(anyString())).thenReturn(originalMeasure);
 
     TestCase updatingTestCase =
-        testCase
-            .toBuilder()
+        testCase.toBuilder()
             .createdBy("Nobody")
             .createdAt(Instant.now())
             .title("UpdatedTitle")
@@ -829,8 +822,7 @@ public class TestCaseServiceTest implements ResourceUtil {
         .save(any(Measure.class));
 
     TestCase upsertingTestCase =
-        testCase
-            .toBuilder()
+        testCase.toBuilder()
             .createdBy("Nobody")
             .createdAt(Instant.now())
             .title("UpdatedTitle")
@@ -854,8 +846,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertNotNull(savedMeasure.getTestCases());
     assertEquals(1, savedMeasure.getTestCases().size());
     TestCase expectedTestCase =
-        upsertingTestCase
-            .toBuilder()
+        upsertingTestCase.toBuilder()
             .hapiOperationOutcome(
                 HapiOperationOutcome.builder()
                     .code(500)
@@ -875,8 +866,7 @@ public class TestCaseServiceTest implements ResourceUtil {
         .save(any(Measure.class));
 
     TestCase upsertingTestCase =
-        testCase
-            .toBuilder()
+        testCase.toBuilder()
             .createdBy("Nobody")
             .createdAt(Instant.now())
             .title("UpdatedTitle")
@@ -902,8 +892,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertEquals(1, savedMeasure.getTestCases().size());
 
     TestCase expectedTestCase =
-        updatedTestCase
-            .toBuilder()
+        updatedTestCase.toBuilder()
             .hapiOperationOutcome(
                 HapiOperationOutcome.builder()
                     .code(500)
@@ -926,8 +915,7 @@ public class TestCaseServiceTest implements ResourceUtil {
         .save(any(Measure.class));
 
     TestCase upsertingTestCase =
-        testCase
-            .toBuilder()
+        testCase.toBuilder()
             .createdBy("Nobody")
             .createdAt(Instant.now())
             .title("UpdatedTitle")
@@ -954,8 +942,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertEquals(otherExistingTC, savedMeasure.getTestCases().get(0));
 
     TestCase expectedTestCase =
-        updatedTestCase
-            .toBuilder()
+        updatedTestCase.toBuilder()
             .hapiOperationOutcome(
                 HapiOperationOutcome.builder()
                     .code(500)
@@ -978,7 +965,8 @@ public class TestCaseServiceTest implements ResourceUtil {
   @Test
   public void testGetTestCaseReturnsTestCaseByIdValidatesByUpsert() {
     when(fhirServicesClient.validateBundle(anyString(), anyString()))
-        .thenReturn(ResponseEntity.ok("{ \"code\": 200, \"successful\": true }"));
+        .thenReturn(
+            ResponseEntity.ok(HapiOperationOutcome.builder().code(200).successful(true).build()));
 
     Optional<Measure> optional =
         Optional.of(measure.toBuilder().testCases(Arrays.asList(testCase)).build());
@@ -1342,63 +1330,25 @@ public class TestCaseServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testValidateTestCaseJsonHandlesProcessingErrorDuringGoodResponse()
-      throws JsonProcessingException {
-    when(fhirServicesClient.validateBundle(anyString(), anyString()))
-        .thenReturn(
-            ResponseEntity.ok(
-                "{\n"
-                    + "    \"code\": 200,\n"
-                    + "    \"message\": null,\n"
-                    + "    \"successful\": true,\n"
-                    + "    \"outcomeResponse\": {\n"
-                    + "        \"resourceType\": \"OperationOutcome\",\n"
-                    + "        \"issue\": [\n"
-                    + "            {\n"
-                    + "                \"severity\": \"information\",\n"
-                    + "                \"code\": \"informational\",\n"
-                    + "                \"diagnostics\": \"No issues detected during validation\"\n"
-                    + "            }\n"
-                    + "        ]\n"
-                    + "    }\n"
-                    + "}"));
-    doThrow(
-            new JsonParseException(
-                mapper.getDeserializationContext().getParser(), "Something bad happened!"))
-        .when(mapper)
-        .readValue(anyString(), any(Class.class));
-
-    HapiOperationOutcome output =
-        testCaseService.validateTestCaseJson(TestCase.builder().json("{}").build(), "TOKEN");
-    assertThat(output, is(notNullValue()));
-    assertThat(output.getCode(), is(equalTo(500)));
-    assertThat(
-        output.getMessage(),
-        is(
-            equalTo(
-                "Unable to validate test case JSON due to errors, but outcome not able to be interpreted!")));
-  }
-
-  @Test
   public void testValidateTestCaseJsonHandlesGoodResponse() {
     when(fhirServicesClient.validateBundle(anyString(), anyString()))
         .thenReturn(
             ResponseEntity.ok(
-                "{\n"
-                    + "    \"code\": 200,\n"
-                    + "    \"message\": null,\n"
-                    + "    \"successful\": true,\n"
-                    + "    \"outcomeResponse\": {\n"
-                    + "        \"resourceType\": \"OperationOutcome\",\n"
-                    + "        \"issue\": [\n"
-                    + "            {\n"
-                    + "                \"severity\": \"information\",\n"
-                    + "                \"code\": \"informational\",\n"
-                    + "                \"diagnostics\": \"No issues detected during validation\"\n"
-                    + "            }\n"
-                    + "        ]\n"
-                    + "    }\n"
-                    + "}"));
+                HapiOperationOutcome.builder()
+                    .code(200)
+                    .successful(true)
+                    .outcomeResponse(
+                        "{\n"
+                            + "        \"resourceType\": \"OperationOutcome\",\n"
+                            + "        \"issue\": [\n"
+                            + "            {\n"
+                            + "                \"severity\": \"information\",\n"
+                            + "                \"code\": \"informational\",\n"
+                            + "                \"diagnostics\": \"No issues detected during validation\"\n"
+                            + "            }\n"
+                            + "        ]\n"
+                            + "    }\n")
+                    .build()));
 
     HapiOperationOutcome output =
         testCaseService.validateTestCaseJson(TestCase.builder().json("{}").build(), "TOKEN");
