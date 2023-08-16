@@ -1,10 +1,5 @@
 package cms.gov.madie.measure.services;
 
-import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
-import cms.gov.madie.measure.exceptions.InvalidIdException;
-import cms.gov.madie.measure.exceptions.InvalidMeasureStateException;
-import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.HapiOperationOutcome;
@@ -189,7 +184,6 @@ public class TestCaseService {
     if (measure.getTestCases() == null) {
       measure.setTestCases(new ArrayList<>());
     }
-
     verifyUniqueTestCaseName(testCase, measure);
     measureService.verifyAuthorization(username, measure);
     Instant now = Instant.now();
@@ -211,9 +205,10 @@ public class TestCaseService {
       testCase.setId(ObjectId.get().toString());
       testCase.setCreatedAt(now);
       testCase.setCreatedBy(username);
-      testCase.setPatientId(UUID.randomUUID());
+      if (testCase.getPatientId() == null) {
+        testCase.setPatientId(UUID.randomUUID());
+      }
     }
-
     TestCase validatedTestCase = validateTestCaseAsResource(testCase, accessToken);
     if (ModelType.QI_CORE.getValue().equalsIgnoreCase(measure.getModel())) {
       validatedTestCase.setJson(enforcePatientId(validatedTestCase));
@@ -361,6 +356,10 @@ public class TestCaseService {
                     .message("Test Case file is missing.")
                     .build();
               }
+              if (isEmpty(measure.getTestCases())) {
+                return validateTestCaseJsonAndCreateTestCase(
+                    testCaseImportRequest, measure, userName, accessToken);
+              }
               Optional<TestCase> existingTestCase =
                   measure.getTestCases().stream()
                       .filter(
@@ -396,7 +395,11 @@ public class TestCaseService {
       log.info(
           "Test Case title + Test Case Group:  {}", patientGivenName + " " + patientFamilyName);
       TestCase newTestCase =
-          TestCase.builder().title(patientGivenName).series(patientFamilyName).build();
+          TestCase.builder()
+              .title(patientGivenName)
+              .series(patientFamilyName)
+              .patientId(testCaseImportRequest.getPatientId())
+              .build();
       List<TestCaseGroupPopulation> testCaseGroupPopulations =
           QiCoreJsonUtil.getTestCaseGroupPopulationsFromMeasureReport(
               testCaseImportRequest.getJson());
@@ -581,7 +584,8 @@ public class TestCaseService {
     } catch (ResourceNotFoundException
         | InvalidDraftStatusException
         | InvalidMeasureStateException
-        | UnauthorizedException e) {
+        | UnauthorizedException
+        | DuplicateTestCaseNameException e) {
       log.info(
           "User {} is unable to import test case with patient id : {}; Error Message : {}",
           userName,

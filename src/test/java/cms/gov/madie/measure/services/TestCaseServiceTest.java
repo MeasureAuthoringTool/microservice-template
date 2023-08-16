@@ -932,6 +932,7 @@ public class TestCaseServiceTest implements ResourceUtil {
             .createdAt(Instant.now())
             .title("UpdatedTitle")
             .series("UpdatedSeries")
+            .patientId(null)
             .build();
 
     TestCase updatedTestCase =
@@ -1482,6 +1483,31 @@ public class TestCaseServiceTest implements ResourceUtil {
   }
 
   @Test
+  void importTestCasesReturnInvalidOutcomeWithSpecificExceptionMsgWhileUpdatingTestCases() {
+    measure.setTestCases(List.of(testCase));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
+
+    doThrow(new DuplicateTestCaseNameException())
+        .when(testCaseService)
+        .updateTestCase(any(), anyString(), anyString(), anyString());
+    var testCaseImportRequest =
+        TestCaseImportRequest.builder()
+            .patientId(testCase.getPatientId())
+            .json(testCaseImportWithMeasureReport)
+            .build();
+
+    var response =
+        testCaseService.importTestCases(
+            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
+    assertEquals(1, response.size());
+    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
+    assertFalse(response.get(0).isSuccessful());
+    assertEquals(
+        "The Test Case Group and Title combination is not unique. The combination must be unique (case insensitive, spaces ignored) across all test cases associated with the measure.",
+        response.get(0).getMessage());
+  }
+
+  @Test
   void importTestCaseReturnValidOutComeWithJsonParseException() {
     var importedJson = "{\n" + "    \"resourceType\": \"Bundle\",\n" + "}";
     measure.setTestCases(List.of(testCase));
@@ -1511,6 +1537,23 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     var testCaseImportRequest =
         TestCaseImportRequest.builder().patientId(testCase.getPatientId()).json(null).build();
+
+    var response =
+        testCaseService.importTestCases(
+            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
+    assertEquals(1, response.size());
+    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
+    assertFalse(response.get(0).isSuccessful());
+    assertEquals("Test Case file is missing.", response.get(0).getMessage());
+  }
+
+  @Test
+  void importTestCaseReturnInvalidOutComeWithExceptionWhenJsonIsEmpty() {
+    measure.setTestCases(List.of(testCase));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
+
+    var testCaseImportRequest =
+        TestCaseImportRequest.builder().patientId(testCase.getPatientId()).json("").build();
 
     var response =
         testCaseService.importTestCases(
@@ -1566,6 +1609,44 @@ public class TestCaseServiceTest implements ResourceUtil {
     measure.setGroups(List.of(group));
 
     measure.setTestCases(List.of(testCase));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
+
+    TestCase updatedTestCase = testCase;
+    updatedTestCase.setJson(testCaseImportWithMeasureReport);
+
+    doReturn(updatedTestCase)
+        .when(testCaseService)
+        .updateTestCase(any(), anyString(), anyString(), anyString());
+    var testCaseImportRequest =
+        TestCaseImportRequest.builder()
+            .patientId(UUID.randomUUID())
+            .json(testCaseImportWithMeasureReport)
+            .build();
+
+    var response =
+        testCaseService.importTestCases(
+            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
+    assertEquals(1, response.size());
+    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
+    assertTrue(response.get(0).isSuccessful());
+  }
+
+  @Test
+  void importTestCasesCreateNewWhenMeasureHasNotTestCase() {
+    population1 = Population.builder().name(PopulationType.INITIAL_POPULATION).build();
+    population2 = Population.builder().name(PopulationType.DENOMINATOR).build();
+    population3 = Population.builder().name(PopulationType.DENOMINATOR_EXCLUSION).build();
+    population4 = Population.builder().name(PopulationType.NUMERATOR).build();
+    population5 = Population.builder().name(PopulationType.DENOMINATOR_EXCEPTION).build();
+    group =
+        Group.builder()
+            .id("testGroupId")
+            .scoring(MeasureScoring.COHORT.name())
+            .populations(List.of(population1, population2, population3, population4, population5))
+            .populationBasis("Encounter")
+            .build();
+    measure.setGroups(List.of(group));
+
     when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
 
     TestCase updatedTestCase = testCase;
