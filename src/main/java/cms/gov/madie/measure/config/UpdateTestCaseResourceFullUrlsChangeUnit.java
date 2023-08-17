@@ -20,7 +20,6 @@ import java.util.List;
 @ChangeUnit(id = "update_fhir_resource_full_urls", order = "1", author = "madie_dev")
 public class UpdateTestCaseResourceFullUrlsChangeUnit {
 
-  private final String MADiE_URL = "https://madie.cms.gov/";
   @Setter private List<Measure> tempMeasures;
 
   @Execution
