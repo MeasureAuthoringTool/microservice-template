@@ -2179,11 +2179,22 @@ public class TestCaseServiceTest implements ResourceUtil {
   }
 
   @Test
-  void updateResourceFullUrlsIfNotestResourceAvailable() {
+  void updateResourceFullUrlsIfNoTestResourceAvailable() {
     final String json =
         "{\"id\":\"6323489059967e30c06d0774\",\"resourceType\":\"Bundle\",\"type\":\"collection\",\"entry\":[]}";
     TestCase tc1 =
         TestCase.builder().id("TC1").name("TC1").patientId(UUID.randomUUID()).json(json).build();
+    String baseUrl = "https://myorg.com";
+    String updatedTc1 = testCaseService.updateResourceFullUrls(tc1);
+    assertFalse(updatedTc1.contains(baseUrl));
+  }
+
+  @Test
+  void updateResourceFullUrlsIfEntryNodeNotAvailable() {
+    final String json =
+      "{\"id\":\"6323489059967e30c06d0774\",\"resourceType\":\"Bundle\",\"type\":\"collection\"}";
+    TestCase tc1 =
+      TestCase.builder().id("TC1").name("TC1").patientId(UUID.randomUUID()).json(json).build();
     String baseUrl = "https://myorg.com";
     String updatedTc1 = testCaseService.updateResourceFullUrls(tc1);
     assertFalse(updatedTc1.contains(baseUrl));

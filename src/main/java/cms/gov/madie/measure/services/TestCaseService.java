@@ -718,18 +718,20 @@ public class TestCaseService {
     try {
       JsonNode rootNode = mapper.readTree(testCase.getJson());
       JsonNode entry = rootNode.get("entry");
-      for (JsonNode theNode : entry) {
-        var resourceNode = theNode.get("resource");
-        if (resourceNode != null) {
-          var resourceType = resourceNode.get("resourceType").asText();
-          if (resourceType != null
+      if (entry != null) {
+        for (JsonNode theNode : entry) {
+          var resourceNode = theNode.get("resource");
+          if (resourceNode != null) {
+            var resourceType = resourceNode.get("resourceType").asText();
+            if (resourceType != null
               && !"Patient".equalsIgnoreCase(resourceType)
               && theNode.has("fullUrl")) {
-            String id = resourceNode.get("id").asText();
-            String newUrl = buildFullUrl(id, resourceType);
-            log.info("Updating the full url of a resource [{}], new fullUrl is [{}]", id, newUrl);
-            ObjectNode node = (ObjectNode) theNode;
-            node.put("fullUrl", newUrl);
+              String id = resourceNode.get("id").asText();
+              String newUrl = buildFullUrl(id, resourceType);
+              log.info("Updating the full url of a resource [{}], new fullUrl is [{}]", id, newUrl);
+              ObjectNode node = (ObjectNode) theNode;
+              node.put("fullUrl", newUrl);
+            }
           }
         }
       }
