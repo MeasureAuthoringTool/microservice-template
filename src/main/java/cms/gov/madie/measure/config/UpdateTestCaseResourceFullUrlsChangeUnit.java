@@ -26,7 +26,7 @@ public class UpdateTestCaseResourceFullUrlsChangeUnit {
   @Execution
   public void updateTestCaseResourceFullUrls(
       MeasureRepository measureRepository, TestCaseService testCaseService) {
-    log.info("STARTING - update_testcase_json resource id and reference");
+    log.info("STARTING - update_testcase_json resource full urls");
     List<Measure> measures = measureRepository.findAll();
     if (CollectionUtils.isNotEmpty(measures)) {
       setTempMeasures(measures);
@@ -65,31 +65,6 @@ public class UpdateTestCaseResourceFullUrlsChangeUnit {
     }
     log.info("COMPLETED - update_testcase_json_patient_uuid");
   }
-
-  //  private String updateResourceIds(TestCaseService testCaseService, TestCase testCase)
-  //      throws JsonProcessingException {
-  //    ObjectMapper mapper = new ObjectMapper();
-  //    JsonNode rootNode = mapper.readTree(testCase.getJson());
-  //    JsonNode entry = rootNode.get("entry");
-  //    Iterator<JsonNode> iterator = entry.iterator();
-  //    while (iterator.hasNext()) {
-  //      var theNode = iterator.next();
-  //      var resourceNode = theNode.get("resource");
-  //      if (resourceNode != null) {
-  //        var resourceType = resourceNode.get("resourceType").asText();
-  //        if (resourceType != null
-  //            && !"Patient".equalsIgnoreCase(resourceType)
-  //            && theNode.has("fullUrl")) {
-  //          String newUrl = MADiE_URL + resourceType + "/" + resourceNode.get("id").asText();
-  //          log.info(newUrl);
-  //          ObjectNode node = (ObjectNode) theNode;
-  //          node.put("fullUrl", newUrl);
-  //        }
-  //      }
-  //    }
-  //    ByteArrayOutputStream bout = testCaseService.getByteArrayOutputStream(mapper, rootNode);
-  //    return bout.toString();
-  //  }
 
   @RollbackExecution
   public void rollbackExecution(MeasureRepository measureRepository) {
