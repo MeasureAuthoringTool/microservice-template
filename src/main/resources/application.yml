@@ -13,7 +13,7 @@ madie:
   allowedApi: http://localhost:9000
   json:
     resources:
-      base-uri: ${MADIE_JSON_RESOURCES_BASE_URI:https://madie.cms.gov/Patient/}
+      base-uri: ${MADIE_JSON_RESOURCES_BASE_URI:https://madie.cms.gov/}
   fhir:
     service:
       base-url: ${FHIR_SERVICES_URL:http://localhost:8085/api}

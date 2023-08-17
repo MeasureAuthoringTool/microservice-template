@@ -621,7 +621,7 @@ public class TestCaseServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testUpdateTestCaseEnforcingdPatientIdFail() {
+  public void testUpdateTestCaseEnforcingPatientIdFail() {
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
     String json = "invalid test case json";
