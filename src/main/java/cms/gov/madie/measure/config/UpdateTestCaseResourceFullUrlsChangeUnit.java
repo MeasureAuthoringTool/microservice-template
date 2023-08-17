@@ -17,7 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.List;
 
 @Slf4j
-@ChangeUnit(id = "update_fhir_resource_ids", order = "1", author = "madie_dev")
+@ChangeUnit(id = "update_fhir_resource_full_urls", order = "1", author = "madie_dev")
 public class UpdateTestCaseResourceFullUrlsChangeUnit {
 
   private final String MADiE_URL = "https://madie.cms.gov/";
