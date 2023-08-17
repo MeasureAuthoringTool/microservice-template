@@ -10,9 +10,7 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 public final class QiCoreJsonUtil {
-  private QiCoreJsonUtil() {
-
-  }
+  private QiCoreJsonUtil() {}
 
   public static boolean isValidJson(String json) {
     ObjectMapper mapper = new ObjectMapper();
