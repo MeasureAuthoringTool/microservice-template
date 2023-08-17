@@ -766,8 +766,8 @@ public class TestCaseServiceTest implements ResourceUtil {
 
   @Test
   public void testGetByteArrayOutputStreamThrowsException() {
-    ByteArrayOutputStream bout = testCaseService.getByteArrayOutputStream(null, null);
-    assertTrue(StringUtils.isAllBlank(bout.toString()));
+    String str = testCaseService.jsonNodeToString(null, null);
+    assertTrue(StringUtils.isAllBlank(str));
   }
 
   @Test
