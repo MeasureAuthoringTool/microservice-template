@@ -723,8 +723,8 @@ public class TestCaseService {
         if (resourceNode != null) {
           var resourceType = resourceNode.get("resourceType").asText();
           if (resourceType != null
-            && !"Patient".equalsIgnoreCase(resourceType)
-            && theNode.has("fullUrl")) {
+              && !"Patient".equalsIgnoreCase(resourceType)
+              && theNode.has("fullUrl")) {
             String id = resourceNode.get("id").asText();
             String newUrl = buildFullUrl(id, resourceType);
             log.info("Updating the full url of a resource [{}], new fullUrl is [{}]", id, newUrl);
@@ -740,8 +740,7 @@ public class TestCaseService {
     return testCase.getJson();
   }
 
-  protected String jsonNodeToString(
-      ObjectMapper objectMapper, JsonNode rootNode) {
+  protected String jsonNodeToString(ObjectMapper objectMapper, JsonNode rootNode) {
     ByteArrayOutputStream bout = new ByteArrayOutputStream();
     try {
       objectMapper.writerWithDefaultPrettyPrinter().writeValue(bout, rootNode);
