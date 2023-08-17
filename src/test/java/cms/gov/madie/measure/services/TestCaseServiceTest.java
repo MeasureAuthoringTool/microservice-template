@@ -14,6 +14,8 @@ import cms.gov.madie.measure.HapiFhirConfig;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.utils.ResourceUtil;
+import cms.gov.madie.measure.utils.TestCaseServiceUtil;
+
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -51,6 +53,7 @@ public class TestCaseServiceTest implements ResourceUtil {
   @Mock private HapiFhirConfig hapiFhirConfig;
   @Mock private RestTemplate hapiFhirRestTemplate;
   @Mock private ActionLogService actionLogService;
+  @Mock private TestCaseServiceUtil testCaseServiceUtil;
 
   @Spy private ObjectMapper mapper;
 
@@ -1594,11 +1597,25 @@ public class TestCaseServiceTest implements ResourceUtil {
 
   @Test
   void importTestCasesCreateNewAllCriteriaMatched() {
-    population1 = Population.builder().name(PopulationType.INITIAL_POPULATION).build();
-    population2 = Population.builder().name(PopulationType.DENOMINATOR).build();
-    population3 = Population.builder().name(PopulationType.DENOMINATOR_EXCLUSION).build();
-    population4 = Population.builder().name(PopulationType.NUMERATOR).build();
-    population5 = Population.builder().name(PopulationType.DENOMINATOR_EXCEPTION).build();
+    population1 =
+        Population.builder()
+            .name(PopulationType.INITIAL_POPULATION)
+            .definition("Initial Population")
+            .build();
+    population2 =
+        Population.builder().name(PopulationType.DENOMINATOR).definition("Denominator").build();
+    population3 =
+        Population.builder()
+            .name(PopulationType.DENOMINATOR_EXCLUSION)
+            .definition("Denominator Exclusion")
+            .build();
+    population4 =
+        Population.builder().name(PopulationType.NUMERATOR).definition("Numerator").build();
+    population5 =
+        Population.builder()
+            .name(PopulationType.DENOMINATOR_EXCEPTION)
+            .definition("Numerator Exception")
+            .build();
     group =
         Group.builder()
             .id("testGroupId")
@@ -1613,6 +1630,9 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     TestCase updatedTestCase = testCase;
     updatedTestCase.setJson(testCaseImportWithMeasureReport);
+
+    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
+        .thenReturn(List.of(group));
 
     doReturn(updatedTestCase)
         .when(testCaseService)
@@ -1633,11 +1653,25 @@ public class TestCaseServiceTest implements ResourceUtil {
 
   @Test
   void importTestCasesCreateNewWhenMeasureHasNotTestCase() {
-    population1 = Population.builder().name(PopulationType.INITIAL_POPULATION).build();
-    population2 = Population.builder().name(PopulationType.DENOMINATOR).build();
-    population3 = Population.builder().name(PopulationType.DENOMINATOR_EXCLUSION).build();
-    population4 = Population.builder().name(PopulationType.NUMERATOR).build();
-    population5 = Population.builder().name(PopulationType.DENOMINATOR_EXCEPTION).build();
+    population1 =
+        Population.builder()
+            .name(PopulationType.INITIAL_POPULATION)
+            .definition("Initial Population")
+            .build();
+    population2 =
+        Population.builder().name(PopulationType.DENOMINATOR).definition("Denominator").build();
+    population3 =
+        Population.builder()
+            .name(PopulationType.DENOMINATOR_EXCLUSION)
+            .definition("Denominator Exclusiob")
+            .build();
+    population4 =
+        Population.builder().name(PopulationType.NUMERATOR).definition("Numerator").build();
+    population5 =
+        Population.builder()
+            .name(PopulationType.DENOMINATOR_EXCEPTION)
+            .definition("Numerator Exception")
+            .build();
     group =
         Group.builder()
             .id("testGroupId")
@@ -1651,6 +1685,9 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     TestCase updatedTestCase = testCase;
     updatedTestCase.setJson(testCaseImportWithMeasureReport);
+
+    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
+        .thenReturn(List.of(group));
 
     doReturn(updatedTestCase)
         .when(testCaseService)
@@ -1671,11 +1708,25 @@ public class TestCaseServiceTest implements ResourceUtil {
 
   @Test
   void importTestCasesCreateNewAllCriteriaMatchedNoPopulationBasis() {
-    population1 = Population.builder().name(PopulationType.INITIAL_POPULATION).build();
-    population2 = Population.builder().name(PopulationType.DENOMINATOR).build();
-    population3 = Population.builder().name(PopulationType.DENOMINATOR_EXCLUSION).build();
-    population4 = Population.builder().name(PopulationType.NUMERATOR).build();
-    population5 = Population.builder().name(PopulationType.DENOMINATOR_EXCEPTION).build();
+    population1 =
+        Population.builder()
+            .name(PopulationType.INITIAL_POPULATION)
+            .definition("Initial Population")
+            .build();
+    population2 =
+        Population.builder().name(PopulationType.DENOMINATOR).definition("Denominator").build();
+    population3 =
+        Population.builder()
+            .name(PopulationType.DENOMINATOR_EXCLUSION)
+            .definition("Denominator Exclusion")
+            .build();
+    population4 =
+        Population.builder().name(PopulationType.NUMERATOR).definition("Numerator").build();
+    population5 =
+        Population.builder()
+            .name(PopulationType.DENOMINATOR_EXCEPTION)
+            .definition("Numerator Exclusion")
+            .build();
     group =
         Group.builder()
             .id("testGroupId")
@@ -1689,6 +1740,9 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     TestCase updatedTestCase = testCase;
     updatedTestCase.setJson(testCaseImportWithMeasureReport);
+
+    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
+        .thenReturn(List.of(group));
 
     doReturn(updatedTestCase)
         .when(testCaseService)
@@ -1709,11 +1763,25 @@ public class TestCaseServiceTest implements ResourceUtil {
 
   @Test
   void importTestCasesCreateNewAllCriteriaMatchedPatientBased() {
-    population1 = Population.builder().name(PopulationType.INITIAL_POPULATION).build();
-    population2 = Population.builder().name(PopulationType.DENOMINATOR).build();
-    population3 = Population.builder().name(PopulationType.DENOMINATOR_EXCLUSION).build();
-    population4 = Population.builder().name(PopulationType.NUMERATOR).build();
-    population5 = Population.builder().name(PopulationType.DENOMINATOR_EXCEPTION).build();
+    population1 =
+        Population.builder()
+            .name(PopulationType.INITIAL_POPULATION)
+            .definition("Initial Population")
+            .build();
+    population2 =
+        Population.builder().name(PopulationType.DENOMINATOR).definition("Denominator").build();
+    population3 =
+        Population.builder()
+            .name(PopulationType.DENOMINATOR_EXCLUSION)
+            .definition("Denominator Exclusion")
+            .build();
+    population4 =
+        Population.builder().name(PopulationType.NUMERATOR).definition("Numerator").build();
+    population5 =
+        Population.builder()
+            .name(PopulationType.DENOMINATOR_EXCEPTION)
+            .definition("Numerator Exceptiob")
+            .build();
     group =
         Group.builder()
             .id("testGroupId")
@@ -1728,6 +1796,9 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     TestCase updatedTestCase = testCase;
     updatedTestCase.setJson(testCaseImportWithMeasureReport);
+
+    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
+        .thenReturn(List.of(group));
 
     doReturn(updatedTestCase)
         .when(testCaseService)
@@ -1768,6 +1839,9 @@ public class TestCaseServiceTest implements ResourceUtil {
     TestCase updatedTestCase = testCase;
     updatedTestCase.setJson(testCaseImportWithMeasureReport);
 
+    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
+        .thenReturn(List.of(group));
+
     doReturn(updatedTestCase)
         .when(testCaseService)
         .updateTestCase(any(), anyString(), anyString(), anyString());
@@ -1782,7 +1856,7 @@ public class TestCaseServiceTest implements ResourceUtil {
             List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertFalse(response.get(0).isSuccessful());
+    assertTrue(response.get(0).isSuccessful());
     assertEquals(
         "The measure populations do not match the populations in the import file. "
             + "The Test Case has been imported, but no expected values have been set.",
@@ -1807,6 +1881,9 @@ public class TestCaseServiceTest implements ResourceUtil {
     TestCase updatedTestCase = testCase;
     updatedTestCase.setJson(testCaseImportWithMeasureReport);
 
+    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
+        .thenReturn(List.of(group));
+
     doReturn(updatedTestCase)
         .when(testCaseService)
         .updateTestCase(any(), anyString(), anyString(), anyString());
@@ -1821,7 +1898,7 @@ public class TestCaseServiceTest implements ResourceUtil {
             List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertFalse(response.get(0).isSuccessful());
+    assertTrue(response.get(0).isSuccessful());
   }
 
   @Test
@@ -1846,6 +1923,9 @@ public class TestCaseServiceTest implements ResourceUtil {
     TestCase updatedTestCase = testCase;
     updatedTestCase.setJson(testCaseImportWithMeasureReport);
 
+    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
+        .thenReturn(List.of(group));
+
     doReturn(updatedTestCase)
         .when(testCaseService)
         .updateTestCase(any(), anyString(), anyString(), anyString());
@@ -1860,7 +1940,7 @@ public class TestCaseServiceTest implements ResourceUtil {
             List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertFalse(response.get(0).isSuccessful());
+    assertTrue(response.get(0).isSuccessful());
   }
 
   @Test
@@ -1879,6 +1959,9 @@ public class TestCaseServiceTest implements ResourceUtil {
     TestCase updatedTestCase = testCase;
     updatedTestCase.setJson(testCaseImportWithMeasureReport);
 
+    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
+        .thenReturn(List.of(group));
+
     doReturn(updatedTestCase)
         .when(testCaseService)
         .updateTestCase(any(), anyString(), anyString(), anyString());
@@ -1893,7 +1976,7 @@ public class TestCaseServiceTest implements ResourceUtil {
             List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertFalse(response.get(0).isSuccessful());
+    assertTrue(response.get(0).isSuccessful());
   }
 
   @Test
@@ -1918,7 +2001,7 @@ public class TestCaseServiceTest implements ResourceUtil {
             List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertFalse(response.get(0).isSuccessful());
+    assertTrue(response.get(0).isSuccessful());
   }
 
   @Test
@@ -1941,6 +2024,9 @@ public class TestCaseServiceTest implements ResourceUtil {
     TestCase updatedTestCase = testCase;
     updatedTestCase.setJson(testCaseImportWithoutMeasureReport);
 
+    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
+        .thenReturn(List.of(group));
+
     doReturn(updatedTestCase)
         .when(testCaseService)
         .updateTestCase(any(), anyString(), anyString(), anyString());
@@ -1955,7 +2041,7 @@ public class TestCaseServiceTest implements ResourceUtil {
             List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertFalse(response.get(0).isSuccessful());
+    assertTrue(response.get(0).isSuccessful());
   }
 
   private String removeMeasureReportFromJson(String testCaseJson) throws JsonProcessingException {

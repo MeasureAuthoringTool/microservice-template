@@ -10,6 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
 
@@ -485,5 +486,10 @@ public class QiCoreJsonUtilTest {
     List<TestCaseGroupPopulation> testCaseGroupPopulations =
         QiCoreJsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noCount);
     assertThat(testCaseGroupPopulations.size(), is(equalTo(0)));
+  }
+
+  @Test
+  public void testRemoveMeasureReportFromJsonThrowsException() {
+    assertThrows(RuntimeException.class, () -> QiCoreJsonUtil.removeMeasureReportFromJson(null));
   }
 }

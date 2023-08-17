@@ -11,6 +11,8 @@ import gov.cms.madie.models.measure.Group;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.utils.QiCoreJsonUtil;
+import cms.gov.madie.measure.utils.TestCaseServiceUtil;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,6 +46,7 @@ public class TestCaseService {
   private FhirServicesClient fhirServicesClient;
   private ObjectMapper mapper;
   private MeasureService measureService;
+  private TestCaseServiceUtil testCaseServiceUtil;
 
   @Value("${madie.json.resources.base-uri}")
   private String madieJsonResourcesBaseUri;
@@ -54,12 +57,14 @@ public class TestCaseService {
       ActionLogService actionLogService,
       FhirServicesClient fhirServicesClient,
       ObjectMapper mapper,
-      MeasureService measureService) {
+      MeasureService measureService,
+      TestCaseServiceUtil testCaseServiceUtil) {
     this.measureRepository = measureRepository;
     this.actionLogService = actionLogService;
     this.fhirServicesClient = fhirServicesClient;
     this.mapper = mapper;
     this.measureService = measureService;
+    this.testCaseServiceUtil = testCaseServiceUtil;
   }
 
   protected TestCase enrichNewTestCase(TestCase testCase, String username) {
@@ -403,8 +408,8 @@ public class TestCaseService {
       List<TestCaseGroupPopulation> testCaseGroupPopulations =
           QiCoreJsonUtil.getTestCaseGroupPopulationsFromMeasureReport(
               testCaseImportRequest.getJson());
-      boolean matched =
-          matchCriteriaGroups(testCaseGroupPopulations, measure.getGroups(), newTestCase);
+      List<Group> groups = testCaseServiceUtil.getGroupsWithValidPopulations(measure.getGroups());
+      boolean matched = matchCriteriaGroups(testCaseGroupPopulations, groups, newTestCase);
       String warningMessage = null;
       if (!matched) {
         warningMessage =
@@ -551,7 +556,8 @@ public class TestCaseService {
       String accessToken,
       String warningMessage) {
     try {
-      existingTestCase.setJson(removeMeasureReportFromJson(testCaseImportRequest.getJson()));
+      existingTestCase.setJson(
+          QiCoreJsonUtil.removeMeasureReportFromJson(testCaseImportRequest.getJson()));
       TestCase updatedTestCase = updateTestCase(existingTestCase, measureId, userName, accessToken);
       log.info(
           "User {} succesfully imported test case with patient id : {}",
@@ -564,7 +570,6 @@ public class TestCaseService {
               .build();
       if (warningMessage != null) {
         testCaseImportOutcome.setMessage(warningMessage);
-        testCaseImportOutcome.setSuccessful(false);
       }
       return testCaseImportOutcome;
     } catch (JsonProcessingException e) {
@@ -607,29 +612,6 @@ public class TestCaseService {
               "Unable to import test case, please try again."
                   + " if the error persists, Please contact helpdesk.")
           .build();
-    }
-  }
-
-  private String removeMeasureReportFromJson(String testCaseJson) throws JsonProcessingException {
-    if (!StringUtils.isEmpty(testCaseJson)) {
-      ObjectMapper objectMapper = new ObjectMapper();
-
-      JsonNode rootNode = objectMapper.readTree(testCaseJson);
-      ArrayNode entryArray = (ArrayNode) rootNode.get("entry");
-
-      List<JsonNode> filteredList = new ArrayList<>();
-      for (JsonNode entryNode : entryArray) {
-        if (!"MeasureReport"
-            .equalsIgnoreCase(entryNode.get("resource").get("resourceType").asText())) {
-          filteredList.add(entryNode);
-        }
-      }
-
-      entryArray.removeAll();
-      filteredList.forEach(entryArray::add);
-      return objectMapper.writeValueAsString(rootNode);
-    } else {
-      throw new RuntimeException("Unable to find Test case Json");
     }
   }
 
@@ -726,7 +708,6 @@ public class TestCaseService {
             }
           }
         }
-
         return modifiedjsonString;
       } catch (JsonProcessingException e) {
         log.error("Error reading testCaseJson testCaseId = " + testCase.getId(), e);
