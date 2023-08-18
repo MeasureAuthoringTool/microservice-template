@@ -255,10 +255,17 @@ public class MeasureController {
 
     final String username = principal.getName();
     final Pageable pageReq = PageRequest.of(page, limit, Sort.by("lastModifiedAt").descending());
+
     Page<Measure> measures =
-        filterByCurrentUser
-            ? repository.findMyActiveMeasures(username, pageReq, criteria)
-            : repository.findAllByMeasureNameOrEcqmTitle(criteria, pageReq);
+        measureService.getMeasuresByCriteria(filterByCurrentUser, pageReq, username, criteria);
+    measures.map(
+        measure -> {
+          MeasureSet measureSet =
+              measureSetRepository.findByMeasureSetId(measure.getMeasureSetId()).orElse(null);
+          measure.setMeasureSet(measureSet);
+          return measure;
+        });
+
     return ResponseEntity.ok(measures);
   }
 }

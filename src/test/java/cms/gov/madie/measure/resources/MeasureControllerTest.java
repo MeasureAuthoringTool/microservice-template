@@ -603,15 +603,20 @@ class MeasureControllerTest {
   void searchMeasuresByNameOrEcqmTitleWithoutCurrentUserFilter()
       throws UnsupportedEncodingException {
     Page<Measure> measures = new PageImpl<>(List.of(measure1));
-    when(repository.findAllByMeasureNameOrEcqmTitle(any(String.class), any(Pageable.class)))
-        .thenReturn(measures);
+    doReturn(measures)
+        .when(measureService)
+        .getMeasuresByCriteria(
+            eq(false), any(Pageable.class), eq("test.user"), eq("test criteria"));
+
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
     ResponseEntity<Page<Measure>> response =
         controller.findAllByMeasureNameOrEcqmTitle(principal, false, "test criteria", 10, 0);
-    verify(repository, times(1))
-        .findAllByMeasureNameOrEcqmTitle(any(String.class), any(Pageable.class));
+    verify(measureService, times(1))
+        .getMeasuresByCriteria(
+            eq(false), any(Pageable.class), eq("test.user"), eq("test criteria"));
+
     verifyNoMoreInteractions(repository);
     assertNotNull(response.getBody());
     assertNotNull(response.getBody().getContent());
@@ -622,15 +627,17 @@ class MeasureControllerTest {
   @Test
   void searchMeasuresByNameOrEcqmTitleWithCurrentUserFilter() {
     Page<Measure> measures = new PageImpl<>(List.of(measure1));
-    when(repository.findMyActiveMeasures(any(String.class), any(Pageable.class), anyString()))
-        .thenReturn(measures);
+
+    doReturn(measures)
+        .when(measureService)
+        .getMeasuresByCriteria(eq(true), any(Pageable.class), eq("test.user"), eq("test criteria"));
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
     ResponseEntity<Page<Measure>> response =
         controller.findAllByMeasureNameOrEcqmTitle(principal, true, "test criteria", 10, 0);
-    verify(repository, times(1))
-        .findMyActiveMeasures(eq("test.user"), any(Pageable.class), eq("test criteria"));
+    verify(measureService, times(1))
+        .getMeasuresByCriteria(eq(true), any(Pageable.class), eq("test.user"), eq("test criteria"));
     verifyNoMoreInteractions(repository);
     assertNotNull(response.getBody().getContent());
     assertNotNull(response.getBody().getContent().get(0));
