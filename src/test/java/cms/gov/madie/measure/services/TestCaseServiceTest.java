@@ -1,21 +1,14 @@
 package cms.gov.madie.measure.services;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-
 import cms.gov.madie.measure.HapiFhirConfig;
-import cms.gov.madie.measure.exceptions.*;
+import cms.gov.madie.measure.exceptions.DuplicateTestCaseNameException;
+import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
+import cms.gov.madie.measure.exceptions.InvalidIdException;
+import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.utils.ResourceUtil;
 import cms.gov.madie.measure.utils.TestCaseServiceUtil;
-
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -24,12 +17,15 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.common.Version;
-import gov.cms.madie.models.measure.*;
-import java.io.ByteArrayOutputStream;
-import java.nio.charset.Charset;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
+import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.HapiOperationOutcome;
+import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureMetaData;
+import gov.cms.madie.models.measure.MeasureScoring;
+import gov.cms.madie.models.measure.Population;
+import gov.cms.madie.models.measure.PopulationType;
+import gov.cms.madie.models.measure.TestCase;
+import gov.cms.madie.models.measure.TestCaseImportRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.bson.types.ObjectId;
@@ -43,9 +39,44 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+
+import java.nio.charset.Charset;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class TestCaseServiceTest implements ResourceUtil {
@@ -621,7 +652,7 @@ public class TestCaseServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testUpdateTestCaseEnforcingdPatientIdFail() {
+  public void testUpdateTestCaseEnforcingPatientIdFail() {
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
     String json = "invalid test case json";
@@ -766,8 +797,8 @@ public class TestCaseServiceTest implements ResourceUtil {
 
   @Test
   public void testGetByteArrayOutputStreamThrowsException() {
-    ByteArrayOutputStream bout = testCaseService.getByteArrayOutputStream(null, null);
-    assertTrue(StringUtils.isAllBlank(bout.toString()));
+    String str = testCaseService.jsonNodeToString(null, null);
+    assertTrue(StringUtils.isAllBlank(str));
   }
 
   @Test
@@ -2132,5 +2163,40 @@ public class TestCaseServiceTest implements ResourceUtil {
   @Test
   void testAssumeUniqueNameOnEmptyList() {
     assertDoesNotThrow(() -> testCaseService.verifyUniqueTestCaseName(testCase, measure));
+  }
+
+  @Test
+  void updateResourceFullUrlsIfTestResourcesAvailable() {
+    final String json =
+        "{\"id\":\"632334c2414ba67d4e1d1c32\",\"resourceType\":\"Bundle\",\"type\":\"collection\",\"entry\":[{\"fullUrl\":\"https://madie.cms.gov/Patient/0e3be52f-723e-4df4-a584-337daa19e259\",\"resource\":{\"id\":\"0e3be52f-723e-4df4-a584-337daa19e259\",\"meta\":{\"profile\":[\"http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-patient\"]},\"resourceType\":\"Patient\",\"extension\":[{\"extension\":[{\"url\":\"ombCategory\",\"valueCoding\":{\"system\":\"urn:oid:2.16.840.1.113883.6.238\",\"code\":\"2076-8\",\"display\":\"Native Hawaiian or Other Pacific Islander\",\"userSelected\":true}},{\"url\":\"text\",\"valueString\":\"Native Hawaiian or Other Pacific Islander\"}],\"url\":\"http://hl7.org/fhir/us/core/StructureDefinition/us-core-race\"},{\"extension\":[{\"url\":\"ombCategory\",\"valueCoding\":{\"system\":\"urn:oid:2.16.840.1.113883.6.238\",\"code\":\"2135-2\",\"display\":\"Hispanic or Latino\",\"userSelected\":true}},{\"url\":\"text\",\"valueString\":\"Hispanic or Latino\"}],\"url\":\"http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity\"}],\"identifier\":[{\"type\":{\"coding\":[{\"system\":\"http://terminology.hl7.org/CodeSystem/v2-0203\",\"code\":\"MR\"}]},\"system\":\"https://bonnie-fhir.healthit.gov/\",\"value\":\"632334c2414ba67d4e1d1c32\"}],\"name\":[{\"family\":\"DENEXPass\",\"given\":[\"HospiceCareReferral\"]}],\"gender\":\"female\",\"birthDate\":\"2005-12-31\"}},{\"fullUrl\":\"Encounter/encounter-inpatient-1c2a\",\"resource\":{\"id\":\"encounter-inpatient-1c2a\",\"resourceType\":\"Encounter\",\"meta\":{\"profile\":[\"http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-encounter\"]},\"status\":\"finished\",\"class\":{\"system\":\"http://terminology.hl7.org/CodeSystem/v3-ActCode\",\"code\":\"IMP\",\"display\":\"inpatient\"},\"type\":[{\"coding\":[{\"system\":\"http://snomed.info/sct\",\"version\":\"2022-03\",\"code\":\"183452005\",\"display\":\"Emergency hospital admission (procedure)\",\"userSelected\":true}]}],\"period\":{\"start\":\"2024-01-01T00:01:00.000+00:00\",\"end\":\"2024-01-02T08:30:00.000+00:00\"},\"hospitalization\":{\"dischargeDisposition\":{\"coding\":[{\"system\":\"http://snomed.info/sct\",\"code\":\"183919006\",\"display\":\"Urgent admission to hospice (procedure)\",\"userSelected\":true}]}},\"subject\":{\"reference\":\"Patient/0e3be52f-723e-4df4-a584-337daa19e259\"}}},{\"fullUrl\":\"MedicationRequest1/schedule-ii-iii-opioid-medications-1c2b\",\"resource\":{\"id\":\"schedule-ii-iii-opioid-medications-1c2b\",\"resourceType\":\"MedicationRequest\",\"meta\":{\"profile\":[\"http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-medicationrequest\"]},\"status\":\"active\",\"intent\":\"order\",\"doNotPerform\":false,\"category\":[{\"coding\":[{\"system\":\"http://terminology.hl7.org/CodeSystem/medicationrequest-category\",\"code\":\"discharge\",\"display\":\"Discharge\",\"userSelected\":true}]}],\"medicationCodeableConcept\":{\"coding\":[{\"system\":\"http://www.nlm.nih.gov/research/umls/rxnorm\",\"code\":\"1014599\",\"display\":\"acetaminophen 300 MG / oxycodone hydrochloride 10 MG Oral Tablet\",\"userSelected\":true}]},\"authoredOn\":\"2024-01-02T08:30:00.000+00:00\",\"requester\":{\"reference\":\"Practitioner/f007\",\"display\":\"Patrick Pump\"},\"subject\":{\"reference\":\"Patient/0e3be52f-723e-4df4-a584-337daa19e259\"}}},{\"fullUrl\":\"Coverage/1\",\"resource\":{\"resourceType\":\"Coverage\",\"beneficiary\":{\"reference\":\"Patient/0e3be52f-723e-4df4-a584-337daa19e259\"},\"id\":\"1\",\"meta\":{\"profile\":[\"http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-coverage\"]},\"payor\":[{\"reference\":\"Organization/123456\"}],\"status\":\"active\"}},{\"fullUrl\":\"Organization/123456\",\"resource\":{\"resourceType\":\"Organization\",\"active\":true,\"address\":[{\"use\":\"billing\",\"type\":\"postal\",\"line\":[\"P.O. Box 660044\"],\"city\":\"Dallas\",\"state\":\"TX\",\"postalCode\":\"75266-0044\",\"country\":\"USA\"}],\"id\":\"123456\",\"identifier\":[{\"use\":\"temp\",\"system\":\"urn:oid:2.16.840.1.113883.4.4\",\"value\":\"21-3259825\"}],\"meta\":{\"profile\":[\"http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-organization\"]},\"name\":\"Blue Cross Blue Shield of Texas\",\"telecom\":[{\"system\":\"phone\",\"value\":\"(+1) 972-766-6900\"}],\"type\":[{\"coding\":[{\"system\":\"http://terminology.hl7.org/CodeSystem/organization-type\",\"code\":\"pay\",\"display\":\"Payer\"}]}]}}]}";
+    TestCase tc1 =
+        TestCase.builder().id("TC1").name("TC1").patientId(UUID.randomUUID()).json(json).build();
+    String baseUrl = "https://myorg.com";
+    ReflectionTestUtils.setField(testCaseService, "madieJsonResourcesBaseUri", baseUrl);
+    String updatedTc1 = testCaseService.updateResourceFullUrls(tc1);
+    assertNotEquals(updatedTc1, json);
+    assertTrue(updatedTc1.contains(baseUrl));
+  }
+
+  @Test
+  void updateResourceFullUrlsIfNoTestResourceAvailable() {
+    final String json =
+        "{\"id\":\"6323489059967e30c06d0774\",\"resourceType\":\"Bundle\",\"type\":\"collection\",\"entry\":[]}";
+    TestCase tc1 =
+        TestCase.builder().id("TC1").name("TC1").patientId(UUID.randomUUID()).json(json).build();
+    String baseUrl = "https://myorg.com";
+    String updatedTc1 = testCaseService.updateResourceFullUrls(tc1);
+    assertFalse(updatedTc1.contains(baseUrl));
+  }
+
+  @Test
+  void updateResourceFullUrlsIfEntryNodeNotAvailable() {
+    final String json =
+      "{\"id\":\"6323489059967e30c06d0774\",\"resourceType\":\"Bundle\",\"type\":\"collection\"}";
+    TestCase tc1 =
+      TestCase.builder().id("TC1").name("TC1").patientId(UUID.randomUUID()).json(json).build();
+    String baseUrl = "https://myorg.com";
+    String updatedTc1 = testCaseService.updateResourceFullUrls(tc1);
+    assertFalse(updatedTc1.contains(baseUrl));
   }
 }

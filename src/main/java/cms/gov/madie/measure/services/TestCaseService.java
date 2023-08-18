@@ -217,6 +217,7 @@ public class TestCaseService {
     TestCase validatedTestCase = validateTestCaseAsResource(testCase, accessToken);
     if (ModelType.QI_CORE.getValue().equalsIgnoreCase(measure.getModel())) {
       validatedTestCase.setJson(enforcePatientId(validatedTestCase));
+      validatedTestCase.setJson(updateResourceFullUrls(validatedTestCase));
     }
     measure.getTestCases().add(validatedTestCase);
 
@@ -677,15 +678,15 @@ public class TestCaseService {
         .build();
   }
 
-  public String buildFullUrlForPatient(final String newPatientId) {
-    return madieJsonResourcesBaseUri + newPatientId;
+  public String buildFullUrl(final String id, String resourceType) {
+    return madieJsonResourcesBaseUri + resourceType + "/" + id;
   }
 
   public String enforcePatientId(TestCase testCase) {
     String testCaseJson = testCase.getJson();
     if (!StringUtils.isEmpty(testCaseJson)) {
       ObjectMapper objectMapper = new ObjectMapper();
-      String modifiedjsonString = testCaseJson;
+      String modifiedJsonString = testCaseJson;
       try {
         final String newPatientId = testCase.getPatientId().toString();
         JsonNode rootNode = objectMapper.readTree(testCaseJson);
@@ -697,18 +698,14 @@ public class TestCaseService {
                 && node.get("resource").get("resourceType").asText().equalsIgnoreCase("Patient")) {
               JsonNode resourceNode = node.get("resource");
               ObjectNode o = (ObjectNode) resourceNode;
-
               ObjectNode parent = (ObjectNode) node;
-              parent.put("fullUrl", buildFullUrlForPatient(newPatientId));
-
+              parent.put("fullUrl", buildFullUrl(newPatientId, "Patient"));
               o.put("id", newPatientId);
-
-              ByteArrayOutputStream bout = getByteArrayOutputStream(objectMapper, rootNode);
-              modifiedjsonString = bout.toString();
+              modifiedJsonString = jsonNodeToString(objectMapper, rootNode);
             }
           }
         }
-        return modifiedjsonString;
+        return modifiedJsonString;
       } catch (JsonProcessingException e) {
         log.error("Error reading testCaseJson testCaseId = " + testCase.getId(), e);
       }
@@ -716,14 +713,42 @@ public class TestCaseService {
     return testCaseJson;
   }
 
-  protected ByteArrayOutputStream getByteArrayOutputStream(
-      ObjectMapper objectMapper, JsonNode rootNode) {
+  // update full urls for non-patient resources
+  public String updateResourceFullUrls(TestCase testCase) {
+    try {
+      JsonNode rootNode = mapper.readTree(testCase.getJson());
+      JsonNode entry = rootNode.get("entry");
+      if (entry != null) {
+        for (JsonNode theNode : entry) {
+          var resourceNode = theNode.get("resource");
+          if (resourceNode != null) {
+            var resourceType = resourceNode.get("resourceType").asText();
+            if (resourceType != null
+              && !"Patient".equalsIgnoreCase(resourceType)
+              && theNode.has("fullUrl")) {
+              String id = resourceNode.get("id").asText();
+              String newUrl = buildFullUrl(id, resourceType);
+              log.info("Updating the full url of a resource [{}], new fullUrl is [{}]", id, newUrl);
+              ObjectNode node = (ObjectNode) theNode;
+              node.put("fullUrl", newUrl);
+            }
+          }
+        }
+      }
+      return jsonNodeToString(mapper, rootNode);
+    } catch (JsonProcessingException ex) {
+      log.error("Error reading testCaseJson testCaseId = " + testCase.getId(), ex);
+    }
+    return testCase.getJson();
+  }
+
+  protected String jsonNodeToString(ObjectMapper objectMapper, JsonNode rootNode) {
     ByteArrayOutputStream bout = new ByteArrayOutputStream();
     try {
       objectMapper.writerWithDefaultPrettyPrinter().writeValue(bout, rootNode);
     } catch (Exception ex) {
       log.error("Exception : " + ex.getMessage());
     }
-    return bout;
+    return bout.toString();
   }
 }
