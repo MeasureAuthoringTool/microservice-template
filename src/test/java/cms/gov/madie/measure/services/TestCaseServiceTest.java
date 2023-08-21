@@ -273,6 +273,14 @@ public class TestCaseServiceTest implements ResourceUtil {
   }
 
   @Test
+  public void testValidateTestCaseAsResourceNull() {
+    final String accessToken = "Bearer Token";
+    TestCase output =
+        testCaseService.validateTestCaseAsResource(null, ModelType.QDM_5_6, accessToken);
+    assertThat(output, is(nullValue()));
+  }
+
+  @Test
   public void testValidateTestCaseAsResourceHandlesNullTestCase() {
     TestCase testCase = null;
     final String accessToken = "Bearer Token";
