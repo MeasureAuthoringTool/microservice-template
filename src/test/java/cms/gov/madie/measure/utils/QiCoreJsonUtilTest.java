@@ -2,22 +2,32 @@ package cms.gov.madie.measure.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import lombok.extern.slf4j.Slf4j;
+
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.ByteArrayOutputStream;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @ExtendWith(MockitoExtension.class)
 public class QiCoreJsonUtilTest {
 
+  private TestCase testCase =
+      TestCase.builder().patientId(UUID.fromString("3d2abb9d-c10a-4ab3-ae1a-1684ab61c07e")).build();
   final String json =
       "{\"resourceType\":\"Bundle\",\"id\":\"2106\",\"meta\":{\"versionId\":\"1\",\"lastUpdated\":\"2022-09-06T20:47:21.183+00:00\"},\"type\":\"collection\",\"entry\":[{\"fullUrl\":\"http://local/Encounter/2\",\"resource\":{\"id\":\"2\",\"resourceType\":\"Encounter\",\"meta\":{\"versionId\":\"1\",\"lastUpdated\":\"2021-10-13T03:34:10.160+00:00\",\"source\":\"#nEcAkGd8PRwPP5fA\"},\"text\":{\"status\":\"generated\",\"div\":\"<div xmlns=\\\"http://www.w3.org/1999/xhtml\\\">Sep 9th 2021 for Asthma<a name=\\\"mm\\\"/></div>\"},\"class\":{\"system\":\"http://terminology.hl7.org/CodeSystem/v3-ActCode\",\"code\":\"IMP\",\"display\":\"inpatient encounter\"},\"status\":\"planned\",\"type\":[{\"text\":\"OutPatient\"}],\"subject\":{\"reference\":\"Patient/1\"},\"participant\":[{\"individual\":{\"reference\":\"Practitioner/30164\",\"display\":\"Dr John Doe\"}}],\"period\":{\"start\":\"2023-08-10T03:34:10.054Z\",\"end\":\"2023-08-15T03:34:10.054Z\"}}},{\"fullUrl\":\"http://local/Encounter/3\",\"resource\":{\"id\":\"3\",\"resourceType\":\"Encounter\",\"meta\":{\"versionId\":\"1\",\"lastUpdated\":\"2021-10-13T03:34:10.160+00:00\",\"source\":\"#nEcAkGd8PRwPP5fA\"},\"text\":{\"status\":\"generated\",\"div\":\"<div xmlns=\\\"http://www.w3.org/1999/xhtml\\\">Sep 9th 2021 for Asthma<a name=\\\"mm\\\"/></div>\"},\"class\":{\"system\":\"http://terminology.hl7.org/CodeSystem/v3-ActCode\",\"code\":\"IMP\",\"display\":\"inpatient encounter\"},\"status\":\"finished\",\"type\":[{\"text\":\"OutPatient\"}],\"subject\":{\"reference\":\"Patient/1\"},\"participant\":[{\"individual\":{\"reference\":\"Practitioner/30164\",\"display\":\"Dr John Doe\"}}],\"period\":{\"start\":\"2023-09-12T03:34:10.054Z\",\"end\":\"2023-09-13T09:34:10.054Z\"}}},{\"fullUrl\":\"http://local/Patient/1\",\"resource\":{\"id\":\"1\",\"resourceType\":\"Patient\",\"text\":{\"status\":\"generated\",\"div\":\"<div xmlns=\\\"http://www.w3.org/1999/xhtml\\\">Lizzy Health</div>\"},\"meta\":{\"profile\":\"http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-patient\"},\"identifier\":[{\"system\":\"http://clinfhir.com/fhir/NamingSystem/identifier\",\"value\":\"20181011LizzyHealth\"}],\"name\":[{\"use\":\"official\",\"text\":\"Lizzy Health\",\"family\":\"Health\",\"given\":[\"Lizzy\"]}],\"gender\":\"female\",\"birthDate\":\"2000-10-11\"}}]}";
   final String json2 =
@@ -486,6 +496,70 @@ public class QiCoreJsonUtilTest {
     List<TestCaseGroupPopulation> testCaseGroupPopulations =
         QiCoreJsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noCount);
     assertThat(testCaseGroupPopulations.size(), is(equalTo(0)));
+  }
+
+  @Test
+  public void testEnforcePatientIdEmptyJson() {
+    testCase.setJson(null);
+    String modifiedJson = QiCoreJsonUtil.enforcePatientId(testCase);
+    assertNull(modifiedJson);
+  }
+
+  @Test
+  public void testEnforcePatientIdNoEntry() {
+    String json = "{\"resourceType\": \"Bundle\", \"type\": \"collection\"}";
+    testCase.setJson(json);
+    String modifiedJson = QiCoreJsonUtil.enforcePatientId(testCase);
+    assertEquals(modifiedJson, json);
+  }
+
+  @Test
+  public void testEnforcePatientIdNoResource() {
+    String json =
+        "{\"resourceType\": \"Bundle\", \"type\": \"collection\", \n"
+            + "  \"entry\" : [ {\n"
+            + "    \"fullUrl\" : \"http://local/Patient/1\"\n"
+            + "  } ]             }";
+    testCase.setJson(json);
+    String modifiedJson = QiCoreJsonUtil.enforcePatientId(testCase);
+    assertEquals(modifiedJson, json);
+  }
+
+  @Test
+  public void testEnforcePatientIdNoResourceType() {
+    String json =
+        "{\"resourceType\": \"Bundle\", \"type\": \"collection\", \n"
+            + "  \"entry\" : [ {\n"
+            + "    \"fullUrl\" : \"http://local/Patient/1\",\n"
+            + "    \"resource\" : {\n"
+            + "      \"id\" : \"testUniqueId\"\n"
+            + "    }\n"
+            + "  } ]             }";
+    testCase.setJson(json);
+    String modifiedJson = QiCoreJsonUtil.enforcePatientId(testCase);
+    assertEquals(modifiedJson, json);
+  }
+
+  @Test
+  public void testEnforcePatientIdNoPatientResourceType() {
+    String json =
+        "{\"resourceType\": \"Bundle\", \"type\": \"collection\", \n"
+            + "  \"entry\" : [ {\n"
+            + "    \"fullUrl\" : \"http://local/Patient/1\",\n"
+            + "    \"resource\" : {\n"
+            + "      \"id\" : \"testUniqueId\",\n"
+            + "      \"resourceType\" : \"NOTPatient\"    \n"
+            + "    }\n"
+            + "  } ]             }";
+    testCase.setJson(json);
+    String modifiedJson = QiCoreJsonUtil.enforcePatientId(testCase);
+    assertEquals(modifiedJson, json);
+  }
+
+  @Test
+  public void testGetByteArrayOutputStreamThrowsException() {
+    ByteArrayOutputStream bout = QiCoreJsonUtil.getByteArrayOutputStream(null, null);
+    assertTrue(StringUtils.isAllBlank(bout.toString()));
   }
 
   @Test

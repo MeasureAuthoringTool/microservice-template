@@ -4,22 +4,31 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import gov.cms.madie.models.measure.PopulationType;
+import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import gov.cms.madie.models.measure.TestCasePopulationValue;
+import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+@Slf4j
 public final class QiCoreJsonUtil {
   private QiCoreJsonUtil() {}
+
+  @Value("${madie.json.resources.base-uri}")
+  private static String madieJsonResourcesBaseUri;
 
   public static boolean isValidJson(String json) {
     ObjectMapper mapper = new ObjectMapper();
@@ -198,6 +207,57 @@ public final class QiCoreJsonUtil {
       }
     }
     return groupPopulations;
+  }
+
+  public static String enforcePatientId(TestCase testCase) {
+    String testCaseJson = testCase.getJson();
+    if (!StringUtils.isEmpty(testCaseJson)) {
+      ObjectMapper objectMapper = new ObjectMapper();
+      String modifiedjsonString = testCaseJson;
+      try {
+        final String newPatientId = testCase.getPatientId().toString();
+        JsonNode rootNode = objectMapper.readTree(testCaseJson);
+        ArrayNode allEntries = (ArrayNode) rootNode.get("entry");
+        if (allEntries != null) {
+          for (JsonNode node : allEntries) {
+            if (node.get("resource") != null
+                && node.get("resource").get("resourceType") != null
+                && node.get("resource").get("resourceType").asText().equalsIgnoreCase("Patient")) {
+              JsonNode resourceNode = node.get("resource");
+              ObjectNode o = (ObjectNode) resourceNode;
+
+              ObjectNode parent = (ObjectNode) node;
+              parent.put("fullUrl", buildFullUrlForPatient(newPatientId));
+
+              o.put("id", newPatientId);
+
+              ByteArrayOutputStream bout = getByteArrayOutputStream(objectMapper, rootNode);
+              modifiedjsonString = bout.toString();
+            }
+          }
+        }
+
+        return modifiedjsonString;
+      } catch (JsonProcessingException e) {
+        log.error("Error reading testCaseJson testCaseId = " + testCase.getId(), e);
+      }
+    }
+    return testCaseJson;
+  }
+
+  protected static ByteArrayOutputStream getByteArrayOutputStream(
+      ObjectMapper objectMapper, JsonNode rootNode) {
+    ByteArrayOutputStream bout = new ByteArrayOutputStream();
+    try {
+      objectMapper.writerWithDefaultPrettyPrinter().writeValue(bout, rootNode);
+    } catch (Exception ex) {
+      log.error("Exception : " + ex.getMessage());
+    }
+    return bout;
+  }
+
+  public static String buildFullUrlForPatient(final String newPatientId) {
+    return madieJsonResourcesBaseUri + newPatientId;
   }
 
   public static String removeMeasureReportFromJson(String testCaseJson)

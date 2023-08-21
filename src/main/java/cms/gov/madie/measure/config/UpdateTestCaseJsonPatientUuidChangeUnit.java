@@ -49,8 +49,7 @@ public class UpdateTestCaseJsonPatientUuidChangeUnit {
                               return;
                             }
                             try {
-                              testCase.setJson(
-                                  updateJsonForUuids(testCaseService, measure.getId(), testCase));
+                              testCase.setJson(updateJsonForUuids(measure.getId(), testCase));
                             } catch (Exception ex) {
                               log.info(
                                   "Error updating Measure [{}], TestCase [{}]",
@@ -67,8 +66,7 @@ public class UpdateTestCaseJsonPatientUuidChangeUnit {
     log.info("COMPLETED - update_testcase_json_patient_uuid");
   }
 
-  protected String updateJsonForUuids(
-      TestCaseService testCaseService, final String measureId, TestCase testCase)
+  protected String updateJsonForUuids(final String measureId, TestCase testCase)
       throws JsonProcessingException {
     UUID patientIdUuid = testCase.getPatientId();
     if (patientIdUuid == null) {
@@ -84,7 +82,8 @@ public class UpdateTestCaseJsonPatientUuidChangeUnit {
 
     // Refs update makes the assumption that the ref will start with
     // Patient/
-    String updatedJson = testCaseService.enforcePatientId(testCase);
+    String updatedJson = QiCoreJsonUtil.enforcePatientId(testCase);
+
     final String previousJson = updatedJson;
     updatedJson = QiCoreJsonUtil.replacePatientRefs(updatedJson, newPatientId);
 

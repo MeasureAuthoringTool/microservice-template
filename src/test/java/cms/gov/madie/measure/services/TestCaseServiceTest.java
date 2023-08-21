@@ -13,23 +13,27 @@ import static org.mockito.Mockito.*;
 import cms.gov.madie.measure.HapiFhirConfig;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
-import cms.gov.madie.measure.utils.ResourceUtil;
 import cms.gov.madie.measure.utils.TestCaseServiceUtil;
-
+import cms.gov.madie.measure.utils.ResourceUtil;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.*;
+
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.bson.types.ObjectId;
@@ -704,70 +708,6 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertThrows(
         ResourceNotFoundException.class,
         () -> testCaseService.updateTestCase(testCase, measure.getId(), "test.user", "TOKEN"));
-  }
-
-  @Test
-  public void testEnforcePatientIdEmptyJson() {
-    testCase.setJson(null);
-    String modifiedJson = testCaseService.enforcePatientId(testCase);
-    assertNull(modifiedJson);
-  }
-
-  @Test
-  public void testEnforcePatientIdNoEntry() {
-    String json = "{\"resourceType\": \"Bundle\", \"type\": \"collection\"}";
-    testCase.setJson(json);
-    String modifiedJson = testCaseService.enforcePatientId(testCase);
-    assertEquals(modifiedJson, json);
-  }
-
-  @Test
-  public void testEnforcePatientIdNoResource() {
-    String json =
-        "{\"resourceType\": \"Bundle\", \"type\": \"collection\", \n"
-            + "  \"entry\" : [ {\n"
-            + "    \"fullUrl\" : \"http://local/Patient/1\"\n"
-            + "  } ]             }";
-    testCase.setJson(json);
-    String modifiedJson = testCaseService.enforcePatientId(testCase);
-    assertEquals(modifiedJson, json);
-  }
-
-  @Test
-  public void testEnforcePatientIdNoResourceType() {
-    String json =
-        "{\"resourceType\": \"Bundle\", \"type\": \"collection\", \n"
-            + "  \"entry\" : [ {\n"
-            + "    \"fullUrl\" : \"http://local/Patient/1\",\n"
-            + "    \"resource\" : {\n"
-            + "      \"id\" : \"testUniqueId\"\n"
-            + "    }\n"
-            + "  } ]             }";
-    testCase.setJson(json);
-    String modifiedJson = testCaseService.enforcePatientId(testCase);
-    assertEquals(modifiedJson, json);
-  }
-
-  @Test
-  public void testEnforcePatientIdNoPatientResourceType() {
-    String json =
-        "{\"resourceType\": \"Bundle\", \"type\": \"collection\", \n"
-            + "  \"entry\" : [ {\n"
-            + "    \"fullUrl\" : \"http://local/Patient/1\",\n"
-            + "    \"resource\" : {\n"
-            + "      \"id\" : \"testUniqueId\",\n"
-            + "      \"resourceType\" : \"NOTPatient\"    \n"
-            + "    }\n"
-            + "  } ]             }";
-    testCase.setJson(json);
-    String modifiedJson = testCaseService.enforcePatientId(testCase);
-    assertEquals(modifiedJson, json);
-  }
-
-  @Test
-  public void testGetByteArrayOutputStreamThrowsException() {
-    ByteArrayOutputStream bout = testCaseService.getByteArrayOutputStream(null, null);
-    assertTrue(StringUtils.isAllBlank(bout.toString()));
   }
 
   @Test
@@ -1481,7 +1421,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
     assertFalse(response.get(0).isSuccessful());
     assertEquals(
-        "Unable to import test case, please try again. if the error persists, Please contact helpdesk.",
+        "Unable to import test case, please try again. If the error persists, Please contact helpdesk.",
         response.get(0).getMessage());
   }
 
@@ -1633,6 +1573,9 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
         .thenReturn(List.of(group));
+    when(testCaseServiceUtil.matchCriteriaGroups(
+            any(List.class), any(List.class), any(TestCase.class)))
+        .thenReturn(true);
 
     doReturn(updatedTestCase)
         .when(testCaseService)
@@ -1688,201 +1631,9 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
         .thenReturn(List.of(group));
-
-    doReturn(updatedTestCase)
-        .when(testCaseService)
-        .updateTestCase(any(), anyString(), anyString(), anyString());
-    var testCaseImportRequest =
-        TestCaseImportRequest.builder()
-            .patientId(UUID.randomUUID())
-            .json(testCaseImportWithMeasureReport)
-            .build();
-
-    var response =
-        testCaseService.importTestCases(
-            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
-    assertEquals(1, response.size());
-    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertTrue(response.get(0).isSuccessful());
-  }
-
-  @Test
-  void importTestCasesCreateNewAllCriteriaMatchedNoPopulationBasis() {
-    population1 =
-        Population.builder()
-            .name(PopulationType.INITIAL_POPULATION)
-            .definition("Initial Population")
-            .build();
-    population2 =
-        Population.builder().name(PopulationType.DENOMINATOR).definition("Denominator").build();
-    population3 =
-        Population.builder()
-            .name(PopulationType.DENOMINATOR_EXCLUSION)
-            .definition("Denominator Exclusion")
-            .build();
-    population4 =
-        Population.builder().name(PopulationType.NUMERATOR).definition("Numerator").build();
-    population5 =
-        Population.builder()
-            .name(PopulationType.DENOMINATOR_EXCEPTION)
-            .definition("Numerator Exclusion")
-            .build();
-    group =
-        Group.builder()
-            .id("testGroupId")
-            .scoring(MeasureScoring.COHORT.name())
-            .populations(List.of(population1, population2, population3, population4, population5))
-            .build();
-    measure.setGroups(List.of(group));
-
-    measure.setTestCases(List.of(testCase));
-    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
-
-    TestCase updatedTestCase = testCase;
-    updatedTestCase.setJson(testCaseImportWithMeasureReport);
-
-    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
-        .thenReturn(List.of(group));
-
-    doReturn(updatedTestCase)
-        .when(testCaseService)
-        .updateTestCase(any(), anyString(), anyString(), anyString());
-    var testCaseImportRequest =
-        TestCaseImportRequest.builder()
-            .patientId(UUID.randomUUID())
-            .json(testCaseImportWithMeasureReport)
-            .build();
-
-    var response =
-        testCaseService.importTestCases(
-            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
-    assertEquals(1, response.size());
-    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertTrue(response.get(0).isSuccessful());
-  }
-
-  @Test
-  void importTestCasesCreateNewAllCriteriaMatchedPatientBased() {
-    population1 =
-        Population.builder()
-            .name(PopulationType.INITIAL_POPULATION)
-            .definition("Initial Population")
-            .build();
-    population2 =
-        Population.builder().name(PopulationType.DENOMINATOR).definition("Denominator").build();
-    population3 =
-        Population.builder()
-            .name(PopulationType.DENOMINATOR_EXCLUSION)
-            .definition("Denominator Exclusion")
-            .build();
-    population4 =
-        Population.builder().name(PopulationType.NUMERATOR).definition("Numerator").build();
-    population5 =
-        Population.builder()
-            .name(PopulationType.DENOMINATOR_EXCEPTION)
-            .definition("Numerator Exceptiob")
-            .build();
-    group =
-        Group.builder()
-            .id("testGroupId")
-            .scoring(MeasureScoring.COHORT.name())
-            .populationBasis("Boolean")
-            .populations(List.of(population1, population2, population3, population4, population5))
-            .build();
-    measure.setGroups(List.of(group));
-
-    measure.setTestCases(List.of(testCase));
-    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
-
-    TestCase updatedTestCase = testCase;
-    updatedTestCase.setJson(testCaseImportWithMeasureReport);
-
-    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
-        .thenReturn(List.of(group));
-
-    doReturn(updatedTestCase)
-        .when(testCaseService)
-        .updateTestCase(any(), anyString(), anyString(), anyString());
-    var testCaseImportRequest =
-        TestCaseImportRequest.builder()
-            .patientId(UUID.randomUUID())
-            .json(testCaseImportWithMeasureReport)
-            .build();
-
-    var response =
-        testCaseService.importTestCases(
-            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
-    assertEquals(1, response.size());
-    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertTrue(response.get(0).isSuccessful());
-  }
-
-  @Test
-  void importTestCasesCreateNewGroupDoesNotMatch() {
-    group =
-        Group.builder()
-            .id("testGroupId")
-            .scoring(MeasureScoring.COHORT.name())
-            .populationBasis("Boolean")
-            .build();
-    Group group2 =
-        Group.builder()
-            .id("testGroupId2")
-            .scoring(MeasureScoring.COHORT.name())
-            .populationBasis("Boolean")
-            .build();
-    measure.setGroups(List.of(group, group2));
-
-    measure.setTestCases(List.of(testCase));
-    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
-
-    TestCase updatedTestCase = testCase;
-    updatedTestCase.setJson(testCaseImportWithMeasureReport);
-
-    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
-        .thenReturn(List.of(group));
-
-    doReturn(updatedTestCase)
-        .when(testCaseService)
-        .updateTestCase(any(), anyString(), anyString(), anyString());
-    var testCaseImportRequest =
-        TestCaseImportRequest.builder()
-            .patientId(UUID.randomUUID())
-            .json(testCaseImportWithMeasureReport)
-            .build();
-
-    var response =
-        testCaseService.importTestCases(
-            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
-    assertEquals(1, response.size());
-    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertTrue(response.get(0).isSuccessful());
-    assertEquals(
-        "The measure populations do not match the populations in the import file. "
-            + "The Test Case has been imported, but no expected values have been set.",
-        response.get(0).getMessage());
-  }
-
-  @Test
-  void importTestCasesCreateNewGroupPopulationDoesNotMatch() {
-    population1 = Population.builder().name(PopulationType.INITIAL_POPULATION).build();
-    group =
-        Group.builder()
-            .id("testGroupId")
-            .scoring(MeasureScoring.COHORT.name())
-            .populationBasis("Boolean")
-            .populations(List.of(population1))
-            .build();
-    measure.setGroups(List.of(group));
-
-    measure.setTestCases(List.of(testCase));
-    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
-
-    TestCase updatedTestCase = testCase;
-    updatedTestCase.setJson(testCaseImportWithMeasureReport);
-
-    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
-        .thenReturn(List.of(group));
+    when(testCaseServiceUtil.matchCriteriaGroups(
+            any(List.class), any(List.class), any(TestCase.class)))
+        .thenReturn(true);
 
     doReturn(updatedTestCase)
         .when(testCaseService)
@@ -1940,132 +1691,7 @@ public class TestCaseServiceTest implements ResourceUtil {
             List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertTrue(response.get(0).isSuccessful());
-  }
-
-  @Test
-  void importTestCasesCreateNewNoGroups() {
-    group =
-        Group.builder()
-            .id("testGroupId")
-            .scoring(MeasureScoring.COHORT.name())
-            .populationBasis("Boolean")
-            .build();
-    measure.setGroups(List.of(group));
-
-    measure.setTestCases(List.of(testCase));
-    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
-
-    TestCase updatedTestCase = testCase;
-    updatedTestCase.setJson(testCaseImportWithMeasureReport);
-
-    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
-        .thenReturn(List.of(group));
-
-    doReturn(updatedTestCase)
-        .when(testCaseService)
-        .updateTestCase(any(), anyString(), anyString(), anyString());
-    var testCaseImportRequest =
-        TestCaseImportRequest.builder()
-            .patientId(UUID.randomUUID())
-            .json(testCaseImportWithMeasureReport)
-            .build();
-
-    var response =
-        testCaseService.importTestCases(
-            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
-    assertEquals(1, response.size());
-    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertTrue(response.get(0).isSuccessful());
-  }
-
-  @Test
-  void importTestCasesCreateNewNoGroupPopulations() {
-    measure.setTestCases(List.of(testCase));
-    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
-
-    TestCase updatedTestCase = testCase;
-    updatedTestCase.setJson(testCaseImportWithMeasureReport);
-
-    doReturn(updatedTestCase)
-        .when(testCaseService)
-        .updateTestCase(any(), anyString(), anyString(), anyString());
-    var testCaseImportRequest =
-        TestCaseImportRequest.builder()
-            .patientId(UUID.randomUUID())
-            .json(testCaseImportWithMeasureReport)
-            .build();
-
-    var response =
-        testCaseService.importTestCases(
-            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
-    assertEquals(1, response.size());
-    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertTrue(response.get(0).isSuccessful());
-  }
-
-  @Test
-  void importTestCasesCreateNewNoTestCasePopulationsFromMeasureReport()
-      throws JsonProcessingException {
-    String testCaseImportWithoutMeasureReport = null;
-    testCaseImportWithoutMeasureReport =
-        removeMeasureReportFromJson(testCaseImportWithMeasureReport);
-    group =
-        Group.builder()
-            .id("testGroupId")
-            .scoring(MeasureScoring.COHORT.name())
-            .populationBasis("Boolean")
-            .build();
-    measure.setGroups(List.of(group));
-
-    measure.setTestCases(List.of(testCase));
-    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
-
-    TestCase updatedTestCase = testCase;
-    updatedTestCase.setJson(testCaseImportWithoutMeasureReport);
-
-    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
-        .thenReturn(List.of(group));
-
-    doReturn(updatedTestCase)
-        .when(testCaseService)
-        .updateTestCase(any(), anyString(), anyString(), anyString());
-    var testCaseImportRequest =
-        TestCaseImportRequest.builder()
-            .patientId(UUID.randomUUID())
-            .json(testCaseImportWithoutMeasureReport)
-            .build();
-
-    var response =
-        testCaseService.importTestCases(
-            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
-    assertEquals(1, response.size());
-    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertTrue(response.get(0).isSuccessful());
-  }
-
-  private String removeMeasureReportFromJson(String testCaseJson) throws JsonProcessingException {
-    if (!StringUtils.isEmpty(testCaseJson)) {
-      ObjectMapper objectMapper = new ObjectMapper();
-
-      JsonNode rootNode = objectMapper.readTree(testCaseJson);
-      ArrayNode entryArray = (ArrayNode) rootNode.get("entry");
-
-      List<JsonNode> filteredList = new ArrayList<>();
-      for (JsonNode entryNode : entryArray) {
-
-        if (!"MeasureReport"
-            .equalsIgnoreCase(entryNode.get("resource").get("resourceType").asText())) {
-          filteredList.add(entryNode);
-        }
-      }
-
-      entryArray.removeAll();
-      filteredList.forEach(entryArray::add);
-      return objectMapper.writeValueAsString(rootNode);
-    } else {
-      throw new RuntimeException("Unable to find Test case Json");
-    }
+    assertFalse(response.get(0).isSuccessful());
   }
 
   @Test
@@ -2101,6 +1727,50 @@ public class TestCaseServiceTest implements ResourceUtil {
             List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
     assertEquals(1, response.size());
     assertFalse(response.get(0).isSuccessful());
+  }
+
+  @Test
+  void importTestCasesDoesNotCreateNewNoGivenName() throws IOException {
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
+    String testCaseImportWithoutGivenName =
+        removeGivenNameFromJson(testCaseImportWithMeasureReport);
+    var testCaseImportRequest =
+        TestCaseImportRequest.builder()
+            .patientId(UUID.randomUUID())
+            .json(testCaseImportWithoutGivenName)
+            .build();
+
+    var response =
+        testCaseService.importTestCases(
+            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
+    assertFalse(response.get(0).isSuccessful());
+    assertEquals("Test Case Title is required.", response.get(0).getMessage());
+  }
+
+  private String removeGivenNameFromJson(String testCaseJson) throws IOException {
+    String modifiedjsonString = testCaseJson;
+    if (!StringUtils.isEmpty(testCaseJson)) {
+      ObjectMapper objectMapper = new ObjectMapper();
+
+      JsonNode rootNode = objectMapper.readTree(testCaseJson);
+      ArrayNode entryArray = (ArrayNode) rootNode.get("entry");
+
+      for (JsonNode entryNode : entryArray) {
+        if ("Patient".equalsIgnoreCase(entryNode.get("resource").get("resourceType").asText())) {
+
+          JsonNode resourceNode = entryNode.get("resource");
+          ObjectNode o = (ObjectNode) resourceNode;
+          ObjectNode parent = (ObjectNode) o;
+
+          parent.remove("name");
+
+          ByteArrayOutputStream bout = new ByteArrayOutputStream();
+          objectMapper.writerWithDefaultPrettyPrinter().writeValue(bout, rootNode);
+          modifiedjsonString = bout.toString();
+        }
+      }
+    }
+    return modifiedjsonString;
   }
 
   @Test

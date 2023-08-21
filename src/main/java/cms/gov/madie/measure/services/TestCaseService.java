@@ -4,7 +4,6 @@ import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.HapiOperationOutcome;
 import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import gov.cms.madie.models.measure.Group;
@@ -14,24 +13,17 @@ import cms.gov.madie.measure.utils.QiCoreJsonUtil;
 import cms.gov.madie.measure.utils.TestCaseServiceUtil;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import gov.cms.madie.models.measure.TestCaseImportOutcome;
 import gov.cms.madie.models.measure.TestCaseImportRequest;
-import gov.cms.madie.models.measure.TestCasePopulationValue;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.HttpClientErrorException;
-import java.io.ByteArrayOutputStream;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -47,9 +39,6 @@ public class TestCaseService {
   private ObjectMapper mapper;
   private MeasureService measureService;
   private TestCaseServiceUtil testCaseServiceUtil;
-
-  @Value("${madie.json.resources.base-uri}")
-  private String madieJsonResourcesBaseUri;
 
   @Autowired
   public TestCaseService(
@@ -216,7 +205,7 @@ public class TestCaseService {
     }
     TestCase validatedTestCase = validateTestCaseAsResource(testCase, accessToken);
     if (ModelType.QI_CORE.getValue().equalsIgnoreCase(measure.getModel())) {
-      validatedTestCase.setJson(enforcePatientId(validatedTestCase));
+      validatedTestCase.setJson(QiCoreJsonUtil.enforcePatientId(validatedTestCase));
     }
     measure.getTestCases().add(validatedTestCase);
 
@@ -399,6 +388,13 @@ public class TestCaseService {
           QiCoreJsonUtil.getPatientName(testCaseImportRequest.getJson(), "given");
       log.info(
           "Test Case title + Test Case Group:  {}", patientGivenName + " " + patientFamilyName);
+      if (StringUtils.isBlank(patientGivenName)) {
+        return TestCaseImportOutcome.builder()
+            .patientId(testCaseImportRequest.getPatientId())
+            .successful(false)
+            .message("Test Case Title is required.")
+            .build();
+      }
       TestCase newTestCase =
           TestCase.builder()
               .title(patientGivenName)
@@ -409,7 +405,8 @@ public class TestCaseService {
           QiCoreJsonUtil.getTestCaseGroupPopulationsFromMeasureReport(
               testCaseImportRequest.getJson());
       List<Group> groups = testCaseServiceUtil.getGroupsWithValidPopulations(measure.getGroups());
-      boolean matched = matchCriteriaGroups(testCaseGroupPopulations, groups, newTestCase);
+      boolean matched =
+          testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, groups, newTestCase);
       String warningMessage = null;
       if (!matched) {
         warningMessage =
@@ -440,114 +437,6 @@ public class TestCaseService {
     }
   }
 
-  // match criteria groups from MeasureReport in imported json file
-  private boolean matchCriteriaGroups(
-      List<TestCaseGroupPopulation> testCaseGroupPopulations,
-      List<Group> groups,
-      TestCase newTestCase) {
-    boolean isValid = true;
-    List<TestCaseGroupPopulation> groupPopulations = null;
-    // group size has to match
-    if (!CollectionUtils.isEmpty(groups)
-        && !CollectionUtils.isEmpty(testCaseGroupPopulations)
-        && groups.size() == testCaseGroupPopulations.size()) {
-      groupPopulations = new ArrayList<>();
-      for (int i = 0; i < groups.size(); i++) {
-        Group group = groups.get(i);
-        // group population size has to match
-        if (!CollectionUtils.isEmpty(group.getPopulations())
-            && !CollectionUtils.isEmpty(testCaseGroupPopulations.get(i).getPopulationValues())
-            && group.getPopulations().size()
-                == testCaseGroupPopulations.get(i).getPopulationValues().size()) {
-          isValid =
-              mapPopulationValues(
-                  group, testCaseGroupPopulations, i, groupPopulations, newTestCase, isValid);
-        } else {
-          isValid = false;
-        }
-      }
-    } else {
-      isValid = false;
-    }
-    return isValid;
-  }
-
-  private TestCaseGroupPopulation assignTestCaseGroupPopulation(Group group) {
-    return TestCaseGroupPopulation.builder()
-        .groupId(group.getId())
-        .scoring(group.getScoring())
-        .populationBasis(group.getPopulationBasis())
-        .build();
-  }
-
-  private boolean mapPopulationValues(
-      Group group,
-      List<TestCaseGroupPopulation> testCaseGroupPopulations,
-      int i,
-      List<TestCaseGroupPopulation> groupPopulations,
-      TestCase newTestCase,
-      boolean isValid) {
-    TestCaseGroupPopulation groupPopulation = assignTestCaseGroupPopulation(group);
-    List<TestCasePopulationValue> populationValues = new ArrayList<>();
-    int matchedNumber = 0;
-    for (int j = 0; j < group.getPopulations().size(); j++) {
-      Population population = group.getPopulations().get(j);
-      matchedNumber =
-          assignPopulationValues(
-              population,
-              testCaseGroupPopulations,
-              i,
-              j,
-              matchedNumber,
-              group,
-              populationValues,
-              groupPopulation);
-      // check if matchedNumber is correct
-      if (j == group.getPopulations().size() - 1) {
-        if (matchedNumber == group.getPopulations().size()) {
-          groupPopulations.add(groupPopulation);
-          newTestCase.setGroupPopulations(groupPopulations);
-        } else {
-          isValid = false;
-        }
-      }
-    }
-    return isValid;
-  }
-
-  private int assignPopulationValues(
-      Population population,
-      List<TestCaseGroupPopulation> testCaseGroupPopulations,
-      int i,
-      int j,
-      int matchedNumber,
-      Group group,
-      List<TestCasePopulationValue> populationValues,
-      TestCaseGroupPopulation groupPopulation) {
-    if (population
-        .getName()
-        .toCode()
-        .equalsIgnoreCase(
-            testCaseGroupPopulations.get(i).getPopulationValues().get(j).getName().toCode())) {
-      matchedNumber++;
-
-      TestCasePopulationValue populationValue =
-          testCaseGroupPopulations.get(i).getPopulationValues().get(j);
-      if (group.getPopulationBasis() != null
-          && group.getPopulationBasis().equalsIgnoreCase("boolean")) {
-        String originalValue = (String) populationValue.getExpected();
-        if (originalValue.equalsIgnoreCase("1")) {
-          populationValue.setExpected("true");
-        } else {
-          populationValue.setExpected("false");
-        }
-      }
-      populationValues.add(populationValue);
-      groupPopulation.setPopulationValues(populationValues);
-    }
-    return matchedNumber;
-  }
-
   private TestCaseImportOutcome updateTestCaseJsonAndSaveTestCase(
       TestCase existingTestCase,
       TestCaseImportRequest testCaseImportRequest,
@@ -555,6 +444,11 @@ public class TestCaseService {
       String userName,
       String accessToken,
       String warningMessage) {
+    TestCaseImportOutcome failureOutcome =
+        TestCaseImportOutcome.builder()
+            .patientId(testCaseImportRequest.getPatientId())
+            .successful(false)
+            .build();
     try {
       existingTestCase.setJson(
           QiCoreJsonUtil.removeMeasureReportFromJson(testCaseImportRequest.getJson()));
@@ -570,6 +464,7 @@ public class TestCaseService {
               .build();
       if (warningMessage != null) {
         testCaseImportOutcome.setMessage(warningMessage);
+        testCaseImportOutcome.setSuccessful(false);
       }
       return testCaseImportOutcome;
     } catch (JsonProcessingException e) {
@@ -578,12 +473,9 @@ public class TestCaseService {
               + "{} due to Malformed test case json bundle",
           userName,
           testCaseImportRequest.getPatientId());
-      return TestCaseImportOutcome.builder()
-          .patientId(testCaseImportRequest.getPatientId())
-          .successful(false)
-          .message(
-              "Error while processing Test Case JSON.  Please make sure Test Case JSON is valid.")
-          .build();
+      failureOutcome.setMessage(
+          "Error while processing Test Case JSON.  Please make sure Test Case JSON is valid.");
+      return failureOutcome;
     } catch (ResourceNotFoundException
         | InvalidDraftStatusException
         | InvalidMeasureStateException
@@ -594,24 +486,18 @@ public class TestCaseService {
           userName,
           testCaseImportRequest.getPatientId(),
           e.getMessage());
-      return TestCaseImportOutcome.builder()
-          .patientId(testCaseImportRequest.getPatientId())
-          .successful(false)
-          .message(e.getMessage())
-          .build();
+      failureOutcome.setMessage(e.getMessage());
+      return failureOutcome;
     } catch (Exception e) {
       log.info(
           "User {} is unable to import test case with patient id : {}; Error Message : {}",
           userName,
           testCaseImportRequest.getPatientId(),
           e.getMessage());
-      return TestCaseImportOutcome.builder()
-          .patientId(testCaseImportRequest.getPatientId())
-          .successful(false)
-          .message(
-              "Unable to import test case, please try again."
-                  + " if the error persists, Please contact helpdesk.")
-          .build();
+      failureOutcome.setMessage(
+          "Unable to import test case, please try again. "
+              + "If the error persists, Please contact helpdesk.");
+      return failureOutcome;
     }
   }
 
@@ -675,55 +561,5 @@ public class TestCaseService {
             "Unable to validate test case JSON due to errors, "
                 + "but outcome not able to be interpreted!")
         .build();
-  }
-
-  public String buildFullUrlForPatient(final String newPatientId) {
-    return madieJsonResourcesBaseUri + newPatientId;
-  }
-
-  public String enforcePatientId(TestCase testCase) {
-    String testCaseJson = testCase.getJson();
-    if (!StringUtils.isEmpty(testCaseJson)) {
-      ObjectMapper objectMapper = new ObjectMapper();
-      String modifiedjsonString = testCaseJson;
-      try {
-        final String newPatientId = testCase.getPatientId().toString();
-        JsonNode rootNode = objectMapper.readTree(testCaseJson);
-        ArrayNode allEntries = (ArrayNode) rootNode.get("entry");
-        if (allEntries != null) {
-          for (JsonNode node : allEntries) {
-            if (node.get("resource") != null
-                && node.get("resource").get("resourceType") != null
-                && node.get("resource").get("resourceType").asText().equalsIgnoreCase("Patient")) {
-              JsonNode resourceNode = node.get("resource");
-              ObjectNode o = (ObjectNode) resourceNode;
-
-              ObjectNode parent = (ObjectNode) node;
-              parent.put("fullUrl", buildFullUrlForPatient(newPatientId));
-
-              o.put("id", newPatientId);
-
-              ByteArrayOutputStream bout = getByteArrayOutputStream(objectMapper, rootNode);
-              modifiedjsonString = bout.toString();
-            }
-          }
-        }
-        return modifiedjsonString;
-      } catch (JsonProcessingException e) {
-        log.error("Error reading testCaseJson testCaseId = " + testCase.getId(), e);
-      }
-    }
-    return testCaseJson;
-  }
-
-  protected ByteArrayOutputStream getByteArrayOutputStream(
-      ObjectMapper objectMapper, JsonNode rootNode) {
-    ByteArrayOutputStream bout = new ByteArrayOutputStream();
-    try {
-      objectMapper.writerWithDefaultPrettyPrinter().writeValue(bout, rootNode);
-    } catch (Exception ex) {
-      log.error("Exception : " + ex.getMessage());
-    }
-    return bout;
   }
 }
