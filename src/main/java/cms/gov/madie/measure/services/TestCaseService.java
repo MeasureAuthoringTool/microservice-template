@@ -110,7 +110,9 @@ public class TestCaseService {
     verifyUniqueTestCaseName(testCase, measure);
 
     TestCase enrichedTestCase = enrichNewTestCase(testCase, username);
-    enrichedTestCase = validateTestCaseAsResource(enrichedTestCase, accessToken);
+    enrichedTestCase =
+        validateTestCaseAsResource(
+            enrichedTestCase, ModelType.valueOfName(measure.getModel()), accessToken);
 
     if (measure.getTestCases() == null) {
       measure.setTestCases(List.of(enrichedTestCase));
@@ -144,7 +146,9 @@ public class TestCaseService {
     List<TestCase> enrichedTestCases = new ArrayList<>(newTestCases.size());
     for (TestCase testCase : newTestCases) {
       TestCase enriched = enrichNewTestCase(testCase, username);
-      enriched = validateTestCaseAsResource(enriched, accessToken);
+      enriched =
+          validateTestCaseAsResource(
+              enriched, ModelType.valueOfName(measure.getModel()), accessToken);
       enrichedTestCases.add(enriched);
       actionLogService.logAction(enriched.getId(), TestCase.class, ActionType.IMPORTED, username);
     }
@@ -164,15 +168,25 @@ public class TestCaseService {
     return enrichedTestCases;
   }
 
-  public TestCase validateTestCaseAsResource(final TestCase testCase, final String accessToken) {
-    final HapiOperationOutcome hapiOperationOutcome = validateTestCaseJson(testCase, accessToken);
-    return testCase == null
-        ? null
-        : testCase
-            .toBuilder()
-            .hapiOperationOutcome(hapiOperationOutcome)
-            .validResource(hapiOperationOutcome != null && hapiOperationOutcome.isSuccessful())
-            .build();
+  public TestCase validateTestCaseAsResource(
+      final TestCase testCase, final ModelType modelType, final String accessToken) {
+    if (ModelType.QDM_5_6.equals(modelType)) {
+      return testCase == null
+          ? null
+          : testCase
+              .toBuilder()
+              .validResource(QiCoreJsonUtil.isValidJson(testCase.getJson()))
+              .build();
+    } else {
+      final HapiOperationOutcome hapiOperationOutcome = validateTestCaseJson(testCase, accessToken);
+      return testCase == null
+          ? null
+          : testCase
+              .toBuilder()
+              .hapiOperationOutcome(hapiOperationOutcome)
+              .validResource(hapiOperationOutcome != null && hapiOperationOutcome.isSuccessful())
+              .build();
+    }
   }
 
   public TestCase updateTestCase(
@@ -214,7 +228,9 @@ public class TestCaseService {
         testCase.setPatientId(UUID.randomUUID());
       }
     }
-    TestCase validatedTestCase = validateTestCaseAsResource(testCase, accessToken);
+    TestCase validatedTestCase =
+        validateTestCaseAsResource(
+            testCase, ModelType.valueOfName(measure.getModel()), accessToken);
     if (ModelType.QI_CORE.getValue().equalsIgnoreCase(measure.getModel())) {
       validatedTestCase.setJson(enforcePatientId(validatedTestCase));
       validatedTestCase.setJson(updateResourceFullUrls(validatedTestCase));
@@ -724,8 +740,8 @@ public class TestCaseService {
           if (resourceNode != null) {
             var resourceType = resourceNode.get("resourceType").asText();
             if (resourceType != null
-              && !"Patient".equalsIgnoreCase(resourceType)
-              && theNode.has("fullUrl")) {
+                && !"Patient".equalsIgnoreCase(resourceType)
+                && theNode.has("fullUrl")) {
               String id = resourceNode.get("id").asText();
               String newUrl = buildFullUrl(id, resourceType);
               log.info("Updating the full url of a resource [{}], new fullUrl is [{}]", id, newUrl);
