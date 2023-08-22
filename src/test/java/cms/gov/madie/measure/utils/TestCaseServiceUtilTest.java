@@ -6,6 +6,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,9 +61,6 @@ public class TestCaseServiceUtilTest {
   private List<TestCaseGroupPopulation> testCaseGroupPopulations = new ArrayList<>();
   TestCaseGroupPopulation testCaseGroupPopulation1 = null;
   TestCaseGroupPopulation testCaseGroupPopulation2 = null;
-  TestCaseGroupPopulation testCaseGroupPopulation3 = null;
-  TestCaseGroupPopulation testCaseGroupPopulation4 = null;
-  TestCaseGroupPopulation testCaseGroupPopulation5 = null;
 
   private TestCase testCase;
 
@@ -178,7 +176,7 @@ public class TestCaseServiceUtilTest {
   public void testMatchCriteriaGroupsSuccessAllMatch() {
     boolean result =
         testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
-    assertEquals(true, result);
+    assertTrue(result);
   }
 
   @Test
