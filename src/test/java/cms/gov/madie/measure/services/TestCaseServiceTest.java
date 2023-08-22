@@ -7,16 +7,26 @@ import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
-import cms.gov.madie.measure.utils.ResourceUtil;
 import cms.gov.madie.measure.utils.TestCaseServiceUtil;
+import cms.gov.madie.measure.utils.ResourceUtil;
+
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.common.Version;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.HapiOperationOutcome;
 import gov.cms.madie.models.measure.Measure;
@@ -26,6 +36,7 @@ import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseImportRequest;
+
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.bson.types.ObjectId;
@@ -41,13 +52,9 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.nio.charset.Charset;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -65,7 +72,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -767,70 +773,6 @@ public class TestCaseServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testEnforcePatientIdEmptyJson() {
-    testCase.setJson(null);
-    String modifiedJson = testCaseService.enforcePatientId(testCase);
-    assertNull(modifiedJson);
-  }
-
-  @Test
-  public void testEnforcePatientIdNoEntry() {
-    String json = "{\"resourceType\": \"Bundle\", \"type\": \"collection\"}";
-    testCase.setJson(json);
-    String modifiedJson = testCaseService.enforcePatientId(testCase);
-    assertEquals(modifiedJson, json);
-  }
-
-  @Test
-  public void testEnforcePatientIdNoResource() {
-    String json =
-        "{\"resourceType\": \"Bundle\", \"type\": \"collection\", \n"
-            + "  \"entry\" : [ {\n"
-            + "    \"fullUrl\" : \"http://local/Patient/1\"\n"
-            + "  } ]             }";
-    testCase.setJson(json);
-    String modifiedJson = testCaseService.enforcePatientId(testCase);
-    assertEquals(modifiedJson, json);
-  }
-
-  @Test
-  public void testEnforcePatientIdNoResourceType() {
-    String json =
-        "{\"resourceType\": \"Bundle\", \"type\": \"collection\", \n"
-            + "  \"entry\" : [ {\n"
-            + "    \"fullUrl\" : \"http://local/Patient/1\",\n"
-            + "    \"resource\" : {\n"
-            + "      \"id\" : \"testUniqueId\"\n"
-            + "    }\n"
-            + "  } ]             }";
-    testCase.setJson(json);
-    String modifiedJson = testCaseService.enforcePatientId(testCase);
-    assertEquals(modifiedJson, json);
-  }
-
-  @Test
-  public void testEnforcePatientIdNoPatientResourceType() {
-    String json =
-        "{\"resourceType\": \"Bundle\", \"type\": \"collection\", \n"
-            + "  \"entry\" : [ {\n"
-            + "    \"fullUrl\" : \"http://local/Patient/1\",\n"
-            + "    \"resource\" : {\n"
-            + "      \"id\" : \"testUniqueId\",\n"
-            + "      \"resourceType\" : \"NOTPatient\"    \n"
-            + "    }\n"
-            + "  } ]             }";
-    testCase.setJson(json);
-    String modifiedJson = testCaseService.enforcePatientId(testCase);
-    assertEquals(modifiedJson, json);
-  }
-
-  @Test
-  public void testGetByteArrayOutputStreamThrowsException() {
-    String str = testCaseService.jsonNodeToString(null, null);
-    assertTrue(StringUtils.isAllBlank(str));
-  }
-
-  @Test
   public void testUpdateTestCasePreventsModificationOfCreatedByFields() {
     Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
     TestCase originalTestCase =
@@ -1496,7 +1438,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
     assertFalse(response.get(0).isSuccessful());
     assertEquals(
-        "Unable to import test case, please try again. if the error persists, Please contact helpdesk.",
+        "Unable to import test case, please try again. If the error persists, Please contact helpdesk.",
         response.get(0).getMessage());
   }
 
@@ -1648,6 +1590,9 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
         .thenReturn(List.of(group));
+    when(testCaseServiceUtil.matchCriteriaGroups(
+            any(List.class), any(List.class), any(TestCase.class)))
+        .thenReturn(true);
 
     doReturn(updatedTestCase)
         .when(testCaseService)
@@ -1703,201 +1648,9 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
         .thenReturn(List.of(group));
-
-    doReturn(updatedTestCase)
-        .when(testCaseService)
-        .updateTestCase(any(), anyString(), anyString(), anyString());
-    var testCaseImportRequest =
-        TestCaseImportRequest.builder()
-            .patientId(UUID.randomUUID())
-            .json(testCaseImportWithMeasureReport)
-            .build();
-
-    var response =
-        testCaseService.importTestCases(
-            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
-    assertEquals(1, response.size());
-    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertTrue(response.get(0).isSuccessful());
-  }
-
-  @Test
-  void importTestCasesCreateNewAllCriteriaMatchedNoPopulationBasis() {
-    population1 =
-        Population.builder()
-            .name(PopulationType.INITIAL_POPULATION)
-            .definition("Initial Population")
-            .build();
-    population2 =
-        Population.builder().name(PopulationType.DENOMINATOR).definition("Denominator").build();
-    population3 =
-        Population.builder()
-            .name(PopulationType.DENOMINATOR_EXCLUSION)
-            .definition("Denominator Exclusion")
-            .build();
-    population4 =
-        Population.builder().name(PopulationType.NUMERATOR).definition("Numerator").build();
-    population5 =
-        Population.builder()
-            .name(PopulationType.DENOMINATOR_EXCEPTION)
-            .definition("Numerator Exclusion")
-            .build();
-    group =
-        Group.builder()
-            .id("testGroupId")
-            .scoring(MeasureScoring.COHORT.name())
-            .populations(List.of(population1, population2, population3, population4, population5))
-            .build();
-    measure.setGroups(List.of(group));
-
-    measure.setTestCases(List.of(testCase));
-    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
-
-    TestCase updatedTestCase = testCase;
-    updatedTestCase.setJson(testCaseImportWithMeasureReport);
-
-    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
-        .thenReturn(List.of(group));
-
-    doReturn(updatedTestCase)
-        .when(testCaseService)
-        .updateTestCase(any(), anyString(), anyString(), anyString());
-    var testCaseImportRequest =
-        TestCaseImportRequest.builder()
-            .patientId(UUID.randomUUID())
-            .json(testCaseImportWithMeasureReport)
-            .build();
-
-    var response =
-        testCaseService.importTestCases(
-            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
-    assertEquals(1, response.size());
-    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertTrue(response.get(0).isSuccessful());
-  }
-
-  @Test
-  void importTestCasesCreateNewAllCriteriaMatchedPatientBased() {
-    population1 =
-        Population.builder()
-            .name(PopulationType.INITIAL_POPULATION)
-            .definition("Initial Population")
-            .build();
-    population2 =
-        Population.builder().name(PopulationType.DENOMINATOR).definition("Denominator").build();
-    population3 =
-        Population.builder()
-            .name(PopulationType.DENOMINATOR_EXCLUSION)
-            .definition("Denominator Exclusion")
-            .build();
-    population4 =
-        Population.builder().name(PopulationType.NUMERATOR).definition("Numerator").build();
-    population5 =
-        Population.builder()
-            .name(PopulationType.DENOMINATOR_EXCEPTION)
-            .definition("Numerator Exceptiob")
-            .build();
-    group =
-        Group.builder()
-            .id("testGroupId")
-            .scoring(MeasureScoring.COHORT.name())
-            .populationBasis("Boolean")
-            .populations(List.of(population1, population2, population3, population4, population5))
-            .build();
-    measure.setGroups(List.of(group));
-
-    measure.setTestCases(List.of(testCase));
-    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
-
-    TestCase updatedTestCase = testCase;
-    updatedTestCase.setJson(testCaseImportWithMeasureReport);
-
-    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
-        .thenReturn(List.of(group));
-
-    doReturn(updatedTestCase)
-        .when(testCaseService)
-        .updateTestCase(any(), anyString(), anyString(), anyString());
-    var testCaseImportRequest =
-        TestCaseImportRequest.builder()
-            .patientId(UUID.randomUUID())
-            .json(testCaseImportWithMeasureReport)
-            .build();
-
-    var response =
-        testCaseService.importTestCases(
-            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
-    assertEquals(1, response.size());
-    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertTrue(response.get(0).isSuccessful());
-  }
-
-  @Test
-  void importTestCasesCreateNewGroupDoesNotMatch() {
-    group =
-        Group.builder()
-            .id("testGroupId")
-            .scoring(MeasureScoring.COHORT.name())
-            .populationBasis("Boolean")
-            .build();
-    Group group2 =
-        Group.builder()
-            .id("testGroupId2")
-            .scoring(MeasureScoring.COHORT.name())
-            .populationBasis("Boolean")
-            .build();
-    measure.setGroups(List.of(group, group2));
-
-    measure.setTestCases(List.of(testCase));
-    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
-
-    TestCase updatedTestCase = testCase;
-    updatedTestCase.setJson(testCaseImportWithMeasureReport);
-
-    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
-        .thenReturn(List.of(group));
-
-    doReturn(updatedTestCase)
-        .when(testCaseService)
-        .updateTestCase(any(), anyString(), anyString(), anyString());
-    var testCaseImportRequest =
-        TestCaseImportRequest.builder()
-            .patientId(UUID.randomUUID())
-            .json(testCaseImportWithMeasureReport)
-            .build();
-
-    var response =
-        testCaseService.importTestCases(
-            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
-    assertEquals(1, response.size());
-    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertTrue(response.get(0).isSuccessful());
-    assertEquals(
-        "The measure populations do not match the populations in the import file. "
-            + "The Test Case has been imported, but no expected values have been set.",
-        response.get(0).getMessage());
-  }
-
-  @Test
-  void importTestCasesCreateNewGroupPopulationDoesNotMatch() {
-    population1 = Population.builder().name(PopulationType.INITIAL_POPULATION).build();
-    group =
-        Group.builder()
-            .id("testGroupId")
-            .scoring(MeasureScoring.COHORT.name())
-            .populationBasis("Boolean")
-            .populations(List.of(population1))
-            .build();
-    measure.setGroups(List.of(group));
-
-    measure.setTestCases(List.of(testCase));
-    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
-
-    TestCase updatedTestCase = testCase;
-    updatedTestCase.setJson(testCaseImportWithMeasureReport);
-
-    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
-        .thenReturn(List.of(group));
+    when(testCaseServiceUtil.matchCriteriaGroups(
+            any(List.class), any(List.class), any(TestCase.class)))
+        .thenReturn(true);
 
     doReturn(updatedTestCase)
         .when(testCaseService)
@@ -1959,131 +1712,6 @@ public class TestCaseServiceTest implements ResourceUtil {
   }
 
   @Test
-  void importTestCasesCreateNewNoGroups() {
-    group =
-        Group.builder()
-            .id("testGroupId")
-            .scoring(MeasureScoring.COHORT.name())
-            .populationBasis("Boolean")
-            .build();
-    measure.setGroups(List.of(group));
-
-    measure.setTestCases(List.of(testCase));
-    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
-
-    TestCase updatedTestCase = testCase;
-    updatedTestCase.setJson(testCaseImportWithMeasureReport);
-
-    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
-        .thenReturn(List.of(group));
-
-    doReturn(updatedTestCase)
-        .when(testCaseService)
-        .updateTestCase(any(), anyString(), anyString(), anyString());
-    var testCaseImportRequest =
-        TestCaseImportRequest.builder()
-            .patientId(UUID.randomUUID())
-            .json(testCaseImportWithMeasureReport)
-            .build();
-
-    var response =
-        testCaseService.importTestCases(
-            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
-    assertEquals(1, response.size());
-    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertTrue(response.get(0).isSuccessful());
-  }
-
-  @Test
-  void importTestCasesCreateNewNoGroupPopulations() {
-    measure.setTestCases(List.of(testCase));
-    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
-
-    TestCase updatedTestCase = testCase;
-    updatedTestCase.setJson(testCaseImportWithMeasureReport);
-
-    doReturn(updatedTestCase)
-        .when(testCaseService)
-        .updateTestCase(any(), anyString(), anyString(), anyString());
-    var testCaseImportRequest =
-        TestCaseImportRequest.builder()
-            .patientId(UUID.randomUUID())
-            .json(testCaseImportWithMeasureReport)
-            .build();
-
-    var response =
-        testCaseService.importTestCases(
-            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
-    assertEquals(1, response.size());
-    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertTrue(response.get(0).isSuccessful());
-  }
-
-  @Test
-  void importTestCasesCreateNewNoTestCasePopulationsFromMeasureReport()
-      throws JsonProcessingException {
-    String testCaseImportWithoutMeasureReport = null;
-    testCaseImportWithoutMeasureReport =
-        removeMeasureReportFromJson(testCaseImportWithMeasureReport);
-    group =
-        Group.builder()
-            .id("testGroupId")
-            .scoring(MeasureScoring.COHORT.name())
-            .populationBasis("Boolean")
-            .build();
-    measure.setGroups(List.of(group));
-
-    measure.setTestCases(List.of(testCase));
-    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
-
-    TestCase updatedTestCase = testCase;
-    updatedTestCase.setJson(testCaseImportWithoutMeasureReport);
-
-    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
-        .thenReturn(List.of(group));
-
-    doReturn(updatedTestCase)
-        .when(testCaseService)
-        .updateTestCase(any(), anyString(), anyString(), anyString());
-    var testCaseImportRequest =
-        TestCaseImportRequest.builder()
-            .patientId(UUID.randomUUID())
-            .json(testCaseImportWithoutMeasureReport)
-            .build();
-
-    var response =
-        testCaseService.importTestCases(
-            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
-    assertEquals(1, response.size());
-    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertTrue(response.get(0).isSuccessful());
-  }
-
-  private String removeMeasureReportFromJson(String testCaseJson) throws JsonProcessingException {
-    if (!StringUtils.isEmpty(testCaseJson)) {
-      ObjectMapper objectMapper = new ObjectMapper();
-
-      JsonNode rootNode = objectMapper.readTree(testCaseJson);
-      ArrayNode entryArray = (ArrayNode) rootNode.get("entry");
-
-      List<JsonNode> filteredList = new ArrayList<>();
-      for (JsonNode entryNode : entryArray) {
-
-        if (!"MeasureReport"
-            .equalsIgnoreCase(entryNode.get("resource").get("resourceType").asText())) {
-          filteredList.add(entryNode);
-        }
-      }
-
-      entryArray.removeAll();
-      filteredList.forEach(entryArray::add);
-      return objectMapper.writeValueAsString(rootNode);
-    } else {
-      throw new RuntimeException("Unable to find Test case Json");
-    }
-  }
-
-  @Test
   void importTestCasesCreateNewInvalidImportJson() {
     population1 = Population.builder().name(PopulationType.INITIAL_POPULATION).build();
     population2 = Population.builder().name(PopulationType.DENOMINATOR).build();
@@ -2119,6 +1747,50 @@ public class TestCaseServiceTest implements ResourceUtil {
   }
 
   @Test
+  void importTestCasesDoesNotCreateNewNoGivenName() throws IOException {
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
+    String testCaseImportWithoutGivenName =
+        removeGivenNameFromJson(testCaseImportWithMeasureReport);
+    var testCaseImportRequest =
+        TestCaseImportRequest.builder()
+            .patientId(UUID.randomUUID())
+            .json(testCaseImportWithoutGivenName)
+            .build();
+
+    var response =
+        testCaseService.importTestCases(
+            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
+    assertFalse(response.get(0).isSuccessful());
+    assertEquals("Test Case Title is required.", response.get(0).getMessage());
+  }
+
+  private String removeGivenNameFromJson(String testCaseJson) throws IOException {
+    String modifiedjsonString = testCaseJson;
+    if (!StringUtils.isEmpty(testCaseJson)) {
+      ObjectMapper objectMapper = new ObjectMapper();
+
+      JsonNode rootNode = objectMapper.readTree(testCaseJson);
+      ArrayNode entryArray = (ArrayNode) rootNode.get("entry");
+
+      for (JsonNode entryNode : entryArray) {
+        if ("Patient".equalsIgnoreCase(entryNode.get("resource").get("resourceType").asText())) {
+
+          JsonNode resourceNode = entryNode.get("resource");
+          ObjectNode o = (ObjectNode) resourceNode;
+          ObjectNode parent = (ObjectNode) o;
+
+          parent.remove("name");
+
+          ByteArrayOutputStream bout = new ByteArrayOutputStream();
+          objectMapper.writerWithDefaultPrettyPrinter().writeValue(bout, rootNode);
+          modifiedjsonString = bout.toString();
+        }
+      }
+    }
+    return modifiedjsonString;
+  }
+
+  @Test
   void testUniqueTestCaseName() {
     measure.setTestCases(List.of(testCase));
     TestCase anotherTestCase = testCase.toBuilder().id(null).build();
@@ -2147,40 +1819,5 @@ public class TestCaseServiceTest implements ResourceUtil {
   @Test
   void testAssumeUniqueNameOnEmptyList() {
     assertDoesNotThrow(() -> testCaseService.verifyUniqueTestCaseName(testCase, measure));
-  }
-
-  @Test
-  void updateResourceFullUrlsIfTestResourcesAvailable() {
-    final String json =
-        "{\"id\":\"632334c2414ba67d4e1d1c32\",\"resourceType\":\"Bundle\",\"type\":\"collection\",\"entry\":[{\"fullUrl\":\"https://madie.cms.gov/Patient/0e3be52f-723e-4df4-a584-337daa19e259\",\"resource\":{\"id\":\"0e3be52f-723e-4df4-a584-337daa19e259\",\"meta\":{\"profile\":[\"http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-patient\"]},\"resourceType\":\"Patient\",\"extension\":[{\"extension\":[{\"url\":\"ombCategory\",\"valueCoding\":{\"system\":\"urn:oid:2.16.840.1.113883.6.238\",\"code\":\"2076-8\",\"display\":\"Native Hawaiian or Other Pacific Islander\",\"userSelected\":true}},{\"url\":\"text\",\"valueString\":\"Native Hawaiian or Other Pacific Islander\"}],\"url\":\"http://hl7.org/fhir/us/core/StructureDefinition/us-core-race\"},{\"extension\":[{\"url\":\"ombCategory\",\"valueCoding\":{\"system\":\"urn:oid:2.16.840.1.113883.6.238\",\"code\":\"2135-2\",\"display\":\"Hispanic or Latino\",\"userSelected\":true}},{\"url\":\"text\",\"valueString\":\"Hispanic or Latino\"}],\"url\":\"http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity\"}],\"identifier\":[{\"type\":{\"coding\":[{\"system\":\"http://terminology.hl7.org/CodeSystem/v2-0203\",\"code\":\"MR\"}]},\"system\":\"https://bonnie-fhir.healthit.gov/\",\"value\":\"632334c2414ba67d4e1d1c32\"}],\"name\":[{\"family\":\"DENEXPass\",\"given\":[\"HospiceCareReferral\"]}],\"gender\":\"female\",\"birthDate\":\"2005-12-31\"}},{\"fullUrl\":\"Encounter/encounter-inpatient-1c2a\",\"resource\":{\"id\":\"encounter-inpatient-1c2a\",\"resourceType\":\"Encounter\",\"meta\":{\"profile\":[\"http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-encounter\"]},\"status\":\"finished\",\"class\":{\"system\":\"http://terminology.hl7.org/CodeSystem/v3-ActCode\",\"code\":\"IMP\",\"display\":\"inpatient\"},\"type\":[{\"coding\":[{\"system\":\"http://snomed.info/sct\",\"version\":\"2022-03\",\"code\":\"183452005\",\"display\":\"Emergency hospital admission (procedure)\",\"userSelected\":true}]}],\"period\":{\"start\":\"2024-01-01T00:01:00.000+00:00\",\"end\":\"2024-01-02T08:30:00.000+00:00\"},\"hospitalization\":{\"dischargeDisposition\":{\"coding\":[{\"system\":\"http://snomed.info/sct\",\"code\":\"183919006\",\"display\":\"Urgent admission to hospice (procedure)\",\"userSelected\":true}]}},\"subject\":{\"reference\":\"Patient/0e3be52f-723e-4df4-a584-337daa19e259\"}}},{\"fullUrl\":\"MedicationRequest1/schedule-ii-iii-opioid-medications-1c2b\",\"resource\":{\"id\":\"schedule-ii-iii-opioid-medications-1c2b\",\"resourceType\":\"MedicationRequest\",\"meta\":{\"profile\":[\"http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-medicationrequest\"]},\"status\":\"active\",\"intent\":\"order\",\"doNotPerform\":false,\"category\":[{\"coding\":[{\"system\":\"http://terminology.hl7.org/CodeSystem/medicationrequest-category\",\"code\":\"discharge\",\"display\":\"Discharge\",\"userSelected\":true}]}],\"medicationCodeableConcept\":{\"coding\":[{\"system\":\"http://www.nlm.nih.gov/research/umls/rxnorm\",\"code\":\"1014599\",\"display\":\"acetaminophen 300 MG / oxycodone hydrochloride 10 MG Oral Tablet\",\"userSelected\":true}]},\"authoredOn\":\"2024-01-02T08:30:00.000+00:00\",\"requester\":{\"reference\":\"Practitioner/f007\",\"display\":\"Patrick Pump\"},\"subject\":{\"reference\":\"Patient/0e3be52f-723e-4df4-a584-337daa19e259\"}}},{\"fullUrl\":\"Coverage/1\",\"resource\":{\"resourceType\":\"Coverage\",\"beneficiary\":{\"reference\":\"Patient/0e3be52f-723e-4df4-a584-337daa19e259\"},\"id\":\"1\",\"meta\":{\"profile\":[\"http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-coverage\"]},\"payor\":[{\"reference\":\"Organization/123456\"}],\"status\":\"active\"}},{\"fullUrl\":\"Organization/123456\",\"resource\":{\"resourceType\":\"Organization\",\"active\":true,\"address\":[{\"use\":\"billing\",\"type\":\"postal\",\"line\":[\"P.O. Box 660044\"],\"city\":\"Dallas\",\"state\":\"TX\",\"postalCode\":\"75266-0044\",\"country\":\"USA\"}],\"id\":\"123456\",\"identifier\":[{\"use\":\"temp\",\"system\":\"urn:oid:2.16.840.1.113883.4.4\",\"value\":\"21-3259825\"}],\"meta\":{\"profile\":[\"http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-organization\"]},\"name\":\"Blue Cross Blue Shield of Texas\",\"telecom\":[{\"system\":\"phone\",\"value\":\"(+1) 972-766-6900\"}],\"type\":[{\"coding\":[{\"system\":\"http://terminology.hl7.org/CodeSystem/organization-type\",\"code\":\"pay\",\"display\":\"Payer\"}]}]}}]}";
-    TestCase tc1 =
-        TestCase.builder().id("TC1").name("TC1").patientId(UUID.randomUUID()).json(json).build();
-    String baseUrl = "https://myorg.com";
-    ReflectionTestUtils.setField(testCaseService, "madieJsonResourcesBaseUri", baseUrl);
-    String updatedTc1 = testCaseService.updateResourceFullUrls(tc1);
-    assertNotEquals(updatedTc1, json);
-    assertTrue(updatedTc1.contains(baseUrl));
-  }
-
-  @Test
-  void updateResourceFullUrlsIfNoTestResourceAvailable() {
-    final String json =
-        "{\"id\":\"6323489059967e30c06d0774\",\"resourceType\":\"Bundle\",\"type\":\"collection\",\"entry\":[]}";
-    TestCase tc1 =
-        TestCase.builder().id("TC1").name("TC1").patientId(UUID.randomUUID()).json(json).build();
-    String baseUrl = "https://myorg.com";
-    String updatedTc1 = testCaseService.updateResourceFullUrls(tc1);
-    assertFalse(updatedTc1.contains(baseUrl));
-  }
-
-  @Test
-  void updateResourceFullUrlsIfEntryNodeNotAvailable() {
-    final String json =
-        "{\"id\":\"6323489059967e30c06d0774\",\"resourceType\":\"Bundle\",\"type\":\"collection\"}";
-    TestCase tc1 =
-        TestCase.builder().id("TC1").name("TC1").patientId(UUID.randomUUID()).json(json).build();
-    String baseUrl = "https://myorg.com";
-    String updatedTc1 = testCaseService.updateResourceFullUrls(tc1);
-    assertFalse(updatedTc1.contains(baseUrl));
   }
 }

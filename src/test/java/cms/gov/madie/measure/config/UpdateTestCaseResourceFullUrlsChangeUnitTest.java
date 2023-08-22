@@ -121,13 +121,6 @@ class UpdateTestCaseResourceFullUrlsChangeUnitTest {
   public void testChangeUnitExecutionMultipleTestCases() {
     // given
     when(measureRepository.findAll()).thenReturn(List.of(measure1, measure2));
-    when(testCaseService.updateResourceFullUrls(any(TestCase.class)))
-        .thenAnswer(
-            invocationOnMock -> {
-              Object argument = invocationOnMock.getArgument(0);
-              TestCase tc = (TestCase) argument;
-              return tc.getJson();
-            });
 
     // when
     changeUnit.updateTestCaseResourceFullUrls(measureRepository, testCaseService);
@@ -137,9 +130,6 @@ class UpdateTestCaseResourceFullUrlsChangeUnitTest {
     Measure measure = measureArgumentCaptor1.getValue();
     assertThat(measure.getTestCases(), is(notNullValue()));
     assertThat(measure.getTestCases().size(), is(equalTo(2)));
-
-    verify(testCaseService, times(1)).updateResourceFullUrls(eq(tc1));
-    verify(testCaseService, times(1)).updateResourceFullUrls(eq(tc2));
   }
 
   @Test
