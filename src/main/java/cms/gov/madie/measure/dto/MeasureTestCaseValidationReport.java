@@ -13,6 +13,7 @@ public class MeasureTestCaseValidationReport {
   private String measureId;
   private String measureSetId;
   private String measureVersionId;
+  private JobStatus jobStatus;
 
   @Singular private List<TestCaseValidationReport> testCaseValidationReports;
 }

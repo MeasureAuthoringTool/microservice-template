@@ -104,6 +104,6 @@ public class AdminController {
 
   private Callable<MeasureTestCaseValidationReport> buildCallableForMeasureId(
       final String measureId, final String accessToken) {
-    return () -> testCaseService.updateTestCaseValidResources(measureId, accessToken);
+    return () -> testCaseService.updateTestCaseValidResourcesWithReport(measureId, accessToken);
   }
 }

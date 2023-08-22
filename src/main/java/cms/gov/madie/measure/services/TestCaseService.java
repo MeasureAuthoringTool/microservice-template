@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.dto.JobStatus;
 import cms.gov.madie.measure.dto.MeasureTestCaseValidationReport;
 import cms.gov.madie.measure.dto.TestCaseValidationReport;
 import gov.cms.madie.models.common.ActionType;
@@ -171,7 +172,7 @@ public class TestCaseService {
     return enrichedTestCases;
   }
 
-  public MeasureTestCaseValidationReport updateTestCaseValidResources(
+  public MeasureTestCaseValidationReport updateTestCaseValidResourcesWithReport(
       final String measureId, final String accessToken) {
     log.info(
         "Thread [{}] :: Updating ValidResource flag for all test cases on measure [{}]",
@@ -200,8 +201,7 @@ public class TestCaseService {
                             .build())
                 .toList();
         List<TestCase> validatedTestCases =
-            validateTestCasesAsResources(
-                measure.getTestCases(), ModelType.valueOfName(measure.getModel()), accessToken);
+            updateTestCaseValidResourcesForMeasure(measure, accessToken);
         Map<String, TestCase> testCaseMap =
             validatedTestCases.stream()
                 .collect(Collectors.toMap(TestCase::getId, Function.identity()));
@@ -209,15 +209,27 @@ public class TestCaseService {
             report ->
                 report.setCurrentValidResource(
                     testCaseMap.get(report.getTestCaseId()).isValidResource()));
+        measureReport.setJobStatus(JobStatus.COMPLETED);
         measureReport.setTestCaseValidationReports(reports);
-        measure.setTestCases(validatedTestCases);
-        measureRepository.save(measure);
       }
 
       return measureReport;
     }
 
-    return null;
+    return MeasureTestCaseValidationReport.builder()
+            .measureId(measureId)
+            .jobStatus(JobStatus.SKIPPED)
+            .build();
+  }
+
+  public List<TestCase> updateTestCaseValidResourcesForMeasure(
+      Measure measure, final String accessToken) {
+    List<TestCase> validatedTestCases =
+        validateTestCasesAsResources(
+            measure.getTestCases(), ModelType.valueOfName(measure.getModel()), accessToken);
+    measure.setTestCases(validatedTestCases);
+    measureRepository.save(measure);
+    return validatedTestCases;
   }
 
   public List<TestCase> validateTestCasesAsResources(
