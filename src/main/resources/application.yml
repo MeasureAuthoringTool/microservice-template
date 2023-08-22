@@ -10,6 +10,8 @@ server:
     context-path: /api
 
 madie:
+  admin:
+    concurrency-limit: ${MADIE_ADMIN_CONCURRENCY_LIMIT:5}
   allowedApi: http://localhost:9000
   json:
     resources:

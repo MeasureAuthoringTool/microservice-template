@@ -30,6 +30,9 @@ public interface MeasureRepository
   @Query(value = "{_id: ?0}", fields = "{'testCases.series': 1, _id: 0}")
   Optional<Measure> findAllTestCaseSeriesByMeasureId(String measureId);
 
+  @Query(fields = "{_id: 1, model: 1}")
+  List<Measure> findAllMeasureIdsBy();
+
   @Query(value = "{'groups._id': ?0}")
   Optional<Measure> findGroupById(String groupId);
 

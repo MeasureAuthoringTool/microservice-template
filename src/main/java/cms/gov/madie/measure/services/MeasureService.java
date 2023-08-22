@@ -22,6 +22,7 @@ import java.time.Instant;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -331,6 +332,10 @@ public class MeasureService {
     // For measureSetIds that were searched, but not returned put the id & true ( is draftable )
 
     return measureSetMap;
+  }
+
+  public List<String> getAllMeasureIds() {
+    return measureRepository.findAllMeasureIdsBy().stream().map(Measure::getId).collect(Collectors.toList());
   }
 
   public Page<Measure> getMeasuresByCriteria(

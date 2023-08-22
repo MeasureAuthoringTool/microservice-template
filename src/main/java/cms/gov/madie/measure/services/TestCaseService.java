@@ -1,5 +1,7 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.dto.MeasureTestCaseValidationReport;
+import cms.gov.madie.measure.dto.TestCaseValidationReport;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.HapiOperationOutcome;
@@ -34,6 +36,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import java.io.ByteArrayOutputStream;
 import java.time.Instant;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 
@@ -167,6 +170,52 @@ public class TestCaseService {
         measureId);
     return enrichedTestCases;
   }
+
+  public MeasureTestCaseValidationReport updateTestCaseValidResources(final String measureId, final String accessToken) {
+    log.info("Thread [{}] :: Updating ValidResource flag for all test cases on measure [{}]", Thread.currentThread().getName(), measureId);
+    final Optional<Measure> measureOpt = measureRepository.findById(measureId);
+    if (measureOpt.isPresent()) {
+      final Measure measure = measureOpt.get();
+      MeasureTestCaseValidationReport measureReport = MeasureTestCaseValidationReport.builder()
+              .measureName(measure.getMeasureName())
+              .measureId(measure.getId())
+              .measureSetId(measure.getMeasureSetId())
+              .measureVersionId(measure.getVersionId())
+              .build();
+
+      if (!CollectionUtils.isEmpty(measure.getTestCases())) {
+        List<TestCaseValidationReport> reports = measure.getTestCases().stream()
+                .map(testCase -> TestCaseValidationReport.builder()
+                        .testCaseId(testCase.getId())
+                        .patientId(testCase.getPatientId().toString())
+                        .previousValidResource(testCase.isValidResource())
+                        .build())
+                .toList();
+        List<TestCase> validatedTestCases = validateTestCasesAsResources(measure.getTestCases(), ModelType.valueOfName(measure.getModel()), accessToken);
+        Map<String, TestCase> testCaseMap = validatedTestCases.stream().collect(Collectors.toMap(TestCase::getId, Function.identity()));
+        reports.forEach(report -> report.setCurrentValidResource(testCaseMap.get(report.getTestCaseId()).isValidResource()));
+        measureReport.setTestCaseValidationReports(reports);
+        measure.setTestCases(validatedTestCases);
+        measureRepository.save(measure);
+      }
+
+      return measureReport;
+    }
+
+    return null;
+  }
+
+  public List<TestCase> validateTestCasesAsResources(final List<TestCase> testCases, final ModelType modelType, final String accessToken) {
+    List<TestCase> validatedTestCases = new ArrayList<>();
+
+    if (!CollectionUtils.isEmpty(testCases)) {
+      validatedTestCases = testCases.stream().map(testCase -> validateTestCaseAsResource(testCase, modelType, accessToken)).collect(Collectors.toList());
+    }
+
+    return validatedTestCases;
+  }
+
+
 
   public TestCase validateTestCaseAsResource(
       final TestCase testCase, final ModelType modelType, final String accessToken) {
