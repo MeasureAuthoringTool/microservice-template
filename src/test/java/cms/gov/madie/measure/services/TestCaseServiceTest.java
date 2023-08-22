@@ -227,6 +227,51 @@ public class TestCaseServiceTest implements ResourceUtil {
   }
 
   @Test
+  public void testValidateTestCasesAsResourcesNullList() {
+    final String accessToken = "Bearer Token";
+    final ModelType model = ModelType.QI_CORE;
+    List<TestCase> output = testCaseService.validateTestCasesAsResources(null, model, accessToken);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.isEmpty(), is(true));
+  }
+
+  @Test
+  public void testValidateTestCasesAsResourcesEmptyList() {
+    final String accessToken = "Bearer Token";
+    final ModelType model = ModelType.QI_CORE;
+    final List<TestCase> testCases = List.of();
+    List<TestCase> output =
+        testCaseService.validateTestCasesAsResources(testCases, model, accessToken);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.isEmpty(), is(true));
+  }
+
+  @Test
+  public void testValidateTestCasesAsResourcesWithEntries() throws JsonProcessingException {
+    TestCase testCase =
+        TestCase.builder()
+            .id("TestID")
+            .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
+            .build();
+    final String accessToken = "Bearer Token";
+
+    when(fhirServicesClient.validateBundle(anyString(), anyString()))
+        .thenReturn(ResponseEntity.ok("{}"));
+    when(mapper.readValue("{}", HapiOperationOutcome.class))
+        .thenReturn(HapiOperationOutcome.builder().code(200).successful(true).build());
+    final ModelType model = ModelType.QI_CORE;
+    final List<TestCase> testCases = List.of(testCase);
+    List<TestCase> output =
+        testCaseService.validateTestCasesAsResources(testCases, model, accessToken);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.isEmpty(), is(false));
+    assertThat(output.get(0), is(notNullValue()));
+    assertThat(output.get(0).isValidResource(), is(true));
+    assertThat(output.get(0).getHapiOperationOutcome(), is(notNullValue()));
+    assertThat(output.get(0).getHapiOperationOutcome().getCode(), is(equalTo(200)));
+  }
+
+  @Test
   public void testValidateTestCaseAsResource() throws JsonProcessingException {
     TestCase testCase =
         TestCase.builder()
