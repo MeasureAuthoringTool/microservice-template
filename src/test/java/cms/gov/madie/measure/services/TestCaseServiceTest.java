@@ -246,7 +246,8 @@ public class TestCaseServiceTest implements ResourceUtil {
     when(mapper.readValue("{}", HapiOperationOutcome.class))
         .thenReturn(HapiOperationOutcome.builder().code(200).successful(true).build());
 
-    TestCase output = testCaseService.validateTestCaseAsResource(testCase, accessToken);
+    TestCase output =
+        testCaseService.validateTestCaseAsResource(testCase, ModelType.QI_CORE, accessToken);
     assertThat(output, is(notNullValue()));
     assertThat(output.getJson(), is(notNullValue()));
     assertThat(output.getHapiOperationOutcome(), is(notNullValue()));
@@ -254,11 +255,44 @@ public class TestCaseServiceTest implements ResourceUtil {
   }
 
   @Test
+  public void testValidateTestCaseAsResourceForQDM() {
+    final String qdmJson = "{\n \"qdmVersion\": \"5.6\",\n \"dataElements\": []\n }";
+    TestCase testCase = TestCase.builder().id("TestID").json(qdmJson).build();
+    final String accessToken = "Bearer Token";
+    TestCase output =
+        testCaseService.validateTestCaseAsResource(testCase, ModelType.QDM_5_6, accessToken);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.getJson(), is(notNullValue()));
+    assertThat(output.isValidResource(), is(true));
+  }
+
+  @Test
+  public void testValidateTestCaseAsResourceMalformedJsonForQDM() {
+    final String qdmJson = "{\n BADTHINGHERE \"qdmVersion\": \"5.6\",\n \"dataElements\": []\n }";
+    TestCase testCase = TestCase.builder().id("TestID").json(qdmJson).build();
+    final String accessToken = "Bearer Token";
+    TestCase output =
+        testCaseService.validateTestCaseAsResource(testCase, ModelType.QDM_5_6, accessToken);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.getJson(), is(notNullValue()));
+    assertThat(output.isValidResource(), is(false));
+  }
+
+  @Test
+  public void testValidateTestCaseAsResourceNull() {
+    final String accessToken = "Bearer Token";
+    TestCase output =
+        testCaseService.validateTestCaseAsResource(null, ModelType.QDM_5_6, accessToken);
+    assertThat(output, is(nullValue()));
+  }
+
+  @Test
   public void testValidateTestCaseAsResourceHandlesNullTestCase() {
     TestCase testCase = null;
     final String accessToken = "Bearer Token";
 
-    TestCase output = testCaseService.validateTestCaseAsResource(testCase, accessToken);
+    TestCase output =
+        testCaseService.validateTestCaseAsResource(testCase, ModelType.QI_CORE, accessToken);
     assertThat(output, is(nullValue()));
   }
 
