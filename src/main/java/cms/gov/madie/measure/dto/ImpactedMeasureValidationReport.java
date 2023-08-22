@@ -10,10 +10,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ImpactedMeasureValidationReport {
-        private String measureName;
-        private String measureId;
-        private String measureSetId;
-        private String measureVersionId;
-        private String measureOwner;
-        private int impactedTestCasesCount;
+  private String measureName;
+  private String measureId;
+  private String measureSetId;
+  private String measureVersionId;
+  private String measureOwner;
+  private int impactedTestCasesCount;
 }

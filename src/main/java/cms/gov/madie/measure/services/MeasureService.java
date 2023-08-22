@@ -335,7 +335,9 @@ public class MeasureService {
   }
 
   public List<String> getAllMeasureIds() {
-    return measureRepository.findAllMeasureIdsBy().stream().map(Measure::getId).collect(Collectors.toList());
+    return measureRepository.findAllMeasureIdsBy().stream()
+        .map(Measure::getId)
+        .collect(Collectors.toList());
   }
 
   public Page<Measure> getMeasuresByCriteria(

@@ -10,8 +10,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TestCaseValidationReport {
-    private String testCaseId;
-    private String patientId;
-    private boolean previousValidResource;
-    private boolean currentValidResource;
+  private String testCaseId;
+  private String patientId;
+  private boolean previousValidResource;
+  private boolean currentValidResource;
 }

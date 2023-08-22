@@ -12,7 +12,6 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MeasureTestCaseValidationReportSummary {
-    List<MeasureTestCaseValidationReport> reports;
-    List<ImpactedMeasureValidationReport> impactedMeasures;
+  List<MeasureTestCaseValidationReport> reports;
+  List<ImpactedMeasureValidationReport> impactedMeasures;
 }
-

@@ -30,72 +30,80 @@ import java.util.concurrent.*;
 @RequestMapping("/admin")
 @RequiredArgsConstructor
 public class AdminController {
-    private final MeasureService measureService;
-    private final TestCaseService testCaseService;
-    private final MeasureSetService measureSetService;
+  private final MeasureService measureService;
+  private final TestCaseService testCaseService;
+  private final MeasureSetService measureSetService;
 
-    @Value("${madie.admin.concurrency-limit}")
-    private int concurrencyLimit;
+  @Value("${madie.admin.concurrency-limit}")
+  private int concurrencyLimit;
 
-    @PutMapping("/measures/test-cases/validations")
-    @PreAuthorize("#request.getHeader('api-key') == #apiKey")
-    public ResponseEntity<MeasureTestCaseValidationReportSummary> validateAllMeasureTestCases(
-            HttpServletRequest request,
-            @Value("${lambda-api-key}") String apiKey,
-            Principal principal,
-            @RequestHeader("Authorization") String accessToken
-    ) throws InterruptedException, ExecutionException {
-        log.info("User [{}] - Starting admin task [validateAllMeasureTestCases]", principal.getName());
-        StopWatch timer = new StopWatch();
-        timer.start();
-        List<MeasureTestCaseValidationReport> reports = new ArrayList<>();
-        List<String> measureIds = measureService.getAllMeasureIds();
-        List<Callable<MeasureTestCaseValidationReport>> tasks = new ArrayList<>();
+  @PutMapping("/measures/test-cases/validations")
+  @PreAuthorize("#request.getHeader('api-key') == #apiKey")
+  public ResponseEntity<MeasureTestCaseValidationReportSummary> validateAllMeasureTestCases(
+      HttpServletRequest request,
+      @Value("${lambda-api-key}") String apiKey,
+      Principal principal,
+      @RequestHeader("Authorization") String accessToken)
+      throws InterruptedException, ExecutionException {
+    log.info("User [{}] - Starting admin task [validateAllMeasureTestCases]", principal.getName());
+    StopWatch timer = new StopWatch();
+    timer.start();
+    List<MeasureTestCaseValidationReport> reports = new ArrayList<>();
+    List<String> measureIds = measureService.getAllMeasureIds();
+    List<Callable<MeasureTestCaseValidationReport>> tasks = new ArrayList<>();
 
-        for (String measureId : measureIds) {
-            tasks.add(buildCallableForMeasureId(measureId, accessToken));
+    for (String measureId : measureIds) {
+      tasks.add(buildCallableForMeasureId(measureId, accessToken));
+    }
+
+    ExecutorService executorService = Executors.newFixedThreadPool(concurrencyLimit);
+    List<Future<MeasureTestCaseValidationReport>> futures = executorService.invokeAll(tasks);
+    executorService.shutdown();
+
+    List<ImpactedMeasureValidationReport> impactedMeasures = new ArrayList<>();
+
+    for (Future<MeasureTestCaseValidationReport> f : futures) {
+      MeasureTestCaseValidationReport measureTestCaseValidationReport = f.get();
+      reports.add(measureTestCaseValidationReport);
+
+      int diffCount = 0;
+      for (TestCaseValidationReport tcValReport :
+          measureTestCaseValidationReport.getTestCaseValidationReports()) {
+        if (tcValReport.isPreviousValidResource() && !tcValReport.isCurrentValidResource()) {
+          diffCount++;
         }
+      }
+      if (diffCount > 0) {
+        MeasureSet measureSet =
+            measureSetService.findByMeasureSetId(measureTestCaseValidationReport.getMeasureSetId());
 
-        ExecutorService executorService = Executors.newFixedThreadPool(concurrencyLimit);
-        List<Future<MeasureTestCaseValidationReport>> futures = executorService.invokeAll(tasks);
-        executorService.shutdown();
-
-        List<ImpactedMeasureValidationReport> impactedMeasures = new ArrayList<>();
-
-        for (Future<MeasureTestCaseValidationReport> f : futures) {
-            MeasureTestCaseValidationReport measureTestCaseValidationReport = f.get();
-            reports.add(measureTestCaseValidationReport);
-
-            int diffCount = 0;
-            for (TestCaseValidationReport tcValReport : measureTestCaseValidationReport.getTestCaseValidationReports()) {
-                if (tcValReport.isPreviousValidResource() && !tcValReport.isCurrentValidResource()) {
-                    diffCount++;
-                }
-            }
-            if (diffCount > 0) {
-                MeasureSet measureSet = measureSetService.findByMeasureSetId(measureTestCaseValidationReport.getMeasureSetId());
-
-                impactedMeasures.add(ImpactedMeasureValidationReport.builder()
-                        .measureId(measureTestCaseValidationReport.getMeasureId())
-                        .measureSetId(measureTestCaseValidationReport.getMeasureSetId())
-                        .measureVersionId(measureTestCaseValidationReport.getMeasureVersionId())
-                        .measureName(measureTestCaseValidationReport.getMeasureName())
-                        .measureOwner(measureSet.getOwner())
-                        .impactedTestCasesCount(diffCount)
-                        .build());
-            }
-        }
-
-        timer.stop();
-        log.info("User [{}] - Admin task [validateAllMeasureTestCases] took [{}s] to complete", principal.getName(), timer.getTotalTimeSeconds());
-
-        return ResponseEntity.ok(MeasureTestCaseValidationReportSummary.builder()
-                .reports(reports)
-                .impactedMeasures(impactedMeasures)
+        impactedMeasures.add(
+            ImpactedMeasureValidationReport.builder()
+                .measureId(measureTestCaseValidationReport.getMeasureId())
+                .measureSetId(measureTestCaseValidationReport.getMeasureSetId())
+                .measureVersionId(measureTestCaseValidationReport.getMeasureVersionId())
+                .measureName(measureTestCaseValidationReport.getMeasureName())
+                .measureOwner(measureSet.getOwner())
+                .impactedTestCasesCount(diffCount)
                 .build());
+      }
     }
 
-    private Callable<MeasureTestCaseValidationReport> buildCallableForMeasureId(final String measureId, final String accessToken) {
-        return () -> testCaseService.updateTestCaseValidResources(measureId, accessToken);
-    }
+    timer.stop();
+    log.info(
+        "User [{}] - Admin task [validateAllMeasureTestCases] took [{}s] to complete",
+        principal.getName(),
+        timer.getTotalTimeSeconds());
+
+    return ResponseEntity.ok(
+        MeasureTestCaseValidationReportSummary.builder()
+            .reports(reports)
+            .impactedMeasures(impactedMeasures)
+            .build());
+  }
+
+  private Callable<MeasureTestCaseValidationReport> buildCallableForMeasureId(
+      final String measureId, final String accessToken) {
+    return () -> testCaseService.updateTestCaseValidResources(measureId, accessToken);
+  }
 }

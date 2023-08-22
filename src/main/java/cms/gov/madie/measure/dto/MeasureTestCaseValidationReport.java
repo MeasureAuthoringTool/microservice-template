@@ -9,11 +9,10 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MeasureTestCaseValidationReport {
-    private String measureName;
-    private String measureId;
-    private String measureSetId;
-    private String measureVersionId;
+  private String measureName;
+  private String measureId;
+  private String measureSetId;
+  private String measureVersionId;
 
-    @Singular
-    private List<TestCaseValidationReport> testCaseValidationReports;
+  @Singular private List<TestCaseValidationReport> testCaseValidationReports;
 }
