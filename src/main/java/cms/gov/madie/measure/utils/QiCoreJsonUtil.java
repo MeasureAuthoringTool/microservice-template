@@ -25,10 +25,11 @@ import java.util.regex.Pattern;
 
 @Slf4j
 public final class QiCoreJsonUtil {
-  private QiCoreJsonUtil() {}
 
   @Value("${madie.json.resources.base-uri}")
   private static String madieJsonResourcesBaseUri;
+
+  private QiCoreJsonUtil() {}
 
   public static boolean isValidJson(String json) {
     ObjectMapper mapper = new ObjectMapper();

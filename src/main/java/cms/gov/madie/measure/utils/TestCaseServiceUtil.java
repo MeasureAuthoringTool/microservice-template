@@ -7,7 +7,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Population;
@@ -50,15 +49,15 @@ public class TestCaseServiceUtil {
     boolean isValid = true;
     List<TestCaseGroupPopulation> groupPopulations = null;
     // group size has to match
-    if (!CollectionUtils.isEmpty(groups)
-        && !CollectionUtils.isEmpty(testCaseGroupPopulations)
+    if (!isEmpty(groups)
+        && !isEmpty(testCaseGroupPopulations)
         && groups.size() == testCaseGroupPopulations.size()) {
       groupPopulations = new ArrayList<>();
       for (int i = 0; i < groups.size(); i++) {
         Group group = groups.get(i);
         // group population size has to match
-        if (!CollectionUtils.isEmpty(group.getPopulations())
-            && !CollectionUtils.isEmpty(testCaseGroupPopulations.get(i).getPopulationValues())
+        if (!isEmpty(group.getPopulations())
+            && !isEmpty(testCaseGroupPopulations.get(i).getPopulationValues())
             && group.getPopulations().size()
                 == testCaseGroupPopulations.get(i).getPopulationValues().size()) {
           isValid =
