@@ -236,6 +236,34 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
+  public void testGetMeasuresByCriteriaWithCurrentUser() {
+    PageRequest initialPage = PageRequest.of(0, 10);
+
+    Page<Measure> activeMeasures = new PageImpl<>(List.of(measure1));
+
+    doReturn(activeMeasures)
+        .when(measureRepository)
+        .findMyActiveMeasures(eq("test.user"), any(PageRequest.class), eq("test criteria"));
+    Object measures =
+        measureService.getMeasuresByCriteria(true, initialPage, "test.user", "test criteria");
+    assertNotNull(measures);
+  }
+
+  @Test
+  public void testGetMeasuresByCriteriaWithoutCurrentUser() {
+    PageRequest initialPage = PageRequest.of(0, 10);
+
+    Page<Measure> activeMeasures = new PageImpl<>(List.of(measure1));
+
+    doReturn(activeMeasures)
+        .when(measureRepository)
+        .findAllByMeasureNameOrEcqmTitle(eq("test criteria"), any(PageRequest.class));
+    Object measures =
+        measureService.getMeasuresByCriteria(false, initialPage, "test.user", "test criteria");
+    assertNotNull(measures);
+  }
+
+  @Test
   public void testGetMeasures() {
     PageRequest initialPage = PageRequest.of(0, 10);
 

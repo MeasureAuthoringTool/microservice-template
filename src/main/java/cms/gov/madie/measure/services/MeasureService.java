@@ -332,4 +332,11 @@ public class MeasureService {
 
     return measureSetMap;
   }
+
+  public Page<Measure> getMeasuresByCriteria(
+      boolean filterByCurrentUser, Pageable pageReq, String username, String criteria) {
+    return filterByCurrentUser
+        ? measureRepository.findMyActiveMeasures(username, pageReq, criteria)
+        : measureRepository.findAllByMeasureNameOrEcqmTitle(criteria, pageReq);
+  }
 }

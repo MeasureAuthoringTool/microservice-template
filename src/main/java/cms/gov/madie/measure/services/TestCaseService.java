@@ -206,6 +206,7 @@ public class TestCaseService {
     TestCase validatedTestCase = validateTestCaseAsResource(testCase, accessToken);
     if (ModelType.QI_CORE.getValue().equalsIgnoreCase(measure.getModel())) {
       validatedTestCase.setJson(QiCoreJsonUtil.enforcePatientId(validatedTestCase));
+      validatedTestCase.setJson(QiCoreJsonUtil.updateResourceFullUrls(validatedTestCase));
     }
     measure.getTestCases().add(validatedTestCase);
 

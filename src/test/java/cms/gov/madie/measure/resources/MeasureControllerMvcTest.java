@@ -1583,9 +1583,10 @@ public class MeasureControllerMvcTest {
             .build();
 
     Page<Measure> allMeasures = new PageImpl<>(List.of(m1, m2, m3));
-    when(measureRepository.findAllByMeasureNameOrEcqmTitle(any(String.class), any(Pageable.class)))
-        .thenReturn(allMeasures);
 
+    doReturn(allMeasures)
+        .when(measureService)
+        .getMeasuresByCriteria(eq(false), any(Pageable.class), eq(TEST_USER_ID), eq("measure"));
     MvcResult result =
         mockMvc
             .perform(
@@ -1600,8 +1601,9 @@ public class MeasureControllerMvcTest {
     String expectedJsonStr = mapper.writeValueAsString(allMeasures);
 
     assertThat(resultStr, is(equalTo(expectedJsonStr)));
-    verify(measureRepository, times(1))
-        .findAllByMeasureNameOrEcqmTitle(any(String.class), any(Pageable.class));
+
+    verify(measureService, times(1))
+        .getMeasuresByCriteria(eq(false), any(Pageable.class), eq(TEST_USER_ID), eq("measure"));
     verifyNoMoreInteractions(measureRepository);
   }
 
@@ -1627,9 +1629,10 @@ public class MeasureControllerMvcTest {
             .build();
 
     Page<Measure> allMeasures = new PageImpl<>(List.of(m1, m2, m3));
-    when(measureRepository.findAllByMeasureNameOrEcqmTitle(any(String.class), any(Pageable.class)))
-        .thenReturn(allMeasures);
 
+    doReturn(allMeasures)
+        .when(measureService)
+        .getMeasuresByCriteria(eq(false), any(Pageable.class), eq(TEST_USER_ID), eq("ecqm"));
     MvcResult result =
         mockMvc
             .perform(
@@ -1647,8 +1650,8 @@ public class MeasureControllerMvcTest {
     String expectedJsonStr = mapper.writeValueAsString(allMeasures);
 
     assertThat(resultStr, is(equalTo(expectedJsonStr)));
-    verify(measureRepository, times(1))
-        .findAllByMeasureNameOrEcqmTitle(any(String.class), any(Pageable.class));
+    verify(measureService, times(1))
+        .getMeasuresByCriteria(eq(false), any(Pageable.class), eq(TEST_USER_ID), eq("ecqm"));
     verifyNoMoreInteractions(measureRepository);
   }
 
@@ -1675,10 +1678,9 @@ public class MeasureControllerMvcTest {
 
     final Page<Measure> measures = new PageImpl<>(List.of(m1, m2, m3));
 
-    when(measureRepository.findMyActiveMeasures(
-            any(String.class), any(Pageable.class), any(String.class)))
-        .thenReturn(measures);
-
+    doReturn(measures)
+        .when(measureService)
+        .getMeasuresByCriteria(eq(true), any(Pageable.class), eq(TEST_USER_ID), eq("measure"));
     MvcResult result =
         mockMvc
             .perform(
@@ -1696,8 +1698,9 @@ public class MeasureControllerMvcTest {
     String expectedJsonStr = mapper.writeValueAsString(measures);
 
     assertThat(resultStr, is(equalTo(expectedJsonStr)));
-    verify(measureRepository, times(1))
-        .findMyActiveMeasures(eq(TEST_USER_ID), any(PageRequest.class), eq("measure"));
+    verify(measureService, times(1))
+        .getMeasuresByCriteria(eq(true), any(Pageable.class), eq(TEST_USER_ID), eq("measure"));
+
     verifyNoMoreInteractions(measureRepository);
   }
 }
