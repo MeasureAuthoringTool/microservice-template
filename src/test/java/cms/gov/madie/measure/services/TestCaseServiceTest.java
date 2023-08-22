@@ -1724,7 +1724,7 @@ public class TestCaseServiceTest implements ResourceUtil {
             List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
-    assertFalse(response.get(0).isSuccessful());
+    assertTrue(response.get(0).isSuccessful());
   }
 
   @Test

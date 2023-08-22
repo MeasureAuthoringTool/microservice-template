@@ -465,7 +465,6 @@ public class TestCaseService {
               .build();
       if (warningMessage != null) {
         testCaseImportOutcome.setMessage(warningMessage);
-        testCaseImportOutcome.setSuccessful(false);
       }
       return testCaseImportOutcome;
     } catch (JsonProcessingException e) {
