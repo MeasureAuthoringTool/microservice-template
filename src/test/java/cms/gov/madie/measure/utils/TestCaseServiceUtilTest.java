@@ -3,7 +3,7 @@ package cms.gov.madie.measure.utils;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -183,7 +183,7 @@ public class TestCaseServiceUtilTest {
   public void testMatchCriteriaGroupsNullGroup() {
     boolean result =
         testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, null, testCase);
-    assertEquals(false, result);
+    assertFalse(result);
   }
 
   @Test
@@ -191,7 +191,7 @@ public class TestCaseServiceUtilTest {
     testCaseGroupPopulations.clear();
     boolean result =
         testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
-    assertEquals(false, result);
+    assertFalse(result);
   }
 
   @Test
@@ -201,7 +201,7 @@ public class TestCaseServiceUtilTest {
     testCaseGroupPopulations.add(testCaseGroupPopulation2);
     boolean result =
         testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
-    assertEquals(false, result);
+    assertFalse(result);
   }
 
   @Test
@@ -214,7 +214,7 @@ public class TestCaseServiceUtilTest {
             .build();
     boolean result =
         testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
-    assertEquals(false, result);
+    assertFalse(result);
   }
 
   @Test
@@ -225,7 +225,7 @@ public class TestCaseServiceUtilTest {
     testCaseGroupPopulations.add(testCaseGroupPopulation1);
     boolean result =
         testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
-    assertEquals(false, result);
+    assertFalse(result);
   }
 
   @Test
@@ -241,7 +241,7 @@ public class TestCaseServiceUtilTest {
     testCaseGroupPopulations.add(testCaseGroupPopulation1);
     boolean result =
         testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
-    assertEquals(false, result);
+    assertFalse(result);
   }
 
   @Test
@@ -261,7 +261,7 @@ public class TestCaseServiceUtilTest {
     testCaseGroupPopulations.add(testCaseGroupPopulation1);
     boolean result =
         testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
-    assertEquals(false, result);
+    assertFalse(result);
   }
 
   @Test
@@ -274,7 +274,7 @@ public class TestCaseServiceUtilTest {
             .build();
     boolean result =
         testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
-    assertEquals(true, result);
+    assertTrue(result);
   }
 
   @Test
@@ -288,6 +288,6 @@ public class TestCaseServiceUtilTest {
             .build();
     boolean result =
         testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
-    assertEquals(true, result);
+    assertTrue(result);
   }
 }
