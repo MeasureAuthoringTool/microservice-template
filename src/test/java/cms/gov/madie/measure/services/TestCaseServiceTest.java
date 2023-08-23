@@ -235,7 +235,8 @@ public class TestCaseServiceTest implements ResourceUtil {
     final String accessToken = "Bearer Token";
     when(measureRepository.findById(anyString())).thenReturn(Optional.empty());
 
-    MeasureTestCaseValidationReport output = testCaseService.updateTestCaseValidResourcesWithReport(measureId, accessToken);
+    MeasureTestCaseValidationReport output =
+        testCaseService.updateTestCaseValidResourcesWithReport(measureId, accessToken);
     assertThat(output, is(notNullValue()));
     assertThat(output.getMeasureId(), is(equalTo(measureId)));
     assertThat(output.getJobStatus(), is(equalTo(JobStatus.SKIPPED)));
@@ -245,25 +246,176 @@ public class TestCaseServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testUpdateTestCaseValidResourcesForMeasureValidList() {
-    TestCase testCase =
-            TestCase.builder()
-                    .id("TestID")
-                    .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
-                    .build();
-    Measure measure = Measure.builder()
-            .testCases(List.of(testCase))
+  public void testUpdateTestCaseValidResourcesWithReportMeasureNullTestCases() {
+    final String measureId = "M1234";
+    final String accessToken = "Bearer Token";
+    final String measureSetId = UUID.randomUUID().toString();
+    final String versionId = UUID.randomUUID().toString();
+    Measure measure =
+        Measure.builder()
+            .id(measureId)
+            .measureName("Measure 1234")
+            .measureSetId(measureSetId)
+            .versionId(versionId)
+            .testCases(null)
             .model(ModelType.QI_CORE.getValue())
             .build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+
+    MeasureTestCaseValidationReport output =
+        testCaseService.updateTestCaseValidResourcesWithReport(measureId, accessToken);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.getMeasureId(), is(equalTo(measureId)));
+    assertThat(output.getJobStatus(), is(equalTo(JobStatus.COMPLETED)));
+    assertThat(output.getMeasureSetId(), is(equalTo(measureSetId)));
+    assertThat(output.getMeasureVersionId(), is(equalTo(versionId)));
+    assertThat(output.getMeasureName(), is(equalTo("Measure 1234")));
+    assertThat(output.getTestCaseValidationReports(), is(notNullValue()));
+    assertThat(output.getTestCaseValidationReports().isEmpty(), is(true));
+  }
+
+  @Test
+  public void testUpdateTestCaseValidResourcesWithReportMeasureEmptyTestCases() {
+    final String measureId = "M1234";
+    final String accessToken = "Bearer Token";
+    final String measureSetId = UUID.randomUUID().toString();
+    final String versionId = UUID.randomUUID().toString();
+    Measure measure =
+        Measure.builder()
+            .id(measureId)
+            .measureName("Measure 1234")
+            .measureSetId(measureSetId)
+            .versionId(versionId)
+            .testCases(List.of())
+            .model(ModelType.QI_CORE.getValue())
+            .build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+
+    MeasureTestCaseValidationReport output =
+        testCaseService.updateTestCaseValidResourcesWithReport(measureId, accessToken);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.getMeasureId(), is(equalTo(measureId)));
+    assertThat(output.getJobStatus(), is(equalTo(JobStatus.COMPLETED)));
+    assertThat(output.getMeasureSetId(), is(equalTo(measureSetId)));
+    assertThat(output.getMeasureVersionId(), is(equalTo(versionId)));
+    assertThat(output.getMeasureName(), is(equalTo("Measure 1234")));
+    assertThat(output.getTestCaseValidationReports(), is(notNullValue()));
+    assertThat(output.getTestCaseValidationReports().isEmpty(), is(true));
+  }
+
+  @Test
+  public void testUpdateTestCaseValidResourcesWithReportMeasureWithTestCases() {
+    final String measureId = "M1234";
+    final String accessToken = "Bearer Token";
+    final String measureSetId = UUID.randomUUID().toString();
+    final String versionId = UUID.randomUUID().toString();
+    List<TestCase> prevTestCases =
+        List.of(
+            TestCase.builder()
+                .id("TC1")
+                .name("TC1")
+                .validResource(true)
+                .patientId(UUID.randomUUID())
+                .json("{}")
+                .build(),
+            TestCase.builder()
+                .id("TC2")
+                .name("TC2")
+                .validResource(true)
+                .patientId(UUID.randomUUID())
+                .json("{}")
+                .build(),
+            TestCase.builder()
+                .id("TC3")
+                .name("TC3")
+                .validResource(false)
+                .patientId(UUID.randomUUID())
+                .json("{}")
+                .build());
+
+    Measure measure =
+        Measure.builder()
+            .id(measureId)
+            .measureName("Measure 1234")
+            .measureSetId(measureSetId)
+            .versionId(versionId)
+            .testCases(prevTestCases)
+            .model(ModelType.QI_CORE.getValue())
+            .build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+
+    TestCaseService spy = Mockito.spy(testCaseService);
+    List<TestCase> validatedTestCases =
+        List.of(
+            TestCase.builder()
+                .id("TC1")
+                .name("TC1")
+                .validResource(false)
+                .patientId(UUID.randomUUID())
+                .json("{}")
+                .build(),
+            TestCase.builder()
+                .id("TC2")
+                .name("TC2")
+                .validResource(true)
+                .patientId(UUID.randomUUID())
+                .json("{}")
+                .build(),
+            TestCase.builder()
+                .id("TC3")
+                .name("TC3")
+                .validResource(true)
+                .patientId(UUID.randomUUID())
+                .json("{}")
+                .build());
+    doReturn(validatedTestCases)
+        .when(spy)
+        .updateTestCaseValidResourcesForMeasure(any(Measure.class), anyString());
+
+    MeasureTestCaseValidationReport output =
+        spy.updateTestCaseValidResourcesWithReport(measureId, accessToken);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.getMeasureId(), is(equalTo(measureId)));
+    assertThat(output.getJobStatus(), is(equalTo(JobStatus.COMPLETED)));
+    assertThat(output.getMeasureSetId(), is(equalTo(measureSetId)));
+    assertThat(output.getMeasureVersionId(), is(equalTo(versionId)));
+    assertThat(output.getMeasureName(), is(equalTo("Measure 1234")));
+    assertThat(output.getTestCaseValidationReports(), is(notNullValue()));
+    assertThat(output.getTestCaseValidationReports().size(), is(equalTo(3)));
+    assertThat(output.getTestCaseValidationReports().get(0), is(notNullValue()));
+    assertThat(output.getTestCaseValidationReports().get(0).getTestCaseId(), is(equalTo("TC1")));
+    assertThat(output.getTestCaseValidationReports().get(0).isPreviousValidResource(), is(true));
+    assertThat(output.getTestCaseValidationReports().get(0).isCurrentValidResource(), is(false));
+    assertThat(output.getTestCaseValidationReports().get(1), is(notNullValue()));
+    assertThat(output.getTestCaseValidationReports().get(1).getTestCaseId(), is(equalTo("TC2")));
+    assertThat(output.getTestCaseValidationReports().get(1).isPreviousValidResource(), is(true));
+    assertThat(output.getTestCaseValidationReports().get(1).isCurrentValidResource(), is(true));
+    assertThat(output.getTestCaseValidationReports().get(2), is(notNullValue()));
+    assertThat(output.getTestCaseValidationReports().get(2).getTestCaseId(), is(equalTo("TC3")));
+    assertThat(output.getTestCaseValidationReports().get(2).isPreviousValidResource(), is(false));
+    assertThat(output.getTestCaseValidationReports().get(2).isCurrentValidResource(), is(true));
+  }
+
+  @Test
+  public void testUpdateTestCaseValidResourcesForMeasureValidList() {
+    TestCase testCase =
+        TestCase.builder()
+            .id("TestID")
+            .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
+            .build();
+    Measure measure =
+        Measure.builder().testCases(List.of(testCase)).model(ModelType.QI_CORE.getValue()).build();
     final String accessToken = "Bearer Token";
     TestCaseService spy = Mockito.spy(testCaseService);
-    TestCase validatedTestCase = testCase.toBuilder()
+    TestCase validatedTestCase =
+        testCase
+            .toBuilder()
             .hapiOperationOutcome(HapiOperationOutcome.builder().build())
             .validResource(true)
             .build();
     doReturn(List.of(validatedTestCase))
-            .when(spy)
-                    .validateTestCasesAsResources(anyList(), any(ModelType.class), anyString());
+        .when(spy)
+        .validateTestCasesAsResources(anyList(), any(ModelType.class), anyString());
 
     List<TestCase> output = spy.updateTestCaseValidResourcesForMeasure(measure, accessToken);
 

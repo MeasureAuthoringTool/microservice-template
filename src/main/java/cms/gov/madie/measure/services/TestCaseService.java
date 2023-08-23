@@ -187,6 +187,7 @@ public class TestCaseService {
               .measureId(measure.getId())
               .measureSetId(measure.getMeasureSetId())
               .measureVersionId(measure.getVersionId())
+              .testCaseValidationReports(List.of())
               .build();
 
       if (!CollectionUtils.isEmpty(measure.getTestCases())) {
@@ -209,17 +210,17 @@ public class TestCaseService {
             report ->
                 report.setCurrentValidResource(
                     testCaseMap.get(report.getTestCaseId()).isValidResource()));
-        measureReport.setJobStatus(JobStatus.COMPLETED);
         measureReport.setTestCaseValidationReports(reports);
       }
 
+      measureReport.setJobStatus(JobStatus.COMPLETED);
       return measureReport;
     }
 
     return MeasureTestCaseValidationReport.builder()
-            .measureId(measureId)
-            .jobStatus(JobStatus.SKIPPED)
-            .build();
+        .measureId(measureId)
+        .jobStatus(JobStatus.SKIPPED)
+        .build();
   }
 
   public List<TestCase> updateTestCaseValidResourcesForMeasure(
