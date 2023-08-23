@@ -47,6 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -1013,9 +1014,20 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testGetAllMeasureIds() {
-    when(measureRepository.findAllMeasureIdsBy()).thenReturn(List.of(measure1, measure2));
-    List<String> result = measureService.getAllMeasureIds();
+  public void testGetAllMeasureIdsAnyDraftStatus() {
+    when(measureRepository.findAllMeasureIdsByActive()).thenReturn(List.of(measure1, measure2));
+    List<String> result = measureService.getAllActiveMeasureIds(false);
+
+    assertThat(result.size(), is(equalTo(2)));
+    assertThat(result.get(0), is(equalTo(measure1.getId())));
+    assertThat(result.get(1), is(equalTo(measure2.getId())));
+  }
+
+  @Test
+  public void testGetAllMeasureIdsDraftOnly() {
+    when(measureRepository.findAllMeasureIdsByActiveAndMeasureMetaDataDraft(anyBoolean()))
+        .thenReturn(List.of(measure1, measure2));
+    List<String> result = measureService.getAllActiveMeasureIds(true);
 
     assertThat(result.size(), is(equalTo(2)));
     assertThat(result.get(0), is(equalTo(measure1.getId())));

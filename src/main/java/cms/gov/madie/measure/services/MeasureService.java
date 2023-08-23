@@ -334,10 +334,11 @@ public class MeasureService {
     return measureSetMap;
   }
 
-  public List<String> getAllMeasureIds() {
-    return measureRepository.findAllMeasureIdsBy().stream()
-        .map(Measure::getId)
-        .collect(Collectors.toList());
+  public List<String> getAllActiveMeasureIds(boolean draftOnly) {
+    return (draftOnly
+            ? measureRepository.findAllMeasureIdsByActiveAndMeasureMetaDataDraft(true)
+            : measureRepository.findAllMeasureIdsByActive())
+        .stream().map(Measure::getId).collect(Collectors.toList());
   }
 
   public Page<Measure> getMeasuresByCriteria(

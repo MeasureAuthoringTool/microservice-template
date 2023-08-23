@@ -46,8 +46,8 @@ public class AdminControllerMvcTest {
   @Autowired private MockMvc mockMvc;
 
   @Test
-  public void testValidateAllMeasureTestCasesNoMeasuresFound() throws Exception {
-    when(measureService.getAllMeasureIds()).thenReturn(List.of());
+  public void testValidateAllMeasureTestCasesNoMeasuresFoundDefaultDraftOnly() throws Exception {
+    when(measureService.getAllActiveMeasureIds(eq(true))).thenReturn(List.of());
 
     mockMvc
         .perform(
@@ -63,8 +63,43 @@ public class AdminControllerMvcTest {
   }
 
   @Test
-  public void testValidateAllMeasureTestCasesNoImpactedMeasure() throws Exception {
-    when(measureService.getAllMeasureIds()).thenReturn(List.of("M1", "M2"));
+  public void testValidateAllMeasureTestCasesNoMeasuresFoundProvidedDraftOnly() throws Exception {
+    when(measureService.getAllActiveMeasureIds(eq(true))).thenReturn(List.of());
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.put("/admin/measures/test-cases/validations?draftOnly=true")
+                .with(csrf())
+                .with(user(TEST_USER_ID))
+                .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
+                .header("Authorization", "test-okta"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.reports", empty()))
+        .andExpect(jsonPath("$.impactedMeasures", empty()));
+    verifyNoInteractions(testCaseService);
+  }
+
+  @Test
+  public void testValidateAllMeasureTestCasesNoMeasuresFoundProvidedNotDraftOnly()
+      throws Exception {
+    when(measureService.getAllActiveMeasureIds(eq(false))).thenReturn(List.of());
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.put("/admin/measures/test-cases/validations?draftOnly=false")
+                .with(csrf())
+                .with(user(TEST_USER_ID))
+                .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
+                .header("Authorization", "test-okta"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.reports", empty()))
+        .andExpect(jsonPath("$.impactedMeasures", empty()));
+    verifyNoInteractions(testCaseService);
+  }
+
+  @Test
+  public void testValidateAllMeasureTestCasesNoImpactedMeasureDefaultDraftOnly() throws Exception {
+    when(measureService.getAllActiveMeasureIds(eq(true))).thenReturn(List.of("M1", "M2"));
     MeasureTestCaseValidationReport report1 =
         MeasureTestCaseValidationReport.builder()
             .measureId("M1")
@@ -151,8 +186,8 @@ public class AdminControllerMvcTest {
   }
 
   @Test
-  public void testValidateAllMeasureTestCasesOneImpactedMeasure() throws Exception {
-    when(measureService.getAllMeasureIds()).thenReturn(List.of("M1", "M2"));
+  public void testValidateAllMeasureTestCasesOneImpactedMeasureDefaultDraftOnly() throws Exception {
+    when(measureService.getAllActiveMeasureIds(eq(true))).thenReturn(List.of("M1", "M2"));
     MeasureTestCaseValidationReport report1 =
         MeasureTestCaseValidationReport.builder()
             .measureId("M1")

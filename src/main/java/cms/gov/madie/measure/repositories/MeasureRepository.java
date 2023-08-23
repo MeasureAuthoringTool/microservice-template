@@ -30,8 +30,11 @@ public interface MeasureRepository
   @Query(value = "{_id: ?0}", fields = "{'testCases.series': 1, _id: 0}")
   Optional<Measure> findAllTestCaseSeriesByMeasureId(String measureId);
 
-  @Query(fields = "{_id: 1, model: 1}")
-  List<Measure> findAllMeasureIdsBy();
+  @Query(value = "{active : true}", fields = "{_id: 1, model: 1}")
+  List<Measure> findAllMeasureIdsByActive();
+
+  @Query(value = "{active : true, 'measureMetaData.draft': ?0}", fields = "{_id: 1, model: 1}")
+  List<Measure> findAllMeasureIdsByActiveAndMeasureMetaDataDraft(boolean draft);
 
   @Query(value = "{'groups._id': ?0}")
   Optional<Measure> findGroupById(String groupId);

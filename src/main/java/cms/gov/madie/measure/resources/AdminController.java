@@ -18,6 +18,7 @@ import org.springframework.util.StopWatch;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
@@ -43,12 +44,13 @@ public class AdminController {
       HttpServletRequest request,
       @Value("${lambda-api-key}") String apiKey,
       Principal principal,
-      @RequestHeader("Authorization") String accessToken)
+      @RequestHeader("Authorization") String accessToken,
+      @RequestParam(name = "draftOnly", defaultValue = "true") boolean draftOnly)
       throws InterruptedException, ExecutionException {
     log.info("User [{}] - Starting admin task [validateAllMeasureTestCases]", principal.getName());
     StopWatch timer = new StopWatch();
     timer.start();
-    List<String> measureIds = measureService.getAllMeasureIds();
+    List<String> measureIds = measureService.getAllActiveMeasureIds(draftOnly);
     List<Callable<MeasureTestCaseValidationReport>> tasks = new ArrayList<>();
     List<MeasureTestCaseValidationReport> reports = new ArrayList<>();
     List<ImpactedMeasureValidationReport> impactedMeasures = new ArrayList<>();
