@@ -1,6 +1,8 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.HapiFhirConfig;
+import cms.gov.madie.measure.dto.JobStatus;
+import cms.gov.madie.measure.dto.MeasureTestCaseValidationReport;
 import cms.gov.madie.measure.exceptions.DuplicateTestCaseNameException;
 import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
@@ -69,6 +71,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -224,6 +227,49 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertThat(output.getResourceUri(), is(nullValue()));
     assertThat(output.getHapiOperationOutcome(), is(nullValue()));
     assertThat(output.isValidResource(), is(false));
+  }
+
+  @Test
+  public void testUpdateTestCaseValidResourcesWithReportMeasureNotFound() {
+    final String measureId = "M1234";
+    final String accessToken = "Bearer Token";
+    when(measureRepository.findById(anyString())).thenReturn(Optional.empty());
+
+    MeasureTestCaseValidationReport output = testCaseService.updateTestCaseValidResourcesWithReport(measureId, accessToken);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.getMeasureId(), is(equalTo(measureId)));
+    assertThat(output.getJobStatus(), is(equalTo(JobStatus.SKIPPED)));
+    assertThat(output.getMeasureSetId(), is(nullValue()));
+    assertThat(output.getMeasureVersionId(), is(nullValue()));
+    assertThat(output.getMeasureName(), is(nullValue()));
+  }
+
+  @Test
+  public void testUpdateTestCaseValidResourcesForMeasureValidList() {
+    TestCase testCase =
+            TestCase.builder()
+                    .id("TestID")
+                    .json("{\"resourceType\": \"Bundle\", \"type\": \"collection\"}")
+                    .build();
+    Measure measure = Measure.builder()
+            .testCases(List.of(testCase))
+            .model(ModelType.QI_CORE.getValue())
+            .build();
+    final String accessToken = "Bearer Token";
+    TestCaseService spy = Mockito.spy(testCaseService);
+    TestCase validatedTestCase = testCase.toBuilder()
+            .hapiOperationOutcome(HapiOperationOutcome.builder().build())
+            .validResource(true)
+            .build();
+    doReturn(List.of(validatedTestCase))
+            .when(spy)
+                    .validateTestCasesAsResources(anyList(), any(ModelType.class), anyString());
+
+    List<TestCase> output = spy.updateTestCaseValidResourcesForMeasure(measure, accessToken);
+
+    assertThat(output, is(notNullValue()));
+    assertThat(output.size(), is(equalTo(1)));
+    assertThat(output.get(0), is(equalTo(validatedTestCase)));
   }
 
   @Test
