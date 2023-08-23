@@ -35,8 +35,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(SecurityConfig.class)
 public class AdminControllerMvcTest {
-  private static final String LAMBDA_TEST_API_KEY_HEADER = "api-key";
-  private static final String LAMBDA_TEST_API_KEY_HEADER_VALUE = "9202c9fa";
+  private static final String ADMIN_TEST_API_KEY_HEADER = "api-key";
+  private static final String ADMIN_TEST_API_KEY_HEADER_VALUE = "0a51991c";
   private static final String TEST_USER_ID = "test-okta-user-id-123";
 
   @MockBean private MeasureService measureService;
@@ -54,7 +54,7 @@ public class AdminControllerMvcTest {
             MockMvcRequestBuilders.put("/admin/measures/test-cases/validations")
                 .with(csrf())
                 .with(user(TEST_USER_ID))
-                .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
+                .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
                 .header("Authorization", "test-okta"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.reports", empty()))
@@ -71,7 +71,7 @@ public class AdminControllerMvcTest {
             MockMvcRequestBuilders.put("/admin/measures/test-cases/validations?draftOnly=true")
                 .with(csrf())
                 .with(user(TEST_USER_ID))
-                .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
+                .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
                 .header("Authorization", "test-okta"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.reports", empty()))
@@ -89,7 +89,7 @@ public class AdminControllerMvcTest {
             MockMvcRequestBuilders.put("/admin/measures/test-cases/validations?draftOnly=false")
                 .with(csrf())
                 .with(user(TEST_USER_ID))
-                .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
+                .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
                 .header("Authorization", "test-okta"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.reports", empty()))
@@ -147,7 +147,7 @@ public class AdminControllerMvcTest {
             MockMvcRequestBuilders.put("/admin/measures/test-cases/validations")
                 .with(csrf())
                 .with(user(TEST_USER_ID))
-                .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
+                .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
                 .header("Authorization", "test-okta"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.reports[0].measureId").value("M1"))
@@ -243,7 +243,7 @@ public class AdminControllerMvcTest {
             MockMvcRequestBuilders.put("/admin/measures/test-cases/validations")
                 .with(csrf())
                 .with(user(TEST_USER_ID))
-                .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
+                .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
                 .header("Authorization", "test-okta"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.reports[0].measureId").value("M1"))

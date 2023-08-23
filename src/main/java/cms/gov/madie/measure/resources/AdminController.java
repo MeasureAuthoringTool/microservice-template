@@ -42,7 +42,7 @@ public class AdminController {
   @PreAuthorize("#request.getHeader('api-key') == #apiKey")
   public ResponseEntity<MeasureTestCaseValidationReportSummary> validateAllMeasureTestCases(
       HttpServletRequest request,
-      @Value("${lambda-api-key}") String apiKey,
+      @Value("${admin-api-key}") String apiKey,
       Principal principal,
       @RequestHeader("Authorization") String accessToken,
       @RequestParam(name = "draftOnly", defaultValue = "true") boolean draftOnly)
@@ -108,4 +108,6 @@ public class AdminController {
       final String measureId, final String accessToken) {
     return () -> testCaseService.updateTestCaseValidResourcesWithReport(measureId, accessToken);
   }
+
+
 }
