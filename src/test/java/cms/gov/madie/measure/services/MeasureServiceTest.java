@@ -1011,4 +1011,14 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertFalse(result);
   }
+
+  @Test
+  public void testGetAllMeasureIds() {
+    when(measureRepository.findAllMeasureIdsBy()).thenReturn(List.of(measure1, measure2));
+    List<String> result = measureService.getAllMeasureIds();
+
+    assertThat(result.size(), is(equalTo(2)));
+    assertThat(result.get(0), is(equalTo(measure1.getId())));
+    assertThat(result.get(1), is(equalTo(measure2.getId())));
+  }
 }
