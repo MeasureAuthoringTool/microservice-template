@@ -190,7 +190,7 @@ public class TestCaseService {
               .testCaseValidationReports(List.of())
               .build();
 
-      if (!CollectionUtils.isEmpty(measure.getTestCases())) {
+      if (!isEmpty(measure.getTestCases())) {
         List<TestCaseValidationReport> reports =
             measure.getTestCases().stream()
                 .map(
@@ -237,7 +237,7 @@ public class TestCaseService {
       final List<TestCase> testCases, final ModelType modelType, final String accessToken) {
     List<TestCase> validatedTestCases = new ArrayList<>();
 
-    if (!CollectionUtils.isEmpty(testCases)) {
+    if (!isEmpty(testCases)) {
       validatedTestCases =
           testCases.stream()
               .map(testCase -> validateTestCaseAsResource(testCase, modelType, accessToken))
