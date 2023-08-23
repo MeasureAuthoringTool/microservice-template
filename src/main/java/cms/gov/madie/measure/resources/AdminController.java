@@ -48,10 +48,12 @@ public class AdminController {
     log.info("User [{}] - Starting admin task [validateAllMeasureTestCases]", principal.getName());
     StopWatch timer = new StopWatch();
     timer.start();
-    List<MeasureTestCaseValidationReport> reports = new ArrayList<>();
     List<String> measureIds = measureService.getAllMeasureIds();
     List<Callable<MeasureTestCaseValidationReport>> tasks = new ArrayList<>();
+    List<MeasureTestCaseValidationReport> reports = new ArrayList<>();
+    List<ImpactedMeasureValidationReport> impactedMeasures = new ArrayList<>();
 
+    log.info("User [{}] - Building callable tasks for [] measures", measureIds.size());
     for (String measureId : measureIds) {
       tasks.add(buildCallableForMeasureId(measureId, accessToken));
     }
@@ -59,8 +61,6 @@ public class AdminController {
     ExecutorService executorService = Executors.newFixedThreadPool(concurrencyLimit);
     List<Future<MeasureTestCaseValidationReport>> futures = executorService.invokeAll(tasks);
     executorService.shutdown();
-
-    List<ImpactedMeasureValidationReport> impactedMeasures = new ArrayList<>();
 
     for (Future<MeasureTestCaseValidationReport> f : futures) {
       MeasureTestCaseValidationReport measureTestCaseValidationReport = f.get();
