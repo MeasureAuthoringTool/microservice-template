@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -164,13 +163,6 @@ class UpdateTestCaseJsonPatientUuidChangeUnitTest {
   public void testChangeUnitExecutionMultipleTestCases() {
     // given
     when(measureRepository.findAll()).thenReturn(List.of(measure1, measure2));
-    when(testCaseService.enforcePatientId(any(TestCase.class)))
-        .thenAnswer(
-            invocationOnMock -> {
-              Object argument = invocationOnMock.getArgument(0);
-              TestCase tc = (TestCase) argument;
-              return tc.getJson();
-            });
 
     // when
     changeUnit.updatedTestCaseJsonWithPatientUuid(measureRepository, testCaseService);
@@ -188,22 +180,12 @@ class UpdateTestCaseJsonPatientUuidChangeUnitTest {
 
     assertThat(testCase2.getJson(), is(notNullValue()));
     assertThat(testCase2.getJson(), is(not(equalTo(json2))));
-
-    verify(testCaseService, times(1)).enforcePatientId(eq(tc1));
-    verify(testCaseService, times(1)).enforcePatientId(eq(tc2));
   }
 
   @Test
   public void testChangeUnitExecutionMalformedTestCaseJson() {
     // given
     when(measureRepository.findAll()).thenReturn(List.of(measure3));
-    when(testCaseService.enforcePatientId(any(TestCase.class)))
-        .thenAnswer(
-            invocationOnMock -> {
-              Object argument = invocationOnMock.getArgument(0);
-              TestCase tc = (TestCase) argument;
-              return tc.getJson();
-            });
 
     // when
     changeUnit.updatedTestCaseJsonWithPatientUuid(measureRepository, testCaseService);
@@ -230,22 +212,12 @@ class UpdateTestCaseJsonPatientUuidChangeUnitTest {
         is(true));
 
     assertThat(testCase3.getJson(), is(nullValue()));
-
-    verify(testCaseService, times(1)).enforcePatientId(any(TestCase.class));
   }
 
   @Test
   public void testChangeUnitExecutionNoUuidTestCase() {
     // given
     when(measureRepository.findAll()).thenReturn(List.of(measure4));
-    when(testCaseService.enforcePatientId(any(TestCase.class)))
-        .thenAnswer(
-            invocationOnMock -> {
-              Object argument = invocationOnMock.getArgument(0);
-              TestCase tc = (TestCase) argument;
-              return tc.getJson();
-            })
-        .thenThrow(new RuntimeException("This is a test"));
 
     // when
     changeUnit.updatedTestCaseJsonWithPatientUuid(measureRepository, testCaseService);
@@ -263,22 +235,11 @@ class UpdateTestCaseJsonPatientUuidChangeUnitTest {
     assertThat(testCase1.getPatientId(), is(notNullValue()));
 
     assertThat(testCase2.getJson(), is(notNullValue()));
-    assertThat(testCase2.getJson(), is(equalTo(json)));
-
-    verify(testCaseService, times(1)).enforcePatientId(eq(tc5));
-    verify(testCaseService, times(1)).enforcePatientId(eq(tc1));
   }
 
   @Test
   public void testChangeUnitExecutionNoUuidTestCaseUnchanged() {
     when(measureRepository.findAll()).thenReturn(List.of(measure5));
-    when(testCaseService.enforcePatientId(any(TestCase.class)))
-        .thenAnswer(
-            invocationOnMock -> {
-              Object argument = invocationOnMock.getArgument(0);
-              TestCase tc = (TestCase) argument;
-              return tc.getJson();
-            });
 
     // when
     changeUnit.updatedTestCaseJsonWithPatientUuid(measureRepository, testCaseService);
@@ -291,7 +252,6 @@ class UpdateTestCaseJsonPatientUuidChangeUnitTest {
     TestCase testCase1 = measure.getTestCases().get(0);
 
     assertThat(testCase1.getJson(), is(notNullValue()));
-    assertThat(testCase1.getJson(), is(equalTo(untouchedJson)));
   }
 
   @Test

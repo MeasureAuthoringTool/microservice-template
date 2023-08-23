@@ -4,21 +4,31 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import gov.cms.madie.models.measure.PopulationType;
+import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import gov.cms.madie.models.measure.TestCasePopulationValue;
+import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+@Slf4j
 public final class QiCoreJsonUtil {
+
+  @Value("${madie.json.resources.base-uri}")
+  private static String madieJsonResourcesBaseUri;
+
   private QiCoreJsonUtil() {}
 
   /**
@@ -228,5 +238,80 @@ public final class QiCoreJsonUtil {
     } else {
       throw new RuntimeException("Unable to find Test case Json");
     }
+  }
+
+  public static String buildFullUrl(final String id, String resourceType) {
+    return madieJsonResourcesBaseUri + resourceType + "/" + id;
+  }
+
+  public static String enforcePatientId(TestCase testCase) {
+    String testCaseJson = testCase.getJson();
+    if (!StringUtils.isEmpty(testCaseJson)) {
+      ObjectMapper objectMapper = new ObjectMapper();
+      String modifiedJsonString = testCaseJson;
+      try {
+        final String newPatientId = testCase.getPatientId().toString();
+        JsonNode rootNode = objectMapper.readTree(testCaseJson);
+        ArrayNode allEntries = (ArrayNode) rootNode.get("entry");
+        if (allEntries != null) {
+          for (JsonNode node : allEntries) {
+            if (node.get("resource") != null
+                && node.get("resource").get("resourceType") != null
+                && node.get("resource").get("resourceType").asText().equalsIgnoreCase("Patient")) {
+              JsonNode resourceNode = node.get("resource");
+              ObjectNode o = (ObjectNode) resourceNode;
+              ObjectNode parent = (ObjectNode) node;
+              parent.put("fullUrl", buildFullUrl(newPatientId, "Patient"));
+              o.put("id", newPatientId);
+              modifiedJsonString = jsonNodeToString(objectMapper, rootNode);
+            }
+          }
+        }
+        return modifiedJsonString;
+      } catch (JsonProcessingException e) {
+        log.error("Error reading testCaseJson testCaseId = " + testCase.getId(), e);
+      }
+    }
+    return testCaseJson;
+  }
+
+  // update full urls for non-patient resources
+  public static String updateResourceFullUrls(TestCase testCase) {
+    ObjectMapper mapper = new ObjectMapper();
+    try {
+      JsonNode rootNode = mapper.readTree(testCase.getJson());
+      JsonNode entry = rootNode.get("entry");
+      if (entry != null) {
+        for (JsonNode theNode : entry) {
+          var resourceNode = theNode.get("resource");
+          if (resourceNode != null) {
+            var resourceType = resourceNode.get("resourceType").asText();
+            if (resourceType != null
+                && !"Patient".equalsIgnoreCase(resourceType)
+                && theNode.has("fullUrl")) {
+              String id = resourceNode.get("id").asText();
+              String newUrl = buildFullUrl(id, resourceType);
+              log.info("Updating the full url of a resource [{}], new fullUrl is [{}]", id, newUrl);
+              ObjectNode node = (ObjectNode) theNode;
+              node.put("fullUrl", newUrl);
+            }
+          }
+        }
+      }
+      return jsonNodeToString(mapper, rootNode);
+    } catch (JsonProcessingException ex) {
+      log.error("Error reading testCaseJson testCaseId = " + testCase.getId(), ex);
+    }
+    return testCase.getJson();
+  }
+
+  protected static String jsonNodeToString(ObjectMapper objectMapper, JsonNode rootNode) {
+    ByteArrayOutputStream bout = new ByteArrayOutputStream();
+    try {
+      objectMapper.writerWithDefaultPrettyPrinter().writeValue(bout, rootNode);
+    } catch (Exception ex) {
+      log.error("Exception : " + ex.getMessage());
+    }
+    return bout.toString();
   }
 }
