@@ -77,6 +77,34 @@ class ValidationControllerTest {
   }
 
   @Test
+  void testValidateBundleBadRequest() throws JsonProcessingException {
+    final String accessToken = "Bearer TOKEN";
+    final String testCaseJson = "{ \"resourceType\": \"GOOD JSON\" }";
+    HttpHeaders headers = new HttpHeaders();
+    HttpEntity<String> request = new HttpEntity<>(testCaseJson, headers);
+
+    when(fhirServicesClient.validateBundle(anyString(), anyString()))
+        .thenReturn(
+            ResponseEntity.ok(HapiOperationOutcome.builder().code(200).successful(true).build()));
+
+    when(mapper.writeValueAsString(any())).thenThrow(new JsonProcessingException("BadJson") {});
+
+    ResponseEntity<String> output = validationController.validateBundle(request, accessToken);
+
+    assertThat(output, is(notNullValue()));
+    assertThat(output.getStatusCode(), is(HttpStatus.BAD_REQUEST));
+    assertThat(output.getBody(), is(notNullValue()));
+    assertThat(
+        output.getBody(),
+        is(
+            equalTo(
+                "Unable to validate test case JSON due to errors,"
+                    + " but outcome not able to be interpreted!")));
+    verify(fhirServicesClient, times(1))
+        .validateBundle(testCaseJsonCaptor.capture(), accessTokenCaptor.capture());
+  }
+
+  @Test
   void testScanFileHandlesNoFileResponse() {
     MultipartFile multipartFile = Mockito.mock(MultipartFile.class);
     when(multipartFile.getOriginalFilename()).thenReturn("TestFile.txt");
