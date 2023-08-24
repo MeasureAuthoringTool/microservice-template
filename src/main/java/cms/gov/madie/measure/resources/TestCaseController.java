@@ -4,6 +4,7 @@ import cms.gov.madie.measure.dto.ValidList;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.MeasureService;
+import com.fasterxml.jackson.databind.JsonNode;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.TestCase;
 import cms.gov.madie.measure.services.TestCaseService;
@@ -20,7 +21,9 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -118,13 +121,10 @@ public class TestCaseController {
 
   @DeleteMapping(ControllerUtil.TEST_CASES)
   public ResponseEntity<String> deleteTestCases(
-      @PathVariable String measureId, @RequestBody List<String> testCaseIds, Principal principal) {
-
-    log.info(
-        "User [{}] is attempting to delete following test cases with Ids [{}] from measure [{}]",
-        principal.getName(),
-        String.join(", ", testCaseIds),
-        measureId);
+      @PathVariable String measureId,
+      @RequestBody Map<String, List<String>> requestBody,
+      Principal principal) {
+    List<String> testCaseIds = requestBody.get("testCaseIds");
     return ResponseEntity.ok(
         testCaseService.deleteTestCases(measureId, testCaseIds, principal.getName()));
   }

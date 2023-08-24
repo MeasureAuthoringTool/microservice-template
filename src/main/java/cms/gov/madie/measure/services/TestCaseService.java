@@ -292,6 +292,11 @@ public class TestCaseService {
       log.info("Test case Ids or Measure Id is Empty");
       throw new InvalidIdException("Test cases cannot be deleted, please contact the helpdesk");
     }
+    log.info(
+        "User [{}] is attempting to delete following test cases with Ids [{}] from measure [{}]",
+        username,
+        String.join(", ", testCaseIds),
+        measureId);
     Measure measure = findMeasureById(measureId);
     if (!measure.getMeasureMetaData().isDraft()) {
       throw new InvalidDraftStatusException(measure.getId());

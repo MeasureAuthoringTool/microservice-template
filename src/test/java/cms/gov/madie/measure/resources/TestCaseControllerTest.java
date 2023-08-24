@@ -24,6 +24,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -227,7 +228,8 @@ public class TestCaseControllerTest {
         .deleteTestCases(any(String.class), any(), any(String.class));
 
     ResponseEntity<String> output =
-        controller.deleteTestCases("measure.id", List.of("TC1_ID"), principal);
+        controller.deleteTestCases(
+            "measure.id", Map.of("testCaseIds", List.of("TC1_ID")), principal);
 
     assertEquals(mockedServiceResponse, output.getBody());
     assertEquals(HttpStatus.OK, output.getStatusCode());

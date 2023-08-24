@@ -29,6 +29,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -823,7 +824,7 @@ public class TestCaseControllerMvcTest {
 
   @Test
   public void testDeleteTestCases() throws Exception {
-    List<String> testCaseIds = List.of("testCaseId1", "testCaseId1");
+    var inputData = Map.of("testCaseIds", List.of("TC1_ID", "TC2_ID"));
     when(testCaseService.deleteTestCases(anyString(), any(), any(String.class)))
         .thenReturn("Succesfully deleted provided test cases");
 
@@ -833,7 +834,7 @@ public class TestCaseControllerMvcTest {
                 MockMvcRequestBuilders.delete("/measures/1234/test-cases")
                     .with(user(TEST_USER_ID))
                     .with(csrf())
-                    .content(asJsonString(testCaseIds))
+                    .content(asJsonString(inputData))
                     .contentType(MediaType.APPLICATION_JSON)
                     .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
