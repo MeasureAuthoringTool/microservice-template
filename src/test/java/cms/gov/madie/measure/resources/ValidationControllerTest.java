@@ -2,6 +2,9 @@ package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.services.FhirServicesClient;
 import cms.gov.madie.measure.services.VirusScanClient;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import gov.cms.madie.models.measure.HapiOperationOutcome;
 import gov.cms.madie.models.scanner.ScanValidationDto;
 import gov.cms.madie.models.scanner.VirusScanResponseDto;
 import gov.cms.madie.models.scanner.VirusScanResultDto;
@@ -40,6 +43,8 @@ class ValidationControllerTest {
 
   @Mock private VirusScanClient virusScanClient;
 
+  @Mock private ObjectMapper mapper;
+
   @InjectMocks private ValidationController validationController;
 
   @Captor ArgumentCaptor<String> testCaseJsonCaptor;
@@ -47,7 +52,7 @@ class ValidationControllerTest {
   @Captor ArgumentCaptor<String> accessTokenCaptor;
 
   @Test
-  void testValidateBundleProxiesRequest() {
+  void testValidateBundleProxiesRequest() throws JsonProcessingException {
     final String accessToken = "Bearer TOKEN";
     final String testCaseJson = "{ \"resourceType\": \"GOOD JSON\" }";
     HttpHeaders headers = new HttpHeaders();
@@ -55,7 +60,10 @@ class ValidationControllerTest {
     HttpEntity<String> request = new HttpEntity<>(testCaseJson, headers);
 
     when(fhirServicesClient.validateBundle(anyString(), anyString()))
-        .thenReturn(ResponseEntity.ok(goodOutcomeJson));
+        .thenReturn(
+            ResponseEntity.ok(HapiOperationOutcome.builder().code(200).successful(true).build()));
+
+    when(mapper.writeValueAsString(any())).thenReturn(goodOutcomeJson);
 
     ResponseEntity<String> output = validationController.validateBundle(request, accessToken);
 
@@ -66,6 +74,34 @@ class ValidationControllerTest {
         .validateBundle(testCaseJsonCaptor.capture(), accessTokenCaptor.capture());
     assertThat(testCaseJsonCaptor.getValue(), is(equalTo(testCaseJson)));
     assertThat(accessTokenCaptor.getValue(), is(equalTo(accessToken)));
+  }
+
+  @Test
+  void testValidateBundleBadRequest() throws JsonProcessingException {
+    final String accessToken = "Bearer TOKEN";
+    final String testCaseJson = "{ \"resourceType\": \"GOOD JSON\" }";
+    HttpHeaders headers = new HttpHeaders();
+    HttpEntity<String> request = new HttpEntity<>(testCaseJson, headers);
+
+    when(fhirServicesClient.validateBundle(anyString(), anyString()))
+        .thenReturn(
+            ResponseEntity.ok(HapiOperationOutcome.builder().code(200).successful(true).build()));
+
+    when(mapper.writeValueAsString(any())).thenThrow(new JsonProcessingException("BadJson") {});
+
+    ResponseEntity<String> output = validationController.validateBundle(request, accessToken);
+
+    assertThat(output, is(notNullValue()));
+    assertThat(output.getStatusCode(), is(HttpStatus.BAD_REQUEST));
+    assertThat(output.getBody(), is(notNullValue()));
+    assertThat(
+        output.getBody(),
+        is(
+            equalTo(
+                "Unable to validate test case JSON due to errors,"
+                    + " but outcome not able to be interpreted!")));
+    verify(fhirServicesClient, times(1))
+        .validateBundle(testCaseJsonCaptor.capture(), accessTokenCaptor.capture());
   }
 
   @Test
