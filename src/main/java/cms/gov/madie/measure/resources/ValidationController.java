@@ -2,6 +2,9 @@ package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.services.FhirServicesClient;
 import cms.gov.madie.measure.services.VirusScanClient;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import gov.cms.madie.models.measure.HapiOperationOutcome;
 import gov.cms.madie.models.scanner.ScanValidationDto;
 import gov.cms.madie.models.scanner.VirusScanResponseDto;
 import lombok.AllArgsConstructor;
@@ -28,6 +31,7 @@ public class ValidationController {
 
   private FhirServicesClient fhirServicesClient;
   private VirusScanClient virusScanClient;
+  private ObjectMapper mapper;
 
   @PostMapping(
       path = "/bundles",
@@ -35,7 +39,17 @@ public class ValidationController {
       produces = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<String> validateBundle(
       HttpEntity<String> request, @RequestHeader("Authorization") String accessToken) {
-    return fhirServicesClient.validateBundle(request.getBody(), accessToken);
+    try {
+      ResponseEntity<HapiOperationOutcome> output =
+          fhirServicesClient.validateBundle(request.getBody(), accessToken);
+      return ResponseEntity.ok(mapper.writeValueAsString(output.getBody()));
+
+    } catch (JsonProcessingException ex) {
+      return ResponseEntity.badRequest()
+          .body(
+              "Unable to validate test case JSON due to errors,"
+                  + " but outcome not able to be interpreted!");
+    }
   }
 
   @PostMapping("/files")
