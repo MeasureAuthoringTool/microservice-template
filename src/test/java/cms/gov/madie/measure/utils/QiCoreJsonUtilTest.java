@@ -146,6 +146,12 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
   }
 
   @Test
+  public void testIsValidJsonFalseForNull() {
+    boolean output = QiCoreJsonUtil.isValidJson(null);
+    assertThat(output, is(false));
+  }
+
+  @Test
   public void testGetPatientId() throws JsonProcessingException {
     String output = QiCoreJsonUtil.getPatientId(json);
     assertThat(output, is(equalTo("1")));

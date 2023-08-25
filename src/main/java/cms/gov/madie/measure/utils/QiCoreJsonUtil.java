@@ -28,12 +28,19 @@ public final class QiCoreJsonUtil {
 
   private QiCoreJsonUtil() {}
 
+  /**
+   * Helper function to test if JSON is well-formed for purposes of being used as a resource. Null
+   * input is treated as invalid, because it is not a valid resource.
+   *
+   * @param json
+   * @return true if json is present and well-formed, false otherwise
+   */
   public static boolean isValidJson(String json) {
     ObjectMapper mapper = new ObjectMapper();
     try {
       mapper.readTree(json);
       return true;
-    } catch (JsonProcessingException e) {
+    } catch (JsonProcessingException | IllegalArgumentException e) {
       // do nothing
     }
     return false;
