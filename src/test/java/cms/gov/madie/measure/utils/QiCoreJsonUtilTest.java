@@ -27,6 +27,7 @@ import java.util.UUID;
 @ExtendWith(MockitoExtension.class)
 public class QiCoreJsonUtilTest implements ResourceUtil {
 
+  private String baseUrl = "https://myorg.com";
   private TestCase testCase =
       TestCase.builder().patientId(UUID.fromString("3d2abb9d-c10a-4ab3-ae1a-1684ab61c07e")).build();
   final String json = getData("/bundles/qicore_json_util_testjson1.json");
@@ -401,7 +402,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
   @Test
   public void testEnforcePatientIdEmptyJson() {
     testCase.setJson(null);
-    String modifiedJson = QiCoreJsonUtil.enforcePatientId(testCase);
+    String modifiedJson = QiCoreJsonUtil.enforcePatientId(testCase, baseUrl);
     assertNull(modifiedJson);
   }
 
@@ -409,7 +410,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
   public void testEnforcePatientIdNoEntry() {
     String json = "{\"resourceType\": \"Bundle\", \"type\": \"collection\"}";
     testCase.setJson(json);
-    String modifiedJson = QiCoreJsonUtil.enforcePatientId(testCase);
+    String modifiedJson = QiCoreJsonUtil.enforcePatientId(testCase, baseUrl);
     assertEquals(modifiedJson, json);
   }
 
@@ -421,7 +422,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
             + "    \"fullUrl\" : \"http://local/Patient/1\"\n"
             + "  } ]             }";
     testCase.setJson(json);
-    String modifiedJson = QiCoreJsonUtil.enforcePatientId(testCase);
+    String modifiedJson = QiCoreJsonUtil.enforcePatientId(testCase, baseUrl);
     assertEquals(modifiedJson, json);
   }
 
@@ -436,7 +437,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
             + "    }\n"
             + "  } ]             }";
     testCase.setJson(json);
-    String modifiedJson = QiCoreJsonUtil.enforcePatientId(testCase);
+    String modifiedJson = QiCoreJsonUtil.enforcePatientId(testCase, baseUrl);
     assertEquals(modifiedJson, json);
   }
 
@@ -452,7 +453,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
             + "    }\n"
             + "  } ]             }";
     testCase.setJson(json);
-    String modifiedJson = QiCoreJsonUtil.enforcePatientId(testCase);
+    String modifiedJson = QiCoreJsonUtil.enforcePatientId(testCase, baseUrl);
     assertEquals(modifiedJson, json);
   }
 
@@ -472,8 +473,9 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
     final String json = getData("/bundles/qicore_json_util_fullurl.json");
     TestCase tc1 =
         TestCase.builder().id("TC1").name("TC1").patientId(UUID.randomUUID()).json(json).build();
-    String updatedTc1 = QiCoreJsonUtil.updateResourceFullUrls(tc1);
+    String updatedTc1 = QiCoreJsonUtil.updateResourceFullUrls(tc1, baseUrl);
     assertNotEquals(updatedTc1, json);
+    assertTrue(updatedTc1.contains(baseUrl));
   }
 
   @Test
@@ -483,7 +485,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
     TestCase tc1 =
         TestCase.builder().id("TC1").name("TC1").patientId(UUID.randomUUID()).json(json).build();
     String baseUrl = "https://myorg.com";
-    String updatedTc1 = QiCoreJsonUtil.updateResourceFullUrls(tc1);
+    String updatedTc1 = QiCoreJsonUtil.updateResourceFullUrls(tc1, baseUrl);
     assertFalse(updatedTc1.contains(baseUrl));
   }
 
@@ -494,7 +496,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
     TestCase tc1 =
         TestCase.builder().id("TC1").name("TC1").patientId(UUID.randomUUID()).json(json).build();
     String baseUrl = "https://myorg.com";
-    String updatedTc1 = QiCoreJsonUtil.updateResourceFullUrls(tc1);
+    String updatedTc1 = QiCoreJsonUtil.updateResourceFullUrls(tc1, baseUrl);
     assertFalse(updatedTc1.contains(baseUrl));
   }
 }

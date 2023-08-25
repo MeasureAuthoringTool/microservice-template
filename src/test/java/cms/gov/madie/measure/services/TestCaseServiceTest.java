@@ -561,7 +561,8 @@ public class TestCaseServiceTest implements ResourceUtil {
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
     TestCase originalTestCase =
-        testCase.toBuilder()
+        testCase
+            .toBuilder()
             .createdAt(createdAt)
             .createdBy("test.user5")
             .lastModifiedAt(createdAt)
@@ -589,7 +590,8 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertNotNull(savedMeasure.getTestCases());
     assertEquals(1, savedMeasure.getTestCases().size());
     TestCase expectedTestCase =
-        updatedTestCase.toBuilder()
+        updatedTestCase
+            .toBuilder()
             .hapiOperationOutcome(
                 HapiOperationOutcome.builder()
                     .code(500)
@@ -623,7 +625,8 @@ public class TestCaseServiceTest implements ResourceUtil {
             + "    }\n"
             + "  } ]             }";
     TestCase originalTestCase =
-        testCase.toBuilder()
+        testCase
+            .toBuilder()
             .createdAt(createdAt)
             .createdBy("test.user5")
             .lastModifiedAt(createdAt)
@@ -634,7 +637,8 @@ public class TestCaseServiceTest implements ResourceUtil {
     List<TestCase> testCases = new ArrayList<>();
     testCases.add(originalTestCase);
     Measure originalMeasure =
-        measure.toBuilder()
+        measure
+            .toBuilder()
             .model(ModelType.QI_CORE.getValue())
             .cqlLibraryName("Test1CQLLibraryName")
             .testCases(testCases)
@@ -694,7 +698,8 @@ public class TestCaseServiceTest implements ResourceUtil {
     Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
     String json = "invalid test case json";
     TestCase originalTestCase =
-        testCase.toBuilder()
+        testCase
+            .toBuilder()
             .createdAt(createdAt)
             .createdBy("test.user5")
             .lastModifiedAt(createdAt)
@@ -704,7 +709,8 @@ public class TestCaseServiceTest implements ResourceUtil {
     List<TestCase> testCases = new ArrayList<>();
     testCases.add(originalTestCase);
     Measure originalMeasure =
-        measure.toBuilder()
+        measure
+            .toBuilder()
             .model(ModelType.QI_CORE.getValue())
             .cqlLibraryName("Test1CQLLibraryName")
             .testCases(testCases)
@@ -776,7 +782,8 @@ public class TestCaseServiceTest implements ResourceUtil {
   public void testUpdateTestCasePreventsModificationOfCreatedByFields() {
     Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
     TestCase originalTestCase =
-        testCase.toBuilder()
+        testCase
+            .toBuilder()
             .createdAt(createdAt)
             .createdBy("test.user5")
             .lastModifiedAt(createdAt)
@@ -788,7 +795,8 @@ public class TestCaseServiceTest implements ResourceUtil {
     when(measureService.findMeasureById(anyString())).thenReturn(originalMeasure);
 
     TestCase updatingTestCase =
-        testCase.toBuilder()
+        testCase
+            .toBuilder()
             .createdBy("Nobody")
             .createdAt(Instant.now())
             .title("UpdatedTitle")
@@ -832,7 +840,8 @@ public class TestCaseServiceTest implements ResourceUtil {
         .save(any(Measure.class));
 
     TestCase upsertingTestCase =
-        testCase.toBuilder()
+        testCase
+            .toBuilder()
             .createdBy("Nobody")
             .createdAt(Instant.now())
             .title("UpdatedTitle")
@@ -856,7 +865,8 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertNotNull(savedMeasure.getTestCases());
     assertEquals(1, savedMeasure.getTestCases().size());
     TestCase expectedTestCase =
-        upsertingTestCase.toBuilder()
+        upsertingTestCase
+            .toBuilder()
             .hapiOperationOutcome(
                 HapiOperationOutcome.builder()
                     .code(500)
@@ -876,7 +886,8 @@ public class TestCaseServiceTest implements ResourceUtil {
         .save(any(Measure.class));
 
     TestCase upsertingTestCase =
-        testCase.toBuilder()
+        testCase
+            .toBuilder()
             .createdBy("Nobody")
             .createdAt(Instant.now())
             .title("UpdatedTitle")
@@ -902,7 +913,8 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertEquals(1, savedMeasure.getTestCases().size());
 
     TestCase expectedTestCase =
-        updatedTestCase.toBuilder()
+        updatedTestCase
+            .toBuilder()
             .hapiOperationOutcome(
                 HapiOperationOutcome.builder()
                     .code(500)
@@ -925,7 +937,8 @@ public class TestCaseServiceTest implements ResourceUtil {
         .save(any(Measure.class));
 
     TestCase upsertingTestCase =
-        testCase.toBuilder()
+        testCase
+            .toBuilder()
             .createdBy("Nobody")
             .createdAt(Instant.now())
             .title("UpdatedTitle")
@@ -952,7 +965,8 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertEquals(otherExistingTC, savedMeasure.getTestCases().get(0));
 
     TestCase expectedTestCase =
-        updatedTestCase.toBuilder()
+        updatedTestCase
+            .toBuilder()
             .hapiOperationOutcome(
                 HapiOperationOutcome.builder()
                     .code(500)

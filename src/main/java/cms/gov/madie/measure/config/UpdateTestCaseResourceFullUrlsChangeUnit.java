@@ -47,7 +47,9 @@ public class UpdateTestCaseResourceFullUrlsChangeUnit {
                               return;
                             }
                             try {
-                              String updatedJson = QiCoreJsonUtil.updateResourceFullUrls(testCase);
+                              String updatedJson =
+                                  QiCoreJsonUtil.updateResourceFullUrls(
+                                      testCase, testCaseService.getMadieJsonResourcesBaseUri());
                               testCase.setJson(updatedJson);
                             } catch (Exception ex) {
                               log.info(
