@@ -101,7 +101,7 @@ class UpdateTestCaseResourceFullUrlsChangeUnitTest {
 
     // then
     verifyNoMoreInteractions(measureRepository);
-    verifyNoInteractions(testCaseService);
+    verifyNoMoreInteractions(testCaseService);
   }
 
   @Test
@@ -114,7 +114,7 @@ class UpdateTestCaseResourceFullUrlsChangeUnitTest {
 
     // then
     verifyNoMoreInteractions(measureRepository);
-    verifyNoInteractions(testCaseService);
+    verifyNoMoreInteractions(testCaseService);
   }
 
   @Test

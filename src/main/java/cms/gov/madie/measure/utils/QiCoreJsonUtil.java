@@ -26,9 +26,6 @@ import java.util.regex.Pattern;
 @Slf4j
 public final class QiCoreJsonUtil {
 
-  @Value("${madie.json.resources.base-uri}")
-  private static String madieJsonResourcesBaseUri;
-
   private QiCoreJsonUtil() {}
 
   /**
@@ -240,11 +237,12 @@ public final class QiCoreJsonUtil {
     }
   }
 
-  public static String buildFullUrl(final String id, String resourceType) {
+  public static String buildFullUrl(
+      final String id, String resourceType, String madieJsonResourcesBaseUri) {
     return madieJsonResourcesBaseUri + resourceType + "/" + id;
   }
 
-  public static String enforcePatientId(TestCase testCase) {
+  public static String enforcePatientId(TestCase testCase, String madieJsonResourcesBaseUri) {
     String testCaseJson = testCase.getJson();
     if (!StringUtils.isEmpty(testCaseJson)) {
       ObjectMapper objectMapper = new ObjectMapper();
@@ -261,7 +259,8 @@ public final class QiCoreJsonUtil {
               JsonNode resourceNode = node.get("resource");
               ObjectNode o = (ObjectNode) resourceNode;
               ObjectNode parent = (ObjectNode) node;
-              parent.put("fullUrl", buildFullUrl(newPatientId, "Patient"));
+              parent.put(
+                  "fullUrl", buildFullUrl(newPatientId, "Patient", madieJsonResourcesBaseUri));
               o.put("id", newPatientId);
               modifiedJsonString = jsonNodeToString(objectMapper, rootNode);
             }
@@ -276,7 +275,7 @@ public final class QiCoreJsonUtil {
   }
 
   // update full urls for non-patient resources
-  public static String updateResourceFullUrls(TestCase testCase) {
+  public static String updateResourceFullUrls(TestCase testCase, String madieJsonResourcesBaseUri) {
     ObjectMapper mapper = new ObjectMapper();
     try {
       JsonNode rootNode = mapper.readTree(testCase.getJson());
@@ -290,7 +289,7 @@ public final class QiCoreJsonUtil {
                 && !"Patient".equalsIgnoreCase(resourceType)
                 && theNode.has("fullUrl")) {
               String id = resourceNode.get("id").asText();
-              String newUrl = buildFullUrl(id, resourceType);
+              String newUrl = buildFullUrl(id, resourceType, madieJsonResourcesBaseUri);
               log.info("Updating the full url of a resource [{}], new fullUrl is [{}]", id, newUrl);
               ObjectNode node = (ObjectNode) theNode;
               node.put("fullUrl", newUrl);

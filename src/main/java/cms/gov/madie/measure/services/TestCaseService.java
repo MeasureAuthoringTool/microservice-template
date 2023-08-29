@@ -19,12 +19,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cms.madie.models.measure.TestCaseImportOutcome;
 import gov.cms.madie.models.measure.TestCaseImportRequest;
-
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import java.time.Instant;
@@ -43,6 +43,10 @@ public class TestCaseService {
   private ObjectMapper mapper;
   private MeasureService measureService;
   private TestCaseServiceUtil testCaseServiceUtil;
+
+  @Value("${madie.json.resources.base-uri}")
+  @Getter
+  private String madieJsonResourcesBaseUri;
 
   @Autowired
   public TestCaseService(
@@ -300,8 +304,10 @@ public class TestCaseService {
         validateTestCaseAsResource(
             testCase, ModelType.valueOfName(measure.getModel()), accessToken);
     if (ModelType.QI_CORE.getValue().equalsIgnoreCase(measure.getModel())) {
-      validatedTestCase.setJson(QiCoreJsonUtil.enforcePatientId(validatedTestCase));
-      validatedTestCase.setJson(QiCoreJsonUtil.updateResourceFullUrls(validatedTestCase));
+      validatedTestCase.setJson(
+          QiCoreJsonUtil.enforcePatientId(validatedTestCase, madieJsonResourcesBaseUri));
+      validatedTestCase.setJson(
+          QiCoreJsonUtil.updateResourceFullUrls(validatedTestCase, madieJsonResourcesBaseUri));
     }
     measure.getTestCases().add(validatedTestCase);
 

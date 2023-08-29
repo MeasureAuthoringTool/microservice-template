@@ -108,6 +108,4 @@ public class AdminController {
       final String measureId, final String accessToken) {
     return () -> testCaseService.updateTestCaseValidResourcesWithReport(measureId, accessToken);
   }
-
-
 }
