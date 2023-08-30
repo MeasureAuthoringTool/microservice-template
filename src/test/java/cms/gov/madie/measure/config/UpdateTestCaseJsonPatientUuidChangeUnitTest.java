@@ -43,7 +43,8 @@ class UpdateTestCaseJsonPatientUuidChangeUnitTest {
   final String malformedJson =
       "{ \"resourceType\": \"Bundle\", \"type\": \"collection\", \"entry\": [{ \"fullUrl\": \"633c9d020968f8012250fc60 }]}"; // intentional - missing quotes around fullUrl ID
 
-  final String untouchedJson = "{\"resourceType\":\"Bundle\",\"id\":\"2106\",\"meta\":{\"versionId\":\"1\",\"lastUpdated\":\"2022-09-06T20:47:21.183+00:00\"},\"type\":\"collection\",\"entry\":[{\"fullUrl\":\"http://local/Encounter/2\",\"resource\":{\"id\":\"2\",\"resourceType\":\"Encounter\",\"meta\":{\"versionId\":\"1\",\"lastUpdated\":\"2021-10-13T03:34:10.160+00:00\",\"source\":\"#nEcAkGd8PRwPP5fA\"},\"text\":{\"status\":\"generated\",\"div\":\"<div xmlns=\\\"http://www.w3.org/1999/xhtml\\\">Sep 9th 2021 for Asthma<a name=\\\"mm\\\"/></div>\"},\"class\":{\"system\":\"http://terminology.hl7.org/CodeSystem/v3-ActCode\",\"code\":\"IMP\",\"display\":\"inpatient encounter\"},\"status\":\"planned\",\"type\":[{\"text\":\"OutPatient\"}],\"subject\":{\"reference\": \"Patient/12e89a1c-39c8-4fe1-bcbb-b19cc05eaf5e\"},\"participant\":[{\"individual\":{\"reference\":\"Practitioner/30164\",\"display\":\"Dr John Doe\"}}],\"period\":{\"start\":\"2023-08-10T03:34:10.054Z\",\"end\":\"2023-08-15T03:34:10.054Z\"}}},{\"fullUrl\":\"http://local/Encounter/3\",\"resource\":{\"id\":\"3\",\"resourceType\":\"Encounter\",\"meta\":{\"versionId\":\"1\",\"lastUpdated\":\"2021-10-13T03:34:10.160+00:00\",\"source\":\"#nEcAkGd8PRwPP5fA\"},\"text\":{\"status\":\"generated\",\"div\":\"<div xmlns=\\\"http://www.w3.org/1999/xhtml\\\">Sep 9th 2021 for Asthma<a name=\\\"mm\\\"/></div>\"},\"class\":{\"system\":\"http://terminology.hl7.org/CodeSystem/v3-ActCode\",\"code\":\"IMP\",\"display\":\"inpatient encounter\"},\"status\":\"finished\",\"type\":[{\"text\":\"OutPatient\"}],\"subject\":{\"reference\": \"Patient/12e89a1c-39c8-4fe1-bcbb-b19cc05eaf5e\"},\"participant\":[{\"individual\":{\"reference\":\"Practitioner/30164\",\"display\":\"Dr John Doe\"}}],\"period\":{\"start\":\"2023-09-12T03:34:10.054Z\",\"end\":\"2023-09-13T09:34:10.054Z\"}}},{\"fullUrl\":\"http://local/Patient/1\",\"resource\":{\"id\":\"1\",\"resourceType\":\"Patient\",\"text\":{\"status\":\"generated\",\"div\":\"<div xmlns=\\\"http://www.w3.org/1999/xhtml\\\">Lizzy Health</div>\"},\"meta\":{\"profile\":\"http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-patient\"},\"identifier\":[{\"system\":\"http://clinfhir.com/fhir/NamingSystem/identifier\",\"value\":\"20181011LizzyHealth\"}],\"name\":[{\"use\":\"official\",\"text\":\"Lizzy Health\",\"family\":\"Health\",\"given\":[\"Lizzy\"]}],\"gender\":\"female\",\"birthDate\":\"2000-10-11\"}}]}";
+  final String untouchedJson =
+      "{\"resourceType\":\"Bundle\",\"id\":\"2106\",\"meta\":{\"versionId\":\"1\",\"lastUpdated\":\"2022-09-06T20:47:21.183+00:00\"},\"type\":\"collection\",\"entry\":[{\"fullUrl\":\"http://local/Encounter/2\",\"resource\":{\"id\":\"2\",\"resourceType\":\"Encounter\",\"meta\":{\"versionId\":\"1\",\"lastUpdated\":\"2021-10-13T03:34:10.160+00:00\",\"source\":\"#nEcAkGd8PRwPP5fA\"},\"text\":{\"status\":\"generated\",\"div\":\"<div xmlns=\\\"http://www.w3.org/1999/xhtml\\\">Sep 9th 2021 for Asthma<a name=\\\"mm\\\"/></div>\"},\"class\":{\"system\":\"http://terminology.hl7.org/CodeSystem/v3-ActCode\",\"code\":\"IMP\",\"display\":\"inpatient encounter\"},\"status\":\"planned\",\"type\":[{\"text\":\"OutPatient\"}],\"subject\":{\"reference\": \"Patient/12e89a1c-39c8-4fe1-bcbb-b19cc05eaf5e\"},\"participant\":[{\"individual\":{\"reference\":\"Practitioner/30164\",\"display\":\"Dr John Doe\"}}],\"period\":{\"start\":\"2023-08-10T03:34:10.054Z\",\"end\":\"2023-08-15T03:34:10.054Z\"}}},{\"fullUrl\":\"http://local/Encounter/3\",\"resource\":{\"id\":\"3\",\"resourceType\":\"Encounter\",\"meta\":{\"versionId\":\"1\",\"lastUpdated\":\"2021-10-13T03:34:10.160+00:00\",\"source\":\"#nEcAkGd8PRwPP5fA\"},\"text\":{\"status\":\"generated\",\"div\":\"<div xmlns=\\\"http://www.w3.org/1999/xhtml\\\">Sep 9th 2021 for Asthma<a name=\\\"mm\\\"/></div>\"},\"class\":{\"system\":\"http://terminology.hl7.org/CodeSystem/v3-ActCode\",\"code\":\"IMP\",\"display\":\"inpatient encounter\"},\"status\":\"finished\",\"type\":[{\"text\":\"OutPatient\"}],\"subject\":{\"reference\": \"Patient/12e89a1c-39c8-4fe1-bcbb-b19cc05eaf5e\"},\"participant\":[{\"individual\":{\"reference\":\"Practitioner/30164\",\"display\":\"Dr John Doe\"}}],\"period\":{\"start\":\"2023-09-12T03:34:10.054Z\",\"end\":\"2023-09-13T09:34:10.054Z\"}}},{\"fullUrl\":\"http://local/Patient/1\",\"resource\":{\"id\":\"1\",\"resourceType\":\"Patient\",\"text\":{\"status\":\"generated\",\"div\":\"<div xmlns=\\\"http://www.w3.org/1999/xhtml\\\">Lizzy Health</div>\"},\"meta\":{\"profile\":\"http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-patient\"},\"identifier\":[{\"system\":\"http://clinfhir.com/fhir/NamingSystem/identifier\",\"value\":\"20181011LizzyHealth\"}],\"name\":[{\"use\":\"official\",\"text\":\"Lizzy Health\",\"family\":\"Health\",\"given\":[\"Lizzy\"]}],\"gender\":\"female\",\"birthDate\":\"2000-10-11\"}}]}";
 
   @Mock MeasureRepository measureRepository;
 
@@ -85,7 +86,8 @@ class UpdateTestCaseJsonPatientUuidChangeUnitTest {
             .json(null)
             .build();
     tc5 = TestCase.builder().id("NoUuidTC").name("No UUID TC").json(json2).build();
-    tc6 = TestCase.builder()
+    tc6 =
+        TestCase.builder()
             .id("UntouchedTC")
             .name("UntouchedTC")
             .json(untouchedJson)
@@ -124,12 +126,12 @@ class UpdateTestCaseJsonPatientUuidChangeUnitTest {
             .build();
 
     measure5 =
-            Measure.builder()
-                    .id("UntouchedMeasure")
-                    .measureName("UntouchedMeasure")
-                    .model(ModelType.QI_CORE.getValue())
-                    .testCases(List.of(tc6))
-                    .build();
+        Measure.builder()
+            .id("UntouchedMeasure")
+            .measureName("UntouchedMeasure")
+            .model(ModelType.QI_CORE.getValue())
+            .testCases(List.of(tc6))
+            .build();
   }
 
   @Test
@@ -271,12 +273,12 @@ class UpdateTestCaseJsonPatientUuidChangeUnitTest {
   public void testChangeUnitExecutionNoUuidTestCaseUnchanged() {
     when(measureRepository.findAll()).thenReturn(List.of(measure5));
     when(testCaseService.enforcePatientId(any(TestCase.class)))
-            .thenAnswer(
-                    invocationOnMock -> {
-                      Object argument = invocationOnMock.getArgument(0);
-                      TestCase tc = (TestCase) argument;
-                      return tc.getJson();
-                    });
+        .thenAnswer(
+            invocationOnMock -> {
+              Object argument = invocationOnMock.getArgument(0);
+              TestCase tc = (TestCase) argument;
+              return tc.getJson();
+            });
 
     // when
     changeUnit.updatedTestCaseJsonWithPatientUuid(measureRepository, testCaseService);
