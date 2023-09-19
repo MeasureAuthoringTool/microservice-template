@@ -1,6 +1,5 @@
 package cms.gov.madie.measure.services;
 
-import cms.gov.madie.measure.HapiFhirConfig;
 import cms.gov.madie.measure.dto.JobStatus;
 import cms.gov.madie.measure.dto.MeasureTestCaseValidationReport;
 import cms.gov.madie.measure.exceptions.DuplicateTestCaseNameException;
@@ -90,8 +89,6 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class TestCaseServiceTest implements ResourceUtil {
   @Mock private MeasureRepository measureRepository;
-  @Mock private HapiFhirConfig hapiFhirConfig;
-  @Mock private RestTemplate hapiFhirRestTemplate;
   @Mock private ActionLogService actionLogService;
   @Mock private TestCaseServiceUtil testCaseServiceUtil;
 

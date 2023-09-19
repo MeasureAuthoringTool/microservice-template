@@ -314,18 +314,5 @@ public class VersionService {
         "User [{}] successfully saved versioned measure's export data with ID [{}]",
         username,
         savedExport.getId());
-    ResponseEntity<String> result =
-        fhirServicesClient.saveMeasureInHapiFhir(savedMeasure, accessToken);
-    if (result.getStatusCode() == HttpStatus.OK) {
-      log.info(
-          "User [{}] successfully saved versioned measure with ID [{}] in HAPI FHIR",
-          username,
-          result.getBody());
-    } else {
-      log.info(
-          "User [{}] failed to save versioned measure in HAPI FHIR: {}",
-          username,
-          result.getBody());
-    }
   }
 }
