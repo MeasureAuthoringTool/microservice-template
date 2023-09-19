@@ -59,9 +59,6 @@ class FhirServicesClientTest {
         .when(fhirServicesConfig.getMadieFhirServiceMeasuresBundleUri())
         .thenReturn("/api/fhir/measures/bundles");
     lenient()
-        .when(fhirServicesConfig.getMadieFhirServiceSaveMeasureUri())
-        .thenReturn("/api/fhir/measures/save");
-    lenient()
         .when(fhirServicesConfig.getMadieFhirServiceValidateBundleUri())
         .thenReturn("/api/fhir/validations/bundles");
 

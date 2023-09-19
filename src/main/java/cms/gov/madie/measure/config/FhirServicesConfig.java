@@ -23,9 +23,6 @@ public class FhirServicesConfig {
   @Value("${madie.fhir.service.hapi-fhir.validation.bundle-uri}")
   private String madieFhirServiceValidateBundleUri;
 
-  @Value("${madie.fhir.service.hapi-fhir.measures.save-measure-uri}")
-  private String madieFhirServiceSaveMeasureUri;
-
   @Value("${madie.fhir.service.test-cases}")
   public String madieFhirServiceTestCaseUri;
 

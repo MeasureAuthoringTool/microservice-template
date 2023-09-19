@@ -88,7 +88,7 @@ public class VersionService {
       String versionType, String username, String accessToken, Measure measure) throws Exception {
     Measure savedMeasure = version(versionType, username, measure);
     var measureBundle = fhirServicesClient.getMeasureBundle(savedMeasure, accessToken, "export");
-    saveMeasureBundle(savedMeasure, measureBundle, accessToken, username);
+    saveMeasureBundle(savedMeasure, measureBundle, username);
     return savedMeasure;
   }
 
@@ -305,8 +305,7 @@ public class VersionService {
     }
   }
 
-  private void saveMeasureBundle(
-      Measure savedMeasure, String measureBundle, String accessToken, String username) {
+  private void saveMeasureBundle(Measure savedMeasure, String measureBundle, String username) {
     Export export =
         Export.builder().measureId(savedMeasure.getId()).measureBundleJson(measureBundle).build();
     Export savedExport = exportRepository.save(export);
