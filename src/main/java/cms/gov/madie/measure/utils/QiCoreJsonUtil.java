@@ -14,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -25,7 +24,7 @@ import java.util.regex.Pattern;
 
 @Slf4j
 public final class QiCoreJsonUtil {
-  private static final String CQFM_DESCRIPTION_URL =
+  private static final String CQFM_TEST_DESCRIPTION_URL =
       "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-testCaseDescription";
 
   private QiCoreJsonUtil() {}
@@ -176,7 +175,7 @@ public final class QiCoreJsonUtil {
     JsonNode reportExtension = resourceNode.get("extension");
     for (JsonNode entry : reportExtension) {
       String extensionUrl = entry.get("url").asText();
-      if (CQFM_DESCRIPTION_URL.equalsIgnoreCase(extensionUrl)) {
+      if (CQFM_TEST_DESCRIPTION_URL.equalsIgnoreCase(extensionUrl)) {
         return entry.get("valueMarkdown").asText();
       }
     }

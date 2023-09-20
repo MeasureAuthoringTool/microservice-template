@@ -505,4 +505,36 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
     String updatedTc1 = QiCoreJsonUtil.updateResourceFullUrls(tc1, baseUrl);
     assertFalse(updatedTc1.contains(baseUrl));
   }
+
+  @Test
+  void testGetTestcaseDescriptionIfMeasureReportMissing() throws JsonProcessingException {
+    final String json =
+        "{\"id\":\"6323489059967e30c06d0774\",\"resourceType\":\"Bundle\",\"type\":\"collection\",\"entry\":[]}";
+    String description = QiCoreJsonUtil.getTestDescription(json);
+    assertNull(description);
+  }
+
+  @Test
+  void testGetTestcaseDescriptionIfNoExtension() throws JsonProcessingException {
+    final String json =
+        "{\"id\":\"6323489059967e30c06d0774\",\"resourceType\":\"Bundle\",\"type\":\"collection\",\"entry\":[{\"resource\": {\"resourceType\": \"MeasureReport\"}}]}";
+    String description = QiCoreJsonUtil.getTestDescription(json);
+    assertNull(description);
+  }
+
+  @Test
+  void testGetTestcaseDescriptionIfNoTestcaseDescriptionExtension() throws JsonProcessingException {
+    final String json =
+        "{\"id\":\"6323489059967e30c06d0774\",\"resourceType\":\"Bundle\",\"type\":\"collection\",\"entry\":[{\"resource\": {\"resourceType\": \"MeasureReport\",\"extension\":[{\"url\":\"http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-inputParameters\",\"valueReference\":{\"reference\":\"#IPPass-parameters\"}}]}}]}";
+    String description = QiCoreJsonUtil.getTestDescription(json);
+    assertNull(description);
+  }
+
+  @Test
+  void testGetTestcaseDescription() throws JsonProcessingException {
+    final String json =
+        "{\"id\":\"6323489059967e30c06d0774\",\"resourceType\":\"Bundle\",\"type\":\"collection\",\"entry\":[{\"resource\": {\"resourceType\": \"MeasureReport\", \"extension\":[{\"url\":\"http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-testCaseDescription\",\"valueMarkdown\":\"test case description\"}]}}]}";
+    String description = QiCoreJsonUtil.getTestDescription(json);
+    assertEquals(description, "test case description");
+  }
 }
