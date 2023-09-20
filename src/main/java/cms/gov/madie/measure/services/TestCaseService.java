@@ -552,11 +552,13 @@ public class TestCaseService {
             .successful(false)
             .build();
     try {
+      String description = QiCoreJsonUtil.getTestDescription(testCaseImportRequest.getJson());
       existingTestCase.setJson(
           QiCoreJsonUtil.removeMeasureReportFromJson(testCaseImportRequest.getJson()));
+      existingTestCase.setDescription(description);
       TestCase updatedTestCase = updateTestCase(existingTestCase, measureId, userName, accessToken);
       log.info(
-          "User {} succesfully imported test case with patient id : {}",
+          "User {} successfully imported test case with patient id : {}",
           userName,
           updatedTestCase.getPatientId());
       TestCaseImportOutcome testCaseImportOutcome =

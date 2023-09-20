@@ -8,6 +8,7 @@ import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.utils.QiCoreJsonUtil;
 import cms.gov.madie.measure.utils.TestCaseServiceUtil;
 import cms.gov.madie.measure.utils.ResourceUtil;
 
@@ -1622,7 +1623,7 @@ public class TestCaseServiceTest implements ResourceUtil {
   }
 
   @Test
-  void importTestCasesReturnValidOutcomes() {
+  void importTestCasesReturnValidOutcomes() throws JsonProcessingException {
     measure.setTestCases(List.of(testCase));
     when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
 
@@ -1643,6 +1644,10 @@ public class TestCaseServiceTest implements ResourceUtil {
             List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
+    assertNotNull(testCase.getDescription());
+    assertEquals(
+        testCase.getDescription(),
+        QiCoreJsonUtil.getTestDescription(testCaseImportWithMeasureReport));
     assertTrue(response.get(0).isSuccessful());
   }
 
