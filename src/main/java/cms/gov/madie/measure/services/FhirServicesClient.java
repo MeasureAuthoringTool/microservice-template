@@ -70,23 +70,6 @@ public class FhirServicesClient {
         uri, HttpMethod.POST, measureEntity, HapiOperationOutcome.class);
   }
 
-  public ResponseEntity<String> saveMeasureInHapiFhir(Measure measure, String accessToken) {
-    URI uri =
-        URI.create(
-            fhirServicesConfig.getMadieFhirServiceBaseUrl()
-                + fhirServicesConfig.getMadieFhirServiceSaveMeasureUri());
-    HttpHeaders headers = new HttpHeaders();
-    headers.set(HttpHeaders.AUTHORIZATION, accessToken);
-    HttpEntity<Measure> measureEntity = new HttpEntity<>(measure, headers);
-    try {
-      return fhirServicesRestTemplate.exchange(uri, HttpMethod.POST, measureEntity, String.class);
-    } catch (RestClientResponseException e) {
-      // Ignore errors when saving Measures to HAPI as they're never retrieved.
-      return new ResponseEntity<>(
-          e.getResponseBodyAsString(), HttpStatus.valueOf(e.getRawStatusCode()));
-    }
-  }
-
   public ResponseEntity<byte[]> getTestCaseExports(
       Measure measure, String accessToken, List<String> testCaseId) {
     URI uri =

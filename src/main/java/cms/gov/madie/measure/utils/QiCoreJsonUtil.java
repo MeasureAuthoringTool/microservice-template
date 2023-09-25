@@ -14,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -25,6 +24,8 @@ import java.util.regex.Pattern;
 
 @Slf4j
 public final class QiCoreJsonUtil {
+  private static final String CQFM_TEST_DESCRIPTION_URL =
+      "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-testCaseDescription";
 
   private QiCoreJsonUtil() {}
 
@@ -123,43 +124,8 @@ public final class QiCoreJsonUtil {
     return false;
   }
 
-  public static String getPatientName(String json, String type) throws JsonProcessingException {
-    ObjectMapper mapper = new ObjectMapper();
-
-    JsonNode jsonNode = mapper.readTree(json);
-    JsonNode entries = jsonNode.get("entry");
-    if (entries != null) {
-      for (JsonNode entry : entries) {
-        var resourceNode = entry.get("resource");
-        if (resourceNode != null) {
-          var resourceType = resourceNode.get("resourceType");
-          if (resourceType != null && "PATIENT".equalsIgnoreCase(resourceType.asText())) {
-            JsonNode names = resourceNode.get("name");
-            if (names != null) {
-              for (JsonNode name : names) {
-                if ("family".equalsIgnoreCase(type)) {
-                  return name.get("family").asText();
-                } else if ("given".equalsIgnoreCase(type)) {
-                  JsonNode givenNames = name.get("given");
-                  if (givenNames != null) {
-                    for (JsonNode givenName : givenNames) {
-                      return givenName.asText();
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    return null;
-  }
-
-  public static List<TestCaseGroupPopulation> getTestCaseGroupPopulationsFromMeasureReport(
-      String json) throws JsonProcessingException {
-    List<TestCaseGroupPopulation> groupPopulations = new ArrayList<>();
+  public static JsonNode getResourceNode(String json, String resourceType)
+      throws JsonProcessingException {
     ObjectMapper mapper = new ObjectMapper();
     JsonNode jsonNode = mapper.readTree(json);
     JsonNode entries = jsonNode.get("entry");
@@ -167,45 +133,91 @@ public final class QiCoreJsonUtil {
       for (JsonNode entry : entries) {
         JsonNode resourceNode = entry.get("resource");
         if (resourceNode != null) {
-          JsonNode resourceType = resourceNode.get("resourceType");
-          if (resourceType != null && "MeasureReport".equalsIgnoreCase(resourceType.asText())) {
-            JsonNode groups = resourceNode.get("group");
+          JsonNode resourceTypeNode = resourceNode.get("resourceType");
+          if (resourceTypeNode != null
+              && resourceType.equalsIgnoreCase(resourceTypeNode.asText())) {
+            return resourceNode;
+          }
+        }
+      }
+    }
+    return null;
+  }
 
-            TestCaseGroupPopulation groupPopulation = null;
-            if (groups != null) {
-              for (JsonNode group : groups) {
-                JsonNode populations = group.get("population");
-                List<TestCasePopulationValue> populationValues = new ArrayList<>();
-                if (populations != null) {
-                  for (JsonNode pouplation : populations) {
-                    JsonNode codeNode = pouplation.get("code");
-                    String count =
-                        pouplation.get("count") != null ? pouplation.get("count").asText() : "";
-                    if (codeNode != null) {
-                      JsonNode codings = codeNode.get("coding");
-                      if (codings != null) {
-                        for (JsonNode coding : codings) {
-                          String code = coding.get("code").asText();
-                          TestCasePopulationValue populationValue =
-                              TestCasePopulationValue.builder()
-                                  .name(PopulationType.fromCode(code))
-                                  .expected(count)
-                                  .build();
-                          populationValues.add(populationValue);
-                        }
-                      }
-                      groupPopulation =
-                          TestCaseGroupPopulation.builder()
-                              .populationValues(populationValues)
-                              .build();
-                    }
-                  }
-                  if (groupPopulation != null
-                      && !CollectionUtils.isEmpty(groupPopulation.getPopulationValues())) {
-                    groupPopulations.add(groupPopulation);
+  public static String getPatientName(String json, String type) throws JsonProcessingException {
+    JsonNode resourceNode = getResourceNode(json, "patient");
+    if (resourceNode == null) {
+      return null;
+    }
+    JsonNode names = resourceNode.get("name");
+    if (names != null) {
+      for (JsonNode name : names) {
+        if ("family".equalsIgnoreCase(type)) {
+          return name.get("family").asText();
+        } else if ("given".equalsIgnoreCase(type)) {
+          JsonNode givenNames = name.get("given");
+          if (givenNames != null) {
+            for (JsonNode givenName : givenNames) {
+              return givenName.asText();
+            }
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  public static String getTestDescription(String testCaseBundle) throws JsonProcessingException {
+    JsonNode resourceNode = getResourceNode(testCaseBundle, "MeasureReport");
+    if (resourceNode == null || resourceNode.get("extension") == null) {
+      return null;
+    }
+    JsonNode reportExtension = resourceNode.get("extension");
+    for (JsonNode entry : reportExtension) {
+      String extensionUrl = entry.get("url").asText();
+      if (CQFM_TEST_DESCRIPTION_URL.equalsIgnoreCase(extensionUrl)) {
+        return entry.get("valueMarkdown").asText();
+      }
+    }
+    return null;
+  }
+
+  public static List<TestCaseGroupPopulation> getTestCaseGroupPopulationsFromMeasureReport(
+      String json) throws JsonProcessingException {
+    List<TestCaseGroupPopulation> groupPopulations = new ArrayList<>();
+    JsonNode resourceNode = getResourceNode(json, "MeasureReport");
+    if (resourceNode != null) {
+      JsonNode groups = resourceNode.get("group");
+      TestCaseGroupPopulation groupPopulation = null;
+      if (groups != null) {
+        for (JsonNode group : groups) {
+          JsonNode populations = group.get("population");
+          List<TestCasePopulationValue> populationValues = new ArrayList<>();
+          if (populations != null) {
+            for (JsonNode population : populations) {
+              JsonNode codeNode = population.get("code");
+              String count =
+                  population.get("count") != null ? population.get("count").asText() : "";
+              if (codeNode != null) {
+                JsonNode codings = codeNode.get("coding");
+                if (codings != null) {
+                  for (JsonNode coding : codings) {
+                    String code = coding.get("code").asText();
+                    TestCasePopulationValue populationValue =
+                        TestCasePopulationValue.builder()
+                            .name(PopulationType.fromCode(code))
+                            .expected(count)
+                            .build();
+                    populationValues.add(populationValue);
                   }
                 }
+                groupPopulation =
+                    TestCaseGroupPopulation.builder().populationValues(populationValues).build();
               }
+            }
+            if (groupPopulation != null
+                && !CollectionUtils.isEmpty(groupPopulation.getPopulationValues())) {
+              groupPopulations.add(groupPopulation);
             }
           }
         }

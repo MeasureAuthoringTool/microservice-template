@@ -416,9 +416,6 @@ public class VersionServiceTest {
     updatedMeasure.setMeasureMetaData(updatedMetaData);
     when(measureRepository.save(any(Measure.class))).thenReturn(updatedMeasure);
 
-    when(fhirServicesClient.saveMeasureInHapiFhir(any(), anyString()))
-        .thenReturn(ResponseEntity.ok("Created"));
-
     Export measureExport =
         Export.builder()
             .id("testId")
@@ -456,8 +453,6 @@ public class VersionServiceTest {
     Export capturedExport = exportArgumentCaptor.getValue();
     assertEquals(savedValue.getId(), capturedExport.getMeasureId());
     assertEquals(measureExport.getMeasureBundleJson(), capturedExport.getMeasureBundleJson());
-
-    verify(fhirServicesClient, times(1)).saveMeasureInHapiFhir(updatedMeasure, "accesstoken");
   }
 
   @Test
@@ -553,9 +548,6 @@ public class VersionServiceTest {
     updatedMeasure.setMeasureMetaData(updatedMetaData);
     when(measureRepository.save(any(Measure.class))).thenReturn(updatedMeasure);
 
-    when(fhirServicesClient.saveMeasureInHapiFhir(any(), anyString()))
-        .thenReturn(new ResponseEntity<>(HttpStatus.OK));
-
     Export measureExport =
         Export.builder()
             .id("testId")
@@ -593,8 +585,6 @@ public class VersionServiceTest {
     Export savedExport = exportArgumentCaptor.getValue();
     assertEquals(savedValue.getId(), savedExport.getMeasureId());
     assertEquals(measureExport.getMeasureBundleJson(), savedExport.getMeasureBundleJson());
-
-    verify(fhirServicesClient, times(1)).saveMeasureInHapiFhir(updatedMeasure, "accesstoken");
   }
 
   @Test
