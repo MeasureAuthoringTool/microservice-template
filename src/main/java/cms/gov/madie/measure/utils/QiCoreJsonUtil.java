@@ -304,6 +304,8 @@ public final class QiCoreJsonUtil {
     return testCase.getJson();
   }
 
+  // update full urls for non-patient resources
+
   protected static String jsonNodeToString(ObjectMapper objectMapper, JsonNode rootNode) {
     ByteArrayOutputStream bout = new ByteArrayOutputStream();
     try {

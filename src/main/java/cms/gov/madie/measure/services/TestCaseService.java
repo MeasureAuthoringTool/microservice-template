@@ -309,6 +309,9 @@ public class TestCaseService {
       validatedTestCase.setJson(
           QiCoreJsonUtil.updateResourceFullUrls(validatedTestCase, madieJsonResourcesBaseUri));
     }
+    validatedTestCase.setJson(
+        QiCoreJsonUtil.replacePatientRefs(
+            validatedTestCase.getJson(), validatedTestCase.getPatientId().toString()));
     measure.getTestCases().add(validatedTestCase);
 
     measureRepository.save(measure);
