@@ -1721,7 +1721,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
     assertFalse(response.get(0).isSuccessful());
     assertEquals(
-        "The Test Case Group and Title combination is not unique. The combination must be unique (case insensitive, spaces ignored) across all test cases associated with the measure.",
+        "The Family and Given combination on the Patient resource in the Test Case JSON is already used in another test case on this measure.  The combination must be unique (case insensitive, spaces ignored) across all test cases associated with the measure.",
         response.get(0).getMessage());
   }
 
