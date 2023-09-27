@@ -588,8 +588,8 @@ public class TestCaseService {
           "User {} is unable to import test case with patient id : {}; Error Message : {}",
           userName,
           testCaseImportRequest.getPatientId(),
-          e.getMessage());
-      failureOutcome.setMessage(e.getMessage());
+          formatErrorMessage(e));
+      failureOutcome.setMessage(formatErrorMessage(e));
       return failureOutcome;
     } catch (Exception e) {
       log.info(
@@ -602,6 +602,15 @@ public class TestCaseService {
               + "If the error persists, Please contact helpdesk.");
       return failureOutcome;
     }
+  }
+
+  private String formatErrorMessage(Exception e) {
+    return e.getClass().getSimpleName().equals("DuplicateTestCaseNameException")
+        ? "The Family and Given combination on the Patient resource in the Test Case JSON"
+            + " is already used in another test case on this measure.  The combination"
+            + " must be unique (case insensitive, spaces ignored) across all test cases"
+            + " associated with the measure."
+        : e.getMessage();
   }
 
   public Measure findMeasureById(String measureId) {
