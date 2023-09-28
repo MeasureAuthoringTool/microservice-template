@@ -125,7 +125,7 @@ class ModelValidatorTest {
     try {
       validator.validateGroupAssociations(ModelType.QI_CORE.getShortValue(), group);
       fail("Should fail because QICore strat association can't be null");
-    } catch (Exception e) {
+    } catch (InvalidGroupException e) {
       assertTrue(e instanceof InvalidGroupException);
     }
   }
