@@ -48,9 +48,12 @@ public interface MeasureRepository
 
   boolean existsByMeasureSetIdAndActiveAndMeasureMetaDataDraft(
       String setId, boolean active, boolean draft);
+
   // Map measureSetId, boolean (ie.,
   // id 1 - drafted , 2 - versioned  setId 4 4, false
   // id 1 - versioned , 2 - versioned setId 4 4, true
   List<Measure> findAllByMeasureSetIdInAndActiveAndMeasureMetaDataDraft(
       List<String> setIds, boolean active, boolean draft);
+
+  List<Measure> findAllByModel(String model);
 }
