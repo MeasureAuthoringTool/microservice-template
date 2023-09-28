@@ -1,10 +1,5 @@
 package cms.gov.madie.measure.config;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.lessThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -43,73 +38,81 @@ public class UpdateStratificationAssociationTest {
 
   @BeforeEach
   public void setUp() {
-    Stratification stratification = new Stratification() ; 
+    Stratification stratification = new Stratification();
     stratification.setAssociation(PopulationType.INITIAL_POPULATION);
     List<Group> groups = List.of(Group.builder().stratifications(List.of(stratification)).build());
-    testMeasure = Measure.builder().id("testMeasureId").model(ModelType.QDM_5_6.getValue()).groups(groups).build();
+    testMeasure =
+        Measure.builder()
+            .id("testMeasureId")
+            .model(ModelType.QDM_5_6.getValue())
+            .groups(groups)
+            .build();
   }
 
   @Test
   public void updateStratificationAssociation() {
-    doReturn(List.of(testMeasure)).when(measureRepository).findAllByModel(ModelType.QDM_5_6.getValue());
+    doReturn(List.of(testMeasure))
+        .when(measureRepository)
+        .findAllByModel(ModelType.QDM_5_6.getValue());
     updateStratificationAssociation.removeAssociationFromStratification(measureRepository);
 
     Stratification strat = testMeasure.getGroups().get(0).getStratifications().get(0);
     assertNotNull(strat);
-    
+
     assertNull(strat.getAssociation());
-    
   }
-  
+
   @Test
   public void updateStratificationAssociationWithoutGroups() {
-	  testMeasure.setGroups(new ArrayList<Group>());
-    doReturn(List.of(testMeasure)).when(measureRepository).findAllByModel(ModelType.QDM_5_6.getValue());
+    testMeasure.setGroups(new ArrayList<Group>());
+    doReturn(List.of(testMeasure))
+        .when(measureRepository)
+        .findAllByModel(ModelType.QDM_5_6.getValue());
     updateStratificationAssociation.removeAssociationFromStratification(measureRepository);
 
-    List<Group> groups= testMeasure.getGroups();
+    List<Group> groups = testMeasure.getGroups();
     assertTrue(CollectionUtils.isEmpty(groups));
-    
   }
-  
+
   @Test
   public void updateStratificationAssociationWithoutStratifications() {
-	  testMeasure.getGroups().get(0).setStratifications(new ArrayList<Stratification>());
-    doReturn(List.of(testMeasure)).when(measureRepository).findAllByModel(ModelType.QDM_5_6.getValue());
+    testMeasure.getGroups().get(0).setStratifications(new ArrayList<Stratification>());
+    doReturn(List.of(testMeasure))
+        .when(measureRepository)
+        .findAllByModel(ModelType.QDM_5_6.getValue());
     updateStratificationAssociation.removeAssociationFromStratification(measureRepository);
 
-    List<Stratification> strats= testMeasure.getGroups().get(0).getStratifications();
+    List<Stratification> strats = testMeasure.getGroups().get(0).getStratifications();
     assertTrue(CollectionUtils.isEmpty(strats));
-    
   }
-  
+
   @Test
   public void updateStratificationAssociation_ModelMismatch() {
-	
-    doReturn(new ArrayList<Measure>()).when(measureRepository).findAllByModel(ModelType.QDM_5_6.getValue());
+
+    doReturn(new ArrayList<Measure>())
+        .when(measureRepository)
+        .findAllByModel(ModelType.QDM_5_6.getValue());
     updateStratificationAssociation.removeAssociationFromStratification(measureRepository);
 
     Stratification strat = testMeasure.getGroups().get(0).getStratifications().get(0);
     assertNotNull(strat);
-    
+
     assertEquals(PopulationType.INITIAL_POPULATION, strat.getAssociation());
-    
   }
-
-
 
   @Test
   public void testRollbackExecutionHasMeasures() {
-    ReflectionTestUtils.setField(updateStratificationAssociation, "tempMeasures", List.of(testMeasure));
+    ReflectionTestUtils.setField(
+        updateStratificationAssociation, "tempMeasures", List.of(testMeasure));
 
     updateStratificationAssociation.rollbackExecution(measureRepository);
 
     Stratification strat = testMeasure.getGroups().get(0).getStratifications().get(0);
     assertNotNull(strat);
-    
+
     assertEquals(PopulationType.INITIAL_POPULATION, strat.getAssociation());
   }
-  
+
   @Test
   public void testRollbackExecutionNoMeasures() {
     ReflectionTestUtils.setField(updateStratificationAssociation, "tempMeasures", new ArrayList());
@@ -118,8 +121,7 @@ public class UpdateStratificationAssociationTest {
 
     Stratification strat = testMeasure.getGroups().get(0).getStratifications().get(0);
     assertNotNull(strat);
-    
+
     assertEquals(PopulationType.INITIAL_POPULATION, strat.getAssociation());
   }
-
 }
