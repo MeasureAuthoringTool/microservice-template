@@ -5,6 +5,7 @@ import java.util.List;
 import org.apache.commons.collections4.CollectionUtils;
 
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.Stratification;
@@ -22,7 +23,7 @@ public class UpdateStratificationAssociation {
 
   @Execution
   public void removeAssociationFromStratification(MeasureRepository measureRepository) {
-    List<Measure> measures = measureRepository.findAllByModel("QDM v5.6");
+    List<Measure> measures = measureRepository.findAllByModel(ModelType.QDM_5_6.getValue());
     if (CollectionUtils.isNotEmpty(measures)) {
       setTempMeasures(measures);
       measures.forEach(
