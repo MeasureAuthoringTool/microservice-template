@@ -11,10 +11,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-
-import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
-import gov.cms.madie.models.measure.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -22,9 +23,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import cms.gov.madie.measure.utils.MeasureUtil;
-import gov.cms.madie.models.common.ModelType;
-import gov.cms.madie.models.common.Version;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,13 +37,33 @@ import org.springframework.data.domain.PageRequest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.utils.MeasureUtil;
 import cms.gov.madie.measure.utils.ResourceUtil;
 import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeService;
 import cms.gov.madie.measure.validations.CqlObservationFunctionService;
+import gov.cms.madie.models.common.ModelType;
+import gov.cms.madie.models.common.Version;
+import gov.cms.madie.models.measure.AggregateMethodType;
+import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureGroupTypes;
+import gov.cms.madie.models.measure.MeasureMetaData;
+import gov.cms.madie.models.measure.MeasureObservation;
+import gov.cms.madie.models.measure.MeasureScoring;
+import gov.cms.madie.models.measure.MeasureSet;
+import gov.cms.madie.models.measure.Population;
+import gov.cms.madie.models.measure.PopulationType;
+import gov.cms.madie.models.measure.QdmMeasure;
+import gov.cms.madie.models.measure.Stratification;
+import gov.cms.madie.models.measure.TestCase;
+import gov.cms.madie.models.measure.TestCaseGroupPopulation;
+import gov.cms.madie.models.measure.TestCasePopulationValue;
+import gov.cms.madie.models.measure.TestCaseStratificationValue;
 
 @ExtendWith(MockitoExtension.class)
 public class GroupServiceTest implements ResourceUtil {
@@ -57,6 +75,10 @@ public class GroupServiceTest implements ResourceUtil {
 
   @Mock private CqlDefinitionReturnTypeService cqlDefinitionReturnTypeService;
   @Mock private CqlObservationFunctionService cqlObservationFunctionService;
+
+  @Mock private ModelValidatorLocator modelValidatorLocator;
+
+  @Mock private QicoreModelValidator qicoreModelValidator;
 
   @InjectMocks private GroupService groupService;
 
@@ -288,6 +310,10 @@ public class GroupServiceTest implements ResourceUtil {
     doReturn(optional).when(measureRepository).findById(any(String.class));
 
     doReturn(measure).when(measureRepository).save(any(Measure.class));
+
+    doReturn(qicoreModelValidator)
+        .when(modelValidatorLocator)
+        .get(eq(ModelType.QI_CORE.getShortValue()));
 
     when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
@@ -611,7 +637,7 @@ public class GroupServiceTest implements ResourceUtil {
     // before updates
     assertEquals(1, testCases.get(0).getGroupPopulations().size());
     groupService.updateGroupForTestCases(group, testCases);
-    // group should be removed from test case as  measure group scoring was changed
+    // group should be removed from test case as measure group scoring was changed
     assertEquals(0, testCases.get(0).getGroupPopulations().size());
   }
 
@@ -651,7 +677,8 @@ public class GroupServiceTest implements ResourceUtil {
     // before updates
     assertEquals(1, testCases.get(0).getGroupPopulations().size());
     groupService.updateGroupForTestCases(group, testCases);
-    // group should not be removed from test case as  measure group scoring was not changed
+    // group should not be removed from test case as measure group scoring was not
+    // changed
     assertEquals(1, testCases.get(0).getGroupPopulations().size());
   }
 
@@ -673,7 +700,8 @@ public class GroupServiceTest implements ResourceUtil {
     // before updates
     assertEquals(1, testCases.get(0).getGroupPopulations().size());
     groupService.updateGroupForTestCases(group, testCases);
-    // group should be removed from test case as populationBasis for measure group was changed
+    // group should be removed from test case as populationBasis for measure group
+    // was changed
     assertEquals(0, testCases.get(0).getGroupPopulations().size());
   }
 
@@ -786,6 +814,9 @@ public class GroupServiceTest implements ResourceUtil {
     doReturn(measure).when(measureRepository).save(any(Measure.class));
     when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
+    doReturn(qicoreModelValidator)
+        .when(modelValidatorLocator)
+        .get(eq(ModelType.QI_CORE.getShortValue()));
 
     Group group = groupService.createOrUpdateGroup(group2, measure.getId(), "test.user");
     assertEquals(group.getStratifications().size(), group2.getStratifications().size());
@@ -801,6 +832,9 @@ public class GroupServiceTest implements ResourceUtil {
     doReturn(measure).when(measureRepository).save(any(Measure.class));
     when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
+    doReturn(qicoreModelValidator)
+        .when(modelValidatorLocator)
+        .get(eq(ModelType.QI_CORE.getShortValue()));
 
     Group group = groupService.createOrUpdateGroup(group2, measure.getId(), "test.user");
     assertEquals(group.getMeasureObservations().size(), group2.getMeasureObservations().size());
