@@ -67,7 +67,7 @@ class ModelValidatorTest {
       validator.validateGroupAssociations(ModelType.QDM_5_6.getShortValue(), group);
       fail("Should fail because association exists on the Stratification");
     } catch (Exception e) {
-      assertTrue(e instanceof InvalidGroupException);
+      assertEquals("QDM group stratifications cannot be associated.", e.getMessage());
     }
   }
 
@@ -126,7 +126,9 @@ class ModelValidatorTest {
       validator.validateGroupAssociations(ModelType.QI_CORE.getShortValue(), group);
       fail("Should fail because QICore strat association can't be null");
     } catch (InvalidGroupException e) {
-      assertTrue(e instanceof InvalidGroupException);
+      assertTrue(
+          "QI-Core group stratifications should be associated to a valid population type."
+              .equals(e.getMessage()));
     }
   }
 
