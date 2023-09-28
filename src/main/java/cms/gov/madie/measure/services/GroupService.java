@@ -26,6 +26,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -46,6 +47,8 @@ public class GroupService {
   private final MeasureService measureService;
   private final CqlDefinitionReturnTypeService cqlDefinitionReturnTypeService;
   private final CqlObservationFunctionService cqlObservationFunctionService;
+
+  @Autowired private ModelValidatorLocator modelLocator;
 
   public Group createOrUpdateGroup(Group group, String measureId, String username) {
 
@@ -247,22 +250,9 @@ public class GroupService {
   }
 
   public void validateGroupAssociations(String model, Group group) {
-    boolean isQdmModel = model.equalsIgnoreCase(ModelType.QDM_5_6.getValue());
-    boolean isAssociated;
-    if (isQdmModel) {
-      isAssociated =
-          group.getStratifications().stream().anyMatch(map -> map.getAssociation() != null);
-
-    } else {
-      isAssociated =
-          group.getStratifications().stream().anyMatch(map -> map.getAssociation() == null);
-    }
-    if (isAssociated) {
-      throw new InvalidGroupException(
-          isQdmModel
-              ? "QDM group stratifications cannot be associated."
-              : "QI-Core group stratifications should be associated to a valid population type.");
-    }
+    String shortModel = ModelType.valueOfName(model).getShortValue();
+    ModelValidator validator = modelLocator.get(shortModel);
+    validator.validateGroupAssociations(model, group);
   }
 
   private TestCasePopulationValue updateTestCasePopulation(

@@ -33,6 +33,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -57,6 +58,10 @@ public class GroupServiceTest implements ResourceUtil {
 
   @Mock private CqlDefinitionReturnTypeService cqlDefinitionReturnTypeService;
   @Mock private CqlObservationFunctionService cqlObservationFunctionService;
+
+  @Mock private ModelValidatorLocator modelValidatorLocator;
+
+  @Mock private QicoreModelValidator qicoreModelValidator;
 
   @InjectMocks private GroupService groupService;
 
@@ -288,6 +293,10 @@ public class GroupServiceTest implements ResourceUtil {
     doReturn(optional).when(measureRepository).findById(any(String.class));
 
     doReturn(measure).when(measureRepository).save(any(Measure.class));
+
+    doReturn(qicoreModelValidator)
+        .when(modelValidatorLocator)
+        .get(eq(ModelType.QI_CORE.getShortValue()));
 
     when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
@@ -611,7 +620,7 @@ public class GroupServiceTest implements ResourceUtil {
     // before updates
     assertEquals(1, testCases.get(0).getGroupPopulations().size());
     groupService.updateGroupForTestCases(group, testCases);
-    // group should be removed from test case as  measure group scoring was changed
+    // group should be removed from test case as measure group scoring was changed
     assertEquals(0, testCases.get(0).getGroupPopulations().size());
   }
 
@@ -651,7 +660,8 @@ public class GroupServiceTest implements ResourceUtil {
     // before updates
     assertEquals(1, testCases.get(0).getGroupPopulations().size());
     groupService.updateGroupForTestCases(group, testCases);
-    // group should not be removed from test case as  measure group scoring was not changed
+    // group should not be removed from test case as measure group scoring was not
+    // changed
     assertEquals(1, testCases.get(0).getGroupPopulations().size());
   }
 
@@ -673,7 +683,8 @@ public class GroupServiceTest implements ResourceUtil {
     // before updates
     assertEquals(1, testCases.get(0).getGroupPopulations().size());
     groupService.updateGroupForTestCases(group, testCases);
-    // group should be removed from test case as populationBasis for measure group was changed
+    // group should be removed from test case as populationBasis for measure group
+    // was changed
     assertEquals(0, testCases.get(0).getGroupPopulations().size());
   }
 
@@ -786,6 +797,9 @@ public class GroupServiceTest implements ResourceUtil {
     doReturn(measure).when(measureRepository).save(any(Measure.class));
     when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
+    doReturn(qicoreModelValidator)
+        .when(modelValidatorLocator)
+        .get(eq(ModelType.QI_CORE.getShortValue()));
 
     Group group = groupService.createOrUpdateGroup(group2, measure.getId(), "test.user");
     assertEquals(group.getStratifications().size(), group2.getStratifications().size());
@@ -801,6 +815,9 @@ public class GroupServiceTest implements ResourceUtil {
     doReturn(measure).when(measureRepository).save(any(Measure.class));
     when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
+    doReturn(qicoreModelValidator)
+        .when(modelValidatorLocator)
+        .get(eq(ModelType.QI_CORE.getShortValue()));
 
     Group group = groupService.createOrUpdateGroup(group2, measure.getId(), "test.user");
     assertEquals(group.getMeasureObservations().size(), group2.getMeasureObservations().size());
