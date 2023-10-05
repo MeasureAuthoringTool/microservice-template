@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.config.FhirServicesConfig;
+import gov.cms.madie.models.common.BundleType;
 import gov.cms.madie.models.dto.ExportDTO;
 import gov.cms.madie.models.measure.HapiOperationOutcome;
 import gov.cms.madie.models.measure.Measure;
@@ -8,6 +9,7 @@ import java.net.URI;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -71,7 +73,7 @@ public class FhirServicesClient {
   }
 
   public ResponseEntity<byte[]> getTestCaseExports(
-      Measure measure, String accessToken, List<String> testCaseId) {
+      Measure measure, String accessToken, List<String> testCaseId, String bundleType) {
     URI uri =
         URI.create(
             fhirServicesConfig.getMadieFhirServiceBaseUrl()
@@ -82,7 +84,12 @@ public class FhirServicesClient {
     headers.set(HttpHeaders.ACCEPT, MediaType.ALL_VALUE);
     headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
-    ExportDTO dto = ExportDTO.builder().measure(measure).testCaseIds(testCaseId).build();
+    ExportDTO dto =
+        ExportDTO.builder()
+            .measure(measure)
+            .bundleType(BundleType.valueOf(bundleType))
+            .testCaseIds(testCaseId)
+            .build();
 
     HttpEntity<ExportDTO> measureEntity = new HttpEntity<>(dto, headers);
 

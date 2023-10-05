@@ -168,7 +168,8 @@ class FhirServicesClientTest {
         .thenReturn(ResponseEntity.ok(new byte[0]));
     byte[] output =
         fhirServicesClient
-            .getTestCaseExports(measure, accessToken, asList("test-case-id-1", "test=case=id-2"))
+            .getTestCaseExports(
+                measure, accessToken, asList("test-case-id-1", "test=case=id-2"), "COLLECTION")
             .getBody();
     assertNotNull(output);
   }
@@ -190,7 +191,7 @@ class FhirServicesClientTest {
                 "error occured", HttpStatus.NOT_FOUND, null, null, null, null));
     ResponseEntity<byte[]> output =
         fhirServicesClient.getTestCaseExports(
-            measure, accessToken, asList("test-case-id-1", "test=case=id-2"));
+            measure, accessToken, asList("test-case-id-1", "test=case=id-2"), "COLLECTION");
     assertThat(output.getStatusCode(), is(HttpStatus.NOT_FOUND));
   }
 }

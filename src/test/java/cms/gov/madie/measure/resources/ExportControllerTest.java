@@ -87,7 +87,8 @@ class ExportControllerTest {
             .createdBy("test.user")
             .build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    when(fhirServicesClient.getTestCaseExports(any(Measure.class), anyString(), anyList()))
+    when(fhirServicesClient.getTestCaseExports(
+            any(Measure.class), anyString(), anyList(), anyString()))
         .thenReturn(new ResponseEntity<byte[]>(HttpStatus.OK));
     ResponseEntity<byte[]> output =
         exportController.getTestCaseExport(
@@ -111,7 +112,8 @@ class ExportControllerTest {
             .createdBy("test.user")
             .build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    when(fhirServicesClient.getTestCaseExports(any(Measure.class), anyString(), anyList()))
+    when(fhirServicesClient.getTestCaseExports(
+            any(Measure.class), anyString(), anyList(), anyString()))
         .thenReturn(new ResponseEntity<byte[]>(HttpStatus.PARTIAL_CONTENT));
     ResponseEntity<byte[]> output =
         exportController.getTestCaseExport(
@@ -135,7 +137,8 @@ class ExportControllerTest {
             .createdBy("test.user")
             .build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    when(fhirServicesClient.getTestCaseExports(any(Measure.class), anyString(), anyList()))
+    when(fhirServicesClient.getTestCaseExports(
+            any(Measure.class), anyString(), anyList(), anyString()))
         .thenReturn(new ResponseEntity<byte[]>(HttpStatus.PARTIAL_CONTENT));
     ResponseEntity<byte[]> output =
         exportController.getTestCaseExport(
