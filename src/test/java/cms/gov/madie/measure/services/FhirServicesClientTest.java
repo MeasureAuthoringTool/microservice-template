@@ -3,10 +3,10 @@ package cms.gov.madie.measure.services;
 import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
@@ -14,12 +14,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import cms.gov.madie.measure.config.FhirServicesConfig;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import gov.cms.madie.models.measure.HapiOperationOutcome;
-import gov.cms.madie.models.measure.Measure;
 import java.net.URI;
 import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,6 +33,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+
+import cms.gov.madie.measure.config.FhirServicesConfig;
+import gov.cms.madie.models.measure.HapiOperationOutcome;
+import gov.cms.madie.models.measure.Measure;
 
 @ExtendWith(MockitoExtension.class)
 class FhirServicesClientTest {
@@ -168,7 +171,8 @@ class FhirServicesClientTest {
         .thenReturn(ResponseEntity.ok(new byte[0]));
     byte[] output =
         fhirServicesClient
-            .getTestCaseExports(measure, accessToken, asList("test-case-id-1", "test=case=id-2"))
+            .getTestCaseExports(
+                measure, accessToken, asList("test-case-id-1", "test=case=id-2"), "COLLECTION")
             .getBody();
     assertNotNull(output);
   }
@@ -190,7 +194,7 @@ class FhirServicesClientTest {
                 "error occured", HttpStatus.NOT_FOUND, null, null, null, null));
     ResponseEntity<byte[]> output =
         fhirServicesClient.getTestCaseExports(
-            measure, accessToken, asList("test-case-id-1", "test=case=id-2"));
+            measure, accessToken, asList("test-case-id-1", "test=case=id-2"), "COLLECTION");
     assertThat(output.getStatusCode(), is(HttpStatus.NOT_FOUND));
   }
 }
