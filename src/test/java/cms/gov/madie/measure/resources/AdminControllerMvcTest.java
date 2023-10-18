@@ -4,9 +4,12 @@ import cms.gov.madie.measure.SecurityConfig;
 import cms.gov.madie.measure.dto.JobStatus;
 import cms.gov.madie.measure.dto.MeasureTestCaseValidationReport;
 import cms.gov.madie.measure.dto.TestCaseValidationReport;
+import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.MeasureService;
 import cms.gov.madie.measure.services.MeasureSetService;
 import cms.gov.madie.measure.services.TestCaseService;
+import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureSet;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +23,11 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.util.List;
 
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.equalTo;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -42,6 +48,9 @@ public class AdminControllerMvcTest {
   @MockBean private MeasureService measureService;
   @MockBean private MeasureSetService measureSetService;
   @MockBean private TestCaseService testCaseService;
+  @MockBean private ActionLogService actionLogService;
+
+  @MockBean private MeasureRepository measureRepository;
 
   @Autowired private MockMvc mockMvc;
 
@@ -289,5 +298,44 @@ public class AdminControllerMvcTest {
 
     verify(testCaseService, times(1)).updateTestCaseValidResourcesWithReport(eq("M1"), anyString());
     verify(testCaseService, times(1)).updateTestCaseValidResourcesWithReport(eq("M2"), anyString());
+  }
+
+  @Test
+  public void testAdminMeasurePermaDelete() throws Exception {
+    Measure testMsr = Measure.builder().id("12345").build();
+    when(measureService.findMeasureById(anyString())).thenReturn(testMsr);
+    doNothing().when(measureRepository).delete(any(Measure.class));
+
+    mockMvc.perform(
+        MockMvcRequestBuilders.delete("/admin/measures/{id}", "12345")
+            .with(csrf())
+            .with(user(TEST_USER_ID))
+            .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
+            .header("Authorization", "test-okta"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id", equalTo("12345")));
+  }
+
+  @Test
+  public void testAdminMeasureDeleteThrowsWhenMeasureNotFound() throws Exception {
+    when(measureService.findMeasureById(anyString())).thenReturn(null);
+
+    mockMvc.perform(
+            MockMvcRequestBuilders.delete("/admin/measures/{id}", "12345")
+                .with(csrf())
+                .with(user(TEST_USER_ID))
+                .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
+                .header("Authorization", "test-okta"))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  public void testBlocksNonAuthorizedDeleteRequests() throws Exception {
+    mockMvc.perform(
+        MockMvcRequestBuilders.delete("/admin/measures/{id}", "12345")
+            .with(csrf())
+            .with(user(TEST_USER_ID))
+            .header("Authorization", "test-okta"))
+        .andExpect(status().isForbidden());
   }
 }
