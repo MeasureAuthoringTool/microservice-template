@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -903,6 +904,31 @@ public class GroupServiceTest implements ResourceUtil {
   public void updateTestCaseGroupToAddMeasurePopulationsAndStratification() {
     // measure group with 4 populations and 2 stratification
     Group measureGroup = ratioGroup;
+    TestCaseGroupPopulation testCaseGroup = buildTestCaseRatioGroup();
+    // no testcase stratification
+    testCaseGroup.setStratificationValues(null);
+
+    // before updates
+    assertEquals(5, testCaseGroup.getPopulationValues().size());
+    assertNull(testCaseGroup.getStratificationValues());
+    groupService.updateTestCaseGroupWithMeasureGroup(testCaseGroup, measureGroup);
+    // after updates
+    assertEquals(6, testCaseGroup.getPopulationValues().size());
+    assertEquals(2, testCaseGroup.getStratificationValues().size());
+  }
+
+  @Test
+  public void updateTestCaseGroupToAddMeasurePopulationsHandlesNoAssociation() {
+    // measure group with 4 populations and 2 stratification
+    Group measureGroup = ratioGroup.toBuilder().build();
+    measureGroup.setStratifications(measureGroup.getStratifications().stream().map(stratification -> {
+      Stratification strat = new Stratification();
+      strat.setId(stratification.getId());
+      strat.setCqlDefinition(stratification.getCqlDefinition());
+      strat.setDescription(stratification.getDescription());
+      strat.setAssociation(null);
+      return strat;
+    }).collect(Collectors.toList()));
     TestCaseGroupPopulation testCaseGroup = buildTestCaseRatioGroup();
     // no testcase stratification
     testCaseGroup.setStratificationValues(null);
