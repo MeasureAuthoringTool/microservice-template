@@ -231,11 +231,16 @@ public class GroupService {
           measureGroup.getStratifications().stream()
               .map(
                   measureStrata -> {
-                    String strataName =
-                        String.format(
-                            "Strata-%d %s",
-                            count.getAndIncrement(), measureStrata.getAssociation().getDisplay());
-                    return updateTestCaseStratification(measureStrata, testCaseGroup, strataName);
+                    if (null != measureStrata.getAssociation()) {
+                      String strataName =
+                          String.format(
+                              "Strata-%d %s",
+                              count.getAndIncrement(), measureStrata.getAssociation().getDisplay());
+                      return updateTestCaseStratification(measureStrata, testCaseGroup, strataName);
+                    } else {
+                      String strataName = String.format("Strata-%d", count.getAndIncrement());
+                      return updateTestCaseStratification(measureStrata, testCaseGroup, strataName);
+                    }
                   })
               .filter(Objects::nonNull)
               .toList();
