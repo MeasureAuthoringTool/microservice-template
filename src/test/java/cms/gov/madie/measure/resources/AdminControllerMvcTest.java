@@ -306,12 +306,13 @@ public class AdminControllerMvcTest {
     when(measureService.findMeasureById(anyString())).thenReturn(testMsr);
     doNothing().when(measureRepository).delete(any(Measure.class));
 
-    mockMvc.perform(
-        MockMvcRequestBuilders.delete("/admin/measures/{id}", "12345")
-            .with(csrf())
-            .with(user(TEST_USER_ID))
-            .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
-            .header("Authorization", "test-okta"))
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.delete("/admin/measures/{id}", "12345")
+                .with(csrf())
+                .with(user(TEST_USER_ID))
+                .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
+                .header("Authorization", "test-okta"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id", equalTo("12345")));
   }
@@ -320,7 +321,8 @@ public class AdminControllerMvcTest {
   public void testAdminMeasureDeleteThrowsWhenMeasureNotFound() throws Exception {
     when(measureService.findMeasureById(anyString())).thenReturn(null);
 
-    mockMvc.perform(
+    mockMvc
+        .perform(
             MockMvcRequestBuilders.delete("/admin/measures/{id}", "12345")
                 .with(csrf())
                 .with(user(TEST_USER_ID))
@@ -331,11 +333,12 @@ public class AdminControllerMvcTest {
 
   @Test
   public void testBlocksNonAuthorizedDeleteRequests() throws Exception {
-    mockMvc.perform(
-        MockMvcRequestBuilders.delete("/admin/measures/{id}", "12345")
-            .with(csrf())
-            .with(user(TEST_USER_ID))
-            .header("Authorization", "test-okta"))
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.delete("/admin/measures/{id}", "12345")
+                .with(csrf())
+                .with(user(TEST_USER_ID))
+                .header("Authorization", "test-okta"))
         .andExpect(status().isForbidden());
   }
 }

@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -282,7 +283,7 @@ public class GroupService {
     return testCasePopulation;
   }
 
-  private TestCaseStratificationValue updateTestCaseStratification(
+  protected TestCaseStratificationValue updateTestCaseStratification(
       Stratification stratification, TestCaseGroupPopulation testCaseGroup, String strataName) {
     // if no cql definition(optional), no need to consider stratification
     if (StringUtils.isEmpty(stratification.getCqlDefinition())) {
@@ -308,7 +309,62 @@ public class GroupService {
               .build();
     }
     testCaseStrata.setName(strataName);
+    handlePopulationChange(testCaseStrata, testCaseGroup);
+
     return testCaseStrata;
+  }
+
+  private void handlePopulationChange(
+      TestCaseStratificationValue testCaseStrata, TestCaseGroupPopulation testCaseGroup) {
+    List<TestCasePopulationValue> testCasePopulationValues = testCaseStrata.getPopulationValues();
+    List<TestCasePopulationValue> testCasePopulationValuesFromGroup =
+        testCaseGroup.getPopulationValues();
+
+    if (!CollectionUtils.isEmpty(testCasePopulationValuesFromGroup)) {
+      if (!CollectionUtils.isEmpty(testCasePopulationValues)) {
+        // when there is added group population
+        if (testCasePopulationValuesFromGroup.size() > testCasePopulationValues.size()) {
+          for (int i = 0; i < testCasePopulationValuesFromGroup.size(); i++) {
+            TestCasePopulationValue testCasePopulationValueFromGroup =
+                testCasePopulationValuesFromGroup.get(i);
+            if (!findExistsInTestCasePopulationValues(
+                testCasePopulationValueFromGroup.getId(), testCasePopulationValues)) {
+              testCasePopulationValues.add(testCasePopulationValueFromGroup);
+            }
+          }
+        } // when there is deleted group population
+        else {
+          List<TestCasePopulationValue> tempTestCasePopulationValues = new ArrayList<>();
+          for (int i = 0; i < testCasePopulationValues.size(); i++) {
+            if (findExistsInTestCasePopulationValues(
+                testCasePopulationValues.get(i).getId(), testCasePopulationValuesFromGroup)) {
+              tempTestCasePopulationValues.add(testCasePopulationValues.get(i));
+            }
+          }
+          testCaseStrata.setPopulationValues(tempTestCasePopulationValues);
+        }
+
+      } // when there is new strat
+      else {
+        List<TestCasePopulationValue> tempTestCasePopulationValues = new ArrayList<>();
+        for (int i = 0; i < testCasePopulationValuesFromGroup.size(); i++) {
+          tempTestCasePopulationValues.add(testCasePopulationValuesFromGroup.get(i));
+        }
+        testCaseStrata.setPopulationValues(tempTestCasePopulationValues);
+      }
+    }
+  }
+
+  private boolean findExistsInTestCasePopulationValues(
+      String id, List<TestCasePopulationValue> testCasePopulationValues) {
+    boolean found = false;
+    for (int i = 0; i < testCasePopulationValues.size(); i++) {
+      TestCasePopulationValue testCasePopulationValue = testCasePopulationValues.get(i);
+      if (id.equalsIgnoreCase(testCasePopulationValue.getId())) {
+        found = true;
+      }
+    }
+    return found;
   }
 
   private TestCasePopulationValue findTestCasePopulation(
