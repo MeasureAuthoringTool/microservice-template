@@ -322,49 +322,34 @@ public class GroupService {
 
     if (!CollectionUtils.isEmpty(testCasePopulationValuesFromGroup)) {
       if (!CollectionUtils.isEmpty(testCasePopulationValues)) {
-        // when there is added group population
-        if (testCasePopulationValuesFromGroup.size() > testCasePopulationValues.size()) {
-          for (int i = 0; i < testCasePopulationValuesFromGroup.size(); i++) {
-            TestCasePopulationValue testCasePopulationValueFromGroup =
-                testCasePopulationValuesFromGroup.get(i);
-            if (!findExistsInTestCasePopulationValues(
-                testCasePopulationValueFromGroup.getId(), testCasePopulationValues)) {
-              testCasePopulationValues.add(testCasePopulationValueFromGroup);
-            }
+        for (TestCasePopulationValue testCasePopulationValueFromGroup :
+            testCasePopulationValuesFromGroup) {
+          // if there is new population value from testCasePopulationValuesFromGroup
+          if (!findExistsTestCasePopulationValue(
+              testCasePopulationValueFromGroup.getId(), testCasePopulationValues)) {
+            testCasePopulationValues.add(testCasePopulationValueFromGroup);
           }
-        } // when there is deleted group population
-        else {
+          // delete any that is not in testCasePopulationValuesFromGroup
           List<TestCasePopulationValue> tempTestCasePopulationValues = new ArrayList<>();
-          for (int i = 0; i < testCasePopulationValues.size(); i++) {
-            if (findExistsInTestCasePopulationValues(
-                testCasePopulationValues.get(i).getId(), testCasePopulationValuesFromGroup)) {
-              tempTestCasePopulationValues.add(testCasePopulationValues.get(i));
+          for (TestCasePopulationValue tempTestCasePopulationValue : testCasePopulationValues) {
+            if (findExistsTestCasePopulationValue(
+                tempTestCasePopulationValue.getId(), testCasePopulationValuesFromGroup)) {
+              tempTestCasePopulationValues.add(tempTestCasePopulationValue);
             }
           }
           testCaseStrata.setPopulationValues(tempTestCasePopulationValues);
         }
-
       } // when there is new strat
       else {
-        List<TestCasePopulationValue> tempTestCasePopulationValues = new ArrayList<>();
-        for (int i = 0; i < testCasePopulationValuesFromGroup.size(); i++) {
-          tempTestCasePopulationValues.add(testCasePopulationValuesFromGroup.get(i));
-        }
-        testCaseStrata.setPopulationValues(tempTestCasePopulationValues);
+        testCaseStrata.setPopulationValues(testCasePopulationValuesFromGroup);
       }
     }
   }
 
-  private boolean findExistsInTestCasePopulationValues(
+  private boolean findExistsTestCasePopulationValue(
       String id, List<TestCasePopulationValue> testCasePopulationValues) {
-    boolean found = false;
-    for (int i = 0; i < testCasePopulationValues.size(); i++) {
-      TestCasePopulationValue testCasePopulationValue = testCasePopulationValues.get(i);
-      if (id.equalsIgnoreCase(testCasePopulationValue.getId())) {
-        found = true;
-      }
-    }
-    return found;
+    return testCasePopulationValues.stream()
+        .anyMatch(testCasePopulationValue -> id.equalsIgnoreCase(testCasePopulationValue.getId()));
   }
 
   private TestCasePopulationValue findTestCasePopulation(

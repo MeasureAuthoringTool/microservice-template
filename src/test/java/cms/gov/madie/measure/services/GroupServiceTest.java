@@ -1426,7 +1426,7 @@ public class GroupServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testUpdateTestCaseStratificationForSameGroupPopulation() {
+  public void testUpdateTestCaseStratificationForChangedGroupPopulation() {
 
     List<TestCasePopulationValue> testCasePopulationValues = new ArrayList<>();
 
@@ -1435,8 +1435,8 @@ public class GroupServiceTest implements ResourceUtil {
 
     List<TestCaseStratificationValue> testCaseStratificationValues = new ArrayList<>();
     List<TestCasePopulationValue> testCaseStrataPopulationValues = new ArrayList<>();
-    testCaseStrataPopulationValues.add(testCasePopulationValue1);
     testCaseStrataPopulationValues.add(testCasePopulationValue2);
+    testCaseStrataPopulationValues.add(testCasePopulationValue3);
 
     TestCaseStratificationValue testCaseStratificationValue1 =
         TestCaseStratificationValue.builder()
@@ -1462,6 +1462,12 @@ public class GroupServiceTest implements ResourceUtil {
             stratification, testCaseGroupPopulation, "Strata-1");
     assertTrue(testCaseStratificationValue != null);
     assertEquals(testCaseStratificationValue.getPopulationValues().size(), 2);
+    assertNotEquals(
+        testCaseStratificationValue.getPopulationValues().get(0).getId(),
+        testCasePopulationValue3.getId());
+    assertNotEquals(
+        testCaseStratificationValue.getPopulationValues().get(1).getId(),
+        testCasePopulationValue3.getId());
   }
 
   @Test
