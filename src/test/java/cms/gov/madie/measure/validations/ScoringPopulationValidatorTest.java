@@ -9,6 +9,7 @@ import gov.cms.madie.models.measure.PopulationType;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import gov.cms.madie.models.measure.TestCasePopulationValue;
 import gov.cms.madie.models.common.Version;
+import jakarta.validation.ConstraintValidatorContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,7 +17,6 @@ import org.mockito.Mock;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import javax.validation.ConstraintValidatorContext;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
