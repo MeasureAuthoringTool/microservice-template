@@ -88,6 +88,11 @@ public class GroupServiceTest implements ResourceUtil {
   private Group ratioGroup;
   private Measure measure;
   private Stratification strata1;
+  private Stratification stratification;
+  private TestCasePopulationValue testCasePopulationValue1;
+  private TestCasePopulationValue testCasePopulationValue2;
+  private TestCasePopulationValue testCasePopulationValue3;
+  private TestCasePopulationValue testCasePopulationValue4;
 
   @BeforeEach
   public void setUp() {
@@ -205,6 +210,38 @@ public class GroupServiceTest implements ResourceUtil {
             .lastModifiedAt(Instant.now())
             .lastModifiedBy("test user")
             .measureMetaData(MeasureMetaData.builder().draft(true).build())
+            .build();
+
+    stratification = new Stratification();
+    stratification.setId("stratId");
+    stratification.setCqlDefinition("truebool1");
+    testCasePopulationValue1 =
+        TestCasePopulationValue.builder()
+            .id("testCasePopulationValue1")
+            .name(PopulationType.INITIAL_POPULATION)
+            .expected(Boolean.FALSE)
+            .actual(Boolean.FALSE)
+            .build();
+    testCasePopulationValue2 =
+        TestCasePopulationValue.builder()
+            .id("testCasePopulationValue2")
+            .name(PopulationType.DENOMINATOR)
+            .expected(Boolean.FALSE)
+            .actual(Boolean.FALSE)
+            .build();
+    testCasePopulationValue3 =
+        TestCasePopulationValue.builder()
+            .id("testCasePopulationValue3")
+            .name(PopulationType.NUMERATOR)
+            .expected(Boolean.FALSE)
+            .actual(Boolean.FALSE)
+            .build();
+    testCasePopulationValue4 =
+        TestCasePopulationValue.builder()
+            .id("testCasePopulationValue4")
+            .name(PopulationType.DENOMINATOR_EXCLUSION)
+            .expected(Boolean.FALSE)
+            .actual(Boolean.FALSE)
             .build();
   }
 
@@ -921,14 +958,18 @@ public class GroupServiceTest implements ResourceUtil {
   public void updateTestCaseGroupToAddMeasurePopulationsHandlesNoAssociation() {
     // measure group with 4 populations and 2 stratification
     Group measureGroup = ratioGroup.toBuilder().build();
-    measureGroup.setStratifications(measureGroup.getStratifications().stream().map(stratification -> {
-      Stratification strat = new Stratification();
-      strat.setId(stratification.getId());
-      strat.setCqlDefinition(stratification.getCqlDefinition());
-      strat.setDescription(stratification.getDescription());
-      strat.setAssociation(null);
-      return strat;
-    }).collect(Collectors.toList()));
+    measureGroup.setStratifications(
+        measureGroup.getStratifications().stream()
+            .map(
+                stratification -> {
+                  Stratification strat = new Stratification();
+                  strat.setId(stratification.getId());
+                  strat.setCqlDefinition(stratification.getCqlDefinition());
+                  strat.setDescription(stratification.getDescription());
+                  strat.setAssociation(null);
+                  return strat;
+                })
+            .collect(Collectors.toList()));
     TestCaseGroupPopulation testCaseGroup = buildTestCaseRatioGroup();
     // no testcase stratification
     testCaseGroup.setStratificationValues(null);
@@ -1301,5 +1342,139 @@ public class GroupServiceTest implements ResourceUtil {
         IllegalArgumentException.class,
         () -> groupService.handleQdmGroupReturnTypes(qdmGroup, qdmMeasure),
         "Invalid elm json");
+  }
+
+  @Test
+  public void testUpdateTestCaseStratificationForAddedGroupPopulation() {
+
+    List<TestCasePopulationValue> testCasePopulationValues = new ArrayList<>();
+
+    testCasePopulationValues.add(testCasePopulationValue1);
+    testCasePopulationValues.add(testCasePopulationValue2);
+    testCasePopulationValues.add(testCasePopulationValue3);
+
+    List<TestCaseStratificationValue> testCaseStratificationValues = new ArrayList<>();
+    List<TestCasePopulationValue> testCaseStrataPopulationValues = new ArrayList<>();
+    testCaseStrataPopulationValues.add(testCasePopulationValue1);
+    testCaseStrataPopulationValues.add(testCasePopulationValue2);
+    TestCaseStratificationValue testCaseStratificationValue1 =
+        TestCaseStratificationValue.builder()
+            .id("stratId")
+            .name("Strata-1")
+            .expected(Boolean.TRUE)
+            .actual(Boolean.FALSE)
+            .populationValues(testCaseStrataPopulationValues)
+            .build();
+    testCaseStratificationValues.add(testCaseStratificationValue1);
+
+    TestCaseGroupPopulation testCaseGroupPopulation =
+        TestCaseGroupPopulation.builder()
+            .groupId("testGroupId")
+            .scoring("Proportion")
+            .populationBasis("true")
+            .populationValues(testCasePopulationValues)
+            .stratificationValues(testCaseStratificationValues)
+            .build();
+
+    TestCaseStratificationValue testCaseStratificationValue =
+        groupService.updateTestCaseStratification(
+            stratification, testCaseGroupPopulation, "Strata-1");
+    assertTrue(testCaseStratificationValue != null);
+    assertEquals(testCaseStratificationValue.getPopulationValues().size(), 3);
+  }
+
+  @Test
+  public void testUpdateTestCaseStratificationForDeletedGroupPopulation() {
+
+    List<TestCasePopulationValue> testCasePopulationValues = new ArrayList<>();
+
+    testCasePopulationValues.add(testCasePopulationValue1);
+    testCasePopulationValues.add(testCasePopulationValue2);
+    testCasePopulationValues.add(testCasePopulationValue3);
+
+    List<TestCaseStratificationValue> testCaseStratificationValues = new ArrayList<>();
+    List<TestCasePopulationValue> testCaseStrataPopulationValues = new ArrayList<>();
+    testCaseStrataPopulationValues.add(testCasePopulationValue1);
+    testCaseStrataPopulationValues.add(testCasePopulationValue2);
+    testCaseStrataPopulationValues.add(testCasePopulationValue3);
+    testCaseStrataPopulationValues.add(testCasePopulationValue4);
+
+    TestCaseStratificationValue testCaseStratificationValue1 =
+        TestCaseStratificationValue.builder()
+            .id("stratId")
+            .name("Strata-1")
+            .expected(Boolean.TRUE)
+            .actual(Boolean.FALSE)
+            .populationValues(testCaseStrataPopulationValues)
+            .build();
+    testCaseStratificationValues.add(testCaseStratificationValue1);
+
+    TestCaseGroupPopulation testCaseGroupPopulation =
+        TestCaseGroupPopulation.builder()
+            .groupId("testGroupId")
+            .scoring("Proportion")
+            .populationBasis("true")
+            .populationValues(testCasePopulationValues)
+            .stratificationValues(testCaseStratificationValues)
+            .build();
+
+    TestCaseStratificationValue testCaseStratificationValue =
+        groupService.updateTestCaseStratification(
+            stratification, testCaseGroupPopulation, "Strata-1");
+    assertTrue(testCaseStratificationValue != null);
+    assertEquals(testCaseStratificationValue.getPopulationValues().size(), 3);
+  }
+
+  @Test
+  public void testUpdateTestCaseStratificationForChangedGroupPopulation() {
+
+    List<TestCasePopulationValue> testCasePopulationValues = new ArrayList<>();
+
+    testCasePopulationValues.add(testCasePopulationValue1);
+    testCasePopulationValues.add(testCasePopulationValue2);
+
+    List<TestCaseStratificationValue> testCaseStratificationValues = new ArrayList<>();
+    List<TestCasePopulationValue> testCaseStrataPopulationValues = new ArrayList<>();
+    testCaseStrataPopulationValues.add(testCasePopulationValue2);
+    testCaseStrataPopulationValues.add(testCasePopulationValue3);
+
+    TestCaseStratificationValue testCaseStratificationValue1 =
+        TestCaseStratificationValue.builder()
+            .id("stratId")
+            .name("Strata-1")
+            .expected(Boolean.TRUE)
+            .actual(Boolean.FALSE)
+            .populationValues(testCaseStrataPopulationValues)
+            .build();
+    testCaseStratificationValues.add(testCaseStratificationValue1);
+
+    TestCaseGroupPopulation testCaseGroupPopulation =
+        TestCaseGroupPopulation.builder()
+            .groupId("testGroupId")
+            .scoring("Proportion")
+            .populationBasis("true")
+            .populationValues(testCasePopulationValues)
+            .stratificationValues(testCaseStratificationValues)
+            .build();
+
+    TestCaseStratificationValue testCaseStratificationValue =
+        groupService.updateTestCaseStratification(
+            stratification, testCaseGroupPopulation, "Strata-1");
+    assertTrue(testCaseStratificationValue != null);
+    assertEquals(testCaseStratificationValue.getPopulationValues().size(), 2);
+    assertNotEquals(
+        testCaseStratificationValue.getPopulationValues().get(0).getId(),
+        testCasePopulationValue3.getId());
+    assertNotEquals(
+        testCaseStratificationValue.getPopulationValues().get(1).getId(),
+        testCasePopulationValue3.getId());
+  }
+
+  @Test
+  public void testUpdateTestCaseStratificationForNonTestCasePopulationValuesFromGroup() {
+    TestCaseStratificationValue testCaseStratificationValue =
+        groupService.updateTestCaseStratification(
+            stratification, new TestCaseGroupPopulation(), "Strata-1");
+    assertNull(testCaseStratificationValue.getPopulationValues());
   }
 }

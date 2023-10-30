@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -282,7 +283,7 @@ public class GroupService {
     return testCasePopulation;
   }
 
-  private TestCaseStratificationValue updateTestCaseStratification(
+  protected TestCaseStratificationValue updateTestCaseStratification(
       Stratification stratification, TestCaseGroupPopulation testCaseGroup, String strataName) {
     // if no cql definition(optional), no need to consider stratification
     if (StringUtils.isEmpty(stratification.getCqlDefinition())) {
@@ -308,7 +309,47 @@ public class GroupService {
               .build();
     }
     testCaseStrata.setName(strataName);
+    handlePopulationChange(testCaseStrata, testCaseGroup);
+
     return testCaseStrata;
+  }
+
+  private void handlePopulationChange(
+      TestCaseStratificationValue testCaseStrata, TestCaseGroupPopulation testCaseGroup) {
+    List<TestCasePopulationValue> testCasePopulationValues = testCaseStrata.getPopulationValues();
+    List<TestCasePopulationValue> testCasePopulationValuesFromGroup =
+        testCaseGroup.getPopulationValues();
+
+    if (!CollectionUtils.isEmpty(testCasePopulationValuesFromGroup)) {
+      if (!CollectionUtils.isEmpty(testCasePopulationValues)) {
+        for (TestCasePopulationValue testCasePopulationValueFromGroup :
+            testCasePopulationValuesFromGroup) {
+          // if there is new population value from testCasePopulationValuesFromGroup
+          if (!findExistsTestCasePopulationValue(
+              testCasePopulationValueFromGroup.getId(), testCasePopulationValues)) {
+            testCasePopulationValues.add(testCasePopulationValueFromGroup);
+          }
+          // delete any that is not in testCasePopulationValuesFromGroup
+          List<TestCasePopulationValue> tempTestCasePopulationValues = new ArrayList<>();
+          for (TestCasePopulationValue tempTestCasePopulationValue : testCasePopulationValues) {
+            if (findExistsTestCasePopulationValue(
+                tempTestCasePopulationValue.getId(), testCasePopulationValuesFromGroup)) {
+              tempTestCasePopulationValues.add(tempTestCasePopulationValue);
+            }
+          }
+          testCaseStrata.setPopulationValues(tempTestCasePopulationValues);
+        }
+      } // when there is new strat
+      else {
+        testCaseStrata.setPopulationValues(testCasePopulationValuesFromGroup);
+      }
+    }
+  }
+
+  private boolean findExistsTestCasePopulationValue(
+      String id, List<TestCasePopulationValue> testCasePopulationValues) {
+    return testCasePopulationValues.stream()
+        .anyMatch(testCasePopulationValue -> id.equalsIgnoreCase(testCasePopulationValue.getId()));
   }
 
   private TestCasePopulationValue findTestCasePopulation(
