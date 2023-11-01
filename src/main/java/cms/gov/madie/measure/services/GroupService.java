@@ -26,10 +26,12 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -46,6 +48,8 @@ public class GroupService {
   private final MeasureService measureService;
   private final CqlDefinitionReturnTypeService cqlDefinitionReturnTypeService;
   private final CqlObservationFunctionService cqlObservationFunctionService;
+
+  @Autowired private ModelValidatorLocator modelLocator;
 
   public Group createOrUpdateGroup(Group group, String measureId, String username) {
 
@@ -228,11 +232,16 @@ public class GroupService {
           measureGroup.getStratifications().stream()
               .map(
                   measureStrata -> {
-                    String strataName =
-                        String.format(
-                            "Strata-%d %s",
-                            count.getAndIncrement(), measureStrata.getAssociation().getDisplay());
-                    return updateTestCaseStratification(measureStrata, testCaseGroup, strataName);
+                    if (null != measureStrata.getAssociation()) {
+                      String strataName =
+                          String.format(
+                              "Strata-%d %s",
+                              count.getAndIncrement(), measureStrata.getAssociation().getDisplay());
+                      return updateTestCaseStratification(measureStrata, testCaseGroup, strataName);
+                    } else {
+                      String strataName = String.format("Strata-%d", count.getAndIncrement());
+                      return updateTestCaseStratification(measureStrata, testCaseGroup, strataName);
+                    }
                   })
               .filter(Objects::nonNull)
               .toList();
@@ -247,22 +256,9 @@ public class GroupService {
   }
 
   public void validateGroupAssociations(String model, Group group) {
-    boolean isQdmModel = model.equalsIgnoreCase(ModelType.QDM_5_6.getValue());
-    boolean isAssociated;
-    if (isQdmModel) {
-      isAssociated =
-          group.getStratifications().stream().anyMatch(map -> map.getAssociation() != null);
-
-    } else {
-      isAssociated =
-          group.getStratifications().stream().anyMatch(map -> map.getAssociation() == null);
-    }
-    if (isAssociated) {
-      throw new InvalidGroupException(
-          isQdmModel
-              ? "QDM group stratifications cannot be associated."
-              : "QI-Core group stratifications should be associated to a valid population type.");
-    }
+    String shortModel = ModelType.valueOfName(model).getShortValue();
+    ModelValidator validator = modelLocator.get(shortModel);
+    validator.validateGroupAssociations(model, group);
   }
 
   private TestCasePopulationValue updateTestCasePopulation(
@@ -287,7 +283,7 @@ public class GroupService {
     return testCasePopulation;
   }
 
-  private TestCaseStratificationValue updateTestCaseStratification(
+  protected TestCaseStratificationValue updateTestCaseStratification(
       Stratification stratification, TestCaseGroupPopulation testCaseGroup, String strataName) {
     // if no cql definition(optional), no need to consider stratification
     if (StringUtils.isEmpty(stratification.getCqlDefinition())) {
@@ -313,7 +309,47 @@ public class GroupService {
               .build();
     }
     testCaseStrata.setName(strataName);
+    handlePopulationChange(testCaseStrata, testCaseGroup);
+
     return testCaseStrata;
+  }
+
+  private void handlePopulationChange(
+      TestCaseStratificationValue testCaseStrata, TestCaseGroupPopulation testCaseGroup) {
+    List<TestCasePopulationValue> testCasePopulationValues = testCaseStrata.getPopulationValues();
+    List<TestCasePopulationValue> testCasePopulationValuesFromGroup =
+        testCaseGroup.getPopulationValues();
+
+    if (!CollectionUtils.isEmpty(testCasePopulationValuesFromGroup)) {
+      if (!CollectionUtils.isEmpty(testCasePopulationValues)) {
+        for (TestCasePopulationValue testCasePopulationValueFromGroup :
+            testCasePopulationValuesFromGroup) {
+          // if there is new population value from testCasePopulationValuesFromGroup
+          if (!findExistsTestCasePopulationValue(
+              testCasePopulationValueFromGroup.getId(), testCasePopulationValues)) {
+            testCasePopulationValues.add(testCasePopulationValueFromGroup);
+          }
+          // delete any that is not in testCasePopulationValuesFromGroup
+          List<TestCasePopulationValue> tempTestCasePopulationValues = new ArrayList<>();
+          for (TestCasePopulationValue tempTestCasePopulationValue : testCasePopulationValues) {
+            if (findExistsTestCasePopulationValue(
+                tempTestCasePopulationValue.getId(), testCasePopulationValuesFromGroup)) {
+              tempTestCasePopulationValues.add(tempTestCasePopulationValue);
+            }
+          }
+          testCaseStrata.setPopulationValues(tempTestCasePopulationValues);
+        }
+      } // when there is new strat
+      else {
+        testCaseStrata.setPopulationValues(testCasePopulationValuesFromGroup);
+      }
+    }
+  }
+
+  private boolean findExistsTestCasePopulationValue(
+      String id, List<TestCasePopulationValue> testCasePopulationValues) {
+    return testCasePopulationValues.stream()
+        .anyMatch(testCasePopulationValue -> id.equalsIgnoreCase(testCasePopulationValue.getId()));
   }
 
   private TestCasePopulationValue findTestCasePopulation(

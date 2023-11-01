@@ -4,9 +4,14 @@ import cms.gov.madie.measure.dto.ImpactedMeasureValidationReport;
 import cms.gov.madie.measure.dto.MeasureTestCaseValidationReport;
 import cms.gov.madie.measure.dto.MeasureTestCaseValidationReportSummary;
 import cms.gov.madie.measure.dto.TestCaseValidationReport;
+import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.MeasureService;
 import cms.gov.madie.measure.services.MeasureSetService;
 import cms.gov.madie.measure.services.TestCaseService;
+import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureSet;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -15,11 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.StopWatch;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.ArrayList;
@@ -34,6 +35,9 @@ public class AdminController {
   private final MeasureService measureService;
   private final TestCaseService testCaseService;
   private final MeasureSetService measureSetService;
+  private final ActionLogService actionLogService;
+
+  private final MeasureRepository measureRepository;
 
   @Value("${madie.admin.concurrency-limit}")
   private int concurrencyLimit;
@@ -102,6 +106,24 @@ public class AdminController {
             .reports(reports)
             .impactedMeasures(impactedMeasures)
             .build());
+  }
+
+  @DeleteMapping("/measures/{id}")
+  @PreAuthorize("#request.getHeader('api-key') == #apiKey")
+  public ResponseEntity<Measure> permDeleteMeasure(
+      HttpServletRequest request,
+      @Value("${admin-api-key}") String apiKey,
+      Principal principal,
+      @RequestHeader("Authorization") String accessToken,
+      @PathVariable String id) {
+
+    Measure measureToDelete = measureService.findMeasureById(id);
+    if (measureToDelete != null) {
+      measureRepository.delete(measureToDelete);
+      actionLogService.logAction(id, Measure.class, ActionType.DELETED, principal.getName());
+      return ResponseEntity.ok(measureToDelete);
+    }
+    throw new ResourceNotFoundException(id);
   }
 
   private Callable<MeasureTestCaseValidationReport> buildCallableForMeasureId(

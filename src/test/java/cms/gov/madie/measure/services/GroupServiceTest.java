@@ -11,20 +11,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-
-import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
-import gov.cms.madie.models.measure.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
-import cms.gov.madie.measure.utils.MeasureUtil;
-import gov.cms.madie.models.common.ModelType;
-import gov.cms.madie.models.common.Version;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,13 +38,33 @@ import org.springframework.data.domain.PageRequest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.utils.MeasureUtil;
 import cms.gov.madie.measure.utils.ResourceUtil;
 import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeService;
 import cms.gov.madie.measure.validations.CqlObservationFunctionService;
+import gov.cms.madie.models.common.ModelType;
+import gov.cms.madie.models.common.Version;
+import gov.cms.madie.models.measure.AggregateMethodType;
+import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureGroupTypes;
+import gov.cms.madie.models.measure.MeasureMetaData;
+import gov.cms.madie.models.measure.MeasureObservation;
+import gov.cms.madie.models.measure.MeasureScoring;
+import gov.cms.madie.models.measure.MeasureSet;
+import gov.cms.madie.models.measure.Population;
+import gov.cms.madie.models.measure.PopulationType;
+import gov.cms.madie.models.measure.QdmMeasure;
+import gov.cms.madie.models.measure.Stratification;
+import gov.cms.madie.models.measure.TestCase;
+import gov.cms.madie.models.measure.TestCaseGroupPopulation;
+import gov.cms.madie.models.measure.TestCasePopulationValue;
+import gov.cms.madie.models.measure.TestCaseStratificationValue;
 
 @ExtendWith(MockitoExtension.class)
 public class GroupServiceTest implements ResourceUtil {
@@ -58,6 +77,10 @@ public class GroupServiceTest implements ResourceUtil {
   @Mock private CqlDefinitionReturnTypeService cqlDefinitionReturnTypeService;
   @Mock private CqlObservationFunctionService cqlObservationFunctionService;
 
+  @Mock private ModelValidatorLocator modelValidatorLocator;
+
+  @Mock private QicoreModelValidator qicoreModelValidator;
+
   @InjectMocks private GroupService groupService;
 
   private Group group1;
@@ -65,6 +88,11 @@ public class GroupServiceTest implements ResourceUtil {
   private Group ratioGroup;
   private Measure measure;
   private Stratification strata1;
+  private Stratification stratification;
+  private TestCasePopulationValue testCasePopulationValue1;
+  private TestCasePopulationValue testCasePopulationValue2;
+  private TestCasePopulationValue testCasePopulationValue3;
+  private TestCasePopulationValue testCasePopulationValue4;
 
   @BeforeEach
   public void setUp() {
@@ -183,6 +211,38 @@ public class GroupServiceTest implements ResourceUtil {
             .lastModifiedBy("test user")
             .measureMetaData(MeasureMetaData.builder().draft(true).build())
             .build();
+
+    stratification = new Stratification();
+    stratification.setId("stratId");
+    stratification.setCqlDefinition("truebool1");
+    testCasePopulationValue1 =
+        TestCasePopulationValue.builder()
+            .id("testCasePopulationValue1")
+            .name(PopulationType.INITIAL_POPULATION)
+            .expected(Boolean.FALSE)
+            .actual(Boolean.FALSE)
+            .build();
+    testCasePopulationValue2 =
+        TestCasePopulationValue.builder()
+            .id("testCasePopulationValue2")
+            .name(PopulationType.DENOMINATOR)
+            .expected(Boolean.FALSE)
+            .actual(Boolean.FALSE)
+            .build();
+    testCasePopulationValue3 =
+        TestCasePopulationValue.builder()
+            .id("testCasePopulationValue3")
+            .name(PopulationType.NUMERATOR)
+            .expected(Boolean.FALSE)
+            .actual(Boolean.FALSE)
+            .build();
+    testCasePopulationValue4 =
+        TestCasePopulationValue.builder()
+            .id("testCasePopulationValue4")
+            .name(PopulationType.DENOMINATOR_EXCLUSION)
+            .expected(Boolean.FALSE)
+            .actual(Boolean.FALSE)
+            .build();
   }
 
   @Test
@@ -288,6 +348,10 @@ public class GroupServiceTest implements ResourceUtil {
     doReturn(optional).when(measureRepository).findById(any(String.class));
 
     doReturn(measure).when(measureRepository).save(any(Measure.class));
+
+    doReturn(qicoreModelValidator)
+        .when(modelValidatorLocator)
+        .get(eq(ModelType.QI_CORE.getShortValue()));
 
     when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
@@ -611,7 +675,7 @@ public class GroupServiceTest implements ResourceUtil {
     // before updates
     assertEquals(1, testCases.get(0).getGroupPopulations().size());
     groupService.updateGroupForTestCases(group, testCases);
-    // group should be removed from test case as  measure group scoring was changed
+    // group should be removed from test case as measure group scoring was changed
     assertEquals(0, testCases.get(0).getGroupPopulations().size());
   }
 
@@ -651,7 +715,8 @@ public class GroupServiceTest implements ResourceUtil {
     // before updates
     assertEquals(1, testCases.get(0).getGroupPopulations().size());
     groupService.updateGroupForTestCases(group, testCases);
-    // group should not be removed from test case as  measure group scoring was not changed
+    // group should not be removed from test case as measure group scoring was not
+    // changed
     assertEquals(1, testCases.get(0).getGroupPopulations().size());
   }
 
@@ -673,7 +738,8 @@ public class GroupServiceTest implements ResourceUtil {
     // before updates
     assertEquals(1, testCases.get(0).getGroupPopulations().size());
     groupService.updateGroupForTestCases(group, testCases);
-    // group should be removed from test case as populationBasis for measure group was changed
+    // group should be removed from test case as populationBasis for measure group
+    // was changed
     assertEquals(0, testCases.get(0).getGroupPopulations().size());
   }
 
@@ -786,6 +852,9 @@ public class GroupServiceTest implements ResourceUtil {
     doReturn(measure).when(measureRepository).save(any(Measure.class));
     when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
+    doReturn(qicoreModelValidator)
+        .when(modelValidatorLocator)
+        .get(eq(ModelType.QI_CORE.getShortValue()));
 
     Group group = groupService.createOrUpdateGroup(group2, measure.getId(), "test.user");
     assertEquals(group.getStratifications().size(), group2.getStratifications().size());
@@ -801,6 +870,9 @@ public class GroupServiceTest implements ResourceUtil {
     doReturn(measure).when(measureRepository).save(any(Measure.class));
     when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
+    doReturn(qicoreModelValidator)
+        .when(modelValidatorLocator)
+        .get(eq(ModelType.QI_CORE.getShortValue()));
 
     Group group = groupService.createOrUpdateGroup(group2, measure.getId(), "test.user");
     assertEquals(group.getMeasureObservations().size(), group2.getMeasureObservations().size());
@@ -869,6 +941,35 @@ public class GroupServiceTest implements ResourceUtil {
   public void updateTestCaseGroupToAddMeasurePopulationsAndStratification() {
     // measure group with 4 populations and 2 stratification
     Group measureGroup = ratioGroup;
+    TestCaseGroupPopulation testCaseGroup = buildTestCaseRatioGroup();
+    // no testcase stratification
+    testCaseGroup.setStratificationValues(null);
+
+    // before updates
+    assertEquals(5, testCaseGroup.getPopulationValues().size());
+    assertNull(testCaseGroup.getStratificationValues());
+    groupService.updateTestCaseGroupWithMeasureGroup(testCaseGroup, measureGroup);
+    // after updates
+    assertEquals(6, testCaseGroup.getPopulationValues().size());
+    assertEquals(2, testCaseGroup.getStratificationValues().size());
+  }
+
+  @Test
+  public void updateTestCaseGroupToAddMeasurePopulationsHandlesNoAssociation() {
+    // measure group with 4 populations and 2 stratification
+    Group measureGroup = ratioGroup.toBuilder().build();
+    measureGroup.setStratifications(
+        measureGroup.getStratifications().stream()
+            .map(
+                stratification -> {
+                  Stratification strat = new Stratification();
+                  strat.setId(stratification.getId());
+                  strat.setCqlDefinition(stratification.getCqlDefinition());
+                  strat.setDescription(stratification.getDescription());
+                  strat.setAssociation(null);
+                  return strat;
+                })
+            .collect(Collectors.toList()));
     TestCaseGroupPopulation testCaseGroup = buildTestCaseRatioGroup();
     // no testcase stratification
     testCaseGroup.setStratificationValues(null);
@@ -1241,5 +1342,139 @@ public class GroupServiceTest implements ResourceUtil {
         IllegalArgumentException.class,
         () -> groupService.handleQdmGroupReturnTypes(qdmGroup, qdmMeasure),
         "Invalid elm json");
+  }
+
+  @Test
+  public void testUpdateTestCaseStratificationForAddedGroupPopulation() {
+
+    List<TestCasePopulationValue> testCasePopulationValues = new ArrayList<>();
+
+    testCasePopulationValues.add(testCasePopulationValue1);
+    testCasePopulationValues.add(testCasePopulationValue2);
+    testCasePopulationValues.add(testCasePopulationValue3);
+
+    List<TestCaseStratificationValue> testCaseStratificationValues = new ArrayList<>();
+    List<TestCasePopulationValue> testCaseStrataPopulationValues = new ArrayList<>();
+    testCaseStrataPopulationValues.add(testCasePopulationValue1);
+    testCaseStrataPopulationValues.add(testCasePopulationValue2);
+    TestCaseStratificationValue testCaseStratificationValue1 =
+        TestCaseStratificationValue.builder()
+            .id("stratId")
+            .name("Strata-1")
+            .expected(Boolean.TRUE)
+            .actual(Boolean.FALSE)
+            .populationValues(testCaseStrataPopulationValues)
+            .build();
+    testCaseStratificationValues.add(testCaseStratificationValue1);
+
+    TestCaseGroupPopulation testCaseGroupPopulation =
+        TestCaseGroupPopulation.builder()
+            .groupId("testGroupId")
+            .scoring("Proportion")
+            .populationBasis("true")
+            .populationValues(testCasePopulationValues)
+            .stratificationValues(testCaseStratificationValues)
+            .build();
+
+    TestCaseStratificationValue testCaseStratificationValue =
+        groupService.updateTestCaseStratification(
+            stratification, testCaseGroupPopulation, "Strata-1");
+    assertTrue(testCaseStratificationValue != null);
+    assertEquals(testCaseStratificationValue.getPopulationValues().size(), 3);
+  }
+
+  @Test
+  public void testUpdateTestCaseStratificationForDeletedGroupPopulation() {
+
+    List<TestCasePopulationValue> testCasePopulationValues = new ArrayList<>();
+
+    testCasePopulationValues.add(testCasePopulationValue1);
+    testCasePopulationValues.add(testCasePopulationValue2);
+    testCasePopulationValues.add(testCasePopulationValue3);
+
+    List<TestCaseStratificationValue> testCaseStratificationValues = new ArrayList<>();
+    List<TestCasePopulationValue> testCaseStrataPopulationValues = new ArrayList<>();
+    testCaseStrataPopulationValues.add(testCasePopulationValue1);
+    testCaseStrataPopulationValues.add(testCasePopulationValue2);
+    testCaseStrataPopulationValues.add(testCasePopulationValue3);
+    testCaseStrataPopulationValues.add(testCasePopulationValue4);
+
+    TestCaseStratificationValue testCaseStratificationValue1 =
+        TestCaseStratificationValue.builder()
+            .id("stratId")
+            .name("Strata-1")
+            .expected(Boolean.TRUE)
+            .actual(Boolean.FALSE)
+            .populationValues(testCaseStrataPopulationValues)
+            .build();
+    testCaseStratificationValues.add(testCaseStratificationValue1);
+
+    TestCaseGroupPopulation testCaseGroupPopulation =
+        TestCaseGroupPopulation.builder()
+            .groupId("testGroupId")
+            .scoring("Proportion")
+            .populationBasis("true")
+            .populationValues(testCasePopulationValues)
+            .stratificationValues(testCaseStratificationValues)
+            .build();
+
+    TestCaseStratificationValue testCaseStratificationValue =
+        groupService.updateTestCaseStratification(
+            stratification, testCaseGroupPopulation, "Strata-1");
+    assertTrue(testCaseStratificationValue != null);
+    assertEquals(testCaseStratificationValue.getPopulationValues().size(), 3);
+  }
+
+  @Test
+  public void testUpdateTestCaseStratificationForChangedGroupPopulation() {
+
+    List<TestCasePopulationValue> testCasePopulationValues = new ArrayList<>();
+
+    testCasePopulationValues.add(testCasePopulationValue1);
+    testCasePopulationValues.add(testCasePopulationValue2);
+
+    List<TestCaseStratificationValue> testCaseStratificationValues = new ArrayList<>();
+    List<TestCasePopulationValue> testCaseStrataPopulationValues = new ArrayList<>();
+    testCaseStrataPopulationValues.add(testCasePopulationValue2);
+    testCaseStrataPopulationValues.add(testCasePopulationValue3);
+
+    TestCaseStratificationValue testCaseStratificationValue1 =
+        TestCaseStratificationValue.builder()
+            .id("stratId")
+            .name("Strata-1")
+            .expected(Boolean.TRUE)
+            .actual(Boolean.FALSE)
+            .populationValues(testCaseStrataPopulationValues)
+            .build();
+    testCaseStratificationValues.add(testCaseStratificationValue1);
+
+    TestCaseGroupPopulation testCaseGroupPopulation =
+        TestCaseGroupPopulation.builder()
+            .groupId("testGroupId")
+            .scoring("Proportion")
+            .populationBasis("true")
+            .populationValues(testCasePopulationValues)
+            .stratificationValues(testCaseStratificationValues)
+            .build();
+
+    TestCaseStratificationValue testCaseStratificationValue =
+        groupService.updateTestCaseStratification(
+            stratification, testCaseGroupPopulation, "Strata-1");
+    assertTrue(testCaseStratificationValue != null);
+    assertEquals(testCaseStratificationValue.getPopulationValues().size(), 2);
+    assertNotEquals(
+        testCaseStratificationValue.getPopulationValues().get(0).getId(),
+        testCasePopulationValue3.getId());
+    assertNotEquals(
+        testCaseStratificationValue.getPopulationValues().get(1).getId(),
+        testCasePopulationValue3.getId());
+  }
+
+  @Test
+  public void testUpdateTestCaseStratificationForNonTestCasePopulationValuesFromGroup() {
+    TestCaseStratificationValue testCaseStratificationValue =
+        groupService.updateTestCaseStratification(
+            stratification, new TestCaseGroupPopulation(), "Strata-1");
+    assertNull(testCaseStratificationValue.getPopulationValues());
   }
 }
