@@ -55,9 +55,9 @@ public class MeasureAclRepositoryImpl implements MeasureAclRepository {
     Criteria measureSetCriteria =
         new Criteria()
             .orOperator(
-                Criteria.where("measureSet.owner").is(userId),
+                Criteria.where("measureSet.owner").regex("^\\Q" + userId + "\\E$", "i"),
                 Criteria.where("measureSet.acls.userId")
-                    .is(userId)
+                    .regex("^\\Q" + userId + "\\E$", "i")
                     .and("measureSet.acls.roles")
                     .in(RoleEnum.SHARED_WITH));
 
