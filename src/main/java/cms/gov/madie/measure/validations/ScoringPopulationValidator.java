@@ -9,10 +9,10 @@ import gov.cms.madie.models.measure.PopulationType;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import gov.cms.madie.models.measure.TestCasePopulationValue;
 import gov.cms.madie.models.validators.ValidScoringPopulation;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
