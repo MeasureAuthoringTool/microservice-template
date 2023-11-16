@@ -317,7 +317,7 @@ public class TestCaseControllerTest {
             .json("test case import json")
             .build();
 
-    when(testCaseService.importTestCases(any(), anyString(), anyString(), anyString()))
+    when(testCaseService.importTestCases(any(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(List.of(testCaseImportOutcome));
     var responseEntity =
         controller.importTestCases(

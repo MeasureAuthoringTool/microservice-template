@@ -2,10 +2,14 @@ package cms.gov.madie.measure.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.MeasureScoring;
+import gov.cms.madie.models.measure.QdmMeasure;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,7 +29,7 @@ import java.util.UUID;
 
 @Slf4j
 @ExtendWith(MockitoExtension.class)
-public class QiCoreJsonUtilTest implements ResourceUtil {
+public class JsonUtilTest implements ResourceUtil {
 
   private String baseUrl = "https://myorg.com";
   private TestCase testCase =
@@ -132,28 +136,29 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
           + "    }\n"
           + "  }]\n"
           + "}";
+  final String qdmImportedJson = getData("/test_case_exported_qdm_json.json");
 
   @Test
   public void testIsValidJsonSuccess() {
-    boolean output = QiCoreJsonUtil.isValidJson(json);
+    boolean output = JsonUtil.isValidJson(json);
     assertThat(output, is(true));
   }
 
   @Test
   public void testIsValidJsonFalse() {
-    boolean output = QiCoreJsonUtil.isValidJson(malformedJson);
+    boolean output = JsonUtil.isValidJson(malformedJson);
     assertThat(output, is(false));
   }
 
   @Test
   public void testIsValidJsonFalseForNull() {
-    boolean output = QiCoreJsonUtil.isValidJson(null);
+    boolean output = JsonUtil.isValidJson(null);
     assertThat(output, is(false));
   }
 
   @Test
   public void testGetPatientId() throws JsonProcessingException {
-    String output = QiCoreJsonUtil.getPatientId(json);
+    String output = JsonUtil.getPatientId(json);
     assertThat(output, is(equalTo("1")));
   }
 
@@ -161,7 +166,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
   public void testUpdateFullUrlNoChange() {
     final String fullUrl = "https://something/Patient/foo";
     final String output =
-        QiCoreJsonUtil.updateFullUrl(fullUrl, "patient1", "a64561f9-5654-4e45-ac06-1c168f411345");
+        JsonUtil.updateFullUrl(fullUrl, "patient1", "a64561f9-5654-4e45-ac06-1c168f411345");
     assertThat(output, is(equalTo(fullUrl)));
   }
 
@@ -169,7 +174,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
   public void testUpdateFullUrlUpdatesSuccessfully() {
     final String fullUrl = "https://something/Patient/patient1";
     final String output =
-        QiCoreJsonUtil.updateFullUrl(fullUrl, "patient1", "a64561f9-5654-4e45-ac06-1c168f411345");
+        JsonUtil.updateFullUrl(fullUrl, "patient1", "a64561f9-5654-4e45-ac06-1c168f411345");
     assertThat(
         output, is(equalTo("https://something/Patient/a64561f9-5654-4e45-ac06-1c168f411345")));
   }
@@ -178,7 +183,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
   public void testUpdateFullUrlUpdatesOnlyLastInstanceSuccessfully() {
     final String fullUrl = "https://something/patient1/patient1/Patient/patient1/patient1";
     final String output =
-        QiCoreJsonUtil.updateFullUrl(fullUrl, "patient1", "a64561f9-5654-4e45-ac06-1c168f411345");
+        JsonUtil.updateFullUrl(fullUrl, "patient1", "a64561f9-5654-4e45-ac06-1c168f411345");
     assertThat(
         output,
         is(
@@ -190,13 +195,13 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
   public void testUpdateFullUrlUpdatesStringWithOnlyId() {
     final String fullUrl = "patient1";
     final String output =
-        QiCoreJsonUtil.updateFullUrl(fullUrl, "patient1", "a64561f9-5654-4e45-ac06-1c168f411345");
+        JsonUtil.updateFullUrl(fullUrl, "patient1", "a64561f9-5654-4e45-ac06-1c168f411345");
     assertThat(output, is(equalTo("a64561f9-5654-4e45-ac06-1c168f411345")));
   }
 
   @Test
   public void testReplaceReferencesDoesNothing() {
-    String output = QiCoreJsonUtil.replacePatientRefs(json, "FOO12344", "BillyBob");
+    String output = JsonUtil.replacePatientRefs(json, "FOO12344", "BillyBob");
     assertThat(output, is(equalTo(json)));
   }
 
@@ -204,8 +209,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
   public void testReplaceReference() {
     // make sure it's there to start with
     assertThat(json.contains("\"Patient/1\""), is(true));
-    String output =
-        QiCoreJsonUtil.replacePatientRefs(json, "1", "a64561f9-5654-4e45-ac06-1c168f411345");
+    String output = JsonUtil.replacePatientRefs(json, "1", "a64561f9-5654-4e45-ac06-1c168f411345");
     assertThat(output, is(not(equalTo(json))));
     assertThat(output.contains("\"Patient/1\""), is(false));
   }
@@ -214,7 +218,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
   public void testReplaceReferenceWithoutOldId() {
     // make sure it's there to start with
     assertThat(json.contains("\"Patient/1\""), is(true));
-    String output = QiCoreJsonUtil.replacePatientRefs(json, "a64561f9-5654-4e45-ac06-1c168f411345");
+    String output = JsonUtil.replacePatientRefs(json, "a64561f9-5654-4e45-ac06-1c168f411345");
     assertThat(output, is(not(equalTo(json))));
     assertThat(output.contains("\"Patient/1\""), is(false));
     assertThat(output.contains("\"Patient/a64561f9-5654-4e45-ac06-1c168f411345\""), is(true));
@@ -223,7 +227,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
   @Test
   public void testReplaceFullUrlRefsWorks() {
     String output =
-        QiCoreJsonUtil.replaceFullUrlRefs(
+        JsonUtil.replaceFullUrlRefs(
             "{ \"reference\" : \"http://local/Patient/1\" }",
             "http://local/Patient/1",
             "a64561f9-5654-4e45-ac06-1c168f411345");
@@ -235,7 +239,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
   public void testReplaceFullUrlRefsHandlesFullJson() {
     assertThat(json2.contains("reference\":\"http://local/Patient/Patient-7"), is(true));
     String output =
-        QiCoreJsonUtil.replaceFullUrlRefs(
+        JsonUtil.replaceFullUrlRefs(
             json2, "http://local/Patient/Patient-7", "a64561f9-5654-4e45-ac06-1c168f411345");
     assertThat(output.contains("\"reference\": \"http://local/Patient/Patient-7\""), is(false));
     assertThat(
@@ -245,86 +249,86 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
 
   @Test
   public void testIsUuiReturnsFalseForNull() {
-    assertThat(QiCoreJsonUtil.isUuid(null), is(false));
+    assertThat(JsonUtil.isUuid(null), is(false));
   }
 
   @Test
   public void testIsUuiReturnsFalseForEmptyString() {
-    assertThat(QiCoreJsonUtil.isUuid(""), is(false));
+    assertThat(JsonUtil.isUuid(""), is(false));
   }
 
   @Test
   public void testIsUuiReturnsFalseForObjectId() {
-    assertThat(QiCoreJsonUtil.isUuid("63bc5891ee2e584d9c7d819b"), is(false));
+    assertThat(JsonUtil.isUuid("63bc5891ee2e584d9c7d819b"), is(false));
   }
 
   @Test
   public void testIsUuiReturnsFalseForRandomString() {
-    assertThat(QiCoreJsonUtil.isUuid("RandomStringHere"), is(false));
+    assertThat(JsonUtil.isUuid("RandomStringHere"), is(false));
   }
 
   @Test
   public void testIsUuiReturnsFalseForAlmostUuid() {
-    assertThat(QiCoreJsonUtil.isUuid("a500cba-353-050-9a7"), is(false));
+    assertThat(JsonUtil.isUuid("a500cba-353-050-9a7"), is(false));
   }
 
   @Test
   public void testIsUuiReturnsTrueForUuid() {
-    assertThat(QiCoreJsonUtil.isUuid("a500ccba-a353-4050-94a7-50f4eac4e59f"), is(true));
+    assertThat(JsonUtil.isUuid("a500ccba-a353-4050-94a7-50f4eac4e59f"), is(true));
   }
 
   @Test
   public void testGetPatientFamilyName() throws JsonProcessingException {
-    String output = QiCoreJsonUtil.getPatientName(json, "family");
+    String output = JsonUtil.getPatientName(json, "family");
     assertThat(output, is(equalTo("Health")));
   }
 
   @Test
   public void testGetPatientGivenName() throws JsonProcessingException {
-    String output = QiCoreJsonUtil.getPatientName(json, "given");
+    String output = JsonUtil.getPatientName(json, "given");
     assertThat(output, is(equalTo("Lizzy")));
   }
 
   @Test
   public void testGetPatientFamilyNameNoEntries() throws JsonProcessingException {
-    String output = QiCoreJsonUtil.getPatientName(json_noEntries, "family");
+    String output = JsonUtil.getPatientName(json_noEntries, "family");
     assertThat(output, is(equalTo(null)));
   }
 
   @Test
   public void testGetPatientFamilyNameNoResource() throws JsonProcessingException {
-    String output = QiCoreJsonUtil.getPatientName(json_noResource, "family");
+    String output = JsonUtil.getPatientName(json_noResource, "family");
     assertThat(output, is(equalTo(null)));
   }
 
   @Test
   public void testGetPatientFamilyNameNoResourceType() throws JsonProcessingException {
-    String output = QiCoreJsonUtil.getPatientName(json_noResourceType, "family");
+    String output = JsonUtil.getPatientName(json_noResourceType, "family");
     assertThat(output, is(equalTo(null)));
   }
 
   @Test
   public void testGetPatientFamilyNameWrongtype() throws JsonProcessingException {
-    String output = QiCoreJsonUtil.getPatientName(json, "wrongType");
+    String output = JsonUtil.getPatientName(json, "wrongType");
     assertThat(output, is(equalTo(null)));
   }
 
   @Test
   public void testGetPatientFamilyNameNoName() throws JsonProcessingException {
-    String output = QiCoreJsonUtil.getPatientName(json_noName, "family");
+    String output = JsonUtil.getPatientName(json_noName, "family");
     assertThat(output, is(equalTo(null)));
   }
 
   @Test
   public void testGetPatientFamilyNameNoGivenName() throws JsonProcessingException {
-    String output = QiCoreJsonUtil.getPatientName(json_noGivenName, "given");
+    String output = JsonUtil.getPatientName(json_noGivenName, "given");
     assertThat(output, is(equalTo(null)));
   }
 
   @Test
   public void testGetTestCaseGroupPopulationsFromMeasureReport() throws JsonProcessingException {
     List<TestCaseGroupPopulation> testCaseGroupPopulations =
-        QiCoreJsonUtil.getTestCaseGroupPopulationsFromMeasureReport(measureReportJson);
+        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(measureReportJson);
     assertThat(testCaseGroupPopulations.size(), is(equalTo(2)));
     log.debug("testCaseGroupPopulations size  = " + testCaseGroupPopulations.size());
 
@@ -353,7 +357,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
   public void testGetTestCaseGroupPopulationsFromMeasureReportNoEntries()
       throws JsonProcessingException {
     List<TestCaseGroupPopulation> testCaseGroupPopulations =
-        QiCoreJsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noEntries);
+        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noEntries);
     assertThat(testCaseGroupPopulations.size(), is(equalTo(0)));
   }
 
@@ -361,7 +365,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
   public void testGetTestCaseGroupPopulationsFromMeasureReportNoResource()
       throws JsonProcessingException {
     List<TestCaseGroupPopulation> testCaseGroupPopulations =
-        QiCoreJsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noResource);
+        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noResource);
     assertThat(testCaseGroupPopulations.size(), is(equalTo(0)));
   }
 
@@ -369,7 +373,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
   public void testGetTestCaseGroupPopulationsFromMeasureReportNoResourceType()
       throws JsonProcessingException {
     List<TestCaseGroupPopulation> testCaseGroupPopulations =
-        QiCoreJsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noResourceType);
+        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noResourceType);
     assertThat(testCaseGroupPopulations.size(), is(equalTo(0)));
   }
 
@@ -377,7 +381,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
   public void testGetTestCaseGroupPopulationsFromMeasureReportNoGroup()
       throws JsonProcessingException {
     List<TestCaseGroupPopulation> testCaseGroupPopulations =
-        QiCoreJsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noGroup);
+        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noGroup);
     assertThat(testCaseGroupPopulations.size(), is(equalTo(0)));
   }
 
@@ -385,7 +389,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
   public void testGetTestCaseGroupPopulationsFromMeasureReportNoPopulation()
       throws JsonProcessingException {
     List<TestCaseGroupPopulation> testCaseGroupPopulations =
-        QiCoreJsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noPopulation);
+        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noPopulation);
     assertThat(testCaseGroupPopulations.size(), is(equalTo(0)));
   }
 
@@ -393,7 +397,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
   public void testGetTestCaseGroupPopulationsFromMeasureReportNoCode()
       throws JsonProcessingException {
     List<TestCaseGroupPopulation> testCaseGroupPopulations =
-        QiCoreJsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noCode);
+        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noCode);
     assertThat(testCaseGroupPopulations.size(), is(equalTo(0)));
   }
 
@@ -401,14 +405,14 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
   public void testGetTestCaseGroupPopulationsFromMeasureReportNoCount()
       throws JsonProcessingException {
     List<TestCaseGroupPopulation> testCaseGroupPopulations =
-        QiCoreJsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noCount);
+        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noCount);
     assertThat(testCaseGroupPopulations.size(), is(equalTo(0)));
   }
 
   @Test
   public void testEnforcePatientIdEmptyJson() {
     testCase.setJson(null);
-    String modifiedJson = QiCoreJsonUtil.enforcePatientId(testCase, baseUrl);
+    String modifiedJson = JsonUtil.enforcePatientId(testCase, baseUrl);
     assertNull(modifiedJson);
   }
 
@@ -416,7 +420,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
   public void testEnforcePatientIdNoEntry() {
     String json = "{\"resourceType\": \"Bundle\", \"type\": \"collection\"}";
     testCase.setJson(json);
-    String modifiedJson = QiCoreJsonUtil.enforcePatientId(testCase, baseUrl);
+    String modifiedJson = JsonUtil.enforcePatientId(testCase, baseUrl);
     assertEquals(modifiedJson, json);
   }
 
@@ -428,7 +432,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
             + "    \"fullUrl\" : \"http://local/Patient/1\"\n"
             + "  } ]             }";
     testCase.setJson(json);
-    String modifiedJson = QiCoreJsonUtil.enforcePatientId(testCase, baseUrl);
+    String modifiedJson = JsonUtil.enforcePatientId(testCase, baseUrl);
     assertEquals(modifiedJson, json);
   }
 
@@ -443,7 +447,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
             + "    }\n"
             + "  } ]             }";
     testCase.setJson(json);
-    String modifiedJson = QiCoreJsonUtil.enforcePatientId(testCase, baseUrl);
+    String modifiedJson = JsonUtil.enforcePatientId(testCase, baseUrl);
     assertEquals(modifiedJson, json);
   }
 
@@ -459,18 +463,18 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
             + "    }\n"
             + "  } ]             }";
     testCase.setJson(json);
-    String modifiedJson = QiCoreJsonUtil.enforcePatientId(testCase, baseUrl);
+    String modifiedJson = JsonUtil.enforcePatientId(testCase, baseUrl);
     assertEquals(modifiedJson, json);
   }
 
   @Test
   public void testRemoveMeasureReportFromJsonThrowsException() {
-    assertThrows(RuntimeException.class, () -> QiCoreJsonUtil.removeMeasureReportFromJson(null));
+    assertThrows(RuntimeException.class, () -> JsonUtil.removeMeasureReportFromJson(null));
   }
 
   @Test
   public void testJsonNodeToString() {
-    String str = QiCoreJsonUtil.jsonNodeToString(null, null);
+    String str = JsonUtil.jsonNodeToString(null, null);
     assertTrue(StringUtils.isAllBlank(str));
   }
 
@@ -479,7 +483,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
     final String json = getData("/bundles/qicore_json_util_fullurl.json");
     TestCase tc1 =
         TestCase.builder().id("TC1").name("TC1").patientId(UUID.randomUUID()).json(json).build();
-    String updatedTc1 = QiCoreJsonUtil.updateResourceFullUrls(tc1, baseUrl);
+    String updatedTc1 = JsonUtil.updateResourceFullUrls(tc1, baseUrl);
     assertNotEquals(updatedTc1, json);
     assertTrue(updatedTc1.contains(baseUrl));
   }
@@ -491,7 +495,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
     TestCase tc1 =
         TestCase.builder().id("TC1").name("TC1").patientId(UUID.randomUUID()).json(json).build();
     String baseUrl = "https://myorg.com";
-    String updatedTc1 = QiCoreJsonUtil.updateResourceFullUrls(tc1, baseUrl);
+    String updatedTc1 = JsonUtil.updateResourceFullUrls(tc1, baseUrl);
     assertFalse(updatedTc1.contains(baseUrl));
   }
 
@@ -502,7 +506,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
     TestCase tc1 =
         TestCase.builder().id("TC1").name("TC1").patientId(UUID.randomUUID()).json(json).build();
     String baseUrl = "https://myorg.com";
-    String updatedTc1 = QiCoreJsonUtil.updateResourceFullUrls(tc1, baseUrl);
+    String updatedTc1 = JsonUtil.updateResourceFullUrls(tc1, baseUrl);
     assertFalse(updatedTc1.contains(baseUrl));
   }
 
@@ -510,7 +514,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
   void testGetTestcaseDescriptionIfMeasureReportMissing() throws JsonProcessingException {
     final String json =
         "{\"id\":\"6323489059967e30c06d0774\",\"resourceType\":\"Bundle\",\"type\":\"collection\",\"entry\":[]}";
-    String description = QiCoreJsonUtil.getTestDescription(json);
+    String description = JsonUtil.getTestDescription(json);
     assertNull(description);
   }
 
@@ -518,7 +522,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
   void testGetTestcaseDescriptionIfNoExtension() throws JsonProcessingException {
     final String json =
         "{\"id\":\"6323489059967e30c06d0774\",\"resourceType\":\"Bundle\",\"type\":\"collection\",\"entry\":[{\"resource\": {\"resourceType\": \"MeasureReport\"}}]}";
-    String description = QiCoreJsonUtil.getTestDescription(json);
+    String description = JsonUtil.getTestDescription(json);
     assertNull(description);
   }
 
@@ -526,7 +530,7 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
   void testGetTestcaseDescriptionIfNoTestcaseDescriptionExtension() throws JsonProcessingException {
     final String json =
         "{\"id\":\"6323489059967e30c06d0774\",\"resourceType\":\"Bundle\",\"type\":\"collection\",\"entry\":[{\"resource\": {\"resourceType\": \"MeasureReport\",\"extension\":[{\"url\":\"http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-inputParameters\",\"valueReference\":{\"reference\":\"#IPPass-parameters\"}}]}}]}";
-    String description = QiCoreJsonUtil.getTestDescription(json);
+    String description = JsonUtil.getTestDescription(json);
     assertNull(description);
   }
 
@@ -534,7 +538,49 @@ public class QiCoreJsonUtilTest implements ResourceUtil {
   void testGetTestcaseDescription() throws JsonProcessingException {
     final String json =
         "{\"id\":\"6323489059967e30c06d0774\",\"resourceType\":\"Bundle\",\"type\":\"collection\",\"entry\":[{\"resource\": {\"resourceType\": \"MeasureReport\", \"extension\":[{\"url\":\"http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-testCaseDescription\",\"valueMarkdown\":\"test case description\"}]}}]}";
-    String description = QiCoreJsonUtil.getTestDescription(json);
+    String description = JsonUtil.getTestDescription(json);
     assertEquals(description, "test case description");
+  }
+
+  @Test
+  void testGetPatientNameQdmWrongNodeType() throws JsonProcessingException {
+    String result = JsonUtil.getPatientNameQdm(qdmImportedJson, "wrongNode");
+    assertNull(result);
+  }
+
+  @Test
+  void testGetTestDescriptionQdmNotFound() throws JsonProcessingException {
+    String result = JsonUtil.getTestDescriptionQdm("{\"id\":\"test\"}");
+    assertNull(result);
+  }
+
+  @Test
+  void testGGetTestCaseJsonNotFound() throws JsonProcessingException {
+    String result = JsonUtil.getTestCaseJson("{\"id\":\"test\"}");
+    assertNull(result);
+  }
+
+  @Test
+  void testHandleStratificationValuesGroupsNull() throws JsonProcessingException {
+    QdmMeasure qdmMeasure =
+        QdmMeasure.builder().scoring(MeasureScoring.CONTINUOUS_VARIABLE.name()).build();
+
+    List<TestCaseGroupPopulation> groupPopulations =
+        JsonUtil.getTestCaseGroupPopulationsQdm(qdmImportedJson, qdmMeasure);
+    assertTrue(CollectionUtils.isEmpty(groupPopulations.get(0).getStratificationValues()));
+  }
+
+  @Test
+  void testHandleStratificationValuesStratificationsNull() throws JsonProcessingException {
+    Group group = Group.builder().build();
+    QdmMeasure qdmMeasure =
+        QdmMeasure.builder()
+            .scoring(MeasureScoring.CONTINUOUS_VARIABLE.name())
+            .groups(List.of(group))
+            .build();
+
+    List<TestCaseGroupPopulation> groupPopulations =
+        JsonUtil.getTestCaseGroupPopulationsQdm(qdmImportedJson, qdmMeasure);
+    assertTrue(CollectionUtils.isEmpty(groupPopulations.get(0).getStratificationValues()));
   }
 }
