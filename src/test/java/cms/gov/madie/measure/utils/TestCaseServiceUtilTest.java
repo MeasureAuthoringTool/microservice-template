@@ -333,10 +333,15 @@ public class TestCaseServiceUtilTest {
 
   @Test
   public void testAssignStratificationValuesQdm() {
-    TestCaseStratificationValue stratValue1 =
+    TestCaseStratificationValue stratValue =
         TestCaseStratificationValue.builder().name("Strata-1").expected(1).build();
+    TestCasePopulationValue populationValue = TestCasePopulationValue.builder().expected(1).build();
+    stratValue.setPopulationValues(List.of(populationValue));
     TestCaseGroupPopulation groupPopulation =
-        TestCaseGroupPopulation.builder().stratificationValues(List.of(stratValue1)).build();
+        TestCaseGroupPopulation.builder()
+            .stratificationValues(List.of(stratValue))
+            .populationValues(List.of(populationValue))
+            .build();
 
     TestCaseGroupPopulation groupPopulationFromTestCase = TestCaseGroupPopulation.builder().build();
     TestCase newTestCase =
@@ -352,10 +357,9 @@ public class TestCaseServiceUtilTest {
 
   @Test
   public void testAssignStratificationValuesQdmEmpty() {
-    TestCaseStratificationValue stratValue1 =
-        TestCaseStratificationValue.builder().name("Strata-1").expected(1).build();
+
     TestCaseGroupPopulation groupPopulation =
-        TestCaseGroupPopulation.builder().stratificationValues(List.of(stratValue1)).build();
+        TestCaseGroupPopulation.builder().stratificationValues(null).build();
 
     TestCase newTestCase = TestCase.builder().build();
 
@@ -367,10 +371,12 @@ public class TestCaseServiceUtilTest {
 
   @Test
   public void testAssignStratificationValuesQdmBoolean() {
-    TestCaseStratificationValue stratValue1 =
+    TestCaseStratificationValue stratValue =
         TestCaseStratificationValue.builder().name("Strata-1").expected(1).build();
+    TestCasePopulationValue populationValue = TestCasePopulationValue.builder().expected(1).build();
+    stratValue.setPopulationValues(List.of(populationValue));
     TestCaseGroupPopulation groupPopulation =
-        TestCaseGroupPopulation.builder().stratificationValues(List.of(stratValue1)).build();
+        TestCaseGroupPopulation.builder().stratificationValues(List.of(stratValue)).build();
 
     TestCaseGroupPopulation groupPopulationFromTestCase = TestCaseGroupPopulation.builder().build();
     TestCase newTestCase =
@@ -387,10 +393,12 @@ public class TestCaseServiceUtilTest {
 
   @Test
   public void testAssignStratificationValuesQdmBooleanFalse() {
-    TestCaseStratificationValue stratValue1 =
+    TestCaseStratificationValue stratValue =
         TestCaseStratificationValue.builder().name("Strata-1").expected(0).build();
+    TestCasePopulationValue populationValue = TestCasePopulationValue.builder().expected(1).build();
+    stratValue.setPopulationValues(List.of(populationValue));
     TestCaseGroupPopulation groupPopulation =
-        TestCaseGroupPopulation.builder().stratificationValues(List.of(stratValue1)).build();
+        TestCaseGroupPopulation.builder().stratificationValues(List.of(stratValue)).build();
 
     TestCaseGroupPopulation groupPopulationFromTestCase = TestCaseGroupPopulation.builder().build();
     TestCase newTestCase =
@@ -449,5 +457,12 @@ public class TestCaseServiceUtilTest {
     assertEquals(
         newTestCase.getGroupPopulations().get(0).getPopulationValues().get(5).getExpected(),
         Boolean.FALSE);
+  }
+
+  @Test
+  public void testGetObservationPopulationsReturnsNull() {
+    List<TestCasePopulationValue> populationValues =
+        testCaseServiceUtil.getObservationPopulations(null);
+    assertNull(populationValues);
   }
 }

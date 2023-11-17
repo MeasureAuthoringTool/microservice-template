@@ -2250,7 +2250,7 @@ public class TestCaseServiceTest implements ResourceUtil {
   }
 
   @Test
-  void importQdmTestCasesReturnValidOutcomesForCV() throws JsonProcessingException {
+  void importQdmTestCasesReturnValidOutcomes() throws JsonProcessingException {
     QdmMeasure qdmMeasure =
         QdmMeasure.builder()
             .id("testMeasureId")

@@ -326,4 +326,53 @@ public class TestCaseControllerTest {
     assertEquals(
         testPatientId, Objects.requireNonNull(responseEntity.getBody()).get(0).getPatientId());
   }
+
+  @Test
+  void updateTestCaseNullId() {
+    Principal principal = mock(Principal.class);
+    assertThrows(
+        ResourceNotFoundException.class,
+        () ->
+            controller.updateTestCase(
+                TestCase.builder().build(), "testMeasureId", "testTestCaseId", "TOKEN", principal));
+  }
+
+  @Test
+  void updateTestCaseIdNotMatch() {
+    Principal principal = mock(Principal.class);
+    assertThrows(
+        ResourceNotFoundException.class,
+        () ->
+            controller.updateTestCase(
+                TestCase.builder().id("differentId").build(),
+                "testMeasureId",
+                "testTestCaseId",
+                "TOKEN",
+                principal));
+  }
+
+  @Test
+  void importQdmTestCasesSuccess() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    UUID testPatientId = UUID.randomUUID();
+
+    var testCaseImportOutcome =
+        TestCaseImportOutcome.builder().successful(true).patientId(testPatientId).build();
+    var testCaseImportRequest =
+        TestCaseImportRequest.builder()
+            .patientId(testPatientId)
+            .json("test case import json")
+            .build();
+
+    when(testCaseService.importTestCases(any(), anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(List.of(testCaseImportOutcome));
+    var responseEntity =
+        controller.importTestCasesQdm(
+            List.of(testCaseImportRequest), measure.getId(), "TOKEN", principal);
+    assertEquals(1, Objects.requireNonNull(responseEntity.getBody()).size());
+    assertEquals(
+        testPatientId, Objects.requireNonNull(responseEntity.getBody()).get(0).getPatientId());
+  }
 }

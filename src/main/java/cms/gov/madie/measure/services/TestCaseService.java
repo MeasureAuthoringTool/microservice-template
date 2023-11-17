@@ -511,6 +511,9 @@ public class TestCaseService {
       List<Group> groups = testCaseServiceUtil.getGroupsWithValidPopulations(measure.getGroups());
       boolean matched =
           testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, groups, newTestCase);
+      assignObservationAndStratificationValuesForQdm(
+          matched, model, testCaseGroupPopulations, newTestCase, groups);
+
       String warningMessage = null;
       if (!matched) {
         warningMessage =
@@ -571,6 +574,20 @@ public class TestCaseService {
       testCaseGroupPopulations = JsonUtil.getTestCaseGroupPopulationsQdm(json, measure);
     }
     return testCaseGroupPopulations;
+  }
+
+  protected void assignObservationAndStratificationValuesForQdm(
+      boolean matched,
+      String model,
+      List<TestCaseGroupPopulation> testCaseGroupPopulations,
+      TestCase newTestCase,
+      List<Group> groups) {
+    if (matched && ModelType.QDM_5_6.getValue().equalsIgnoreCase(model)) {
+      testCaseServiceUtil.assignStratificationValuesQdm(
+          testCaseGroupPopulations, newTestCase, groups.get(0).getPopulationBasis());
+      testCaseServiceUtil.assignObservationValues(
+          newTestCase, testCaseGroupPopulations, groups.get(0).getPopulationBasis());
+    }
   }
 
   private TestCaseImportOutcome updateTestCaseJsonAndSaveTestCase(
