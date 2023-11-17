@@ -583,4 +583,18 @@ public class JsonUtilTest implements ResourceUtil {
         JsonUtil.getTestCaseGroupPopulationsQdm(qdmImportedJson, qdmMeasure);
     assertTrue(CollectionUtils.isEmpty(groupPopulations.get(0).getStratificationValues()));
   }
+
+  @Test
+  void testGetTestCaseGroupPopulationsQdmEmptyExpectedValues() throws JsonProcessingException {
+    Group group = Group.builder().build();
+    QdmMeasure qdmMeasure =
+        QdmMeasure.builder()
+            .scoring(MeasureScoring.CONTINUOUS_VARIABLE.name())
+            .groups(List.of(group))
+            .build();
+
+    List<TestCaseGroupPopulation> groupPopulations =
+        JsonUtil.getTestCaseGroupPopulationsQdm("{\"expectedValues\":[]}", qdmMeasure);
+    assertTrue(CollectionUtils.isEmpty(groupPopulations));
+  }
 }
