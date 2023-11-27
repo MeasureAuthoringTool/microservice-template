@@ -36,15 +36,14 @@ public class MigrateSupplementalDataElementsChangeUnitTest {
   @InjectMocks MigrateSupplementalDataElementsChangeUnit changeUnit;
 
   private Measure measure;
-  private MeasureMetaData metaData;
-  private DefDescPair supplementalData;
 
   @Captor private ArgumentCaptor<Measure> measureArgumentCaptor;
 
   @BeforeEach
   public void setup() {
-    metaData = MeasureMetaData.builder().supplementalDataElements("test supplemental data").build();
-    supplementalData =
+    MeasureMetaData metaData =
+        MeasureMetaData.builder().supplementalDataElements("test supplemental data").build();
+    DefDescPair supplementalData =
         DefDescPair.builder().definition("SDE definition").description("SDE description").build();
     measure =
         Measure.builder()
