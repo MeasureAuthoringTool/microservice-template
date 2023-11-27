@@ -2,7 +2,7 @@ package cms.gov.madie.measure.config;
 
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.TestCaseService;
-import cms.gov.madie.measure.utils.QiCoreJsonUtil;
+import cms.gov.madie.measure.utils.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.Measure;
@@ -41,7 +41,7 @@ public class UpdateTestCaseJsonPatientUuidChangeUnit {
                       .filter(tc -> !StringUtils.isBlank(tc.getJson()))
                       .forEach(
                           testCase -> {
-                            if (!QiCoreJsonUtil.isValidJson(testCase.getJson())) {
+                            if (!JsonUtil.isValidJson(testCase.getJson())) {
                               log.warn(
                                   "Skipping test case [{}] on measure [{}] as JSON is invalid",
                                   testCase.getId(),
@@ -80,18 +80,18 @@ public class UpdateTestCaseJsonPatientUuidChangeUnit {
           testCase.getId());
     }
     final String newPatientId = patientIdUuid.toString();
-    final String oldFullUrl = QiCoreJsonUtil.getPatientFullUrl(testCase.getJson());
+    final String oldFullUrl = JsonUtil.getPatientFullUrl(testCase.getJson());
 
     // Refs update makes the assumption that the ref will start with
     // Patient/
     String updatedJson =
-        QiCoreJsonUtil.enforcePatientId(testCase, testCaseService.getMadieJsonResourcesBaseUri());
+        JsonUtil.enforcePatientId(testCase, testCaseService.getMadieJsonResourcesBaseUri());
 
     final String previousJson = updatedJson;
-    updatedJson = QiCoreJsonUtil.replacePatientRefs(updatedJson, newPatientId);
+    updatedJson = JsonUtil.replacePatientRefs(updatedJson, newPatientId);
 
     if (!StringUtils.isBlank(oldFullUrl)) {
-      updatedJson = QiCoreJsonUtil.replaceFullUrlRefs(updatedJson, oldFullUrl, newPatientId);
+      updatedJson = JsonUtil.replaceFullUrlRefs(updatedJson, oldFullUrl, newPatientId);
     }
 
     if (previousJson.equals(updatedJson)) {
