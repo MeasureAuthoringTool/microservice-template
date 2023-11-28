@@ -91,6 +91,24 @@ public class MigrateSupplementalDataElementsChangeUnitTest {
   }
 
   @Test
+  public void testChangeUnitExecutionSDEMigratedNoDescription() throws Exception {
+    DefDescPair supplementalData = DefDescPair.builder().definition("SDE definition").build();
+    measure.setSupplementalData(List.of(supplementalData));
+
+    when(measureRepository.findAll()).thenReturn(List.of(measure));
+
+    changeUnit.migrateSupplementalDataElements(measureRepository);
+
+    verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
+    Measure measure = measureArgumentCaptor.getValue();
+
+    assertThat(measure.getSupplementalData().size(), is(equalTo(1)));
+    assertThat(
+        measure.getMeasureMetaData().getSupplementalDataElements(),
+        is(equalTo("test supplemental data; SDE definition | ")));
+  }
+
+  @Test
   public void testChangeUnitExecutionSDEMigratedNoMetaData() throws Exception {
     measure.setMeasureMetaData(null);
 

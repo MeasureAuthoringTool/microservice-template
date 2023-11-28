@@ -2,6 +2,8 @@ package cms.gov.madie.measure.config;
 
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 
 import cms.gov.madie.measure.repositories.MeasureRepository;
@@ -36,10 +38,11 @@ public class MigrateSupplementalDataElementsChangeUnit {
                       .getSupplementalData()
                       .forEach(
                           sde -> {
-                            sb.append(sde.getDefinition())
-                                .append("-")
-                                .append(sde.getDescription())
-                                .append(" | ");
+                            sb.append(sde.getDefinition());
+                            if (StringUtils.isNotBlank(sde.getDescription())) {
+                              sb.append("-").append(sde.getDescription());
+                            }
+                            sb.append(" | ");
                           });
                   if (measure.getMeasureMetaData() != null) {
                     String sde =
