@@ -12,7 +12,7 @@ import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import gov.cms.madie.models.measure.Group;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
-import cms.gov.madie.measure.utils.QiCoreJsonUtil;
+import cms.gov.madie.measure.utils.JsonUtil;
 import cms.gov.madie.measure.utils.TestCaseServiceUtil;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -245,10 +245,7 @@ public class TestCaseService {
     if (ModelType.QDM_5_6.equals(modelType)) {
       return testCase == null
           ? null
-          : testCase
-              .toBuilder()
-              .validResource(QiCoreJsonUtil.isValidJson(testCase.getJson()))
-              .build();
+          : testCase.toBuilder().validResource(JsonUtil.isValidJson(testCase.getJson())).build();
     } else {
       final HapiOperationOutcome hapiOperationOutcome = validateTestCaseJson(testCase, accessToken);
       return testCase == null
@@ -305,11 +302,11 @@ public class TestCaseService {
             testCase, ModelType.valueOfName(measure.getModel()), accessToken);
     if (ModelType.QI_CORE.getValue().equalsIgnoreCase(measure.getModel())) {
       validatedTestCase.setJson(
-          QiCoreJsonUtil.enforcePatientId(validatedTestCase, madieJsonResourcesBaseUri));
+          JsonUtil.enforcePatientId(validatedTestCase, madieJsonResourcesBaseUri));
       validatedTestCase.setJson(
-          QiCoreJsonUtil.updateResourceFullUrls(validatedTestCase, madieJsonResourcesBaseUri));
+          JsonUtil.updateResourceFullUrls(validatedTestCase, madieJsonResourcesBaseUri));
       validatedTestCase.setJson(
-          QiCoreJsonUtil.replacePatientRefs(
+          JsonUtil.replacePatientRefs(
               validatedTestCase.getJson(), validatedTestCase.getPatientId().toString()));
     }
     measure.getTestCases().add(validatedTestCase);
@@ -424,7 +421,8 @@ public class TestCaseService {
       List<TestCaseImportRequest> testCaseImportRequests,
       String measureId,
       String userName,
-      String accessToken) {
+      String accessToken,
+      String model) {
     Measure measure = findMeasureById(measureId);
     Set<UUID> checkedTestCases = new HashSet<>();
     return testCaseImportRequests.stream()
@@ -457,7 +455,7 @@ public class TestCaseService {
               }
               if (isEmpty(measure.getTestCases())) {
                 return validateTestCaseJsonAndCreateTestCase(
-                    testCaseImportRequest, measure, userName, accessToken);
+                    testCaseImportRequest, measure, userName, accessToken, model);
               }
               Optional<TestCase> existingTestCase =
                   measure.getTestCases().stream()
@@ -472,10 +470,11 @@ public class TestCaseService {
                     measureId,
                     userName,
                     accessToken,
-                    null);
+                    null,
+                    model);
               } else {
                 return validateTestCaseJsonAndCreateTestCase(
-                    testCaseImportRequest, measure, userName, accessToken);
+                    testCaseImportRequest, measure, userName, accessToken, model);
               }
             })
         .toList();
@@ -485,12 +484,11 @@ public class TestCaseService {
       TestCaseImportRequest testCaseImportRequest,
       Measure measure,
       String userName,
-      String accessToken) {
+      String accessToken,
+      String model) {
     try {
-      String patientFamilyName =
-          QiCoreJsonUtil.getPatientName(testCaseImportRequest.getJson(), "family");
-      String patientGivenName =
-          QiCoreJsonUtil.getPatientName(testCaseImportRequest.getJson(), "given");
+      String patientFamilyName = getPatientFamilyName(model, testCaseImportRequest.getJson());
+      String patientGivenName = getPatientGivenName(model, testCaseImportRequest.getJson());
       log.info(
           "Test Case title + Test Case Group:  {}", patientGivenName + " " + patientFamilyName);
       if (StringUtils.isBlank(patientGivenName)) {
@@ -506,12 +504,16 @@ public class TestCaseService {
               .series(patientFamilyName)
               .patientId(testCaseImportRequest.getPatientId())
               .build();
+
       List<TestCaseGroupPopulation> testCaseGroupPopulations =
-          QiCoreJsonUtil.getTestCaseGroupPopulationsFromMeasureReport(
-              testCaseImportRequest.getJson());
+          getTestCaseGroupPopulationsFromImportRequest(
+              model, testCaseImportRequest.getJson(), measure);
       List<Group> groups = testCaseServiceUtil.getGroupsWithValidPopulations(measure.getGroups());
       boolean matched =
           testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, groups, newTestCase);
+      assignObservationAndStratificationValuesForQdm(
+          matched, model, testCaseGroupPopulations, newTestCase, groups);
+
       String warningMessage = null;
       if (!matched) {
         warningMessage =
@@ -524,7 +526,8 @@ public class TestCaseService {
           measure.getId(),
           userName,
           accessToken,
-          warningMessage);
+          warningMessage,
+          model);
     } catch (JsonProcessingException ex) {
       log.info(
           "User {} is unable to import test case with patient id : "
@@ -542,23 +545,67 @@ public class TestCaseService {
     }
   }
 
+  private String getPatientFamilyName(String model, String json) throws JsonProcessingException {
+    String patientFamilyName = null;
+    if (ModelType.QI_CORE.getValue().equalsIgnoreCase(model)) {
+      patientFamilyName = JsonUtil.getPatientName(json, "family");
+    } else if ((ModelType.QDM_5_6.getValue().equalsIgnoreCase(model))) {
+      patientFamilyName = JsonUtil.getPatientNameQdm(json, "familyName");
+    }
+    return patientFamilyName;
+  }
+
+  private String getPatientGivenName(String model, String json) throws JsonProcessingException {
+    String patientGivenName = null;
+    if (ModelType.QI_CORE.getValue().equalsIgnoreCase(model)) {
+      patientGivenName = JsonUtil.getPatientName(json, "given");
+    } else if ((ModelType.QDM_5_6.getValue().equalsIgnoreCase(model))) {
+      patientGivenName = JsonUtil.getPatientNameQdm(json, "givenNames");
+    }
+    return patientGivenName;
+  }
+
+  private List<TestCaseGroupPopulation> getTestCaseGroupPopulationsFromImportRequest(
+      String model, String json, Measure measure) throws JsonProcessingException {
+    List<TestCaseGroupPopulation> testCaseGroupPopulations = null;
+    if (ModelType.QI_CORE.getValue().equalsIgnoreCase(model)) {
+      testCaseGroupPopulations = JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json);
+    } else if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(model)) {
+      testCaseGroupPopulations = JsonUtil.getTestCaseGroupPopulationsQdm(json, measure);
+    }
+    return testCaseGroupPopulations;
+  }
+
+  protected void assignObservationAndStratificationValuesForQdm(
+      boolean matched,
+      String model,
+      List<TestCaseGroupPopulation> testCaseGroupPopulations,
+      TestCase newTestCase,
+      List<Group> groups) {
+    if (matched && ModelType.QDM_5_6.getValue().equalsIgnoreCase(model)) {
+      testCaseServiceUtil.assignStratificationValuesQdm(
+          testCaseGroupPopulations, newTestCase, groups.get(0).getPopulationBasis());
+      testCaseServiceUtil.assignObservationValues(
+          newTestCase, testCaseGroupPopulations, groups.get(0).getPopulationBasis());
+    }
+  }
+
   private TestCaseImportOutcome updateTestCaseJsonAndSaveTestCase(
       TestCase existingTestCase,
       TestCaseImportRequest testCaseImportRequest,
       String measureId,
       String userName,
       String accessToken,
-      String warningMessage) {
+      String warningMessage,
+      String model) {
     TestCaseImportOutcome failureOutcome =
         TestCaseImportOutcome.builder()
             .patientId(testCaseImportRequest.getPatientId())
             .successful(false)
             .build();
     try {
-      String description = QiCoreJsonUtil.getTestDescription(testCaseImportRequest.getJson());
-      existingTestCase.setJson(
-          QiCoreJsonUtil.removeMeasureReportFromJson(testCaseImportRequest.getJson()));
-      existingTestCase.setDescription(description);
+      existingTestCase.setDescription(getDescription(model, testCaseImportRequest.getJson()));
+      existingTestCase.setJson(getJson(model, testCaseImportRequest.getJson()));
       TestCase updatedTestCase = updateTestCase(existingTestCase, measureId, userName, accessToken);
       log.info(
           "User {} successfully imported test case with patient id : {}",
@@ -605,6 +652,26 @@ public class TestCaseService {
               + "If the error persists, Please contact helpdesk.");
       return failureOutcome;
     }
+  }
+
+  private String getDescription(String model, String json) throws JsonProcessingException {
+    String description = null;
+    if (ModelType.QI_CORE.getValue().equalsIgnoreCase(model)) {
+      description = JsonUtil.getTestDescription(json);
+    } else if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(model)) {
+      description = JsonUtil.getTestDescriptionQdm(json);
+    }
+    return description;
+  }
+
+  private String getJson(String model, String json) throws JsonProcessingException {
+    String jsonFromImportRequest = null;
+    if (ModelType.QI_CORE.getValue().equalsIgnoreCase(model)) {
+      jsonFromImportRequest = JsonUtil.removeMeasureReportFromJson(json);
+    } else if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(model)) {
+      jsonFromImportRequest = JsonUtil.getTestCaseJson(json);
+    }
+    return jsonFromImportRequest;
   }
 
   private String formatErrorMessage(Exception e) {

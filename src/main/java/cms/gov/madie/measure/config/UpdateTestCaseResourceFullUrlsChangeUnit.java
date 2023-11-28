@@ -2,7 +2,7 @@ package cms.gov.madie.measure.config;
 
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.TestCaseService;
-import cms.gov.madie.measure.utils.QiCoreJsonUtil;
+import cms.gov.madie.measure.utils.JsonUtil;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.TestCase;
@@ -39,7 +39,7 @@ public class UpdateTestCaseResourceFullUrlsChangeUnit {
                       .filter(tc -> !StringUtils.isBlank(tc.getJson()))
                       .forEach(
                           testCase -> {
-                            if (!QiCoreJsonUtil.isValidJson(testCase.getJson())) {
+                            if (!JsonUtil.isValidJson(testCase.getJson())) {
                               log.warn(
                                   "Skipping test case [{}] on measure [{}] as JSON is invalid",
                                   testCase.getId(),
@@ -48,7 +48,7 @@ public class UpdateTestCaseResourceFullUrlsChangeUnit {
                             }
                             try {
                               String updatedJson =
-                                  QiCoreJsonUtil.updateResourceFullUrls(
+                                  JsonUtil.updateResourceFullUrls(
                                       testCase, testCaseService.getMadieJsonResourcesBaseUri());
                               testCase.setJson(updatedJson);
                             } catch (Exception ex) {

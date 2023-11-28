@@ -8,7 +8,7 @@ import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
-import cms.gov.madie.measure.utils.QiCoreJsonUtil;
+import cms.gov.madie.measure.utils.JsonUtil;
 import cms.gov.madie.measure.utils.TestCaseServiceUtil;
 import cms.gov.madie.measure.utils.ResourceUtil;
 
@@ -36,6 +36,8 @@ import gov.cms.madie.models.measure.MeasureMetaData;
 import gov.cms.madie.models.measure.MeasureScoring;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
+import gov.cms.madie.models.measure.QdmMeasure;
+import gov.cms.madie.models.measure.Stratification;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseImportRequest;
 
@@ -55,7 +57,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -114,6 +115,9 @@ public class TestCaseServiceTest implements ResourceUtil {
   private Population population5;
 
   String testCaseImportWithMeasureReport = getData("/test_case_exported_json.json");
+  String testCaseImportQdm = getData("/test_case_exported_qdm_json.json");
+  private static final String qdmTestCaseDescription =
+      "Patient is seen in ED,  Decision to Admit order and assessment performed;patient does not have a psychiatric diagnosis; order should calculate, not assessment time; measure observation 50 minutes";
 
   @BeforeEach
   public void setUp() {
@@ -1641,13 +1645,16 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     var response =
         testCaseService.importTestCases(
-            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
+            List.of(testCaseImportRequest),
+            measure.getId(),
+            "test.user",
+            "TOKEN",
+            ModelType.QI_CORE.getValue());
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
     assertNotNull(testCase.getDescription());
     assertEquals(
-        testCase.getDescription(),
-        QiCoreJsonUtil.getTestDescription(testCaseImportWithMeasureReport));
+        testCase.getDescription(), JsonUtil.getTestDescription(testCaseImportWithMeasureReport));
     assertTrue(response.get(0).isSuccessful());
   }
 
@@ -1667,7 +1674,11 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     var response =
         testCaseService.importTestCases(
-            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
+            List.of(testCaseImportRequest),
+            measure.getId(),
+            "test.user",
+            "TOKEN",
+            ModelType.QI_CORE.getValue());
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
     assertFalse(response.get(0).isSuccessful());
@@ -1691,7 +1702,11 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     var response =
         testCaseService.importTestCases(
-            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
+            List.of(testCaseImportRequest),
+            measure.getId(),
+            "test.user",
+            "TOKEN",
+            ModelType.QI_CORE.getValue());
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
     assertFalse(response.get(0).isSuccessful());
@@ -1716,7 +1731,11 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     var response =
         testCaseService.importTestCases(
-            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
+            List.of(testCaseImportRequest),
+            measure.getId(),
+            "test.user",
+            "TOKEN",
+            ModelType.QI_CORE.getValue());
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
     assertFalse(response.get(0).isSuccessful());
@@ -1739,7 +1758,11 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     var response =
         testCaseService.importTestCases(
-            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
+            List.of(testCaseImportRequest),
+            measure.getId(),
+            "test.user",
+            "TOKEN",
+            ModelType.QI_CORE.getValue());
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
     assertFalse(response.get(0).isSuccessful());
@@ -1758,7 +1781,11 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     var response =
         testCaseService.importTestCases(
-            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
+            List.of(testCaseImportRequest),
+            measure.getId(),
+            "test.user",
+            "TOKEN",
+            ModelType.QI_CORE.getValue());
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
     assertFalse(response.get(0).isSuccessful());
@@ -1775,7 +1802,11 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     var response =
         testCaseService.importTestCases(
-            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
+            List.of(testCaseImportRequest),
+            measure.getId(),
+            "test.user",
+            "TOKEN",
+            ModelType.QI_CORE.getValue());
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
     assertFalse(response.get(0).isSuccessful());
@@ -1801,7 +1832,8 @@ public class TestCaseServiceTest implements ResourceUtil {
             List.of(testCaseImportRequest, testCaseImportRequest),
             measure.getId(),
             "test.user",
-            "TOKEN");
+            "TOKEN",
+            ModelType.QI_CORE.getValue());
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
     assertFalse(response.get(0).isSuccessful());
@@ -1863,7 +1895,11 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     var response =
         testCaseService.importTestCases(
-            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
+            List.of(testCaseImportRequest),
+            measure.getId(),
+            "test.user",
+            "TOKEN",
+            ModelType.QI_CORE.getValue());
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
     assertTrue(response.get(0).isSuccessful());
@@ -1921,7 +1957,11 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     var response =
         testCaseService.importTestCases(
-            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
+            List.of(testCaseImportRequest),
+            measure.getId(),
+            "test.user",
+            "TOKEN",
+            ModelType.QI_CORE.getValue());
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
     assertTrue(response.get(0).isSuccessful());
@@ -1963,7 +2003,11 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     var response =
         testCaseService.importTestCases(
-            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
+            List.of(testCaseImportRequest),
+            measure.getId(),
+            "test.user",
+            "TOKEN",
+            ModelType.QI_CORE.getValue());
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
     assertTrue(response.get(0).isSuccessful());
@@ -1999,7 +2043,11 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     var response =
         testCaseService.importTestCases(
-            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
+            List.of(testCaseImportRequest),
+            measure.getId(),
+            "test.user",
+            "TOKEN",
+            ModelType.QI_CORE.getValue());
     assertEquals(1, response.size());
     assertFalse(response.get(0).isSuccessful());
   }
@@ -2017,7 +2065,11 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     var response =
         testCaseService.importTestCases(
-            List.of(testCaseImportRequest), measure.getId(), "test.user", "TOKEN");
+            List.of(testCaseImportRequest),
+            measure.getId(),
+            "test.user",
+            "TOKEN",
+            ModelType.QI_CORE.getValue());
     assertFalse(response.get(0).isSuccessful());
     assertEquals("Test Case Title is required.", response.get(0).getMessage());
   }
@@ -2077,5 +2129,182 @@ public class TestCaseServiceTest implements ResourceUtil {
   @Test
   void testAssumeUniqueNameOnEmptyList() {
     assertDoesNotThrow(() -> testCaseService.verifyUniqueTestCaseName(testCase, measure));
+  }
+
+  @Test
+  void importQdmTestCasesReturnValidOutcomesForProportion() throws JsonProcessingException {
+    QdmMeasure qdmMeasure =
+        QdmMeasure.builder()
+            .id("testMeasureId")
+            .model(ModelType.QDM_5_6.getValue())
+            .scoring(MeasureScoring.PROPORTION.name())
+            .build();
+
+    population1 = Population.builder().name(PopulationType.INITIAL_POPULATION).build();
+    population2 = Population.builder().name(PopulationType.DENOMINATOR).build();
+    population3 = Population.builder().name(PopulationType.DENOMINATOR_EXCLUSION).build();
+    population4 = Population.builder().name(PopulationType.NUMERATOR).build();
+    population5 = Population.builder().name(PopulationType.DENOMINATOR_EXCEPTION).build();
+
+    Stratification strat = new Stratification();
+    strat.setId("testStratId");
+    strat.setDescription("test desc");
+    strat.setCqlDefinition("ipp");
+    strat.setAssociation(PopulationType.INITIAL_POPULATION);
+    group =
+        Group.builder()
+            .id("testGroupId")
+            .scoring(MeasureScoring.PROPORTION.name())
+            .populationBasis("Encounter")
+            .populations(List.of(population1, population2, population3, population4, population5))
+            .stratifications(List.of(strat))
+            .build();
+    qdmMeasure.setGroups(List.of(group));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(qdmMeasure));
+
+    TestCase updatedTestCase = testCase;
+    updatedTestCase.setDescription(qdmTestCaseDescription);
+    String json = JsonUtil.getTestCaseJson(testCaseImportQdm);
+    updatedTestCase.setJson(json);
+
+    doReturn(updatedTestCase)
+        .when(testCaseService)
+        .updateTestCase(any(), anyString(), anyString(), anyString());
+    var testCaseImportRequest =
+        TestCaseImportRequest.builder()
+            .patientId(testCase.getPatientId())
+            .json(testCaseImportQdm)
+            .build();
+
+    var response =
+        testCaseService.importTestCases(
+            List.of(testCaseImportRequest),
+            measure.getId(),
+            "test.user",
+            "TOKEN",
+            ModelType.QDM_5_6.getValue());
+    assertEquals(1, response.size());
+    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
+    assertNotNull(testCase.getDescription());
+    assertEquals(testCase.getDescription(), JsonUtil.getTestDescriptionQdm(testCaseImportQdm));
+    assertTrue(response.get(0).isSuccessful());
+  }
+
+  @Test
+  void importQdmTestCasesReturnValidOutcomesForRatio() throws JsonProcessingException {
+    QdmMeasure qdmMeasure =
+        QdmMeasure.builder()
+            .id("testMeasureId")
+            .model(ModelType.QDM_5_6.getValue())
+            .scoring(MeasureScoring.RATIO.name())
+            .build();
+
+    population1 = Population.builder().name(PopulationType.INITIAL_POPULATION).build();
+    population2 = Population.builder().name(PopulationType.DENOMINATOR).build();
+    population3 = Population.builder().name(PopulationType.DENOMINATOR_EXCLUSION).build();
+    population4 = Population.builder().name(PopulationType.NUMERATOR).build();
+    population5 = Population.builder().name(PopulationType.DENOMINATOR_EXCEPTION).build();
+
+    Stratification strat = new Stratification();
+    strat.setId("testStratId");
+    strat.setDescription("test desc");
+    strat.setCqlDefinition("ipp");
+    strat.setAssociation(PopulationType.INITIAL_POPULATION);
+    group =
+        Group.builder()
+            .id("testGroupId")
+            .scoring(MeasureScoring.RATIO.name())
+            .populationBasis("Encounter")
+            .populations(List.of(population1, population2, population3, population4, population5))
+            .stratifications(List.of(strat))
+            .build();
+    qdmMeasure.setGroups(List.of(group));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(qdmMeasure));
+
+    TestCase updatedTestCase = testCase;
+    updatedTestCase.setDescription(qdmTestCaseDescription);
+    String json = JsonUtil.getTestCaseJson(testCaseImportQdm);
+    updatedTestCase.setJson(json);
+
+    doReturn(updatedTestCase)
+        .when(testCaseService)
+        .updateTestCase(any(), anyString(), anyString(), anyString());
+    var testCaseImportRequest =
+        TestCaseImportRequest.builder()
+            .patientId(testCase.getPatientId())
+            .json(testCaseImportQdm)
+            .build();
+
+    var response =
+        testCaseService.importTestCases(
+            List.of(testCaseImportRequest),
+            measure.getId(),
+            "test.user",
+            "TOKEN",
+            ModelType.QDM_5_6.getValue());
+    assertEquals(1, response.size());
+    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
+    assertNotNull(testCase.getDescription());
+    assertEquals(testCase.getDescription(), JsonUtil.getTestDescriptionQdm(testCaseImportQdm));
+    assertTrue(response.get(0).isSuccessful());
+  }
+
+  @Test
+  void importQdmTestCasesReturnValidOutcomes() throws JsonProcessingException {
+    QdmMeasure qdmMeasure =
+        QdmMeasure.builder()
+            .id("testMeasureId")
+            .model(ModelType.QDM_5_6.getValue())
+            .scoring(MeasureScoring.CONTINUOUS_VARIABLE.name())
+            .build();
+
+    population1 = Population.builder().name(PopulationType.INITIAL_POPULATION).build();
+    population2 = Population.builder().name(PopulationType.DENOMINATOR).build();
+    population3 = Population.builder().name(PopulationType.DENOMINATOR_EXCLUSION).build();
+    population4 = Population.builder().name(PopulationType.NUMERATOR).build();
+    population5 = Population.builder().name(PopulationType.DENOMINATOR_EXCEPTION).build();
+
+    Stratification strat = new Stratification();
+    strat.setId("testStratId");
+    strat.setDescription("test desc");
+    strat.setCqlDefinition("ipp");
+    strat.setAssociation(PopulationType.INITIAL_POPULATION);
+    group =
+        Group.builder()
+            .id("testGroupId")
+            .scoring(MeasureScoring.CONTINUOUS_VARIABLE.name())
+            .populationBasis("Encounter")
+            .populations(List.of(population1, population2, population3, population4, population5))
+            .stratifications(List.of(strat))
+            .build();
+    qdmMeasure.setGroups(List.of(group));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(qdmMeasure));
+
+    TestCase updatedTestCase = testCase;
+    updatedTestCase.setDescription(qdmTestCaseDescription);
+    String json = JsonUtil.getTestCaseJson(testCaseImportQdm);
+    updatedTestCase.setJson(json);
+
+    doReturn(updatedTestCase)
+        .when(testCaseService)
+        .updateTestCase(any(), anyString(), anyString(), anyString());
+    var testCaseImportRequest =
+        TestCaseImportRequest.builder()
+            .patientId(testCase.getPatientId())
+            .json(testCaseImportQdm)
+            .build();
+
+    var response =
+        testCaseService.importTestCases(
+            List.of(testCaseImportRequest),
+            measure.getId(),
+            "test.user",
+            "TOKEN",
+            ModelType.QDM_5_6.getValue());
+    assertEquals(1, response.size());
+    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
+    assertNotNull(testCase.getDescription());
+    assertEquals(testCase.getDescription(), JsonUtil.getTestDescriptionQdm(testCaseImportQdm));
+    assertTrue(response.get(0).isSuccessful());
   }
 }
