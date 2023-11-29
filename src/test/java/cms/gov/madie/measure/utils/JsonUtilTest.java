@@ -563,7 +563,7 @@ public class JsonUtilTest implements ResourceUtil {
   @Test
   void testHandleStratificationValuesGroupsNull() throws JsonProcessingException {
     QdmMeasure qdmMeasure =
-        QdmMeasure.builder().scoring(MeasureScoring.CONTINUOUS_VARIABLE.name()).build();
+        QdmMeasure.builder().scoring(MeasureScoring.CONTINUOUS_VARIABLE.toString()).build();
 
     List<TestCaseGroupPopulation> groupPopulations =
         JsonUtil.getTestCaseGroupPopulationsQdm(qdmImportedJson, qdmMeasure);
@@ -575,7 +575,7 @@ public class JsonUtilTest implements ResourceUtil {
     Group group = Group.builder().build();
     QdmMeasure qdmMeasure =
         QdmMeasure.builder()
-            .scoring(MeasureScoring.CONTINUOUS_VARIABLE.name())
+            .scoring(MeasureScoring.CONTINUOUS_VARIABLE.toString())
             .groups(List.of(group))
             .build();
 
@@ -589,7 +589,7 @@ public class JsonUtilTest implements ResourceUtil {
     Group group = Group.builder().build();
     QdmMeasure qdmMeasure =
         QdmMeasure.builder()
-            .scoring(MeasureScoring.CONTINUOUS_VARIABLE.name())
+            .scoring(MeasureScoring.CONTINUOUS_VARIABLE.toString())
             .groups(List.of(group))
             .build();
 
