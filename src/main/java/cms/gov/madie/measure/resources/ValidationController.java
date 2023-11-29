@@ -57,25 +57,6 @@ public class ValidationController {
       @RequestParam("file") MultipartFile multipartFile, Principal principal) {
     final String fileName = StringUtils.cleanPath(multipartFile.getOriginalFilename());
     final String username = principal.getName();
-
-
-    if ("true".equalsIgnoreCase(System.getenv("FORCE_VIRUS_SCAN"))) {
-      return ResponseEntity.ok(ScanValidationDto.builder().fileName(fileName).valid(true).build());
-    } else if ("false".equalsIgnoreCase(System.getenv("FORCE_VIRUS_SCAN"))) {
-      return ResponseEntity.ok(
-              ScanValidationDto.builder()
-                      .fileName(fileName)
-                      .valid(false)
-                      .error(
-                              new ObjectError(
-                                      fileName,
-                                      new String[] {"V100"},
-                                      null,
-                                      "There was an error importing this file. "
-                                              + "Please contact the help desk for error code V100."))
-                      .build());
-    }
-
     VirusScanResponseDto scanResponse = virusScanClient.scanFile(multipartFile.getResource());
 
     if (scanResponse.getFilesScanned() == 0) {
