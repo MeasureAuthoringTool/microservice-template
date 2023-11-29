@@ -89,46 +89,60 @@ public class TestCaseServiceUtil {
         .build();
   }
 
+  /**
+   * This function modifies input parameters!
+   *
+   * @param group
+   * @param testCaseGroupPopulations
+   * @param measureGroupNumber
+   * @param groupPopulations
+   * @param newTestCase
+   * @param isValid
+   * @return
+   */
   private boolean mapPopulationValues(
-      Group group,
-      List<TestCaseGroupPopulation> testCaseGroupPopulations,
-      int i,
-      List<TestCaseGroupPopulation> groupPopulations,
-      TestCase newTestCase,
-      boolean isValid) {
+          Group group,
+          List<TestCaseGroupPopulation> testCaseGroupPopulations,
+          int measureGroupNumber,
+          List<TestCaseGroupPopulation> groupPopulations,
+          TestCase newTestCase,
+          boolean isValid) {
     TestCaseGroupPopulation groupPopulation = assignTestCaseGroupPopulation(group);
     List<TestCasePopulationValue> populationValues = new ArrayList<>();
     int matchedNumber = 0;
-    for (int j = 0; j < group.getPopulations().size(); j++) {
-      Population population = group.getPopulations().get(j);
+    final int groupPopulationCount = group.getPopulations().size();
+    // map the non-observation population results based on type
+    for (int groupPopulationIndex = 0; groupPopulationIndex < groupPopulationCount; groupPopulationIndex++) {
+      Population population = group.getPopulations().get(groupPopulationIndex);
       matchedNumber =
-          assignPopulationValues(
-              population,
-              testCaseGroupPopulations,
-              i,
-              j,
-              matchedNumber,
-              group,
-              populationValues,
-              groupPopulation);
-      // check if matchedNumber is correct
-      if (j == group.getPopulations().size() - 1) {
-        if (matchedNumber == group.getPopulations().size()) {
-          groupPopulations.add(groupPopulation);
-          newTestCase.setGroupPopulations(groupPopulations);
-        } else {
-          isValid = false;
-        }
-      }
+              assignPopulationValues(
+                      population,
+                      testCaseGroupPopulations,
+                      measureGroupNumber,
+                      groupPopulationIndex,
+                      matchedNumber,
+                      group,
+                      populationValues,
+                      groupPopulation);
     }
+
+    if (matchedNumber == group.getPopulations().size()) {
+      // if group has observations and some existed on test case, add them back in
+      groupPopulations.add(groupPopulation);
+      groupPopulation.setGroupId(group.getId());
+      newTestCase.setGroupPopulations(groupPopulations);
+    } else {
+      isValid = false;
+    }
+
     return isValid;
   }
 
   private int assignPopulationValues(
       Population population,
       List<TestCaseGroupPopulation> testCaseGroupPopulations,
-      int i,
-      int j,
+      int measureGroupNumber,
+      int groupPopulationIndex,
       int matchedNumber,
       Group group,
       List<TestCasePopulationValue> populationValues,
@@ -137,11 +151,13 @@ public class TestCaseServiceUtil {
         .getName()
         .toCode()
         .equalsIgnoreCase(
-            testCaseGroupPopulations.get(i).getPopulationValues().get(j).getName().toCode())) {
+            testCaseGroupPopulations.get(measureGroupNumber).getPopulationValues().get(groupPopulationIndex).getName().toCode())) {
       matchedNumber++;
 
       TestCasePopulationValue populationValue =
-          testCaseGroupPopulations.get(i).getPopulationValues().get(j);
+          testCaseGroupPopulations.get(measureGroupNumber).getPopulationValues().get(groupPopulationIndex);
+      populationValue.setId(population.getId());
+
       if (group.getPopulationBasis() != null
           && group.getPopulationBasis().equalsIgnoreCase("boolean")) {
         String originalValue = (String) populationValue.getExpected();
@@ -232,21 +248,20 @@ public class TestCaseServiceUtil {
 
   // testCaseGroupPopulations may contain observations that are not in group
   protected List<TestCaseGroupPopulation> getRevisedGroupPopulation(
-      List<TestCaseGroupPopulation> testCaseGroupPopulations) {
+          List<TestCaseGroupPopulation> testCaseGroupPopulations) {
     List<TestCaseGroupPopulation> revisedGroupPopulations = new ArrayList<>();
-    List<TestCasePopulationValue> revisedPopulationValues = new ArrayList<>();
-    if (!CollectionUtils.isEmpty(testCaseGroupPopulations)
-        && CollectionUtils.isNotEmpty(testCaseGroupPopulations.get(0).getPopulationValues())) {
-      revisedPopulationValues =
-          testCaseGroupPopulations.get(0).getPopulationValues().stream()
-              .filter(
-                  populationValue -> !populationValue.getName().toCode().contains("observation"))
-              .toList();
+    if (!CollectionUtils.isEmpty(testCaseGroupPopulations)) {
+      for (TestCaseGroupPopulation groupPopulation : testCaseGroupPopulations) {
+        List<TestCasePopulationValue> revisedPopulationValues = null;
+        if ( CollectionUtils.isNotEmpty(groupPopulation.getPopulationValues())) {
+          revisedPopulationValues = groupPopulation.getPopulationValues().stream()
+                  .filter(
+                          populationValue -> !populationValue.getName().toCode().contains("observation"))
+                  .toList();
+        }
+        revisedGroupPopulations.add(groupPopulation.toBuilder().populationValues(revisedPopulationValues).build());
+      }
     }
-
-    TestCaseGroupPopulation revisedGroupPopulation =
-        TestCaseGroupPopulation.builder().populationValues(revisedPopulationValues).build();
-    revisedGroupPopulations.add(revisedGroupPopulation);
     return revisedGroupPopulations;
   }
 
