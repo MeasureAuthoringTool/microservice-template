@@ -161,6 +161,6 @@ public class MigrateRiskAdjustmentChangeUnitTest {
   public void testRollBackMultipleMeasures() throws Exception {
     ReflectionTestUtils.setField(changeUnit, "tempMeasures", List.of(measure, measure));
     changeUnit.rollbackExecution(measureRepository);
-    verify(measureRepository, times(2)).save(any(Measure.class));
+    verify(measureRepository, times(1)).saveAll(any(List.class));
   }
 }
