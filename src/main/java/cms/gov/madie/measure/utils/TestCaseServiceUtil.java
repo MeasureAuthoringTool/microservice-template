@@ -101,29 +101,31 @@ public class TestCaseServiceUtil {
    * @return
    */
   private boolean mapPopulationValues(
-          Group group,
-          List<TestCaseGroupPopulation> testCaseGroupPopulations,
-          int measureGroupNumber,
-          List<TestCaseGroupPopulation> groupPopulations,
-          TestCase newTestCase,
-          boolean isValid) {
+      Group group,
+      List<TestCaseGroupPopulation> testCaseGroupPopulations,
+      int measureGroupNumber,
+      List<TestCaseGroupPopulation> groupPopulations,
+      TestCase newTestCase,
+      boolean isValid) {
     TestCaseGroupPopulation groupPopulation = assignTestCaseGroupPopulation(group);
     List<TestCasePopulationValue> populationValues = new ArrayList<>();
     int matchedNumber = 0;
     final int groupPopulationCount = group.getPopulations().size();
     // map the non-observation population results based on type
-    for (int groupPopulationIndex = 0; groupPopulationIndex < groupPopulationCount; groupPopulationIndex++) {
+    for (int groupPopulationIndex = 0;
+        groupPopulationIndex < groupPopulationCount;
+        groupPopulationIndex++) {
       Population population = group.getPopulations().get(groupPopulationIndex);
       matchedNumber =
-              assignPopulationValues(
-                      population,
-                      testCaseGroupPopulations,
-                      measureGroupNumber,
-                      groupPopulationIndex,
-                      matchedNumber,
-                      group,
-                      populationValues,
-                      groupPopulation);
+          assignPopulationValues(
+              population,
+              testCaseGroupPopulations,
+              measureGroupNumber,
+              groupPopulationIndex,
+              matchedNumber,
+              group,
+              populationValues,
+              groupPopulation);
     }
 
     if (matchedNumber == group.getPopulations().size()) {
@@ -151,11 +153,19 @@ public class TestCaseServiceUtil {
         .getName()
         .toCode()
         .equalsIgnoreCase(
-            testCaseGroupPopulations.get(measureGroupNumber).getPopulationValues().get(groupPopulationIndex).getName().toCode())) {
+            testCaseGroupPopulations
+                .get(measureGroupNumber)
+                .getPopulationValues()
+                .get(groupPopulationIndex)
+                .getName()
+                .toCode())) {
       matchedNumber++;
 
       TestCasePopulationValue populationValue =
-          testCaseGroupPopulations.get(measureGroupNumber).getPopulationValues().get(groupPopulationIndex);
+          testCaseGroupPopulations
+              .get(measureGroupNumber)
+              .getPopulationValues()
+              .get(groupPopulationIndex);
       populationValue.setId(population.getId());
 
       if (group.getPopulationBasis() != null
@@ -248,18 +258,21 @@ public class TestCaseServiceUtil {
 
   // testCaseGroupPopulations may contain observations that are not in group
   protected List<TestCaseGroupPopulation> getRevisedGroupPopulation(
-          List<TestCaseGroupPopulation> testCaseGroupPopulations) {
+      List<TestCaseGroupPopulation> testCaseGroupPopulations) {
     List<TestCaseGroupPopulation> revisedGroupPopulations = new ArrayList<>();
-    if (!CollectionUtils.isEmpty(testCaseGroupPopulations)) {
+    if (!isEmpty(testCaseGroupPopulations)) {
       for (TestCaseGroupPopulation groupPopulation : testCaseGroupPopulations) {
         List<TestCasePopulationValue> revisedPopulationValues = null;
-        if ( CollectionUtils.isNotEmpty(groupPopulation.getPopulationValues())) {
-          revisedPopulationValues = groupPopulation.getPopulationValues().stream()
+        if (CollectionUtils.isNotEmpty(groupPopulation.getPopulationValues())) {
+          revisedPopulationValues =
+              groupPopulation.getPopulationValues().stream()
                   .filter(
-                          populationValue -> !populationValue.getName().toCode().contains("observation"))
+                      populationValue ->
+                          !populationValue.getName().toCode().contains("observation"))
                   .toList();
         }
-        revisedGroupPopulations.add(groupPopulation.toBuilder().populationValues(revisedPopulationValues).build());
+        revisedGroupPopulations.add(
+            groupPopulation.toBuilder().populationValues(revisedPopulationValues).build());
       }
     }
     return revisedGroupPopulations;
