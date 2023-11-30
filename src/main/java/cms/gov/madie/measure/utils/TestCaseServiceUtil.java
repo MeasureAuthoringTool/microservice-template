@@ -52,7 +52,7 @@ public class TestCaseServiceUtil {
     boolean isValid = true;
     List<TestCaseGroupPopulation> groupPopulations = null;
     List<TestCaseGroupPopulation> revisedGroupPopulations =
-        getRevisedGroupPopulation(testCaseGroupPopulations);
+        getNonObservationGroupPopulations(testCaseGroupPopulations);
 
     // group size has to match
     if (!isEmpty(groups)
@@ -257,7 +257,7 @@ public class TestCaseServiceUtil {
   }
 
   // testCaseGroupPopulations may contain observations that are not in group
-  protected List<TestCaseGroupPopulation> getRevisedGroupPopulation(
+  protected List<TestCaseGroupPopulation> getNonObservationGroupPopulations(
       List<TestCaseGroupPopulation> testCaseGroupPopulations) {
     List<TestCaseGroupPopulation> revisedGroupPopulations = new ArrayList<>();
     if (!isEmpty(testCaseGroupPopulations)) {
