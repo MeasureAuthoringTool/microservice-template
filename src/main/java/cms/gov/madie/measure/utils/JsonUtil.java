@@ -431,7 +431,8 @@ public final class JsonUtil {
   protected static void handleObservationValues(
       JsonNode population, List<TestCasePopulationValue> populationValues, Measure measure) {
     QdmMeasure qdmMeasure = (QdmMeasure) measure;
-    if (qdmMeasure.getScoring().equalsIgnoreCase("CONTINUOUS_VARIABLE")) {
+    if (StringUtils.equals(
+        qdmMeasure.getScoring(), MeasureScoring.CONTINUOUS_VARIABLE.toString())) {
       if (population.get("OBSERV") != null) {
         for (JsonNode observation : population.get("OBSERV")) {
           if (observation != null) {
