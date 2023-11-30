@@ -65,10 +65,7 @@ public class MigrateSupplementalDataElementsChangeUnit {
   public void rollbackExecution(MeasureRepository measureRepository) throws Exception {
     log.debug("Entering rollbackExecution()");
     if (CollectionUtils.isNotEmpty(tempMeasures)) {
-      tempMeasures.forEach(
-          measure -> {
-            measureRepository.save(measure);
-          });
+measureRepository.saveAll(tempMeasures);
     }
   }
 }
