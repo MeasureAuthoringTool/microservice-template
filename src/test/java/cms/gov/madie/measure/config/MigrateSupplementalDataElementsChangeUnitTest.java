@@ -76,6 +76,17 @@ public class MigrateSupplementalDataElementsChangeUnitTest {
   }
 
   @Test
+  public void testChangeUnitExecutionQdmMeasure() throws Exception {
+    measure.setModel(ModelType.QDM_5_6.getValue());
+
+    when(measureRepository.findAll()).thenReturn(List.of(measure));
+
+    changeUnit.migrateSupplementalDataElements(measureRepository);
+
+    verifyNoMoreInteractions(measureRepository);
+  }
+
+  @Test
   public void testChangeUnitExecutionSupplementalDataElementsMigrated() throws Exception {
     when(measureRepository.findAll()).thenReturn(List.of(measure));
 
@@ -86,7 +97,7 @@ public class MigrateSupplementalDataElementsChangeUnitTest {
 
     assertThat(measure.getSupplementalData().size(), is(equalTo(1)));
     assertThat(
-        measure.getMeasureMetaData().getSupplementalDataElements(),
+        measure.getSupplementalDataDescription(),
         is(equalTo("test supplemental data; SDE definition-SDE description | ")));
   }
 
@@ -104,7 +115,7 @@ public class MigrateSupplementalDataElementsChangeUnitTest {
 
     assertThat(measure.getSupplementalData().size(), is(equalTo(1)));
     assertThat(
-        measure.getMeasureMetaData().getSupplementalDataElements(),
+        measure.getSupplementalDataDescription(),
         is(equalTo("test supplemental data; SDE definition | ")));
   }
 
@@ -121,8 +132,7 @@ public class MigrateSupplementalDataElementsChangeUnitTest {
 
     assertThat(measure.getSupplementalData().size(), is(equalTo(1)));
     assertThat(
-        measure.getMeasureMetaData().getSupplementalDataElements(),
-        is(equalTo("SDE definition-SDE description | ")));
+        measure.getSupplementalDataDescription(), is(equalTo("SDE definition-SDE description | ")));
   }
 
   @Test
@@ -138,8 +148,7 @@ public class MigrateSupplementalDataElementsChangeUnitTest {
 
     assertThat(measure.getSupplementalData().size(), is(equalTo(1)));
     assertThat(
-        measure.getMeasureMetaData().getSupplementalDataElements(),
-        is(equalTo("SDE definition-SDE description | ")));
+        measure.getSupplementalDataDescription(), is(equalTo("SDE definition-SDE description | ")));
   }
 
   @Test

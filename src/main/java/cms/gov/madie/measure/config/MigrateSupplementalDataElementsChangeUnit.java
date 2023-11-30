@@ -7,8 +7,8 @@ import org.apache.commons.lang3.StringUtils;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.MeasureMetaData;
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
@@ -30,36 +30,33 @@ public class MigrateSupplementalDataElementsChangeUnit {
     if (CollectionUtils.isNotEmpty(measureList)) {
       setTempMeasures(measureList);
       measureList.stream()
+          .filter(
+              measure ->
+                  measure.getModel().equalsIgnoreCase(ModelType.QI_CORE.getValue())
+                      && CollectionUtils.isNotEmpty(measure.getSupplementalData()))
           .forEach(
               measure -> {
-                if (CollectionUtils.isNotEmpty(measure.getSupplementalData())) {
-                  StringBuffer sb = new StringBuffer();
-                  measure
-                      .getSupplementalData()
-                      .forEach(
-                          sde -> {
-                            sb.append(sde.getDefinition());
-                            if (StringUtils.isNotBlank(sde.getDescription())) {
-                              sb.append("-").append(sde.getDescription());
-                            }
-                            sb.append(" | ");
-                          });
-                  if (measure.getMeasureMetaData() != null) {
-                    String sde =
-                        (measure.getMeasureMetaData().getSupplementalDataElements() != null
-                            ? measure.getMeasureMetaData().getSupplementalDataElements()
-                                + "; "
-                                + sb.toString()
-                            : sb.toString());
-                    measure.getMeasureMetaData().setSupplementalDataElements(sde);
-                  } else {
-                    MeasureMetaData metaData =
-                        MeasureMetaData.builder().supplementalDataElements(sb.toString()).build();
-                    measure.setMeasureMetaData(metaData);
-                  }
+                StringBuffer sb = new StringBuffer();
+                measure
+                    .getSupplementalData()
+                    .forEach(
+                        sde -> {
+                          sb.append(sde.getDefinition());
+                          if (StringUtils.isNotBlank(sde.getDescription())) {
+                            sb.append("-").append(sde.getDescription());
+                          }
+                          sb.append(" | ");
+                        });
+                measure.setSupplementalDataDescription(
+                    measure.getMeasureMetaData() != null
+                            && StringUtils.isNotBlank(
+                                measure.getMeasureMetaData().getSupplementalDataElements())
+                        ? measure.getMeasureMetaData().getSupplementalDataElements()
+                            + "; "
+                            + sb.toString()
+                        : sb.toString());
 
-                  measureRepository.save(measure);
-                }
+                measureRepository.save(measure);
               });
     }
   }
