@@ -1,0 +1,74 @@
+package cms.gov.madie.measure.config;
+
+import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
+
+import com.nimbusds.oauth2.sdk.util.CollectionUtils;
+
+import cms.gov.madie.measure.repositories.MeasureRepository;
+import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureMetaData;
+import io.mongock.api.annotations.ChangeUnit;
+import io.mongock.api.annotations.Execution;
+import io.mongock.api.annotations.RollbackExecution;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@ChangeUnit(id = "migrate_risk_adjustment", order = "1", author = "madie_dev")
+public class MigrateRiskAdjustmentChangeUnit {
+
+  @Setter private List<Measure> tempMeasures;
+
+  @Execution
+  public void migrateRiskAdjustment(MeasureRepository measureRepository) throws Exception {
+    log.debug("Entering migrateRiskAdjustment()");
+
+    List<Measure> measureList = measureRepository.findAll();
+    if (CollectionUtils.isNotEmpty(measureList)) {
+      setTempMeasures(measureList);
+      measureList.stream()
+          .filter(measure -> CollectionUtils.isNotEmpty(measure.getRiskAdjustments()))
+          .forEach(
+              measure -> {
+                StringBuilder sb = new StringBuilder();
+                measure
+                    .getRiskAdjustments()
+                    .forEach(
+                        rav -> {
+                          sb.append(rav.getDefinition());
+                          if (StringUtils.isNotBlank(rav.getDescription())) {
+                            sb.append("-");
+                            sb.append(rav.getDescription());
+                          }
+                          sb.append(" | ");
+                        });
+                if (measure.getMeasureMetaData() != null) {
+                  String rav =
+                      (measure.getMeasureMetaData().getRiskAdjustment() != null
+                          ? measure.getMeasureMetaData().getRiskAdjustment() + "; " + sb.toString()
+                          : sb.toString());
+                  measure.getMeasureMetaData().setRiskAdjustment(rav);
+                } else {
+                  MeasureMetaData metaData =
+                      MeasureMetaData.builder().riskAdjustment(sb.toString()).build();
+                  measure.setMeasureMetaData(metaData);
+                }
+
+                measureRepository.save(measure);
+              });
+    }
+  }
+
+  @RollbackExecution
+  public void rollbackExecution(MeasureRepository measureRepository) throws Exception {
+    log.debug("Entering rollbackExecution()");
+    if (CollectionUtils.isNotEmpty(tempMeasures)) {
+      tempMeasures.forEach(
+          measure -> {
+            measureRepository.save(measure);
+          });
+    }
+  }
+}
