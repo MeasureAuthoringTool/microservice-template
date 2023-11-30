@@ -76,6 +76,17 @@ public class MigrateRiskAdjustmentChangeUnitTest {
   }
 
   @Test
+  public void testChangeUnitExecutionQdmMeasure() throws Exception {
+    measure.setModel(ModelType.QDM_5_6.getValue());
+
+    when(measureRepository.findAll()).thenReturn(List.of(measure));
+
+    changeUnit.migrateRiskAdjustment(measureRepository);
+
+    verifyNoMoreInteractions(measureRepository);
+  }
+
+  @Test
   public void testChangeUnitExecutionRiskAdjustmentsMigrated() throws Exception {
     when(measureRepository.findAll()).thenReturn(List.of(measure));
 
@@ -86,7 +97,7 @@ public class MigrateRiskAdjustmentChangeUnitTest {
 
     assertThat(measure.getRiskAdjustments().size(), is(equalTo(1)));
     assertThat(
-        measure.getMeasureMetaData().getRiskAdjustment(),
+        measure.getRiskAdjustmentDescription(),
         is(equalTo("test risk adjustment; RAV definition-RAV description | ")));
   }
 
@@ -104,7 +115,7 @@ public class MigrateRiskAdjustmentChangeUnitTest {
 
     assertThat(measure.getRiskAdjustments().size(), is(equalTo(1)));
     assertThat(
-        measure.getMeasureMetaData().getRiskAdjustment(),
+        measure.getRiskAdjustmentDescription(),
         is(equalTo("test risk adjustment; RAV definition | ")));
   }
 
@@ -121,8 +132,7 @@ public class MigrateRiskAdjustmentChangeUnitTest {
 
     assertThat(measure.getRiskAdjustments().size(), is(equalTo(1)));
     assertThat(
-        measure.getMeasureMetaData().getRiskAdjustment(),
-        is(equalTo("RAV definition-RAV description | ")));
+        measure.getRiskAdjustmentDescription(), is(equalTo("RAV definition-RAV description | ")));
   }
 
   @Test
@@ -138,8 +148,7 @@ public class MigrateRiskAdjustmentChangeUnitTest {
 
     assertThat(measure.getRiskAdjustments().size(), is(equalTo(1)));
     assertThat(
-        measure.getMeasureMetaData().getRiskAdjustment(),
-        is(equalTo("RAV definition-RAV description | ")));
+        measure.getRiskAdjustmentDescription(), is(equalTo("RAV definition-RAV description | ")));
   }
 
   @Test

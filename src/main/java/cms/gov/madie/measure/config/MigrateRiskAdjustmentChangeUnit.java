@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureMetaData;
 import io.mongock.api.annotations.ChangeUnit;
@@ -29,7 +30,10 @@ public class MigrateRiskAdjustmentChangeUnit {
     if (CollectionUtils.isNotEmpty(measureList)) {
       setTempMeasures(measureList);
       measureList.stream()
-          .filter(measure -> CollectionUtils.isNotEmpty(measure.getRiskAdjustments()))
+          .filter(
+              measure ->
+                  measure.getModel().equalsIgnoreCase(ModelType.QI_CORE.getValue())
+                      && CollectionUtils.isNotEmpty(measure.getRiskAdjustments()))
           .forEach(
               measure -> {
                 StringBuilder sb = new StringBuilder();
@@ -44,18 +48,13 @@ public class MigrateRiskAdjustmentChangeUnit {
                           }
                           sb.append(" | ");
                         });
-                if (measure.getMeasureMetaData() != null) {
-                  String rav =
-                      (measure.getMeasureMetaData().getRiskAdjustment() != null
-                          ? measure.getMeasureMetaData().getRiskAdjustment() + "; " + sb.toString()
-                          : sb.toString());
-                  measure.getMeasureMetaData().setRiskAdjustment(rav);
-                } else {
-                  MeasureMetaData metaData =
-                      MeasureMetaData.builder().riskAdjustment(sb.toString()).build();
-                  measure.setMeasureMetaData(metaData);
-                }
 
+                measure.setRiskAdjustmentDescription(
+                    measure.getMeasureMetaData() != null
+                            && StringUtils.isNotBlank(
+                                measure.getMeasureMetaData().getRiskAdjustment())
+                        ? measure.getMeasureMetaData().getRiskAdjustment() + "; " + sb.toString()
+                        : sb.toString());
                 measureRepository.save(measure);
               });
     }
