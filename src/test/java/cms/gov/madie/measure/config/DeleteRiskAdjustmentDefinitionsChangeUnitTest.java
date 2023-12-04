@@ -13,6 +13,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.BulkOperations;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
@@ -23,7 +24,7 @@ public class DeleteRiskAdjustmentDefinitionsChangeUnitTest {
 
     @Test
     public void testDeleteRiskAdjustmentsDescriptions() {
-        Query query = new Query();
+        Query query = new Query(Criteria.where("risk").exists(true));
         Update update = new Update().unset("riskAdjustments.$[].description");
         BulkOperations bulkOperations = mock(BulkOperations.class);
 
