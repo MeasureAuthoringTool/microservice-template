@@ -16,7 +16,7 @@ import org.springframework.data.mongodb.core.query.Update;
 public class DeleteRiskAdjustmentsDescriptionsChangeUnit {
   @Execution
   public void deleteAdjustmentDescriptions(MongoOperations mongoOperations) {
-    Query query = new Query(Criteria.where("risk").exists(true));
+    Query query = new Query(Criteria.where("riskAdjustments").exists(true));
     Update update = new Update().unset("riskAdjustments.$[].description");
 
     BulkOperations bulkOperations =

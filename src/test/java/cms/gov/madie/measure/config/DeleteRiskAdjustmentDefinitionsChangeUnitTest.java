@@ -24,7 +24,7 @@ public class DeleteRiskAdjustmentDefinitionsChangeUnitTest {
 
     @Test
     public void testDeleteRiskAdjustmentsDescriptions() {
-        Query query = new Query(Criteria.where("risk").exists(true));
+        Query query = new Query(Criteria.where("riskAdjustments").exists(true));
         Update update = new Update().unset("riskAdjustments.$[].description");
         BulkOperations bulkOperations = mock(BulkOperations.class);
 
