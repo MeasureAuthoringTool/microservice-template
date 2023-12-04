@@ -11,10 +11,10 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 @Slf4j
-@ChangeUnit(id = "delete-risk-adjustment-descriptions", order = "2", author = "madie_dev")
-public class DeleteRiskAdjustmentDefinitionsChangeUnit {
+@ChangeUnit(id = "delete-risk-adjustments-descriptions", order = "2", author = "madie_dev")
+public class DeleteRiskAdjustmentsDescriptionsChangeUnit {
   @Execution
-  public void deleteAdjustmentDefinitions(MongoOperations mongoOperations) {
+  public void deleteAdjustmentDescriptions(MongoOperations mongoOperations) {
     Query query = new Query();
     Update update = new Update().unset("riskAdjustments.$[].description");
 

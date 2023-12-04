@@ -22,7 +22,7 @@ public class DeleteRiskAdjustmentDefinitionsChangeUnitTest {
   @Mock private MongoOperations mongoOperations;
 
   @Test
-  public void testDeleteRiskAdjustmentDefinitions() {
+  public void testDeleteRiskAdjustmentsDescriptions() {
     Query query = new Query();
     Update update = new Update().unset("riskAdjustments.$[].description");
     BulkOperations bulkOperations = mock(BulkOperations.class);
@@ -30,8 +30,8 @@ public class DeleteRiskAdjustmentDefinitionsChangeUnitTest {
     when(mongoOperations.bulkOps(BulkOperations.BulkMode.UNORDERED, Measure.class))
         .thenReturn(bulkOperations);
 
-    new DeleteRiskAdjustmentDefinitionsChangeUnit()
-        .deleteAdjustmentDefinitions(mongoOperations);
+    new DeleteRiskAdjustmentsDescriptionsChangeUnit()
+        .deleteAdjustmentDescriptions(mongoOperations);
 
     verify(bulkOperations, new Times(1)).updateMulti(query, update);
     verify(bulkOperations, new Times(1)).execute();
@@ -39,7 +39,7 @@ public class DeleteRiskAdjustmentDefinitionsChangeUnitTest {
 
   @Test
   void testRollback() {
-    new DeleteRiskAdjustmentDefinitionsChangeUnit().rollbackExecution();
+    new DeleteRiskAdjustmentsDescriptionsChangeUnit().rollbackExecution();
     verifyNoInteractions(measureRepository);
   }
 }
