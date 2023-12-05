@@ -10,7 +10,6 @@ import org.springframework.data.mongodb.core.query.Update;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 
 import cms.gov.madie.measure.repositories.MeasureRepository;
-import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.Measure;
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
