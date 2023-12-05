@@ -52,7 +52,6 @@ public class DeleteSupplementalDataDescriptionChangeUnitTest {
     changeUnit.deleteSdeDescriptionFromDefDescPair(mongoOperations);
 
     verify(bulkOperations, new Times(0)).updateMulti(query, update);
-    // verify(bulkOperations, new Times(0)).execute();
   }
 
   @Test
