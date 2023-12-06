@@ -3,7 +3,6 @@ package cms.gov.madie.measure.config;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 
-import cms.gov.madie.measure.config.VersionConverter;
 import gov.cms.madie.models.common.Version;
 
 public class VersionConverterTest {

@@ -182,8 +182,7 @@ class MeasureControllerTest {
     measure1.setMeasurementPeriodStart(new Date("12/02/2020"));
     measure1.setMeasurementPeriodEnd(new Date("12/02/2021"));
     Measure originalMeasure =
-        measure1
-            .toBuilder()
+        measure1.toBuilder()
             .id("5399aba6e4b0ae375bfdca88")
             .createdAt(createdAt)
             .createdBy("test.user2")
@@ -192,8 +191,7 @@ class MeasureControllerTest {
     Instant original = Instant.now().minus(140, ChronoUnit.HOURS);
 
     Measure m1 =
-        originalMeasure
-            .toBuilder()
+        originalMeasure.toBuilder()
             .createdBy("test.user")
             .createdAt(original)
             .measurementPeriodStart(new Date("12/02/2021"))
@@ -207,8 +205,7 @@ class MeasureControllerTest {
         .thenReturn(m1);
     when(measureService.findMeasureById(anyString()))
         .thenReturn(
-            originalMeasure
-                .toBuilder()
+            originalMeasure.toBuilder()
                 .measureSet(MeasureSet.builder().owner("test.user").build())
                 .build());
 
@@ -250,8 +247,7 @@ class MeasureControllerTest {
     measure1.setMeasurementPeriodStart(new Date("12/02/2020"));
     measure1.setMeasurementPeriodEnd(new Date("12/02/2021"));
     Measure originalMeasure =
-        measure1
-            .toBuilder()
+        measure1.toBuilder()
             .id("5399aba6e4b0ae375bfdca88")
             .active(true)
             .createdAt(createdAt)
@@ -261,8 +257,7 @@ class MeasureControllerTest {
     Instant original = Instant.now().minus(140, ChronoUnit.HOURS);
 
     Measure m1 =
-        originalMeasure
-            .toBuilder()
+        originalMeasure.toBuilder()
             .createdBy("test.user")
             .createdAt(original)
             .measurementPeriodStart(new Date("12/02/2021"))
@@ -274,8 +269,7 @@ class MeasureControllerTest {
 
     when(measureService.findMeasureById(anyString()))
         .thenReturn(
-            originalMeasure
-                .toBuilder()
+            originalMeasure.toBuilder()
                 .measureSet(MeasureSet.builder().owner("test.user2").build())
                 .build());
     doNothing().when(measureService).verifyAuthorization(anyString(), any(Measure.class));
@@ -349,8 +343,7 @@ class MeasureControllerTest {
     measure1.setMeasureMetaData(MeasureMetaData.builder().draft(true).build());
     when(measureService.findMeasureById(anyString()))
         .thenReturn(
-            measure1
-                .toBuilder()
+            measure1.toBuilder()
                 .measureSet(MeasureSet.builder().owner("validuser@gmail.com").build())
                 .build());
     doNothing().when(measureService).verifyAuthorization(anyString(), any(Measure.class));
@@ -405,8 +398,7 @@ class MeasureControllerTest {
     acl.setRoles(List.of(RoleEnum.SHARED_WITH));
     when(measureService.findMeasureById(anyString()))
         .thenReturn(
-            measure1
-                .toBuilder()
+            measure1.toBuilder()
                 .measureSet(MeasureSet.builder().owner("MSR01").acls(List.of(acl)).build())
                 .build());
     doNothing().when(measureService).verifyAuthorization(anyString(), any(Measure.class));
@@ -438,8 +430,7 @@ class MeasureControllerTest {
     acl.setRoles(List.of(RoleEnum.SHARED_WITH));
     when(measureService.findMeasureById(anyString()))
         .thenReturn(
-            measure1
-                .toBuilder()
+            measure1.toBuilder()
                 .measureSet(MeasureSet.builder().owner("test.user").acls(List.of(acl)).build())
                 .build());
 
@@ -505,8 +496,7 @@ class MeasureControllerTest {
     measure1.setId("testid");
     when(measureService.findMeasureById(anyString()))
         .thenReturn(
-            measure1
-                .toBuilder()
+            measure1.toBuilder()
                 .measureSet(MeasureSet.builder().owner("test.user").build())
                 .build());
     doThrow(new UnauthorizedException("Measure", "testid", "unAuthorized user"))

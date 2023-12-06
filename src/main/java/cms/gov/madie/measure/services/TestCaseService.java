@@ -250,8 +250,7 @@ public class TestCaseService {
       final HapiOperationOutcome hapiOperationOutcome = validateTestCaseJson(testCase, accessToken);
       return testCase == null
           ? null
-          : testCase
-              .toBuilder()
+          : testCase.toBuilder()
               .hapiOperationOutcome(hapiOperationOutcome)
               .validResource(hapiOperationOutcome != null && hapiOperationOutcome.isSuccessful())
               .build();
@@ -324,7 +323,8 @@ public class TestCaseService {
       String measureId, String testCaseId, boolean validate, String accessToken) {
     TestCase testCase =
         Optional.ofNullable(findMeasureById(measureId).getTestCases())
-            .orElseThrow(() -> new ResourceNotFoundException("Test Case", testCaseId)).stream()
+            .orElseThrow(() -> new ResourceNotFoundException("Test Case", testCaseId))
+            .stream()
             .filter(tc -> tc.getId().equals(testCaseId))
             .findFirst()
             .orElse(null);

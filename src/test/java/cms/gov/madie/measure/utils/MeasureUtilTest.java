@@ -802,8 +802,7 @@ class MeasureUtilTest {
             .measurementPeriodEnd(new Date())
             .build();
     final Measure changed =
-        original
-            .toBuilder()
+        original.toBuilder()
             .measurementPeriodStart(Date.from(Instant.now().minus(5, ChronoUnit.DAYS)))
             .build();
     boolean output = measureUtil.isMeasurementPeriodChanged(changed, original);
@@ -818,8 +817,7 @@ class MeasureUtilTest {
             .measurementPeriodEnd(new Date())
             .build();
     final Measure changed =
-        original
-            .toBuilder()
+        original.toBuilder()
             .measurementPeriodEnd(Date.from(Instant.now().plus(5, ChronoUnit.DAYS)))
             .build();
     boolean output = measureUtil.isMeasurementPeriodChanged(changed, original);
