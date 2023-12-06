@@ -509,10 +509,16 @@ public class TestCaseService {
           getTestCaseGroupPopulationsFromImportRequest(
               model, testCaseImportRequest.getJson(), measure);
       List<Group> groups = testCaseServiceUtil.getGroupsWithValidPopulations(measure.getGroups());
+      // See if the main populations (non-observation and strats) match between the measure's and
+      // the incoming test case's pop criteria.
       boolean matched =
           testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, groups, newTestCase);
-      assignObservationAndStratificationValuesForQdm(
-          matched, model, testCaseGroupPopulations, newTestCase, groups);
+
+      // Ignore stratifications for QICore
+      if (matched && ModelType.QDM_5_6.getValue().equalsIgnoreCase(model)) {
+        testCaseServiceUtil.assignStratificationValuesQdm(
+            testCaseGroupPopulations, newTestCase, groups.get(0).getPopulationBasis());
+      }
 
       String warningMessage = null;
       if (!matched) {
