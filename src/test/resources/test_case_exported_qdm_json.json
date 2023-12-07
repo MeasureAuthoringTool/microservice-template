@@ -7,6 +7,8 @@
          "DENOM":1,
          "DENEX":1,
          "NUMER":1,
+         "DENEXCEP":1,
+         "NUMEX":1,
          "OBSERV_UNIT":" mins",
          "MSRPOPLEX":0,
          "OBSERV":[
@@ -53,10 +55,10 @@
             5
          ],
          "DENOM_OBSERV":[
-            
+
          ],
          "NUMER_OBSERV":[
-            
+
          ]
       }
    ],
@@ -66,7 +68,7 @@
    ],
    "notes":"Patient is seen in ED,  Decision to Admit order and assessment performed;patient does not have a psychiatric diagnosis; order should calculate, not assessment time; measure observation 50 minutes",
    "provider_ids":[
-      
+
    ],
    "qdmPatient":{
       "birthDatetime":"1973-08-28T08:00:00.000+00:00",
@@ -228,7 +230,7 @@
             "birthDatetime":"1973-08-28T08:00:00.000+00:00",
             "codeListId":null,
             "dataElementCodes":[
-               
+
             ],
             "description":null,
             "hqmfOid":"2.16.840.1.113883.10.20.28.4.54",
