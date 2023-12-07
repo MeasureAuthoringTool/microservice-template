@@ -3,19 +3,25 @@ package cms.gov.madie.measure.utils;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Service;
-
 import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.MeasureObservation;
 import gov.cms.madie.models.measure.Population;
+import gov.cms.madie.models.measure.PopulationType;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import gov.cms.madie.models.measure.TestCasePopulationValue;
 import gov.cms.madie.models.measure.TestCaseStratificationValue;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Service;
+
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,6 +29,20 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @AllArgsConstructor
 public class TestCaseServiceUtil {
+
+  private static final List<PopulationType> EXPECTED_VALUE_ORDER =
+      List.of(
+          PopulationType.INITIAL_POPULATION,
+          PopulationType.MEASURE_POPULATION,
+          PopulationType.MEASURE_POPULATION_OBSERVATION,
+          PopulationType.MEASURE_POPULATION_EXCLUSION,
+          PopulationType.DENOMINATOR,
+          PopulationType.DENOMINATOR_OBSERVATION,
+          PopulationType.DENOMINATOR_EXCLUSION,
+          PopulationType.NUMERATOR,
+          PopulationType.NUMERATOR_OBSERVATION,
+          PopulationType.NUMERATOR_EXCLUSION,
+          PopulationType.DENOMINATOR_EXCEPTION);
 
   public List<Group> getGroupsWithValidPopulations(List<Group> originalGroups) {
     List<Group> changedGroups = null;
@@ -50,25 +70,31 @@ public class TestCaseServiceUtil {
       List<Group> groups,
       TestCase newTestCase) {
     boolean isValid = true;
-    List<TestCaseGroupPopulation> groupPopulations = null;
-    List<TestCaseGroupPopulation> revisedGroupPopulations =
+    List<TestCaseGroupPopulation> finalGroupPopulations;
+    List<TestCaseGroupPopulation> nonObservationGroupPopulations =
         getNonObservationGroupPopulations(testCaseGroupPopulations);
 
     // group size has to match
     if (!isEmpty(groups)
-        && !isEmpty(revisedGroupPopulations)
-        && groups.size() == revisedGroupPopulations.size()) {
-      groupPopulations = new ArrayList<>();
+        && !isEmpty(nonObservationGroupPopulations)
+        && groups.size() == nonObservationGroupPopulations.size()) {
+      finalGroupPopulations = new ArrayList<>();
       for (int i = 0; i < groups.size(); i++) {
         Group group = groups.get(i);
         // group population size has to match
         if (!isEmpty(group.getPopulations())
-            && !isEmpty(revisedGroupPopulations.get(i).getPopulationValues())
+            && !isEmpty(nonObservationGroupPopulations.get(i).getPopulationValues())
             && group.getPopulations().size()
-                == revisedGroupPopulations.get(i).getPopulationValues().size()) {
+                == nonObservationGroupPopulations.get(i).getPopulationValues().size()) {
           isValid =
               mapPopulationValues(
-                  group, revisedGroupPopulations, i, groupPopulations, newTestCase, isValid);
+                  group,
+                  nonObservationGroupPopulations,
+                  i,
+                  finalGroupPopulations,
+                  newTestCase,
+                  isValid,
+                  testCaseGroupPopulations);
 
         } else {
           isValid = false;
@@ -92,21 +118,23 @@ public class TestCaseServiceUtil {
   /**
    * This function modifies input parameters!
    *
-   * @param group
-   * @param testCaseGroupPopulations
+   * @param group Existing Measure Population Criteria
+   * @param nonObsAndStratPopulations Population Criteria members excluding observations.
    * @param measureGroupNumber
-   * @param groupPopulations
-   * @param newTestCase
-   * @param isValid
-   * @return
+   * @param finalGroupPopulations Finalized list of Population Criteria populations.
+   * @param newTestCase WIP Test Case from imported data
+   * @param isValid Whether, excluding Observations, if the Measure Population Criteria matches the
+   *     imported Population Criteria. True = matches, False, does not match.
+   * @return isValid
    */
   private boolean mapPopulationValues(
       Group group,
-      List<TestCaseGroupPopulation> testCaseGroupPopulations,
+      List<TestCaseGroupPopulation> nonObsAndStratPopulations,
       int measureGroupNumber,
-      List<TestCaseGroupPopulation> groupPopulations,
+      List<TestCaseGroupPopulation> finalGroupPopulations,
       TestCase newTestCase,
-      boolean isValid) {
+      boolean isValid,
+      List<TestCaseGroupPopulation> allImportedPopulations) {
     TestCaseGroupPopulation groupPopulation = assignTestCaseGroupPopulation(group);
     List<TestCasePopulationValue> populationValues = new ArrayList<>();
     int matchedNumber = 0;
@@ -119,7 +147,7 @@ public class TestCaseServiceUtil {
       matchedNumber =
           assignPopulationValues(
               population,
-              testCaseGroupPopulations,
+              nonObsAndStratPopulations,
               measureGroupNumber,
               groupPopulationIndex,
               matchedNumber,
@@ -130,14 +158,62 @@ public class TestCaseServiceUtil {
 
     if (matchedNumber == group.getPopulations().size()) {
       // if group has observations and some existed on test case, add them back in
-      groupPopulations.add(groupPopulation);
+      List<TestCasePopulationValue> observationPopVals =
+          mapObservations(allImportedPopulations.get(measureGroupNumber), group);
+      if (!isEmpty(observationPopVals)) {
+        groupPopulation.getPopulationValues().addAll(observationPopVals);
+        groupPopulation
+            .getPopulationValues()
+            .sort(
+                Comparator.comparing(
+                    TestCasePopulationValue::getName,
+                    Comparator.comparingInt(EXPECTED_VALUE_ORDER::indexOf)));
+      }
+      finalGroupPopulations.add(groupPopulation);
       groupPopulation.setGroupId(group.getId());
-      newTestCase.setGroupPopulations(groupPopulations);
+      newTestCase.setGroupPopulations(finalGroupPopulations);
     } else {
       isValid = false;
     }
 
     return isValid;
+  }
+
+  private Set<PopulationType> getObservationTypesForGroup(Group group) {
+    Set<PopulationType> types = new HashSet<>();
+    if (group != null
+        && !isEmpty(group.getPopulations())
+        && !isEmpty(group.getMeasureObservations())) {
+      for (MeasureObservation observation : group.getMeasureObservations()) {
+        Optional<Population> refPopOpt =
+            group.getPopulations().stream()
+                .filter(p -> StringUtils.equals(p.getId(), observation.getCriteriaReference()))
+                .findFirst();
+        if (refPopOpt.isPresent()) {
+          switch (refPopOpt.get().getName()) {
+            case DENOMINATOR -> types.add(PopulationType.DENOMINATOR_OBSERVATION);
+            case NUMERATOR -> types.add(PopulationType.NUMERATOR_OBSERVATION);
+            case MEASURE_POPULATION -> types.add(PopulationType.MEASURE_POPULATION_OBSERVATION);
+            default -> {}
+          }
+        }
+      }
+    }
+    return types;
+  }
+
+  private List<TestCasePopulationValue> mapObservations(
+      TestCaseGroupPopulation importedGroup, Group measrueGroup) {
+    List<TestCasePopulationValue> observationPopVals = new ArrayList<>();
+    Set<PopulationType> observationPopulationTypes = getObservationTypesForGroup(measrueGroup);
+    if (!isEmpty(observationPopulationTypes) && !isEmpty(importedGroup.getPopulationValues())) {
+      for (TestCasePopulationValue tcPopVal : importedGroup.getPopulationValues()) {
+        if (observationPopulationTypes.contains(tcPopVal.getName())) {
+          observationPopVals.add(tcPopVal);
+        }
+      }
+    }
+    return observationPopVals;
   }
 
   private int assignPopulationValues(

@@ -19,28 +19,27 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @ExtendWith(MockitoExtension.class)
 public class DeleteRiskAdjustmentDefinitionsChangeUnitTest {
-    @Mock private MeasureRepository measureRepository;
-    @Mock private MongoOperations mongoOperations;
+  @Mock private MeasureRepository measureRepository;
+  @Mock private MongoOperations mongoOperations;
 
-    @Test
-    public void testDeleteRiskAdjustmentsDescriptions() {
-        Query query = new Query(Criteria.where("riskAdjustments").exists(true));
-        Update update = new Update().unset("riskAdjustments.$[].description");
-        BulkOperations bulkOperations = mock(BulkOperations.class);
+  @Test
+  public void testDeleteRiskAdjustmentsDescriptions() {
+    Query query = new Query(Criteria.where("riskAdjustments").exists(true));
+    Update update = new Update().unset("riskAdjustments.$[].description");
+    BulkOperations bulkOperations = mock(BulkOperations.class);
 
-        when(mongoOperations.bulkOps(BulkOperations.BulkMode.UNORDERED, Measure.class))
-                .thenReturn(bulkOperations);
+    when(mongoOperations.bulkOps(BulkOperations.BulkMode.UNORDERED, Measure.class))
+        .thenReturn(bulkOperations);
 
-        new DeleteRiskAdjustmentsDescriptionsChangeUnit()
-                .deleteAdjustmentDescriptions(mongoOperations);
+    new DeleteRiskAdjustmentsDescriptionsChangeUnit().deleteAdjustmentDescriptions(mongoOperations);
 
-        verify(bulkOperations, new Times(1)).updateMulti(query, update);
-        verify(bulkOperations, new Times(1)).execute();
-    }
+    verify(bulkOperations, new Times(1)).updateMulti(query, update);
+    verify(bulkOperations, new Times(1)).execute();
+  }
 
-    @Test
-    void testRollback() {
-        new DeleteRiskAdjustmentsDescriptionsChangeUnit().rollbackExecution();
-        verifyNoInteractions(measureRepository);
-    }
+  @Test
+  void testRollback() {
+    new DeleteRiskAdjustmentsDescriptionsChangeUnit().rollbackExecution();
+    verifyNoInteractions(measureRepository);
+  }
 }

@@ -19,8 +19,6 @@ import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -194,15 +192,13 @@ public class VersionService {
                       testCaseGroups.stream()
                           .map(
                               testCaseGroupPopulation ->
-                                  testCaseGroupPopulation
-                                      .toBuilder()
+                                  testCaseGroupPopulation.toBuilder()
                                       .groupId(
                                           draftGroups.get(indexHolder.getAndIncrement()).getId())
                                       .build())
                           .toList());
                 }
-                return testCase
-                    .toBuilder()
+                return testCase.toBuilder()
                     .id(ObjectId.get().toString())
                     .groupPopulations(updatedTestCaseGroupPopulations)
                     .build();
