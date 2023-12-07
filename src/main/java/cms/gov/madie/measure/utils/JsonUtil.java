@@ -426,6 +426,22 @@ public final class JsonUtil {
               .build();
       populationValues.add(populationValue);
     }
+    if (population.get("DENEXCEP") != null) {
+      TestCasePopulationValue populationValue =
+          TestCasePopulationValue.builder()
+              .name(PopulationType.DENOMINATOR_EXCEPTION)
+              .expected(population.get("DENEXCEP").asInt())
+              .build();
+      populationValues.add(populationValue);
+    }
+    if (population.get("NUMEX") != null) {
+      TestCasePopulationValue populationValue =
+          TestCasePopulationValue.builder()
+              .name(PopulationType.NUMERATOR_EXCLUSION)
+              .expected(population.get("NUMEX").asInt())
+              .build();
+      populationValues.add(populationValue);
+    }
   }
 
   protected static void handleObservationValues(
