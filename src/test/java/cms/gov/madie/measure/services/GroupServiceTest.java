@@ -77,7 +77,7 @@ public class GroupServiceTest implements ResourceUtil {
   @Mock private CqlDefinitionReturnTypeService cqlDefinitionReturnTypeService;
   @Mock private CqlObservationFunctionService cqlObservationFunctionService;
 
-  @Mock private ModelValidatorLocator modelValidatorLocator;
+  @Mock private ModelValidatorFactory modelValidatorFactory;
 
   @Mock private QicoreModelValidator qicoreModelValidator;
 
@@ -350,8 +350,8 @@ public class GroupServiceTest implements ResourceUtil {
     doReturn(measure).when(measureRepository).save(any(Measure.class));
 
     doReturn(qicoreModelValidator)
-        .when(modelValidatorLocator)
-        .get(eq(ModelType.QI_CORE.getShortValue()));
+        .when(modelValidatorFactory)
+        .getModelValidator(eq(ModelType.QI_CORE));
 
     when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
@@ -853,8 +853,8 @@ public class GroupServiceTest implements ResourceUtil {
     when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
     doReturn(qicoreModelValidator)
-        .when(modelValidatorLocator)
-        .get(eq(ModelType.QI_CORE.getShortValue()));
+        .when(modelValidatorFactory)
+        .getModelValidator(eq(ModelType.QI_CORE));
 
     Group group = groupService.createOrUpdateGroup(group2, measure.getId(), "test.user");
     assertEquals(group.getStratifications().size(), group2.getStratifications().size());
@@ -871,8 +871,8 @@ public class GroupServiceTest implements ResourceUtil {
     when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
     doReturn(qicoreModelValidator)
-        .when(modelValidatorLocator)
-        .get(eq(ModelType.QI_CORE.getShortValue()));
+        .when(modelValidatorFactory)
+        .getModelValidator(eq(ModelType.QI_CORE));
 
     Group group = groupService.createOrUpdateGroup(group2, measure.getId(), "test.user");
     assertEquals(group.getMeasureObservations().size(), group2.getMeasureObservations().size());

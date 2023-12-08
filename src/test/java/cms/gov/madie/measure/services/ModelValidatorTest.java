@@ -22,7 +22,7 @@ import gov.cms.madie.models.measure.Stratification;
 @SpringBootTest
 @ActiveProfiles("test")
 class ModelValidatorTest {
-  @Autowired private ModelValidatorLocator modelLocator;
+  @Autowired private ModelValidatorFactory modelLocator;
 
   @Test
   void createModelValidatorTest() {
@@ -33,7 +33,7 @@ class ModelValidatorTest {
   void createQdmModelValidatorTest() {
     assertNotNull(modelLocator);
 
-    ModelValidator validator = modelLocator.get(ModelType.QDM_5_6.getShortValue());
+    ModelValidator validator = modelLocator.getModelValidator(ModelType.QDM_5_6);
     assertTrue(validator instanceof QdmModelValidator);
   }
 
@@ -41,10 +41,10 @@ class ModelValidatorTest {
   void useQdmModelValidatorTest() {
     assertNotNull(modelLocator);
     Group group = Group.builder().stratifications(new ArrayList<Stratification>()).build();
-    ModelValidator validator = modelLocator.get(ModelType.QDM_5_6.getShortValue());
+    ModelValidator validator = modelLocator.getModelValidator(ModelType.QDM_5_6);
     assertTrue(validator instanceof QdmModelValidator);
     try {
-      validator.validateGroupAssociations(ModelType.QDM_5_6.getShortValue(), group);
+      validator.validateGroupAssociations(group);
     } catch (Exception e) {
       fail(e);
     }
@@ -61,10 +61,10 @@ class ModelValidatorTest {
     strats.add(strat);
 
     Group group = Group.builder().stratifications(strats).build();
-    ModelValidator validator = modelLocator.get(ModelType.QDM_5_6.getShortValue());
+    ModelValidator validator = modelLocator.getModelValidator(ModelType.QDM_5_6);
     assertTrue(validator instanceof QdmModelValidator);
     try {
-      validator.validateGroupAssociations(ModelType.QDM_5_6.getShortValue(), group);
+      validator.validateGroupAssociations(group);
       fail("Should fail because association exists on the Stratification");
     } catch (Exception e) {
       assertEquals("QDM group stratifications cannot be associated.", e.getMessage());
@@ -80,10 +80,10 @@ class ModelValidatorTest {
     strats.add(strat);
 
     Group group = Group.builder().stratifications(strats).build();
-    ModelValidator validator = modelLocator.get(ModelType.QDM_5_6.getShortValue());
+    ModelValidator validator = modelLocator.getModelValidator(ModelType.QDM_5_6);
     assertTrue(validator instanceof QdmModelValidator);
     try {
-      validator.validateGroupAssociations(ModelType.QDM_5_6.getShortValue(), group);
+      validator.validateGroupAssociations(group);
     } catch (Exception e) {
       fail(e);
     }
@@ -93,7 +93,7 @@ class ModelValidatorTest {
   void createQicoreModelValidatorTest() {
     assertNotNull(modelLocator);
 
-    ModelValidator validator = modelLocator.get(ModelType.QI_CORE.getShortValue());
+    ModelValidator validator = modelLocator.getModelValidator(ModelType.QI_CORE);
     assertTrue(validator instanceof QicoreModelValidator);
   }
 
@@ -101,10 +101,10 @@ class ModelValidatorTest {
   void useQicoreModelValidatorTestNoStratifications() {
     assertNotNull(modelLocator);
     Group group = Group.builder().stratifications(new ArrayList<Stratification>()).build();
-    ModelValidator validator = modelLocator.get(ModelType.QI_CORE.getShortValue());
+    ModelValidator validator = modelLocator.getModelValidator(ModelType.QI_CORE);
     assertTrue(validator instanceof QicoreModelValidator);
     try {
-      validator.validateGroupAssociations(ModelType.QI_CORE.getShortValue(), group);
+      validator.validateGroupAssociations(group);
 
     } catch (Exception e) {
       fail(e);
@@ -120,10 +120,10 @@ class ModelValidatorTest {
     strats.add(strat);
 
     Group group = Group.builder().stratifications(strats).build();
-    ModelValidator validator = modelLocator.get(ModelType.QI_CORE.getShortValue());
+    ModelValidator validator = modelLocator.getModelValidator(ModelType.QI_CORE);
     assertTrue(validator instanceof QicoreModelValidator);
     try {
-      validator.validateGroupAssociations(ModelType.QI_CORE.getShortValue(), group);
+      validator.validateGroupAssociations(group);
       fail("Should fail because QICore strat association can't be null");
     } catch (InvalidGroupException e) {
       assertTrue(
@@ -142,10 +142,10 @@ class ModelValidatorTest {
     strats.add(strat);
 
     Group group = Group.builder().stratifications(strats).build();
-    ModelValidator validator = modelLocator.get(ModelType.QI_CORE.getShortValue());
+    ModelValidator validator = modelLocator.getModelValidator(ModelType.QI_CORE);
     assertTrue(validator instanceof QicoreModelValidator);
     try {
-      validator.validateGroupAssociations(ModelType.QI_CORE.getShortValue(), group);
+      validator.validateGroupAssociations(group);
 
     } catch (Exception e) {
       fail(e);

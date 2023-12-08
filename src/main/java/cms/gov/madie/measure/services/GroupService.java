@@ -1,7 +1,6 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
-import cms.gov.madie.measure.exceptions.InvalidGroupException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
@@ -26,7 +25,6 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -48,8 +46,7 @@ public class GroupService {
   private final MeasureService measureService;
   private final CqlDefinitionReturnTypeService cqlDefinitionReturnTypeService;
   private final CqlObservationFunctionService cqlObservationFunctionService;
-
-  @Autowired private ModelValidatorLocator modelLocator;
+  private final ModelValidatorFactory modelValidatorFactory;
 
   public Group createOrUpdateGroup(Group group, String measureId, String username) {
 
@@ -256,9 +253,8 @@ public class GroupService {
   }
 
   public void validateGroupAssociations(String model, Group group) {
-    String shortModel = ModelType.valueOfName(model).getShortValue();
-    ModelValidator validator = modelLocator.get(shortModel);
-    validator.validateGroupAssociations(model, group);
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.valueOfName(model));
+    validator.validateGroupAssociations(group);
   }
 
   private TestCasePopulationValue updateTestCasePopulation(

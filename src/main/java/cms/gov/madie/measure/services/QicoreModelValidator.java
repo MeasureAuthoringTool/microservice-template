@@ -1,16 +1,17 @@
 package cms.gov.madie.measure.services;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import cms.gov.madie.measure.exceptions.InvalidGroupException;
 import gov.cms.madie.models.measure.Group;
 
-@Service
+@Slf4j
+@Service(ServiceConstants.QICORE_VALIDATOR)
 public class QicoreModelValidator implements ModelValidator {
 
   @Override
-  public void validateGroupAssociations(String model, Group group) {
-
+  public void validateGroupAssociations(Group group) {
     boolean isNotAssociated;
 
     isNotAssociated =
