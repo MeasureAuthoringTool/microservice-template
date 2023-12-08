@@ -98,7 +98,7 @@ public class MigrateSupplementalDataElementsChangeUnitTest {
     assertThat(measure.getSupplementalData().size(), is(equalTo(1)));
     assertThat(
         measure.getSupplementalDataDescription(),
-        is(equalTo("test supplemental data; SDE definition-SDE description | ")));
+        is(equalTo("test supplemental data; SDE definition-SDE description \n ")));
   }
 
   @Test
@@ -116,7 +116,7 @@ public class MigrateSupplementalDataElementsChangeUnitTest {
     assertThat(measure.getSupplementalData().size(), is(equalTo(1)));
     assertThat(
         measure.getSupplementalDataDescription(),
-        is(equalTo("test supplemental data; SDE definition | ")));
+        is(equalTo("test supplemental data; SDE definition \n ")));
   }
 
   @Test
@@ -132,7 +132,7 @@ public class MigrateSupplementalDataElementsChangeUnitTest {
 
     assertThat(measure.getSupplementalData().size(), is(equalTo(1)));
     assertThat(
-        measure.getSupplementalDataDescription(), is(equalTo("SDE definition-SDE description | ")));
+        measure.getSupplementalDataDescription(), is(equalTo("SDE definition-SDE description \n ")));
   }
 
   @Test
@@ -148,7 +148,7 @@ public class MigrateSupplementalDataElementsChangeUnitTest {
 
     assertThat(measure.getSupplementalData().size(), is(equalTo(1)));
     assertThat(
-        measure.getSupplementalDataDescription(), is(equalTo("SDE definition-SDE description | ")));
+        measure.getSupplementalDataDescription(), is(equalTo("SDE definition-SDE description \n ")));
   }
 
   @Test
