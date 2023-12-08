@@ -45,7 +45,7 @@ public class MigrateSupplementalDataElementsChangeUnit {
                           if (StringUtils.isNotBlank(sde.getDescription())) {
                             sb.append("-").append(sde.getDescription());
                           }
-                          sb.append(" | ");
+                          sb.append(" \n ");
                         });
                 measure.setSupplementalDataDescription(
                     measure.getMeasureMetaData() != null

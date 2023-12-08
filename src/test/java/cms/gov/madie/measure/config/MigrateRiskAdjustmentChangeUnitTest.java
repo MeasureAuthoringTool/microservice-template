@@ -98,7 +98,7 @@ public class MigrateRiskAdjustmentChangeUnitTest {
     assertThat(measure.getRiskAdjustments().size(), is(equalTo(1)));
     assertThat(
         measure.getRiskAdjustmentDescription(),
-        is(equalTo("test risk adjustment; RAV definition-RAV description | ")));
+        is(equalTo("test risk adjustment; RAV definition-RAV description \n ")));
   }
 
   @Test
@@ -116,7 +116,7 @@ public class MigrateRiskAdjustmentChangeUnitTest {
     assertThat(measure.getRiskAdjustments().size(), is(equalTo(1)));
     assertThat(
         measure.getRiskAdjustmentDescription(),
-        is(equalTo("test risk adjustment; RAV definition | ")));
+        is(equalTo("test risk adjustment; RAV definition \n ")));
   }
 
   @Test
@@ -132,7 +132,7 @@ public class MigrateRiskAdjustmentChangeUnitTest {
 
     assertThat(measure.getRiskAdjustments().size(), is(equalTo(1)));
     assertThat(
-        measure.getRiskAdjustmentDescription(), is(equalTo("RAV definition-RAV description | ")));
+        measure.getRiskAdjustmentDescription(), is(equalTo("RAV definition-RAV description \n ")));
   }
 
   @Test
@@ -148,7 +148,7 @@ public class MigrateRiskAdjustmentChangeUnitTest {
 
     assertThat(measure.getRiskAdjustments().size(), is(equalTo(1)));
     assertThat(
-        measure.getRiskAdjustmentDescription(), is(equalTo("RAV definition-RAV description | ")));
+        measure.getRiskAdjustmentDescription(), is(equalTo("RAV definition-RAV description \n ")));
   }
 
   @Test

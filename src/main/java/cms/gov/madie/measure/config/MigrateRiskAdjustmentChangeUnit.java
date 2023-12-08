@@ -45,7 +45,7 @@ public class MigrateRiskAdjustmentChangeUnit {
                             sb.append("-");
                             sb.append(rav.getDescription());
                           }
-                          sb.append(" | ");
+                          sb.append(" \n ");
                         });
 
                 measure.setRiskAdjustmentDescription(
