@@ -22,8 +22,6 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -601,8 +599,7 @@ public class VersionServiceTest {
     ReviewMetaData reviewMetaData =
         ReviewMetaData.builder().approvalDate(today).lastReviewDate(today).build();
     Measure versionedCopy =
-        versionedMeasure
-            .toBuilder()
+        versionedMeasure.toBuilder()
             .id("2")
             .versionId("13-13-13-13")
             .measureName("Test")
@@ -610,8 +607,7 @@ public class VersionServiceTest {
             .groups(List.of(cvGroup.toBuilder().id(ObjectId.get().toString()).build()))
             .testCases(
                 List.of(
-                    testCase
-                        .toBuilder()
+                    testCase.toBuilder()
                         .id(ObjectId.get().toString())
                         .groupPopulations(List.of(clonedTestCaseGroupPopulation))
                         .build()))
@@ -665,8 +661,7 @@ public class VersionServiceTest {
     ReviewMetaData reviewMetaData =
         ReviewMetaData.builder().approvalDate(today).lastReviewDate(today).build();
     Measure versionedCopy =
-        versionedMeasure
-            .toBuilder()
+        versionedMeasure.toBuilder()
             .id("2")
             .versionId("13-13-13-13")
             .measureName("Test")

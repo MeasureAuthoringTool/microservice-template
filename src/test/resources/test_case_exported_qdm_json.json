@@ -1,0 +1,296 @@
+{
+   "expectedValues":[
+      {
+         "population_index":0,
+         "IPP":1,
+         "MSRPOPL":1,
+         "DENOM":1,
+         "DENEX":1,
+         "NUMER":1,
+         "DENEXCEP":1,
+         "NUMEX":1,
+         "OBSERV_UNIT":" mins",
+         "MSRPOPLEX":0,
+         "OBSERV":[
+            5
+         ],
+         "DENOM_OBSERV":[
+            1,1
+         ],
+         "NUMER_OBSERV":[
+            2,2
+         ]
+      },
+      {
+         "population_index":1,
+         "STRAT":0,
+         "IPP":2,
+         "DENOM":2,
+         "DENEX":2,
+         "NUMER":1,
+         "MSRPOPL":0,
+         "OBSERV_UNIT":" mins",
+         "MSRPOPLEX":0,
+         "OBSERV":[
+            2
+         ],
+         "DENOM_OBSERV":[
+            3,3
+         ],
+         "NUMER_OBSERV":[
+            4,4
+         ]
+      },
+      {
+         "population_index":2,
+         "STRAT":1,
+         "IPP":1,
+         "DENOM":3,
+         "DENEX":3,
+         "NUMER":1,
+         "MSRPOPL":1,
+         "OBSERV_UNIT":" mins",
+         "MSRPOPLEX":0,
+         "OBSERV":[
+            5
+         ],
+         "DENOM_OBSERV":[
+
+         ],
+         "NUMER_OBSERV":[
+
+         ]
+      }
+   ],
+   "familyName":"Strat2Pass",
+   "givenNames":[
+      "StartDateBeforeMPEndsDuringMP"
+   ],
+   "notes":"Patient is seen in ED,  Decision to Admit order and assessment performed;patient does not have a psychiatric diagnosis; order should calculate, not assessment time; measure observation 50 minutes",
+   "provider_ids":[
+
+   ],
+   "qdmPatient":{
+      "birthDatetime":"1973-08-28T08:00:00.000+00:00",
+      "dataElements":[
+         {
+            "admissionSource":null,
+            "authorDatetime":null,
+            "clazz":null,
+            "codeListId":"2.16.840.1.113883.3.117.1.7.1.292",
+            "dataElementCodes":[
+               {
+                  "code":"4525004",
+                  "system":"2.16.840.1.113883.6.96",
+                  "version":null,
+                  "display":null
+               }
+            ],
+            "description":"Encounter, Performed: Emergency Department Visit",
+            "diagnoses":null,
+            "dischargeDisposition":null,
+            "facilityLocations":[
+               {
+                  "qdmVersion":"5.5",
+                  "_type":"QDM::FacilityLocation",
+                  "code":{
+                     "code":"4525004",
+                     "system":"2.16.840.1.113883.6.96",
+                     "version":null,
+                     "display":"Emergency department patient visit (procedure)"
+                  },
+                  "locationPeriod":{
+                     "low":"2024-12-30T05:00:00.000+00:00",
+                     "high":"2024-12-30T09:15:00.000+00:00",
+                     "lowClosed":true,
+                     "highClosed":true
+                  }
+               }
+            ],
+            "hqmfOid":"2.16.840.1.113883.10.20.28.4.5",
+            "id":"5c6c61cdb84846536a9a98c0",
+            "lengthOfStay":null,
+            "priority":null,
+            "qdmCategory":"encounter",
+            "qdmStatus":"performed",
+            "qdmTitle":"Encounter, Performed",
+            "qdmVersion":"5.6",
+            "relatedTo":null,
+            "relevantPeriod":{
+               "low":"2024-12-30T05:00:00.000Z",
+               "high":"2024-12-30T09:15:00.000Z",
+               "lowClosed":true,
+               "highClosed":true
+            },
+            "_type":"QDM::EncounterPerformed"
+         },
+         {
+            "admissionSource":null,
+            "authorDatetime":null,
+            "clazz":null,
+            "codeListId":"2.16.840.1.113883.3.666.5.307",
+            "dataElementCodes":[
+               {
+                  "code":"8715000",
+                  "system":"2.16.840.1.113883.6.96",
+                  "version":null,
+                  "display":null
+               }
+            ],
+            "description":"Encounter, Performed: Encounter Inpatient",
+            "diagnoses":[
+               {
+                  "qdmVersion":"5.5",
+                  "_type":"QDM::DiagnosisComponent",
+                  "code":{
+                     "code":"10278007",
+                     "system":"2.16.840.1.113883.6.96",
+                     "version":null,
+                     "display":"Factitious purpura (disorder)"
+                  },
+                  "presentOnAdmissionIndicator":null,
+                  "rank":1
+               },
+               {
+                  "qdmVersion":"5.6",
+                  "_type":"QDM::DiagnosisComponent",
+                  "code":{
+                     "code":"274950005",
+                     "system":"2.16.840.1.113883.6.96",
+                     "version":null,
+                     "display":"Sleep related bruxism (disorder)"
+                  },
+                  "presentOnAdmissionIndicator":null,
+                  "rank":1
+               }
+            ],
+            "dischargeDisposition":null,
+            "facilityLocations":null,
+            "hqmfOid":"2.16.840.1.113883.10.20.28.4.5",
+            "id":"5c6c61cdb84846536a9a98c1",
+            "lengthOfStay":null,
+            "priority":null,
+            "qdmCategory":"encounter",
+            "qdmStatus":"performed",
+            "qdmTitle":"Encounter, Performed",
+            "qdmVersion":"5.6",
+            "relatedTo":null,
+            "relevantPeriod":{
+               "low":"2024-12-30T10:00:00.000Z",
+               "high":"2025-01-02T10:00:00.000Z",
+               "lowClosed":true,
+               "highClosed":true
+            },
+            "_type":"QDM::EncounterPerformed"
+         },
+         {
+            "authorDatetime":"2024-12-30T09:10:00.000+00:00",
+            "codeListId":"2.16.840.1.113883.3.117.1.7.1.295",
+            "dataElementCodes":[
+               {
+                  "code":"10378005",
+                  "system":"2.16.840.1.113883.6.96",
+                  "version":null,
+                  "display":null
+               }
+            ],
+            "description":"Encounter, Order: Decision to Admit to Hospital Inpatient",
+            "facilityLocation":null,
+            "hqmfOid":"2.16.840.1.113883.10.20.28.4.27",
+            "id":"5e6bc4ac61fc3b000034c673",
+            "negationRationale":null,
+            "priority":null,
+            "qdmCategory":"encounter",
+            "qdmStatus":"order",
+            "qdmTitle":"Encounter, Order",
+            "qdmVersion":"5.6",
+            "reason":null,
+            "_type":"QDM::EncounterOrder"
+         },
+         {
+            "codeListId":"2.16.840.1.113762.1.4.1",
+            "dataElementCodes":[
+               {
+                  "code":"M",
+                  "system":"2.16.840.1.113883.5.1",
+                  "version":null,
+                  "display":"Male"
+               }
+            ],
+            "description":"Patient Characteristic Sex: ONCAdministrativeSex",
+            "hqmfOid":"2.16.840.1.113883.10.20.28.4.55",
+            "id":"654aa641b869be15aad8ae99",
+            "qdmCategory":"patient_characteristic",
+            "qdmStatus":"gender",
+            "qdmTitle":"Patient Characteristic Sex",
+            "qdmVersion":"5.6",
+            "_type":"QDM::PatientCharacteristicSex"
+         },
+         {
+            "birthDatetime":"1973-08-28T08:00:00.000+00:00",
+            "codeListId":null,
+            "dataElementCodes":[
+
+            ],
+            "description":null,
+            "hqmfOid":"2.16.840.1.113883.10.20.28.4.54",
+            "id":"654be2d151cc950000cada74",
+            "qdmCategory":"patient_characteristic",
+            "qdmStatus":"birthdate",
+            "qdmTitle":"Patient Characteristic Birthdate",
+            "qdmVersion":"5.6",
+            "_type":"QDM::PatientCharacteristicBirthdate"
+         },
+         {
+            "codeListId":"2.16.840.1.114222.4.11.836",
+            "dataElementCodes":[
+               {
+                  "code":"1002-5",
+                  "system":"2.16.840.1.113883.6.238",
+                  "version":null,
+                  "display":"American Indian or Alaska Native"
+               }
+            ],
+            "description":"Patient Characteristic Race: Race",
+            "hqmfOid":"2.16.840.1.113883.10.20.28.4.59",
+            "id":"654aa641b869be15aad8ae9c",
+            "qdmCategory":"patient_characteristic",
+            "qdmStatus":"race",
+            "qdmTitle":"Patient Characteristic Race",
+            "qdmVersion":"5.6",
+            "_type":"QDM::PatientCharacteristicRace"
+         },
+         {
+            "codeListId":"2.16.840.1.114222.4.11.837",
+            "dataElementCodes":[
+               {
+                  "code":"2135-2",
+                  "system":"2.16.840.1.113883.6.238",
+                  "version":null,
+                  "display":"Hispanic or Latino"
+               }
+            ],
+            "description":"Patient Characteristic Ethnicity: Ethnicity",
+            "hqmfOid":"2.16.840.1.113883.10.20.28.4.56",
+            "id":"654aa641b869be15aad8ae9a",
+            "qdmCategory":"patient_characteristic",
+            "qdmStatus":"ethnicity",
+            "qdmTitle":"Patient Characteristic Ethnicity",
+            "qdmVersion":"5.6",
+            "_type":"QDM::PatientCharacteristicEthnicity"
+         }
+      ],
+      "extendedData":{
+         "type":null,
+         "is_shared":false,
+         "origin_data":null,
+         "test_id":null,
+         "medical_record_number":"77cb0defe2b10f9b07a5b4abc78b0d6e",
+         "medical_record_assigner":"Bonnie",
+         "description":null,
+         "description_category":null,
+         "insurance_providers":"[]"
+      },
+      "qdmVersion":"5.6"
+   }
+}

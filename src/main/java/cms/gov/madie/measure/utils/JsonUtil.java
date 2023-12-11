@@ -6,10 +6,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureScoring;
 import gov.cms.madie.models.measure.PopulationType;
+import gov.cms.madie.models.measure.QdmMeasure;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import gov.cms.madie.models.measure.TestCasePopulationValue;
+import gov.cms.madie.models.measure.TestCaseStratificationValue;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -23,11 +27,11 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 @Slf4j
-public final class QiCoreJsonUtil {
+public final class JsonUtil {
   private static final String CQFM_TEST_DESCRIPTION_URL =
       "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-testCaseDescription";
 
-  private QiCoreJsonUtil() {}
+  private JsonUtil() {}
 
   /**
    * Helper function to test if JSON is well-formed for purposes of being used as a resource. Null
@@ -324,5 +328,220 @@ public final class QiCoreJsonUtil {
       log.error("Exception : " + ex.getMessage());
     }
     return bout.toString();
+  }
+
+  public static String getPatientNameQdm(String json, String type) throws JsonProcessingException {
+    JsonNode resourceNode = getResourceNodeQdm(json, type);
+    if (resourceNode == null) {
+      return null;
+    }
+    if (type.equalsIgnoreCase("givenNames")) {
+      for (JsonNode givenName : resourceNode) {
+        return givenName.asText();
+      }
+    }
+    return resourceNode.asText();
+  }
+
+  public static JsonNode getResourceNodeQdm(String json, String resourceType)
+      throws JsonProcessingException {
+    ObjectMapper mapper = new ObjectMapper();
+    JsonNode jsonNode = mapper.readTree(json);
+    return jsonNode.get(resourceType);
+  }
+
+  public static List<TestCaseGroupPopulation> getTestCaseGroupPopulationsQdm(
+      String json, Measure measure) throws JsonProcessingException {
+    List<TestCaseGroupPopulation> groupPopulations = new ArrayList<>();
+    List<TestCaseStratificationValue> stratificationValues = new ArrayList<>();
+    JsonNode populations = getResourceNodeQdm(json, "expectedValues");
+    if (populations != null) {
+      for (JsonNode population : populations) {
+        List<TestCasePopulationValue> populationValues = new ArrayList<>();
+        TestCaseGroupPopulation groupPopulation = null;
+
+        handlePopulationValues(population, populationValues, measure);
+        handleObservationValues(population, populationValues, measure);
+
+        JsonNode stratification = population.get("STRAT");
+        if (stratification != null) {
+          handleStratificationValues(
+              stratificationValues, stratification, populationValues, measure);
+          groupPopulation =
+              TestCaseGroupPopulation.builder().stratificationValues(stratificationValues).build();
+        } else {
+          groupPopulation =
+              TestCaseGroupPopulation.builder().populationValues(populationValues).build();
+        }
+        groupPopulations.add(groupPopulation);
+      }
+    }
+    List<TestCaseGroupPopulation> groupPopulationsCombined = new ArrayList<>();
+    if (!CollectionUtils.isEmpty(groupPopulations)) {
+      TestCaseGroupPopulation testCaseGroupPopulation = TestCaseGroupPopulation.builder().build();
+      for (TestCaseGroupPopulation groupPopulation : groupPopulations) {
+        if (!CollectionUtils.isEmpty(groupPopulation.getPopulationValues())) {
+          testCaseGroupPopulation.setPopulationValues(groupPopulation.getPopulationValues());
+        } else if (!CollectionUtils.isEmpty(groupPopulation.getStratificationValues())) {
+          testCaseGroupPopulation.setStratificationValues(
+              groupPopulation.getStratificationValues());
+        }
+      }
+      groupPopulationsCombined.add(testCaseGroupPopulation);
+    }
+    return groupPopulationsCombined;
+  }
+
+  private static void handlePopulationValues(
+      JsonNode population, List<TestCasePopulationValue> populationValues, Measure measure) {
+    if (population.get("IPP") != null) {
+      TestCasePopulationValue populationValue =
+          TestCasePopulationValue.builder()
+              .name(PopulationType.INITIAL_POPULATION)
+              .expected(population.get("IPP").asInt())
+              .build();
+      populationValues.add(populationValue);
+    }
+    if (population.get("DENOM") != null) {
+      TestCasePopulationValue populationValue =
+          TestCasePopulationValue.builder()
+              .name(PopulationType.DENOMINATOR)
+              .expected(population.get("DENOM").asInt())
+              .build();
+      populationValues.add(populationValue);
+    }
+    if (population.get("DENEX") != null) {
+      TestCasePopulationValue populationValue =
+          TestCasePopulationValue.builder()
+              .name(PopulationType.DENOMINATOR_EXCLUSION)
+              .expected(population.get("DENEX").asInt())
+              .build();
+      populationValues.add(populationValue);
+    }
+    if (population.get("NUMER") != null) {
+      TestCasePopulationValue populationValue =
+          TestCasePopulationValue.builder()
+              .name(PopulationType.NUMERATOR)
+              .expected(population.get("NUMER").asInt())
+              .build();
+      populationValues.add(populationValue);
+    }
+    if (population.get("DENEXCEP") != null) {
+      TestCasePopulationValue populationValue =
+          TestCasePopulationValue.builder()
+              .name(PopulationType.DENOMINATOR_EXCEPTION)
+              .expected(population.get("DENEXCEP").asInt())
+              .build();
+      populationValues.add(populationValue);
+    }
+    if (population.get("NUMEX") != null) {
+      TestCasePopulationValue populationValue =
+          TestCasePopulationValue.builder()
+              .name(PopulationType.NUMERATOR_EXCLUSION)
+              .expected(population.get("NUMEX").asInt())
+              .build();
+      populationValues.add(populationValue);
+    }
+  }
+
+  protected static void handleObservationValues(
+      JsonNode population, List<TestCasePopulationValue> populationValues, Measure measure) {
+    QdmMeasure qdmMeasure = (QdmMeasure) measure;
+    if (StringUtils.equals(
+        qdmMeasure.getScoring(), MeasureScoring.CONTINUOUS_VARIABLE.toString())) {
+      if (population.get("OBSERV") != null) {
+        for (JsonNode observation : population.get("OBSERV")) {
+          if (observation != null) {
+            TestCasePopulationValue populationValue =
+                TestCasePopulationValue.builder()
+                    .name(PopulationType.MEASURE_OBSERVATION)
+                    .expected(observation.asInt())
+                    .build();
+            populationValues.add(populationValue);
+          }
+        }
+      }
+      if (population.get("MSRPOPL") != null) {
+        TestCasePopulationValue populationValue =
+            TestCasePopulationValue.builder()
+                .name(PopulationType.MEASURE_POPULATION)
+                .expected(population.get("MSRPOPL").asInt())
+                .build();
+        populationValues.add(populationValue);
+      }
+      if (population.get("MSRPOPLEX") != null) {
+        TestCasePopulationValue populationValue =
+            TestCasePopulationValue.builder()
+                .name(PopulationType.MEASURE_POPULATION_EXCLUSION)
+                .expected(population.get("MSRPOPLEX").asInt())
+                .build();
+        populationValues.add(populationValue);
+      }
+    } else if (qdmMeasure.getScoring().equalsIgnoreCase(MeasureScoring.RATIO.toString())) {
+      if (population.get("DENOM_OBSERV") != null) {
+        for (JsonNode observation : population.get("DENOM_OBSERV")) {
+          if (observation != null) {
+            TestCasePopulationValue populationValue =
+                TestCasePopulationValue.builder()
+                    .name(PopulationType.DENOMINATOR_OBSERVATION)
+                    .expected(observation.asInt())
+                    .build();
+            populationValues.add(populationValue);
+          }
+        }
+      }
+      if (population.get("NUMER_OBSERV") != null) {
+        for (JsonNode observation : population.get("NUMER_OBSERV")) {
+          if (observation != null) {
+            TestCasePopulationValue populationValue =
+                TestCasePopulationValue.builder()
+                    .name(PopulationType.NUMERATOR_OBSERVATION)
+                    .expected(observation.asInt())
+                    .build();
+            populationValues.add(populationValue);
+          }
+        }
+      }
+    }
+  }
+
+  private static void handleStratificationValues(
+      List<TestCaseStratificationValue> stratificationValues,
+      JsonNode stratification,
+      List<TestCasePopulationValue> populationValues,
+      Measure measure) {
+    QdmMeasure qdmMeasure = (QdmMeasure) measure;
+    int groupStratSize =
+        !CollectionUtils.isEmpty(measure.getGroups())
+                && measure.getGroups().get(0).getStratifications() != null
+            ? measure.getGroups().get(0).getStratifications().size()
+            : 0;
+    if (!qdmMeasure.getScoring().equalsIgnoreCase(MeasureScoring.RATIO.toString())
+        && stratificationValues.size() < groupStratSize) {
+      String stratName = "Strata-" + (stratificationValues.size() + 1);
+      TestCaseStratificationValue stratValue =
+          TestCaseStratificationValue.builder()
+              .name(stratName)
+              .expected(stratification.intValue())
+              .build();
+      stratificationValues.add(stratValue);
+      stratValue.setPopulationValues(populationValues);
+    }
+  }
+
+  public static String getTestDescriptionQdm(String json) throws JsonProcessingException {
+    JsonNode notesNode = getResourceNodeQdm(json, "notes");
+    if (notesNode != null) {
+      return notesNode.asText();
+    }
+    return null;
+  }
+
+  public static String getTestCaseJson(String json) throws JsonProcessingException {
+    JsonNode patientNode = getResourceNodeQdm(json, "qdmPatient");
+    if (patientNode != null) {
+      return patientNode.toPrettyString();
+    }
+    return null;
   }
 }

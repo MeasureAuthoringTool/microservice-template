@@ -176,8 +176,7 @@ public class MeasureService {
             measureUtil.removeError(outputMeasure.getErrors(), MeasureErrorType.ERRORS_ELM_JSON));
       } catch (CqlElmTranslationErrorException ex) {
         outputMeasure =
-            updatingMeasure
-                .toBuilder()
+            updatingMeasure.toBuilder()
                 .cqlErrors(true)
                 .error(MeasureErrorType.ERRORS_ELM_JSON)
                 .build();

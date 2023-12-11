@@ -273,8 +273,7 @@ public class MeasureControllerMvcTest {
     metaData.setDevelopers(developers);
     metaData.setGuidance(guidance);
     final Measure updatingMeasure =
-        priorMeasure
-            .toBuilder()
+        priorMeasure.toBuilder()
             .active(false)
             .measureMetaData(metaData)
             .ecqmTitle(ecqmTitle)

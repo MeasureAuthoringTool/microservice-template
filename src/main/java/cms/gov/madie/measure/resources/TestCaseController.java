@@ -4,6 +4,7 @@ import cms.gov.madie.measure.dto.ValidList;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.MeasureService;
+import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.TestCase;
 import cms.gov.madie.measure.services.TestCaseService;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -137,7 +139,25 @@ public class TestCaseController {
       Principal principal) {
     final String userName = principal.getName();
     var testCaseImportOutcomes =
-        testCaseService.importTestCases(testCaseImportRequests, measureId, userName, accessToken);
+        testCaseService.importTestCases(
+            testCaseImportRequests, measureId, userName, accessToken, ModelType.QI_CORE.getValue());
+    return ResponseEntity.ok().body(testCaseImportOutcomes);
+  }
+
+  @PutMapping(ControllerUtil.TEST_CASES + "/imports/qdm")
+  public ResponseEntity<List<TestCaseImportOutcome>> importTestCasesQdm(
+      @RequestBody List<TestCaseImportRequest> testCaseImportRequests,
+      @PathVariable String measureId,
+      @RequestHeader("Authorization") String accessToken,
+      Principal principal) {
+    final String userName = principal.getName();
+
+    for (TestCaseImportRequest request : testCaseImportRequests) {
+      request.setPatientId(UUID.randomUUID());
+    }
+    var testCaseImportOutcomes =
+        testCaseService.importTestCases(
+            testCaseImportRequests, measureId, userName, accessToken, ModelType.QDM_5_6.getValue());
     return ResponseEntity.ok().body(testCaseImportOutcomes);
   }
 

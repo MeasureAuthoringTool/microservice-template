@@ -3,16 +3,25 @@ package cms.gov.madie.measure.utils;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
-
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Service;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.MeasureObservation;
 import gov.cms.madie.models.measure.Population;
+import gov.cms.madie.models.measure.PopulationType;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import gov.cms.madie.models.measure.TestCasePopulationValue;
+import gov.cms.madie.models.measure.TestCaseStratificationValue;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Service;
+
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,6 +29,20 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @AllArgsConstructor
 public class TestCaseServiceUtil {
+
+  private static final List<PopulationType> EXPECTED_VALUE_ORDER =
+      List.of(
+          PopulationType.INITIAL_POPULATION,
+          PopulationType.MEASURE_POPULATION,
+          PopulationType.MEASURE_POPULATION_OBSERVATION,
+          PopulationType.MEASURE_POPULATION_EXCLUSION,
+          PopulationType.DENOMINATOR,
+          PopulationType.DENOMINATOR_OBSERVATION,
+          PopulationType.DENOMINATOR_EXCLUSION,
+          PopulationType.NUMERATOR,
+          PopulationType.NUMERATOR_OBSERVATION,
+          PopulationType.NUMERATOR_EXCLUSION,
+          PopulationType.DENOMINATOR_EXCEPTION);
 
   public List<Group> getGroupsWithValidPopulations(List<Group> originalGroups) {
     List<Group> changedGroups = null;
@@ -47,22 +70,32 @@ public class TestCaseServiceUtil {
       List<Group> groups,
       TestCase newTestCase) {
     boolean isValid = true;
-    List<TestCaseGroupPopulation> groupPopulations = null;
+    List<TestCaseGroupPopulation> finalGroupPopulations;
+    List<TestCaseGroupPopulation> nonObservationGroupPopulations =
+        getNonObservationGroupPopulations(testCaseGroupPopulations);
+
     // group size has to match
     if (!isEmpty(groups)
-        && !isEmpty(testCaseGroupPopulations)
-        && groups.size() == testCaseGroupPopulations.size()) {
-      groupPopulations = new ArrayList<>();
+        && !isEmpty(nonObservationGroupPopulations)
+        && groups.size() == nonObservationGroupPopulations.size()) {
+      finalGroupPopulations = new ArrayList<>();
       for (int i = 0; i < groups.size(); i++) {
         Group group = groups.get(i);
         // group population size has to match
         if (!isEmpty(group.getPopulations())
-            && !isEmpty(testCaseGroupPopulations.get(i).getPopulationValues())
+            && !isEmpty(nonObservationGroupPopulations.get(i).getPopulationValues())
             && group.getPopulations().size()
-                == testCaseGroupPopulations.get(i).getPopulationValues().size()) {
+                == nonObservationGroupPopulations.get(i).getPopulationValues().size()) {
           isValid =
               mapPopulationValues(
-                  group, testCaseGroupPopulations, i, groupPopulations, newTestCase, isValid);
+                  group,
+                  nonObservationGroupPopulations,
+                  i,
+                  finalGroupPopulations,
+                  newTestCase,
+                  isValid,
+                  testCaseGroupPopulations);
+
         } else {
           isValid = false;
         }
@@ -70,6 +103,7 @@ public class TestCaseServiceUtil {
     } else {
       isValid = false;
     }
+
     return isValid;
   }
 
@@ -81,46 +115,112 @@ public class TestCaseServiceUtil {
         .build();
   }
 
+  /**
+   * This function modifies input parameters!
+   *
+   * @param group Existing Measure Population Criteria
+   * @param nonObsAndStratPopulations Population Criteria members excluding observations.
+   * @param measureGroupNumber
+   * @param finalGroupPopulations Finalized list of Population Criteria populations.
+   * @param newTestCase WIP Test Case from imported data
+   * @param isValid Whether, excluding Observations, if the Measure Population Criteria matches the
+   *     imported Population Criteria. True = matches, False, does not match.
+   * @return isValid
+   */
   private boolean mapPopulationValues(
       Group group,
-      List<TestCaseGroupPopulation> testCaseGroupPopulations,
-      int i,
-      List<TestCaseGroupPopulation> groupPopulations,
+      List<TestCaseGroupPopulation> nonObsAndStratPopulations,
+      int measureGroupNumber,
+      List<TestCaseGroupPopulation> finalGroupPopulations,
       TestCase newTestCase,
-      boolean isValid) {
+      boolean isValid,
+      List<TestCaseGroupPopulation> allImportedPopulations) {
     TestCaseGroupPopulation groupPopulation = assignTestCaseGroupPopulation(group);
     List<TestCasePopulationValue> populationValues = new ArrayList<>();
     int matchedNumber = 0;
-    for (int j = 0; j < group.getPopulations().size(); j++) {
-      Population population = group.getPopulations().get(j);
+    final int groupPopulationCount = group.getPopulations().size();
+    // map the non-observation population results based on type
+    for (int groupPopulationIndex = 0;
+        groupPopulationIndex < groupPopulationCount;
+        groupPopulationIndex++) {
+      Population population = group.getPopulations().get(groupPopulationIndex);
       matchedNumber =
           assignPopulationValues(
               population,
-              testCaseGroupPopulations,
-              i,
-              j,
+              nonObsAndStratPopulations,
+              measureGroupNumber,
+              groupPopulationIndex,
               matchedNumber,
               group,
               populationValues,
               groupPopulation);
-      // check if matchedNumber is correct
-      if (j == group.getPopulations().size() - 1) {
-        if (matchedNumber == group.getPopulations().size()) {
-          groupPopulations.add(groupPopulation);
-          newTestCase.setGroupPopulations(groupPopulations);
-        } else {
-          isValid = false;
+    }
+
+    if (matchedNumber == group.getPopulations().size()) {
+      // if group has observations and some existed on test case, add them back in
+      List<TestCasePopulationValue> observationPopVals =
+          mapObservations(allImportedPopulations.get(measureGroupNumber), group);
+      if (!isEmpty(observationPopVals)) {
+        groupPopulation.getPopulationValues().addAll(observationPopVals);
+        groupPopulation
+            .getPopulationValues()
+            .sort(
+                Comparator.comparing(
+                    TestCasePopulationValue::getName,
+                    Comparator.comparingInt(EXPECTED_VALUE_ORDER::indexOf)));
+      }
+      finalGroupPopulations.add(groupPopulation);
+      groupPopulation.setGroupId(group.getId());
+      newTestCase.setGroupPopulations(finalGroupPopulations);
+    } else {
+      isValid = false;
+    }
+
+    return isValid;
+  }
+
+  private Set<PopulationType> getObservationTypesForGroup(Group group) {
+    Set<PopulationType> types = new HashSet<>();
+    if (group != null
+        && !isEmpty(group.getPopulations())
+        && !isEmpty(group.getMeasureObservations())) {
+      for (MeasureObservation observation : group.getMeasureObservations()) {
+        Optional<Population> refPopOpt =
+            group.getPopulations().stream()
+                .filter(p -> StringUtils.equals(p.getId(), observation.getCriteriaReference()))
+                .findFirst();
+        if (refPopOpt.isPresent()) {
+          switch (refPopOpt.get().getName()) {
+            case DENOMINATOR -> types.add(PopulationType.DENOMINATOR_OBSERVATION);
+            case NUMERATOR -> types.add(PopulationType.NUMERATOR_OBSERVATION);
+            case MEASURE_POPULATION -> types.add(PopulationType.MEASURE_POPULATION_OBSERVATION);
+            default -> {}
+          }
         }
       }
     }
-    return isValid;
+    return types;
+  }
+
+  private List<TestCasePopulationValue> mapObservations(
+      TestCaseGroupPopulation importedGroup, Group measrueGroup) {
+    List<TestCasePopulationValue> observationPopVals = new ArrayList<>();
+    Set<PopulationType> observationPopulationTypes = getObservationTypesForGroup(measrueGroup);
+    if (!isEmpty(observationPopulationTypes) && !isEmpty(importedGroup.getPopulationValues())) {
+      for (TestCasePopulationValue tcPopVal : importedGroup.getPopulationValues()) {
+        if (observationPopulationTypes.contains(tcPopVal.getName())) {
+          observationPopVals.add(tcPopVal);
+        }
+      }
+    }
+    return observationPopVals;
   }
 
   private int assignPopulationValues(
       Population population,
       List<TestCaseGroupPopulation> testCaseGroupPopulations,
-      int i,
-      int j,
+      int measureGroupNumber,
+      int groupPopulationIndex,
       int matchedNumber,
       Group group,
       List<TestCasePopulationValue> populationValues,
@@ -129,11 +229,21 @@ public class TestCaseServiceUtil {
         .getName()
         .toCode()
         .equalsIgnoreCase(
-            testCaseGroupPopulations.get(i).getPopulationValues().get(j).getName().toCode())) {
+            testCaseGroupPopulations
+                .get(measureGroupNumber)
+                .getPopulationValues()
+                .get(groupPopulationIndex)
+                .getName()
+                .toCode())) {
       matchedNumber++;
 
       TestCasePopulationValue populationValue =
-          testCaseGroupPopulations.get(i).getPopulationValues().get(j);
+          testCaseGroupPopulations
+              .get(measureGroupNumber)
+              .getPopulationValues()
+              .get(groupPopulationIndex);
+      populationValue.setId(population.getId());
+
       if (group.getPopulationBasis() != null
           && group.getPopulationBasis().equalsIgnoreCase("boolean")) {
         String originalValue = (String) populationValue.getExpected();
@@ -147,5 +257,150 @@ public class TestCaseServiceUtil {
       groupPopulation.setPopulationValues(populationValues);
     }
     return matchedNumber;
+  }
+
+  public void assignStratificationValuesQdm(
+      List<TestCaseGroupPopulation> testCaseGroupPopulations,
+      TestCase newTestCase,
+      String populationBasis) {
+    List<TestCaseStratificationValue> stratValues =
+        convertStratificationValues(
+            testCaseGroupPopulations.get(0).getStratificationValues(), populationBasis);
+    if (!CollectionUtils.isEmpty(stratValues)) {
+      newTestCase.getGroupPopulations().get(0).setStratificationValues(stratValues);
+    }
+  }
+
+  private List<TestCaseStratificationValue> convertStratificationValues(
+      List<TestCaseStratificationValue> stratValuesFromRequest, String populationBasis) {
+    List<TestCaseStratificationValue> converted = new ArrayList<>();
+    if (!CollectionUtils.isEmpty(stratValuesFromRequest)) {
+      for (TestCaseStratificationValue stratValue : stratValuesFromRequest) {
+        TestCaseStratificationValue newStratValue =
+            TestCaseStratificationValue.builder()
+                .id(UUID.randomUUID().toString())
+                .name(stratValue.getName())
+                .expected(getStratificationExpected(populationBasis, stratValue))
+                .build();
+        List<TestCasePopulationValue> populationValues = stratValue.getPopulationValues();
+        List<TestCasePopulationValue> convertgedPopulationValues = new ArrayList<>();
+        for (TestCasePopulationValue populationValue : populationValues) {
+          TestCasePopulationValue value =
+              TestCasePopulationValue.builder()
+                  .id(UUID.randomUUID().toString())
+                  .name(populationValue.getName())
+                  .expected(getPopulationExpected(populationBasis, populationValue))
+                  .build();
+          convertgedPopulationValues.add(value);
+        }
+        newStratValue.setPopulationValues(convertgedPopulationValues);
+        converted.add(newStratValue);
+      }
+    }
+    return converted;
+  }
+
+  private Object getStratificationExpected(
+      String populationBasis, TestCaseStratificationValue stratValue) {
+    Object expected = null;
+    if (populationBasis != null && populationBasis.equalsIgnoreCase("boolean")) {
+      String originalValue = stratValue.getExpected().toString();
+      if (originalValue.equalsIgnoreCase("1")) {
+        expected = Boolean.TRUE;
+      } else {
+        expected = Boolean.FALSE;
+      }
+    } else {
+      expected = stratValue.getExpected();
+    }
+    return expected;
+  }
+
+  private Object getPopulationExpected(
+      String populationBasis, TestCasePopulationValue populationValue) {
+    Object expected = null;
+    if (populationBasis != null && populationBasis.equalsIgnoreCase("boolean")) {
+      String originalValue = populationValue.getExpected().toString();
+      if (originalValue.equalsIgnoreCase("1")) {
+        expected = Boolean.TRUE;
+      } else {
+        expected = Boolean.FALSE;
+      }
+    } else {
+      expected = populationValue.getExpected();
+    }
+    return expected;
+  }
+
+  // testCaseGroupPopulations may contain observations that are not in group
+  protected List<TestCaseGroupPopulation> getNonObservationGroupPopulations(
+      List<TestCaseGroupPopulation> testCaseGroupPopulations) {
+    List<TestCaseGroupPopulation> revisedGroupPopulations = new ArrayList<>();
+    if (!isEmpty(testCaseGroupPopulations)) {
+      for (TestCaseGroupPopulation groupPopulation : testCaseGroupPopulations) {
+        List<TestCasePopulationValue> revisedPopulationValues = null;
+        if (CollectionUtils.isNotEmpty(groupPopulation.getPopulationValues())) {
+          revisedPopulationValues =
+              groupPopulation.getPopulationValues().stream()
+                  .filter(
+                      populationValue ->
+                          !populationValue.getName().toCode().contains("observation"))
+                  .toList();
+        }
+        revisedGroupPopulations.add(
+            groupPopulation.toBuilder().populationValues(revisedPopulationValues).build());
+      }
+    }
+    return revisedGroupPopulations;
+  }
+
+  public void assignObservationValues(
+      TestCase newTestCase,
+      List<TestCaseGroupPopulation> testCaseGroupPopulations,
+      String populationBasis) {
+    List<TestCasePopulationValue> observationPopulations =
+        getObservationPopulations(testCaseGroupPopulations);
+
+    TestCaseGroupPopulation groupPopulation = newTestCase.getGroupPopulations().get(0);
+    List<TestCasePopulationValue> currentPopulationValues = groupPopulation.getPopulationValues();
+
+    List<TestCasePopulationValue> combinedPopulationValues = new ArrayList<>();
+    combinedPopulationValues.addAll(currentPopulationValues);
+    if (!CollectionUtils.isEmpty(observationPopulations)) {
+      combinedPopulationValues.addAll(
+          convertPopulationValues(observationPopulations, populationBasis));
+    }
+    groupPopulation.setPopulationValues(combinedPopulationValues);
+    List<TestCaseGroupPopulation> newGroupPopulations = new ArrayList<>();
+    newGroupPopulations.add(groupPopulation);
+    newTestCase.setGroupPopulations(newGroupPopulations);
+  }
+
+  private List<TestCasePopulationValue> convertPopulationValues(
+      List<TestCasePopulationValue> observationValues, String populationBasis) {
+    List<TestCasePopulationValue> observationPopulationValues = new ArrayList<>();
+    if (!CollectionUtils.isEmpty(observationValues)) {
+      for (TestCasePopulationValue observationvalue : observationValues) {
+        TestCasePopulationValue populationValue =
+            TestCasePopulationValue.builder()
+                .id(UUID.randomUUID().toString())
+                .name(observationvalue.getName())
+                .expected(getPopulationExpected(populationBasis, observationvalue))
+                .build();
+        observationPopulationValues.add(populationValue);
+      }
+    }
+    return observationPopulationValues;
+  }
+
+  protected List<TestCasePopulationValue> getObservationPopulations(
+      List<TestCaseGroupPopulation> testCaseGroupPopulations) {
+    if (!CollectionUtils.isEmpty(testCaseGroupPopulations)
+        && !CollectionUtils.isEmpty(testCaseGroupPopulations.get(0).getPopulationValues())) {
+      return testCaseGroupPopulations.get(0).getPopulationValues().stream()
+          .filter(populationValue -> populationValue.getName().toCode().contains("observation"))
+          .toList();
+    }
+    return null;
   }
 }

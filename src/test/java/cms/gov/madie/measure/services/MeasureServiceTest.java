@@ -297,8 +297,7 @@ public class MeasureServiceTest implements ResourceUtil {
   public void testCreateMeasureSuccessfullyWithNoCql() {
     String usr = "john rao";
     Measure measureToSave =
-        measure1
-            .toBuilder()
+        measure1.toBuilder()
             .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
             .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
             .measureSetId("msid-1")
@@ -325,8 +324,7 @@ public class MeasureServiceTest implements ResourceUtil {
   @Test
   public void testCreateMeasureSuccessfullyWithValidCql() {
     Measure measureToSave =
-        measure1
-            .toBuilder()
+        measure1.toBuilder()
             .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
             .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
             .measureSetId("msid-1")
@@ -355,8 +353,7 @@ public class MeasureServiceTest implements ResourceUtil {
     Set<MeasureErrorType> errors =
         Set.of(MeasureErrorType.ERRORS_ELM_JSON, MeasureErrorType.INVALID_TERMINOLOGY);
     Measure measureToSave =
-        measure1
-            .toBuilder()
+        measure1.toBuilder()
             .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
             .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
             .cqlLibraryName("VTE")
@@ -390,8 +387,7 @@ public class MeasureServiceTest implements ResourceUtil {
   @Test
   public void testCreateMeasureWhenLibraryNameDuplicate() {
     Measure measureToSave =
-        measure1
-            .toBuilder()
+        measure1.toBuilder()
             .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
             .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
             .cqlLibraryName("VTE")
@@ -411,8 +407,7 @@ public class MeasureServiceTest implements ResourceUtil {
     Instant startInstant = Instant.now();
     Instant endInstant = startInstant.plus(2, ChronoUnit.DAYS);
     Measure measureToSave =
-        measure1
-            .toBuilder()
+        measure1.toBuilder()
             .measurementPeriodStart(Date.from(startInstant))
             .measurementPeriodEnd(Date.from(endInstant))
             .cqlLibraryName("VTE")
@@ -524,8 +519,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .build();
 
     Measure updated =
-        original
-            .toBuilder()
+        original.toBuilder()
             .createdAt(Instant.now())
             .createdBy("SomebodyElse")
             .lastModifiedAt(null)

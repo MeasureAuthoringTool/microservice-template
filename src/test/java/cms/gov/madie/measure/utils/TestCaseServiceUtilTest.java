@@ -1,8 +1,11 @@
 package cms.gov.madie.measure.utils;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -25,6 +28,7 @@ import gov.cms.madie.models.measure.PopulationType;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import gov.cms.madie.models.measure.TestCasePopulationValue;
+import gov.cms.madie.models.measure.TestCaseStratificationValue;
 
 @ExtendWith(MockitoExtension.class)
 public class TestCaseServiceUtilTest {
@@ -86,20 +90,31 @@ public class TestCaseServiceUtilTest {
 
     population1 =
         Population.builder()
+            .id("Population1Id")
             .name(PopulationType.INITIAL_POPULATION)
             .definition("Initial Population")
             .build();
     population2 =
-        Population.builder().name(PopulationType.DENOMINATOR).definition("Denominator").build();
+        Population.builder()
+            .id("Population2Id")
+            .name(PopulationType.DENOMINATOR)
+            .definition("Denominator")
+            .build();
     population3 =
         Population.builder()
+            .id("Population3Id")
             .name(PopulationType.DENOMINATOR_EXCLUSION)
             .definition("Denominator Exclusion")
             .build();
     population4 =
-        Population.builder().name(PopulationType.NUMERATOR).definition("Numerator").build();
+        Population.builder()
+            .id("Population4Id")
+            .name(PopulationType.NUMERATOR)
+            .definition("Numerator")
+            .build();
     population5 =
         Population.builder()
+            .id("Population5Id")
             .name(PopulationType.NUMERATOR_EXCLUSION)
             .definition("Numerator Exclusion")
             .build();
@@ -177,6 +192,26 @@ public class TestCaseServiceUtilTest {
     boolean result =
         testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
     assertTrue(result);
+    assertThat(testCase, is(notNullValue()));
+    assertThat(testCase.getGroupPopulations().size(), is(equalTo(1)));
+    assertThat(testCase.getGroupPopulations().get(0).getGroupId(), is(equalTo("testGroupId")));
+    assertThat(testCase.getGroupPopulations().get(0).getPopulationValues(), is(notNullValue()));
+    assertThat(testCase.getGroupPopulations().get(0).getPopulationValues().size(), is(equalTo(5)));
+    assertThat(
+        testCase.getGroupPopulations().get(0).getPopulationValues().get(0).getId(),
+        is(equalTo("Population1Id")));
+    assertThat(
+        testCase.getGroupPopulations().get(0).getPopulationValues().get(1).getId(),
+        is(equalTo("Population2Id")));
+    assertThat(
+        testCase.getGroupPopulations().get(0).getPopulationValues().get(2).getId(),
+        is(equalTo("Population3Id")));
+    assertThat(
+        testCase.getGroupPopulations().get(0).getPopulationValues().get(3).getId(),
+        is(equalTo("Population4Id")));
+    assertThat(
+        testCase.getGroupPopulations().get(0).getPopulationValues().get(4).getId(),
+        is(equalTo("Population5Id")));
   }
 
   @Test
@@ -197,8 +232,14 @@ public class TestCaseServiceUtilTest {
   @Test
   public void testMatchCriteriaGroupsGroupSizeNotMatch() {
     List<TestCaseGroupPopulation> testCaseGroupPopulations = new ArrayList<>();
+    populationValues = new ArrayList<>();
+    populationValues.add(testCasePopulationValue1);
+    testCaseGroupPopulation1 =
+        TestCaseGroupPopulation.builder()
+            .populationBasis("Boolean")
+            .populationValues(populationValues)
+            .build();
     testCaseGroupPopulations.add(testCaseGroupPopulation1);
-    testCaseGroupPopulations.add(testCaseGroupPopulation2);
     boolean result =
         testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
     assertFalse(result);
@@ -289,5 +330,286 @@ public class TestCaseServiceUtilTest {
     boolean result =
         testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
     assertTrue(result);
+  }
+
+  @Test
+  public void testMatchCriteriaGroupsWithObservations() {
+    List<TestCasePopulationValue> populationValues =
+        testCaseGroupPopulations.get(0).getPopulationValues();
+    TestCasePopulationValue denomPopulationValue =
+        TestCasePopulationValue.builder()
+            .name(PopulationType.DENOMINATOR_OBSERVATION)
+            .expected(4)
+            .build();
+    populationValues.add(denomPopulationValue);
+    TestCasePopulationValue numerPopulationValue =
+        TestCasePopulationValue.builder()
+            .name(PopulationType.NUMERATOR_OBSERVATION)
+            .expected(4)
+            .build();
+    populationValues.add(numerPopulationValue);
+    TestCaseGroupPopulation groupPopulation = TestCaseGroupPopulation.builder().build();
+    groupPopulation.setPopulationValues(populationValues);
+
+    group =
+        Group.builder()
+            .id("testGroupId")
+            .scoring(MeasureScoring.COHORT.name())
+            .populationBasis("Encounter")
+            .populations(List.of(population1, population2, population3, population4, population5))
+            .build();
+
+    boolean result =
+        testCaseServiceUtil.matchCriteriaGroups(List.of(groupPopulation), List.of(group), testCase);
+    assertTrue(result);
+  }
+
+  @Test
+  public void testAssignStratificationValuesQdm() {
+    TestCaseStratificationValue stratValue =
+        TestCaseStratificationValue.builder().name("Strata-1").expected(1).build();
+    TestCasePopulationValue populationValue = TestCasePopulationValue.builder().expected(1).build();
+    stratValue.setPopulationValues(List.of(populationValue));
+    TestCaseGroupPopulation groupPopulation =
+        TestCaseGroupPopulation.builder()
+            .stratificationValues(List.of(stratValue))
+            .populationValues(List.of(populationValue))
+            .build();
+
+    TestCaseGroupPopulation groupPopulationFromTestCase = TestCaseGroupPopulation.builder().build();
+    TestCase newTestCase =
+        TestCase.builder().groupPopulations(List.of(groupPopulationFromTestCase)).build();
+
+    testCaseServiceUtil.assignStratificationValuesQdm(
+        List.of(groupPopulation), newTestCase, "Encounter");
+
+    assertEquals(newTestCase.getGroupPopulations().get(0).getStratificationValues().size(), 1);
+    assertEquals(
+        newTestCase.getGroupPopulations().get(0).getStratificationValues().get(0).getExpected(), 1);
+  }
+
+  @Test
+  public void testAssignStratificationValuesQdmEmpty() {
+
+    TestCaseGroupPopulation groupPopulation =
+        TestCaseGroupPopulation.builder().stratificationValues(null).build();
+
+    TestCase newTestCase = TestCase.builder().build();
+
+    testCaseServiceUtil.assignStratificationValuesQdm(
+        List.of(groupPopulation), newTestCase, "Encounter");
+
+    assertNull(newTestCase.getGroupPopulations());
+  }
+
+  @Test
+  public void testAssignStratificationValuesQdmBoolean() {
+    TestCaseStratificationValue stratValue =
+        TestCaseStratificationValue.builder().name("Strata-1").expected(1).build();
+    TestCasePopulationValue populationValue = TestCasePopulationValue.builder().expected(1).build();
+    stratValue.setPopulationValues(List.of(populationValue));
+    TestCaseGroupPopulation groupPopulation =
+        TestCaseGroupPopulation.builder().stratificationValues(List.of(stratValue)).build();
+
+    TestCaseGroupPopulation groupPopulationFromTestCase = TestCaseGroupPopulation.builder().build();
+    TestCase newTestCase =
+        TestCase.builder().groupPopulations(List.of(groupPopulationFromTestCase)).build();
+
+    testCaseServiceUtil.assignStratificationValuesQdm(
+        List.of(groupPopulation), newTestCase, "Boolean");
+
+    assertEquals(newTestCase.getGroupPopulations().get(0).getStratificationValues().size(), 1);
+    assertEquals(
+        newTestCase.getGroupPopulations().get(0).getStratificationValues().get(0).getExpected(),
+        Boolean.TRUE);
+  }
+
+  @Test
+  public void testAssignStratificationValuesQdmBooleanFalse() {
+    TestCaseStratificationValue stratValue =
+        TestCaseStratificationValue.builder().name("Strata-1").expected(0).build();
+    TestCasePopulationValue populationValue = TestCasePopulationValue.builder().expected(1).build();
+    stratValue.setPopulationValues(List.of(populationValue));
+    TestCaseGroupPopulation groupPopulation =
+        TestCaseGroupPopulation.builder().stratificationValues(List.of(stratValue)).build();
+
+    TestCaseGroupPopulation groupPopulationFromTestCase = TestCaseGroupPopulation.builder().build();
+    TestCase newTestCase =
+        TestCase.builder().groupPopulations(List.of(groupPopulationFromTestCase)).build();
+
+    testCaseServiceUtil.assignStratificationValuesQdm(
+        List.of(groupPopulation), newTestCase, "Boolean");
+
+    assertEquals(newTestCase.getGroupPopulations().get(0).getStratificationValues().size(), 1);
+    assertEquals(
+        newTestCase.getGroupPopulations().get(0).getStratificationValues().get(0).getExpected(),
+        Boolean.FALSE);
+  }
+
+  @Test
+  public void testAssignObservationValuesBoolean() {
+    TestCaseGroupPopulation groupPopulationFromTestCase =
+        TestCaseGroupPopulation.builder().populationValues(populationValues).build();
+    TestCase newTestCase =
+        TestCase.builder().groupPopulations(List.of(groupPopulationFromTestCase)).build();
+
+    TestCasePopulationValue populationValue1 =
+        TestCasePopulationValue.builder()
+            .name(PopulationType.DENOMINATOR_OBSERVATION)
+            .expected(1)
+            .build();
+    TestCaseGroupPopulation groupPopulation =
+        TestCaseGroupPopulation.builder().populationValues(List.of(populationValue1)).build();
+
+    testCaseServiceUtil.assignObservationValues(newTestCase, List.of(groupPopulation), "Boolean");
+
+    assertEquals(newTestCase.getGroupPopulations().get(0).getPopulationValues().size(), 6);
+    assertEquals(
+        newTestCase.getGroupPopulations().get(0).getPopulationValues().get(5).getExpected(),
+        Boolean.TRUE);
+  }
+
+  @Test
+  public void testAssignObservationValuesBooleanFalse() {
+    TestCaseGroupPopulation groupPopulationFromTestCase =
+        TestCaseGroupPopulation.builder().populationValues(populationValues).build();
+    TestCase newTestCase =
+        TestCase.builder().groupPopulations(List.of(groupPopulationFromTestCase)).build();
+
+    TestCasePopulationValue populationValue1 =
+        TestCasePopulationValue.builder()
+            .name(PopulationType.DENOMINATOR_OBSERVATION)
+            .expected(0)
+            .build();
+    TestCaseGroupPopulation groupPopulation =
+        TestCaseGroupPopulation.builder().populationValues(List.of(populationValue1)).build();
+
+    testCaseServiceUtil.assignObservationValues(newTestCase, List.of(groupPopulation), "Boolean");
+
+    assertEquals(newTestCase.getGroupPopulations().get(0).getPopulationValues().size(), 6);
+    assertEquals(
+        newTestCase.getGroupPopulations().get(0).getPopulationValues().get(5).getExpected(),
+        Boolean.FALSE);
+  }
+
+  @Test
+  public void testGetObservationPopulationsReturnsNull() {
+    List<TestCasePopulationValue> populationValues =
+        testCaseServiceUtil.getObservationPopulations(null);
+    assertNull(populationValues);
+  }
+
+  @Test
+  public void testGetRevisedGroupPopulationReturnsEmptyListForNull() {
+    List<TestCaseGroupPopulation> output =
+        testCaseServiceUtil.getNonObservationGroupPopulations(null);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.isEmpty(), is(true));
+  }
+
+  @Test
+  public void testGetRevisedGroupPopulationReturnsEmptyListForEmptyInput() {
+    final List<TestCaseGroupPopulation> originalTestCaseGroupPopulations = List.of();
+    List<TestCaseGroupPopulation> output =
+        testCaseServiceUtil.getNonObservationGroupPopulations(originalTestCaseGroupPopulations);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.isEmpty(), is(true));
+  }
+
+  @Test
+  public void testGetRevisedGroupPopulationReturnsListWithEmptyPopValuesLists() {
+    final List<TestCaseGroupPopulation> originalTestCaseGroupPopulations =
+        List.of(
+            TestCaseGroupPopulation.builder()
+                .groupId("Group1Id")
+                .populationBasis("boolean")
+                .scoring(MeasureScoring.CONTINUOUS_VARIABLE.toString())
+                .build(),
+            TestCaseGroupPopulation.builder()
+                .groupId("Group2Id")
+                .populationBasis("boolean")
+                .scoring(MeasureScoring.PROPORTION.toString())
+                .build());
+    List<TestCaseGroupPopulation> output =
+        testCaseServiceUtil.getNonObservationGroupPopulations(originalTestCaseGroupPopulations);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.size(), is(equalTo(2)));
+    assertThat(output.get(0), is(notNullValue()));
+    assertThat(output.get(0).getPopulationValues(), is(nullValue()));
+  }
+
+  @Test
+  public void testGetRevisedGroupPopulationReturnsListWithoutObservations() {
+    final List<TestCaseGroupPopulation> originalTestCaseGroupPopulations =
+        List.of(
+            TestCaseGroupPopulation.builder()
+                .groupId("Group1Id")
+                .populationBasis("boolean")
+                .scoring(MeasureScoring.CONTINUOUS_VARIABLE.toString())
+                .populationValues(
+                    List.of(
+                        TestCasePopulationValue.builder()
+                            .name(PopulationType.INITIAL_POPULATION)
+                            .id("G1P1")
+                            .expected("true")
+                            .build(),
+                        TestCasePopulationValue.builder()
+                            .name(PopulationType.MEASURE_POPULATION)
+                            .id("G1P2")
+                            .expected("true")
+                            .build(),
+                        TestCasePopulationValue.builder()
+                            .name(PopulationType.MEASURE_POPULATION_OBSERVATION)
+                            .id("G1P3")
+                            .expected("2")
+                            .build()))
+                .build(),
+            TestCaseGroupPopulation.builder()
+                .groupId("Group2Id")
+                .populationBasis("Encounter")
+                .scoring(MeasureScoring.RATIO.toString())
+                .populationValues(
+                    List.of(
+                        TestCasePopulationValue.builder()
+                            .name(PopulationType.INITIAL_POPULATION)
+                            .id("G2P1")
+                            .expected("2")
+                            .build(),
+                        TestCasePopulationValue.builder()
+                            .name(PopulationType.DENOMINATOR)
+                            .id("G2P2")
+                            .expected("2")
+                            .build(),
+                        TestCasePopulationValue.builder()
+                            .name(PopulationType.DENOMINATOR_OBSERVATION)
+                            .id("G2P3")
+                            .expected("15")
+                            .build(),
+                        TestCasePopulationValue.builder()
+                            .name(PopulationType.DENOMINATOR_OBSERVATION)
+                            .id("G2P4")
+                            .expected("120")
+                            .build(),
+                        TestCasePopulationValue.builder()
+                            .name(PopulationType.NUMERATOR)
+                            .id("G2P5")
+                            .expected("1")
+                            .build(),
+                        TestCasePopulationValue.builder()
+                            .name(PopulationType.NUMERATOR_OBSERVATION)
+                            .id("G2P6")
+                            .expected("2")
+                            .build()))
+                .build());
+    List<TestCaseGroupPopulation> output =
+        testCaseServiceUtil.getNonObservationGroupPopulations(originalTestCaseGroupPopulations);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.size(), is(equalTo(2)));
+    assertThat(output.get(0), is(notNullValue()));
+    assertThat(output.get(0).getPopulationValues(), is(notNullValue()));
+    assertThat(output.get(0).getPopulationValues().size(), is(equalTo(2)));
+    assertThat(output.get(1), is(notNullValue()));
+    assertThat(output.get(1).getPopulationValues(), is(notNullValue()));
+    assertThat(output.get(1).getPopulationValues().size(), is(equalTo(3)));
   }
 }
