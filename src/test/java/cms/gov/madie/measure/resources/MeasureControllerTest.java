@@ -29,13 +29,7 @@ import java.io.UnsupportedEncodingException;
 import java.security.Principal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -642,5 +636,76 @@ class MeasureControllerTest {
     assertNotNull(response.getBody().getContent());
     assertNotNull(response.getBody().getContent().get(0));
     assertEquals("IDIDID", response.getBody().getContent().get(0).getMeasureSetId());
+  }
+
+  @Test
+  void createStratification() {
+    Stratification stratification =
+        Stratification.builder()
+            .cqlDefinition("Initial Population")
+            .association(PopulationType.INITIAL_POPULATION)
+            .associations(List.of(PopulationType.INITIAL_POPULATION, PopulationType.NUMERATOR))
+            .build();
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    doReturn(stratification)
+        .when(groupService)
+        .createOrUpdateStratification(
+            any(String.class), any(String.class), any(Stratification.class), any(String.class));
+
+    ResponseEntity<Stratification> response =
+        controller.createStratification(new Stratification(), "measure-id", "group-id", principal);
+    assertNotNull(response.getBody());
+    assertEquals(stratification.getCqlDefinition(), response.getBody().getCqlDefinition());
+    assertEquals(stratification.getAssociation(), response.getBody().getAssociation());
+    assertEquals(stratification.getAssociations(), response.getBody().getAssociations());
+  }
+
+  @Test
+  void deleteStratification() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    Measure updatedMeasure =
+        Measure.builder()
+            .id("measure-id")
+            .createdBy("test.user")
+            .groups(List.of(Group.builder().stratifications(null).build()))
+            .build();
+    doReturn(updatedMeasure)
+        .when(groupService)
+        .deleteStratification(
+            any(String.class), any(String.class), any(String.class), any(String.class));
+
+    ResponseEntity<Measure> output =
+        controller.deleteStratification("measure-id", "testgroupid", "stratifactionid", principal);
+
+    assertThat(output.getStatusCode(), is(equalTo(HttpStatus.OK)));
+    assertNull(output.getBody().getGroups().get(0).getStratifications());
+  }
+
+  @Test
+  void updateStratification() {
+    Stratification stratification =
+        Stratification.builder()
+            .cqlDefinition("Initial Population")
+            .association(PopulationType.INITIAL_POPULATION)
+            .associations(List.of(PopulationType.INITIAL_POPULATION, PopulationType.NUMERATOR))
+            .build();
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    doReturn(stratification)
+        .when(groupService)
+        .createOrUpdateStratification(
+            any(String.class), any(String.class), any(Stratification.class), any(String.class));
+
+    ResponseEntity<Stratification> response =
+        controller.updateStratification(new Stratification(), "measure-id", "group-id", principal);
+    assertNotNull(response.getBody());
+    assertEquals(stratification.getCqlDefinition(), response.getBody().getCqlDefinition());
+    assertEquals(stratification.getAssociation(), response.getBody().getAssociation());
+    assertEquals(stratification.getAssociations(), response.getBody().getAssociations());
   }
 }

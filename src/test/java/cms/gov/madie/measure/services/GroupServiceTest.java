@@ -100,6 +100,7 @@ public class GroupServiceTest implements ResourceUtil {
     strata1.setId("strat-1");
     strata1.setCqlDefinition("Initial Population");
     strata1.setAssociation(PopulationType.INITIAL_POPULATION);
+    strata1.setAssociations(List.of(PopulationType.INITIAL_POPULATION));
     Stratification strata2 = new Stratification();
     strata2.setId("strat-2");
     strata2.setCqlDefinition("Denominator");
@@ -1476,5 +1477,166 @@ public class GroupServiceTest implements ResourceUtil {
         groupService.updateTestCaseStratification(
             stratification, new TestCaseGroupPopulation(), "Strata-1");
     assertNull(testCaseStratificationValue.getPopulationValues());
+  }
+
+  @Test
+  public void testCreateStratificationOnly() {
+    group1.setId("group1");
+    measure.getGroups().add(group1);
+    ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+
+    doReturn(measure).when(measureRepository).save(any(Measure.class));
+    when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
+        .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
+
+    Stratification persistedStratification =
+        groupService.createOrUpdateStratification(
+            group1.getId(), measure.getId(), strata1, "test.user");
+
+    verify(measureRepository, times(1)).save(measureCaptor.capture());
+    Measure savedMeasure = measureCaptor.getValue();
+    assertEquals(measure.getLastModifiedBy(), savedMeasure.getLastModifiedBy());
+    assertEquals(measure.getLastModifiedAt(), savedMeasure.getLastModifiedAt());
+    assertNotNull(savedMeasure.getGroups());
+    Group capturedGroup = savedMeasure.getGroups().get(0);
+    assertNotNull(capturedGroup.getStratifications());
+    Stratification capturedStratification = capturedGroup.getStratifications().get(0);
+    assertEquals("Initial Population", capturedStratification.getCqlDefinition());
+    assertEquals(PopulationType.INITIAL_POPULATION, capturedStratification.getAssociation());
+    assertEquals(1, capturedStratification.getAssociations().size());
+    assertTrue(
+        capturedStratification.getAssociations().contains(PopulationType.INITIAL_POPULATION));
+  }
+
+  @Test
+  public void testCreateStratificationMultiple() {
+
+    Stratification strata2 =
+        Stratification.builder()
+            .id("test-strat")
+            .cqlDefinition("Initial Population")
+            .association(PopulationType.INITIAL_POPULATION)
+            .associations(List.of(PopulationType.INITIAL_POPULATION, PopulationType.DENOMINATOR))
+            .build();
+
+    ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+
+    doReturn(measure).when(measureRepository).save(any(Measure.class));
+    when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
+        .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
+
+    Stratification persistedGroup =
+        groupService.createOrUpdateStratification(
+            group2.getId(), measure.getId(), strata2, "test.user");
+
+    verify(measureRepository, times(1)).save(measureCaptor.capture());
+    Measure savedMeasure = measureCaptor.getValue();
+    assertEquals(measure.getLastModifiedBy(), savedMeasure.getLastModifiedBy());
+    assertEquals(measure.getLastModifiedAt(), savedMeasure.getLastModifiedAt());
+    Group capturedGroup = savedMeasure.getGroups().get(0);
+    assertNotNull(capturedGroup.getStratifications());
+    assertEquals(2, capturedGroup.getStratifications().size());
+    Stratification capturedStratification = capturedGroup.getStratifications().get(1);
+    assertEquals("Initial Population", capturedStratification.getCqlDefinition());
+    assertEquals(PopulationType.INITIAL_POPULATION, capturedStratification.getAssociation());
+    assertEquals(2, capturedStratification.getAssociations().size());
+    assertTrue(
+        capturedStratification.getAssociations().contains(PopulationType.INITIAL_POPULATION));
+    assertTrue(capturedStratification.getAssociations().contains(PopulationType.DENOMINATOR));
+  }
+
+  @Test
+  public void testUpdateStratification() {
+    Stratification strata2 =
+        Stratification.builder()
+            .id(strata1.getId())
+            .cqlDefinition("Initial Population")
+            .association(PopulationType.INITIAL_POPULATION)
+            .associations(List.of(PopulationType.INITIAL_POPULATION, PopulationType.DENOMINATOR))
+            .build();
+
+    ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+
+    doReturn(measure).when(measureRepository).save(any(Measure.class));
+
+    when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
+        .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
+
+    // before update
+    assertEquals(
+        "FactorialOfFive", measure.getGroups().get(0).getPopulations().get(0).getDefinition());
+
+    Stratification persistedGroup =
+        groupService.createOrUpdateStratification(
+            group2.getId(), measure.getId(), strata2, "test.user");
+
+    verify(measureRepository, times(1)).save(measureCaptor.capture());
+    Measure savedMeasure = measureCaptor.getValue();
+    assertEquals(measure.getLastModifiedBy(), savedMeasure.getLastModifiedBy());
+    assertEquals(measure.getLastModifiedAt(), savedMeasure.getLastModifiedAt());
+    Group capturedGroup = savedMeasure.getGroups().get(0);
+    assertNotNull(capturedGroup.getStratifications());
+    assertEquals(1, capturedGroup.getStratifications().size());
+    Stratification capturedStratification = capturedGroup.getStratifications().get(0);
+    assertEquals("Initial Population", capturedStratification.getCqlDefinition());
+    assertEquals(PopulationType.INITIAL_POPULATION, capturedStratification.getAssociation());
+    assertEquals(2, capturedStratification.getAssociations().size());
+    assertTrue(
+        capturedStratification.getAssociations().contains(PopulationType.INITIAL_POPULATION));
+    assertTrue(capturedStratification.getAssociations().contains(PopulationType.DENOMINATOR));
+  }
+
+  @Test
+  void testDeleteStratification() {
+    when(measureService.findMeasureById(anyString())).thenReturn(measure);
+
+    doReturn(measure).when(measureRepository).save(any(Measure.class));
+
+    Measure output =
+        groupService.deleteStratification(
+            measure.getId(), group2.getId(), strata1.getId(), "test.user");
+
+    assertEquals(0, output.getGroups().get(0).getStratifications().size());
+  }
+
+  @Test
+  void testUpdateStratificationReturnsExceptionForResourceNotFound() {
+    assertThrows(
+        ResourceNotFoundException.class,
+        () ->
+            groupService.createOrUpdateStratification(
+                group2.getId(), "testid", strata1, "test.user"));
+  }
+
+  @Test
+  void testUpdateStratificationReturnsInvalidDraftStatusException() {
+    measure.setMeasureMetaData(MeasureMetaData.builder().draft(false).build());
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+
+    assertThrows(
+        InvalidDraftStatusException.class,
+        () ->
+            groupService.createOrUpdateStratification(
+                group2.getId(), "testid", strata1, "test.user"));
+  }
+
+  @Test
+  void testCreateStratificationReturnsInvalidDraftStatusException() {
+    measure.setMeasureMetaData(MeasureMetaData.builder().draft(false).build());
+    Optional<Measure> optional = Optional.of(measure);
+    doReturn(optional).when(measureRepository).findById(any(String.class));
+
+    assertThrows(
+        InvalidDraftStatusException.class,
+        () ->
+            groupService.createOrUpdateStratification(
+                group2.getId(), "testid", strata1, "test.user"));
   }
 }
