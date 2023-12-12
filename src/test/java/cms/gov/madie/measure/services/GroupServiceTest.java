@@ -18,10 +18,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -1593,19 +1590,6 @@ public class GroupServiceTest implements ResourceUtil {
   }
 
   @Test
-  void testDeleteStratification() {
-    when(measureService.findMeasureById(anyString())).thenReturn(measure);
-
-    doReturn(measure).when(measureRepository).save(any(Measure.class));
-
-    Measure output =
-        groupService.deleteStratification(
-            measure.getId(), group2.getId(), strata1.getId(), "test.user");
-
-    assertEquals(0, output.getGroups().get(0).getStratifications().size());
-  }
-
-  @Test
   void testUpdateStratificationReturnsExceptionForResourceNotFound() {
     assertThrows(
         ResourceNotFoundException.class,
@@ -1638,5 +1622,126 @@ public class GroupServiceTest implements ResourceUtil {
         () ->
             groupService.createOrUpdateStratification(
                 group2.getId(), "testid", strata1, "test.user"));
+  }
+
+  @Test
+  void testDeleteStratification() {
+    when(measureService.findMeasureById(anyString())).thenReturn(measure);
+
+    doReturn(measure).when(measureRepository).save(any(Measure.class));
+
+    Measure output =
+            groupService.deleteStratification(
+                    measure.getId(), group2.getId(), strata1.getId(), "test.user");
+
+    assertEquals(0, output.getGroups().get(0).getStratifications().size());
+  }
+
+  @Test
+  void testDeleteStratificationReturnsExceptionForNullMeasureId() {
+    assertThrows(
+            InvalidIdException.class,
+            () -> groupService.deleteStratification("", "grouptestid", "stratificationId", "OtherUser"));
+  }
+
+  @Test
+  void testDeleteStratificationThrowsAccessException() {
+    String groupId = "testgroupid";
+    final Measure measure =
+            Measure.builder()
+                    .id("measure-id")
+                    .createdBy("OtherUser")
+                    .measureMetaData(MeasureMetaData.builder().draft(true).build())
+                    .measureSet(MeasureSet.builder().owner("OtherUser").build())
+                    .build();
+    when(measureService.findMeasureById(anyString())).thenReturn(measure);
+    doThrow(new UnauthorizedException("Measure", measure.getId(), "user2"))
+            .when(measureService)
+            .verifyAuthorization(anyString(), any(Measure.class));
+    assertThrows(
+            UnauthorizedException.class,
+            () -> groupService.deleteStratification("measure-id", groupId, "stratificationId", "user2"));
+  }
+
+  @Test
+  void testDeleteStratificationReturnsInvalidDraftStatusException() {
+    String groupId = "testgroupid";
+    final Measure measure =
+            Measure.builder()
+                    .id("measure-id")
+                    .createdBy("OtherUser")
+                    .measureMetaData(MeasureMetaData.builder().draft(false).build())
+                    .measureSet(MeasureSet.builder().owner("OtherUser").build())
+                    .build();
+    when(measureService.findMeasureById(anyString())).thenReturn(measure);
+    assertThrows(
+            InvalidDraftStatusException.class,
+            () -> groupService.deleteStratification("measure-id", groupId, "stratificationId", "user2"));
+  }
+
+  @Test
+  void testDeleteStratificationReturnsExceptionForResourceNotFound() {
+    assertThrows(
+            ResourceNotFoundException.class,
+            () -> groupService.deleteStratification("testid", "testgroupid", "stratificationId", "user2"));
+  }
+
+  @Test
+  void testDeleteStratificationReturnsExceptionForNullId() {
+    final Measure measure =
+            Measure.builder()
+                    .id("measure-id")
+                    .createdBy("OtherUser")
+                    .measureMetaData(MeasureMetaData.builder().draft(true).build())
+                    .measureSet(MeasureSet.builder().owner("OtherUser").build())
+                    .build();
+    when(measureService.findMeasureById(anyString())).thenReturn(measure);
+
+    assertThrows(
+            InvalidIdException.class,
+            () -> groupService.deleteStratification("measure-id", "", "stratificationId", "OtherUser"));
+  }
+
+  @Test
+  void testDeleteStratificationReturnsExceptionForGroupNotFoundInMeasure() {
+    Group group =
+            Group.builder()
+                    .id("testgroupid")
+                    .scoring("Cohort")
+                    .populations(
+                            List.of(
+                                    new Population(
+                                            "id-1",
+                                            PopulationType.INITIAL_POPULATION,
+                                            "Initial Population",
+                                            null,
+                                            null)))
+                    .build();
+
+    Measure existingMeasure =
+            Measure.builder()
+                    .id("measure-id")
+                    .createdBy("test.user")
+                    .groups(List.of(group))
+                    .measureMetaData(MeasureMetaData.builder().draft(true).build())
+                    .measureSet(MeasureSet.builder().owner("test.user").build())
+                    .build();
+    when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
+
+    assertThrows(
+            ResourceNotFoundException.class,
+            () -> groupService.deleteStratification("measure-id", "grouptestid1", "stratificationId", "test.user"));
+  }
+
+  @Test
+  void testDeleteStratificationReturnsExceptionForStratificationNotFoundInMeasure() {
+    measure.getGroups().get(0).setStratifications(Collections.emptyList());
+
+    when(measureService.findMeasureById(anyString())).thenReturn(measure);
+
+    assertThrows(
+            ResourceNotFoundException.class,
+            () -> groupService.deleteStratification(
+                    measure.getId(), group2.getId(), strata1.getId(), "test.user"));
   }
 }
