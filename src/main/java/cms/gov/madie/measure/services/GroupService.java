@@ -254,7 +254,8 @@ public class GroupService {
   }
 
   public void validateGroupAssociations(String model, Group group) {
-    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.valueOfName(model));
+    ModelValidator validator =
+        modelValidatorFactory.getModelValidator(ModelType.valueOfName(model));
     validator.validateGroupAssociations(group);
   }
 
