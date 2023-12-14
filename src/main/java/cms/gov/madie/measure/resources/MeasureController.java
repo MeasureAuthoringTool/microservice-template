@@ -10,9 +10,7 @@ import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.GroupService;
 import cms.gov.madie.measure.services.MeasureService;
 import gov.cms.madie.models.common.ActionType;
-import gov.cms.madie.models.measure.Group;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.MeasureSet;
+import gov.cms.madie.models.measure.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -242,6 +240,46 @@ public class MeasureController {
         measureId);
     return ResponseEntity.ok(
         groupService.deleteMeasureGroup(measureId, groupId, principal.getName()));
+  }
+
+  @PostMapping("/measures/{measureId}/groups/{groupId}/stratification")
+  public ResponseEntity<Stratification> createStratification(
+      @RequestBody Stratification stratification,
+      @PathVariable String measureId,
+      @PathVariable String groupId,
+      Principal principal) {
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(
+            groupService.createOrUpdateStratification(
+                groupId, measureId, stratification, principal.getName()));
+  }
+
+  @PutMapping("/measures/{measureId}/groups/{groupId}/stratification")
+  public ResponseEntity<Stratification> updateStratification(
+      @RequestBody Stratification stratification,
+      @PathVariable String measureId,
+      @PathVariable String groupId,
+      Principal principal) {
+    return ResponseEntity.ok(
+        groupService.createOrUpdateStratification(
+            groupId, measureId, stratification, principal.getName()));
+  }
+
+  @DeleteMapping("/measures/{measureId}/groups/{groupId}/stratification/{stratificationId}")
+  public ResponseEntity<Measure> deleteStratification(
+      @RequestBody @PathVariable String measureId,
+      @PathVariable String groupId,
+      @PathVariable String stratificationId,
+      Principal principal) {
+
+    log.info(
+        "User [{}] is attempting to delete a group with Id [{}] from measure [{}]",
+        principal.getName(),
+        groupId,
+        measureId);
+    return ResponseEntity.ok(
+        groupService.deleteStratification(
+            measureId, groupId, stratificationId, principal.getName()));
   }
 
   @GetMapping("/measures/search/{criteria}")

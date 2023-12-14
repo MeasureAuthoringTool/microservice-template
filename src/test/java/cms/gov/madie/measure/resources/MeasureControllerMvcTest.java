@@ -16,13 +16,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.common.Organization;
-import gov.cms.madie.models.measure.Group;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.MeasureGroupTypes;
-import gov.cms.madie.models.measure.MeasureMetaData;
-import gov.cms.madie.models.measure.MeasureScoring;
-import gov.cms.madie.models.measure.Population;
-import gov.cms.madie.models.measure.PopulationType;
+import gov.cms.madie.models.measure.*;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -45,9 +39,7 @@ import java.util.Optional;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -89,10 +81,12 @@ public class MeasureControllerMvcTest {
   private static final String TEST_API_KEY_HEADER_VALUE = "9202c9fa";
 
   @Captor ArgumentCaptor<Group> groupCaptor;
+  @Captor ArgumentCaptor<String> groupIdCaptor;
   @Captor ArgumentCaptor<String> measureIdCaptor;
   @Captor ArgumentCaptor<String> usernameCaptor;
   @Captor ArgumentCaptor<PageRequest> pageRequestCaptor;
   @Captor ArgumentCaptor<Boolean> activeCaptor;
+  @Captor ArgumentCaptor<Stratification> stratificationCaptor;
   @Captor private ArgumentCaptor<ActionType> actionTypeArgumentCaptor;
   @Captor private ArgumentCaptor<Class> targetClassArgumentCaptor;
   @Captor private ArgumentCaptor<String> targetIdArgumentCaptor;
@@ -1701,5 +1695,101 @@ public class MeasureControllerMvcTest {
         .getMeasuresByCriteria(eq(true), any(Pageable.class), eq(TEST_USER_ID), eq("measure"));
 
     verifyNoMoreInteractions(measureRepository);
+  }
+
+  @Test
+  public void testCreateStratification() throws Exception {
+    Stratification stratification = new Stratification();
+    stratification.setCqlDefinition("Initial Population");
+    stratification.setAssociation(PopulationType.INITIAL_POPULATION);
+    stratification.setAssociations(List.of(PopulationType.INITIAL_POPULATION));
+    final String stratificationJson =
+        "{\n"
+            + "    \"id\": \"id-1\",\n"
+            + "    \"description\": \"\",\n"
+            + "    \"cqlDefinition\": \"Initial Population\",\n"
+            + "    \"association\": \"initialPopulation\",\n"
+            + "    \"associations\": [\n"
+            + "        \"initialPopulation\",\n"
+            + "        \"numerator\"\n"
+            + "    ]\n"
+            + "}";
+    when(groupService.createOrUpdateStratification(
+            any(String.class), any(String.class), any(Stratification.class), any(String.class)))
+        .thenReturn(stratification);
+
+    mockMvc
+        .perform(
+            post("/measures/1234/groups/id-1/stratification")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(stratificationJson)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isCreated());
+
+    verify(groupService, times(1))
+        .createOrUpdateStratification(
+            groupIdCaptor.capture(),
+            measureIdCaptor.capture(),
+            stratificationCaptor.capture(),
+            usernameCaptor.capture());
+
+    Stratification persistedStratification = stratificationCaptor.getValue();
+    assertEquals(stratification.getCqlDefinition(), persistedStratification.getCqlDefinition());
+    assertEquals(PopulationType.INITIAL_POPULATION, persistedStratification.getAssociation());
+    assertEquals(2, persistedStratification.getAssociations().size());
+    assertTrue(
+        persistedStratification.getAssociations().contains(PopulationType.INITIAL_POPULATION));
+  }
+
+  @Test
+  public void testUpdateStratification() throws Exception {
+    Stratification stratification =
+        Stratification.builder()
+            .cqlDefinition("Initial Population")
+            .association(PopulationType.INITIAL_POPULATION)
+            .associations(List.of(PopulationType.INITIAL_POPULATION, PopulationType.NUMERATOR))
+            .build();
+    final String stratificationJson =
+        "{\n"
+            + "    \"id\": \"id-1\",\n"
+            + "    \"description\": \"\",\n"
+            + "    \"cqlDefinition\": \"Initial Population\",\n"
+            + "    \"association\": \"initialPopulation\",\n"
+            + "    \"associations\": [\n"
+            + "        \"initialPopulation\",\n"
+            + "        \"numerator\"\n"
+            + "    ]\n"
+            + "}";
+    when(groupService.createOrUpdateStratification(
+            any(String.class), any(String.class), any(Stratification.class), any(String.class)))
+        .thenReturn(stratification);
+
+    mockMvc
+        .perform(
+            put("/measures/1234/groups/id-1/stratification")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .content(stratificationJson)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isOk());
+
+    verify(groupService, times(1))
+        .createOrUpdateStratification(
+            groupIdCaptor.capture(),
+            measureIdCaptor.capture(),
+            stratificationCaptor.capture(),
+            usernameCaptor.capture());
+
+    Stratification persistedStratification = stratificationCaptor.getValue();
+    assertEquals(stratification.getCqlDefinition(), persistedStratification.getCqlDefinition());
+    assertEquals(PopulationType.INITIAL_POPULATION, persistedStratification.getAssociation());
+    assertEquals(2, persistedStratification.getAssociations().size());
+    assertTrue(
+        persistedStratification.getAssociations().contains(PopulationType.INITIAL_POPULATION));
   }
 }
