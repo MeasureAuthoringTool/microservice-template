@@ -1490,7 +1490,7 @@ public class GroupServiceTest implements ResourceUtil {
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
 
     groupService.createOrUpdateStratification(
-            group1.getId(), measure.getId(), strata1, "test.user");
+        group1.getId(), measure.getId(), strata1, "test.user");
 
     verify(measureRepository, times(1)).save(measureCaptor.capture());
     Measure savedMeasure = measureCaptor.getValue();
@@ -1527,7 +1527,7 @@ public class GroupServiceTest implements ResourceUtil {
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
 
     groupService.createOrUpdateStratification(
-            group2.getId(), measure.getId(), strata2, "test.user");
+        group2.getId(), measure.getId(), strata2, "test.user");
 
     verify(measureRepository, times(1)).save(measureCaptor.capture());
     Measure savedMeasure = measureCaptor.getValue();
@@ -1568,7 +1568,8 @@ public class GroupServiceTest implements ResourceUtil {
     assertEquals(
         "FactorialOfFive", measure.getGroups().get(0).getPopulations().get(0).getDefinition());
 
-    groupService.createOrUpdateStratification(group2.getId(), measure.getId(), strata2, "test.user");
+    groupService.createOrUpdateStratification(
+        group2.getId(), measure.getId(), strata2, "test.user");
 
     verify(measureRepository, times(1)).save(measureCaptor.capture());
     Measure savedMeasure = measureCaptor.getValue();
@@ -1628,8 +1629,8 @@ public class GroupServiceTest implements ResourceUtil {
     doReturn(measure).when(measureRepository).save(any(Measure.class));
 
     Measure output =
-            groupService.deleteStratification(
-                    measure.getId(), group2.getId(), strata1.getId(), "test.user");
+        groupService.deleteStratification(
+            measure.getId(), group2.getId(), strata1.getId(), "test.user");
 
     assertEquals(0, output.getGroups().get(0).getStratifications().size());
   }
@@ -1637,97 +1638,104 @@ public class GroupServiceTest implements ResourceUtil {
   @Test
   void testDeleteStratificationReturnsExceptionForNullMeasureId() {
     assertThrows(
-            InvalidIdException.class,
-            () -> groupService.deleteStratification("", "grouptestid", "stratificationId", "OtherUser"));
+        InvalidIdException.class,
+        () ->
+            groupService.deleteStratification("", "grouptestid", "stratificationId", "OtherUser"));
   }
 
   @Test
   void testDeleteStratificationThrowsAccessException() {
     String groupId = "testgroupid";
     final Measure measure =
-            Measure.builder()
-                    .id("measure-id")
-                    .createdBy("OtherUser")
-                    .measureMetaData(MeasureMetaData.builder().draft(true).build())
-                    .measureSet(MeasureSet.builder().owner("OtherUser").build())
-                    .build();
+        Measure.builder()
+            .id("measure-id")
+            .createdBy("OtherUser")
+            .measureMetaData(MeasureMetaData.builder().draft(true).build())
+            .measureSet(MeasureSet.builder().owner("OtherUser").build())
+            .build();
     when(measureService.findMeasureById(anyString())).thenReturn(measure);
     doThrow(new UnauthorizedException("Measure", measure.getId(), "user2"))
-            .when(measureService)
-            .verifyAuthorization(anyString(), any(Measure.class));
+        .when(measureService)
+        .verifyAuthorization(anyString(), any(Measure.class));
     assertThrows(
-            UnauthorizedException.class,
-            () -> groupService.deleteStratification("measure-id", groupId, "stratificationId", "user2"));
+        UnauthorizedException.class,
+        () ->
+            groupService.deleteStratification("measure-id", groupId, "stratificationId", "user2"));
   }
 
   @Test
   void testDeleteStratificationReturnsInvalidDraftStatusException() {
     String groupId = "testgroupid";
     final Measure measure =
-            Measure.builder()
-                    .id("measure-id")
-                    .createdBy("OtherUser")
-                    .measureMetaData(MeasureMetaData.builder().draft(false).build())
-                    .measureSet(MeasureSet.builder().owner("OtherUser").build())
-                    .build();
+        Measure.builder()
+            .id("measure-id")
+            .createdBy("OtherUser")
+            .measureMetaData(MeasureMetaData.builder().draft(false).build())
+            .measureSet(MeasureSet.builder().owner("OtherUser").build())
+            .build();
     when(measureService.findMeasureById(anyString())).thenReturn(measure);
     assertThrows(
-            InvalidDraftStatusException.class,
-            () -> groupService.deleteStratification("measure-id", groupId, "stratificationId", "user2"));
+        InvalidDraftStatusException.class,
+        () ->
+            groupService.deleteStratification("measure-id", groupId, "stratificationId", "user2"));
   }
 
   @Test
   void testDeleteStratificationReturnsExceptionForResourceNotFound() {
     assertThrows(
-            ResourceNotFoundException.class,
-            () -> groupService.deleteStratification("testid", "testgroupid", "stratificationId", "user2"));
+        ResourceNotFoundException.class,
+        () ->
+            groupService.deleteStratification(
+                "testid", "testgroupid", "stratificationId", "user2"));
   }
 
   @Test
   void testDeleteStratificationReturnsExceptionForNullId() {
     final Measure measure =
-            Measure.builder()
-                    .id("measure-id")
-                    .createdBy("OtherUser")
-                    .measureMetaData(MeasureMetaData.builder().draft(true).build())
-                    .measureSet(MeasureSet.builder().owner("OtherUser").build())
-                    .build();
+        Measure.builder()
+            .id("measure-id")
+            .createdBy("OtherUser")
+            .measureMetaData(MeasureMetaData.builder().draft(true).build())
+            .measureSet(MeasureSet.builder().owner("OtherUser").build())
+            .build();
     when(measureService.findMeasureById(anyString())).thenReturn(measure);
 
     assertThrows(
-            InvalidIdException.class,
-            () -> groupService.deleteStratification("measure-id", "", "stratificationId", "OtherUser"));
+        InvalidIdException.class,
+        () -> groupService.deleteStratification("measure-id", "", "stratificationId", "OtherUser"));
   }
 
   @Test
   void testDeleteStratificationReturnsExceptionForGroupNotFoundInMeasure() {
     Group group =
-            Group.builder()
-                    .id("testgroupid")
-                    .scoring("Cohort")
-                    .populations(
-                            List.of(
-                                    new Population(
-                                            "id-1",
-                                            PopulationType.INITIAL_POPULATION,
-                                            "Initial Population",
-                                            null,
-                                            null)))
-                    .build();
+        Group.builder()
+            .id("testgroupid")
+            .scoring("Cohort")
+            .populations(
+                List.of(
+                    new Population(
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        "Initial Population",
+                        null,
+                        null)))
+            .build();
 
     Measure existingMeasure =
-            Measure.builder()
-                    .id("measure-id")
-                    .createdBy("test.user")
-                    .groups(List.of(group))
-                    .measureMetaData(MeasureMetaData.builder().draft(true).build())
-                    .measureSet(MeasureSet.builder().owner("test.user").build())
-                    .build();
+        Measure.builder()
+            .id("measure-id")
+            .createdBy("test.user")
+            .groups(List.of(group))
+            .measureMetaData(MeasureMetaData.builder().draft(true).build())
+            .measureSet(MeasureSet.builder().owner("test.user").build())
+            .build();
     when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
 
     assertThrows(
-            ResourceNotFoundException.class,
-            () -> groupService.deleteStratification("measure-id", "grouptestid1", "stratificationId", "test.user"));
+        ResourceNotFoundException.class,
+        () ->
+            groupService.deleteStratification(
+                "measure-id", "grouptestid1", "stratificationId", "test.user"));
   }
 
   @Test
@@ -1737,8 +1745,9 @@ public class GroupServiceTest implements ResourceUtil {
     when(measureService.findMeasureById(anyString())).thenReturn(measure);
 
     assertThrows(
-            ResourceNotFoundException.class,
-            () -> groupService.deleteStratification(
-                    measure.getId(), group2.getId(), strata1.getId(), "test.user"));
+        ResourceNotFoundException.class,
+        () ->
+            groupService.deleteStratification(
+                measure.getId(), group2.getId(), strata1.getId(), "test.user"));
   }
 }
