@@ -1488,8 +1488,7 @@ public class GroupServiceTest implements ResourceUtil {
     when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
 
-    Stratification persistedStratification =
-        groupService.createOrUpdateStratification(
+    groupService.createOrUpdateStratification(
             group1.getId(), measure.getId(), strata1, "test.user");
 
     verify(measureRepository, times(1)).save(measureCaptor.capture());
@@ -1526,8 +1525,7 @@ public class GroupServiceTest implements ResourceUtil {
     when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
 
-    Stratification persistedGroup =
-        groupService.createOrUpdateStratification(
+    groupService.createOrUpdateStratification(
             group2.getId(), measure.getId(), strata2, "test.user");
 
     verify(measureRepository, times(1)).save(measureCaptor.capture());

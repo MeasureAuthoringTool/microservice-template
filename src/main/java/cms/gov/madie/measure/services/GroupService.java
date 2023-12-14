@@ -435,6 +435,8 @@ public class GroupService {
       throw new InvalidDraftStatusException(measure.getId());
     }
 
+    measureService.verifyAuthorization(username, measure);
+
     Optional<Group> group =
         measure.getGroups().stream().filter(g -> g.getId().equals(groupId)).findFirst();
 
@@ -479,7 +481,6 @@ public class GroupService {
     if (measureId == null || measureId.trim().isEmpty()) {
       throw new InvalidIdException("Measure Id cannot be null");
     }
-    //    Measure measure = measureRepository.findById(measureId).orElse(null);
     Measure measure = measureService.findMeasureById(measureId);
     if (measure == null) {
       throw new ResourceNotFoundException("Measure", measureId);
