@@ -424,4 +424,101 @@ public class GroupService {
       throw new IllegalArgumentException("Invalid elm json");
     }
   }
+
+  public Stratification createOrUpdateStratification(
+      String groupId, String measureId, Stratification stratification, String username) {
+    Measure measure = measureRepository.findById(measureId).orElse(null);
+    if (measure == null) {
+      throw new ResourceNotFoundException("Measure", measureId);
+    }
+    if (!measure.getMeasureMetaData().isDraft()) {
+      throw new InvalidDraftStatusException(measure.getId());
+    }
+
+    measureService.verifyAuthorization(username, measure);
+
+    Optional<Group> group =
+        measure.getGroups().stream().filter(g -> g.getId().equals(groupId)).findFirst();
+
+    // no stratification present, this is the first stratification
+    if (group.isPresent() && CollectionUtils.isEmpty(group.get().getStratifications())) {
+      stratification.setId(ObjectId.get().toString());
+      group.get().setStratifications(List.of(stratification));
+    } else {
+      Optional<Stratification> existingStratificationOpt =
+          group.get().getStratifications().stream()
+              .filter(s -> s.getId().equals(stratification.getId()))
+              .findFirst();
+      // if stratification already exists, just update it
+      if (existingStratificationOpt.isPresent()) {
+        Stratification existingStratification = existingStratificationOpt.get();
+        existingStratification.setCqlDefinition(stratification.getCqlDefinition());
+        existingStratification.setDescription(stratification.getDescription());
+        existingStratification.setAssociations(stratification.getAssociations());
+        existingStratification.setAssociation(stratification.getAssociation());
+      } else { // if not present, add into stratification collection
+        stratification.setId(ObjectId.get().toString());
+        List<Stratification> newStratList = new ArrayList<>();
+        newStratList.addAll(group.get().getStratifications());
+        newStratList.add(stratification);
+        group.get().setStratifications(newStratList);
+      }
+    }
+
+    Measure errors = measureUtil.validateAllMeasureDependencies(measure);
+    measure.setErrors(errors.getErrors());
+    measure.setCqlErrors(errors.isCqlErrors());
+
+    measure.setLastModifiedBy(username);
+    measure.setLastModifiedAt(Instant.now());
+    measureRepository.save(measure);
+    return stratification;
+  }
+
+  public Measure deleteStratification(
+      String measureId, String groupId, String stratificationId, String username) {
+
+    if (measureId == null || measureId.trim().isEmpty()) {
+      throw new InvalidIdException("Measure Id cannot be null");
+    }
+    Measure measure = measureService.findMeasureById(measureId);
+    if (measure == null) {
+      throw new ResourceNotFoundException("Measure", measureId);
+    }
+
+    if (!measure.getMeasureMetaData().isDraft()) {
+      throw new InvalidDraftStatusException(measure.getId());
+    }
+
+    measureService.verifyAuthorization(username, measure);
+
+    if (groupId == null || groupId.trim().isEmpty()) {
+      throw new InvalidIdException("Measure group Id cannot be null");
+    }
+
+    Optional<Group> group =
+        measure.getGroups().stream().filter(g -> g.getId().equals(groupId)).findFirst();
+
+    // to check if given group id is present
+    if (!group.isPresent()) {
+      throw new ResourceNotFoundException("Group", groupId);
+    }
+
+    List<Stratification> remainingStratifications =
+        group.get().getStratifications().stream()
+            .filter(s -> !s.getId().equals(stratificationId))
+            .toList();
+
+    if (remainingStratifications.size() == group.get().getStratifications().size()) {
+      throw new ResourceNotFoundException("Stratification", stratificationId);
+    }
+
+    group.get().setStratifications(remainingStratifications);
+    log.info(
+        "User [{}] has successfully deleted a group with Id [{}] from measure [{}]",
+        username,
+        groupId,
+        measure.getId());
+    return measureRepository.save(measure);
+  }
 }
