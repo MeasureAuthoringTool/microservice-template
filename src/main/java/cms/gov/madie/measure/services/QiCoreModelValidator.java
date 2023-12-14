@@ -8,7 +8,7 @@ import gov.cms.madie.models.measure.Group;
 
 @Slf4j
 @Service(ServiceConstants.QICORE_VALIDATOR)
-public class QicoreModelValidator implements ModelValidator {
+public class QiCoreModelValidator implements ModelValidator {
 
   @Override
   public void validateGroupAssociations(Group group) {

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import cms.gov.madie.measure.factories.ModelValidatorFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -22,26 +23,26 @@ import gov.cms.madie.models.measure.Stratification;
 @SpringBootTest
 @ActiveProfiles("test")
 class ModelValidatorTest {
-  @Autowired private ModelValidatorFactory modelLocator;
+  @Autowired private ModelValidatorFactory modelValidatorFactory;
 
   @Test
   void createModelValidatorTest() {
-    assertNotNull(modelLocator);
+    assertNotNull(modelValidatorFactory);
   }
 
   @Test
   void createQdmModelValidatorTest() {
-    assertNotNull(modelLocator);
+    assertNotNull(modelValidatorFactory);
 
-    ModelValidator validator = modelLocator.getModelValidator(ModelType.QDM_5_6);
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QDM_5_6);
     assertTrue(validator instanceof QdmModelValidator);
   }
 
   @Test
   void useQdmModelValidatorTest() {
-    assertNotNull(modelLocator);
+    assertNotNull(modelValidatorFactory);
     Group group = Group.builder().stratifications(new ArrayList<Stratification>()).build();
-    ModelValidator validator = modelLocator.getModelValidator(ModelType.QDM_5_6);
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QDM_5_6);
     assertTrue(validator instanceof QdmModelValidator);
     try {
       validator.validateGroupAssociations(group);
@@ -53,7 +54,7 @@ class ModelValidatorTest {
 
   @Test
   void useQdmModelValidatorTestHasInvalidAssociation() {
-    assertNotNull(modelLocator);
+    assertNotNull(modelValidatorFactory);
     Stratification strat = new Stratification();
     List<Stratification> strats = new ArrayList<>();
     strat.setAssociation(PopulationType.INITIAL_POPULATION);
@@ -61,7 +62,7 @@ class ModelValidatorTest {
     strats.add(strat);
 
     Group group = Group.builder().stratifications(strats).build();
-    ModelValidator validator = modelLocator.getModelValidator(ModelType.QDM_5_6);
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QDM_5_6);
     assertTrue(validator instanceof QdmModelValidator);
     try {
       validator.validateGroupAssociations(group);
@@ -73,14 +74,14 @@ class ModelValidatorTest {
 
   @Test
   void useQdmModelValidatorTestHasValidAssociation() {
-    assertNotNull(modelLocator);
+    assertNotNull(modelValidatorFactory);
     Stratification strat = new Stratification();
     List<Stratification> strats = new ArrayList<>();
 
     strats.add(strat);
 
     Group group = Group.builder().stratifications(strats).build();
-    ModelValidator validator = modelLocator.getModelValidator(ModelType.QDM_5_6);
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QDM_5_6);
     assertTrue(validator instanceof QdmModelValidator);
     try {
       validator.validateGroupAssociations(group);
@@ -91,18 +92,18 @@ class ModelValidatorTest {
 
   @Test
   void createQicoreModelValidatorTest() {
-    assertNotNull(modelLocator);
+    assertNotNull(modelValidatorFactory);
 
-    ModelValidator validator = modelLocator.getModelValidator(ModelType.QI_CORE);
-    assertTrue(validator instanceof QicoreModelValidator);
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
+    assertTrue(validator instanceof QiCoreModelValidator);
   }
 
   @Test
   void useQicoreModelValidatorTestNoStratifications() {
-    assertNotNull(modelLocator);
+    assertNotNull(modelValidatorFactory);
     Group group = Group.builder().stratifications(new ArrayList<Stratification>()).build();
-    ModelValidator validator = modelLocator.getModelValidator(ModelType.QI_CORE);
-    assertTrue(validator instanceof QicoreModelValidator);
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
+    assertTrue(validator instanceof QiCoreModelValidator);
     try {
       validator.validateGroupAssociations(group);
 
@@ -113,15 +114,15 @@ class ModelValidatorTest {
 
   @Test
   void useQicoreModelValidatorTestHasInvalidAssociation() {
-    assertNotNull(modelLocator);
+    assertNotNull(modelValidatorFactory);
     Stratification strat = new Stratification();
     List<Stratification> strats = new ArrayList<>();
 
     strats.add(strat);
 
     Group group = Group.builder().stratifications(strats).build();
-    ModelValidator validator = modelLocator.getModelValidator(ModelType.QI_CORE);
-    assertTrue(validator instanceof QicoreModelValidator);
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
+    assertTrue(validator instanceof QiCoreModelValidator);
     try {
       validator.validateGroupAssociations(group);
       fail("Should fail because QICore strat association can't be null");
@@ -134,7 +135,7 @@ class ModelValidatorTest {
 
   @Test
   void useQicoreModelValidatorTestHasAssociation() {
-    assertNotNull(modelLocator);
+    assertNotNull(modelValidatorFactory);
     Stratification strat = new Stratification();
     List<Stratification> strats = new ArrayList<>();
     strat.setAssociation(PopulationType.INITIAL_POPULATION);
@@ -142,8 +143,8 @@ class ModelValidatorTest {
     strats.add(strat);
 
     Group group = Group.builder().stratifications(strats).build();
-    ModelValidator validator = modelLocator.getModelValidator(ModelType.QI_CORE);
-    assertTrue(validator instanceof QicoreModelValidator);
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
+    assertTrue(validator instanceof QiCoreModelValidator);
     try {
       validator.validateGroupAssociations(group);
 

@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import cms.gov.madie.measure.factories.ModelValidatorFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -79,7 +80,7 @@ public class GroupServiceTest implements ResourceUtil {
 
   @Mock private ModelValidatorFactory modelValidatorFactory;
 
-  @Mock private QicoreModelValidator qicoreModelValidator;
+  @Mock private QiCoreModelValidator qicoreModelValidator;
 
   @InjectMocks private GroupService groupService;
 
