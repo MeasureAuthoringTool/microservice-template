@@ -1567,9 +1567,7 @@ public class GroupServiceTest implements ResourceUtil {
     assertEquals(
         "FactorialOfFive", measure.getGroups().get(0).getPopulations().get(0).getDefinition());
 
-    Stratification persistedGroup =
-        groupService.createOrUpdateStratification(
-            group2.getId(), measure.getId(), strata2, "test.user");
+    groupService.createOrUpdateStratification(group2.getId(), measure.getId(), strata2, "test.user");
 
     verify(measureRepository, times(1)).save(measureCaptor.capture());
     Measure savedMeasure = measureCaptor.getValue();
