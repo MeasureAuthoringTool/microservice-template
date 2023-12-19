@@ -1,9 +1,12 @@
 package cms.gov.madie.measure.utils;
 
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -18,7 +21,6 @@ import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import gov.cms.madie.models.measure.TestCasePopulationValue;
 import gov.cms.madie.models.measure.TestCaseStratificationValue;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
@@ -259,61 +261,52 @@ public class TestCaseServiceUtil {
     return matchedNumber;
   }
 
-  public void assignStratificationValuesQdm(
-      List<TestCaseGroupPopulation> testCaseGroupPopulations,
-      TestCase newTestCase,
-      String populationBasis) {
-    List<TestCaseStratificationValue> stratValues =
-        convertStratificationValues(
-            testCaseGroupPopulations.get(0).getStratificationValues(), populationBasis);
-    if (!CollectionUtils.isEmpty(stratValues)) {
-      newTestCase.getGroupPopulations().get(0).setStratificationValues(stratValues);
-    }
-  }
+  public List<TestCaseGroupPopulation> assignStratificationValuesQdm(
+      List<TestCaseGroupPopulation> testCaseGroupPopulations, List<Group> measureGroups) {
 
-  private List<TestCaseStratificationValue> convertStratificationValues(
-      List<TestCaseStratificationValue> stratValuesFromRequest, String populationBasis) {
-    List<TestCaseStratificationValue> converted = new ArrayList<>();
-    if (!CollectionUtils.isEmpty(stratValuesFromRequest)) {
-      for (TestCaseStratificationValue stratValue : stratValuesFromRequest) {
-        TestCaseStratificationValue newStratValue =
-            TestCaseStratificationValue.builder()
-                .id(UUID.randomUUID().toString())
-                .name(stratValue.getName())
-                .expected(getStratificationExpected(populationBasis, stratValue))
-                .build();
-        List<TestCasePopulationValue> populationValues = stratValue.getPopulationValues();
-        List<TestCasePopulationValue> convertgedPopulationValues = new ArrayList<>();
-        for (TestCasePopulationValue populationValue : populationValues) {
-          TestCasePopulationValue value =
-              TestCasePopulationValue.builder()
-                  .id(UUID.randomUUID().toString())
-                  .name(populationValue.getName())
-                  .expected(getPopulationExpected(populationBasis, populationValue))
-                  .build();
-          convertgedPopulationValues.add(value);
+    // Break up single list of pop values and strats into separate lists
+    List<TestCaseGroupPopulation> populationCriteria =
+        testCaseGroupPopulations.stream()
+            .filter(
+                group ->
+                    isNotEmpty(group.getPopulationValues())
+                        && isEmpty(group.getStratificationValues()))
+            .toList();
+
+    List<TestCaseStratificationValue> stratification =
+        testCaseGroupPopulations.stream()
+            .filter(group -> isNotEmpty(group.getStratificationValues()))
+            // Assumes there cannot be more than 1 strat in each incoming expected value obj
+            .map(group -> group.getStratificationValues().get(0))
+            .toList();
+
+    if (measureGroups.size() > 1 && isNotEmpty(stratification)) {
+      Deque<TestCaseStratificationValue> stratificationQueue = new ArrayDeque<>(stratification);
+      do {
+        // Assumes MADiE's Measure Group order matches incoming Group order
+        // i.e. MADiE's PopCriteria 1 matches incoming TestCaseGroupPopulation 1
+        for (int i = 0; i < measureGroups.size(); i++) {
+          for (int j = 0; j < measureGroups.get(i).getStratifications().size(); j++) {
+            addStrat(populationCriteria.get(i), stratificationQueue.pop());
+          }
         }
-        newStratValue.setPopulationValues(convertgedPopulationValues);
-        converted.add(newStratValue);
-      }
+      } while (!stratificationQueue.isEmpty());
+    } else {
+      // assign all strats to the single group
+      populationCriteria.get(0).setStratificationValues(stratification);
     }
-    return converted;
+    return new ArrayList<>(populationCriteria);
   }
 
-  private Object getStratificationExpected(
-      String populationBasis, TestCaseStratificationValue stratValue) {
-    Object expected = null;
-    if (populationBasis != null && populationBasis.equalsIgnoreCase("boolean")) {
-      String originalValue = stratValue.getExpected().toString();
-      if (originalValue.equalsIgnoreCase("1")) {
-        expected = Boolean.TRUE;
-      } else {
-        expected = Boolean.FALSE;
-      }
+  private void addStrat(
+      TestCaseGroupPopulation populationCriteria, TestCaseStratificationValue strat) {
+    if (populationCriteria.getStratificationValues() == null) {
+      List<TestCaseStratificationValue> strats = new ArrayList<>();
+      strats.add(strat);
+      populationCriteria.setStratificationValues(strats);
     } else {
-      expected = stratValue.getExpected();
+      populationCriteria.getStratificationValues().add(strat);
     }
-    return expected;
   }
 
   private Object getPopulationExpected(
