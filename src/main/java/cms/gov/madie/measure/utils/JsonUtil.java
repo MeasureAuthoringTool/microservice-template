@@ -376,20 +376,7 @@ public final class JsonUtil {
         groupPopulations.add(groupPopulation);
       }
     }
-    List<TestCaseGroupPopulation> groupPopulationsCombined = new ArrayList<>();
-    if (!CollectionUtils.isEmpty(groupPopulations)) {
-      TestCaseGroupPopulation testCaseGroupPopulation = TestCaseGroupPopulation.builder().build();
-      for (TestCaseGroupPopulation groupPopulation : groupPopulations) {
-        if (!CollectionUtils.isEmpty(groupPopulation.getPopulationValues())) {
-          testCaseGroupPopulation.setPopulationValues(groupPopulation.getPopulationValues());
-        } else if (!CollectionUtils.isEmpty(groupPopulation.getStratificationValues())) {
-          testCaseGroupPopulation.setStratificationValues(
-              groupPopulation.getStratificationValues());
-        }
-      }
-      groupPopulationsCombined.add(testCaseGroupPopulation);
-    }
-    return groupPopulationsCombined;
+    return groupPopulations;
   }
 
   private static void handlePopulationValues(
