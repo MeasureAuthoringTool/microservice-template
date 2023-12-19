@@ -13,7 +13,6 @@ import gov.cms.madie.models.measure.Export;
 import gov.cms.madie.models.measure.FhirMeasure;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.ReviewMetaData;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import lombok.AllArgsConstructor;
@@ -94,7 +93,6 @@ public class VersionService {
     measure.getMeasureMetaData().setDraft(false);
     measure.setLastModifiedAt(Instant.now());
     measure.setLastModifiedBy(username);
-    setMeasureReviewMetaData(measure);
     Version oldVersion = measure.getVersion();
     Version newVersion = getNextVersion(measure, versionType);
     measure.setVersion(newVersion);
@@ -159,7 +157,6 @@ public class VersionService {
     measureDraft.setCreatedAt(now);
     measureDraft.setLastModifiedAt(now);
     measureDraft.setCreatedBy(username);
-    setMeasureReviewMetaDataForDraft(measureDraft);
     Measure savedDraft = measureRepository.save(measureDraft);
     log.info(
         "User [{}] created a draft for measure with id [{}]. Draft id is [{}]",
@@ -280,25 +277,6 @@ public class VersionService {
 
   private String generateLibraryContentLine(String cqlLibraryName, Version version) {
     return "library " + cqlLibraryName + " version " + "'" + version + "'";
-  }
-
-  protected void setMeasureReviewMetaData(Measure measure) {
-    Instant today = Instant.now();
-    if (measure.getReviewMetaData() == null) {
-      ReviewMetaData reviewMetaData =
-          ReviewMetaData.builder().approvalDate(today).lastReviewDate(today).build();
-      measure.setReviewMetaData(reviewMetaData);
-    } else {
-      measure.getReviewMetaData().setApprovalDate(today);
-      measure.getReviewMetaData().setLastReviewDate(today);
-    }
-  }
-
-  protected void setMeasureReviewMetaDataForDraft(Measure measure) {
-    if (measure.getReviewMetaData() != null) {
-      measure.getReviewMetaData().setApprovalDate(null);
-      measure.getReviewMetaData().setLastReviewDate(null);
-    }
   }
 
   private void saveMeasureBundle(Measure savedMeasure, String measureBundle, String username) {

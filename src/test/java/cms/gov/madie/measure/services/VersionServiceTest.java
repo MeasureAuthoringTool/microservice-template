@@ -24,7 +24,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,7 +34,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -432,20 +430,6 @@ public class VersionServiceTest {
     assertEquals(savedValue.getVersion().getMinor(), 0);
     assertEquals(savedValue.getVersion().getRevisionNumber(), 0);
     assertFalse(savedValue.getMeasureMetaData().isDraft());
-    assertThat(
-        savedValue
-            .getReviewMetaData()
-            .getApprovalDate()
-            .truncatedTo(ChronoUnit.MINUTES)
-            .compareTo(today.truncatedTo(ChronoUnit.MINUTES)),
-        is(0));
-    assertThat(
-        savedValue
-            .getReviewMetaData()
-            .getLastReviewDate()
-            .truncatedTo(ChronoUnit.MINUTES)
-            .compareTo(today.truncatedTo(ChronoUnit.MINUTES)),
-        is(0));
 
     verify(exportRepository, times(1)).save(exportArgumentCaptor.capture());
     Export capturedExport = exportArgumentCaptor.getValue();
@@ -495,20 +479,6 @@ public class VersionServiceTest {
     assertEquals(savedValue.getVersion().getMinor(), 4);
     assertEquals(savedValue.getVersion().getRevisionNumber(), 0);
     assertFalse(savedValue.getMeasureMetaData().isDraft());
-    assertThat(
-        savedValue
-            .getReviewMetaData()
-            .getApprovalDate()
-            .truncatedTo(ChronoUnit.MINUTES)
-            .compareTo(today.truncatedTo(ChronoUnit.MINUTES)),
-        is(0));
-    assertThat(
-        savedValue
-            .getReviewMetaData()
-            .getLastReviewDate()
-            .truncatedTo(ChronoUnit.MINUTES)
-            .compareTo(today.truncatedTo(ChronoUnit.MINUTES)),
-        is(0));
   }
 
   @Test
@@ -564,20 +534,6 @@ public class VersionServiceTest {
     assertEquals(savedValue.getVersion().getMinor(), 3);
     assertEquals(savedValue.getVersion().getRevisionNumber(), 2);
     assertFalse(savedValue.getMeasureMetaData().isDraft());
-    assertThat(
-        savedValue
-            .getReviewMetaData()
-            .getApprovalDate()
-            .truncatedTo(ChronoUnit.MINUTES)
-            .compareTo(today.truncatedTo(ChronoUnit.MINUTES)),
-        is(0));
-    assertThat(
-        savedValue
-            .getReviewMetaData()
-            .getLastReviewDate()
-            .truncatedTo(ChronoUnit.MINUTES)
-            .compareTo(today.truncatedTo(ChronoUnit.MINUTES)),
-        is(0));
 
     verify(exportRepository, times(1)).save(exportArgumentCaptor.capture());
     Export savedExport = exportArgumentCaptor.getValue();
@@ -596,8 +552,6 @@ public class VersionServiceTest {
     Measure versionedMeasure = buildBasicMeasure();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(true);
-    ReviewMetaData reviewMetaData =
-        ReviewMetaData.builder().approvalDate(today).lastReviewDate(today).build();
     Measure versionedCopy =
         versionedMeasure.toBuilder()
             .id("2")
@@ -611,7 +565,6 @@ public class VersionServiceTest {
                         .id(ObjectId.get().toString())
                         .groupPopulations(List.of(clonedTestCaseGroupPopulation))
                         .build()))
-            .reviewMetaData(reviewMetaData)
             .build();
 
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(versionedMeasure));
@@ -637,8 +590,6 @@ public class VersionServiceTest {
     assertThat(
         draft.getTestCases().get(0).getGroupPopulations().get(0).getGroupId(),
         is(equalTo("clonedGroupId1")));
-    assertEquals(draft.getReviewMetaData().getApprovalDate().toString(), today.toString());
-    assertEquals(draft.getReviewMetaData().getLastReviewDate().toString(), today.toString());
   }
 
   @Test
@@ -658,8 +609,7 @@ public class VersionServiceTest {
             .build();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(true);
-    ReviewMetaData reviewMetaData =
-        ReviewMetaData.builder().approvalDate(today).lastReviewDate(today).build();
+
     Measure versionedCopy =
         versionedMeasure.toBuilder()
             .id("2")
@@ -668,7 +618,6 @@ public class VersionServiceTest {
             .measureMetaData(metaData)
             .groups(List.of())
             .testCases(List.of())
-            .reviewMetaData(reviewMetaData)
             .build();
 
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(versionedMeasure));
@@ -689,8 +638,6 @@ public class VersionServiceTest {
     assertThat(draft.getVersion().getRevisionNumber(), is(equalTo(1)));
     assertThat(draft.getGroups().size(), is(equalTo(0)));
     assertThat(draft.getTestCases().size(), is(equalTo(0)));
-    assertEquals(draft.getReviewMetaData().getApprovalDate().toString(), today.toString());
-    assertEquals(draft.getReviewMetaData().getLastReviewDate().toString(), today.toString());
   }
 
   @Test
@@ -754,67 +701,5 @@ public class VersionServiceTest {
         .groups(List.of(cvGroup))
         .testCases(List.of(testCase))
         .build();
-  }
-
-  @Test
-  public void testSetMeasureReviewMetaDataForDraft() {
-    Measure measure =
-        Measure.builder()
-            .reviewMetaData(
-                ReviewMetaData.builder().approvalDate(today).lastReviewDate(today).build())
-            .build();
-    versionService.setMeasureReviewMetaDataForDraft(measure);
-    assertNull(measure.getReviewMetaData().getApprovalDate());
-    assertNull(measure.getReviewMetaData().getLastReviewDate());
-  }
-
-  @Test
-  public void testSetMeasureReviewMetaData() {
-    Measure measure = Measure.builder().build();
-    Instant now = Instant.now();
-    versionService.setMeasureReviewMetaData(measure);
-
-    assertThat(
-        measure
-            .getReviewMetaData()
-            .getLastReviewDate()
-            .truncatedTo(ChronoUnit.MINUTES)
-            .compareTo(now.truncatedTo(ChronoUnit.MINUTES)),
-        is(0));
-
-    assertThat(
-        measure
-            .getReviewMetaData()
-            .getApprovalDate()
-            .truncatedTo(ChronoUnit.MINUTES)
-            .compareTo(now.truncatedTo(ChronoUnit.MINUTES)),
-        is(0));
-  }
-
-  @Test
-  public void testReplaceMeasureReviewMetaData() {
-    Measure measure = Measure.builder().build();
-    Instant now = Instant.now();
-    measure.setReviewMetaData(ReviewMetaData.builder().build());
-    versionService.setMeasureReviewMetaData(measure);
-    assertThat(
-        measure
-            .getReviewMetaData()
-            .getLastReviewDate()
-            .truncatedTo(ChronoUnit.MINUTES)
-            .compareTo(now.truncatedTo(ChronoUnit.MINUTES)),
-        is(0));
-
-    assertThat(
-        measure
-            .getReviewMetaData()
-            .getApprovalDate()
-            .truncatedTo(ChronoUnit.MINUTES)
-            .compareTo(now.truncatedTo(ChronoUnit.MINUTES)),
-        is(0));
-
-    assertThat(
-        measure.getReviewMetaData().getLastReviewDate(),
-        is(measure.getReviewMetaData().getApprovalDate()));
   }
 }
