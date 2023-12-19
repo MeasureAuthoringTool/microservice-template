@@ -259,6 +259,8 @@ public class TestCaseServiceUtil {
       }
       populationValues.add(populationValue);
       groupPopulation.setPopulationValues(populationValues);
+      groupPopulation.setStratificationValues(
+          testCaseGroupPopulations.get(measureGroupNumber).getStratificationValues());
     }
     return matchedNumber;
   }
