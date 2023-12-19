@@ -5,6 +5,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -15,20 +17,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.MeasureScoring;
+import gov.cms.madie.models.measure.Population;
+import gov.cms.madie.models.measure.PopulationType;
+import gov.cms.madie.models.measure.Stratification;
+import gov.cms.madie.models.measure.TestCase;
+import gov.cms.madie.models.measure.TestCaseGroupPopulation;
+import gov.cms.madie.models.measure.TestCasePopulationValue;
+import gov.cms.madie.models.measure.TestCaseStratificationValue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import gov.cms.madie.models.measure.Group;
-import gov.cms.madie.models.measure.MeasureScoring;
-import gov.cms.madie.models.measure.Population;
-import gov.cms.madie.models.measure.PopulationType;
-import gov.cms.madie.models.measure.TestCase;
-import gov.cms.madie.models.measure.TestCaseGroupPopulation;
-import gov.cms.madie.models.measure.TestCasePopulationValue;
-import gov.cms.madie.models.measure.TestCaseStratificationValue;
 
 @ExtendWith(MockitoExtension.class)
 public class TestCaseServiceUtilTest {
@@ -366,84 +368,143 @@ public class TestCaseServiceUtilTest {
 
   @Test
   public void testAssignStratificationValuesQdm() {
+    // Measure Group
+    Group group =
+        Group.builder()
+            .id("testGroupId")
+            .scoring(MeasureScoring.PROPORTION.name())
+            .populationBasis("Boolean")
+            .populations(List.of(population1, population2, population3, population4))
+            .stratifications(List.of(Stratification.builder().cqlDefinition("def1").build()))
+            .build();
+    List<Group> measureGroups = new ArrayList<>();
+    measureGroups.add(group);
+
+    TestCasePopulationValue populationValue = TestCasePopulationValue.builder().expected(1).build();
+
+    // Imported Strat Population
     TestCaseStratificationValue stratValue =
         TestCaseStratificationValue.builder().name("Strata-1").expected(1).build();
-    TestCasePopulationValue populationValue = TestCasePopulationValue.builder().expected(1).build();
     stratValue.setPopulationValues(List.of(populationValue));
-    TestCaseGroupPopulation groupPopulation =
-        TestCaseGroupPopulation.builder()
-            .stratificationValues(List.of(stratValue))
-            .populationValues(List.of(populationValue))
-            .build();
 
-    TestCaseGroupPopulation groupPopulationFromTestCase = TestCaseGroupPopulation.builder().build();
-    TestCase newTestCase =
-        TestCase.builder().groupPopulations(List.of(groupPopulationFromTestCase)).build();
+    TestCaseGroupPopulation stratPopultion =
+        TestCaseGroupPopulation.builder().stratificationValues(List.of(stratValue)).build();
 
-    testCaseServiceUtil.assignStratificationValuesQdm(
-        List.of(groupPopulation), newTestCase, "Encounter");
+    // Imported Populations
+    List<TestCaseGroupPopulation> importedGroups = new ArrayList<>();
+    importedGroups.add(
+        TestCaseGroupPopulation.builder().populationValues(List.of(populationValue)).build());
+    importedGroups.add(stratPopultion);
 
-    assertEquals(newTestCase.getGroupPopulations().get(0).getStratificationValues().size(), 1);
-    assertEquals(
-        newTestCase.getGroupPopulations().get(0).getStratificationValues().get(0).getExpected(), 1);
+    List<TestCaseGroupPopulation> testCaseGroups =
+        testCaseServiceUtil.assignStratificationValuesQdm(importedGroups, measureGroups);
+
+    assertEquals(1, testCaseGroups.size());
+    assertThat(testCaseGroups.get(0).getStratificationValues(), not(empty()));
+
+    List<TestCaseStratificationValue> finalStratValues = testCaseGroups.get(0).getStratificationValues();
+    assertThat(finalStratValues.size(), is(1));
+    assertThat(finalStratValues.get(0).getExpected(), is(1));
   }
 
   @Test
   public void testAssignStratificationValuesQdmEmpty() {
+    // Measure Group
+    Group group =
+        Group.builder()
+            .id("testGroupId")
+            .scoring(MeasureScoring.PROPORTION.name())
+            .populationBasis("Boolean")
+            .populations(List.of(population1, population2, population3, population4))
+            .stratifications(List.of(Stratification.builder().cqlDefinition("def1").build()))
+            .build();
+    List<Group> measureGroups = new ArrayList<>();
+    measureGroups.add(group);
 
-    TestCaseGroupPopulation groupPopulation =
-        TestCaseGroupPopulation.builder().stratificationValues(null).build();
+    // Imported Populations
+    List<TestCaseGroupPopulation> importedGroups = new ArrayList<>();
+    importedGroups.add(
+        TestCaseGroupPopulation.builder()
+            .populationValues(List.of(TestCasePopulationValue.builder().expected(1).build()))
+            .build());
 
-    TestCase newTestCase = TestCase.builder().build();
-
-    testCaseServiceUtil.assignStratificationValuesQdm(
-        List.of(groupPopulation), newTestCase, "Encounter");
-
-    assertNull(newTestCase.getGroupPopulations());
+    List<TestCaseGroupPopulation> testCaseGroups =
+        testCaseServiceUtil.assignStratificationValuesQdm(importedGroups, measureGroups);
+    assertThat(testCaseGroups.get(0).getStratificationValues(), empty());
   }
 
   @Test
   public void testAssignStratificationValuesQdmBoolean() {
+    // Measure Group
+    Group group =
+        Group.builder()
+            .id("testGroupId")
+            .scoring(MeasureScoring.PROPORTION.name())
+            .populationBasis("Boolean")
+            .populations(List.of(population1, population2, population3, population4))
+            .stratifications(List.of(Stratification.builder().cqlDefinition("def1").build()))
+            .build();
+    List<Group> measureGroups = new ArrayList<>();
+    measureGroups.add(group);
+
+    // Imported Populations
     TestCaseStratificationValue stratValue =
-        TestCaseStratificationValue.builder().name("Strata-1").expected(1).build();
-    TestCasePopulationValue populationValue = TestCasePopulationValue.builder().expected(1).build();
-    stratValue.setPopulationValues(List.of(populationValue));
-    TestCaseGroupPopulation groupPopulation =
+        TestCaseStratificationValue.builder().name("Strata-1").expected(true).build();
+    stratValue.setPopulationValues(List.of(TestCasePopulationValue.builder().expected(1).build()));
+
+    TestCaseGroupPopulation importedPopulationGroup =
+        TestCaseGroupPopulation.builder()
+            .populationValues(List.of(TestCasePopulationValue.builder().expected(true).build()))
+            .build();
+    TestCaseGroupPopulation importedStratGroup =
         TestCaseGroupPopulation.builder().stratificationValues(List.of(stratValue)).build();
+    List<TestCaseGroupPopulation> importedGroups = new ArrayList<>();
+    importedGroups.add(importedPopulationGroup);
+    importedGroups.add(importedStratGroup);
 
-    TestCaseGroupPopulation groupPopulationFromTestCase = TestCaseGroupPopulation.builder().build();
-    TestCase newTestCase =
-        TestCase.builder().groupPopulations(List.of(groupPopulationFromTestCase)).build();
+    List<TestCaseGroupPopulation> testCaseGroups =
+        testCaseServiceUtil.assignStratificationValuesQdm(importedGroups, measureGroups);
 
-    testCaseServiceUtil.assignStratificationValuesQdm(
-        List.of(groupPopulation), newTestCase, "Boolean");
-
-    assertEquals(newTestCase.getGroupPopulations().get(0).getStratificationValues().size(), 1);
+    assertEquals(1, testCaseGroups.get(0).getStratificationValues().size());
     assertEquals(
-        newTestCase.getGroupPopulations().get(0).getStratificationValues().get(0).getExpected(),
-        Boolean.TRUE);
+        Boolean.TRUE, testCaseGroups.get(0).getStratificationValues().get(0).getExpected());
   }
 
   @Test
   public void testAssignStratificationValuesQdmBooleanFalse() {
+    // Measure Group
+    Group group =
+        Group.builder()
+            .id("testGroupId")
+            .scoring(MeasureScoring.PROPORTION.name())
+            .populationBasis("Boolean")
+            .populations(List.of(population1, population2, population3, population4))
+            .stratifications(List.of(Stratification.builder().cqlDefinition("def1").build()))
+            .build();
+    List<Group> measureGroups = new ArrayList<>();
+    measureGroups.add(group);
+
+    // Imported Populations
     TestCaseStratificationValue stratValue =
-        TestCaseStratificationValue.builder().name("Strata-1").expected(0).build();
-    TestCasePopulationValue populationValue = TestCasePopulationValue.builder().expected(1).build();
-    stratValue.setPopulationValues(List.of(populationValue));
-    TestCaseGroupPopulation groupPopulation =
+        TestCaseStratificationValue.builder().name("Strata-1").expected(false).build();
+    stratValue.setPopulationValues(List.of(TestCasePopulationValue.builder().expected(1).build()));
+
+    TestCaseGroupPopulation importedPopulationGroup =
+        TestCaseGroupPopulation.builder()
+            .populationValues(List.of(TestCasePopulationValue.builder().expected(true).build()))
+            .build();
+    TestCaseGroupPopulation importedStratGroup =
         TestCaseGroupPopulation.builder().stratificationValues(List.of(stratValue)).build();
+    List<TestCaseGroupPopulation> importedGroups = new ArrayList<>();
+    importedGroups.add(importedPopulationGroup);
+    importedGroups.add(importedStratGroup);
 
-    TestCaseGroupPopulation groupPopulationFromTestCase = TestCaseGroupPopulation.builder().build();
-    TestCase newTestCase =
-        TestCase.builder().groupPopulations(List.of(groupPopulationFromTestCase)).build();
+    List<TestCaseGroupPopulation> testCaseGroups =
+        testCaseServiceUtil.assignStratificationValuesQdm(importedGroups, measureGroups);
 
-    testCaseServiceUtil.assignStratificationValuesQdm(
-        List.of(groupPopulation), newTestCase, "Boolean");
-
-    assertEquals(newTestCase.getGroupPopulations().get(0).getStratificationValues().size(), 1);
+    assertEquals(1, testCaseGroups.get(0).getStratificationValues().size());
     assertEquals(
-        newTestCase.getGroupPopulations().get(0).getStratificationValues().get(0).getExpected(),
-        Boolean.FALSE);
+        Boolean.FALSE, testCaseGroups.get(0).getStratificationValues().get(0).getExpected());
   }
 
   @Test
