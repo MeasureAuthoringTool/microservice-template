@@ -123,7 +123,7 @@ public class TestCaseServiceUtil {
    * This function modifies input parameters!
    *
    * @param group Existing Measure Population Criteria
-   * @param nonObsAndStratPopulations Population Criteria members excluding observations.
+   * @param nonObsPopulations Population Criteria members excluding observations.
    * @param measureGroupNumber
    * @param finalGroupPopulations Finalized list of Population Criteria populations.
    * @param newTestCase WIP Test Case from imported data
@@ -133,7 +133,7 @@ public class TestCaseServiceUtil {
    */
   private boolean mapPopulationValues(
       Group group,
-      List<TestCaseGroupPopulation> nonObsAndStratPopulations,
+      List<TestCaseGroupPopulation> nonObsPopulations,
       int measureGroupNumber,
       List<TestCaseGroupPopulation> finalGroupPopulations,
       TestCase newTestCase,
@@ -151,7 +151,7 @@ public class TestCaseServiceUtil {
       matchedNumber =
           assignPopulationValues(
               population,
-              nonObsAndStratPopulations,
+              nonObsPopulations,
               measureGroupNumber,
               groupPopulationIndex,
               matchedNumber,
