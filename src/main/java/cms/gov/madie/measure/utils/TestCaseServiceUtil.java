@@ -37,6 +37,7 @@ public class TestCaseServiceUtil {
           PopulationType.INITIAL_POPULATION,
           PopulationType.MEASURE_POPULATION,
           PopulationType.MEASURE_POPULATION_OBSERVATION,
+          PopulationType.MEASURE_OBSERVATION,
           PopulationType.MEASURE_POPULATION_EXCLUSION,
           PopulationType.DENOMINATOR,
           PopulationType.DENOMINATOR_OBSERVATION,
