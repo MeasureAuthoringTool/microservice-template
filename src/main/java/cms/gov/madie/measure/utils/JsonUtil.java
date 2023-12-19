@@ -353,9 +353,9 @@ public final class JsonUtil {
   public static List<TestCaseGroupPopulation> getTestCaseGroupPopulationsQdm(
       String json, Measure measure) throws JsonProcessingException {
     List<TestCaseGroupPopulation> groupPopulations = new ArrayList<>();
-    List<TestCaseStratificationValue> stratificationValues = new ArrayList<>();
     JsonNode populations = getResourceNodeQdm(json, "expectedValues");
     if (populations != null) {
+      int stratCount = 0; // appended to strat name
       for (JsonNode population : populations) {
         List<TestCasePopulationValue> populationValues = new ArrayList<>();
         TestCaseGroupPopulation groupPopulation = null;
@@ -365,10 +365,12 @@ public final class JsonUtil {
 
         JsonNode stratification = population.get("STRAT");
         if (stratification != null) {
-          handleStratificationValues(
-              stratificationValues, stratification, populationValues, measure);
           groupPopulation =
-              TestCaseGroupPopulation.builder().stratificationValues(stratificationValues).build();
+              TestCaseGroupPopulation.builder()
+                  .stratificationValues(
+                      handleStratificationValues(
+                          stratification, populationValues, measure, ++stratCount))
+                  .build();
         } else {
           groupPopulation =
               TestCaseGroupPopulation.builder().populationValues(populationValues).build();
@@ -495,28 +497,30 @@ public final class JsonUtil {
     }
   }
 
-  private static void handleStratificationValues(
-      List<TestCaseStratificationValue> stratificationValues,
+  private static List<TestCaseStratificationValue> handleStratificationValues(
       JsonNode stratification,
       List<TestCasePopulationValue> populationValues,
-      Measure measure) {
+      Measure measure,
+      int stratCount) {
     QdmMeasure qdmMeasure = (QdmMeasure) measure;
-    int groupStratSize =
-        !CollectionUtils.isEmpty(measure.getGroups())
-                && measure.getGroups().get(0).getStratifications() != null
-            ? measure.getGroups().get(0).getStratifications().size()
-            : 0;
-    if (!qdmMeasure.getScoring().equalsIgnoreCase(MeasureScoring.RATIO.toString())
-        && stratificationValues.size() < groupStratSize) {
-      String stratName = "Strata-" + (stratificationValues.size() + 1);
+
+    if (!qdmMeasure.getScoring().equalsIgnoreCase(MeasureScoring.RATIO.toString())) {
+      List<TestCaseStratificationValue> stratificationValues = new ArrayList<>();
+      String stratName = "Strata-" + stratCount;
       TestCaseStratificationValue stratValue =
           TestCaseStratificationValue.builder()
+              .id(UUID.randomUUID().toString())
               .name(stratName)
-              .expected(stratification.intValue())
+              .expected(
+                  qdmMeasure.isPatientBasis()
+                      ? stratification.intValue() == 1
+                      : stratification.intValue())
               .build();
       stratificationValues.add(stratValue);
       stratValue.setPopulationValues(populationValues);
+      return stratificationValues;
     }
+    return null;
   }
 
   public static String getTestDescriptionQdm(String json) throws JsonProcessingException {
