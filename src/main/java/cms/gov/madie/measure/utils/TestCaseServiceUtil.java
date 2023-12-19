@@ -46,24 +46,26 @@ public class TestCaseServiceUtil {
           PopulationType.NUMERATOR_EXCLUSION,
           PopulationType.DENOMINATOR_EXCEPTION);
 
+  /**
+   * Filter out populations that are not associated with a definition.
+   *
+   * @param originalGroups Target measure's Population Criteria.
+   * @return New List with populations associated with definitions.
+   */
   public List<Group> getGroupsWithValidPopulations(List<Group> originalGroups) {
-    List<Group> changedGroups = null;
-    if (!isEmpty(originalGroups)) {
-      changedGroups = new ArrayList<>();
-      for (Group group : originalGroups) {
-        if (!isEmpty(group.getPopulations())) {
-          List<Population> changedPopulations = new ArrayList<>();
-          for (Population population : group.getPopulations()) {
-            if (!StringUtils.isBlank(population.getDefinition())) {
-              changedPopulations.add(population);
-            }
-          }
-          group.setPopulations(changedPopulations);
-        }
-        changedGroups.add(group);
+    if (isEmpty(originalGroups)) {
+      return null;
+    }
+    List<Group> groups = new ArrayList<>(originalGroups);
+
+    for (Group group : groups) {
+      if (isNotEmpty(group.getPopulations())) {
+        List<Population> pops = new ArrayList<>(group.getPopulations());
+        pops.removeIf(pop -> StringUtils.isBlank(pop.getDefinition()));
+        group.setPopulations(pops);
       }
     }
-    return changedGroups;
+    return groups;
   }
 
   // match criteria groups from MeasureReport in imported json file
