@@ -159,7 +159,6 @@ public class TestCaseServiceUtil {
               populationValues,
               groupPopulation);
     }
-
     if (matchedNumber == group.getPopulations().size()) {
       // if group has observations and some existed on test case, add them back in
       List<TestCasePopulationValue> observationPopVals =
@@ -315,7 +314,7 @@ public class TestCaseServiceUtil {
 
   private Object getPopulationExpected(
       String populationBasis, TestCasePopulationValue populationValue) {
-    Object expected = null;
+    Object expected;
     if (populationBasis != null && populationBasis.equalsIgnoreCase("boolean")) {
       String originalValue = populationValue.getExpected().toString();
       if (originalValue.equalsIgnoreCase("1")) {
@@ -336,7 +335,7 @@ public class TestCaseServiceUtil {
     if (!isEmpty(testCaseGroupPopulations)) {
       for (TestCaseGroupPopulation groupPopulation : testCaseGroupPopulations) {
         List<TestCasePopulationValue> revisedPopulationValues = null;
-        if (CollectionUtils.isNotEmpty(groupPopulation.getPopulationValues())) {
+        if (isNotEmpty(groupPopulation.getPopulationValues())) {
           revisedPopulationValues =
               groupPopulation.getPopulationValues().stream()
                   .filter(
@@ -363,7 +362,7 @@ public class TestCaseServiceUtil {
 
     List<TestCasePopulationValue> combinedPopulationValues = new ArrayList<>();
     combinedPopulationValues.addAll(currentPopulationValues);
-    if (!CollectionUtils.isEmpty(observationPopulations)) {
+    if (!isEmpty(observationPopulations)) {
       combinedPopulationValues.addAll(
           convertPopulationValues(observationPopulations, populationBasis));
     }
@@ -376,7 +375,7 @@ public class TestCaseServiceUtil {
   private List<TestCasePopulationValue> convertPopulationValues(
       List<TestCasePopulationValue> observationValues, String populationBasis) {
     List<TestCasePopulationValue> observationPopulationValues = new ArrayList<>();
-    if (!CollectionUtils.isEmpty(observationValues)) {
+    if (!isEmpty(observationValues)) {
       for (TestCasePopulationValue observationvalue : observationValues) {
         TestCasePopulationValue populationValue =
             TestCasePopulationValue.builder()
@@ -392,8 +391,8 @@ public class TestCaseServiceUtil {
 
   protected List<TestCasePopulationValue> getObservationPopulations(
       List<TestCaseGroupPopulation> testCaseGroupPopulations) {
-    if (!CollectionUtils.isEmpty(testCaseGroupPopulations)
-        && !CollectionUtils.isEmpty(testCaseGroupPopulations.get(0).getPopulationValues())) {
+    if (!isEmpty(testCaseGroupPopulations)
+        && !isEmpty(testCaseGroupPopulations.get(0).getPopulationValues())) {
       return testCaseGroupPopulations.get(0).getPopulationValues().stream()
           .filter(populationValue -> populationValue.getName().toCode().contains("observation"))
           .toList();
