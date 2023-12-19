@@ -454,7 +454,10 @@ public final class JsonUtil {
           if (observation != null) {
             TestCasePopulationValue populationValue =
                 TestCasePopulationValue.builder()
-                    .name(PopulationType.MEASURE_OBSERVATION)
+                    .name(
+                        population.get("MSRPOPL") != null
+                            ? PopulationType.MEASURE_POPULATION_OBSERVATION
+                            : PopulationType.MEASURE_OBSERVATION)
                     .expected(observation.asInt())
                     .build();
             populationValues.add(populationValue);
