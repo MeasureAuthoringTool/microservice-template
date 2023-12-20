@@ -408,6 +408,97 @@ public class TestCaseServiceUtilTest {
   }
 
   @Test
+  public void testAssignStratificationValuesMultiPopulationCriteriaQdm() {
+    // Measure Groups
+    Group group1 =
+        Group.builder()
+            .id("testGroupId1")
+            .scoring(MeasureScoring.PROPORTION.name())
+            .populationBasis("Boolean")
+            .populations(List.of(population1, population2, population3, population4))
+            .stratifications(List.of(Stratification.builder().cqlDefinition("def1").build(),
+                Stratification.builder().cqlDefinition("def2").build()))
+            .build();
+
+    Group group2 =
+        Group.builder()
+            .id("testGroupId2")
+            .scoring(MeasureScoring.PROPORTION.name())
+            .populationBasis("Boolean")
+            .populations(List.of(population1, population2, population4))
+            .stratifications(List.of(Stratification.builder().cqlDefinition("def1").build(),
+                Stratification.builder().cqlDefinition("def2").build()))
+            .build();
+    List<Group> measureGroups = new ArrayList<>();
+    measureGroups.add(group1);
+    measureGroups.add(group2);
+
+    // Imported Strat Populations
+    TestCaseStratificationValue stratValue1 =
+        TestCaseStratificationValue.builder().name("Strata-1").expected(1).build();
+    stratValue1.setPopulationValues(List.of(
+        TestCasePopulationValue.builder().expected(1).build(),
+        TestCasePopulationValue.builder().expected(1).build(),
+        TestCasePopulationValue.builder().expected(0).build(),
+        TestCasePopulationValue.builder().expected(1).build()));
+
+    TestCaseStratificationValue stratValue2 =
+        TestCaseStratificationValue.builder().name("Strata-2").expected(0).build();
+    stratValue2.setPopulationValues(List.of(
+        TestCasePopulationValue.builder().expected(0).build(),
+        TestCasePopulationValue.builder().expected(0).build(),
+        TestCasePopulationValue.builder().expected(0).build(),
+        TestCasePopulationValue.builder().expected(0).build()));
+
+    TestCaseGroupPopulation stratPopCriteria1 = TestCaseGroupPopulation.builder().stratificationValues(List.of(stratValue1)).build();
+    TestCaseGroupPopulation stratPopCriteria2 = TestCaseGroupPopulation.builder().stratificationValues(List.of(stratValue2)).build();
+    TestCaseGroupPopulation stratPopCriteria3 = TestCaseGroupPopulation.builder().stratificationValues(List.of(stratValue1)).build();
+    TestCaseGroupPopulation stratPopCriteria4 = TestCaseGroupPopulation.builder().stratificationValues(List.of(stratValue2)).build();
+
+    // Imported Populations
+    List<TestCaseGroupPopulation> importedGroups = new ArrayList<>();
+    importedGroups.add(
+        TestCaseGroupPopulation.builder().populationValues(
+            List.of(
+                TestCasePopulationValue.builder().expected(1).build(),
+                TestCasePopulationValue.builder().expected(1).build(),
+                TestCasePopulationValue.builder().expected(0).build(),
+                TestCasePopulationValue.builder().expected(1).build())
+        ).build());
+
+    importedGroups.add(
+        TestCaseGroupPopulation.builder().populationValues(
+            List.of(
+                TestCasePopulationValue.builder().expected(1).build(),
+                TestCasePopulationValue.builder().expected(1).build(),
+                TestCasePopulationValue.builder().expected(1).build(),
+                TestCasePopulationValue.builder().expected(0).build())
+        ).build());
+
+    importedGroups.add(stratPopCriteria1);
+    importedGroups.add(stratPopCriteria2);
+    importedGroups.add(stratPopCriteria3);
+    importedGroups.add(stratPopCriteria4);
+
+    List<TestCaseGroupPopulation> testCaseGroups =
+        testCaseServiceUtil.assignStratificationValuesQdm(importedGroups, measureGroups);
+
+    assertEquals(2, testCaseGroups.size());
+    assertThat(testCaseGroups.get(0).getStratificationValues(), not(empty()));
+    assertThat(testCaseGroups.get(1).getStratificationValues(), not(empty()));
+
+    List<TestCaseStratificationValue> finalStratValues1 = testCaseGroups.get(0).getStratificationValues();
+    assertThat(finalStratValues1.size(), is(2));
+    assertThat(finalStratValues1.get(0).getExpected(), is(1));
+    assertThat(finalStratValues1.get(1).getExpected(), is(0));
+
+    List<TestCaseStratificationValue> finalStratValues2 = testCaseGroups.get(1).getStratificationValues();
+    assertThat(finalStratValues2.size(), is(2));
+    assertThat(finalStratValues2.get(0).getExpected(), is(1));
+    assertThat(finalStratValues2.get(1).getExpected(), is(0));
+  }
+
+  @Test
   public void testAssignStratificationValuesQdmEmpty() {
     // Measure Group
     Group group =
