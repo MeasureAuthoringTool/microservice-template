@@ -517,7 +517,7 @@ public class TestCaseService {
             testCaseServiceUtil.assignStratificationValuesQdm(testCaseGroupPopulations, groups);
       }
 
-      // See if the main populations from the measure population criteria and the incoming test case match.
+      // Compare main populations from the measure pop criteria against incoming test case.
       // Check includes Stratifications and excludes Observations.
       boolean matched =
           testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, groups, newTestCase);
