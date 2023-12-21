@@ -41,6 +41,10 @@ madie:
       base-url: ${TERMINOLOGY_SSERVICE_URL:http://localhost:8082/api/vsac}
       fetch-value-sets: /value-sets/searches
       validate-codes: /validations/codes
+  qdm-service:
+    base-url: ${QDM_SSERVICE_URL:http://localhost:8086/api}
+    create-package-urn: /qdm/measures/package
+
 
 management:
   endpoints:

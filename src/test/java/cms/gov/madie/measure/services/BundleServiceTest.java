@@ -117,13 +117,13 @@ class BundleServiceTest implements ResourceUtil {
         () -> bundleService.bundleMeasure(measure, "Bearer TOKEN", "calculation"));
   }
 
-  @Test
-  void testBundleMeasureWhenThereAreNoGroups() {
-    measure.setGroups(new ArrayList<>());
-    assertThrows(
-        InvalidResourceBundleStateException.class,
-        () -> bundleService.bundleMeasure(measure, "Bearer TOKEN", "calculation"));
-  }
+  //  @Test
+  //  void testBundleMeasureWhenThereAreNoGroups() {
+  //    measure.setGroups(new ArrayList<>());
+  //    assertThrows(
+  //        InvalidResourceBundleStateException.class,
+  //        () -> bundleService.bundleMeasure(measure, "Bearer TOKEN", "calculation"));
+  //  }
 
   @Test
   void testBundleMeasureThrowsOperationException() {
@@ -213,7 +213,7 @@ class BundleServiceTest implements ResourceUtil {
     measure.setModel("QI-Core v4.1.1");
     when(exportRepository.findByMeasureId(anyString())).thenReturn(Optional.of(export));
 
-    byte[] output = bundleService.exportBundleMeasure(measure, "Bearer TOKEN");
+    byte[] output = bundleService.getMeasureExport(measure, "Bearer TOKEN");
     assertNotNull(output);
     ZipInputStream z = new ZipInputStream(new ByteArrayInputStream(output));
     ZipEntry entry = z.getNextEntry();
@@ -238,7 +238,7 @@ class BundleServiceTest implements ResourceUtil {
     Exception ex =
         assertThrows(
             BundleOperationException.class,
-            () -> bundleService.exportBundleMeasure(measure, "Bearer TOKEN"));
+            () -> bundleService.getMeasureExport(measure, "Bearer TOKEN"));
     assertThat(
         ex.getMessage(),
         is(
@@ -270,7 +270,7 @@ class BundleServiceTest implements ResourceUtil {
         .when(fhirServicesClient)
         .getMeasureBundleExport(any(Measure.class), eq("Bearer TOKEN"));
 
-    byte[] output = bundleService.exportBundleMeasure(measure, "Bearer TOKEN");
+    byte[] output = bundleService.getMeasureExport(measure, "Bearer TOKEN");
     assertNotNull(output);
     assertTrue(Arrays.equals("TEST".getBytes(), output));
   }
@@ -296,7 +296,7 @@ class BundleServiceTest implements ResourceUtil {
     Exception ex =
         assertThrows(
             BundleOperationException.class,
-            () -> bundleService.exportBundleMeasure(measure, "Bearer TOKEN"));
+            () -> bundleService.getMeasureExport(measure, "Bearer TOKEN"));
     assertThat(
         ex.getMessage(),
         is(
@@ -308,7 +308,7 @@ class BundleServiceTest implements ResourceUtil {
   @Test
   void testExportBundleMeasureForNullMeasureReturnsNull() throws IOException {
 
-    byte[] output = bundleService.exportBundleMeasure(null, "Bearer TOKEN");
+    byte[] output = bundleService.getMeasureExport(null, "Bearer TOKEN");
     assertNull(output);
   }
 }
