@@ -54,7 +54,7 @@ class PackageServiceFactoryTest {
   @Test
   void testFactoryThrowsException() {
     PackageServiceFactory factory =
-        new PackageServiceFactory(Map.of(ServiceConstants.QDM_VALIDATOR, qdmPackageService));
+        new PackageServiceFactory(Map.of("qdm", qdmPackageService));
     assertThrows(
         UnsupportedTypeException.class, () -> factory.getPackageService(ModelType.QI_CORE));
   }
