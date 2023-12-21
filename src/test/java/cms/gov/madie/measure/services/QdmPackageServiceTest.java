@@ -35,7 +35,7 @@ class QdmPackageServiceTest {
   @Mock private RestTemplate qdmServiceRestTemplate;
   @InjectMocks private QdmPackageService qdmPackageService;
 
-  private String token = "token";
+  private final String token = "token";
   private Measure measure;
 
   @BeforeEach
