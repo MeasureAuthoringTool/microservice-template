@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -284,19 +285,33 @@ public class TestCaseServiceUtil {
             .map(group -> group.getStratificationValues().get(0))
             .toList();
 
+    // Mismatch between target and import Stratification, don't set Strat expected values
+    boolean measureHasStrats =
+        measureGroups.stream().allMatch(group -> isNotEmpty(group.getStratifications()));
+    if ((measureHasStrats && isEmpty(stratification))
+        || (!measureHasStrats && isNotEmpty(stratification))) {
+      return new ArrayList<>(populationCriteria);
+    }
+
     if (measureGroups.size() > 1 && isNotEmpty(stratification)) {
       Deque<TestCaseStratificationValue> stratificationQueue = new ArrayDeque<>(stratification);
-      do {
-        // Assumes MADiE's Measure Group order matches incoming Group order
-        // i.e. MADiE's PopCriteria 1 matches incoming TestCaseGroupPopulation 1
-        for (int i = 0; i < measureGroups.size(); i++) {
-          for (int j = 0; j < measureGroups.get(i).getStratifications().size(); j++) {
-            addStrat(populationCriteria.get(i), stratificationQueue.pop());
+      try {
+        do {
+          // Assumes MADiE's Measure Group order matches incoming Group order
+          // i.e. MADiE's PopCriteria 1 aligns with incoming TestCaseGroupPopulation 1
+          for (int i = 0; i < measureGroups.size(); i++) {
+            for (int j = 0; j < measureGroups.get(i).getStratifications().size(); j++) {
+              addStrat(populationCriteria.get(i), stratificationQueue.pop());
+            }
           }
-        }
-      } while (!stratificationQueue.isEmpty());
+        } while (!stratificationQueue.isEmpty());
+      } catch (NoSuchElementException e) {
+        // Import Strat count doesn't align with measure group Strat count, don't set expected
+        // values.
+        populationCriteria.forEach(popCrit -> popCrit.setStratificationValues(new ArrayList<>()));
+      }
     } else {
-      // assign all strats to the single group
+      // Single group, go ahead and assign all strats.
       populationCriteria.get(0).setStratificationValues(stratification);
     }
     return new ArrayList<>(populationCriteria);
