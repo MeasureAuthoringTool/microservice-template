@@ -285,12 +285,12 @@ public class TestCaseServiceUtil {
             .map(group -> group.getStratificationValues().get(0))
             .toList();
 
-    // Mismatch between target and import Stratification, don't set Strat expected values
+    // Mismatch between target and import Stratification, don't set any expected values
     boolean measureHasStrats =
         measureGroups.stream().allMatch(group -> isNotEmpty(group.getStratifications()));
     if ((measureHasStrats && isEmpty(stratification))
         || (!measureHasStrats && isNotEmpty(stratification))) {
-      return new ArrayList<>(populationCriteria);
+      return null;
     }
 
     if (measureGroups.size() > 1 && isNotEmpty(stratification)) {
@@ -306,9 +306,9 @@ public class TestCaseServiceUtil {
           }
         } while (!stratificationQueue.isEmpty());
       } catch (NoSuchElementException e) {
-        // Import Strat count doesn't align with measure group Strat count, don't set expected
+        // Import Strat count doesn't align with measure group Strat count, don't set any expected
         // values.
-        populationCriteria.forEach(popCrit -> popCrit.setStratificationValues(new ArrayList<>()));
+        return null;
       }
     } else {
       // Single group, go ahead and assign all strats.

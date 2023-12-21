@@ -696,9 +696,7 @@ public class TestCaseServiceUtilTest {
     List<TestCaseGroupPopulation> testCaseGroups =
         testCaseServiceUtil.assignStratificationValuesQdm(importedGroups, measureGroups);
 
-    assertEquals(2, testCaseGroups.size());
-    assertThat(testCaseGroups.get(0).getStratificationValues(), empty());
-    assertThat(testCaseGroups.get(1).getStratificationValues(), empty());
+    assertNull(testCaseGroups);
   }
 
   @Test
@@ -783,9 +781,7 @@ public class TestCaseServiceUtilTest {
     List<TestCaseGroupPopulation> testCaseGroups =
         testCaseServiceUtil.assignStratificationValuesQdm(importedGroups, measureGroups);
 
-    assertEquals(2, testCaseGroups.size());
-    assertThat(testCaseGroups.get(0).getStratificationValues(), empty());
-    assertThat(testCaseGroups.get(1).getStratificationValues(), empty());
+    assertNull(testCaseGroups);
   }
 
   @Test
@@ -811,7 +807,7 @@ public class TestCaseServiceUtilTest {
 
     List<TestCaseGroupPopulation> testCaseGroups =
         testCaseServiceUtil.assignStratificationValuesQdm(importedGroups, measureGroups);
-    assertThat(testCaseGroups.get(0).getStratificationValues(), nullValue());
+    assertNull(testCaseGroups);
   }
 
   @Test
