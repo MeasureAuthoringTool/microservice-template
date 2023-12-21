@@ -4,7 +4,6 @@ import cms.gov.madie.measure.exceptions.UnsupportedTypeException;
 import cms.gov.madie.measure.services.PackageService;
 import cms.gov.madie.measure.services.QdmPackageService;
 import cms.gov.madie.measure.services.QicorePackageService;
-import cms.gov.madie.measure.services.ServiceConstants;
 import gov.cms.madie.models.common.ModelType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,8 +52,7 @@ class PackageServiceFactoryTest {
 
   @Test
   void testFactoryThrowsException() {
-    PackageServiceFactory factory =
-        new PackageServiceFactory(Map.of("qdm", qdmPackageService));
+    PackageServiceFactory factory = new PackageServiceFactory(Map.of("qdm", qdmPackageService));
     assertThrows(
         UnsupportedTypeException.class, () -> factory.getPackageService(ModelType.QI_CORE));
   }
