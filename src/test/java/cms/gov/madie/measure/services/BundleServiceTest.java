@@ -117,14 +117,6 @@ class BundleServiceTest implements ResourceUtil {
         () -> bundleService.bundleMeasure(measure, "Bearer TOKEN", "calculation"));
   }
 
-  //  @Test
-  //  void testBundleMeasureWhenThereAreNoGroups() {
-  //    measure.setGroups(new ArrayList<>());
-  //    assertThrows(
-  //        InvalidResourceBundleStateException.class,
-  //        () -> bundleService.bundleMeasure(measure, "Bearer TOKEN", "calculation"));
-  //  }
-
   @Test
   void testBundleMeasureThrowsOperationException() {
     when(elmTranslatorClient.getElmJson(anyString(), anyString()))
