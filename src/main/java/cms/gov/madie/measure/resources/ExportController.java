@@ -4,6 +4,7 @@ import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 
+import cms.gov.madie.measure.services.ExportService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
-import cms.gov.madie.measure.services.BundleService;
 import cms.gov.madie.measure.services.FhirServicesClient;
 import cms.gov.madie.measure.utils.ControllerUtil;
 import cms.gov.madie.measure.utils.ExportFileNamesUtil;
@@ -31,10 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 public class ExportController {
 
   private final MeasureRepository measureRepository;
-
-  private final BundleService bundleService;
-
   private final FhirServicesClient fhirServicesClient;
+  private final ExportService exportService;
 
   @GetMapping(path = "/measures/{id}/exports", produces = "application/zip")
   public ResponseEntity<byte[]> getZip(
@@ -58,7 +56,7 @@ public class ExportController {
             HttpHeaders.CONTENT_DISPOSITION,
             "attachment;filename=\"" + ExportFileNamesUtil.getExportFileName(measure) + ".zip\"")
         .contentType(MediaType.APPLICATION_OCTET_STREAM)
-        .body(bundleService.exportBundleMeasure(measure, accessToken));
+        .body(exportService.getMeasureExport(measure, accessToken));
   }
 
   @PutMapping(path = ControllerUtil.TEST_CASES + "/exports", produces = "application/zip")

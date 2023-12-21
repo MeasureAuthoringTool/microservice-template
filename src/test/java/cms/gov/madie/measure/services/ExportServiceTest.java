@@ -1,0 +1,165 @@
+package cms.gov.madie.measure.services;
+
+import cms.gov.madie.measure.exceptions.InvalidResourceBundleStateException;
+import cms.gov.madie.measure.factories.PackageServiceFactory;
+import gov.cms.madie.models.common.Organization;
+import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureGroupTypes;
+import gov.cms.madie.models.measure.MeasureMetaData;
+import gov.cms.madie.models.measure.MeasureSet;
+import gov.cms.madie.models.measure.Population;
+import gov.cms.madie.models.measure.PopulationType;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Arrays;
+import java.util.List;
+
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class ExportServiceTest {
+  @Mock private PackageServiceFactory packageServiceFactory;
+  @Mock private QicorePackageService qicorePackageService;
+  @Mock private QdmPackageService qdmPackageService;
+  @InjectMocks ExportService exportService;
+
+  private final String packageContent = "raw package";
+  private final String token = "token";
+  private Measure measure;
+  private MeasureMetaData measureMetaData;
+
+  @BeforeEach
+  void setup() {
+    Group group =
+        Group.builder()
+            .scoring("Cohort")
+            .populationBasis("Encounter")
+            .measureGroupTypes(Arrays.asList(MeasureGroupTypes.OUTCOME))
+            .populations(
+                List.of(
+                    new Population(
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        "Initial Population",
+                        null,
+                        null)))
+            .groupDescription("Description")
+            .scoringUnit("test-scoring-unit")
+            .build();
+    measure =
+        Measure.builder()
+            .id("measure-id")
+            .createdBy("test.user")
+            .groups(List.of(group))
+            .measureMetaData(MeasureMetaData.builder().draft(true).build())
+            .measureSet(MeasureSet.builder().owner("test.user").build())
+            .build();
+    measureMetaData =
+        MeasureMetaData.builder()
+            .draft(false)
+            .steward(Organization.builder().name("SemanticBits").build())
+            .description("This is a description")
+            .developers(List.of(Organization.builder().name("ICF").build()))
+            .build();
+    measure.setMeasureMetaData(measureMetaData);
+  }
+
+  @Test
+  void testGetQdmMeasurePackage() {
+    when(packageServiceFactory.getPackageService(any())).thenReturn(qdmPackageService);
+    when(qdmPackageService.getMeasurePackage(any(Measure.class), anyString()))
+        .thenReturn(packageContent.getBytes());
+    byte[] measurePackage = exportService.getMeasureExport(measure, token);
+    assertThat(new String(measurePackage), is(equalTo(packageContent)));
+  }
+
+  @Test
+  void testGetQiCoreMeasurePackage() {
+    when(packageServiceFactory.getPackageService(any())).thenReturn(qicorePackageService);
+    when(qicorePackageService.getMeasurePackage(any(Measure.class), anyString()))
+        .thenReturn(packageContent.getBytes());
+    byte[] measurePackage = exportService.getMeasureExport(measure, token);
+    assertThat(new String(measurePackage), is(equalTo(packageContent)));
+  }
+
+  @Test
+  void testGetMeasurePackageWhenGroupsAreEmpty() {
+    measure.setGroups(List.of());
+    Exception ex =
+        Assertions.assertThrows(
+            InvalidResourceBundleStateException.class,
+            () -> exportService.getMeasureExport(measure, token));
+    assertThat(
+        ex.getMessage(),
+        is(
+            equalTo(
+                "Response could not be completed for Measure with ID measure-id, since there is no population criteria on the measure.")));
+  }
+
+  @Test
+  void testGetMeasurePackageWhenGroupsHaveNoType() {
+    measure.getGroups().get(0).setMeasureGroupTypes(List.of());
+    Exception ex =
+        Assertions.assertThrows(
+            InvalidResourceBundleStateException.class,
+            () -> exportService.getMeasureExport(measure, token));
+    assertThat(
+        ex.getMessage(),
+        is(
+            equalTo(
+                "Response could not be completed for Measure with ID measure-id, since there is at least one Population Criteria with no type.")));
+  }
+
+  @Test
+  void testGetMeasurePackageWhenNoDevelopers() {
+    measureMetaData.setDevelopers(List.of());
+    Exception ex =
+        Assertions.assertThrows(
+            InvalidResourceBundleStateException.class,
+            () -> exportService.getMeasureExport(measure, token));
+    assertThat(
+        ex.getMessage(),
+        is(
+            equalTo(
+                "Response could not be completed for Measure with ID measure-id, since there are no associated developers in metadata.")));
+  }
+
+  @Test
+  void testGetMeasurePackageWhenNoStewards() {
+    measureMetaData.setSteward(null);
+    Exception ex =
+        Assertions.assertThrows(
+            InvalidResourceBundleStateException.class,
+            () -> exportService.getMeasureExport(measure, token));
+    assertThat(
+        ex.getMessage(),
+        is(
+            equalTo(
+                "Response could not be completed for Measure with ID measure-id, since there is no associated steward in metadata.")));
+  }
+
+  @Test
+  void testGetMeasurePackageWhenNoMeasureDescription() {
+    measureMetaData.setDescription(null);
+    Exception ex =
+        Assertions.assertThrows(
+            InvalidResourceBundleStateException.class,
+            () -> exportService.getMeasureExport(measure, token));
+    assertThat(
+        ex.getMessage(),
+        is(
+            equalTo(
+                "Response could not be completed for Measure with ID measure-id, since there is no description in metadata.")));
+  }
+}

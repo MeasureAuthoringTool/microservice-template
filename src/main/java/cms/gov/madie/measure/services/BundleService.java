@@ -2,17 +2,17 @@ package cms.gov.madie.measure.services;
 
 import java.lang.reflect.InvocationTargetException;
 
+import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
+import cms.gov.madie.measure.exceptions.InvalidResourceBundleStateException;
+import gov.cms.madie.models.measure.ElmJson;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestClientException;
 
 import cms.gov.madie.measure.exceptions.BundleOperationException;
-import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
-import cms.gov.madie.measure.exceptions.InvalidResourceBundleStateException;
 import cms.gov.madie.measure.repositories.ExportRepository;
 import cms.gov.madie.measure.utils.ExportFileNamesUtil;
-import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Export;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.packaging.utils.PackagingUtility;
@@ -38,7 +38,6 @@ public class BundleService {
     if (measure == null) {
       return null;
     }
-
     // for draft measures
     if (measure.getMeasureMetaData().isDraft()) {
       try {
@@ -58,14 +57,11 @@ public class BundleService {
     return export.getMeasureBundleJson();
   }
 
-  public byte[] exportBundleMeasure(Measure measure, String accessToken) {
+  public byte[] getMeasureExport(Measure measure, String accessToken) {
     if (measure == null) {
       return null;
     }
-    isMetadataValid(measure);
-    areGroupsValid(measure);
     try {
-
       // for draft measures
       if (measure.getMeasureMetaData().isDraft()) {
         try {
@@ -89,9 +85,7 @@ public class BundleService {
       String model = measure.getModel();
 
       PackagingUtility utility = PackagingUtilityFactory.getInstance(model);
-      byte[] result = utility.getZipBundle(export, exportFileName);
-      return result;
-
+      return utility.getZipBundle(export, exportFileName);
     } catch (RestClientException
         | IllegalArgumentException
         | InstantiationException
@@ -102,37 +96,6 @@ public class BundleService {
         | ClassNotFoundException ex) {
       log.error("An error occurred while bundling measure {}", measure.getId(), ex);
       throw new BundleOperationException("Measure", measure.getId(), ex);
-    }
-  }
-
-  private void areGroupsValid(Measure measure) {
-    if (CollectionUtils.isEmpty(measure.getGroups())) {
-      throw new InvalidResourceBundleStateException(
-          "Measure", measure.getId(), "since there is no population criteria on the measure.");
-    }
-    if (measure.getGroups().stream()
-        .anyMatch(g -> CollectionUtils.isEmpty(g.getMeasureGroupTypes()))) {
-
-      throw new InvalidResourceBundleStateException(
-          "Measure",
-          measure.getId(),
-          "since there is at least one Population Criteria with no type.");
-    }
-  }
-
-  private void isMetadataValid(Measure measure) {
-    if (measure.getMeasureMetaData() != null) {
-      if (CollectionUtils.isEmpty(measure.getMeasureMetaData().getDevelopers())) {
-        throw new InvalidResourceBundleStateException(
-            "Measure", measure.getId(), "since there are no associated developers in metadata.");
-      } else if (measure.getMeasureMetaData().getSteward() == null) {
-        throw new InvalidResourceBundleStateException(
-            "Measure", measure.getId(), "since there is no associated steward in metadata.");
-      } else if (StringUtils.isBlank(measure.getMeasureMetaData().getDescription())) {
-
-        throw new InvalidResourceBundleStateException(
-            "Measure", measure.getId(), "since there is no description in metadata.");
-      }
     }
   }
 
