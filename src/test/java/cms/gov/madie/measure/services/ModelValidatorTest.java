@@ -5,7 +5,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
 import cms.gov.madie.measure.factories.ModelValidatorFactory;
+import gov.cms.madie.models.measure.Measure;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -49,7 +51,6 @@ class ModelValidatorTest {
     } catch (Exception e) {
       fail(e);
     }
-    ;
   }
 
   @Test
@@ -58,7 +59,6 @@ class ModelValidatorTest {
     Stratification strat = new Stratification();
     List<Stratification> strats = new ArrayList<>();
     strat.setAssociation(PopulationType.INITIAL_POPULATION);
-    ;
     strats.add(strat);
 
     Group group = Group.builder().stratifications(strats).build();
@@ -87,6 +87,22 @@ class ModelValidatorTest {
       validator.validateGroupAssociations(group);
     } catch (Exception e) {
       fail(e);
+    }
+  }
+
+  @Test
+  void useQdmModelValidatorTestMeasureHasNoGroup() {
+    assertNotNull(modelValidatorFactory);
+    Measure measure = Measure.builder().id("1").groups(List.of()).build();
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QDM_5_6);
+    assertTrue(validator instanceof QdmModelValidator);
+    try {
+      validator.validateGroups(measure);
+      fail("Should fail because, there should be at least one population criteria");
+    } catch (InvalidResourceStateException e) {
+      assertEquals(
+          "Response could not be completed for Measure with ID 1, since there is no population criteria on the measure.",
+          e.getMessage());
     }
   }
 
@@ -127,9 +143,9 @@ class ModelValidatorTest {
       validator.validateGroupAssociations(group);
       fail("Should fail because QICore strat association can't be null");
     } catch (InvalidGroupException e) {
-      assertTrue(
-          "QI-Core group stratifications should be associated to a valid population type."
-              .equals(e.getMessage()));
+      assertEquals(
+          "QI-Core group stratifications should be associated to a valid population type.",
+          e.getMessage());
     }
   }
 
@@ -139,7 +155,6 @@ class ModelValidatorTest {
     Stratification strat = new Stratification();
     List<Stratification> strats = new ArrayList<>();
     strat.setAssociation(PopulationType.INITIAL_POPULATION);
-    ;
     strats.add(strat);
 
     Group group = Group.builder().stratifications(strats).build();
@@ -150,6 +165,39 @@ class ModelValidatorTest {
 
     } catch (Exception e) {
       fail(e);
+    }
+  }
+
+  @Test
+  void useQicoreModelValidatorTestMeasureHasNoGroup() {
+    assertNotNull(modelValidatorFactory);
+    Measure measure = Measure.builder().id("1").groups(List.of()).build();
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
+    assertTrue(validator instanceof QiCoreModelValidator);
+    try {
+      validator.validateGroups(measure);
+      fail("Should fail because, there should be at least one population criteria");
+    } catch (InvalidResourceStateException e) {
+      assertEquals(
+          "Response could not be completed for Measure with ID 1, since there is no population criteria on the measure.",
+          e.getMessage());
+    }
+  }
+
+  @Test
+  void useQicoreModelValidatorTestMeasureHasGroupWithNoTypes() {
+    assertNotNull(modelValidatorFactory);
+    Group group = Group.builder().build();
+    Measure measure = Measure.builder().id("1").groups(List.of(group)).build();
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
+    assertTrue(validator instanceof QiCoreModelValidator);
+    try {
+      validator.validateGroups(measure);
+      fail("Should fail because QICore group should have types");
+    } catch (InvalidResourceStateException e) {
+      assertEquals(
+          "Response could not be completed for Measure with ID 1, since there is at least one Population Criteria with no type.",
+          e.getMessage());
     }
   }
 }

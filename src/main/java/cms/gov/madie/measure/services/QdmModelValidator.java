@@ -1,10 +1,12 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.exceptions.InvalidGroupException;
+import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
+import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.Measure;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import cms.gov.madie.measure.exceptions.InvalidGroupException;
-import gov.cms.madie.models.measure.Group;
+import org.springframework.util.CollectionUtils;
 
 @Slf4j
 @Service(ServiceConstants.QDM_VALIDATOR)
@@ -19,6 +21,15 @@ public class QdmModelValidator implements ModelValidator {
 
     if (isAssociated) {
       throw new InvalidGroupException("QDM group stratifications cannot be associated.");
+    }
+  }
+
+  @Override
+  public void validateGroups(Measure measure) {
+    // TODO: this is just to start with. implement all the required validations on QDM groups
+    if (CollectionUtils.isEmpty(measure.getGroups())) {
+      throw new InvalidResourceStateException(
+          "Measure", measure.getId(), "since there is no population criteria on the measure.");
     }
   }
 }

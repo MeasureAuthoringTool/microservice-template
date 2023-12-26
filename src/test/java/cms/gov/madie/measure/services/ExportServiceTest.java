@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.services;
 
-import cms.gov.madie.measure.exceptions.InvalidResourceBundleStateException;
+import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
+import cms.gov.madie.measure.factories.ModelValidatorFactory;
 import cms.gov.madie.measure.factories.PackageServiceFactory;
 import gov.cms.madie.models.common.Organization;
 import gov.cms.madie.models.measure.Group;
@@ -25,13 +26,17 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ExportServiceTest {
   @Mock private PackageServiceFactory packageServiceFactory;
+  @Mock private ModelValidatorFactory modelValidatorFactory;
   @Mock private QicorePackageService qicorePackageService;
   @Mock private QdmPackageService qdmPackageService;
+  @Mock private QiCoreModelValidator qicoreModelValidator;
+  @Mock private QdmModelValidator qdmModelValidator;
   @InjectMocks ExportService exportService;
 
   private final String packageContent = "raw package";
@@ -77,6 +82,8 @@ class ExportServiceTest {
 
   @Test
   void testGetQdmMeasurePackage() {
+    when(modelValidatorFactory.getModelValidator(any())).thenReturn(qdmModelValidator);
+    doNothing().when(qdmModelValidator).validateGroups(any(Measure.class));
     when(packageServiceFactory.getPackageService(any())).thenReturn(qdmPackageService);
     when(qdmPackageService.getMeasurePackage(any(Measure.class), anyString()))
         .thenReturn(packageContent.getBytes());
@@ -86,6 +93,8 @@ class ExportServiceTest {
 
   @Test
   void testGetQiCoreMeasurePackage() {
+    when(modelValidatorFactory.getModelValidator(any())).thenReturn(qicoreModelValidator);
+    doNothing().when(qicoreModelValidator).validateGroups(any(Measure.class));
     when(packageServiceFactory.getPackageService(any())).thenReturn(qicorePackageService);
     when(qicorePackageService.getMeasurePackage(any(Measure.class), anyString()))
         .thenReturn(packageContent.getBytes());
@@ -94,39 +103,11 @@ class ExportServiceTest {
   }
 
   @Test
-  void testGetMeasurePackageWhenGroupsAreEmpty() {
-    measure.setGroups(List.of());
-    Exception ex =
-        Assertions.assertThrows(
-            InvalidResourceBundleStateException.class,
-            () -> exportService.getMeasureExport(measure, token));
-    assertThat(
-        ex.getMessage(),
-        is(
-            equalTo(
-                "Response could not be completed for Measure with ID measure-id, since there is no population criteria on the measure.")));
-  }
-
-  @Test
-  void testGetMeasurePackageWhenGroupsHaveNoType() {
-    measure.getGroups().get(0).setMeasureGroupTypes(List.of());
-    Exception ex =
-        Assertions.assertThrows(
-            InvalidResourceBundleStateException.class,
-            () -> exportService.getMeasureExport(measure, token));
-    assertThat(
-        ex.getMessage(),
-        is(
-            equalTo(
-                "Response could not be completed for Measure with ID measure-id, since there is at least one Population Criteria with no type.")));
-  }
-
-  @Test
   void testGetMeasurePackageWhenNoDevelopers() {
     measureMetaData.setDevelopers(List.of());
     Exception ex =
         Assertions.assertThrows(
-            InvalidResourceBundleStateException.class,
+            InvalidResourceStateException.class,
             () -> exportService.getMeasureExport(measure, token));
     assertThat(
         ex.getMessage(),
@@ -140,7 +121,7 @@ class ExportServiceTest {
     measureMetaData.setSteward(null);
     Exception ex =
         Assertions.assertThrows(
-            InvalidResourceBundleStateException.class,
+            InvalidResourceStateException.class,
             () -> exportService.getMeasureExport(measure, token));
     assertThat(
         ex.getMessage(),
@@ -154,7 +135,7 @@ class ExportServiceTest {
     measureMetaData.setDescription(null);
     Exception ex =
         Assertions.assertThrows(
-            InvalidResourceBundleStateException.class,
+            InvalidResourceStateException.class,
             () -> exportService.getMeasureExport(measure, token));
     assertThat(
         ex.getMessage(),

@@ -3,7 +3,7 @@ package cms.gov.madie.measure.services;
 import java.lang.reflect.InvocationTargetException;
 
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
-import cms.gov.madie.measure.exceptions.InvalidResourceBundleStateException;
+import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
 import gov.cms.madie.models.measure.ElmJson;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -101,17 +101,17 @@ public class BundleService {
 
   protected void retrieveElmJson(Measure measure, String accessToken) {
     if (StringUtils.isBlank(measure.getCql())) {
-      throw new InvalidResourceBundleStateException(
+      throw new InvalidResourceStateException(
           "Measure", measure.getId(), "since there is no associated CQL.");
     }
 
     if (measure.isCqlErrors()) {
-      throw new InvalidResourceBundleStateException(
+      throw new InvalidResourceStateException(
           "Measure", measure.getId(), "since CQL errors exist.");
     }
 
     if (CollectionUtils.isEmpty(measure.getGroups())) {
-      throw new InvalidResourceBundleStateException(
+      throw new InvalidResourceStateException(
           "Measure", measure.getId(), "since there are no associated population criteria.");
     }
 

@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.services;
 
-import cms.gov.madie.measure.exceptions.InvalidResourceBundleStateException;
+import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
+import cms.gov.madie.measure.factories.ModelValidatorFactory;
 import cms.gov.madie.measure.factories.PackageServiceFactory;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.Measure;
@@ -13,41 +14,30 @@ import org.springframework.util.CollectionUtils;
 @AllArgsConstructor
 public class ExportService {
   private final PackageServiceFactory packageServiceFactory;
+  private final ModelValidatorFactory modelValidatorFactory;
 
   public byte[] getMeasureExport(Measure measure, String accessToken) {
-    isMetadataValid(measure);
-    areGroupsValid(measure);
+    validateMetadata(measure);
+    ModelValidator modelValidator =
+        modelValidatorFactory.getModelValidator(ModelType.valueOfName(measure.getModel()));
+    modelValidator.validateGroups(measure);
     PackageService packageService =
         packageServiceFactory.getPackageService(ModelType.valueOfName(measure.getModel()));
     return packageService.getMeasurePackage(measure, accessToken);
   }
 
-  private void areGroupsValid(Measure measure) {
-    if (CollectionUtils.isEmpty(measure.getGroups())) {
-      throw new InvalidResourceBundleStateException(
-          "Measure", measure.getId(), "since there is no population criteria on the measure.");
-    }
-    if (measure.getGroups().stream()
-        .anyMatch(g -> CollectionUtils.isEmpty(g.getMeasureGroupTypes()))) {
-
-      throw new InvalidResourceBundleStateException(
-          "Measure",
-          measure.getId(),
-          "since there is at least one Population Criteria with no type.");
-    }
-  }
-
-  private void isMetadataValid(Measure measure) {
+  // TODO: if there are significant diffs between QDM & QICore validations, move this to respective
+  // model validators
+  private void validateMetadata(Measure measure) {
     if (measure.getMeasureMetaData() != null) {
       if (CollectionUtils.isEmpty(measure.getMeasureMetaData().getDevelopers())) {
-        throw new InvalidResourceBundleStateException(
+        throw new InvalidResourceStateException(
             "Measure", measure.getId(), "since there are no associated developers in metadata.");
       } else if (measure.getMeasureMetaData().getSteward() == null) {
-        throw new InvalidResourceBundleStateException(
+        throw new InvalidResourceStateException(
             "Measure", measure.getId(), "since there is no associated steward in metadata.");
       } else if (StringUtils.isBlank(measure.getMeasureMetaData().getDescription())) {
-
-        throw new InvalidResourceBundleStateException(
+        throw new InvalidResourceStateException(
             "Measure", measure.getId(), "since there is no description in metadata.");
       }
     }
