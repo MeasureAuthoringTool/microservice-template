@@ -3,7 +3,7 @@ package cms.gov.madie.measure.services;
 import cms.gov.madie.measure.exceptions.BundleOperationException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
-import cms.gov.madie.measure.exceptions.InvalidResourceBundleStateException;
+import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
 import cms.gov.madie.measure.repositories.ExportRepository;
 import cms.gov.madie.measure.utils.ResourceUtil;
 import gov.cms.madie.models.measure.ElmJson;
@@ -105,7 +105,7 @@ class BundleServiceTest implements ResourceUtil {
   void testBundleMeasureWhenThereIsNoCql() {
     measure.setCql(null);
     assertThrows(
-        InvalidResourceBundleStateException.class,
+        InvalidResourceStateException.class,
         () -> bundleService.bundleMeasure(measure, "Bearer TOKEN", "calculation"));
   }
 
@@ -113,7 +113,7 @@ class BundleServiceTest implements ResourceUtil {
   void testBundleMeasureWhenThereAreCqlErrors() {
     measure.setCqlErrors(true);
     assertThrows(
-        InvalidResourceBundleStateException.class,
+        InvalidResourceStateException.class,
         () -> bundleService.bundleMeasure(measure, "Bearer TOKEN", "calculation"));
   }
 

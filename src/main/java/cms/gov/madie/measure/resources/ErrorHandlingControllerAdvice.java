@@ -98,7 +98,7 @@ public class ErrorHandlingControllerAdvice {
   }
 
   @ExceptionHandler({
-    InvalidResourceBundleStateException.class,
+    InvalidResourceStateException.class,
     CqlElmTranslationErrorException.class,
     InvalidDraftStatusException.class,
     InvalidMeasureObservationException.class,
