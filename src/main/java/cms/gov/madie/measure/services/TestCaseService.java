@@ -508,17 +508,19 @@ public class TestCaseService {
       List<TestCaseGroupPopulation> testCaseGroupPopulations =
           getTestCaseGroupPopulationsFromImportRequest(
               model, testCaseImportRequest.getJson(), measure);
+
       List<Group> groups = testCaseServiceUtil.getGroupsWithValidPopulations(measure.getGroups());
-      // See if the main populations (non-observation and strats) match between the measure's and
-      // the incoming test case's pop criteria.
-      boolean matched =
-          testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, groups, newTestCase);
 
       // Ignore stratifications for QICore
-      if (matched && ModelType.QDM_5_6.getValue().equalsIgnoreCase(model)) {
-        testCaseServiceUtil.assignStratificationValuesQdm(
-            testCaseGroupPopulations, newTestCase, groups.get(0).getPopulationBasis());
+      if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(model)) {
+        testCaseGroupPopulations =
+            testCaseServiceUtil.assignStratificationValuesQdm(testCaseGroupPopulations, groups);
       }
+
+      // Compare main populations from the measure pop criteria against incoming test case.
+      // Check includes Stratifications and excludes Observations.
+      boolean matched =
+          testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, groups, newTestCase);
 
       String warningMessage = null;
       if (!matched) {
@@ -580,20 +582,6 @@ public class TestCaseService {
       testCaseGroupPopulations = JsonUtil.getTestCaseGroupPopulationsQdm(json, measure);
     }
     return testCaseGroupPopulations;
-  }
-
-  protected void assignObservationAndStratificationValuesForQdm(
-      boolean matched,
-      String model,
-      List<TestCaseGroupPopulation> testCaseGroupPopulations,
-      TestCase newTestCase,
-      List<Group> groups) {
-    if (matched && ModelType.QDM_5_6.getValue().equalsIgnoreCase(model)) {
-      testCaseServiceUtil.assignStratificationValuesQdm(
-          testCaseGroupPopulations, newTestCase, groups.get(0).getPopulationBasis());
-      testCaseServiceUtil.assignObservationValues(
-          newTestCase, testCaseGroupPopulations, groups.get(0).getPopulationBasis());
-    }
   }
 
   private TestCaseImportOutcome updateTestCaseJsonAndSaveTestCase(
