@@ -43,6 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -91,8 +92,19 @@ public class MeasureServiceTest implements ResourceUtil {
     Stratification emptyStrat = new Stratification();
     // new group, not in DB, so no ID
 
-    measureMetaData = new MeasureMetaData();
-    measureMetaData.setDraft(true);
+    MeasureDefinition measureDefinition1 =
+        MeasureDefinition.builder().term("test term").definition("test definition").build();
+    MeasureDefinition measureDefinition2 =
+        MeasureDefinition.builder()
+            .id("test id")
+            .term("test term 2")
+            .definition("test definition 2")
+            .build();
+    measureMetaData =
+        MeasureMetaData.builder()
+            .draft(true)
+            .measureDefinitions(List.of(measureDefinition1, measureDefinition2))
+            .build();
 
     // Present in DB and has ID
     group2 =
@@ -525,6 +537,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .lastModifiedAt(null)
             .lastModifiedBy("Nobody")
             .versionId("VersionId")
+            .measureMetaData(measureMetaData)
             .build();
     when(measureUtil.isCqlLibraryNameChanged(any(Measure.class), any(Measure.class)))
         .thenReturn(true);
@@ -1026,5 +1039,20 @@ public class MeasureServiceTest implements ResourceUtil {
     assertThat(result.size(), is(equalTo(2)));
     assertThat(result.get(0), is(equalTo(measure1.getId())));
     assertThat(result.get(1), is(equalTo(measure2.getId())));
+  }
+
+  @Test
+  public void testUpdateMeasureDefinitionIdNullMetaData() {
+    MeasureMetaData metaData = null;
+    measureService.updateMeasureDefinitionId(metaData);
+    assertNull(metaData);
+  }
+
+  @Test
+  public void testUpdateMeasureDefinitionIdNullMeasureDefinitions() {
+    MeasureMetaData metaData = MeasureMetaData.builder().build();
+    measureService.updateMeasureDefinitionId(metaData);
+    assertNotNull(metaData);
+    assertNull(metaData.getMeasureDefinitions());
   }
 }
