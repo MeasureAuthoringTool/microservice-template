@@ -266,12 +266,12 @@ public class TestCaseServiceUtil {
       // set Stratification Population Value Id: measure observation will have generated id
       List<TestCaseStratificationValue> stratValues =
           testCaseGroupPopulations.get(measureGroupNumber).getStratificationValues();
-      if (CollectionUtils.isNotEmpty(stratValues)) {
+      if (isNotEmpty(stratValues)) {
         stratValues.stream()
             .forEach(
                 (stratValue) -> {
                   List<TestCasePopulationValue> popValues = stratValue.getPopulationValues();
-                  if (CollectionUtils.isNotEmpty(popValues)) {
+                  if (isNotEmpty(popValues)) {
                     popValues.stream()
                         .forEach(
                             (popValue) -> {
