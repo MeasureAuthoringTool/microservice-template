@@ -1,12 +1,15 @@
 package cms.gov.madie.measure.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.MeasureScoring;
 import gov.cms.madie.models.measure.QdmMeasure;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
+import gov.cms.madie.models.measure.TestCasePopulationValue;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -137,6 +140,8 @@ public class JsonUtilTest implements ResourceUtil {
           + "  }]\n"
           + "}";
   final String qdmImportedJson = getData("/test_case_exported_qdm_json.json");
+  final String testCasePopulationValueJsonNode =
+      "{\n" + "\"population_index\":0,\n" + "\"IPP\":1\n" + "}";
 
   @Test
   public void testIsValidJsonSuccess() {
@@ -621,5 +626,50 @@ public class JsonUtilTest implements ResourceUtil {
     assertTrue(CollectionUtils.isNotEmpty(groupPopulations.get(0).getPopulationValues()));
     assertTrue(CollectionUtils.isNotEmpty(groupPopulations.get(1).getStratificationValues()));
     assertTrue(CollectionUtils.isNotEmpty(groupPopulations.get(2).getStratificationValues()));
+  }
+
+  @Test
+  void testFetchObservationValuesForCV() throws JsonProcessingException {
+    ObjectMapper mapper = new ObjectMapper();
+    JsonNode ippNode = mapper.readTree(testCasePopulationValueJsonNode);
+
+    List<TestCasePopulationValue> populationValues = List.of();
+
+    QdmMeasure qdmMeasure =
+        QdmMeasure.builder()
+            .scoring(MeasureScoring.CONTINUOUS_VARIABLE.toString())
+            .patientBasis(false)
+            .build();
+
+    JsonUtil.fetchObservationValuesForCV(ippNode, populationValues, qdmMeasure);
+    assertTrue(CollectionUtils.isEmpty(populationValues));
+  }
+
+  @Test
+  void testFetchDenominatorValues() throws JsonProcessingException {
+    ObjectMapper mapper = new ObjectMapper();
+    JsonNode ippNode = mapper.readTree(testCasePopulationValueJsonNode);
+
+    List<TestCasePopulationValue> populationValues = List.of();
+
+    QdmMeasure qdmMeasure =
+        QdmMeasure.builder().scoring(MeasureScoring.RATIO.toString()).patientBasis(false).build();
+
+    JsonUtil.fetchDenominatorValues(ippNode, populationValues, qdmMeasure);
+    assertTrue(CollectionUtils.isEmpty(populationValues));
+  }
+
+  @Test
+  void testFetchNumeratorValues() throws JsonProcessingException {
+    ObjectMapper mapper = new ObjectMapper();
+    JsonNode ippNode = mapper.readTree(testCasePopulationValueJsonNode);
+
+    List<TestCasePopulationValue> populationValues = List.of();
+
+    QdmMeasure qdmMeasure =
+        QdmMeasure.builder().scoring(MeasureScoring.RATIO.toString()).patientBasis(false).build();
+
+    JsonUtil.fetchNumeratorValues(ippNode, populationValues, qdmMeasure);
+    assertTrue(CollectionUtils.isEmpty(populationValues));
   }
 }
