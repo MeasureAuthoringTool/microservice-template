@@ -597,4 +597,29 @@ public class JsonUtilTest implements ResourceUtil {
         JsonUtil.getTestCaseGroupPopulationsQdm("{\"expectedValues\":[]}", qdmMeasure);
     assertTrue(CollectionUtils.isEmpty(groupPopulations));
   }
+
+  @Test
+  void testGetTestCaseGroupPopulationsQdmForRatio() throws JsonProcessingException {
+    QdmMeasure qdmMeasure = QdmMeasure.builder().scoring(MeasureScoring.RATIO.toString()).build();
+
+    List<TestCaseGroupPopulation> groupPopulations =
+        JsonUtil.getTestCaseGroupPopulationsQdm(qdmImportedJson, qdmMeasure);
+    assertTrue(CollectionUtils.isNotEmpty(groupPopulations.get(0).getPopulationValues()));
+  }
+
+  @Test
+  void testGetTestCaseGroupPopulationsQdmForCVWithStratificationValues()
+      throws JsonProcessingException {
+    QdmMeasure qdmMeasure =
+        QdmMeasure.builder()
+            .scoring(MeasureScoring.CONTINUOUS_VARIABLE.toString())
+            .patientBasis(false)
+            .build();
+
+    List<TestCaseGroupPopulation> groupPopulations =
+        JsonUtil.getTestCaseGroupPopulationsQdm(qdmImportedJson, qdmMeasure);
+    assertTrue(CollectionUtils.isNotEmpty(groupPopulations.get(0).getPopulationValues()));
+    assertTrue(CollectionUtils.isNotEmpty(groupPopulations.get(1).getStratificationValues()));
+    assertTrue(CollectionUtils.isNotEmpty(groupPopulations.get(2).getStratificationValues()));
+  }
 }
