@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -18,6 +19,8 @@ import org.springframework.web.context.request.WebRequest;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @RequiredArgsConstructor
 @ControllerAdvice
@@ -80,6 +83,28 @@ public class ErrorHandlingControllerAdvice {
             });
     Map<String, Object> errorAttributes = getErrorAttributes(request, HttpStatus.BAD_REQUEST);
     errorAttributes.put("validationErrors", validationErrors);
+    return errorAttributes;
+  }
+
+  @ExceptionHandler(HttpMessageNotReadableException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  @ResponseBody
+  Map<String, Object> onHttpMessageNotReadableException(
+          HttpMessageNotReadableException ex, WebRequest request) {
+    Map<String, String> validationErrors = new HashMap<>();
+    Map<String, Object> errorAttributes = getErrorAttributes(request, HttpStatus.BAD_REQUEST);
+    if(ex.getMessage().contains("missing type id property 'model'")) {
+      String errorMessage = "Model is required";
+      validationErrors.put("model",  errorMessage);
+      errorAttributes.put("message", errorMessage);
+      errorAttributes.put("validationErrors", validationErrors);
+    }
+    if (ex.getMessage().contains("known type ids = [Measure, QDM v5.6, QI-Core v4.1.1]")) {
+      String errorMessage = "Model should be either QDM v5.6 or QI-Core v4.1.1";
+      validationErrors.put("model",  errorMessage);
+      errorAttributes.put("message", errorMessage);
+      errorAttributes.put("validationErrors", validationErrors);
+    }
     return errorAttributes;
   }
 
@@ -178,6 +203,7 @@ public class ErrorHandlingControllerAdvice {
         ErrorAttributeOptions.of(ErrorAttributeOptions.Include.MESSAGE);
     Map<String, Object> errorAttributes =
         this.errorAttributes.getErrorAttributes(request, errorOptions);
+    System.out.println(errorAttributes);
     errorAttributes.put("status", httpStatus.value());
     errorAttributes.put("error", httpStatus.getReasonPhrase());
     return errorAttributes;
