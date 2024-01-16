@@ -3,6 +3,7 @@ package cms.gov.madie.measure.resources;
 import cms.gov.madie.measure.exceptions.*;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
@@ -91,14 +92,14 @@ public class ErrorHandlingControllerAdvice {
       HttpMessageNotReadableException ex, WebRequest request) {
     Map<String, String> validationErrors = new HashMap<>();
     Map<String, Object> errorAttributes = getErrorAttributes(request, HttpStatus.BAD_REQUEST);
+    String errorMessage = null;
     if (ex.getMessage().contains("missing type id property 'model'")) {
-      String errorMessage = "Model is required";
-      validationErrors.put("model", errorMessage);
-      errorAttributes.put("message", errorMessage);
-      errorAttributes.put("validationErrors", validationErrors);
+      errorMessage = "Model is required";
     }
     if (ex.getMessage().contains("known type ids = [Measure, QDM v5.6, QI-Core v4.1.1]")) {
-      String errorMessage = "Model should be either QDM v5.6 or QI-Core v4.1.1";
+      errorMessage = "Model should be either QDM v5.6 or QI-Core v4.1.1";
+    }
+    if(StringUtils.isNotBlank(errorMessage)){
       validationErrors.put("model", errorMessage);
       errorAttributes.put("message", errorMessage);
       errorAttributes.put("validationErrors", validationErrors);
