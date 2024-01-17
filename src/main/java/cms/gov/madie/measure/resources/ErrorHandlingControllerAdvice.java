@@ -99,7 +99,7 @@ public class ErrorHandlingControllerAdvice {
     if (ex.getMessage().contains("known type ids = [Measure, QDM v5.6, QI-Core v4.1.1]")) {
       errorMessage = "Model should be either QDM v5.6 or QI-Core v4.1.1";
     }
-    if(StringUtils.isNotBlank(errorMessage)){
+    if (StringUtils.isNotBlank(errorMessage)) {
       validationErrors.put("model", errorMessage);
       errorAttributes.put("message", errorMessage);
       errorAttributes.put("validationErrors", validationErrors);
