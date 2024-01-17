@@ -3,10 +3,12 @@ package cms.gov.madie.measure.resources;
 import cms.gov.madie.measure.exceptions.*;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -80,6 +82,28 @@ public class ErrorHandlingControllerAdvice {
             });
     Map<String, Object> errorAttributes = getErrorAttributes(request, HttpStatus.BAD_REQUEST);
     errorAttributes.put("validationErrors", validationErrors);
+    return errorAttributes;
+  }
+
+  @ExceptionHandler(HttpMessageNotReadableException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  @ResponseBody
+  Map<String, Object> onHttpMessageNotReadableException(
+      HttpMessageNotReadableException ex, WebRequest request) {
+    Map<String, String> validationErrors = new HashMap<>();
+    Map<String, Object> errorAttributes = getErrorAttributes(request, HttpStatus.BAD_REQUEST);
+    String errorMessage = null;
+    if (ex.getMessage().contains("missing type id property 'model'")) {
+      errorMessage = "Model is required";
+    }
+    if (ex.getMessage().contains("known type ids = [Measure, QDM v5.6, QI-Core v4.1.1]")) {
+      errorMessage = "Model should be either QDM v5.6 or QI-Core v4.1.1";
+    }
+    if(StringUtils.isNotBlank(errorMessage)){
+      validationErrors.put("model", errorMessage);
+      errorAttributes.put("message", errorMessage);
+      errorAttributes.put("validationErrors", validationErrors);
+    }
     return errorAttributes;
   }
 
