@@ -361,7 +361,6 @@ public final class JsonUtil {
         TestCaseGroupPopulation groupPopulation = null;
 
         handlePopulationValues(population, populationValues, measure);
-        handleObservationValues(population, populationValues, measure);
 
         JsonNode stratification = population.get("STRAT");
         if (stratification != null) {
@@ -391,30 +390,13 @@ public final class JsonUtil {
               .build();
       populationValues.add(populationValue);
     }
-    if (population.get("DENOM") != null) {
-      TestCasePopulationValue populationValue =
-          TestCasePopulationValue.builder()
-              .name(PopulationType.DENOMINATOR)
-              .expected(population.get("DENOM").asInt())
-              .build();
-      populationValues.add(populationValue);
-    }
-    if (population.get("DENEX") != null) {
-      TestCasePopulationValue populationValue =
-          TestCasePopulationValue.builder()
-              .name(PopulationType.DENOMINATOR_EXCLUSION)
-              .expected(population.get("DENEX").asInt())
-              .build();
-      populationValues.add(populationValue);
-    }
-    if (population.get("NUMER") != null) {
-      TestCasePopulationValue populationValue =
-          TestCasePopulationValue.builder()
-              .name(PopulationType.NUMERATOR)
-              .expected(population.get("NUMER").asInt())
-              .build();
-      populationValues.add(populationValue);
-    }
+
+    setObservationValuesForCV(population, populationValues, measure);
+
+    setDenominatorValues(population, populationValues, measure);
+
+    setNumeratorValues(population, populationValues, measure);
+
     if (population.get("DENEXCEP") != null) {
       TestCasePopulationValue populationValue =
           TestCasePopulationValue.builder()
@@ -423,36 +405,13 @@ public final class JsonUtil {
               .build();
       populationValues.add(populationValue);
     }
-    if (population.get("NUMEX") != null) {
-      TestCasePopulationValue populationValue =
-          TestCasePopulationValue.builder()
-              .name(PopulationType.NUMERATOR_EXCLUSION)
-              .expected(population.get("NUMEX").asInt())
-              .build();
-      populationValues.add(populationValue);
-    }
   }
 
-  protected static void handleObservationValues(
+  protected static void setObservationValuesForCV(
       JsonNode population, List<TestCasePopulationValue> populationValues, Measure measure) {
     QdmMeasure qdmMeasure = (QdmMeasure) measure;
     if (StringUtils.equals(
         qdmMeasure.getScoring(), MeasureScoring.CONTINUOUS_VARIABLE.toString())) {
-      if (population.get("OBSERV") != null) {
-        for (JsonNode observation : population.get("OBSERV")) {
-          if (observation != null) {
-            TestCasePopulationValue populationValue =
-                TestCasePopulationValue.builder()
-                    .name(
-                        population.get("MSRPOPL") != null
-                            ? PopulationType.MEASURE_POPULATION_OBSERVATION
-                            : PopulationType.MEASURE_OBSERVATION)
-                    .expected(observation.asInt())
-                    .build();
-            populationValues.add(populationValue);
-          }
-        }
-      }
       if (population.get("MSRPOPL") != null) {
         TestCasePopulationValue populationValue =
             TestCasePopulationValue.builder()
@@ -461,6 +420,24 @@ public final class JsonUtil {
                 .build();
         populationValues.add(populationValue);
       }
+      if (population.get("OBSERV") != null) {
+        for (JsonNode observation : population.get("OBSERV")) {
+          if (observation != null) {
+            TestCasePopulationValue populationValue =
+                TestCasePopulationValue.builder()
+                    .id(UUID.randomUUID().toString()) // need to have id
+                    .name(
+                        PopulationType
+                            .MEASURE_POPULATION_OBSERVATION) // MEASURE_POPULATION_OBSERVATION is
+                    // for QDM, MEASURE_OBSERVATION is for
+                    // QI-Core
+                    .expected(observation.asInt())
+                    .build();
+            populationValues.add(populationValue);
+          }
+        }
+      }
+
       if (population.get("MSRPOPLEX") != null) {
         TestCasePopulationValue populationValue =
             TestCasePopulationValue.builder()
@@ -469,7 +446,21 @@ public final class JsonUtil {
                 .build();
         populationValues.add(populationValue);
       }
-    } else if (qdmMeasure.getScoring().equalsIgnoreCase(MeasureScoring.RATIO.toString())) {
+    }
+  }
+
+  protected static void setDenominatorValues(
+      JsonNode population, List<TestCasePopulationValue> populationValues, Measure measure) {
+    if (population.get("DENOM") != null) {
+      TestCasePopulationValue populationValue =
+          TestCasePopulationValue.builder()
+              .name(PopulationType.DENOMINATOR)
+              .expected(population.get("DENOM").asInt())
+              .build();
+      populationValues.add(populationValue);
+    }
+    QdmMeasure qdmMeasure = (QdmMeasure) measure;
+    if (StringUtils.equals(qdmMeasure.getScoring(), MeasureScoring.RATIO.toString())) {
       if (population.get("DENOM_OBSERV") != null) {
         for (JsonNode observation : population.get("DENOM_OBSERV")) {
           if (observation != null) {
@@ -482,6 +473,29 @@ public final class JsonUtil {
           }
         }
       }
+    }
+    if (population.get("DENEX") != null) {
+      TestCasePopulationValue populationValue =
+          TestCasePopulationValue.builder()
+              .name(PopulationType.DENOMINATOR_EXCLUSION)
+              .expected(population.get("DENEX").asInt())
+              .build();
+      populationValues.add(populationValue);
+    }
+  }
+
+  protected static void setNumeratorValues(
+      JsonNode population, List<TestCasePopulationValue> populationValues, Measure measure) {
+    if (population.get("NUMER") != null) {
+      TestCasePopulationValue populationValue =
+          TestCasePopulationValue.builder()
+              .name(PopulationType.NUMERATOR)
+              .expected(population.get("NUMER").asInt())
+              .build();
+      populationValues.add(populationValue);
+    }
+    QdmMeasure qdmMeasure = (QdmMeasure) measure;
+    if (StringUtils.equals(qdmMeasure.getScoring(), MeasureScoring.RATIO.toString())) {
       if (population.get("NUMER_OBSERV") != null) {
         for (JsonNode observation : population.get("NUMER_OBSERV")) {
           if (observation != null) {
@@ -494,6 +508,14 @@ public final class JsonUtil {
           }
         }
       }
+    }
+    if (population.get("NUMEX") != null) {
+      TestCasePopulationValue populationValue =
+          TestCasePopulationValue.builder()
+              .name(PopulationType.NUMERATOR_EXCLUSION)
+              .expected(population.get("NUMEX").asInt())
+              .build();
+      populationValues.add(populationValue);
     }
   }
 

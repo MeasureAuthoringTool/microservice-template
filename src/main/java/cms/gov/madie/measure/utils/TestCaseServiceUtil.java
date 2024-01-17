@@ -22,6 +22,7 @@ import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import gov.cms.madie.models.measure.TestCasePopulationValue;
 import gov.cms.madie.models.measure.TestCaseStratificationValue;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
@@ -260,10 +261,38 @@ public class TestCaseServiceUtil {
       }
       populationValues.add(populationValue);
       groupPopulation.setPopulationValues(populationValues);
-      groupPopulation.setStratificationValues(
-          testCaseGroupPopulations.get(measureGroupNumber).getStratificationValues());
+
+      // set Stratification Population Value Id: measure observation will have generated id
+      List<TestCaseStratificationValue> stratValues =
+          testCaseGroupPopulations.get(measureGroupNumber).getStratificationValues();
+      if (isNotEmpty(stratValues)) {
+        stratValues.stream()
+            .forEach(
+                (stratValue) -> {
+                  List<TestCasePopulationValue> popValues = stratValue.getPopulationValues();
+                  if (isNotEmpty(popValues)) {
+                    popValues.stream()
+                        .forEach(
+                            (popValue) -> {
+                              Optional<Population> foundGroupPopulation =
+                                  findGroupPopulation(group, popValue);
+                              popValue.setId(
+                                  foundGroupPopulation.isPresent()
+                                      ? foundGroupPopulation.get().getId()
+                                      : UUID.randomUUID().toString());
+                            });
+                  }
+                });
+      }
+      groupPopulation.setStratificationValues(stratValues);
     }
     return matchedNumber;
+  }
+
+  private Optional<Population> findGroupPopulation(Group group, TestCasePopulationValue popValue) {
+    return group.getPopulations().stream()
+        .filter(p -> p.getName().name().equalsIgnoreCase(popValue.getName().toString()))
+        .findFirst();
   }
 
   public List<TestCaseGroupPopulation> assignStratificationValuesQdm(
