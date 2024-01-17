@@ -391,11 +391,11 @@ public final class JsonUtil {
       populationValues.add(populationValue);
     }
 
-    fetchObservationValuesForCV(population, populationValues, measure);
+    setObservationValuesForCV(population, populationValues, measure);
 
-    fetchDenominatorValues(population, populationValues, measure);
+    setDenominatorValues(population, populationValues, measure);
 
-    fetchNumeratorValues(population, populationValues, measure);
+    setNumeratorValues(population, populationValues, measure);
 
     if (population.get("DENEXCEP") != null) {
       TestCasePopulationValue populationValue =
@@ -407,7 +407,7 @@ public final class JsonUtil {
     }
   }
 
-  protected static void fetchObservationValuesForCV(
+  protected static void setObservationValuesForCV(
       JsonNode population, List<TestCasePopulationValue> populationValues, Measure measure) {
     QdmMeasure qdmMeasure = (QdmMeasure) measure;
     if (StringUtils.equals(
@@ -449,7 +449,7 @@ public final class JsonUtil {
     }
   }
 
-  protected static void fetchDenominatorValues(
+  protected static void setDenominatorValues(
       JsonNode population, List<TestCasePopulationValue> populationValues, Measure measure) {
     if (population.get("DENOM") != null) {
       TestCasePopulationValue populationValue =
@@ -484,7 +484,7 @@ public final class JsonUtil {
     }
   }
 
-  protected static void fetchNumeratorValues(
+  protected static void setNumeratorValues(
       JsonNode population, List<TestCasePopulationValue> populationValues, Measure measure) {
     if (population.get("NUMER") != null) {
       TestCasePopulationValue populationValue =

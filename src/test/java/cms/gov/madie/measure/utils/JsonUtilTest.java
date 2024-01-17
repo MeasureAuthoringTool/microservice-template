@@ -629,7 +629,7 @@ public class JsonUtilTest implements ResourceUtil {
   }
 
   @Test
-  void testFetchObservationValuesForCV() throws JsonProcessingException {
+  void testSetObservationValuesForCV() throws JsonProcessingException {
     ObjectMapper mapper = new ObjectMapper();
     JsonNode ippNode = mapper.readTree(testCasePopulationValueJsonNode);
 
@@ -641,12 +641,12 @@ public class JsonUtilTest implements ResourceUtil {
             .patientBasis(false)
             .build();
 
-    JsonUtil.fetchObservationValuesForCV(ippNode, populationValues, qdmMeasure);
+    JsonUtil.setObservationValuesForCV(ippNode, populationValues, qdmMeasure);
     assertTrue(CollectionUtils.isEmpty(populationValues));
   }
 
   @Test
-  void testFetchDenominatorValues() throws JsonProcessingException {
+  void testSetDenominatorValues() throws JsonProcessingException {
     ObjectMapper mapper = new ObjectMapper();
     JsonNode ippNode = mapper.readTree(testCasePopulationValueJsonNode);
 
@@ -655,12 +655,12 @@ public class JsonUtilTest implements ResourceUtil {
     QdmMeasure qdmMeasure =
         QdmMeasure.builder().scoring(MeasureScoring.RATIO.toString()).patientBasis(false).build();
 
-    JsonUtil.fetchDenominatorValues(ippNode, populationValues, qdmMeasure);
+    JsonUtil.setDenominatorValues(ippNode, populationValues, qdmMeasure);
     assertTrue(CollectionUtils.isEmpty(populationValues));
   }
 
   @Test
-  void testFetchNumeratorValues() throws JsonProcessingException {
+  void testSetNumeratorValues() throws JsonProcessingException {
     ObjectMapper mapper = new ObjectMapper();
     JsonNode ippNode = mapper.readTree(testCasePopulationValueJsonNode);
 
@@ -669,7 +669,7 @@ public class JsonUtilTest implements ResourceUtil {
     QdmMeasure qdmMeasure =
         QdmMeasure.builder().scoring(MeasureScoring.RATIO.toString()).patientBasis(false).build();
 
-    JsonUtil.fetchNumeratorValues(ippNode, populationValues, qdmMeasure);
+    JsonUtil.setNumeratorValues(ippNode, populationValues, qdmMeasure);
     assertTrue(CollectionUtils.isEmpty(populationValues));
   }
 }
