@@ -99,6 +99,7 @@ public class MeasureTransferControllerMvcTest {
                 List.of(),
                 "Description",
                 "improvmentNotation",
+                "improvmentNotationOther",
                 "rateAggragation",
                 List.of(MeasureGroupTypes.PROCESS),
                 "testScoringUnit",

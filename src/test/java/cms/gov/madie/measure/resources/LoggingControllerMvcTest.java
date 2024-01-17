@@ -55,7 +55,7 @@ public class LoggingControllerMvcTest {
             .andExpect(status().isBadRequest())
             .andReturn();
     String response = result.getResponse().getContentAsString();
-    assertEquals(response, "");
+    assertTrue(response.contains("Required request body is missing"));
   }
 
   @Test
@@ -87,6 +87,6 @@ public class LoggingControllerMvcTest {
             .andExpect(status().isBadRequest())
             .andReturn();
     String response = result.getResponse().getContentAsString();
-    assertEquals(response, "");
+    assertTrue(response.contains("Required request body is missing"));
   }
 }
