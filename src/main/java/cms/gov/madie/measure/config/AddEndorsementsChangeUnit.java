@@ -11,7 +11,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 
-@ChangeUnit(id = "add_updated_endorsements_initializer", order = "1", author = "madie_dev")
+@ChangeUnit(id = "add_updated_endorsements_initializer_2", order = "1", author = "madie_dev")
 public class AddEndorsementsChangeUnit {
 
   private final ObjectMapper objectMapper;
