@@ -158,6 +158,8 @@ public class MeasureService {
       updateMeasurementPeriods(updatingMeasure);
     }
 
+    updateMeasureDefinitionId(updatingMeasure.getMeasureMetaData());
+
     Measure outputMeasure = updatingMeasure;
     if (measureUtil.isMeasureCqlChanged(existingMeasure, updatingMeasure)
         || measureUtil.isSupplementalDataChanged(existingMeasure, updatingMeasure)
@@ -345,5 +347,24 @@ public class MeasureService {
     return filterByCurrentUser
         ? measureRepository.findMyActiveMeasures(username, pageReq, criteria)
         : measureRepository.findAllByMeasureNameOrEcqmTitle(criteria, pageReq);
+  }
+
+  protected void updateMeasureDefinitionId(MeasureMetaData metaData) {
+    if (metaData != null && !CollectionUtils.isEmpty(metaData.getMeasureDefinitions())) {
+      List<MeasureDefinition> measureDefinitions =
+          metaData.getMeasureDefinitions().stream()
+              .map(
+                  measureDefinition ->
+                      MeasureDefinition.builder()
+                          .id(
+                              StringUtils.isBlank(measureDefinition.getId())
+                                  ? UUID.randomUUID().toString()
+                                  : measureDefinition.getId())
+                          .term(measureDefinition.getTerm())
+                          .definition(measureDefinition.getDefinition())
+                          .build())
+              .toList();
+      metaData.setMeasureDefinitions(measureDefinitions);
+    }
   }
 }

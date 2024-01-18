@@ -10,7 +10,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -55,7 +54,7 @@ public class LoggingControllerMvcTest {
             .andExpect(status().isBadRequest())
             .andReturn();
     String response = result.getResponse().getContentAsString();
-    assertEquals(response, "");
+    assertTrue(response.contains("Required request body is missing"));
   }
 
   @Test
@@ -87,6 +86,6 @@ public class LoggingControllerMvcTest {
             .andExpect(status().isBadRequest())
             .andReturn();
     String response = result.getResponse().getContentAsString();
-    assertEquals(response, "");
+    assertTrue(response.contains("Required request body is missing"));
   }
 }

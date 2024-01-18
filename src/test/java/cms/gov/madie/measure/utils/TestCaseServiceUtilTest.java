@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.UUID;
 
 import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.MeasureObservation;
 import gov.cms.madie.models.measure.MeasureScoring;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
@@ -41,6 +42,7 @@ public class TestCaseServiceUtilTest {
   private Population population3;
   private Population population4;
   private Population population5;
+  private Population measurePopulation;
   private Group group;
 
   List<TestCasePopulationValue> populationValues = new ArrayList<>();
@@ -119,6 +121,12 @@ public class TestCaseServiceUtilTest {
             .id("Population5Id")
             .name(PopulationType.NUMERATOR_EXCLUSION)
             .definition("Numerator Exclusion")
+            .build();
+    measurePopulation =
+        Population.builder()
+            .id("testCriteriaReference")
+            .name(PopulationType.MEASURE_POPULATION)
+            .definition("Measure Population")
             .build();
     group =
         Group.builder()
@@ -335,35 +343,178 @@ public class TestCaseServiceUtilTest {
   }
 
   @Test
-  public void testMatchCriteriaGroupsWithObservations() {
-    List<TestCasePopulationValue> populationValues =
-        testCaseGroupPopulations.get(0).getPopulationValues();
-    TestCasePopulationValue denomPopulationValue =
-        TestCasePopulationValue.builder()
-            .name(PopulationType.DENOMINATOR_OBSERVATION)
-            .expected(4)
-            .build();
-    populationValues.add(denomPopulationValue);
-    TestCasePopulationValue numerPopulationValue =
-        TestCasePopulationValue.builder()
-            .name(PopulationType.NUMERATOR_OBSERVATION)
-            .expected(4)
-            .build();
-    populationValues.add(numerPopulationValue);
+  public void testMatchCVCriteriaGroupsWithObservations() {
+    List<TestCasePopulationValue> populationValues = getCVTestCasePopulationValues();
+
     TestCaseGroupPopulation groupPopulation = TestCaseGroupPopulation.builder().build();
     groupPopulation.setPopulationValues(populationValues);
 
+    MeasureObservation measureObservation =
+        MeasureObservation.builder()
+            .definition(PopulationType.MEASURE_OBSERVATION.name())
+            .criteriaReference("testCriteriaReference")
+            .build();
     group =
         Group.builder()
             .id("testGroupId")
-            .scoring(MeasureScoring.COHORT.name())
+            .scoring(MeasureScoring.CONTINUOUS_VARIABLE.name())
             .populationBasis("Encounter")
-            .populations(List.of(population1, population2, population3, population4, population5))
+            .populations(List.of(population1, measurePopulation))
+            .measureObservations(List.of(measureObservation))
             .build();
 
     boolean result =
         testCaseServiceUtil.matchCriteriaGroups(List.of(groupPopulation), List.of(group), testCase);
     assertTrue(result);
+  }
+
+  @Test
+  public void testMatchRatioCriteriaGroupsWithObservations() {
+    List<TestCasePopulationValue> populationValues = new ArrayList<>();
+    TestCasePopulationValue initialPopulationValue =
+        TestCasePopulationValue.builder()
+            .name(PopulationType.INITIAL_POPULATION)
+            .expected(4)
+            .build();
+    populationValues.add(initialPopulationValue);
+    TestCasePopulationValue denomPopulationValue =
+        TestCasePopulationValue.builder().name(PopulationType.DENOMINATOR).expected(1).build();
+    populationValues.add(denomPopulationValue);
+    TestCasePopulationValue denomObservationPopulationValue =
+        TestCasePopulationValue.builder()
+            .name(PopulationType.DENOMINATOR_OBSERVATION)
+            .expected(1)
+            .build();
+    populationValues.add(denomObservationPopulationValue);
+    TestCasePopulationValue numeratorValue =
+        TestCasePopulationValue.builder().name(PopulationType.NUMERATOR).expected(1).build();
+    populationValues.add(numeratorValue);
+    TestCasePopulationValue numerObservationValue =
+        TestCasePopulationValue.builder()
+            .name(PopulationType.NUMERATOR_OBSERVATION)
+            .expected(1)
+            .build();
+    populationValues.add(numerObservationValue);
+
+    TestCaseGroupPopulation groupPopulation = TestCaseGroupPopulation.builder().build();
+    groupPopulation.setPopulationValues(populationValues);
+
+    MeasureObservation denomObservation =
+        MeasureObservation.builder()
+            .definition(PopulationType.DENOMINATOR_OBSERVATION.name())
+            .criteriaReference("Population2Id")
+            .build();
+    MeasureObservation numerObservation =
+        MeasureObservation.builder()
+            .definition(PopulationType.NUMERATOR_OBSERVATION.name())
+            .criteriaReference("Population4Id")
+            .build();
+    group =
+        Group.builder()
+            .id("testGroupId")
+            .scoring(MeasureScoring.CONTINUOUS_VARIABLE.name())
+            .populationBasis("Encounter")
+            .populations(List.of(population1, population2, population4))
+            .measureObservations(List.of(denomObservation, numerObservation))
+            .build();
+
+    boolean result =
+        testCaseServiceUtil.matchCriteriaGroups(List.of(groupPopulation), List.of(group), testCase);
+    assertTrue(result);
+  }
+
+  @Test
+  public void testMatchCVCriteriaGroupsWithObservationsAndStratifications() {
+    List<TestCasePopulationValue> populationValues = getCVTestCasePopulationValues();
+
+    TestCaseStratificationValue stratificationValue =
+        TestCaseStratificationValue.builder().name("Strata-1").expected("1").build();
+    stratificationValue.setPopulationValues(populationValues);
+
+    TestCaseGroupPopulation groupPopulation = TestCaseGroupPopulation.builder().build();
+    groupPopulation.setPopulationValues(populationValues);
+    groupPopulation.setStratificationValues(List.of(stratificationValue));
+
+    MeasureObservation measureObservation =
+        MeasureObservation.builder()
+            .definition(PopulationType.MEASURE_OBSERVATION.name())
+            .criteriaReference("testCriteriaReference")
+            .build();
+    group =
+        Group.builder()
+            .id("testGroupId")
+            .scoring(MeasureScoring.CONTINUOUS_VARIABLE.name())
+            .populationBasis("Encounter")
+            .populations(List.of(population1, measurePopulation))
+            .measureObservations(List.of(measureObservation))
+            .build();
+
+    boolean result =
+        testCaseServiceUtil.matchCriteriaGroups(List.of(groupPopulation), List.of(group), testCase);
+    assertTrue(result);
+  }
+
+  private List<TestCasePopulationValue> getCVTestCasePopulationValues() {
+    List<TestCasePopulationValue> populationValues = new ArrayList<>();
+    TestCasePopulationValue initialPopulationValue =
+        TestCasePopulationValue.builder()
+            .name(PopulationType.INITIAL_POPULATION)
+            .expected(4)
+            .build();
+    populationValues.add(initialPopulationValue);
+    TestCasePopulationValue measurePopulationValue =
+        TestCasePopulationValue.builder()
+            .name(PopulationType.MEASURE_POPULATION)
+            .expected(1)
+            .build();
+    populationValues.add(measurePopulationValue);
+    TestCasePopulationValue measurePopulationObservationValue =
+        TestCasePopulationValue.builder()
+            .name(PopulationType.MEASURE_POPULATION_OBSERVATION)
+            .expected(60)
+            .build();
+    populationValues.add(measurePopulationObservationValue);
+
+    return populationValues;
+  }
+
+  @Test
+  public void testAssignStratificationValuesQdmMismatch() {
+    // Imported Populations
+    List<TestCasePopulationValue> populationValues = getCVTestCasePopulationValues();
+
+    // Imported Strat Population
+    TestCaseStratificationValue stratValue =
+        TestCaseStratificationValue.builder().name("Strata-1").expected(1).build();
+    stratValue.setPopulationValues(populationValues);
+
+    List<TestCaseGroupPopulation> importedGroups = new ArrayList<>();
+    importedGroups.add(
+        TestCaseGroupPopulation.builder()
+            .populationValues(populationValues)
+            .stratificationValues(List.of(stratValue))
+            .build());
+
+    MeasureObservation measureObservation =
+        MeasureObservation.builder()
+            .definition(PopulationType.MEASURE_OBSERVATION.name())
+            .criteriaReference("testCriteriaReference")
+            .build();
+    group =
+        Group.builder()
+            .id("testGroupId")
+            .scoring(MeasureScoring.CONTINUOUS_VARIABLE.name())
+            .populationBasis("Encounter")
+            .populations(List.of(population1, measurePopulation))
+            .measureObservations(List.of(measureObservation))
+            .build();
+    List<Group> measureGroups = new ArrayList<>();
+    measureGroups.add(group);
+
+    List<TestCaseGroupPopulation> testCaseGroups =
+        testCaseServiceUtil.assignStratificationValuesQdm(importedGroups, measureGroups);
+
+    assertNull(testCaseGroups);
   }
 
   @Test
@@ -928,6 +1079,28 @@ public class TestCaseServiceUtilTest {
     assertEquals(
         newTestCase.getGroupPopulations().get(0).getPopulationValues().get(5).getExpected(),
         Boolean.FALSE);
+  }
+
+  @Test
+  public void testAssignObservationValuesNonBoolean() {
+    TestCaseGroupPopulation groupPopulationFromTestCase =
+        TestCaseGroupPopulation.builder().populationValues(populationValues).build();
+    TestCase newTestCase =
+        TestCase.builder().groupPopulations(List.of(groupPopulationFromTestCase)).build();
+
+    TestCasePopulationValue populationValue1 =
+        TestCasePopulationValue.builder()
+            .name(PopulationType.DENOMINATOR_OBSERVATION)
+            .expected(1)
+            .build();
+    TestCaseGroupPopulation groupPopulation =
+        TestCaseGroupPopulation.builder().populationValues(List.of(populationValue1)).build();
+
+    testCaseServiceUtil.assignObservationValues(newTestCase, List.of(groupPopulation), "Encounter");
+
+    assertEquals(newTestCase.getGroupPopulations().get(0).getPopulationValues().size(), 6);
+    assertEquals(
+        newTestCase.getGroupPopulations().get(0).getPopulationValues().get(5).getExpected(), 1);
   }
 
   @Test

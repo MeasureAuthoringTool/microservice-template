@@ -1,12 +1,15 @@
 package cms.gov.madie.measure.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.MeasureScoring;
 import gov.cms.madie.models.measure.QdmMeasure;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
+import gov.cms.madie.models.measure.TestCasePopulationValue;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -137,6 +140,8 @@ public class JsonUtilTest implements ResourceUtil {
           + "  }]\n"
           + "}";
   final String qdmImportedJson = getData("/test_case_exported_qdm_json.json");
+  final String testCasePopulationValueJsonNode =
+      "{\n" + "\"population_index\":0,\n" + "\"IPP\":1\n" + "}";
 
   @Test
   public void testIsValidJsonSuccess() {
@@ -596,5 +601,75 @@ public class JsonUtilTest implements ResourceUtil {
     List<TestCaseGroupPopulation> groupPopulations =
         JsonUtil.getTestCaseGroupPopulationsQdm("{\"expectedValues\":[]}", qdmMeasure);
     assertTrue(CollectionUtils.isEmpty(groupPopulations));
+  }
+
+  @Test
+  void testGetTestCaseGroupPopulationsQdmForRatio() throws JsonProcessingException {
+    QdmMeasure qdmMeasure = QdmMeasure.builder().scoring(MeasureScoring.RATIO.toString()).build();
+
+    List<TestCaseGroupPopulation> groupPopulations =
+        JsonUtil.getTestCaseGroupPopulationsQdm(qdmImportedJson, qdmMeasure);
+    assertTrue(CollectionUtils.isNotEmpty(groupPopulations.get(0).getPopulationValues()));
+  }
+
+  @Test
+  void testGetTestCaseGroupPopulationsQdmForCVWithStratificationValues()
+      throws JsonProcessingException {
+    QdmMeasure qdmMeasure =
+        QdmMeasure.builder()
+            .scoring(MeasureScoring.CONTINUOUS_VARIABLE.toString())
+            .patientBasis(false)
+            .build();
+
+    List<TestCaseGroupPopulation> groupPopulations =
+        JsonUtil.getTestCaseGroupPopulationsQdm(qdmImportedJson, qdmMeasure);
+    assertTrue(CollectionUtils.isNotEmpty(groupPopulations.get(0).getPopulationValues()));
+    assertTrue(CollectionUtils.isNotEmpty(groupPopulations.get(1).getStratificationValues()));
+    assertTrue(CollectionUtils.isNotEmpty(groupPopulations.get(2).getStratificationValues()));
+  }
+
+  @Test
+  void testSetObservationValuesForCV() throws JsonProcessingException {
+    ObjectMapper mapper = new ObjectMapper();
+    JsonNode ippNode = mapper.readTree(testCasePopulationValueJsonNode);
+
+    List<TestCasePopulationValue> populationValues = List.of();
+
+    QdmMeasure qdmMeasure =
+        QdmMeasure.builder()
+            .scoring(MeasureScoring.CONTINUOUS_VARIABLE.toString())
+            .patientBasis(false)
+            .build();
+
+    JsonUtil.setObservationValuesForCV(ippNode, populationValues, qdmMeasure);
+    assertTrue(CollectionUtils.isEmpty(populationValues));
+  }
+
+  @Test
+  void testSetDenominatorValues() throws JsonProcessingException {
+    ObjectMapper mapper = new ObjectMapper();
+    JsonNode ippNode = mapper.readTree(testCasePopulationValueJsonNode);
+
+    List<TestCasePopulationValue> populationValues = List.of();
+
+    QdmMeasure qdmMeasure =
+        QdmMeasure.builder().scoring(MeasureScoring.RATIO.toString()).patientBasis(false).build();
+
+    JsonUtil.setDenominatorValues(ippNode, populationValues, qdmMeasure);
+    assertTrue(CollectionUtils.isEmpty(populationValues));
+  }
+
+  @Test
+  void testSetNumeratorValues() throws JsonProcessingException {
+    ObjectMapper mapper = new ObjectMapper();
+    JsonNode ippNode = mapper.readTree(testCasePopulationValueJsonNode);
+
+    List<TestCasePopulationValue> populationValues = List.of();
+
+    QdmMeasure qdmMeasure =
+        QdmMeasure.builder().scoring(MeasureScoring.RATIO.toString()).patientBasis(false).build();
+
+    JsonUtil.setNumeratorValues(ippNode, populationValues, qdmMeasure);
+    assertTrue(CollectionUtils.isEmpty(populationValues));
   }
 }
