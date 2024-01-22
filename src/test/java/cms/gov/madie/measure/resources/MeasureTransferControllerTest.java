@@ -98,7 +98,6 @@ public class MeasureTransferControllerTest {
                         AggregateMethodType.AVERAGE.getValue())),
                 "Description",
                 "improvmentNotation",
-                "improvmentNotationOther",
                 "rateAggragation",
                 List.of(MeasureGroupTypes.PROCESS),
                 "testScoringUnit",
