@@ -1,45 +1,12 @@
 package cms.gov.madie.measure.resources;
 
-import cms.gov.madie.measure.SecurityConfig;
-import cms.gov.madie.measure.exceptions.InvalidCmsIdException;
-import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
-import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
-import cms.gov.madie.measure.repositories.MeasureRepository;
-import cms.gov.madie.measure.repositories.MeasureSetRepository;
-import cms.gov.madie.measure.services.ActionLogService;
-import cms.gov.madie.measure.services.GroupService;
-import cms.gov.madie.measure.services.MeasureService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import gov.cms.madie.models.common.ActionType;
-import gov.cms.madie.models.common.ModelType;
-import gov.cms.madie.models.common.Organization;
-import gov.cms.madie.models.measure.*;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-
-import java.util.List;
-import java.util.Optional;
-
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -59,6 +26,52 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
+import cms.gov.madie.measure.SecurityConfig;
+import cms.gov.madie.measure.exceptions.InvalidCmsIdException;
+import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
+import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
+import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.repositories.MeasureSetRepository;
+import cms.gov.madie.measure.services.ActionLogService;
+import cms.gov.madie.measure.services.GroupService;
+import cms.gov.madie.measure.services.MeasureService;
+import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.common.ModelType;
+import gov.cms.madie.models.common.Organization;
+import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureGroupTypes;
+import gov.cms.madie.models.measure.MeasureMetaData;
+import gov.cms.madie.models.measure.MeasureScoring;
+import gov.cms.madie.models.measure.Population;
+import gov.cms.madie.models.measure.PopulationType;
+import gov.cms.madie.models.measure.QdmMeasure;
+import gov.cms.madie.models.measure.Stratification;
 
 @WebMvcTest({MeasureController.class})
 @ActiveProfiles("test")
@@ -883,6 +896,54 @@ public class MeasureControllerMvcTest {
                 .content(qdmMeasureString)
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest());
+    verifyNoMoreInteractions(measureRepository);
+  }
+
+  @Test
+  public void testUpdateQDMMeasurePassesWithImprovementNotation() throws Exception {
+    QdmMeasure saved = new QdmMeasure();
+    String measureId = "id456";
+    saved.setId(measureId);
+    String measureName = "SavedMeasureQDM";
+    String libraryName = "QDMLib1";
+    String ecqmTitle = "ecqmTitleQDM";
+    String measureSetId = "cooltimeQDM";
+    saved.setMeasureName(measureName);
+    saved.setCqlLibraryName(libraryName);
+    saved.setModel(ModelType.QDM_5_6.toString());
+    saved.setEcqmTitle(ecqmTitle);
+    saved.setVersionId(measureId);
+    saved.setImprovementNotation("Other");
+    saved.setImprovementNotationOther("TestingOther");
+    when(measureService.findMeasureById(anyString()))
+    .thenReturn(saved);
+    when(measureService.updateMeasure(any(Measure.class),anyString(),any(Measure.class),anyString()))
+    .thenReturn(saved);
+
+    final String measureAsJson =
+        "{\"measureName\": \"%s\",\"measureSetId\":\"%s\", \"cqlLibraryName\": \"%s\" , \"ecqmTitle\": \"%s\", \"model\": \"%s\", \"id\":\"%s\", \"versionId\":\"%s\", \"scoring\":\"Cohort\",\"improvementNotation\": \"%s\",\"improvementNotationOther\": \"%s\"}"
+            .formatted(
+                measureName,
+                measureSetId,
+                libraryName,
+                ecqmTitle,
+                ModelType.QDM_5_6.toString(),
+                measureId,
+                measureId,
+                "Other",
+                "TestingOther");
+    mockMvc
+        .perform(
+            put("/measures/id456")
+            
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .header("Authorization", "test-okta")
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.improvementNotation").value("Other"))
+        .andExpect(jsonPath("$.improvementNotationOther").value("TestingOther"));
     verifyNoMoreInteractions(measureRepository);
   }
 
