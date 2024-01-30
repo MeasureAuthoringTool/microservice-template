@@ -74,7 +74,8 @@ public class MeasureTransferController {
           measure
               .getCql()
               .replace(
-                  versionService.generateLibraryContentLine(measure.getCqlLibraryName(), oldVersion),
+                  versionService.generateLibraryContentLine(
+                      measure.getCqlLibraryName(), oldVersion),
                   versionService.generateLibraryContentLine(
                       measure.getCqlLibraryName(), newVersion));
       measure.setCql(newCql);

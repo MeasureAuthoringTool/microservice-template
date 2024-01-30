@@ -17,7 +17,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -156,7 +155,8 @@ public class MeasureTransferControllerMvcTest {
             .cql("library MedicationDispenseTest version '0.0.001' using FHIR version '4.0.1'")
             .build();
 
-    qdmMeasure = Measure.builder()
+    qdmMeasure =
+        Measure.builder()
             .id("qdmMeasureId")
             .versionId("qdmMeasureId")
             .createdBy("testCreatedBy")
@@ -184,7 +184,7 @@ public class MeasureTransferControllerMvcTest {
             .owner("user-1")
             .build();
 
-    elmJson =new ElmJson();
+    elmJson = new ElmJson();
     elmJson.setJson(ELM_JSON_SUCCESS);
     elmJson.setXml(ELM_JSON_SUCCESS);
   }
@@ -195,9 +195,8 @@ public class MeasureTransferControllerMvcTest {
 
     ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
 
-    when(elmTranslatorClient.getElmJsonForMatMeasure(
-            anyString(),anyString(), anyString()))
-            .thenReturn(elmJson);
+    when(elmTranslatorClient.getElmJsonForMatMeasure(anyString(), anyString(), anyString()))
+        .thenReturn(elmJson);
     when(elmTranslatorClient.hasErrors(elmJson)).thenReturn(false);
     doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
     doNothing().when(measureSetService).createMeasureSet(anyString(), anyString(), anyString());
@@ -294,34 +293,33 @@ public class MeasureTransferControllerMvcTest {
     ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
 
     doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
-    when(elmTranslatorClient.getElmJsonForMatMeasure(
-           anyString(),anyString(),anyString()))
-            .thenReturn(elmJson);
+    when(elmTranslatorClient.getElmJsonForMatMeasure(anyString(), anyString(), anyString()))
+        .thenReturn(elmJson);
     when(elmTranslatorClient.hasErrors(elmJson)).thenReturn(false);
     doReturn(true)
-            .when(appConfigService)
-            .isFlagEnabled(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER);
+        .when(appConfigService)
+        .isFlagEnabled(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER);
     doReturn("library MedicationDispenseTest version '3.2.000' using QDM version '5.6'")
-            .when(versionService)
-            .generateLibraryContentLine("MedicationDispenseTest", new Version(3,2,0));
+        .when(versionService)
+        .generateLibraryContentLine("MedicationDispenseTest", new Version(3, 2, 0));
 
     doReturn("library MedicationDispenseTest version '0.0.000' using QDM version '5.6'")
-            .when(versionService)
-            .generateLibraryContentLine("MedicationDispenseTest",new Version(0,0,0));
+        .when(versionService)
+        .generateLibraryContentLine("MedicationDispenseTest", new Version(0, 0, 0));
     when(organizationRepository.findAll()).thenReturn(organizationList);
     doReturn(qdmMeasure).when(measureRepository).save(any(Measure.class));
     doNothing().when(measureSetService).createMeasureSet(anyString(), anyString(), anyString());
 
-    when(actionLogService.logAction(anyString(), any(),any(), anyString())).thenReturn(true);
+    when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
 
     mockMvc
-            .perform(
-                    MockMvcRequestBuilders.post("/measure-transfer/mat-measures")
-                            .content(measureJson)
-                            .contentType(MediaType.APPLICATION_JSON_VALUE)
-                            .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
-                            .header(HARP_ID_HEADER_KEY, HARP_ID_HEADER_VALUE))
-            .andExpect(status().isCreated());
+        .perform(
+            MockMvcRequestBuilders.post("/measure-transfer/mat-measures")
+                .content(measureJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
+                .header(HARP_ID_HEADER_KEY, HARP_ID_HEADER_VALUE))
+        .andExpect(status().isCreated());
 
     verify(measureRepository, times(1)).save(persistedMeasureArgCaptor.capture());
     Measure persistedMeasure = persistedMeasureArgCaptor.getValue();
@@ -329,21 +327,21 @@ public class MeasureTransferControllerMvcTest {
     assertEquals(qdmMeasure.getMeasureSetId(), persistedMeasure.getMeasureSetId());
     assertEquals(qdmMeasure.getMeasureName(), persistedMeasure.getMeasureName());
     assertEquals(qdmMeasure.getCqlLibraryName(), persistedMeasure.getCqlLibraryName());
-    assertEquals("library MedicationDispenseTest version '0.0.000' using QDM version '5.6'", persistedMeasure.getCql());
+    assertEquals(
+        "library MedicationDispenseTest version '0.0.000' using QDM version '5.6'",
+        persistedMeasure.getCql());
 
     verify(actionLogService, times(1))
-            .logAction(
-                    targetIdArgumentCaptor.capture(),
-                    targetClassArgumentCaptor.capture(),
-                    actionTypeArgumentCaptor.capture(),
-                    performedByArgumentCaptor.capture());
+        .logAction(
+            targetIdArgumentCaptor.capture(),
+            targetClassArgumentCaptor.capture(),
+            actionTypeArgumentCaptor.capture(),
+            performedByArgumentCaptor.capture());
     assertNotNull(targetIdArgumentCaptor.getValue());
     assertThat(targetClassArgumentCaptor.getValue(), is(equalTo(Measure.class)));
     assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.IMPORTED)));
     assertThat(performedByArgumentCaptor.getValue(), is(equalTo("testCreatedBy")));
   }
-
-
 
   @Test
   public void testCreateMeasureFailureWhenInvalidApiKey() throws Exception {
