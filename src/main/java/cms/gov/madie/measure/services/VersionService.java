@@ -275,7 +275,7 @@ public class VersionService {
     return new Version();
   }
 
-  private String generateLibraryContentLine(String cqlLibraryName, Version version) {
+  public String generateLibraryContentLine(String cqlLibraryName, Version version) {
     return "library " + cqlLibraryName + " version " + "'" + version + "'";
   }
 

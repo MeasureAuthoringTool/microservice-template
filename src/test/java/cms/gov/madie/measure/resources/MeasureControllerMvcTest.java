@@ -935,7 +935,6 @@ public class MeasureControllerMvcTest {
     mockMvc
         .perform(
             put("/measures/id456")
-            
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .header("Authorization", "test-okta")
