@@ -1,14 +1,12 @@
 package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.SecurityConfig;
+import cms.gov.madie.measure.dto.MadieFeatureFlag;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.repositories.OrganizationRepository;
-import cms.gov.madie.measure.services.ActionLogService;
-import cms.gov.madie.measure.services.ElmTranslatorClient;
-import cms.gov.madie.measure.services.MeasureService;
-import cms.gov.madie.measure.services.MeasureSetService;
+import cms.gov.madie.measure.services.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
@@ -19,7 +17,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -59,9 +56,12 @@ public class MeasureTransferControllerMvcTest {
   @MockBean private ActionLogService actionLogService;
   @MockBean private MeasureSetService measureSetService;
   @MockBean private ElmTranslatorClient elmTranslatorClient;
+  @MockBean private AppConfigService appConfigService;
+  @MockBean private VersionService versionService;
 
   @MockBean private OrganizationRepository organizationRepository;
-  @Mock private ElmJson elmJson;
+
+  private ElmJson elmJson;
   private static final String ELM_JSON_SUCCESS = "{\"result\":\"success\"}";
   private static final String ELM_JSON_FAIL =
       "{\"errorExceptions\": [{\"Error\":\"UNAUTHORIZED\"}]}";
@@ -76,6 +76,7 @@ public class MeasureTransferControllerMvcTest {
   @Autowired private MockMvc mockMvc;
 
   Measure measure;
+  Measure qdmMeasure;
   MeasureSet measureSet;
 
   private List<Organization> organizationList;
@@ -154,6 +155,22 @@ public class MeasureTransferControllerMvcTest {
             .cql("library MedicationDispenseTest version '0.0.001' using FHIR version '4.0.1'")
             .build();
 
+    qdmMeasure =
+        Measure.builder()
+            .id("qdmMeasureId")
+            .versionId("qdmMeasureId")
+            .createdBy("testCreatedBy")
+            .measureSetId("abc-pqr-xyz")
+            .version(new Version(3, 2, 0))
+            .measureName("MedicationDispenseTest")
+            .cqlLibraryName("MedicationDispenseTest")
+            .ecqmTitle("ecqmTitle")
+            .model(ModelType.QDM_5_6.toString())
+            .measureMetaData(measureMetaData)
+            .groups(groups)
+            .cql("library MedicationDispenseTest version '3.2.000' using QDM version '5.6'")
+            .build();
+
     organizationList = new ArrayList<>();
     organizationList.add(Organization.builder().name("SB").url("SB Url").build());
     organizationList.add(Organization.builder().name("SB 2").url("SB 2 Url").build());
@@ -166,6 +183,10 @@ public class MeasureTransferControllerMvcTest {
             .measureSetId("abc-pqr-xyz")
             .owner("user-1")
             .build();
+
+    elmJson = new ElmJson();
+    elmJson.setJson(ELM_JSON_SUCCESS);
+    elmJson.setXml(ELM_JSON_SUCCESS);
   }
 
   @Test
@@ -174,6 +195,9 @@ public class MeasureTransferControllerMvcTest {
 
     ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
 
+    when(elmTranslatorClient.getElmJsonForMatMeasure(anyString(), anyString(), anyString()))
+        .thenReturn(elmJson);
+    when(elmTranslatorClient.hasErrors(elmJson)).thenReturn(false);
     doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
     doNothing().when(measureSetService).createMeasureSet(anyString(), anyString(), anyString());
     doReturn(measure).when(measureRepository).save(any(Measure.class));
@@ -263,6 +287,63 @@ public class MeasureTransferControllerMvcTest {
   }
 
   @Test
+  public void testCreateMeasureUpdateVersion() throws Exception {
+    String measureJson = new ObjectMapper().writeValueAsString(qdmMeasure);
+
+    ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
+
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
+    when(elmTranslatorClient.getElmJsonForMatMeasure(anyString(), anyString(), anyString()))
+        .thenReturn(elmJson);
+    when(elmTranslatorClient.hasErrors(elmJson)).thenReturn(false);
+    doReturn(true)
+        .when(appConfigService)
+        .isFlagEnabled(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER);
+    doReturn("library MedicationDispenseTest version '3.2.000' using QDM version '5.6'")
+        .when(versionService)
+        .generateLibraryContentLine("MedicationDispenseTest", new Version(3, 2, 0));
+
+    doReturn("library MedicationDispenseTest version '0.0.000' using QDM version '5.6'")
+        .when(versionService)
+        .generateLibraryContentLine("MedicationDispenseTest", new Version(0, 0, 0));
+    when(organizationRepository.findAll()).thenReturn(organizationList);
+    doReturn(qdmMeasure).when(measureRepository).save(any(Measure.class));
+    doNothing().when(measureSetService).createMeasureSet(anyString(), anyString(), anyString());
+
+    when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.post("/measure-transfer/mat-measures")
+                .content(measureJson)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
+                .header(HARP_ID_HEADER_KEY, HARP_ID_HEADER_VALUE))
+        .andExpect(status().isCreated());
+
+    verify(measureRepository, times(1)).save(persistedMeasureArgCaptor.capture());
+    Measure persistedMeasure = persistedMeasureArgCaptor.getValue();
+    assertNotNull(persistedMeasure);
+    assertEquals(qdmMeasure.getMeasureSetId(), persistedMeasure.getMeasureSetId());
+    assertEquals(qdmMeasure.getMeasureName(), persistedMeasure.getMeasureName());
+    assertEquals(qdmMeasure.getCqlLibraryName(), persistedMeasure.getCqlLibraryName());
+    assertEquals(
+        "library MedicationDispenseTest version '0.0.000' using QDM version '5.6'",
+        persistedMeasure.getCql());
+
+    verify(actionLogService, times(1))
+        .logAction(
+            targetIdArgumentCaptor.capture(),
+            targetClassArgumentCaptor.capture(),
+            actionTypeArgumentCaptor.capture(),
+            performedByArgumentCaptor.capture());
+    assertNotNull(targetIdArgumentCaptor.getValue());
+    assertThat(targetClassArgumentCaptor.getValue(), is(equalTo(Measure.class)));
+    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.IMPORTED)));
+    assertThat(performedByArgumentCaptor.getValue(), is(equalTo("testCreatedBy")));
+  }
+
+  @Test
   public void testCreateMeasureFailureWhenInvalidApiKey() throws Exception {
     String measureJson = new ObjectMapper().writeValueAsString(measure);
 
@@ -285,7 +366,6 @@ public class MeasureTransferControllerMvcTest {
     String measureJson = new ObjectMapper().writeValueAsString(measure);
 
     doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
-    when(elmJson.getJson()).thenReturn(ELM_JSON_SUCCESS);
     when(elmTranslatorClient.getElmJsonForMatMeasure(
             CQL, LAMBDA_TEST_API_KEY_HEADER_VALUE, HARP_ID_HEADER_VALUE))
         .thenReturn(elmJson);
@@ -314,7 +394,6 @@ public class MeasureTransferControllerMvcTest {
     String measureJson = new ObjectMapper().writeValueAsString(measure);
 
     doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
-    when(elmJson.getJson()).thenReturn(ELM_JSON_FAIL);
     when(elmTranslatorClient.getElmJsonForMatMeasure(
             CQL, LAMBDA_TEST_API_KEY_HEADER_VALUE, HARP_ID_HEADER_VALUE))
         .thenReturn(elmJson);

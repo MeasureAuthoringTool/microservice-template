@@ -1,9 +1,12 @@
 package cms.gov.madie.measure.resources;
 
+import cms.gov.madie.measure.dto.MadieFeatureFlag;
 import cms.gov.madie.measure.repositories.OrganizationRepository;
-import cms.gov.madie.measure.services.MeasureSetService;
+import cms.gov.madie.measure.services.*;
 import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.common.Organization;
+import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
@@ -13,9 +16,6 @@ import gov.cms.madie.models.measure.PopulationType;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
-import cms.gov.madie.measure.services.ActionLogService;
-import cms.gov.madie.measure.services.ElmTranslatorClient;
-import cms.gov.madie.measure.services.MeasureService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
@@ -47,6 +47,8 @@ public class MeasureTransferController {
   private final MeasureSetService measureSetService;
   private final ElmTranslatorClient elmTranslatorClient;
   private final OrganizationRepository organizationRepository;
+  private final AppConfigService appConfigService;
+  private final VersionService versionService;
 
   @PostMapping("/mat-measures")
   @PreAuthorize("#request.getHeader('api-key') == #apiKey")
@@ -67,6 +69,23 @@ public class MeasureTransferController {
     Instant now = Instant.now();
     measure.setCreatedAt(now);
     measure.setLastModifiedAt(now);
+
+    if (ModelType.QDM_5_6.getValue().equals(measure.getModel())
+        && appConfigService.isFlagEnabled(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER)) {
+      Version oldVersion = measure.getVersion();
+      Version newVersion = new Version(0, 0, 0);
+      String newCql =
+          measure
+              .getCql()
+              .replace(
+                  versionService.generateLibraryContentLine(
+                      measure.getCqlLibraryName(), oldVersion),
+                  versionService.generateLibraryContentLine(
+                      measure.getCqlLibraryName(), newVersion));
+      measure.setCql(newCql);
+      measure.setVersion(newVersion);
+    }
+
     if (measure.getMeasureMetaData() != null) {
       measure.getMeasureMetaData().setDraft(true);
       updateStewardAndDevelopers(measure);
