@@ -5,8 +5,11 @@ import cms.gov.madie.measure.services.MeasureSetService;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.Organization;
 import gov.cms.madie.models.measure.ElmJson;
+import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureMetaData;
+import gov.cms.madie.models.measure.Population;
+import gov.cms.madie.models.measure.PopulationType;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
@@ -26,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +78,7 @@ public class MeasureTransferController {
     }
     // set ids for groups
     measure.getGroups().forEach(group -> group.setId(ObjectId.get().toString()));
+    measure.setGroups(reorderGroupPopulations(measure.getGroups()));
     Measure savedMeasure = repository.save(measure);
     measureSetService.createMeasureSet(
         harpId, savedMeasure.getId(), savedMeasure.getMeasureSetId());
@@ -176,5 +181,39 @@ public class MeasureTransferController {
           ex);
       measure.setCqlErrors(true);
     }
+  }
+
+  protected List<Group> reorderGroupPopulations(List<Group> groups) {
+    List<Population> newPopulations;
+    List<Group> newGroups = new ArrayList<>();
+    if (!CollectionUtils.isEmpty(groups)) {
+      for (Group group : groups) {
+        newPopulations = new ArrayList<>();
+        List<Population> populations = group.getPopulations();
+        if (!CollectionUtils.isEmpty(populations)) {
+          newPopulations.add(findPopulation(populations, PopulationType.INITIAL_POPULATION));
+          newPopulations.add(findPopulation(populations, PopulationType.DENOMINATOR));
+          newPopulations.add(findPopulation(populations, PopulationType.DENOMINATOR_EXCLUSION));
+          newPopulations.add(findPopulation(populations, PopulationType.NUMERATOR));
+          newPopulations.add(findPopulation(populations, PopulationType.NUMERATOR_EXCLUSION));
+          newPopulations.add(findPopulation(populations, PopulationType.DENOMINATOR_EXCEPTION));
+          group.setPopulations(newPopulations);
+          newGroups.add(group);
+        }
+      }
+    }
+    return newGroups;
+  }
+
+  private Population findPopulation(List<Population> populations, PopulationType populationType) {
+    return populations.stream()
+        .filter(population -> population.getName() == populationType)
+        .findFirst()
+        .orElse(
+            Population.builder()
+                .id(ObjectId.get().toString())
+                .name(populationType)
+                .definition("")
+                .build());
   }
 }

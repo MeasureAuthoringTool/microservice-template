@@ -915,10 +915,10 @@ public class MeasureControllerMvcTest {
     saved.setVersionId(measureId);
     saved.setImprovementNotation("Other");
     saved.setImprovementNotationOther("TestingOther");
-    when(measureService.findMeasureById(anyString()))
-    .thenReturn(saved);
-    when(measureService.updateMeasure(any(Measure.class),anyString(),any(Measure.class),anyString()))
-    .thenReturn(saved);
+    when(measureService.findMeasureById(anyString())).thenReturn(saved);
+    when(measureService.updateMeasure(
+            any(Measure.class), anyString(), any(Measure.class), anyString()))
+        .thenReturn(saved);
 
     final String measureAsJson =
         "{\"measureName\": \"%s\",\"measureSetId\":\"%s\", \"cqlLibraryName\": \"%s\" , \"ecqmTitle\": \"%s\", \"model\": \"%s\", \"id\":\"%s\", \"versionId\":\"%s\", \"scoring\":\"Cohort\",\"improvementNotation\": \"%s\",\"improvementNotationOther\": \"%s\"}"
@@ -935,7 +935,6 @@ public class MeasureControllerMvcTest {
     mockMvc
         .perform(
             put("/measures/id456")
-            
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .header("Authorization", "test-okta")
