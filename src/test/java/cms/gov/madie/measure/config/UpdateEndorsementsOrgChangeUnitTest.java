@@ -125,7 +125,7 @@ class UpdateEndorsementsOrgChangeUnitTest {
     when(endorsementRepository.findAll()).thenReturn(List.of());
 
     // when
-    changeUnit.updateEndorsements(measureRepository, endorsementRepository);
+    changeUnit.updateEndorsementOrgs(measureRepository, endorsementRepository);
 
     // then
     verifyNoInteractions(measureRepository);
@@ -137,7 +137,7 @@ class UpdateEndorsementsOrgChangeUnitTest {
     when(endorsementRepository.findAll()).thenReturn(null);
 
     // when
-    changeUnit.updateEndorsements(measureRepository, endorsementRepository);
+    changeUnit.updateEndorsementOrgs(measureRepository, endorsementRepository);
 
     // then
     verifyNoInteractions(measureRepository);
@@ -150,7 +150,7 @@ class UpdateEndorsementsOrgChangeUnitTest {
     when(measureRepository.findAll()).thenReturn(List.of());
 
     // when
-    changeUnit.updateEndorsements(measureRepository, endorsementRepository);
+    changeUnit.updateEndorsementOrgs(measureRepository, endorsementRepository);
 
     // then
     verify(measureRepository, times(1)).findAll();
@@ -165,7 +165,7 @@ class UpdateEndorsementsOrgChangeUnitTest {
         .thenReturn(List.of(measureNullEndorsements, measureEmptyEndorsements));
 
     // when
-    changeUnit.updateEndorsements(measureRepository, endorsementRepository);
+    changeUnit.updateEndorsementOrgs(measureRepository, endorsementRepository);
 
     // then
     verify(measureRepository, times(1)).findAll();
@@ -180,7 +180,7 @@ class UpdateEndorsementsOrgChangeUnitTest {
     when(measureRepository.findAll()).thenReturn(List.of(measureWithSingleMissingEndorsement));
 
     // when
-    changeUnit.updateEndorsements(measureRepository, endorsementRepository);
+    changeUnit.updateEndorsementOrgs(measureRepository, endorsementRepository);
 
     // then
     verify(measureRepository, times(1)).findAll();
@@ -203,7 +203,7 @@ class UpdateEndorsementsOrgChangeUnitTest {
     when(measureRepository.findAll()).thenReturn(List.of(measureWithSingleExistingEndorsement));
 
     // when
-    changeUnit.updateEndorsements(measureRepository, endorsementRepository);
+    changeUnit.updateEndorsementOrgs(measureRepository, endorsementRepository);
 
     // then
     verify(measureRepository, times(1)).findAll();
@@ -230,7 +230,7 @@ class UpdateEndorsementsOrgChangeUnitTest {
     when(measureRepository.findAll()).thenReturn(List.of(measureWithMultipleEndorsements));
 
     // when
-    changeUnit.updateEndorsements(measureRepository, endorsementRepository);
+    changeUnit.updateEndorsementOrgs(measureRepository, endorsementRepository);
 
     // then
     verify(measureRepository, times(1)).findAll();
@@ -269,7 +269,7 @@ class UpdateEndorsementsOrgChangeUnitTest {
                 measureWithMultipleEndorsements));
 
     // when
-    changeUnit.updateEndorsements(measureRepository, endorsementRepository);
+    changeUnit.updateEndorsementOrgs(measureRepository, endorsementRepository);
 
     // then
     verify(measureRepository, times(1)).findAll();
@@ -296,7 +296,7 @@ class UpdateEndorsementsOrgChangeUnitTest {
     when(measureRepository.findAll()).thenReturn(List.of(measureWithMissingEndorsementId));
 
     // when
-    changeUnit.updateEndorsements(measureRepository, endorsementRepository);
+    changeUnit.updateEndorsementOrgs(measureRepository, endorsementRepository);
 
     // then
     verify(measureRepository, times(1)).findAll();
