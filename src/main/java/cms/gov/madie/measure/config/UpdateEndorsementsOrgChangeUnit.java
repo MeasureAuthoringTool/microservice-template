@@ -19,10 +19,10 @@ import org.apache.commons.lang3.StringUtils;
 public class UpdateEndorsementsOrgChangeUnit {
 
   @Execution
-  public void updateEndorsements(
+  public void updateEndorsementOrgs(
       MeasureRepository measureRepository, EndorsementRepository endorsementRepository)
       throws Exception {
-    log.info("Entering updateEndorsements()");
+    log.info("Entering updateEndorsementOrgs()");
 
     List<EndorserOrganization> allEndorsers = endorsementRepository.findAll();
     if (allEndorsers == null || allEndorsers.isEmpty()) {
