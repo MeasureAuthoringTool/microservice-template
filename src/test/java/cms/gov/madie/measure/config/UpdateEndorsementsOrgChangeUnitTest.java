@@ -83,21 +83,24 @@ class UpdateEndorsementsOrgChangeUnitTest {
                 MeasureMetaData.builder()
                     .endorsements(
                         List.of(
-                            Endorsement.builder().endorser("CMS Consensus Based Entity").endorsementId("123").build()))
+                            Endorsement.builder()
+                                .endorser("CMS Consensus Based Entity")
+                                .endorsementId("123")
+                                .build()))
                     .build())
             .build();
 
     measureWithMissingEndorsementId =
-            Measure.builder()
-                    .id("measureWithSingleMissingEndorsement")
-                    .measureName("measureWithSingleMissingEndorsement")
-                    .measureMetaData(
-                            MeasureMetaData.builder()
-                                    .endorsements(
-                                            List.of(
-                                                    Endorsement.builder().endorser("CMS Consensus Based Entity").build()))
-                                    .build())
-                    .build();
+        Measure.builder()
+            .id("measureWithSingleMissingEndorsement")
+            .measureName("measureWithSingleMissingEndorsement")
+            .measureMetaData(
+                MeasureMetaData.builder()
+                    .endorsements(
+                        List.of(
+                            Endorsement.builder().endorser("CMS Consensus Based Entity").build()))
+                    .build())
+            .build();
 
     measureWithMultipleEndorsements =
         Measure.builder()
@@ -107,7 +110,10 @@ class UpdateEndorsementsOrgChangeUnitTest {
                 MeasureMetaData.builder()
                     .endorsements(
                         List.of(
-                            Endorsement.builder().endorser("CMS Consensus Based Entity").endorsementId("123").build(),
+                            Endorsement.builder()
+                                .endorser("CMS Consensus Based Entity")
+                                .endorsementId("123")
+                                .build(),
                             Endorsement.builder().endorser("NQF").build()))
                     .build())
             .build();
@@ -211,8 +217,8 @@ class UpdateEndorsementsOrgChangeUnitTest {
         updatedMeasure.getMeasureMetaData().getEndorsements().get(0).getEndorser(),
         is(equalTo(organizations.get(1).getEndorserOrganization())));
     assertThat(
-            updatedMeasure.getMeasureMetaData().getEndorsements().get(0).getEndorsementId(),
-            is(equalTo("123")));
+        updatedMeasure.getMeasureMetaData().getEndorsements().get(0).getEndorsementId(),
+        is(equalTo("123")));
   }
 
   @Test
@@ -241,8 +247,8 @@ class UpdateEndorsementsOrgChangeUnitTest {
         updatedMeasure.getMeasureMetaData().getEndorsements().get(0).getEndorser(),
         is(equalTo(organizations.get(1).getEndorserOrganization())));
     assertThat(
-            updatedMeasure.getMeasureMetaData().getEndorsements().get(0).getEndorsementId(),
-            is(equalTo("123")));
+        updatedMeasure.getMeasureMetaData().getEndorsements().get(0).getEndorsementId(),
+        is(equalTo("123")));
     assertThat(
         updatedMeasure.getMeasureMetaData().getEndorsements().get(1).getEndorser(),
         is(equalTo("")));
@@ -283,7 +289,7 @@ class UpdateEndorsementsOrgChangeUnitTest {
 
   @Test
   void updateEndorsementsHandlesEndorsementUpdatesForMeasureWithMissingEndorsementId()
-          throws Exception {
+      throws Exception {
     // given
     List<EndorserOrganization> organizations = buildEndorserOrganizations();
     when(endorsementRepository.findAll()).thenReturn(organizations);
@@ -301,11 +307,11 @@ class UpdateEndorsementsOrgChangeUnitTest {
     assertThat(updatedMeasure.getMeasureMetaData().getEndorsements(), is(notNullValue()));
     assertThat(updatedMeasure.getMeasureMetaData().getEndorsements().isEmpty(), is(false));
     assertThat(
-            updatedMeasure.getMeasureMetaData().getEndorsements().get(0).getEndorser(),
-            is(equalTo("")));
+        updatedMeasure.getMeasureMetaData().getEndorsements().get(0).getEndorser(),
+        is(equalTo("")));
     assertThat(
-            updatedMeasure.getMeasureMetaData().getEndorsements().get(0).getEndorsementId(),
-            is(nullValue()));
+        updatedMeasure.getMeasureMetaData().getEndorsements().get(0).getEndorsementId(),
+        is(nullValue()));
   }
 
   @Test
