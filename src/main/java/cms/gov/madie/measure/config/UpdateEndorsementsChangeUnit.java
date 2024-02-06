@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@ChangeUnit(id = "endorsements_update", order = "2", author = "madie_dev")
+@ChangeUnit(id = "endorsements_update_1", order = "2", author = "madie_dev")
 public class UpdateEndorsementsChangeUnit {
 
   @Execution
