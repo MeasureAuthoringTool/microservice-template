@@ -467,4 +467,28 @@ public class MeasureTransferControllerTest {
     List<Group> reorderedGroups = controller.reorderGroupPopulations(List.of(copiedGroup));
     assertTrue(CollectionUtils.isEmpty(reorderedGroups));
   }
+
+  @Test
+  public void testReorderGroupPopulationsForCV() {
+    Group copiedGroup =
+        Group.builder()
+            .scoring("Continuous Variable")
+            .populations(
+                List.of(
+                    groups.get(0).getPopulations().get(0),
+                    Population.builder()
+                        .id("id-6")
+                        .definition(PopulationType.MEASURE_POPULATION.name())
+                        .description("test description measure population")
+                        .build()))
+            .measureObservations(groups.get(0).getMeasureObservations())
+            .build();
+
+    List<Group> reorderedGroups = controller.reorderGroupPopulations(List.of(copiedGroup));
+    System.out.println("reorderedGroups -> " + reorderedGroups.toString());
+
+    assertEquals(1, reorderedGroups.size());
+    assertEquals(3, reorderedGroups.get(0).getPopulations().size());
+    assertEquals(1, reorderedGroups.get(0).getMeasureObservations().size());
+  }
 }

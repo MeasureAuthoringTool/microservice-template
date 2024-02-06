@@ -11,6 +11,7 @@ import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureMetaData;
+import gov.cms.madie.models.measure.MeasureScoring;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
@@ -18,6 +19,8 @@ import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -211,11 +214,18 @@ public class MeasureTransferController {
         List<Population> populations = group.getPopulations();
         if (!CollectionUtils.isEmpty(populations)) {
           newPopulations.add(findPopulation(populations, PopulationType.INITIAL_POPULATION));
-          newPopulations.add(findPopulation(populations, PopulationType.DENOMINATOR));
-          newPopulations.add(findPopulation(populations, PopulationType.DENOMINATOR_EXCLUSION));
-          newPopulations.add(findPopulation(populations, PopulationType.NUMERATOR));
-          newPopulations.add(findPopulation(populations, PopulationType.NUMERATOR_EXCLUSION));
-          newPopulations.add(findPopulation(populations, PopulationType.DENOMINATOR_EXCEPTION));
+          if (StringUtils.equals(
+              group.getScoring(), MeasureScoring.CONTINUOUS_VARIABLE.toString())) {
+            newPopulations.add(findPopulation(populations, PopulationType.MEASURE_POPULATION));
+            newPopulations.add(
+                findPopulation(populations, PopulationType.MEASURE_POPULATION_EXCLUSION));
+          } else {
+            newPopulations.add(findPopulation(populations, PopulationType.DENOMINATOR));
+            newPopulations.add(findPopulation(populations, PopulationType.DENOMINATOR_EXCLUSION));
+            newPopulations.add(findPopulation(populations, PopulationType.NUMERATOR));
+            newPopulations.add(findPopulation(populations, PopulationType.NUMERATOR_EXCLUSION));
+            newPopulations.add(findPopulation(populations, PopulationType.DENOMINATOR_EXCEPTION));
+          }
           group.setPopulations(newPopulations);
           newGroups.add(group);
         }
