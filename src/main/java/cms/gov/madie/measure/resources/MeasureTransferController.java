@@ -13,6 +13,7 @@ import gov.cms.madie.models.measure.MeasureMetaData;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import gov.cms.madie.models.measure.Reference;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
@@ -26,10 +27,7 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -65,7 +63,6 @@ public class MeasureTransferController {
     Instant now = Instant.now();
     measure.setCreatedAt(now);
     measure.setLastModifiedAt(now);
-
     if (ModelType.QDM_5_6.getValue().equals(measure.getModel())
         && appConfigService.isFlagEnabled(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER)) {
       Version oldVersion = measure.getVersion();
@@ -81,7 +78,6 @@ public class MeasureTransferController {
       measure.setCql(newCql);
       measure.setVersion(newVersion);
     }
-
     if (measure.getMeasureMetaData() != null) {
       measure.getMeasureMetaData().setDraft(true);
       updateStewardAndDevelopers(measure);
@@ -91,6 +87,8 @@ public class MeasureTransferController {
       measure.setMeasureMetaData(metaData);
       updateStewardAndDevelopers(measure);
     }
+    // conditionally update referenceList should it exist.
+    updateReferenceListIds(measure);
     // set ids for groups
     measure.getGroups().forEach(group -> group.setId(ObjectId.get().toString()));
     Measure savedMeasure = repository.save(measure);
@@ -170,6 +168,29 @@ public class MeasureTransferController {
                   d.setName(modifiedOrganizations.get(d.getName()));
                 }
               });
+    }
+  }
+
+  /**
+   * @param measure mat measure There may have references. These references need to have a UUID
+   *     attached to them on transfer.
+   */
+  void updateReferenceListIds(Measure measure) {
+    List<Reference> referenceList = measure.getMeasureMetaData().getReferences();
+    //  if the list isn't empty, map the values adding a new uuid.
+    if (!referenceList.isEmpty()) {
+      List<Reference> updatedReferenceList =
+          referenceList.stream()
+              .map(
+                  ref -> {
+                    Reference updatedRef = new Reference();
+                    updatedRef.setId(UUID.randomUUID().toString());
+                    updatedRef.setReferenceType(ref.getReferenceType());
+                    updatedRef.setReferenceText(ref.getReferenceText());
+                    return updatedRef;
+                  })
+              .toList();
+      measure.getMeasureMetaData().setReferences(updatedReferenceList);
     }
   }
 

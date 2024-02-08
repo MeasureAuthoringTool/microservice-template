@@ -8,6 +8,7 @@ import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.ElmTranslatorClient;
 import cms.gov.madie.measure.services.MeasureService;
 import cms.gov.madie.measure.services.MeasureSetService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.Organization;
 import gov.cms.madie.models.measure.*;
@@ -27,6 +28,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 
+import static gov.cms.madie.packaging.utils.qicore411.ResourceUtils.getData;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -39,6 +41,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
 public class MeasureTransferControllerTest {
@@ -415,5 +418,34 @@ public class MeasureTransferControllerTest {
         "Innovaccer", persistedMeasure.getMeasureMetaData().getDevelopers().get(2).getName());
     assertEquals(
         "Innovaccer Url", persistedMeasure.getMeasureMetaData().getDevelopers().get(2).getUrl());
+  }
+
+  @Test
+  public void updateReferenceListIdsTest() {
+    ObjectMapper objectMapper = new ObjectMapper();
+
+    try {
+      String testMeasureStringQiCore = getData("/test_measure_for_transfer_qi_core.json");
+      Measure testMeasureQiCore = objectMapper.readValue(testMeasureStringQiCore, Measure.class);
+      controller.updateReferenceListIds(testMeasureQiCore);
+      List<Reference> qiCoreRefList = testMeasureQiCore.getMeasureMetaData().getReferences();
+      for (Reference reference : qiCoreRefList) {
+        assertNotNull(reference.getId());
+      }
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    }
+
+    try {
+      String testMeasureStringQdm = getData("/test_measure_for_transfer_qdm.json");
+      Measure testMeasureQDM = objectMapper.readValue(testMeasureStringQdm, Measure.class);
+      controller.updateReferenceListIds(testMeasureQDM);
+      List<Reference> qdmRefList = testMeasureQDM.getMeasureMetaData().getReferences();
+      for (Reference reference : qdmRefList) {
+        assertNotNull(reference.getId());
+      }
+    } catch (JsonProcessingException e) {
+      e.printStackTrace(); // Example: Print the stack trace
+    }
   }
 }
