@@ -58,6 +58,8 @@ public class ValidationController {
     final String fileName = StringUtils.cleanPath(multipartFile.getOriginalFilename());
     final String username = principal.getName();
     VirusScanResponseDto scanResponse = virusScanClient.scanFile(multipartFile.getResource());
+    //    VirusScanResponseDto scanResponse =
+    //        VirusScanResponseDto.builder().filesScanned(1).cleanFileCount(1).build();
 
     if (scanResponse.getFilesScanned() == 0) {
       log.warn(
