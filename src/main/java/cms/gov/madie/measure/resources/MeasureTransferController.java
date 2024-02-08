@@ -100,7 +100,7 @@ public class MeasureTransferController {
     }
     // set ids for groups
     measure.getGroups().forEach(group -> group.setId(ObjectId.get().toString()));
-    measure.setGroups(reorderGroupPopulations(measure.getGroups()));
+    reorderGroupPopulations(measure.getGroups());
     Measure savedMeasure = repository.save(measure);
     measureSetService.createMeasureSet(
         harpId, savedMeasure.getId(), savedMeasure.getMeasureSetId());
@@ -205,9 +205,8 @@ public class MeasureTransferController {
     }
   }
 
-  protected List<Group> reorderGroupPopulations(List<Group> groups) {
+  protected void reorderGroupPopulations(List<Group> groups) {
     List<Population> newPopulations;
-    List<Group> newGroups = new ArrayList<>();
     if (!CollectionUtils.isEmpty(groups)) {
       for (Group group : groups) {
         newPopulations = new ArrayList<>();
@@ -220,18 +219,18 @@ public class MeasureTransferController {
             newPopulations.add(
                 findPopulation(populations, PopulationType.MEASURE_POPULATION_EXCLUSION));
           } else {
-            newPopulations.add(findPopulation(populations, PopulationType.DENOMINATOR));
-            newPopulations.add(findPopulation(populations, PopulationType.DENOMINATOR_EXCLUSION));
-            newPopulations.add(findPopulation(populations, PopulationType.NUMERATOR));
-            newPopulations.add(findPopulation(populations, PopulationType.NUMERATOR_EXCLUSION));
-            newPopulations.add(findPopulation(populations, PopulationType.DENOMINATOR_EXCEPTION));
+            if (!StringUtils.equals(group.getScoring(), MeasureScoring.COHORT.toString())) {
+              newPopulations.add(findPopulation(populations, PopulationType.DENOMINATOR));
+              newPopulations.add(findPopulation(populations, PopulationType.DENOMINATOR_EXCLUSION));
+              newPopulations.add(findPopulation(populations, PopulationType.NUMERATOR));
+              newPopulations.add(findPopulation(populations, PopulationType.NUMERATOR_EXCLUSION));
+              newPopulations.add(findPopulation(populations, PopulationType.DENOMINATOR_EXCEPTION));
+            }
           }
           group.setPopulations(newPopulations);
-          newGroups.add(group);
         }
       }
     }
-    return newGroups;
   }
 
   private Population findPopulation(List<Population> populations, PopulationType populationType) {

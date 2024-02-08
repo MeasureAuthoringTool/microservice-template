@@ -84,7 +84,7 @@ public class MeasureTransferControllerTest {
         List.of(
             new Group(
                 "id-abc",
-                "Cohort",
+                "Ratio",
                 List.of(
                     new Population(
                         "id-1",
@@ -439,33 +439,42 @@ public class MeasureTransferControllerTest {
   }
 
   @Test
-  public void testReorderGroupPopulations() {
+  public void testReorderGroupPopulationsRatio() {
     Group copiedGroup = Group.builder().populations(groups.get(0).getPopulations()).build();
 
-    List<Group> reorderedGroups = controller.reorderGroupPopulations(groups);
+    controller.reorderGroupPopulations(groups);
 
-    assertEquals(1, reorderedGroups.size());
+    assertEquals(1, groups.size());
     assertEquals(4, copiedGroup.getPopulations().size());
-    assertEquals(6, reorderedGroups.get(0).getPopulations().size());
+    assertEquals(6, groups.get(0).getPopulations().size());
     assertEquals(
-        copiedGroup.getPopulations().get(2).getId(),
-        reorderedGroups.get(0).getPopulations().get(5).getId());
+        copiedGroup.getPopulations().get(2).getId(), groups.get(0).getPopulations().get(5).getId());
     assertEquals(
-        copiedGroup.getPopulations().get(3).getId(),
-        reorderedGroups.get(0).getPopulations().get(3).getId());
+        copiedGroup.getPopulations().get(3).getId(), groups.get(0).getPopulations().get(3).getId());
+  }
+
+  @Test
+  public void testReorderGroupPopulationsCohort() {
+    groups.get(0).setScoring("Cohort");
+
+    controller.reorderGroupPopulations(groups);
+
+    assertEquals(1, groups.size());
+    assertEquals(1, groups.get(0).getPopulations().size());
   }
 
   @Test
   public void testReorderGroupPopulationsEmptyGroups() {
-    List<Group> reorderedGroups = controller.reorderGroupPopulations(List.of());
+    List<Group> reorderedGroups = List.of();
+    controller.reorderGroupPopulations(reorderedGroups);
     assertTrue(CollectionUtils.isEmpty(reorderedGroups));
   }
 
   @Test
   public void testReorderGroupPopulationsEmptyPopulations() {
-    Group copiedGroup = Group.builder().build();
-    List<Group> reorderedGroups = controller.reorderGroupPopulations(List.of(copiedGroup));
-    assertTrue(CollectionUtils.isEmpty(reorderedGroups));
+    List<Group> reorderGroups = List.of(Group.builder().build());
+    controller.reorderGroupPopulations(reorderGroups);
+    assertFalse(CollectionUtils.isEmpty(reorderGroups));
   }
 
   @Test
@@ -483,9 +492,9 @@ public class MeasureTransferControllerTest {
                         .build()))
             .measureObservations(groups.get(0).getMeasureObservations())
             .build();
+    List<Group> reorderedGroups = List.of(copiedGroup);
 
-    List<Group> reorderedGroups = controller.reorderGroupPopulations(List.of(copiedGroup));
-    System.out.println("reorderedGroups -> " + reorderedGroups.toString());
+    controller.reorderGroupPopulations(reorderedGroups);
 
     assertEquals(1, reorderedGroups.size());
     assertEquals(3, reorderedGroups.get(0).getPopulations().size());
