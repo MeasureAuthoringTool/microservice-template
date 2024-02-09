@@ -312,7 +312,7 @@ public class MeasureController {
     Optional<MeasureSet> measureSet = measureSetRepository.findByMeasureSetId(measureSetId);
     if (!measureSet.isPresent()) {
       throw new InvalidMeasureStateException(
-          "No measure set exists for measure with measure set idD " + measureSetId);
+          "No measure set exists for measure with measure set id " + measureSetId);
     }
     int generatedSequenceNumber = sequenceGeneratorUtil.generateSequenceNumber(sequenceName);
     measureSet.get().setCmsId(generatedSequenceNumber);
