@@ -1,10 +1,9 @@
 package cms.gov.madie.measure.repositories;
 
-import java.util.Optional;
+import java.util.Objects;
 
 import gov.cms.madie.models.measure.Generator;
 import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
 
@@ -22,23 +21,13 @@ public class GeneratorRepositoryImpl implements GeneratorRepository {
   }
 
   @Override
-  public Optional<Generator> findAndModify(String sequenceName) {
+  public int findAndModify(String sequenceName) {
     Generator counter =
         mongoOperations.findAndModify(
-            query(where("name").is(sequenceName)),
-            new Update().inc("curVal", 1),
+            query(where("_id").is(sequenceName)),
+            new Update().inc("currentValue", 1),
             options().returnNew(true).upsert(true),
             Generator.class);
-    return Optional.ofNullable(counter);
-  }
-
-  @Override
-  public boolean existsBySequenceName(String sequenceName) {
-    Query query = new Query(where("name").is(sequenceName));
-    Generator test = mongoOperations.findOne(query, Generator.class);
-    if (test != null) {
-      return true;
-    }
-    return false;
+    return !Objects.isNull(counter) ? counter.getCurrentValue() : 1;
   }
 }

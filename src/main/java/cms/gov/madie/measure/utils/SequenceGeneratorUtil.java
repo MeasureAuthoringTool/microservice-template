@@ -1,4 +1,4 @@
-package cms.gov.madie.measure.services;
+package cms.gov.madie.measure.utils;
 
 import cms.gov.madie.measure.repositories.GeneratorRepository;
 import lombok.AllArgsConstructor;
@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @AllArgsConstructor
-public class SequenceGenerationService {
+public class SequenceGeneratorUtil {
   private final GeneratorRepository generatorRepository;
 
   public int generateSequenceNumber(String sequenceName) {

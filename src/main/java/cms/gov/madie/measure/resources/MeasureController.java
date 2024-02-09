@@ -1,14 +1,13 @@
 package cms.gov.madie.measure.resources;
 
-import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
-import cms.gov.madie.measure.exceptions.InvalidIdException;
-import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import cms.gov.madie.measure.exceptions.UnauthorizedException;
+import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.GroupService;
 import cms.gov.madie.measure.services.MeasureService;
+import cms.gov.madie.measure.services.SequenceGenerationService;
+import cms.gov.madie.measure.utils.SequenceGeneratorUtil;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.*;
 import lombok.RequiredArgsConstructor;
@@ -49,6 +48,8 @@ public class MeasureController {
   private final GroupService groupService;
   private final ActionLogService actionLogService;
   private final MeasureSetRepository measureSetRepository;
+  private final SequenceGenerationService sequenceGenerationService;
+  private final SequenceGeneratorUtil sequenceGeneratorUtil;
 
   @GetMapping("/measures/draftstatus")
   public ResponseEntity<Map<String, Boolean>> getDraftStatuses(
@@ -305,5 +306,22 @@ public class MeasureController {
         });
 
     return ResponseEntity.ok(measures);
+  }
+
+  @PutMapping("/measures/{measureSetId}/sequenceGenerator/{sequenceName}")
+  public ResponseEntity<MeasureSet> generateSequenceNumber(
+      @PathVariable String measureSetId, @PathVariable String sequenceName) {
+    // int generatedSequencNumber = sequenceGenerationService.generateSequenceNumber(sequenceName);
+
+    Optional<MeasureSet> measureSet = measureSetRepository.findByMeasureSetId(measureSetId);
+    if (!measureSet.isPresent()) {
+
+      throw new InvalidMeasureStateException(
+              "No measure set exists for measure with measure set idD " + measureSetId);
+    }
+    int generatedSequencNumber = sequenceGeneratorUtil.generateSequenceNumber(sequenceName);
+    measureSet.get().setCmsId(generatedSequencNumber);
+    MeasureSet updatedMeasureSet = measureSetRepository.save(measureSet.get());
+    return ResponseEntity.status(HttpStatus.CREATED).body(updatedMeasureSet);
   }
 }
