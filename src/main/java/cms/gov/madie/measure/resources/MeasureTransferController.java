@@ -178,7 +178,7 @@ public class MeasureTransferController {
   void updateReferenceListIds(Measure measure) {
     List<Reference> referenceList = measure.getMeasureMetaData().getReferences();
     //  if the list isn't empty, map the values adding a new uuid.
-    if (!referenceList.isEmpty()) {
+    if (referenceList != null && !referenceList.isEmpty()) {
       List<Reference> updatedReferenceList =
           referenceList.stream()
               .map(
