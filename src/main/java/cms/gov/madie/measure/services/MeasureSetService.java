@@ -1,7 +1,8 @@
 package cms.gov.madie.measure.services;
 
-import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
+import cms.gov.madie.measure.utils.SequenceGeneratorUtil;
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.Measure;
@@ -21,6 +22,7 @@ public class MeasureSetService {
 
   private final MeasureSetRepository measureSetRepository;
   private final ActionLogService actionLogService;
+  private final SequenceGeneratorUtil sequenceGeneratorUtil;
 
   public void createMeasureSet(
       final String harpId, final String measureId, final String savedMeasureSetId) {
@@ -77,6 +79,26 @@ public class MeasureSetService {
       log.error(error);
       throw new ResourceNotFoundException(error);
     }
+  }
+
+  public MeasureSet createCmsId(String measureSetId, String sequenceName) {
+    Optional<MeasureSet> measureSet = measureSetRepository.findByMeasureSetId(measureSetId);
+    if (!measureSet.isPresent()) {
+      throw new InvalidMeasureSetIdException(
+          "No measure set exists for measure with measure set id " + measureSetId);
+    }
+    if (measureSet.get().getCmsId() > 0) {
+      throw new InvalidRequestException(
+          "cms id exists for measure with measure set id " + measureSetId);
+    }
+    if (!sequenceName.equals("cms_id")) {
+      throw new InvalidRequestException(
+          sequenceName + " is not a valid sequence name for generating cms id");
+    }
+    int generatedSequenceNumber = sequenceGeneratorUtil.generateSequenceNumber(sequenceName);
+    measureSet.get().setCmsId(generatedSequenceNumber);
+    MeasureSet updatedMeasureSet = measureSetRepository.save(measureSet.get());
+    return updatedMeasureSet;
   }
 
   public MeasureSet findByMeasureSetId(final String measureSetId) {

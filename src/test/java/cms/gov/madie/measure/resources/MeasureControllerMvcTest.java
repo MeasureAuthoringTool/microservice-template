@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.List;
 import java.util.Optional;
 
-import cms.gov.madie.measure.utils.SequenceGeneratorUtil;
+import cms.gov.madie.measure.services.MeasureSetService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -83,8 +83,7 @@ public class MeasureControllerMvcTest {
   @MockBean private MeasureService measureService;
   @MockBean private GroupService groupService;
   @MockBean private ActionLogService actionLogService;
-  @MockBean private SequenceGeneratorUtil sequenceGeneratorUtil;
-
+  @MockBean private MeasureSetService measureSetService;
   @Autowired private MockMvc mockMvc;
   @MockBean private MeasureSetRepository measureSetRepository;
   @Captor private ArgumentCaptor<Measure> measureArgumentCaptor;
