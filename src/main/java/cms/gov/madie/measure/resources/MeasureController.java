@@ -307,7 +307,7 @@ public class MeasureController {
   }
 
   @PutMapping("/measures/{measureSetId}/sequenceGenerator/{sequenceName}")
-  public ResponseEntity<MeasureSet> generateSequenceNumber(
+  public ResponseEntity<MeasureSet> createCmsId(
       @PathVariable String measureSetId, @PathVariable String sequenceName) {
     Optional<MeasureSet> measureSet = measureSetRepository.findByMeasureSetId(measureSetId);
     if (!measureSet.isPresent()) {
