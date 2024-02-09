@@ -6,7 +6,6 @@ import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.GroupService;
 import cms.gov.madie.measure.services.MeasureService;
-import cms.gov.madie.measure.services.SequenceGenerationService;
 import cms.gov.madie.measure.utils.SequenceGeneratorUtil;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.*;
@@ -48,7 +47,6 @@ public class MeasureController {
   private final GroupService groupService;
   private final ActionLogService actionLogService;
   private final MeasureSetRepository measureSetRepository;
-  private final SequenceGenerationService sequenceGenerationService;
   private final SequenceGeneratorUtil sequenceGeneratorUtil;
 
   @GetMapping("/measures/draftstatus")
@@ -311,16 +309,13 @@ public class MeasureController {
   @PutMapping("/measures/{measureSetId}/sequenceGenerator/{sequenceName}")
   public ResponseEntity<MeasureSet> generateSequenceNumber(
       @PathVariable String measureSetId, @PathVariable String sequenceName) {
-    // int generatedSequencNumber = sequenceGenerationService.generateSequenceNumber(sequenceName);
-
     Optional<MeasureSet> measureSet = measureSetRepository.findByMeasureSetId(measureSetId);
     if (!measureSet.isPresent()) {
-
       throw new InvalidMeasureStateException(
-              "No measure set exists for measure with measure set idD " + measureSetId);
+          "No measure set exists for measure with measure set idD " + measureSetId);
     }
-    int generatedSequencNumber = sequenceGeneratorUtil.generateSequenceNumber(sequenceName);
-    measureSet.get().setCmsId(generatedSequencNumber);
+    int generatedSequenceNumber = sequenceGeneratorUtil.generateSequenceNumber(sequenceName);
+    measureSet.get().setCmsId(generatedSequenceNumber);
     MeasureSet updatedMeasureSet = measureSetRepository.save(measureSet.get());
     return ResponseEntity.status(HttpStatus.CREATED).body(updatedMeasureSet);
   }
