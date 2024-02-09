@@ -168,10 +168,7 @@ public class ErrorHandlingControllerAdvice {
     return getErrorAttributes(request, HttpStatus.BAD_REQUEST);
   }
 
-  @ExceptionHandler({
-    InvalidCmsIdException.class,
-    InvalidRequestException.class
-  })
+  @ExceptionHandler({InvalidCmsIdException.class, InvalidRequestException.class})
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ResponseBody
   Map<String, Object> onInvalidCmsIdException(WebRequest request) {

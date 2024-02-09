@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Optional;
 
 import cms.gov.madie.measure.services.MeasureSetService;
+import gov.cms.madie.models.measure.*;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -64,15 +65,6 @@ import cms.gov.madie.measure.services.MeasureService;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.common.Organization;
-import gov.cms.madie.models.measure.Group;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.MeasureGroupTypes;
-import gov.cms.madie.models.measure.MeasureMetaData;
-import gov.cms.madie.models.measure.MeasureScoring;
-import gov.cms.madie.models.measure.Population;
-import gov.cms.madie.models.measure.PopulationType;
-import gov.cms.madie.models.measure.QdmMeasure;
-import gov.cms.madie.models.measure.Stratification;
 
 @WebMvcTest({MeasureController.class})
 @ActiveProfiles("test")
@@ -348,6 +340,36 @@ public class MeasureControllerMvcTest {
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.validationErrors.measureName").value("Measure Name is required."));
     verifyNoInteractions(measureRepository);
+  }
+
+  @Test
+  public void testCreateCmsId() throws Exception{
+    final MeasureSet measureSet= MeasureSet.builder()
+            .id("f225481c-921e-4015-9e14-e5046bfac9ff")
+            .cmsId(6)
+            .measureSetId("measureSetId")
+            .owner("test.com")
+            .acls(null)
+            .build();
+
+    when(measureSetService.createCmsId(
+            anyString(), anyString(), anyString()))
+            .thenReturn(measureSet);
+
+    final String measureSetAsJson = toJsonString(measureSet);
+    mockMvc
+            .perform(
+                    put("/measures/measureSetId/sequenceGenerator/cms_id" )
+                            .with(user(TEST_USER_ID))
+                            .with(csrf())
+                            .header("Authorization", "test-okta")
+                            .content(measureSetAsJson)
+                            .contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.id").value("f225481c-921e-4015-9e14-e5046bfac9ff"))
+            .andExpect(jsonPath("$.cmsId").value(6))
+            .andExpect(jsonPath("$.measureSetId").value("measureSetId"))
+            .andExpect(jsonPath("$.owner").value("test.com"));
   }
 
   @Test

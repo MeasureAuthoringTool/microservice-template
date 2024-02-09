@@ -81,7 +81,7 @@ public class MeasureSetService {
     }
   }
 
-  public MeasureSet createCmsId(String measureSetId, String sequenceName) {
+  public MeasureSet createCmsId(String measureSetId, String sequenceName, String username) {
     Optional<MeasureSet> measureSet = measureSetRepository.findByMeasureSetId(measureSetId);
     if (!measureSet.isPresent()) {
       throw new InvalidMeasureSetIdException(
@@ -98,6 +98,7 @@ public class MeasureSetService {
     int generatedSequenceNumber = sequenceGeneratorUtil.generateSequenceNumber(sequenceName);
     measureSet.get().setCmsId(generatedSequenceNumber);
     MeasureSet updatedMeasureSet = measureSetRepository.save(measureSet.get());
+   // actionLogService.logAction(measureSetId, MeasureSet.class, ActionType.UPDATED, username);
     return updatedMeasureSet;
   }
 
