@@ -227,11 +227,12 @@ class MeasureControllerTest {
   }
 
   @Test
-  void createCmsId(){
+  void createCmsId() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user2");
 
-    final MeasureSet measureSet= MeasureSet.builder()
+    final MeasureSet measureSet =
+        MeasureSet.builder()
             .id("f225481c-921e-4015-9e14-e5046bfac9ff")
             .cmsId(6)
             .measureSetId("measureSetId")
@@ -239,18 +240,15 @@ class MeasureControllerTest {
             .acls(null)
             .build();
 
-    when(measureSetService.createCmsId(
-            anyString(), anyString(), anyString()))
-            .thenReturn(measureSet);
+    when(measureSetService.createCmsId(anyString(), anyString(), anyString()))
+        .thenReturn(measureSet);
     ResponseEntity<MeasureSet> response =
-            controller.createCmsId(measureSet.getId(), "cms_id", principal);
+        controller.createCmsId(measureSet.getId(), "cms_id", principal);
 
     assertThat(response.getBody(), is(notNullValue()));
     assertThat(response.getBody(), is(equalTo(measureSet)));
     assertEquals(measureSet, response.getBody());
-    verify(measureSetService, times(1))
-            .createCmsId(
-                    anyString(), anyString(), anyString());
+    verify(measureSetService, times(1)).createCmsId(anyString(), anyString(), anyString());
   }
 
   @Test

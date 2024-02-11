@@ -310,9 +310,9 @@ public class MeasureController {
   public ResponseEntity<MeasureSet> createCmsId(
       @PathVariable String measureSetId, @PathVariable String sequenceName, Principal principal) {
     log.info(
-            "User [{}] is attempting to create a cms id for the measure set [{}]",
-            principal.getName(),
-            measureSetId);
+        "User [{}] is attempting to create a cms id for the measure set [{}]",
+        principal.getName(),
+        measureSetId);
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(measureSetService.createCmsId(measureSetId, sequenceName, principal.getName()));
   }

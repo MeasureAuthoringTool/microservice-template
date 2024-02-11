@@ -98,7 +98,7 @@ public class MeasureSetService {
     int generatedSequenceNumber = sequenceGeneratorUtil.generateSequenceNumber(sequenceName);
     measureSet.get().setCmsId(generatedSequenceNumber);
     MeasureSet updatedMeasureSet = measureSetRepository.save(measureSet.get());
-   // actionLogService.logAction(measureSetId, MeasureSet.class, ActionType.UPDATED, username);
+    // actionLogService.logAction(measureSetId, MeasureSet.class, ActionType.UPDATED, username);
     return updatedMeasureSet;
   }
 
