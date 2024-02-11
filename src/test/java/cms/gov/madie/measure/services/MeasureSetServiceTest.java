@@ -1,7 +1,10 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.exceptions.InvalidMeasureSetIdException;
+import cms.gov.madie.measure.exceptions.InvalidRequestException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
+import cms.gov.madie.measure.utils.SequenceGeneratorUtil;
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.common.ActionType;
@@ -23,11 +26,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class MeasureSetServiceTest {
@@ -35,6 +34,7 @@ public class MeasureSetServiceTest {
   @InjectMocks private MeasureSetService measureSetService;
   @Mock MeasureSetRepository measureSetRepository;
   @Mock private ActionLogService actionLogService;
+  @Mock private SequenceGeneratorUtil sequenceGeneratorUtil;
   MeasureSet measureSet;
 
   @BeforeEach
@@ -139,6 +139,71 @@ public class MeasureSetServiceTest {
             ResourceNotFoundException.class,
             () -> measureSetService.updateOwnership("1", "testUser"));
     assertTrue(ex.getMessage().contains("measure set may not exist."));
+    verify(measureSetRepository, times(1)).findByMeasureSetId(anyString());
+    verify(measureSetRepository, times(0)).save(any(MeasureSet.class));
+  }
+
+  @Test
+  public void testCreateCmsId() {
+    final MeasureSet measureSet1 =
+        MeasureSet.builder()
+            .id("f225481c-921e-4015-9e14-e5046bfac9ff")
+            .measureSetId("msid-2")
+            .cmsId(2)
+            .owner("user-1")
+            .build();
+
+    when(measureSetRepository.findByMeasureSetId(anyString()))
+        .thenReturn(Optional.ofNullable(measureSet));
+    when(sequenceGeneratorUtil.generateSequenceNumber("cms_id")).thenReturn(2);
+    when(measureSetRepository.save(any(MeasureSet.class))).thenReturn(measureSet1);
+
+    MeasureSet result = measureSetService.createCmsId("measureSetId", "cms_id", "testUser");
+    assertThat(result.getCmsId(), is(equalTo(2)));
+    assertThat(result.getId(), is(equalTo(measureSet1.getId())));
+  }
+
+  @Test
+  public void testCreateCmsIdWhenMeasureSetIdIsNotValid() {
+    when(measureSetRepository.findByMeasureSetId(anyString())).thenReturn(Optional.empty());
+
+    Exception ex =
+        assertThrows(
+            InvalidMeasureSetIdException.class,
+            () -> measureSetService.createCmsId("measureSetId", "cms_id", "testUser"));
+    assertTrue(
+        ex.getMessage()
+            .contains("No measure set exists for measure with measure set id measureSetId"));
+    verify(measureSetRepository, times(1)).findByMeasureSetId(anyString());
+    verify(measureSetRepository, times(0)).save(any(MeasureSet.class));
+  }
+
+  @Test
+  public void testCreateCmsIdWhenCmsIdAlreadyExistsInMeasureSet() {
+    measureSet.setCmsId(6);
+    when(measureSetRepository.findByMeasureSetId(anyString()))
+        .thenReturn(Optional.ofNullable(measureSet));
+
+    Exception ex =
+        assertThrows(
+            InvalidRequestException.class,
+            () -> measureSetService.createCmsId("measureSetId", "cms_id", "testUser"));
+    assertTrue(
+        ex.getMessage().contains("cms id exists for measure with measure set id measureSetId"));
+    verify(measureSetRepository, times(1)).findByMeasureSetId(anyString());
+    verify(measureSetRepository, times(0)).save(any(MeasureSet.class));
+  }
+
+  @Test
+  public void testCreateCmsIdWhenSequenceNameIsNotValid() {
+    when(measureSetRepository.findByMeasureSetId(anyString()))
+        .thenReturn(Optional.ofNullable(measureSet));
+
+    Exception ex =
+        assertThrows(
+            InvalidRequestException.class,
+            () -> measureSetService.createCmsId("measureSetId", "cms", "testUser"));
+    assertTrue(ex.getMessage().contains("cms is not a valid sequence name for generating cms id"));
     verify(measureSetRepository, times(1)).findByMeasureSetId(anyString());
     verify(measureSetRepository, times(0)).save(any(MeasureSet.class));
   }
