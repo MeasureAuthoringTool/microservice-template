@@ -427,7 +427,7 @@ public class MeasureTransferControllerTest {
   }
 
   @Test
-  public void TestCreateMeasureDuplicateMeasureExceptionForQiCore() {
+  public void testCreateMeasureDuplicateMeasureExceptionForQiCore() {
     doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
     when(organizationRepository.findAll()).thenReturn(organizationList);
     when(measureTransferService.findByMeasureSetId(anyString()))
@@ -439,7 +439,7 @@ public class MeasureTransferControllerTest {
   }
 
   @Test
-  public void TestCreateMeasureSuccessForQDM() {
+  public void testCreateMeasureSuccessForQDM() {
     measure.setModel(ModelType.QDM_5_6.getValue());
     Measure measureWithSameMeasureSetId =
         Measure.builder().id("testMeasureId").measureSetId("abc-pqr-xyz").build();

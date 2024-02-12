@@ -42,17 +42,6 @@ public class MeasureTransferServiceTest {
   private Measure measure1;
   private Measure measure2;
   private Group group1;
-  private Group group2;
-  private Population population1;
-  private Population population2;
-  private Population population3;
-  private Population population4;
-  private Population population5;
-  private Population population6;
-  private MeasureObservation observation1;
-  private MeasureObservation observation2;
-  private Stratification stratification1;
-  private Stratification stratification2;
   private TestCase testcase;
 
   @BeforeEach
@@ -73,36 +62,26 @@ public class MeasureTransferServiceTest {
             .lastModifiedAt(Instant.now().minus(1, ChronoUnit.DAYS))
             .build();
 
-    population1 =
+    Population population1 =
         Population.builder()
             .name(PopulationType.INITIAL_POPULATION)
             .definition("Initial Population")
             .build();
-    population2 =
+    Population population2 =
         Population.builder().name(PopulationType.DENOMINATOR).definition("Denominator").build();
-    population3 =
+    Population population3 =
         Population.builder()
             .name(PopulationType.DENOMINATOR_EXCLUSION)
             .definition("Denominator Exclusion")
             .build();
-    population4 =
+    Population population4 =
         Population.builder().name(PopulationType.NUMERATOR).definition("Numerator").build();
-    population5 =
-        Population.builder()
-            .name(PopulationType.NUMERATOR_EXCLUSION)
-            .definition("Numerator Exclusion")
-            .build();
-    population6 =
-        Population.builder()
-            .name(PopulationType.DENOMINATOR_EXCEPTION)
-            .definition("Denominator Exception")
-            .build();
 
-    observation1 = MeasureObservation.builder().definition("Denominator Observation").build();
-    observation2 = MeasureObservation.builder().definition("Numerator Observation").build();
+    MeasureObservation observation1 =
+        MeasureObservation.builder().definition("Denominator Observation").build();
 
-    stratification1 = Stratification.builder().cqlDefinition("Initial Population").build();
-    stratification2 = Stratification.builder().cqlDefinition("Denominator").build();
+    Stratification stratification1 =
+        Stratification.builder().cqlDefinition("Initial Population").build();
 
     group1 =
         Group.builder()
@@ -113,16 +92,6 @@ public class MeasureTransferServiceTest {
             .populations(List.of(population1, population2, population3, population4))
             .measureObservations(List.of(observation1))
             .stratifications(List.of(stratification1))
-            .build();
-    group2 =
-        Group.builder()
-            .id("testGroupId1")
-            .scoring("Proportion")
-            .populationBasis("Encounter")
-            .measureGroupTypes(Arrays.asList(MeasureGroupTypes.OUTCOME))
-            .populations(List.of(population1, population2, population5, population6))
-            .measureObservations(List.of(observation2))
-            .stratifications(List.of(stratification2))
             .build();
 
     testcase = TestCase.builder().id("testCaseId").build();
