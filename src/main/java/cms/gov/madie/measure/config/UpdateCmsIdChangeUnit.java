@@ -64,8 +64,14 @@ public class UpdateCmsIdChangeUnit {
   }
 
   @RollbackExecution
-  public void rollbackExecution() {
-    log.debug("Entering UpdateCmsIdChangeUnit rollbackExecution");
+  public void rollbackExecution(MongoTemplate mongoTemplate) {
+    log.debug("Something went wrong while updating the CMS IDs");
+    BulkOperations bulkOperations =
+      mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, "measureSet");
+    Query query = new Query();
+    Update update = new Update().unset("cmsId");
+    bulkOperations.updateMulti(query, update);
+    bulkOperations.execute();
   }
 
   @Data

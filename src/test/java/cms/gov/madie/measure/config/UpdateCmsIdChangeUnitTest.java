@@ -63,4 +63,14 @@ public class UpdateCmsIdChangeUnitTest {
     verify(bulkOperations, new Times(1)).updateMulti(any());
     verify(bulkOperations, new Times(1)).execute();
   }
+
+  @Test
+  void testRollbackUpdateCmsIdChangeUnit() {
+    BulkOperations bulkOperations = mock(BulkOperations.class);
+    when(mongoTemplate.bulkOps(eq(BulkOperations.BulkMode.UNORDERED), eq("measureSet")))
+      .thenReturn(bulkOperations);
+    new UpdateCmsIdChangeUnit().rollbackExecution(mongoTemplate);
+    verify(bulkOperations, new Times(1)).updateMulti(any(), any());
+    verify(bulkOperations, new Times(1)).execute();
+  }
 }
