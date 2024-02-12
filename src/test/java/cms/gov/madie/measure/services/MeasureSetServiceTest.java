@@ -147,7 +147,6 @@ public class MeasureSetServiceTest {
   public void testCreateCmsId() {
     final MeasureSet measureSet1 =
         MeasureSet.builder()
-            .id("f225481c-921e-4015-9e14-e5046bfac9ff")
             .measureSetId("msid-2")
             .cmsId(2)
             .owner("user-1")
@@ -161,6 +160,8 @@ public class MeasureSetServiceTest {
     MeasureSet result = measureSetService.createCmsId("measureSetId", "cms_id", "testUser");
     assertThat(result.getCmsId(), is(equalTo(2)));
     assertThat(result.getId(), is(equalTo(measureSet1.getId())));
+    verify(actionLogService, times(1))
+            .logAction(measureSet.getId(), Measure.class, ActionType.CREATED, "testUser");
   }
 
   @Test
