@@ -65,7 +65,7 @@ public class UpdateCmsIdChangeUnit {
 
   @RollbackExecution
   public void rollbackExecution(MongoTemplate mongoTemplate) {
-    log.debug("Something went wrong while updating the CMS IDs");
+    log.debug("Something went wrong while updating the CMS IDs. rolling back the updates.");
     BulkOperations bulkOperations =
       mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, "measureSet");
     Query query = new Query();
