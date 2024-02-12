@@ -205,6 +205,15 @@ public class MeasureTransferController {
     }
   }
 
+  /**
+   * This method is to order the group populations in the order defined as in:
+   * cms.gov.madie.measure.utils.TestCaseServiceUtil. When the test cases are imported, the group
+   * populations are matched one by one in the order. Also, test case execution also needs the group
+   * populations in the right order.
+   *
+   * @param the list of the groups
+   * @return none
+   */
   protected void reorderGroupPopulations(List<Group> groups) {
     List<Population> newPopulations;
     if (!CollectionUtils.isEmpty(groups)) {
