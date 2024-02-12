@@ -1,14 +1,19 @@
 package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
+import cms.gov.madie.measure.exceptions.DuplicateMeasureException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.repositories.OrganizationRepository;
 import cms.gov.madie.measure.services.ActionLogService;
+import cms.gov.madie.measure.services.AppConfigService;
 import cms.gov.madie.measure.services.ElmTranslatorClient;
 import cms.gov.madie.measure.services.MeasureService;
 import cms.gov.madie.measure.services.MeasureSetService;
+import cms.gov.madie.measure.services.MeasureTransferService;
+import cms.gov.madie.measure.services.VersionService;
 import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.common.Organization;
 import gov.cms.madie.models.measure.*;
 import gov.cms.madie.models.common.Version;
@@ -56,6 +61,9 @@ public class MeasureTransferControllerTest {
   @Mock private MeasureSetService measureSetService;
   @Mock private ActionLogService actionLogService;
   @Mock private ElmTranslatorClient elmTranslatorClient;
+  @Mock private AppConfigService appConfigService;
+  @Mock private VersionService versionService;
+  @Mock private MeasureTransferService measureTransferService;
 
   @Mock private OrganizationRepository organizationRepository;
   @Mock private ElmJson elmJson;
@@ -151,6 +159,7 @@ public class MeasureTransferControllerTest {
             .cql(CQL)
             .cqlErrors(false)
             .elmJson(ELM_JSON_SUCCESS)
+            .testCases(List.of(TestCase.builder().id("testCaseId").build()))
             .build();
 
     measureSet = MeasureSet.builder().id(null).measureSetId("abc-pqr-xyz").owner("testID").build();
@@ -415,5 +424,46 @@ public class MeasureTransferControllerTest {
         "Innovaccer", persistedMeasure.getMeasureMetaData().getDevelopers().get(2).getName());
     assertEquals(
         "Innovaccer Url", persistedMeasure.getMeasureMetaData().getDevelopers().get(2).getUrl());
+  }
+
+  @Test
+  public void TestCreateMeasureDuplicateMeasureExceptionForQiCore() {
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
+    when(organizationRepository.findAll()).thenReturn(organizationList);
+    when(measureTransferService.findByMeasureSetId(anyString()))
+        .thenReturn(List.of(Measure.builder().id("testMeasureId").build()));
+
+    assertThrows(
+        DuplicateMeasureException.class,
+        () -> controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY));
+  }
+
+  @Test
+  public void TestCreateMeasureSuccessForQDM() {
+    measure.setModel(ModelType.QDM_5_6.getValue());
+    Measure measureWithSameMeasureSetId =
+        Measure.builder().id("testMeasureId").measureSetId("abc-pqr-xyz").build();
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
+    when(organizationRepository.findAll()).thenReturn(organizationList);
+    when(measureTransferService.findByMeasureSetId(anyString()))
+        .thenReturn(List.of(measureWithSameMeasureSetId));
+    doNothing().when(measureTransferService).deleteVersionedMeasures(any(List.class));
+    when(measureTransferService.overwriteExistingMeasure(any(List.class), any(Measure.class)))
+        .thenReturn(measure);
+    doReturn(measure).when(repository).save(any(Measure.class));
+
+    ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
+    ResponseEntity<Measure> response =
+        controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
+    verify(repository, times(1)).save(persistedMeasureArgCaptor.capture());
+
+    Measure persistedMeasure = response.getBody();
+    assertNotNull(persistedMeasure);
+
+    assertEquals(measure.getMeasureSetId(), persistedMeasure.getMeasureSetId());
+    assertEquals(measure.getMeasureName(), persistedMeasure.getMeasureName());
+    assertEquals(measure.getCqlLibraryName(), persistedMeasure.getCqlLibraryName());
+    assertEquals(measure.getCql(), persistedMeasure.getCql());
+    assertEquals("testCaseId", persistedMeasure.getTestCases().get(0).getId());
   }
 }
