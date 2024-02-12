@@ -370,6 +370,7 @@ public class MeasureControllerMvcTest {
         .andExpect(jsonPath("$.cmsId").value(6))
         .andExpect(jsonPath("$.measureSetId").value("measureSetId"))
         .andExpect(jsonPath("$.owner").value("test.com"));
+    verify(measureSetService, times(1)).createCmsId("measureSetId","cms_id","test-okta-user-id-123");
   }
 
   @Test
