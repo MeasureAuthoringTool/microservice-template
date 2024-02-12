@@ -343,37 +343,6 @@ public class MeasureControllerMvcTest {
   }
 
   @Test
-  public void testCreateCmsId() throws Exception {
-    final MeasureSet measureSet =
-        MeasureSet.builder()
-            .id("f225481c-921e-4015-9e14-e5046bfac9ff")
-            .cmsId(6)
-            .measureSetId("measureSetId")
-            .owner("test.com")
-            .acls(null)
-            .build();
-
-    when(measureSetService.createCmsId(anyString(), anyString(), anyString()))
-        .thenReturn(measureSet);
-
-    final String measureSetAsJson = toJsonString(measureSet);
-    mockMvc
-        .perform(
-            put("/measures/measureSetId/sequenceGenerator/cms_id")
-                .with(user(TEST_USER_ID))
-                .with(csrf())
-                .header("Authorization", "test-okta")
-                .content(measureSetAsJson)
-                .contentType(MediaType.APPLICATION_JSON_VALUE))
-        .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.id").value("f225481c-921e-4015-9e14-e5046bfac9ff"))
-        .andExpect(jsonPath("$.cmsId").value(6))
-        .andExpect(jsonPath("$.measureSetId").value("measureSetId"))
-        .andExpect(jsonPath("$.owner").value("test.com"));
-    verify(measureSetService, times(1)).createCmsId("measureSetId","cms_id","test-okta-user-id-123");
-  }
-
-  @Test
   public void testUpdateMeasureNameMustNotBeNull() throws Exception {
     final String measureAsJson = "{ \"id\": \"m1234\", \"model\":\"QI-Core v4.1.1\" }";
     mockMvc

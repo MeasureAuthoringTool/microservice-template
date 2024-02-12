@@ -126,7 +126,6 @@ public class ErrorHandlingControllerAdvice {
     CqlElmTranslationErrorException.class,
     InvalidDraftStatusException.class,
     InvalidMeasureObservationException.class,
-    InvalidMeasureSetIdException.class,
     InvalidMeasureStateException.class,
   })
   @ResponseStatus(HttpStatus.CONFLICT)

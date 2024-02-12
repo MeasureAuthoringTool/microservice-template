@@ -1,8 +1,8 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.exceptions.*;
+import cms.gov.madie.measure.repositories.GeneratorRepository;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
-import cms.gov.madie.measure.utils.SequenceGeneratorUtil;
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.Measure;
@@ -21,8 +21,8 @@ import java.util.Optional;
 public class MeasureSetService {
 
   private final MeasureSetRepository measureSetRepository;
+  private final GeneratorRepository generatorRepository;
   private final ActionLogService actionLogService;
-  private final SequenceGeneratorUtil sequenceGeneratorUtil;
 
   public void createMeasureSet(
       final String harpId, final String measureId, final String savedMeasureSetId) {
@@ -81,21 +81,17 @@ public class MeasureSetService {
     }
   }
 
-  public MeasureSet createCmsId(String measureSetId, String sequenceName, String username) {
+  public MeasureSet createAndUpdateCmsId(String measureSetId, String username) {
     Optional<MeasureSet> measureSet = measureSetRepository.findByMeasureSetId(measureSetId);
     if (!measureSet.isPresent()) {
-      throw new InvalidMeasureSetIdException(
+      throw new ResourceNotFoundException(
           "No measure set exists for measure with measure set id " + measureSetId);
     }
     if (measureSet.get().getCmsId() > 0) {
       throw new InvalidRequestException(
           "cms id exists for measure with measure set id " + measureSetId);
     }
-    if (!sequenceName.equals("cms_id")) {
-      throw new InvalidRequestException(
-          sequenceName + " is not a valid sequence name for generating cms id");
-    }
-    int generatedSequenceNumber = sequenceGeneratorUtil.generateSequenceNumber(sequenceName);
+    int generatedSequenceNumber = generatorRepository.findAndModify("cms_id");
     measureSet.get().setCmsId(generatedSequenceNumber);
     MeasureSet updatedMeasureSet = measureSetRepository.save(measureSet.get());
     log.info("cms id for the Measure set [{}] is successfully created", updatedMeasureSet.getId());

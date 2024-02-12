@@ -18,21 +18,17 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class GeneratorRepositoryImplTest {
 
-    @Mock
-    MongoOperations mongoOperations;
+  @Mock MongoOperations mongoOperations;
 
-    @InjectMocks
-    GeneratorRepositoryImpl generatorRepository;
+  @InjectMocks GeneratorRepositoryImpl generatorRepository;
 
-    @Test
-    void findAndModify() {
+  @Test
+  void findAndModify() {
 
-        when(mongoOperations.findAndModify(any(Query.class),
-                any(UpdateDefinition.class),
-                any(FindAndModifyOptions.class),
-                any()))
-                .thenReturn(Generator.builder().currentValue(1).build());
-        var result = generatorRepository.findAndModify("cms_id");
-        assertEquals(1, result);
-    }
+    when(mongoOperations.findAndModify(
+            any(Query.class), any(UpdateDefinition.class), any(FindAndModifyOptions.class), any()))
+        .thenReturn(Generator.builder().currentValue(1).build());
+    var result = generatorRepository.findAndModify("cms_id");
+    assertEquals(1, result);
+  }
 }

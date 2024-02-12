@@ -240,15 +240,13 @@ class MeasureControllerTest {
             .acls(null)
             .build();
 
-    when(measureSetService.createCmsId(anyString(), anyString(), anyString()))
-        .thenReturn(measureSet);
-    ResponseEntity<MeasureSet> response =
-        controller.createCmsId(measureSet.getId(), "cms_id", principal);
+    when(measureSetService.createAndUpdateCmsId(anyString(), anyString())).thenReturn(measureSet);
+    ResponseEntity<MeasureSet> response = controller.createCmsId(measureSet.getId(), principal);
 
     assertThat(response.getBody(), is(notNullValue()));
     assertThat(response.getBody(), is(equalTo(measureSet)));
     assertEquals(measureSet, response.getBody());
-    verify(measureSetService, times(1)).createCmsId(anyString(), anyString(), anyString());
+    verify(measureSetService, times(1)).createAndUpdateCmsId(anyString(), anyString());
   }
 
   @Test

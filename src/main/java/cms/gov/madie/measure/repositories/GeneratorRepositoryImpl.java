@@ -28,6 +28,6 @@ public class GeneratorRepositoryImpl implements GeneratorRepository {
             new Update().inc("currentValue", 1),
             options().returnNew(true).upsert(true),
             Generator.class);
-    return !Objects.isNull(counter) ? counter.getCurrentValue() : 1;
+    return Objects.isNull(counter) ? 1 : counter.getCurrentValue();
   }
 }

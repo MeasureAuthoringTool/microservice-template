@@ -306,10 +306,10 @@ public class MeasureController {
     return ResponseEntity.ok(measures);
   }
 
-  @PutMapping("/measures/{measureSetId}/sequenceGenerator/{sequenceName}")
+  @PutMapping("/measures/{measureSetId}/create-cms-id")
   public ResponseEntity<MeasureSet> createCmsId(
-      @PathVariable String measureSetId, @PathVariable String sequenceName, Principal principal) {
+      @PathVariable String measureSetId, Principal principal) {
     return ResponseEntity.status(HttpStatus.CREATED)
-        .body(measureSetService.createCmsId(measureSetId, sequenceName, principal.getName()));
+        .body(measureSetService.createAndUpdateCmsId(measureSetId, principal.getName()));
   }
 }
