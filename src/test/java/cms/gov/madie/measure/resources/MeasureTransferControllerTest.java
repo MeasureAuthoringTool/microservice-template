@@ -446,11 +446,50 @@ public class MeasureTransferControllerTest {
 
     assertEquals(1, groups.size());
     assertEquals(4, copiedGroup.getPopulations().size());
-    assertEquals(6, groups.get(0).getPopulations().size());
+    assertEquals(5, groups.get(0).getPopulations().size());
     assertEquals(
-        copiedGroup.getPopulations().get(2).getId(), groups.get(0).getPopulations().get(5).getId());
+        copiedGroup.getPopulations().get(0).getId(), groups.get(0).getPopulations().get(0).getId());
+    assertEquals("Initial Population", groups.get(0).getPopulations().get(0).getDefinition());
+    assertEquals(
+        copiedGroup.getPopulations().get(1).getId(), groups.get(0).getPopulations().get(1).getId());
+    assertEquals("Denominator", groups.get(0).getPopulations().get(1).getDefinition());
+    // DENOMINATOR_EXCEPTION is not in the reordered group population
+    assertNotEquals(
+        copiedGroup.getPopulations().get(2).getId(), groups.get(0).getPopulations().get(2).getId());
+    assertEquals(
+        "DENOMINATOR_EXCLUSION", groups.get(0).getPopulations().get(2).getName().toString());
     assertEquals(
         copiedGroup.getPopulations().get(3).getId(), groups.get(0).getPopulations().get(3).getId());
+    assertEquals("Numerator", groups.get(0).getPopulations().get(3).getDefinition());
+  }
+
+  @Test
+  public void testReorderGroupPopulationsProportion() {
+    groups.get(0).setScoring(MeasureScoring.PROPORTION.toString());
+    Group copiedGroup = Group.builder().populations(groups.get(0).getPopulations()).build();
+
+    controller.reorderGroupPopulations(groups);
+
+    assertEquals(1, groups.size());
+    assertEquals(4, copiedGroup.getPopulations().size());
+    assertEquals(6, groups.get(0).getPopulations().size());
+    assertEquals(
+        copiedGroup.getPopulations().get(0).getId(), groups.get(0).getPopulations().get(0).getId());
+    assertEquals("Initial Population", groups.get(0).getPopulations().get(0).getDefinition());
+    assertEquals(
+        copiedGroup.getPopulations().get(1).getId(), groups.get(0).getPopulations().get(1).getId());
+    assertEquals("Denominator", groups.get(0).getPopulations().get(1).getDefinition());
+    assertNotEquals(
+        copiedGroup.getPopulations().get(2).getId(), groups.get(0).getPopulations().get(2).getId());
+    assertEquals(
+        "DENOMINATOR_EXCLUSION", groups.get(0).getPopulations().get(2).getName().toString());
+    assertEquals(
+        copiedGroup.getPopulations().get(3).getId(), groups.get(0).getPopulations().get(3).getId());
+    assertEquals("Numerator", groups.get(0).getPopulations().get(3).getDefinition());
+    assertEquals("NUMERATOR_EXCLUSION", groups.get(0).getPopulations().get(4).getName().toString());
+    // DENOMINATOR_EXCEPTION is in the reordered group population
+    assertEquals(
+        "DENOMINATOR_EXCEPTION", groups.get(0).getPopulations().get(5).getName().toString());
   }
 
   @Test
