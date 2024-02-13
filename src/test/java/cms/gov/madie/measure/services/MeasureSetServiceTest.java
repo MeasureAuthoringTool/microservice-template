@@ -185,7 +185,9 @@ public class MeasureSetServiceTest {
             InvalidRequestException.class,
             () -> measureSetService.createAndUpdateCmsId("measureSetId", "testUser"));
     assertTrue(
-        ex.getMessage().contains("CMS ID already exists. Once a CMS Identifier has been generated it may not be modified or removed for any draft or version of a measure."));
+        ex.getMessage()
+            .contains(
+                "CMS ID already exists. Once a CMS Identifier has been generated it may not be modified or removed for any draft or version of a measure."));
     verify(measureSetRepository, times(1)).findByMeasureSetId(anyString());
     verify(measureSetRepository, times(0)).save(any(MeasureSet.class));
   }
