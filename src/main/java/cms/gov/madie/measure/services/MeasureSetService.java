@@ -89,7 +89,7 @@ public class MeasureSetService {
     }
     if (measureSet.get().getCmsId() > 0) {
       throw new InvalidRequestException(
-          "cms id exists for measure with measure set id " + measureSetId);
+          "CMS ID already exists. Once a CMS Identifier has been generated it may not be modified or removed for any draft or version of a measure.");
     }
     int generatedSequenceNumber = generatorRepository.findAndModify("cms_id");
     measureSet.get().setCmsId(generatedSequenceNumber);
