@@ -451,7 +451,7 @@ public class MeasureTransferControllerTest {
   public void testCreateMeasureDuplicateMeasureExceptionForQiCore() {
     doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
     when(organizationRepository.findAll()).thenReturn(organizationList);
-    when(measureTransferService.findByMeasureSetId(anyString()))
+    when(measureService.findAllByMeasureSetId(anyString()))
         .thenReturn(List.of(Measure.builder().id("testMeasureId").build()));
 
     assertThrows(
@@ -466,7 +466,7 @@ public class MeasureTransferControllerTest {
         Measure.builder().id("testMeasureId").measureSetId("abc-pqr-xyz").build();
     doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
     when(organizationRepository.findAll()).thenReturn(organizationList);
-    when(measureTransferService.findByMeasureSetId(anyString()))
+    when(measureService.findAllByMeasureSetId(anyString()))
         .thenReturn(List.of(measureWithSameMeasureSetId));
     doNothing().when(measureTransferService).deleteVersionedMeasures(any(List.class));
     when(measureTransferService.overwriteExistingMeasure(any(List.class), any(Measure.class)))

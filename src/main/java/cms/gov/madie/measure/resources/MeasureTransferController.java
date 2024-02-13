@@ -107,7 +107,7 @@ public class MeasureTransferController {
 
     Measure savedMeasure = null;
     List<Measure> existingMeasures =
-        measureTransferService.findByMeasureSetId(measure.getMeasureSetId());
+        measureService.findAllByMeasureSetId(measure.getMeasureSetId());
     if (!CollectionUtils.isEmpty(existingMeasures)) {
       if (ModelType.QI_CORE.getValue().contains(measure.getModel())) {
         throw new DuplicateMeasureException();

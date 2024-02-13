@@ -4,10 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -95,16 +93,6 @@ public class MeasureTransferServiceTest {
             .build();
 
     testcase = TestCase.builder().id("testCaseId").build();
-  }
-
-  @Test
-  public void testFindByMeasureSetId() {
-    when(measureRepository.findAllByMeasureSetId(anyString()))
-        .thenReturn(List.of(measure1, measure2));
-
-    List<Measure> results = measureTransferService.findByMeasureSetId("testMeasureSetId1");
-
-    assertTrue(results.size() == 2);
   }
 
   @Test

@@ -1079,4 +1079,14 @@ public class MeasureServiceTest implements ResourceUtil {
     assertNotNull(metaData);
     assertNull(metaData.getReferences());
   }
+
+  @Test
+  public void testFindAllByMeasureSetId() {
+    when(measureRepository.findAllByMeasureSetId(anyString()))
+        .thenReturn(List.of(measure1, measure2));
+
+    List<Measure> results = measureService.findAllByMeasureSetId("testMeasureSetId1");
+
+    assertTrue(results.size() == 2);
+  }
 }

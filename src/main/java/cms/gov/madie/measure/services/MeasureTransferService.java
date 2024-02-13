@@ -19,11 +19,6 @@ import gov.cms.madie.models.measure.Measure;
 public class MeasureTransferService {
   private final MeasureRepository measureRepository;
 
-  public List<Measure> findByMeasureSetId(String measureSetId) {
-    List<Measure> measures = measureRepository.findAllByMeasureSetId(measureSetId);
-    return measures;
-  }
-
   public void deleteVersionedMeasures(List<Measure> measuresWithSameSetId) {
     List<Measure> versionedMeasures =
         measuresWithSameSetId.stream()

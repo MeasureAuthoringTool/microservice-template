@@ -392,4 +392,9 @@ public class MeasureService {
       metaData.setReferences(references);
     }
   }
+
+  public List<Measure> findAllByMeasureSetId(String measureSetId) {
+    List<Measure> measures = measureRepository.findAllByMeasureSetId(measureSetId);
+    return measures;
+  }
 }
