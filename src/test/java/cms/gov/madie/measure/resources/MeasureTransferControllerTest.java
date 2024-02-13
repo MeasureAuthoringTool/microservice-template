@@ -13,6 +13,7 @@ import gov.cms.madie.models.common.Organization;
 import gov.cms.madie.models.measure.*;
 import gov.cms.madie.models.common.Version;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -74,21 +75,41 @@ public class MeasureTransferControllerTest {
 
   MockHttpServletRequest request;
 
+  List<Group> groups;
+
   @BeforeEach
   public void setUp() {
     request = new MockHttpServletRequest();
-    List<Group> groups =
+    groups =
         List.of(
             new Group(
                 "id-abc",
-                "Cohort",
+                "Ratio",
                 List.of(
                     new Population(
                         "id-1",
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        "test description")),
+                        "test description"),
+                    new Population(
+                        "id-2",
+                        PopulationType.DENOMINATOR,
+                        "Denominator",
+                        null,
+                        "test description denom"),
+                    new Population(
+                        "id-3",
+                        PopulationType.DENOMINATOR_EXCEPTION,
+                        "Denominator Exceptions",
+                        null,
+                        "test description denom excep"),
+                    new Population(
+                        "id-4",
+                        PopulationType.NUMERATOR,
+                        "Numerator",
+                        null,
+                        "test description num")),
                 List.of(
                     new MeasureObservation(
                         "mo-id-1",
@@ -415,5 +436,68 @@ public class MeasureTransferControllerTest {
         "Innovaccer", persistedMeasure.getMeasureMetaData().getDevelopers().get(2).getName());
     assertEquals(
         "Innovaccer Url", persistedMeasure.getMeasureMetaData().getDevelopers().get(2).getUrl());
+  }
+
+  @Test
+  public void testReorderGroupPopulationsRatio() {
+    Group copiedGroup = Group.builder().populations(groups.get(0).getPopulations()).build();
+
+    controller.reorderGroupPopulations(groups);
+
+    assertEquals(1, groups.size());
+    assertEquals(4, copiedGroup.getPopulations().size());
+    assertEquals(6, groups.get(0).getPopulations().size());
+    assertEquals(
+        copiedGroup.getPopulations().get(2).getId(), groups.get(0).getPopulations().get(5).getId());
+    assertEquals(
+        copiedGroup.getPopulations().get(3).getId(), groups.get(0).getPopulations().get(3).getId());
+  }
+
+  @Test
+  public void testReorderGroupPopulationsCohort() {
+    groups.get(0).setScoring("Cohort");
+
+    controller.reorderGroupPopulations(groups);
+
+    assertEquals(1, groups.size());
+    assertEquals(1, groups.get(0).getPopulations().size());
+  }
+
+  @Test
+  public void testReorderGroupPopulationsEmptyGroups() {
+    List<Group> reorderedGroups = List.of();
+    controller.reorderGroupPopulations(reorderedGroups);
+    assertTrue(CollectionUtils.isEmpty(reorderedGroups));
+  }
+
+  @Test
+  public void testReorderGroupPopulationsEmptyPopulations() {
+    List<Group> reorderGroups = List.of(Group.builder().build());
+    controller.reorderGroupPopulations(reorderGroups);
+    assertFalse(CollectionUtils.isEmpty(reorderGroups));
+  }
+
+  @Test
+  public void testReorderGroupPopulationsForCV() {
+    Group copiedGroup =
+        Group.builder()
+            .scoring("Continuous Variable")
+            .populations(
+                List.of(
+                    groups.get(0).getPopulations().get(0),
+                    Population.builder()
+                        .id("id-6")
+                        .definition(PopulationType.MEASURE_POPULATION.name())
+                        .description("test description measure population")
+                        .build()))
+            .measureObservations(groups.get(0).getMeasureObservations())
+            .build();
+    List<Group> reorderedGroups = List.of(copiedGroup);
+
+    controller.reorderGroupPopulations(reorderedGroups);
+
+    assertEquals(1, reorderedGroups.size());
+    assertEquals(3, reorderedGroups.get(0).getPopulations().size());
+    assertEquals(1, reorderedGroups.get(0).getMeasureObservations().size());
   }
 }
