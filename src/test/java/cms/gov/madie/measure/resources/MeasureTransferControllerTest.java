@@ -461,7 +461,8 @@ public class MeasureTransferControllerTest {
     assertEquals(
         copiedGroup.getPopulations().get(3).getId(), groups.get(0).getPopulations().get(3).getId());
     assertEquals("Numerator", groups.get(0).getPopulations().get(3).getDefinition());
-    assertEquals(PopulationType.NUMERATOR_EXCLUSION, groups.get(0).getPopulations().get(4).getName());
+    assertEquals(
+        PopulationType.NUMERATOR_EXCLUSION, groups.get(0).getPopulations().get(4).getName());
   }
 
   @Test
@@ -483,14 +484,17 @@ public class MeasureTransferControllerTest {
     assertNotEquals(
         copiedGroup.getPopulations().get(2).getId(), groups.get(0).getPopulations().get(2).getId());
     assertEquals(
-        "DENOMINATOR_EXCLUSION", groups.get(0).getPopulations().get(2).getName().toString());
+        PopulationType.DENOMINATOR_EXCLUSION, groups.get(0).getPopulations().get(2).getName());
+    assertEquals("", groups.get(0).getPopulations().get(2).getDefinition());
     assertEquals(
         copiedGroup.getPopulations().get(3).getId(), groups.get(0).getPopulations().get(3).getId());
     assertEquals("Numerator", groups.get(0).getPopulations().get(3).getDefinition());
-    assertEquals("NUMERATOR_EXCLUSION", groups.get(0).getPopulations().get(4).getName().toString());
-    // DENOMINATOR_EXCEPTION is in the reordered group population
     assertEquals(
-        "DENOMINATOR_EXCEPTION", groups.get(0).getPopulations().get(5).getName().toString());
+        PopulationType.NUMERATOR_EXCLUSION, groups.get(0).getPopulations().get(4).getName());
+    assertEquals("", groups.get(0).getPopulations().get(4).getDefinition());
+    // DENOMINATOR_EXCEPTION is in the reordered group population but reordered
+    assertEquals(
+        PopulationType.DENOMINATOR_EXCEPTION, groups.get(0).getPopulations().get(5).getName());
   }
 
   @Test
