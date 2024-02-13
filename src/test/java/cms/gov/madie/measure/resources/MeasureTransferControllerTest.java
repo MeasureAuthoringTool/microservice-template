@@ -449,8 +449,6 @@ public class MeasureTransferControllerTest {
 
   @Test
   public void testCreateMeasureDuplicateMeasureExceptionForQiCore() {
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
-    when(organizationRepository.findAll()).thenReturn(organizationList);
     when(measureService.findAllByMeasureSetId(anyString()))
         .thenReturn(List.of(Measure.builder().id("testMeasureId").build()));
 

@@ -67,6 +67,15 @@ public class MeasureTransferController {
         "Measure [{}] is being transferred over to MADiE by [{}]",
         measure.getMeasureName(),
         harpId);
+
+    List<Measure> existingMeasures =
+        measureService.findAllByMeasureSetId(measure.getMeasureSetId());
+    if (!CollectionUtils.isEmpty(existingMeasures)) {
+      if (ModelType.QI_CORE.getValue().contains(measure.getModel())) {
+        throw new DuplicateMeasureException();
+      }
+    }
+
     measureService.checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
 
     setMeasureElmJsonAndErrors(measure, apiKey, harpId);
@@ -106,19 +115,13 @@ public class MeasureTransferController {
     reorderGroupPopulations(measure.getGroups());
 
     Measure savedMeasure = null;
-    List<Measure> existingMeasures =
-        measureService.findAllByMeasureSetId(measure.getMeasureSetId());
     if (!CollectionUtils.isEmpty(existingMeasures)) {
-      if (ModelType.QI_CORE.getValue().contains(measure.getModel())) {
-        throw new DuplicateMeasureException();
-      } else {
-        // 1. deleting any versioned measures
-        measureTransferService.deleteVersionedMeasures(existingMeasures);
+      // 1. deleting any versioned measures
+      measureTransferService.deleteVersionedMeasures(existingMeasures);
 
-        // 2. overwrite the most recent one with the draft measure
-        savedMeasure = measureTransferService.overwriteExistingMeasure(existingMeasures, measure);
-        savedMeasure = repository.save(savedMeasure);
-      }
+      // 2. overwrite the most recent one with the draft measure
+      savedMeasure = measureTransferService.overwriteExistingMeasure(existingMeasures, measure);
+      savedMeasure = repository.save(savedMeasure);
     } else {
       savedMeasure = repository.save(measure);
       measureSetService.createMeasureSet(
