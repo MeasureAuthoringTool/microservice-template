@@ -7,6 +7,7 @@ import io.mongock.api.annotations.RollbackExecution;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -42,6 +43,9 @@ public class UpdateCmsIdChangeUnit {
     AggregationResults<MeasureMeta> aggregationResults =
         mongoTemplate.aggregate(measureAggregation, MeasureMeta.class);
     List<MeasureMeta> measureMetas = aggregationResults.getMappedResults();
+    if (CollectionUtils.isEmpty(measureMetas)) {
+      return;
+    }
 
     List<Pair<Query, Update>> updatePairs =
         measureMetas.stream()
@@ -67,7 +71,7 @@ public class UpdateCmsIdChangeUnit {
   public void rollbackExecution(MongoTemplate mongoTemplate) {
     log.debug("Something went wrong while updating the CMS IDs. rolling back the updates.");
     BulkOperations bulkOperations =
-      mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, "measureSet");
+        mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, "measureSet");
     Query query = new Query();
     Update update = new Update().unset("cmsId");
     bulkOperations.updateMulti(query, update);
