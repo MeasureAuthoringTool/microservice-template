@@ -9,6 +9,7 @@ import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.GroupService;
 import cms.gov.madie.measure.services.MeasureService;
+import cms.gov.madie.measure.services.MeasureSetService;
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.common.ActionType;
@@ -50,6 +51,7 @@ class MeasureControllerTest {
 
   @Mock private MeasureRepository repository;
   @Mock private MeasureService measureService;
+  @Mock private MeasureSetService measureSetService;
   @Mock private GroupService groupService;
   @Mock private ActionLogService actionLogService;
   @Mock private MeasureSetRepository measureSetRepository;
@@ -222,6 +224,29 @@ class MeasureControllerTest {
     assertNotNull(targetIdArgumentCaptor.getValue());
     assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.UPDATED)));
     assertThat(performedByArgumentCaptor.getValue(), is(equalTo("test.user2")));
+  }
+
+  @Test
+  void createCmsId() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user2");
+
+    final MeasureSet measureSet =
+        MeasureSet.builder()
+            .id("f225481c-921e-4015-9e14-e5046bfac9ff")
+            .cmsId(6)
+            .measureSetId("measureSetId")
+            .owner("test.com")
+            .acls(null)
+            .build();
+
+    when(measureSetService.createAndUpdateCmsId(anyString(), anyString())).thenReturn(measureSet);
+    ResponseEntity<MeasureSet> response = controller.createCmsId(measureSet.getId(), principal);
+
+    assertThat(response.getBody(), is(notNullValue()));
+    assertThat(response.getBody(), is(equalTo(measureSet)));
+    assertEquals(measureSet, response.getBody());
+    verify(measureSetService, times(1)).createAndUpdateCmsId(anyString(), anyString());
   }
 
   @Test

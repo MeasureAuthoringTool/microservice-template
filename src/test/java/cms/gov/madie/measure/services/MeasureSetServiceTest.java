@@ -1,6 +1,8 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.exceptions.InvalidRequestException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.repositories.GeneratorRepository;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
@@ -23,17 +25,14 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class MeasureSetServiceTest {
 
   @InjectMocks private MeasureSetService measureSetService;
   @Mock MeasureSetRepository measureSetRepository;
+  @Mock GeneratorRepository generatorRepository;
   @Mock private ActionLogService actionLogService;
   MeasureSet measureSet;
 
@@ -139,6 +138,56 @@ public class MeasureSetServiceTest {
             ResourceNotFoundException.class,
             () -> measureSetService.updateOwnership("1", "testUser"));
     assertTrue(ex.getMessage().contains("measure set may not exist."));
+    verify(measureSetRepository, times(1)).findByMeasureSetId(anyString());
+    verify(measureSetRepository, times(0)).save(any(MeasureSet.class));
+  }
+
+  @Test
+  public void testCreateCmsId() {
+    final MeasureSet measureSet1 =
+        MeasureSet.builder().measureSetId("msid-2").cmsId(2).owner("user-1").build();
+
+    when(measureSetRepository.findByMeasureSetId(anyString()))
+        .thenReturn(Optional.ofNullable(measureSet));
+    when(generatorRepository.findAndModify("cms_id")).thenReturn(2);
+    when(measureSetRepository.save(any(MeasureSet.class))).thenReturn(measureSet1);
+
+    MeasureSet result = measureSetService.createAndUpdateCmsId("measureSetId", "testUser");
+    assertThat(result.getCmsId(), is(equalTo(2)));
+    assertThat(result.getId(), is(equalTo(measureSet1.getId())));
+    verify(actionLogService, times(1))
+        .logAction(measureSet.getId(), Measure.class, ActionType.CREATED, "testUser");
+  }
+
+  @Test
+  public void testCreateCmsIdWhenMeasureSetIdIsNotValid() {
+    when(measureSetRepository.findByMeasureSetId(anyString())).thenReturn(Optional.empty());
+
+    Exception ex =
+        assertThrows(
+            ResourceNotFoundException.class,
+            () -> measureSetService.createAndUpdateCmsId("measureSetId", "testUser"));
+    assertTrue(
+        ex.getMessage()
+            .contains("No measure set exists for measure with measure set id measureSetId"));
+    verify(measureSetRepository, times(1)).findByMeasureSetId(anyString());
+    verify(measureSetRepository, times(0)).save(any(MeasureSet.class));
+  }
+
+  @Test
+  public void testCreateCmsIdWhenCmsIdAlreadyExistsInMeasureSet() {
+    measureSet.setCmsId(6);
+    when(measureSetRepository.findByMeasureSetId(anyString()))
+        .thenReturn(Optional.ofNullable(measureSet));
+
+    Exception ex =
+        assertThrows(
+            InvalidRequestException.class,
+            () -> measureSetService.createAndUpdateCmsId("measureSetId", "testUser"));
+    assertTrue(
+        ex.getMessage()
+            .contains(
+                "CMS ID already exists. Once a CMS Identifier has been generated it may not be modified or removed for any draft or version of a measure."));
     verify(measureSetRepository, times(1)).findByMeasureSetId(anyString());
     verify(measureSetRepository, times(0)).save(any(MeasureSet.class));
   }

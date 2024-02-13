@@ -1,14 +1,12 @@
 package cms.gov.madie.measure.resources;
 
-import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
-import cms.gov.madie.measure.exceptions.InvalidIdException;
-import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
-import cms.gov.madie.measure.exceptions.UnauthorizedException;
+import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.GroupService;
 import cms.gov.madie.measure.services.MeasureService;
+import cms.gov.madie.measure.services.MeasureSetService;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.*;
 import lombok.RequiredArgsConstructor;
@@ -49,6 +47,7 @@ public class MeasureController {
   private final GroupService groupService;
   private final ActionLogService actionLogService;
   private final MeasureSetRepository measureSetRepository;
+  private final MeasureSetService measureSetService;
 
   @GetMapping("/measures/draftstatus")
   public ResponseEntity<Map<String, Boolean>> getDraftStatuses(
@@ -305,5 +304,12 @@ public class MeasureController {
         });
 
     return ResponseEntity.ok(measures);
+  }
+
+  @PutMapping("/measures/{measureSetId}/create-cms-id")
+  public ResponseEntity<MeasureSet> createCmsId(
+      @PathVariable String measureSetId, Principal principal) {
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(measureSetService.createAndUpdateCmsId(measureSetId, principal.getName()));
   }
 }

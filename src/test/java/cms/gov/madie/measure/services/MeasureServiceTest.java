@@ -100,10 +100,19 @@ public class MeasureServiceTest implements ResourceUtil {
             .term("test term 2")
             .definition("test definition 2")
             .build();
+    Reference reference1 =
+        Reference.builder().referenceType("test type").referenceText("test text").build();
+    Reference reference2 =
+        Reference.builder()
+            .id("test id")
+            .referenceType("test type 2")
+            .referenceText("test text 2")
+            .build();
     measureMetaData =
         MeasureMetaData.builder()
             .draft(true)
             .measureDefinitions(List.of(measureDefinition1, measureDefinition2))
+            .references(List.of(reference1, reference2))
             .build();
 
     // Present in DB and has ID
@@ -1054,5 +1063,20 @@ public class MeasureServiceTest implements ResourceUtil {
     measureService.updateMeasureDefinitionId(metaData);
     assertNotNull(metaData);
     assertNull(metaData.getMeasureDefinitions());
+  }
+
+  @Test
+  public void testUpdateReferenceIdNullMetaData() {
+    MeasureMetaData metaData = null;
+    measureService.updateReferenceId(metaData);
+    assertNull(metaData);
+  }
+
+  @Test
+  public void testUpdateReferenceIdNullReferences() {
+    MeasureMetaData metaData = MeasureMetaData.builder().build();
+    measureService.updateReferenceId(metaData);
+    assertNotNull(metaData);
+    assertNull(metaData.getReferences());
   }
 }
