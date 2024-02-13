@@ -70,10 +70,9 @@ public class MeasureTransferController {
 
     List<Measure> existingMeasures =
         measureService.findAllByMeasureSetId(measure.getMeasureSetId());
-    if (!CollectionUtils.isEmpty(existingMeasures)) {
-      if (ModelType.QI_CORE.getValue().contains(measure.getModel())) {
-        throw new DuplicateMeasureException();
-      }
+    if (!CollectionUtils.isEmpty(existingMeasures)
+        && ModelType.QI_CORE.getValue().contains(measure.getModel())) {
+      throw new DuplicateMeasureException();
     }
 
     measureService.checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
