@@ -30,6 +30,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.List;
 import java.util.Optional;
 
+import cms.gov.madie.measure.services.MeasureSetService;
+import gov.cms.madie.models.measure.*;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -63,15 +65,6 @@ import cms.gov.madie.measure.services.MeasureService;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.common.Organization;
-import gov.cms.madie.models.measure.Group;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.MeasureGroupTypes;
-import gov.cms.madie.models.measure.MeasureMetaData;
-import gov.cms.madie.models.measure.MeasureScoring;
-import gov.cms.madie.models.measure.Population;
-import gov.cms.madie.models.measure.PopulationType;
-import gov.cms.madie.models.measure.QdmMeasure;
-import gov.cms.madie.models.measure.Stratification;
 
 @WebMvcTest({MeasureController.class})
 @ActiveProfiles("test")
@@ -82,7 +75,7 @@ public class MeasureControllerMvcTest {
   @MockBean private MeasureService measureService;
   @MockBean private GroupService groupService;
   @MockBean private ActionLogService actionLogService;
-
+  @MockBean private MeasureSetService measureSetService;
   @Autowired private MockMvc mockMvc;
   @MockBean private MeasureSetRepository measureSetRepository;
   @Captor private ArgumentCaptor<Measure> measureArgumentCaptor;

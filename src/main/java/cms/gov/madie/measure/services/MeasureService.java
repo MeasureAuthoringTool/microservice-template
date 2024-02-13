@@ -158,7 +158,7 @@ public class MeasureService {
       updateMeasurementPeriods(updatingMeasure);
     }
 
-    updateMeasureDefinitionId(updatingMeasure.getMeasureMetaData());
+    updateMeasureMetadataIds(updatingMeasure.getMeasureMetaData());
 
     Measure outputMeasure = updatingMeasure;
     if (measureUtil.isMeasureCqlChanged(existingMeasure, updatingMeasure)
@@ -349,6 +349,11 @@ public class MeasureService {
         : measureRepository.findAllByMeasureNameOrEcqmTitle(criteria, pageReq);
   }
 
+  protected void updateMeasureMetadataIds(MeasureMetaData metaData) {
+    updateMeasureDefinitionId(metaData);
+    updateReferenceId(metaData);
+  }
+
   protected void updateMeasureDefinitionId(MeasureMetaData metaData) {
     if (metaData != null && !CollectionUtils.isEmpty(metaData.getMeasureDefinitions())) {
       List<MeasureDefinition> measureDefinitions =
@@ -365,6 +370,26 @@ public class MeasureService {
                           .build())
               .toList();
       metaData.setMeasureDefinitions(measureDefinitions);
+    }
+  }
+
+  protected void updateReferenceId(MeasureMetaData metaData) {
+    if (metaData != null && !CollectionUtils.isEmpty(metaData.getReferences())) {
+      List<Reference> references =
+          (List<Reference>)
+              metaData.getReferences().stream()
+                  .map(
+                      reference ->
+                          Reference.builder()
+                              .id(
+                                  StringUtils.isBlank(reference.getId())
+                                      ? UUID.randomUUID().toString()
+                                      : reference.getId())
+                              .referenceText(reference.getReferenceText())
+                              .referenceType(reference.getReferenceType())
+                              .build())
+                  .toList();
+      metaData.setReferences(references);
     }
   }
 }
