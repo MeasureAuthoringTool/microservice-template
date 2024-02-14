@@ -13,10 +13,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import cms.gov.madie.measure.repositories.MeasureRepository;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureGroupTypes;
@@ -29,7 +27,6 @@ import gov.cms.madie.models.measure.TestCase;
 
 @ExtendWith(MockitoExtension.class)
 public class MeasureTransferServiceTest {
-  @Mock private MeasureRepository measureRepository;
 
   @InjectMocks private MeasureTransferService measureTransferService;
 

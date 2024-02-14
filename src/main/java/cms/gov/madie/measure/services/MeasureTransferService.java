@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 
-import cms.gov.madie.measure.repositories.MeasureRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,7 +16,6 @@ import gov.cms.madie.models.measure.Measure;
 @Service
 @AllArgsConstructor
 public class MeasureTransferService {
-  private final MeasureRepository measureRepository;
 
   public Measure overwriteExistingMeasure(
       List<Measure> measuresWithSameSetId, Measure transferredMeasure) {
