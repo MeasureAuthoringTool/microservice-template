@@ -1,15 +1,19 @@
 package cms.gov.madie.measure.utils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.bson.types.ObjectId;
 
-import com.nimbusds.oauth2.sdk.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.MeasureObservation;
+import gov.cms.madie.models.measure.MeasureScoring;
 import gov.cms.madie.models.measure.Population;
+import gov.cms.madie.models.measure.PopulationType;
 import gov.cms.madie.models.measure.Stratification;
 
 public class GroupPopulationUtil {
@@ -159,5 +163,58 @@ public class GroupPopulationUtil {
       }
     }
     return true;
+  }
+
+  /**
+   * This method is to order the group populations in the order defined as in:
+   * cms.gov.madie.measure.utils.TestCaseServiceUtil. When the test cases are imported, the group
+   * populations are matched one by one in the order. Also, test case execution also needs the group
+   * populations in the right order.
+   *
+   * @param the list of the groups
+   * @return none
+   */
+  public static void reorderGroupPopulations(List<Group> groups) {
+    List<Population> newPopulations;
+    if (!CollectionUtils.isEmpty(groups)) {
+      for (Group group : groups) {
+        newPopulations = new ArrayList<>();
+        List<Population> populations = group.getPopulations();
+        if (!CollectionUtils.isEmpty(populations)) {
+          newPopulations.add(findPopulation(populations, PopulationType.INITIAL_POPULATION));
+          if (StringUtils.equals(
+              group.getScoring(), MeasureScoring.CONTINUOUS_VARIABLE.toString())) {
+            newPopulations.add(findPopulation(populations, PopulationType.MEASURE_POPULATION));
+            newPopulations.add(
+                findPopulation(populations, PopulationType.MEASURE_POPULATION_EXCLUSION));
+          } else {
+            if (!StringUtils.equals(group.getScoring(), MeasureScoring.COHORT.toString())) {
+              newPopulations.add(findPopulation(populations, PopulationType.DENOMINATOR));
+              newPopulations.add(findPopulation(populations, PopulationType.DENOMINATOR_EXCLUSION));
+              newPopulations.add(findPopulation(populations, PopulationType.NUMERATOR));
+              newPopulations.add(findPopulation(populations, PopulationType.NUMERATOR_EXCLUSION));
+              if (!StringUtils.equals(group.getScoring(), MeasureScoring.RATIO.toString())) {
+                newPopulations.add(
+                    findPopulation(populations, PopulationType.DENOMINATOR_EXCEPTION));
+              }
+            }
+          }
+          group.setPopulations(newPopulations);
+        }
+      }
+    }
+  }
+
+  private static Population findPopulation(
+      List<Population> populations, PopulationType populationType) {
+    return populations.stream()
+        .filter(population -> population.getName() == populationType)
+        .findFirst()
+        .orElse(
+            Population.builder()
+                .id(ObjectId.get().toString())
+                .name(populationType)
+                .definition("")
+                .build());
   }
 }

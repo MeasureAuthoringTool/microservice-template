@@ -3,24 +3,20 @@ package cms.gov.madie.measure.resources;
 import cms.gov.madie.measure.dto.MadieFeatureFlag;
 import cms.gov.madie.measure.repositories.OrganizationRepository;
 import cms.gov.madie.measure.services.*;
+import cms.gov.madie.measure.utils.GroupPopulationUtil;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.common.Organization;
 import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.ElmJson;
-import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureMetaData;
-import gov.cms.madie.models.measure.MeasureScoring;
-import gov.cms.madie.models.measure.Population;
-import gov.cms.madie.models.measure.PopulationType;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -32,7 +28,6 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -100,7 +95,7 @@ public class MeasureTransferController {
     }
     // set ids for groups
     measure.getGroups().forEach(group -> group.setId(ObjectId.get().toString()));
-    reorderGroupPopulations(measure.getGroups());
+    GroupPopulationUtil.reorderGroupPopulations(measure.getGroups());
     Measure savedMeasure = repository.save(measure);
     measureSetService.createMeasureSet(
         harpId, savedMeasure.getId(), savedMeasure.getMeasureSetId());
@@ -203,57 +198,5 @@ public class MeasureTransferController {
           ex);
       measure.setCqlErrors(true);
     }
-  }
-
-  /**
-   * This method is to order the group populations in the order defined as in:
-   * cms.gov.madie.measure.utils.TestCaseServiceUtil. When the test cases are imported, the group
-   * populations are matched one by one in the order. Also, test case execution also needs the group
-   * populations in the right order.
-   *
-   * @param the list of the groups
-   * @return none
-   */
-  protected void reorderGroupPopulations(List<Group> groups) {
-    List<Population> newPopulations;
-    if (!CollectionUtils.isEmpty(groups)) {
-      for (Group group : groups) {
-        newPopulations = new ArrayList<>();
-        List<Population> populations = group.getPopulations();
-        if (!CollectionUtils.isEmpty(populations)) {
-          newPopulations.add(findPopulation(populations, PopulationType.INITIAL_POPULATION));
-          if (StringUtils.equals(
-              group.getScoring(), MeasureScoring.CONTINUOUS_VARIABLE.toString())) {
-            newPopulations.add(findPopulation(populations, PopulationType.MEASURE_POPULATION));
-            newPopulations.add(
-                findPopulation(populations, PopulationType.MEASURE_POPULATION_EXCLUSION));
-          } else {
-            if (!StringUtils.equals(group.getScoring(), MeasureScoring.COHORT.toString())) {
-              newPopulations.add(findPopulation(populations, PopulationType.DENOMINATOR));
-              newPopulations.add(findPopulation(populations, PopulationType.DENOMINATOR_EXCLUSION));
-              newPopulations.add(findPopulation(populations, PopulationType.NUMERATOR));
-              newPopulations.add(findPopulation(populations, PopulationType.NUMERATOR_EXCLUSION));
-              if (!StringUtils.equals(group.getScoring(), MeasureScoring.RATIO.toString())) {
-                newPopulations.add(
-                    findPopulation(populations, PopulationType.DENOMINATOR_EXCEPTION));
-              }
-            }
-          }
-          group.setPopulations(newPopulations);
-        }
-      }
-    }
-  }
-
-  private Population findPopulation(List<Population> populations, PopulationType populationType) {
-    return populations.stream()
-        .filter(population -> population.getName() == populationType)
-        .findFirst()
-        .orElse(
-            Population.builder()
-                .id(ObjectId.get().toString())
-                .name(populationType)
-                .definition("")
-                .build());
   }
 }

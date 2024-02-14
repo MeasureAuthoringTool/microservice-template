@@ -1,12 +1,15 @@
 package cms.gov.madie.measure.utils;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.MeasureGroupTypes;
 import gov.cms.madie.models.measure.MeasureObservation;
+import gov.cms.madie.models.measure.MeasureScoring;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
 import gov.cms.madie.models.measure.Stratification;
@@ -30,24 +34,51 @@ public class GroupPopulationUtilTest {
   private Population population4;
   private Population population5;
   private Population population6;
+  private Population population7;
   private MeasureObservation observation1;
   private MeasureObservation observation2;
   private Stratification stratification1;
   private Stratification stratification2;
 
+  List<Group> groups;
+
   @BeforeEach
   public void setUp() {
 
     population1 =
-        Population.builder().definition(PopulationType.INITIAL_POPULATION.getDisplay()).build();
-    population2 = Population.builder().definition(PopulationType.DENOMINATOR.getDisplay()).build();
+        Population.builder()
+            .id("id-1")
+            .name(PopulationType.INITIAL_POPULATION)
+            .definition(PopulationType.INITIAL_POPULATION.getDisplay())
+            .build();
+    population2 =
+        Population.builder()
+            .id("id-2")
+            .name(PopulationType.DENOMINATOR)
+            .definition(PopulationType.DENOMINATOR.getDisplay())
+            .build();
     population3 =
         Population.builder().definition(PopulationType.DENOMINATOR_EXCLUSION.getDisplay()).build();
-    population4 = Population.builder().definition(PopulationType.NUMERATOR.getDisplay()).build();
+    population4 =
+        Population.builder()
+            .id("id-4")
+            .name(PopulationType.NUMERATOR)
+            .definition(PopulationType.NUMERATOR.getDisplay())
+            .build();
     population5 =
         Population.builder().definition(PopulationType.NUMERATOR_EXCLUSION.getDisplay()).build();
     population6 =
-        Population.builder().definition(PopulationType.DENOMINATOR_EXCEPTION.getDisplay()).build();
+        Population.builder()
+            .id("id-6")
+            .name(PopulationType.DENOMINATOR_EXCEPTION)
+            .definition(PopulationType.DENOMINATOR_EXCEPTION.getDisplay())
+            .build();
+    population7 =
+        Population.builder()
+            .id("id-7")
+            .name(PopulationType.MEASURE_POPULATION)
+            .definition(PopulationType.MEASURE_POPULATION.getDisplay())
+            .build();
 
     observation1 =
         MeasureObservation.builder()
@@ -85,6 +116,13 @@ public class GroupPopulationUtilTest {
             .measureObservations(List.of(observation2))
             .stratifications(List.of(stratification2))
             .build();
+
+    groups =
+        List.of(
+            Group.builder()
+                .scoring(MeasureScoring.RATIO.toString())
+                .populations(List.of(population1, population2, population6, population4))
+                .build());
   }
 
   @Test
@@ -279,5 +317,130 @@ public class GroupPopulationUtilTest {
         GroupPopulationUtil.isStratificationMatch(
             List.of(stratification1, stratification2), List.of(stratification1));
     assertFalse(result);
+  }
+
+  @Test
+  public void testReorderGroupPopulationsRatio() {
+    Group copiedGroup = Group.builder().populations(groups.get(0).getPopulations()).build();
+
+    GroupPopulationUtil.reorderGroupPopulations(groups);
+
+    assertEquals(1, groups.size());
+    assertEquals(4, copiedGroup.getPopulations().size());
+    assertEquals(5, groups.get(0).getPopulations().size());
+    assertEquals(
+        copiedGroup.getPopulations().get(0).getId(), groups.get(0).getPopulations().get(0).getId());
+    assertEquals("Initial Population", groups.get(0).getPopulations().get(0).getDefinition());
+    assertEquals(
+        copiedGroup.getPopulations().get(1).getId(), groups.get(0).getPopulations().get(1).getId());
+    assertEquals("Denominator", groups.get(0).getPopulations().get(1).getDefinition());
+    // DENOMINATOR_EXCEPTION is not in the reordered group population
+    assertNotEquals(
+        copiedGroup.getPopulations().get(2).getId(), groups.get(0).getPopulations().get(2).getId());
+    assertEquals(
+        "DENOMINATOR_EXCLUSION", groups.get(0).getPopulations().get(2).getName().toString());
+    assertEquals(
+        copiedGroup.getPopulations().get(3).getId(), groups.get(0).getPopulations().get(3).getId());
+    assertEquals("Numerator", groups.get(0).getPopulations().get(3).getDefinition());
+    assertEquals(
+        PopulationType.NUMERATOR_EXCLUSION, groups.get(0).getPopulations().get(4).getName());
+  }
+
+  @Test
+  public void testReorderGroupPopulationsProportion() {
+    groups.get(0).setScoring(MeasureScoring.PROPORTION.toString());
+    Group copiedGroup = Group.builder().populations(groups.get(0).getPopulations()).build();
+
+    GroupPopulationUtil.reorderGroupPopulations(groups);
+
+    assertEquals(1, groups.size());
+    assertEquals(4, copiedGroup.getPopulations().size());
+    assertEquals(6, groups.get(0).getPopulations().size());
+    assertEquals(
+        copiedGroup.getPopulations().get(0).getId(), groups.get(0).getPopulations().get(0).getId());
+    assertEquals("Initial Population", groups.get(0).getPopulations().get(0).getDefinition());
+    assertEquals(
+        copiedGroup.getPopulations().get(1).getId(), groups.get(0).getPopulations().get(1).getId());
+    assertEquals("Denominator", groups.get(0).getPopulations().get(1).getDefinition());
+    assertNotEquals(
+        copiedGroup.getPopulations().get(2).getId(), groups.get(0).getPopulations().get(2).getId());
+    assertEquals(
+        PopulationType.DENOMINATOR_EXCLUSION, groups.get(0).getPopulations().get(2).getName());
+    assertEquals("", groups.get(0).getPopulations().get(2).getDefinition());
+    assertEquals(
+        copiedGroup.getPopulations().get(3).getId(), groups.get(0).getPopulations().get(3).getId());
+    assertEquals("Numerator", groups.get(0).getPopulations().get(3).getDefinition());
+    assertEquals(
+        PopulationType.NUMERATOR_EXCLUSION, groups.get(0).getPopulations().get(4).getName());
+    assertEquals("", groups.get(0).getPopulations().get(4).getDefinition());
+    // DENOMINATOR_EXCEPTION is in the reordered group population but reordered
+    assertEquals(
+        PopulationType.DENOMINATOR_EXCEPTION, groups.get(0).getPopulations().get(5).getName());
+  }
+
+  @Test
+  public void testReorderGroupPopulationsCohort() {
+    groups.get(0).setScoring("Cohort");
+
+    GroupPopulationUtil.reorderGroupPopulations(groups);
+
+    assertEquals(1, groups.size());
+    assertEquals(1, groups.get(0).getPopulations().size());
+  }
+
+  @Test
+  public void testReorderGroupPopulationsEmptyGroups() {
+    List<Group> reorderedGroups = List.of();
+    GroupPopulationUtil.reorderGroupPopulations(reorderedGroups);
+    assertTrue(CollectionUtils.isEmpty(reorderedGroups));
+  }
+
+  @Test
+  public void testReorderGroupPopulationsEmptyPopulations() {
+    List<Group> reorderGroups = List.of(Group.builder().build());
+    GroupPopulationUtil.reorderGroupPopulations(reorderGroups);
+    assertFalse(CollectionUtils.isEmpty(reorderGroups));
+  }
+
+  @Test
+  public void testReorderGroupPopulationsForCV() {
+    Group copiedGroup =
+        Group.builder()
+            .scoring(MeasureScoring.CONTINUOUS_VARIABLE.toString())
+            .populations(List.of(groups.get(0).getPopulations().get(0), population7))
+            .measureObservations(List.of(observation1))
+            .stratifications(List.of(stratification1, stratification2))
+            .build();
+    List<Group> reorderedGroups = List.of(copiedGroup);
+
+    GroupPopulationUtil.reorderGroupPopulations(reorderedGroups);
+
+    System.out.println("copiedGroup = " + copiedGroup.getPopulations().toString());
+
+    assertEquals(1, reorderedGroups.size());
+    assertEquals(3, reorderedGroups.get(0).getPopulations().size());
+    assertEquals(
+        PopulationType.INITIAL_POPULATION,
+        reorderedGroups.get(0).getPopulations().get(0).getName());
+    assertEquals(
+        copiedGroup.getPopulations().get(0).getId(),
+        reorderedGroups.get(0).getPopulations().get(0).getId());
+    assertEquals(
+        copiedGroup.getPopulations().get(0).getDefinition(),
+        reorderedGroups.get(0).getPopulations().get(0).getDefinition());
+    assertEquals(
+        PopulationType.MEASURE_POPULATION,
+        reorderedGroups.get(0).getPopulations().get(1).getName());
+    assertEquals(population7.getId(), reorderedGroups.get(0).getPopulations().get(1).getId());
+    assertEquals(
+        population7.getDefinition(),
+        reorderedGroups.get(0).getPopulations().get(1).getDefinition());
+    assertEquals(
+        PopulationType.MEASURE_POPULATION_EXCLUSION,
+        reorderedGroups.get(0).getPopulations().get(2).getName());
+    assertNotEquals("", reorderedGroups.get(0).getPopulations().get(2).getId());
+    assertEquals("", reorderedGroups.get(0).getPopulations().get(2).getDefinition());
+    assertEquals(1, reorderedGroups.get(0).getMeasureObservations().size());
+    assertEquals(2, reorderedGroups.get(0).getStratifications().size());
   }
 }
