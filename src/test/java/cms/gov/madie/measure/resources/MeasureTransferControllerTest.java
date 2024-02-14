@@ -466,7 +466,7 @@ public class MeasureTransferControllerTest {
     when(organizationRepository.findAll()).thenReturn(organizationList);
     when(measureService.findAllByMeasureSetId(anyString()))
         .thenReturn(List.of(measureWithSameMeasureSetId));
-    doNothing().when(measureTransferService).deleteVersionedMeasures(any(List.class));
+    doNothing().when(measureService).deleteVersionedMeasures(any(List.class));
     when(measureTransferService.overwriteExistingMeasure(any(List.class), any(Measure.class)))
         .thenReturn(measure);
     doReturn(measure).when(repository).save(any(Measure.class));

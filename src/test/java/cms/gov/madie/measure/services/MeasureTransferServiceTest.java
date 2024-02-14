@@ -3,9 +3,6 @@ package cms.gov.madie.measure.services;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -15,7 +12,6 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -93,26 +89,6 @@ public class MeasureTransferServiceTest {
             .build();
 
     testcase = TestCase.builder().id("testCaseId").build();
-  }
-
-  @Test
-  public void testDeleteVersionedMeasuresDeleteVersionedMeasures() {
-    ArgumentCaptor<List<Measure>> repositoryArgCaptor = ArgumentCaptor.forClass(List.class);
-    measureTransferService.deleteVersionedMeasures(List.of(measure1, measure2));
-    verify(measureRepository, times(1)).deleteAll(repositoryArgCaptor.capture());
-
-    List<Measure> deletedMeasures = repositoryArgCaptor.getValue();
-    assertTrue(deletedMeasures.size() == 1);
-    assertEquals("testMeasureSetId1", deletedMeasures.get(0).getMeasureSetId());
-  }
-
-  @Test
-  public void testDeleteVersionedMeasuresNotDeletedMetaDataNull() {
-    measure1.setMeasureMetaData(null);
-    measure2.setMeasureMetaData(null);
-    ArgumentCaptor<List<Measure>> repositoryArgCaptor = ArgumentCaptor.forClass(List.class);
-    measureTransferService.deleteVersionedMeasures(List.of(measure1, measure2));
-    verify(measureRepository, times(0)).deleteAll(repositoryArgCaptor.capture());
   }
 
   @Test

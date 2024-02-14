@@ -397,4 +397,21 @@ public class MeasureService {
     List<Measure> measures = measureRepository.findAllByMeasureSetId(measureSetId);
     return measures;
   }
+
+  public void deleteVersionedMeasures(List<Measure> measures) {
+    List<Measure> versionedMeasures =
+        measures.stream()
+            .filter(
+                measure ->
+                    measure.getMeasureMetaData() != null && !measure.getMeasureMetaData().isDraft())
+            .collect(Collectors.toList());
+    if (!CollectionUtils.isEmpty(versionedMeasures)) {
+      String deletedMeasureIds =
+          versionedMeasures.stream()
+              .map(measure -> measure.getId())
+              .collect(Collectors.joining(","));
+      measureRepository.deleteAll(versionedMeasures);
+      log.info("Versioned Measure IDs [{}] are deleted.", deletedMeasureIds);
+    }
+  }
 }

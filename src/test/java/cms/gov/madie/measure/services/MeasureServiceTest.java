@@ -1089,4 +1089,24 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertTrue(results.size() == 2);
   }
+
+  @Test
+  public void testDeleteVersionedMeasuresDeleteVersionedMeasures() {
+    measure1.setMeasureMetaData(MeasureMetaData.builder().draft(false).build());
+    measure2.setMeasureMetaData(MeasureMetaData.builder().draft(true).build());
+    ArgumentCaptor<List<Measure>> repositoryArgCaptor = ArgumentCaptor.forClass(List.class);
+    measureService.deleteVersionedMeasures(List.of(measure1, measure2));
+    verify(measureRepository, times(1)).deleteAll(repositoryArgCaptor.capture());
+
+    List<Measure> deletedMeasures = repositoryArgCaptor.getValue();
+    assertTrue(deletedMeasures.size() == 1);
+    assertEquals("IDIDID", deletedMeasures.get(0).getMeasureSetId());
+  }
+
+  @Test
+  public void testDeleteVersionedMeasuresNotDeletedMetaDataNull() {
+    ArgumentCaptor<List<Measure>> repositoryArgCaptor = ArgumentCaptor.forClass(List.class);
+    measureService.deleteVersionedMeasures(List.of(measure1, measure2));
+    verify(measureRepository, times(0)).deleteAll(repositoryArgCaptor.capture());
+  }
 }

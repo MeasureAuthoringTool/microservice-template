@@ -19,26 +19,6 @@ import gov.cms.madie.models.measure.Measure;
 public class MeasureTransferService {
   private final MeasureRepository measureRepository;
 
-  public void deleteVersionedMeasures(List<Measure> measuresWithSameSetId) {
-    List<Measure> versionedMeasures =
-        measuresWithSameSetId.stream()
-            .filter(
-                measure ->
-                    measure.getMeasureMetaData() != null && !measure.getMeasureMetaData().isDraft())
-            .collect(Collectors.toList());
-    if (!CollectionUtils.isEmpty(versionedMeasures)) {
-      String deletedMeasureIds =
-          versionedMeasures.stream()
-              .map(measure -> measure.getId())
-              .collect(Collectors.joining(","));
-      measureRepository.deleteAll(versionedMeasures);
-      log.info(
-          "Versioned Measure IDs [{}] are deleted because "
-              + "they have the same Measure Set ID as the measure transferred over to MADiE",
-          deletedMeasureIds);
-    }
-  }
-
   public Measure overwriteExistingMeasure(
       List<Measure> measuresWithSameSetId, Measure transferredMeasure) {
     List<Measure> draftdMeasures =

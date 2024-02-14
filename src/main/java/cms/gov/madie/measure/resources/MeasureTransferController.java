@@ -68,9 +68,9 @@ public class MeasureTransferController {
         measure.getMeasureName(),
         harpId);
 
-    List<Measure> existingMeasures =
+    List<Measure> measuresWithSameSetId =
         measureService.findAllByMeasureSetId(measure.getMeasureSetId());
-    if (!CollectionUtils.isEmpty(existingMeasures)
+    if (!CollectionUtils.isEmpty(measuresWithSameSetId)
         && ModelType.QI_CORE.getValue().contains(measure.getModel())) {
       throw new DuplicateMeasureException();
     }
@@ -114,12 +114,13 @@ public class MeasureTransferController {
     reorderGroupPopulations(measure.getGroups());
 
     Measure savedMeasure = null;
-    if (!CollectionUtils.isEmpty(existingMeasures)) {
+    if (!CollectionUtils.isEmpty(measuresWithSameSetId)) {
       // 1. deleting any versioned measures
-      measureTransferService.deleteVersionedMeasures(existingMeasures);
+      measureService.deleteVersionedMeasures(measuresWithSameSetId);
 
       // 2. overwrite the most recent one with the draft measure
-      savedMeasure = measureTransferService.overwriteExistingMeasure(existingMeasures, measure);
+      savedMeasure =
+          measureTransferService.overwriteExistingMeasure(measuresWithSameSetId, measure);
       savedMeasure = repository.save(savedMeasure);
     } else {
       savedMeasure = repository.save(measure);
