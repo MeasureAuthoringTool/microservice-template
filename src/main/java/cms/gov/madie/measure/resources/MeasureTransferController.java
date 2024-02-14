@@ -114,7 +114,8 @@ public class MeasureTransferController {
     reorderGroupPopulations(measure.getGroups());
 
     Measure savedMeasure = null;
-    if (!CollectionUtils.isEmpty(measuresWithSameSetId)) {
+    if (!CollectionUtils.isEmpty(measuresWithSameSetId)
+      && ModelType.QDM_5_6.getValue().equalsIgnoreCase(measure.getModel())) {
       // 1. deleting any versioned measures
       measureService.deleteVersionedMeasures(measuresWithSameSetId);
 
