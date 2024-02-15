@@ -32,8 +32,6 @@ public class GroupPopulationUtilTest {
   private Population population2;
   private Population population3;
   private Population population4;
-  private Population population5;
-  private Population population6;
   private Population population7;
   private MeasureObservation observation1;
   private MeasureObservation observation2;
@@ -65,9 +63,9 @@ public class GroupPopulationUtilTest {
             .name(PopulationType.NUMERATOR)
             .definition(PopulationType.NUMERATOR.getDisplay())
             .build();
-    population5 =
+    Population population5 =
         Population.builder().definition(PopulationType.NUMERATOR_EXCLUSION.getDisplay()).build();
-    population6 =
+    Population population6 =
         Population.builder()
             .id("id-6")
             .name(PopulationType.DENOMINATOR_EXCEPTION)
