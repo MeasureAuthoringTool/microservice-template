@@ -115,7 +115,7 @@ public class MeasureTransferController {
 
     Measure savedMeasure = null;
     if (!CollectionUtils.isEmpty(measuresWithSameSetId)
-      && ModelType.QDM_5_6.getValue().equalsIgnoreCase(measure.getModel())) {
+        && ModelType.QDM_5_6.getValue().equalsIgnoreCase(measure.getModel())) {
       // 1. deleting any versioned measures
       measureService.deleteVersionedMeasures(measuresWithSameSetId);
 

@@ -458,6 +458,33 @@ public class MeasureTransferControllerTest {
   }
 
   @Test
+  public void testCreateMeasureNoOverwrittenNoDeleteForQiCore() {
+    when(measureService.findAllByMeasureSetId(anyString())).thenReturn(List.of());
+    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
+
+    when(elmJson.getJson()).thenReturn(ELM_JSON_SUCCESS);
+    doReturn(elmJson)
+        .when(elmTranslatorClient)
+        .getElmJsonForMatMeasure(CQL, LAMBDA_TEST_API_KEY, null);
+    doReturn(false).when(elmTranslatorClient).hasErrors(elmJson);
+
+    doReturn(measure).when(repository).save(any(Measure.class));
+    when(organizationRepository.findAll()).thenReturn(organizationList);
+
+    ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
+    ResponseEntity<Measure> response =
+        controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
+    verify(repository, times(1)).save(persistedMeasureArgCaptor.capture());
+
+    Measure persistedMeasure = response.getBody();
+    assertNotNull(persistedMeasure);
+
+    verify(measureService, times(0)).deleteVersionedMeasures(any(List.class));
+    verify(measureTransferService, times(0))
+        .overwriteExistingMeasure(any(List.class), any(Measure.class));
+  }
+
+  @Test
   public void testCreateMeasureSuccessForQDM() {
     measure.setModel(ModelType.QDM_5_6.getValue());
     Measure measureWithSameMeasureSetId =
