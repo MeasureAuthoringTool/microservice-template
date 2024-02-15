@@ -459,7 +459,7 @@ public class MeasureTransferControllerTest {
 
   @Test
   public void testCreateMeasureNoOverwrittenNoDeleteForQiCore() {
-    when(measureService.findAllByMeasureSetId(anyString())).thenReturn(List.of());
+    when(measureService.findAllByMeasureSetId(anyString())).thenReturn(Collections.emptyList());
     doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
 
     when(elmJson.getJson()).thenReturn(ELM_JSON_SUCCESS);
