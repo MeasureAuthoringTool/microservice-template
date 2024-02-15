@@ -126,35 +126,35 @@ public class GroupPopulationUtilTest {
   }
 
   @Test
-  public void testisAllGroupsAndPopulationsMatchingEmptyGroups() {
-    boolean result = GroupPopulationUtil.isAllGroupsAndPopulationsMatching(null, null);
+  public void testAreGroupsAndPopulationsMatchingEmptyGroups() {
+    boolean result = GroupPopulationUtil.areGroupsAndPopulationsMatching(null, null);
     assertFalse(result);
   }
 
   @Test
-  public void testisAllGroupsAndPopulationsMatchingOneGroupEmpty() {
-    boolean result = GroupPopulationUtil.isAllGroupsAndPopulationsMatching(null, List.of(group1));
+  public void testAreGroupsAndPopulationsMatchingOneGroupEmpty() {
+    boolean result = GroupPopulationUtil.areGroupsAndPopulationsMatching(null, List.of(group1));
     assertFalse(result);
-    result = GroupPopulationUtil.isAllGroupsAndPopulationsMatching(List.of(), List.of(group1));
+    result = GroupPopulationUtil.areGroupsAndPopulationsMatching(List.of(), List.of(group1));
     assertFalse(result);
-    result = GroupPopulationUtil.isAllGroupsAndPopulationsMatching(List.of(group1), null);
+    result = GroupPopulationUtil.areGroupsAndPopulationsMatching(List.of(group1), null);
     assertFalse(result);
-    result = GroupPopulationUtil.isAllGroupsAndPopulationsMatching(List.of(group1), List.of());
+    result = GroupPopulationUtil.areGroupsAndPopulationsMatching(List.of(group1), List.of());
     assertFalse(result);
   }
 
   @Test
-  public void testisAllGroupsAndPopulationsMatchingFindMatching() {
+  public void testAreGroupsAndPopulationsMatchingFindMatching() {
     boolean result =
-        GroupPopulationUtil.isAllGroupsAndPopulationsMatching(
+        GroupPopulationUtil.areGroupsAndPopulationsMatching(
             List.of(group1), List.of(group1, group2));
     assertTrue(result);
   }
 
   @Test
-  public void testisAllGroupsAndPopulationsMatchingNoMatching() {
+  public void testAreGroupsAndPopulationsMatchingNoMatching() {
     boolean result =
-        GroupPopulationUtil.isAllGroupsAndPopulationsMatching(List.of(group1), List.of(group2));
+        GroupPopulationUtil.areGroupsAndPopulationsMatching(List.of(group1), List.of(group2));
     assertFalse(result);
   }
 

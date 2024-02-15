@@ -19,7 +19,7 @@ import gov.cms.madie.models.measure.Stratification;
 public class GroupPopulationUtil {
   private GroupPopulationUtil() {}
 
-  public static boolean isAllGroupsAndPopulationsMatching(
+  public static boolean areGroupsAndPopulationsMatching(
       List<Group> originalGroups, List<Group> newGroups) {
     boolean match = false;
     if (!CollectionUtils.isEmpty(originalGroups) && !CollectionUtils.isEmpty(newGroups)) {

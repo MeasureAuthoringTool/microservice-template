@@ -1,6 +1,5 @@
 package cms.gov.madie.measure.resources;
 
-import cms.gov.madie.measure.dto.MadieFeatureFlag;
 import cms.gov.madie.measure.repositories.OrganizationRepository;
 import cms.gov.madie.measure.services.*;
 import cms.gov.madie.measure.utils.GroupPopulationUtil;
@@ -11,8 +10,10 @@ import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureMetaData;
+import cms.gov.madie.measure.dto.MadieFeatureFlag;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
+import cms.gov.madie.measure.exceptions.DuplicateMeasureException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,6 +48,7 @@ public class MeasureTransferController {
   private final OrganizationRepository organizationRepository;
   private final AppConfigService appConfigService;
   private final VersionService versionService;
+  private final MeasureTransferService measureTransferService;
 
   @PostMapping("/mat-measures")
   @PreAuthorize("#request.getHeader('api-key') == #apiKey")
@@ -59,6 +61,14 @@ public class MeasureTransferController {
         "Measure [{}] is being transferred over to MADiE by [{}]",
         measure.getMeasureName(),
         harpId);
+
+    List<Measure> measuresWithSameSetId =
+        measureService.findAllByMeasureSetId(measure.getMeasureSetId());
+    if (!CollectionUtils.isEmpty(measuresWithSameSetId)
+        && ModelType.QI_CORE.getValue().contains(measure.getModel())) {
+      throw new DuplicateMeasureException();
+    }
+
     measureService.checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
 
     setMeasureElmJsonAndErrors(measure, apiKey, harpId);
@@ -96,9 +106,23 @@ public class MeasureTransferController {
     // set ids for groups
     measure.getGroups().forEach(group -> group.setId(ObjectId.get().toString()));
     GroupPopulationUtil.reorderGroupPopulations(measure.getGroups());
-    Measure savedMeasure = repository.save(measure);
-    measureSetService.createMeasureSet(
-        harpId, savedMeasure.getId(), savedMeasure.getMeasureSetId());
+
+    Measure savedMeasure = null;
+    if (!CollectionUtils.isEmpty(measuresWithSameSetId)
+        && ModelType.QDM_5_6.getValue().equalsIgnoreCase(measure.getModel())) {
+      // 1. deleting any versioned measures
+      measureService.deleteVersionedMeasures(measuresWithSameSetId);
+
+      // 2. overwrite the most recent one with the draft measure
+      savedMeasure =
+          measureTransferService.overwriteExistingMeasure(measuresWithSameSetId, measure);
+      savedMeasure = repository.save(savedMeasure);
+    } else {
+      savedMeasure = repository.save(measure);
+      measureSetService.createMeasureSet(
+          harpId, savedMeasure.getId(), savedMeasure.getMeasureSetId());
+    }
+
     log.info("Measure [{}] transfer complete", measure.getMeasureName());
     actionLogService.logAction(
         savedMeasure.getId(), Measure.class, ActionType.IMPORTED, savedMeasure.getCreatedBy());
