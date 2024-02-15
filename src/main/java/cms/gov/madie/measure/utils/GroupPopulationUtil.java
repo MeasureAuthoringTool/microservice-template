@@ -21,21 +21,19 @@ public class GroupPopulationUtil {
 
   public static boolean isAllGroupsAndPopulationsMatching(
       List<Group> originalGroups, List<Group> newGroups) {
-    if (CollectionUtils.isEmpty(originalGroups) && CollectionUtils.isEmpty(newGroups)) {
-      return true;
-    } else if ((CollectionUtils.isEmpty(originalGroups) && !CollectionUtils.isEmpty(newGroups))
-        || (CollectionUtils.isEmpty(newGroups) && !CollectionUtils.isEmpty(originalGroups))) {
-      return false;
-    } else {
-      for (int i = 0; i < originalGroups.size(); i++) {
-        for (int j = 0; j < newGroups.size(); j++) {
-          if (isGroupPopulationsMatching(originalGroups.get(i), newGroups.get(j))) {
-            return true;
-          }
-        }
-      }
+    boolean match = false;
+    if (!CollectionUtils.isEmpty(originalGroups) && !CollectionUtils.isEmpty(newGroups)) {
+      List<Group> matchedGroups =
+          originalGroups.stream()
+              .filter(
+                  originalGroup ->
+                      newGroups.stream()
+                          .anyMatch(
+                              newGroup -> isGroupPopulationsMatching(originalGroup, newGroup)))
+              .toList();
+      match = CollectionUtils.isNotEmpty(matchedGroups);
     }
-    return false;
+    return match;
   }
 
   public static boolean isGroupPopulationsMatching(Group originalGroup, Group newGroup) {

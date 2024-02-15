@@ -128,7 +128,7 @@ public class GroupPopulationUtilTest {
   @Test
   public void testisAllGroupsAndPopulationsMatchingEmptyGroups() {
     boolean result = GroupPopulationUtil.isAllGroupsAndPopulationsMatching(null, null);
-    assertTrue(result);
+    assertFalse(result);
   }
 
   @Test
