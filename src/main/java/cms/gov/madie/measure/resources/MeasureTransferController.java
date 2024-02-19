@@ -103,7 +103,7 @@ public class MeasureTransferController {
     reorderGroupPopulations(measure.getGroups());
     Measure savedMeasure = repository.save(measure);
     measureSetService.createMeasureSet(
-        harpId, savedMeasure.getId(), savedMeasure.getMeasureSetId());
+        harpId, savedMeasure.getId(), savedMeasure.getMeasureSetId(), savedMeasure.getCmsId());
     log.info("Measure [{}] transfer complete", measure.getMeasureName());
     actionLogService.logAction(
         savedMeasure.getId(), Measure.class, ActionType.IMPORTED, savedMeasure.getCreatedBy());

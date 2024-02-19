@@ -25,12 +25,16 @@ public class MeasureSetService {
   private final ActionLogService actionLogService;
 
   public void createMeasureSet(
-      final String harpId, final String measureId, final String savedMeasureSetId) {
+      final String harpId, final String measureId, final String savedMeasureSetId, String cmsId) {
 
     boolean isMeasureSetPresent = measureSetRepository.existsByMeasureSetId(savedMeasureSetId);
     if (!isMeasureSetPresent) {
       MeasureSet measureSet =
-          MeasureSet.builder().owner(harpId).measureSetId(savedMeasureSetId).build();
+          MeasureSet.builder()
+              .owner(harpId)
+              .measureSetId(savedMeasureSetId)
+              .cmsId(Integer.parseInt(cmsId))
+              .build();
       MeasureSet savedMeasureSet = measureSetRepository.save(measureSet);
       log.info(
           "Measure set [{}] is successfully created for the measure [{}]",

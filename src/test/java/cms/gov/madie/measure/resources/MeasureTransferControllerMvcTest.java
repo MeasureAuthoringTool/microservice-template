@@ -199,7 +199,9 @@ public class MeasureTransferControllerMvcTest {
         .thenReturn(elmJson);
     when(elmTranslatorClient.hasErrors(elmJson)).thenReturn(false);
     doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
-    doNothing().when(measureSetService).createMeasureSet(anyString(), anyString(), anyString());
+    doNothing()
+        .when(measureSetService)
+        .createMeasureSet(anyString(), anyString(), anyString(), anyString());
     doReturn(measure).when(measureRepository).save(any(Measure.class));
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
@@ -308,7 +310,9 @@ public class MeasureTransferControllerMvcTest {
         .generateLibraryContentLine("MedicationDispenseTest", new Version(0, 0, 0));
     when(organizationRepository.findAll()).thenReturn(organizationList);
     doReturn(qdmMeasure).when(measureRepository).save(any(Measure.class));
-    doNothing().when(measureSetService).createMeasureSet(anyString(), anyString(), anyString());
+    doNothing()
+        .when(measureSetService)
+        .createMeasureSet(anyString(), anyString(), anyString(), anyString());
 
     when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
 
@@ -370,7 +374,9 @@ public class MeasureTransferControllerMvcTest {
             CQL, LAMBDA_TEST_API_KEY_HEADER_VALUE, HARP_ID_HEADER_VALUE))
         .thenReturn(elmJson);
     when(elmTranslatorClient.hasErrors(elmJson)).thenReturn(false);
-    doNothing().when(measureSetService).createMeasureSet(anyString(), anyString(), anyString());
+    doNothing()
+        .when(measureSetService)
+        .createMeasureSet(anyString(), anyString(), anyString(), anyString());
     doReturn(measure).when(measureRepository).save(any(Measure.class));
     doReturn(measureSet).when(measureSetRepository).save(any(MeasureSet.class));
     when(organizationRepository.findAll()).thenReturn(organizationList);

@@ -131,7 +131,7 @@ public class MeasureService {
     actionLogService.logAction(savedMeasure.getId(), Measure.class, ActionType.CREATED, username);
 
     measureSetService.createMeasureSet(
-        username, savedMeasure.getId(), savedMeasure.getMeasureSetId());
+        username, savedMeasure.getId(), savedMeasure.getMeasureSetId(), "0");
     return savedMeasure;
   }
 
