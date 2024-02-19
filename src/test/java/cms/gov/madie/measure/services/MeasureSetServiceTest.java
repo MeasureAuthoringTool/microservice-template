@@ -45,7 +45,7 @@ public class MeasureSetServiceTest {
   public void testCreateMeasureSet() {
     when(measureSetRepository.existsByMeasureSetId("msid-2")).thenReturn(false);
     when(measureSetRepository.save(measureSet)).thenReturn(measureSet);
-    measureSetService.createMeasureSet("user-1", "msid-xyz-p12r-12ert", "msid-2", "0");
+    measureSetService.createMeasureSet("user-1", "msid-xyz-p12r-12ert", "msid-2", null);
 
     verify(measureSetRepository, times(1)).existsByMeasureSetId("msid-2");
     verify(measureSetRepository, times(1)).save(measureSet);
