@@ -58,6 +58,7 @@ public class MeasureTransferControllerMvcTest {
   @MockBean private ElmTranslatorClient elmTranslatorClient;
   @MockBean private AppConfigService appConfigService;
   @MockBean private VersionService versionService;
+  @MockBean private MeasureTransferService measureTransferService;
 
   @MockBean private OrganizationRepository organizationRepository;
 

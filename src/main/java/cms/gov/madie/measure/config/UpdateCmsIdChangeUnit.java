@@ -43,6 +43,9 @@ public class UpdateCmsIdChangeUnit {
     AggregationResults<MeasureMeta> aggregationResults =
         mongoTemplate.aggregate(measureAggregation, MeasureMeta.class);
     List<MeasureMeta> measureMetas = aggregationResults.getMappedResults();
+    if (CollectionUtils.isEmpty(measureMetas)) {
+      return;
+    }
 
     List<Pair<Query, Update>> updatePairs =
         measureMetas.stream()

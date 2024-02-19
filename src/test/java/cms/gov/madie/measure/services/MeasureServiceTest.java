@@ -9,6 +9,7 @@ import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -1086,5 +1087,40 @@ public class MeasureServiceTest implements ResourceUtil {
     measureService.updateReferenceId(metaData);
     assertNotNull(metaData);
     assertNull(metaData.getReferences());
+  }
+
+  @Test
+  public void testFindAllByMeasureSetId() {
+    when(measureRepository.findAllByMeasureSetId(anyString()))
+        .thenReturn(List.of(measure1, measure2));
+
+    List<Measure> results = measureService.findAllByMeasureSetId("testMeasureSetId1");
+
+    assertTrue(results.size() == 2);
+  }
+
+  @Test
+  public void testDeleteVersionedMeasuresOnlyVersionedMeasuresDeleted() {
+    measure1.setId("testId1");
+    measure1.setMeasureMetaData(MeasureMetaData.builder().draft(false).build());
+    measure2.setId("testId2");
+    measure2.setMeasureMetaData(MeasureMetaData.builder().draft(true).build());
+
+    ArgumentCaptor<List<Measure>> repositoryArgCaptor = ArgumentCaptor.forClass(List.class);
+    measureService.deleteVersionedMeasures(List.of(measure1, measure2));
+    verify(measureRepository, times(1)).deleteAll(repositoryArgCaptor.capture());
+
+    List<Measure> deletedMeasures = repositoryArgCaptor.getValue();
+    // measure1 is versioned and only measure1 is deleted:
+    assertTrue(deletedMeasures.size() == 1);
+    assertEquals("testId1", deletedMeasures.get(0).getId());
+    assertEquals("IDIDID", deletedMeasures.get(0).getMeasureSetId());
+  }
+
+  @Test
+  public void testDeleteVersionedMeasuresNotDeletedMetaDataNull() {
+    ArgumentCaptor<List<Measure>> repositoryArgCaptor = ArgumentCaptor.forClass(List.class);
+    measureService.deleteVersionedMeasures(List.of(measure1, measure2));
+    verify(measureRepository, times(0)).deleteAll(repositoryArgCaptor.capture());
   }
 }
