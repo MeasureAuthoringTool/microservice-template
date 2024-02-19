@@ -158,7 +158,7 @@ public class MeasureService {
       updateMeasurementPeriods(updatingMeasure);
     }
 
-    updateMeasureMetadataIds(updatingMeasure.getMeasureMetaData());
+    updateReferenceId(updatingMeasure.getMeasureMetaData());
 
     Measure outputMeasure = updatingMeasure;
     if (measureUtil.isMeasureCqlChanged(existingMeasure, updatingMeasure)
@@ -347,30 +347,6 @@ public class MeasureService {
     return filterByCurrentUser
         ? measureRepository.findMyActiveMeasures(username, pageReq, criteria)
         : measureRepository.findAllByMeasureNameOrEcqmTitle(criteria, pageReq);
-  }
-
-  protected void updateMeasureMetadataIds(MeasureMetaData metaData) {
-    updateMeasureDefinitionId(metaData);
-    updateReferenceId(metaData);
-  }
-
-  protected void updateMeasureDefinitionId(MeasureMetaData metaData) {
-    if (metaData != null && !CollectionUtils.isEmpty(metaData.getMeasureDefinitions())) {
-      List<MeasureDefinition> measureDefinitions =
-          metaData.getMeasureDefinitions().stream()
-              .map(
-                  measureDefinition ->
-                      MeasureDefinition.builder()
-                          .id(
-                              StringUtils.isBlank(measureDefinition.getId())
-                                  ? UUID.randomUUID().toString()
-                                  : measureDefinition.getId())
-                          .term(measureDefinition.getTerm())
-                          .definition(measureDefinition.getDefinition())
-                          .build())
-              .toList();
-      metaData.setMeasureDefinitions(measureDefinitions);
-    }
   }
 
   protected void updateReferenceId(MeasureMetaData metaData) {
