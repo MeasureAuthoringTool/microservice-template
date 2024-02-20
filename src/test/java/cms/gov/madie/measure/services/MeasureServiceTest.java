@@ -329,7 +329,9 @@ public class MeasureServiceTest implements ResourceUtil {
             .measureMetaData(new MeasureMetaData())
             .createdBy(usr)
             .build();
-    doNothing().when(measureSetService).createMeasureSet(anyString(), anyString(), anyString());
+    doNothing()
+        .when(measureSetService)
+        .createMeasureSet(anyString(), anyString(), anyString(), any());
     when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
     when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
@@ -358,7 +360,9 @@ public class MeasureServiceTest implements ResourceUtil {
         .thenReturn(ElmJson.builder().json(elmJson).build());
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(false);
     doNothing().when(terminologyValidationService).validateTerminology(anyString(), anyString());
-    doNothing().when(measureSetService).createMeasureSet(anyString(), anyString(), anyString());
+    doNothing()
+        .when(measureSetService)
+        .createMeasureSet(anyString(), anyString(), anyString(), any());
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
     when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
 
@@ -392,7 +396,9 @@ public class MeasureServiceTest implements ResourceUtil {
     doThrow(InvalidTerminologyException.class)
         .when(terminologyValidationService)
         .validateTerminology(anyString(), anyString());
-    doNothing().when(measureSetService).createMeasureSet(anyString(), anyString(), anyString());
+    doNothing()
+        .when(measureSetService)
+        .createMeasureSet(anyString(), anyString(), anyString(), any());
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
     when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
 
@@ -440,7 +446,9 @@ public class MeasureServiceTest implements ResourceUtil {
         .thenReturn(ElmJson.builder().json(elmJson).build());
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(false);
     doNothing().when(terminologyValidationService).validateTerminology(anyString(), anyString());
-    doNothing().when(measureSetService).createMeasureSet(anyString(), anyString(), anyString());
+    doNothing()
+        .when(measureSetService)
+        .createMeasureSet(anyString(), anyString(), anyString(), any());
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
     when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
 
@@ -474,25 +482,6 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertThrows(
         DuplicateKeyException.class,
-        () -> measureService.updateMeasure(original, "User1", updated, "Access Token"));
-  }
-
-  @Test
-  public void testUpdateMeasureThrowsExceptionForChangedCmsId() {
-    Measure original =
-        Measure.builder()
-            .cqlLibraryName("OriginalLibName")
-            .measureName("Measure1")
-            .cmsId("CMS_ID1")
-            .versionId("VersionId")
-            .build();
-
-    Measure updated = original.toBuilder().cmsId(null).build();
-
-    when(measureUtil.isCqlLibraryNameChanged(any(Measure.class), any(Measure.class)))
-        .thenReturn(false);
-    assertThrows(
-        InvalidCmsIdException.class,
         () -> measureService.updateMeasure(original, "User1", updated, "Access Token"));
   }
 
@@ -963,46 +952,6 @@ public class MeasureServiceTest implements ResourceUtil {
   public void testInvalidVersionIdDoesNotThrowExceptionWhenVersionIdFromDBIsNull() {
     try {
       measureService.checkVersionIdChanged("versionId1", null);
-    } catch (Exception e) {
-      fail("Should not throw unexpected exception");
-    }
-  }
-
-  @Test
-  public void testInvalidCmsIdThrowsExceptionForDifferentCmsIds() {
-    assertThrows(
-        InvalidCmsIdException.class, () -> measureService.checkCmsIdChanged("cmsId1", "cmsId2"));
-  }
-
-  @Test
-  public void testInvalidCmsIdThrowsExceptionWhenPassedInCmsIdIsNull() {
-    assertThrows(InvalidCmsIdException.class, () -> measureService.checkCmsIdChanged("", "cmsId1"));
-  }
-
-  @Test
-  public void testInvalidCmsIdDoesNotThrowExceptionWhenMatch() {
-    try {
-      measureService.checkCmsIdChanged("cmsId1", "cmsId1");
-    } catch (Exception e) {
-      fail("Should not throw unexpected exception");
-    }
-  }
-
-  @Test
-  public void testInvalidCmsIdDoesNotThrowExceptionWhenBothAreNull() {
-    try {
-      measureService.checkCmsIdChanged(null, null);
-
-    } catch (Exception e) {
-      fail("Should not throw unexpected exception");
-    }
-  }
-
-  @Test
-  public void testInvalidCmsIdDoesNotThrowExceptionWhenCmsIdFromDBIsNull() {
-    try {
-      measureService.checkCmsIdChanged("cmsId1", null);
-
     } catch (Exception e) {
       fail("Should not throw unexpected exception");
     }
