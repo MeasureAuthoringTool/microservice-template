@@ -64,12 +64,12 @@ public class MeasureTransferController {
 
     List<Measure> measuresWithSameSetId =
         measureService.findAllByMeasureSetId(measure.getMeasureSetId());
-    if (!CollectionUtils.isEmpty(measuresWithSameSetId)
-        && ModelType.QI_CORE.getValue().contains(measure.getModel())) {
-      throw new DuplicateMeasureException();
+    if (ModelType.QI_CORE.getValue().contains(measure.getModel())) {
+      if (!CollectionUtils.isEmpty(measuresWithSameSetId)) {
+        throw new DuplicateMeasureException();
+      }
+      measureService.checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
     }
-
-    measureService.checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
 
     setMeasureElmJsonAndErrors(measure, apiKey, harpId);
 
