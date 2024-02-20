@@ -331,7 +331,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .build();
     doNothing()
         .when(measureSetService)
-        .createMeasureSet(anyString(), anyString(), anyString(), anyString());
+        .createMeasureSet(anyString(), anyString(), anyString(), any());
     when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
     when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
@@ -362,7 +362,7 @@ public class MeasureServiceTest implements ResourceUtil {
     doNothing().when(terminologyValidationService).validateTerminology(anyString(), anyString());
     doNothing()
         .when(measureSetService)
-        .createMeasureSet(anyString(), anyString(), anyString(), anyString());
+        .createMeasureSet(anyString(), anyString(), anyString(), any());
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
     when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
 
@@ -398,7 +398,7 @@ public class MeasureServiceTest implements ResourceUtil {
         .validateTerminology(anyString(), anyString());
     doNothing()
         .when(measureSetService)
-        .createMeasureSet(anyString(), anyString(), anyString(), anyString());
+        .createMeasureSet(anyString(), anyString(), anyString(), any());
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
     when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
 
@@ -448,7 +448,7 @@ public class MeasureServiceTest implements ResourceUtil {
     doNothing().when(terminologyValidationService).validateTerminology(anyString(), anyString());
     doNothing()
         .when(measureSetService)
-        .createMeasureSet(anyString(), anyString(), anyString(), anyString());
+        .createMeasureSet(anyString(), anyString(), anyString(), any());
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
     when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
 
