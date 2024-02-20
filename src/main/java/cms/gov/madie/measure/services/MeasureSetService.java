@@ -33,7 +33,7 @@ public class MeasureSetService {
           MeasureSet.builder()
               .owner(harpId)
               .measureSetId(savedMeasureSetId)
-              .cmsId(cmsId != null ? Integer.parseInt(cmsId) : null)
+              .cmsId((cmsId != null && !cmsId.equals("0")) ? Integer.parseInt(cmsId) : null)
               .build();
       MeasureSet savedMeasureSet = measureSetRepository.save(measureSet);
       log.info(
