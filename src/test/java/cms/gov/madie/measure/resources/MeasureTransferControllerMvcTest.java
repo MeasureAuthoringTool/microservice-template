@@ -191,7 +191,7 @@ public class MeasureTransferControllerMvcTest {
     elmJson.setJson(ELM_JSON_SUCCESS);
     elmJson.setXml(ELM_JSON_SUCCESS);
 
-    cmsId= "1";
+    cmsId = "1";
   }
 
   @Test
@@ -212,7 +212,7 @@ public class MeasureTransferControllerMvcTest {
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders.post("/measure-transfer/mat-measures?cmsId="+cmsId)
+            MockMvcRequestBuilders.post("/measure-transfer/mat-measures?cmsId=" + cmsId)
                 .content(measureJson)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
@@ -281,7 +281,7 @@ public class MeasureTransferControllerMvcTest {
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders.post("/measure-transfer/mat-measures?cmsId="+cmsId)
+            MockMvcRequestBuilders.post("/measure-transfer/mat-measures?cmsId=" + cmsId)
                 .content(measureJson)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
@@ -323,7 +323,7 @@ public class MeasureTransferControllerMvcTest {
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders.post("/measure-transfer/mat-measures?cmsId="+cmsId)
+            MockMvcRequestBuilders.post("/measure-transfer/mat-measures?cmsId=" + cmsId)
                 .content(measureJson)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
@@ -359,7 +359,7 @@ public class MeasureTransferControllerMvcTest {
     MvcResult result =
         mockMvc
             .perform(
-                MockMvcRequestBuilders.post("/measure-transfer/mat-measures?cmsId="+cmsId)
+                MockMvcRequestBuilders.post("/measure-transfer/mat-measures?cmsId=" + cmsId)
                     .content(measureJson)
                     .contentType(MediaType.APPLICATION_JSON_VALUE)
                     .header(LAMBDA_TEST_API_KEY_HEADER, "invalid-api-key")
@@ -389,7 +389,7 @@ public class MeasureTransferControllerMvcTest {
     MvcResult result =
         mockMvc
             .perform(
-                MockMvcRequestBuilders.post("/measure-transfer/mat-measures?cmsId="+cmsId)
+                MockMvcRequestBuilders.post("/measure-transfer/mat-measures?cmsId=" + cmsId)
                     .content(measureJson)
                     .contentType(MediaType.APPLICATION_JSON_VALUE)
                     .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
@@ -416,7 +416,7 @@ public class MeasureTransferControllerMvcTest {
     MvcResult result =
         mockMvc
             .perform(
-                MockMvcRequestBuilders.post("/measure-transfer/mat-measures?cmsId="+cmsId)
+                MockMvcRequestBuilders.post("/measure-transfer/mat-measures?cmsId=" + cmsId)
                     .content(measureJson)
                     .contentType(MediaType.APPLICATION_JSON_VALUE)
                     .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
@@ -445,7 +445,7 @@ public class MeasureTransferControllerMvcTest {
     MvcResult result =
         mockMvc
             .perform(
-                MockMvcRequestBuilders.post("/measure-transfer/mat-measures?cmsId="+cmsId)
+                MockMvcRequestBuilders.post("/measure-transfer/mat-measures?cmsId=" + cmsId)
                     .content(measureJson)
                     .contentType(MediaType.APPLICATION_JSON_VALUE)
                     .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
