@@ -33,7 +33,7 @@ public class MeasureSetService {
           MeasureSet.builder()
               .owner(harpId)
               .measureSetId(savedMeasureSetId)
-              .cmsId(cmsId != null ? sanitizeCmsId(cmsId) : null)
+              .cmsId(cmsId != null ? Integer.parseInt(cmsId) : null)
               .build();
       MeasureSet savedMeasureSet = measureSetRepository.save(measureSet);
       log.info(
@@ -43,11 +43,6 @@ public class MeasureSetService {
       actionLogService.logAction(
           savedMeasureSet.getId(), Measure.class, ActionType.CREATED, harpId);
     }
-  }
-
-  private Integer sanitizeCmsId(String cmsId){
-    String cmsIdWithoutExtraCharacters= cmsId.replaceAll("(?i)"+"fhir","");
-    return Integer.parseInt(cmsIdWithoutExtraCharacters);
   }
 
   public MeasureSet updateMeasureSetAcls(String measureSetId, AclSpecification aclSpec) {

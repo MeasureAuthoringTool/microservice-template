@@ -61,6 +61,7 @@ public class MeasureTransferController {
   public ResponseEntity<Measure> createMeasure(
       HttpServletRequest request,
       @RequestBody @Validated({Measure.ValidationSequence.class}) Measure measure,
+      @RequestParam String cmsId,
       @Value("${lambda-api-key}") String apiKey) {
     String harpId = request.getHeader(HARP_ID_HEADER);
     log.info(
@@ -126,7 +127,7 @@ public class MeasureTransferController {
     } else {
       savedMeasure = repository.save(measure);
       measureSetService.createMeasureSet(
-          harpId, savedMeasure.getId(), savedMeasure.getMeasureSetId(), savedMeasure.getCmsId());
+          harpId, savedMeasure.getId(), savedMeasure.getMeasureSetId(), cmsId);
     }
 
     log.info("Measure [{}] transfer complete", measure.getMeasureName());

@@ -86,6 +86,8 @@ public class MeasureTransferControllerTest {
 
   List<Group> groups;
 
+  String cmsId;
+
   @BeforeEach
   public void setUp() {
     request = new MockHttpServletRequest();
@@ -184,6 +186,8 @@ public class MeasureTransferControllerTest {
             .testCases(List.of(TestCase.builder().id("testCaseId").build()))
             .build();
 
+    cmsId = "1";
+
     measureSet = MeasureSet.builder().id(null).measureSetId("abc-pqr-xyz").owner("testID").build();
 
     organizationList = new ArrayList<>();
@@ -201,7 +205,7 @@ public class MeasureTransferControllerTest {
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
     ResponseEntity<Measure> response =
-        controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
+        controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY);
 
     verify(repository, times(1)).save(persistedMeasureArgCaptor.capture());
     Measure persistedMeasure = response.getBody();
@@ -262,7 +266,7 @@ public class MeasureTransferControllerTest {
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
     ResponseEntity<Measure> response =
-        controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
+        controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY);
 
     verify(repository, times(1)).save(persistedMeasureArgCaptor.capture());
     Measure persistedMeasure = response.getBody();
@@ -298,7 +302,7 @@ public class MeasureTransferControllerTest {
 
     assertThrows(
         DuplicateKeyException.class,
-        () -> controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY));
+        () -> controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY));
   }
 
   @Test
@@ -315,7 +319,7 @@ public class MeasureTransferControllerTest {
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
     ResponseEntity<Measure> response =
-        controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
+        controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY);
 
     verify(repository, times(1)).save(persistedMeasureArgCaptor.capture());
     Measure persistedMeasure = response.getBody();
@@ -352,7 +356,7 @@ public class MeasureTransferControllerTest {
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
     ResponseEntity<Measure> response =
-        controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
+        controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY);
 
     verify(repository, times(1)).save(persistedMeasureArgCaptor.capture());
     Measure persistedMeasure = response.getBody();
@@ -378,7 +382,7 @@ public class MeasureTransferControllerTest {
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
     ResponseEntity<Measure> response =
-        controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
+        controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY);
 
     Measure persistedMeasure = response.getBody();
     assertNotNull(persistedMeasure);
@@ -395,7 +399,7 @@ public class MeasureTransferControllerTest {
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
     ResponseEntity<Measure> response =
-        controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
+        controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY);
 
     Measure persistedMeasure = response.getBody();
     assertNotNull(persistedMeasure);
@@ -409,7 +413,7 @@ public class MeasureTransferControllerTest {
 
     assertThrows(
         RuntimeException.class,
-        () -> controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY));
+        () -> controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY));
   }
 
   @Test
@@ -430,7 +434,7 @@ public class MeasureTransferControllerTest {
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
     ResponseEntity<Measure> response =
-        controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
+        controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY);
 
     Measure persistedMeasure = response.getBody();
     assertNotNull(persistedMeasure);
@@ -455,7 +459,7 @@ public class MeasureTransferControllerTest {
 
     assertThrows(
         DuplicateMeasureException.class,
-        () -> controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY));
+        () -> controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY));
   }
 
   @Test
@@ -474,7 +478,7 @@ public class MeasureTransferControllerTest {
 
     ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
     ResponseEntity<Measure> response =
-        controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
+        controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY);
     verify(repository, times(1)).save(persistedMeasureArgCaptor.capture());
 
     Measure persistedMeasure = response.getBody();
@@ -500,7 +504,7 @@ public class MeasureTransferControllerTest {
 
     ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
     ResponseEntity<Measure> response =
-        controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
+        controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY);
     verify(repository, times(1)).save(persistedMeasureArgCaptor.capture());
 
     Measure persistedMeasure = response.getBody();
