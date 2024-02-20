@@ -490,7 +490,6 @@ public class MeasureTransferControllerTest {
     measure.setModel(ModelType.QDM_5_6.getValue());
     Measure measureWithSameMeasureSetId =
         Measure.builder().id("testMeasureId").measureSetId("abc-pqr-xyz").build();
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
     when(organizationRepository.findAll()).thenReturn(organizationList);
     when(measureService.findAllByMeasureSetId(anyString()))
         .thenReturn(List.of(measureWithSameMeasureSetId));
