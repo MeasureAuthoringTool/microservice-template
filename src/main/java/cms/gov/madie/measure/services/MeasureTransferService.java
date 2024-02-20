@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 
+import cms.gov.madie.measure.utils.GroupPopulationUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,10 +30,13 @@ public class MeasureTransferService {
       draftdMeasures.sort(Comparator.comparing(Measure::getLastModifiedAt));
       Measure mostRecentMeasure = draftdMeasures.get(draftdMeasures.size() - 1);
       transferredMeasure.setId(mostRecentMeasure.getId());
-      transferredMeasure.setTestCases(mostRecentMeasure.getTestCases());
-      log.info(
-          "Overwrite meausre id {} with the testcases from original measure",
-          mostRecentMeasure.getId());
+      if (GroupPopulationUtil.areGroupsAndPopulationsMatching(
+          mostRecentMeasure.getGroups(), transferredMeasure.getGroups())) {
+        transferredMeasure.setTestCases(mostRecentMeasure.getTestCases());
+        log.info(
+            "Overwrite meausre id {} with the testcases from original measure",
+            mostRecentMeasure.getId());
+      }
     }
     return transferredMeasure;
   }

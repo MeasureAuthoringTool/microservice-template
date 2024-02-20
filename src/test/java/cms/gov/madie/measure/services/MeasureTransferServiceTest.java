@@ -34,6 +34,7 @@ public class MeasureTransferServiceTest {
   private Measure measure2;
   private Group group1;
   private TestCase testcase;
+  private Group group2;
 
   @BeforeEach
   public void setUp() {
@@ -83,6 +84,14 @@ public class MeasureTransferServiceTest {
             .populations(List.of(population1, population2, population3, population4))
             .measureObservations(List.of(observation1))
             .stratifications(List.of(stratification1))
+            .build();
+    group2 =
+        Group.builder()
+            .id("testGroupId2")
+            .scoring("Cohort")
+            .populationBasis("Encounter")
+            .measureGroupTypes(Arrays.asList(MeasureGroupTypes.OUTCOME))
+            .populations(List.of(population1))
             .build();
 
     testcase = TestCase.builder().id("testCaseId").build();
@@ -134,5 +143,19 @@ public class MeasureTransferServiceTest {
 
     assertNotNull(overwrittenMeasure.getId());
     assertEquals(1, overwrittenMeasure.getTestCases().size());
+  }
+
+  @Test
+  public void testOverwriteExistingMeasureWithoutTestCases() {
+    Measure transferredMeasure = Measure.builder().model("QDM").groups(List.of(group1)).build();
+    measure1.setMeasureMetaData(MeasureMetaData.builder().draft(true).build());
+    measure1.setGroups(List.of(group2));
+    measure1.setTestCases(List.of(testcase));
+
+    Measure overwrittenMeasure =
+        measureTransferService.overwriteExistingMeasure(List.of(measure1), transferredMeasure);
+
+    assertNotNull(overwrittenMeasure.getId());
+    assertNull(overwrittenMeasure.getTestCases());
   }
 }
