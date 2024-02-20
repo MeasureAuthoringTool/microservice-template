@@ -18,7 +18,6 @@ import gov.cms.madie.models.common.Organization;
 import gov.cms.madie.models.measure.*;
 import gov.cms.madie.models.common.Version;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -515,109 +514,5 @@ public class MeasureTransferControllerTest {
     assertEquals(measure.getCqlLibraryName(), persistedMeasure.getCqlLibraryName());
     assertEquals(measure.getCql(), persistedMeasure.getCql());
     assertEquals("testCaseId", persistedMeasure.getTestCases().get(0).getId());
-  }
-
-  @Test
-  public void testReorderGroupPopulationsRatio() {
-    Group copiedGroup = Group.builder().populations(groups.get(0).getPopulations()).build();
-
-    controller.reorderGroupPopulations(groups);
-
-    assertEquals(1, groups.size());
-    assertEquals(4, copiedGroup.getPopulations().size());
-    assertEquals(5, groups.get(0).getPopulations().size());
-    assertEquals(
-        copiedGroup.getPopulations().get(0).getId(), groups.get(0).getPopulations().get(0).getId());
-    assertEquals("Initial Population", groups.get(0).getPopulations().get(0).getDefinition());
-    assertEquals(
-        copiedGroup.getPopulations().get(1).getId(), groups.get(0).getPopulations().get(1).getId());
-    assertEquals("Denominator", groups.get(0).getPopulations().get(1).getDefinition());
-    // DENOMINATOR_EXCEPTION is not in the reordered group population
-    assertNotEquals(
-        copiedGroup.getPopulations().get(2).getId(), groups.get(0).getPopulations().get(2).getId());
-    assertEquals(
-        "DENOMINATOR_EXCLUSION", groups.get(0).getPopulations().get(2).getName().toString());
-    assertEquals(
-        copiedGroup.getPopulations().get(3).getId(), groups.get(0).getPopulations().get(3).getId());
-    assertEquals("Numerator", groups.get(0).getPopulations().get(3).getDefinition());
-    assertEquals(
-        PopulationType.NUMERATOR_EXCLUSION, groups.get(0).getPopulations().get(4).getName());
-  }
-
-  @Test
-  public void testReorderGroupPopulationsProportion() {
-    groups.get(0).setScoring(MeasureScoring.PROPORTION.toString());
-    Group copiedGroup = Group.builder().populations(groups.get(0).getPopulations()).build();
-
-    controller.reorderGroupPopulations(groups);
-
-    assertEquals(1, groups.size());
-    assertEquals(4, copiedGroup.getPopulations().size());
-    assertEquals(6, groups.get(0).getPopulations().size());
-    assertEquals(
-        copiedGroup.getPopulations().get(0).getId(), groups.get(0).getPopulations().get(0).getId());
-    assertEquals("Initial Population", groups.get(0).getPopulations().get(0).getDefinition());
-    assertEquals(
-        copiedGroup.getPopulations().get(1).getId(), groups.get(0).getPopulations().get(1).getId());
-    assertEquals("Denominator", groups.get(0).getPopulations().get(1).getDefinition());
-    assertNotEquals(
-        copiedGroup.getPopulations().get(2).getId(), groups.get(0).getPopulations().get(2).getId());
-    assertEquals(
-        "DENOMINATOR_EXCLUSION", groups.get(0).getPopulations().get(2).getName().toString());
-    assertEquals(
-        copiedGroup.getPopulations().get(3).getId(), groups.get(0).getPopulations().get(3).getId());
-    assertEquals("Numerator", groups.get(0).getPopulations().get(3).getDefinition());
-    assertEquals("NUMERATOR_EXCLUSION", groups.get(0).getPopulations().get(4).getName().toString());
-    // DENOMINATOR_EXCEPTION is in the reordered group population
-    assertEquals(
-        "DENOMINATOR_EXCEPTION", groups.get(0).getPopulations().get(5).getName().toString());
-  }
-
-  @Test
-  public void testReorderGroupPopulationsCohort() {
-    groups.get(0).setScoring("Cohort");
-
-    controller.reorderGroupPopulations(groups);
-
-    assertEquals(1, groups.size());
-    assertEquals(1, groups.get(0).getPopulations().size());
-  }
-
-  @Test
-  public void testReorderGroupPopulationsEmptyGroups() {
-    List<Group> reorderedGroups = List.of();
-    controller.reorderGroupPopulations(reorderedGroups);
-    assertTrue(CollectionUtils.isEmpty(reorderedGroups));
-  }
-
-  @Test
-  public void testReorderGroupPopulationsEmptyPopulations() {
-    List<Group> reorderGroups = List.of(Group.builder().build());
-    controller.reorderGroupPopulations(reorderGroups);
-    assertFalse(CollectionUtils.isEmpty(reorderGroups));
-  }
-
-  @Test
-  public void testReorderGroupPopulationsForCV() {
-    Group copiedGroup =
-        Group.builder()
-            .scoring("Continuous Variable")
-            .populations(
-                List.of(
-                    groups.get(0).getPopulations().get(0),
-                    Population.builder()
-                        .id("id-6")
-                        .definition(PopulationType.MEASURE_POPULATION.name())
-                        .description("test description measure population")
-                        .build()))
-            .measureObservations(groups.get(0).getMeasureObservations())
-            .build();
-    List<Group> reorderedGroups = List.of(copiedGroup);
-
-    controller.reorderGroupPopulations(reorderedGroups);
-
-    assertEquals(1, reorderedGroups.size());
-    assertEquals(3, reorderedGroups.get(0).getPopulations().size());
-    assertEquals(1, reorderedGroups.get(0).getMeasureObservations().size());
   }
 }
