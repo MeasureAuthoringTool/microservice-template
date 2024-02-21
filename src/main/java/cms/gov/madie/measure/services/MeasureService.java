@@ -131,7 +131,7 @@ public class MeasureService {
     actionLogService.logAction(savedMeasure.getId(), Measure.class, ActionType.CREATED, username);
 
     measureSetService.createMeasureSet(
-        username, savedMeasure.getId(), savedMeasure.getMeasureSetId());
+        username, savedMeasure.getId(), savedMeasure.getMeasureSetId(), null);
     return savedMeasure;
   }
 
@@ -151,7 +151,6 @@ public class MeasureService {
       existingMeasure.setMeasureSetId(UUID.randomUUID().toString());
     }
 
-    checkCmsIdChanged(updatingMeasure.getCmsId(), existingMeasure.getCmsId());
     if (measureUtil.isMeasurementPeriodChanged(updatingMeasure, existingMeasure)) {
       validateMeasurementPeriod(
           updatingMeasure.getMeasurementPeriodStart(), updatingMeasure.getMeasurementPeriodEnd());
@@ -273,16 +272,6 @@ public class MeasureService {
         && !StringUtils.isBlank(originalVersionId)
         && !changedVersionId.equalsIgnoreCase(originalVersionId)) {
       throw new InvalidVersionIdException(changedVersionId);
-    }
-  }
-
-  public void checkCmsIdChanged(String changedCmsId, String originalCmsId) {
-    if (StringUtils.isBlank(changedCmsId) && !StringUtils.isBlank(originalCmsId)) {
-      throw new InvalidCmsIdException(changedCmsId);
-    } else if (!StringUtils.isBlank(changedCmsId)
-        && !StringUtils.isBlank(originalCmsId)
-        && !changedCmsId.equalsIgnoreCase(originalCmsId)) {
-      throw new InvalidCmsIdException(changedCmsId);
     }
   }
 

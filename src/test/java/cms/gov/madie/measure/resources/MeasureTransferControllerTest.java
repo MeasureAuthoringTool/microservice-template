@@ -18,7 +18,6 @@ import gov.cms.madie.models.common.Organization;
 import gov.cms.madie.models.measure.*;
 import gov.cms.madie.models.common.Version;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -85,6 +84,8 @@ public class MeasureTransferControllerTest {
   MockHttpServletRequest request;
 
   List<Group> groups;
+
+  String cmsId;
 
   @BeforeEach
   public void setUp() {
@@ -184,6 +185,8 @@ public class MeasureTransferControllerTest {
             .testCases(List.of(TestCase.builder().id("testCaseId").build()))
             .build();
 
+    cmsId = "1";
+
     measureSet = MeasureSet.builder().id(null).measureSetId("abc-pqr-xyz").owner("testID").build();
 
     organizationList = new ArrayList<>();
@@ -201,7 +204,7 @@ public class MeasureTransferControllerTest {
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
     ResponseEntity<Measure> response =
-        controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
+        controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY);
 
     verify(repository, times(1)).save(persistedMeasureArgCaptor.capture());
     Measure persistedMeasure = response.getBody();
@@ -262,7 +265,7 @@ public class MeasureTransferControllerTest {
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
     ResponseEntity<Measure> response =
-        controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
+        controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY);
 
     verify(repository, times(1)).save(persistedMeasureArgCaptor.capture());
     Measure persistedMeasure = response.getBody();
@@ -298,7 +301,7 @@ public class MeasureTransferControllerTest {
 
     assertThrows(
         DuplicateKeyException.class,
-        () -> controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY));
+        () -> controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY));
   }
 
   @Test
@@ -315,7 +318,7 @@ public class MeasureTransferControllerTest {
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
     ResponseEntity<Measure> response =
-        controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
+        controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY);
 
     verify(repository, times(1)).save(persistedMeasureArgCaptor.capture());
     Measure persistedMeasure = response.getBody();
@@ -352,7 +355,7 @@ public class MeasureTransferControllerTest {
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
     ResponseEntity<Measure> response =
-        controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
+        controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY);
 
     verify(repository, times(1)).save(persistedMeasureArgCaptor.capture());
     Measure persistedMeasure = response.getBody();
@@ -378,7 +381,7 @@ public class MeasureTransferControllerTest {
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
     ResponseEntity<Measure> response =
-        controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
+        controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY);
 
     Measure persistedMeasure = response.getBody();
     assertNotNull(persistedMeasure);
@@ -395,7 +398,7 @@ public class MeasureTransferControllerTest {
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
     ResponseEntity<Measure> response =
-        controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
+        controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY);
 
     Measure persistedMeasure = response.getBody();
     assertNotNull(persistedMeasure);
@@ -409,7 +412,7 @@ public class MeasureTransferControllerTest {
 
     assertThrows(
         RuntimeException.class,
-        () -> controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY));
+        () -> controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY));
   }
 
   @Test
@@ -430,7 +433,7 @@ public class MeasureTransferControllerTest {
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
     ResponseEntity<Measure> response =
-        controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
+        controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY);
 
     Measure persistedMeasure = response.getBody();
     assertNotNull(persistedMeasure);
@@ -455,7 +458,7 @@ public class MeasureTransferControllerTest {
 
     assertThrows(
         DuplicateMeasureException.class,
-        () -> controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY));
+        () -> controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY));
   }
 
   @Test
@@ -474,7 +477,7 @@ public class MeasureTransferControllerTest {
 
     ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
     ResponseEntity<Measure> response =
-        controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
+        controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY);
     verify(repository, times(1)).save(persistedMeasureArgCaptor.capture());
 
     Measure persistedMeasure = response.getBody();
@@ -500,7 +503,7 @@ public class MeasureTransferControllerTest {
 
     ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
     ResponseEntity<Measure> response =
-        controller.createMeasure(request, measure, LAMBDA_TEST_API_KEY);
+        controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY);
     verify(repository, times(1)).save(persistedMeasureArgCaptor.capture());
 
     Measure persistedMeasure = response.getBody();
@@ -511,109 +514,5 @@ public class MeasureTransferControllerTest {
     assertEquals(measure.getCqlLibraryName(), persistedMeasure.getCqlLibraryName());
     assertEquals(measure.getCql(), persistedMeasure.getCql());
     assertEquals("testCaseId", persistedMeasure.getTestCases().get(0).getId());
-  }
-
-  @Test
-  public void testReorderGroupPopulationsRatio() {
-    Group copiedGroup = Group.builder().populations(groups.get(0).getPopulations()).build();
-
-    controller.reorderGroupPopulations(groups);
-
-    assertEquals(1, groups.size());
-    assertEquals(4, copiedGroup.getPopulations().size());
-    assertEquals(5, groups.get(0).getPopulations().size());
-    assertEquals(
-        copiedGroup.getPopulations().get(0).getId(), groups.get(0).getPopulations().get(0).getId());
-    assertEquals("Initial Population", groups.get(0).getPopulations().get(0).getDefinition());
-    assertEquals(
-        copiedGroup.getPopulations().get(1).getId(), groups.get(0).getPopulations().get(1).getId());
-    assertEquals("Denominator", groups.get(0).getPopulations().get(1).getDefinition());
-    // DENOMINATOR_EXCEPTION is not in the reordered group population
-    assertNotEquals(
-        copiedGroup.getPopulations().get(2).getId(), groups.get(0).getPopulations().get(2).getId());
-    assertEquals(
-        "DENOMINATOR_EXCLUSION", groups.get(0).getPopulations().get(2).getName().toString());
-    assertEquals(
-        copiedGroup.getPopulations().get(3).getId(), groups.get(0).getPopulations().get(3).getId());
-    assertEquals("Numerator", groups.get(0).getPopulations().get(3).getDefinition());
-    assertEquals(
-        PopulationType.NUMERATOR_EXCLUSION, groups.get(0).getPopulations().get(4).getName());
-  }
-
-  @Test
-  public void testReorderGroupPopulationsProportion() {
-    groups.get(0).setScoring(MeasureScoring.PROPORTION.toString());
-    Group copiedGroup = Group.builder().populations(groups.get(0).getPopulations()).build();
-
-    controller.reorderGroupPopulations(groups);
-
-    assertEquals(1, groups.size());
-    assertEquals(4, copiedGroup.getPopulations().size());
-    assertEquals(6, groups.get(0).getPopulations().size());
-    assertEquals(
-        copiedGroup.getPopulations().get(0).getId(), groups.get(0).getPopulations().get(0).getId());
-    assertEquals("Initial Population", groups.get(0).getPopulations().get(0).getDefinition());
-    assertEquals(
-        copiedGroup.getPopulations().get(1).getId(), groups.get(0).getPopulations().get(1).getId());
-    assertEquals("Denominator", groups.get(0).getPopulations().get(1).getDefinition());
-    assertNotEquals(
-        copiedGroup.getPopulations().get(2).getId(), groups.get(0).getPopulations().get(2).getId());
-    assertEquals(
-        "DENOMINATOR_EXCLUSION", groups.get(0).getPopulations().get(2).getName().toString());
-    assertEquals(
-        copiedGroup.getPopulations().get(3).getId(), groups.get(0).getPopulations().get(3).getId());
-    assertEquals("Numerator", groups.get(0).getPopulations().get(3).getDefinition());
-    assertEquals("NUMERATOR_EXCLUSION", groups.get(0).getPopulations().get(4).getName().toString());
-    // DENOMINATOR_EXCEPTION is in the reordered group population
-    assertEquals(
-        "DENOMINATOR_EXCEPTION", groups.get(0).getPopulations().get(5).getName().toString());
-  }
-
-  @Test
-  public void testReorderGroupPopulationsCohort() {
-    groups.get(0).setScoring("Cohort");
-
-    controller.reorderGroupPopulations(groups);
-
-    assertEquals(1, groups.size());
-    assertEquals(1, groups.get(0).getPopulations().size());
-  }
-
-  @Test
-  public void testReorderGroupPopulationsEmptyGroups() {
-    List<Group> reorderedGroups = List.of();
-    controller.reorderGroupPopulations(reorderedGroups);
-    assertTrue(CollectionUtils.isEmpty(reorderedGroups));
-  }
-
-  @Test
-  public void testReorderGroupPopulationsEmptyPopulations() {
-    List<Group> reorderGroups = List.of(Group.builder().build());
-    controller.reorderGroupPopulations(reorderGroups);
-    assertFalse(CollectionUtils.isEmpty(reorderGroups));
-  }
-
-  @Test
-  public void testReorderGroupPopulationsForCV() {
-    Group copiedGroup =
-        Group.builder()
-            .scoring("Continuous Variable")
-            .populations(
-                List.of(
-                    groups.get(0).getPopulations().get(0),
-                    Population.builder()
-                        .id("id-6")
-                        .definition(PopulationType.MEASURE_POPULATION.name())
-                        .description("test description measure population")
-                        .build()))
-            .measureObservations(groups.get(0).getMeasureObservations())
-            .build();
-    List<Group> reorderedGroups = List.of(copiedGroup);
-
-    controller.reorderGroupPopulations(reorderedGroups);
-
-    assertEquals(1, reorderedGroups.size());
-    assertEquals(3, reorderedGroups.get(0).getPopulations().size());
-    assertEquals(1, reorderedGroups.get(0).getMeasureObservations().size());
   }
 }

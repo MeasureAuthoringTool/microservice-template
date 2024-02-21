@@ -25,12 +25,16 @@ public class MeasureSetService {
   private final ActionLogService actionLogService;
 
   public void createMeasureSet(
-      final String harpId, final String measureId, final String savedMeasureSetId) {
+      final String harpId, final String measureId, final String savedMeasureSetId, String cmsId) {
 
     boolean isMeasureSetPresent = measureSetRepository.existsByMeasureSetId(savedMeasureSetId);
     if (!isMeasureSetPresent) {
       MeasureSet measureSet =
-          MeasureSet.builder().owner(harpId).measureSetId(savedMeasureSetId).build();
+          MeasureSet.builder()
+              .owner(harpId)
+              .measureSetId(savedMeasureSetId)
+              .cmsId((cmsId != null && !cmsId.equals("0")) ? Integer.parseInt(cmsId) : null)
+              .build();
       MeasureSet savedMeasureSet = measureSetRepository.save(measureSet);
       log.info(
           "Measure set [{}] is successfully created for the measure [{}]",
@@ -87,7 +91,7 @@ public class MeasureSetService {
       throw new ResourceNotFoundException(
           "No measure set exists for measure with measure set id " + measureSetId);
     }
-    if (measureSet.get().getCmsId() > 0) {
+    if (measureSet.get().getCmsId() != null) {
       throw new InvalidRequestException(
           "CMS ID already exists. Once a CMS Identifier has been generated it may not "
               + "be modified or removed for any draft or version of a measure.");
