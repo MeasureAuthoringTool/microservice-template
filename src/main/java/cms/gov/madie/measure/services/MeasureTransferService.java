@@ -40,24 +40,7 @@ public class MeasureTransferService {
           // then execution will blow up. Users have to manually input expected values
           originalTestCases =
               originalTestCases.stream()
-                  .map(
-                      testCase ->
-                          TestCase.builder()
-                              .id(testCase.getId())
-                              .name(testCase.getName())
-                              .title(testCase.getTitle())
-                              .series(testCase.getSeries())
-                              .description(testCase.getDescription())
-                              .createdAt(testCase.getCreatedAt())
-                              .createdBy(testCase.getCreatedBy())
-                              .lastModifiedAt(testCase.getLastModifiedAt())
-                              .lastModifiedBy(testCase.getLastModifiedBy())
-                              .resourceUri(testCase.getResourceUri())
-                              .validResource(testCase.isValidResource())
-                              .json(testCase.getJson())
-                              .patientId(testCase.getPatientId())
-                              .hapiOperationOutcome(testCase.getHapiOperationOutcome())
-                              .build())
+                  .map(testCase -> testCase.toBuilder().groupPopulations(null).build())
                   .collect(Collectors.toList());
         }
         transferredMeasure.setTestCases(originalTestCases);
