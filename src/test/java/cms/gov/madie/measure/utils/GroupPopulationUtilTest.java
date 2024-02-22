@@ -144,8 +144,7 @@ public class GroupPopulationUtilTest {
   @Test
   public void testAreGroupsAndPopulationsMatchingFindMatching() {
     boolean result =
-        GroupPopulationUtil.areGroupsAndPopulationsMatching(
-            List.of(group1), List.of(group1, group2));
+        GroupPopulationUtil.areGroupsAndPopulationsMatching(List.of(group1), List.of(group1));
     assertTrue(result);
   }
 
@@ -153,6 +152,22 @@ public class GroupPopulationUtilTest {
   public void testAreGroupsAndPopulationsMatchingNoMatching() {
     boolean result =
         GroupPopulationUtil.areGroupsAndPopulationsMatching(List.of(group1), List.of(group2));
+    assertFalse(result);
+  }
+
+  @Test
+  public void testIsGroupPopulationsMatchingPopulationBasisNotMatch() {
+    group1 = Group.builder().populationBasis("true").build();
+    group2 = Group.builder().populationBasis("false").build();
+    boolean result = GroupPopulationUtil.isGroupPopulationsMatching(group1, group2);
+    assertFalse(result);
+  }
+
+  @Test
+  public void testIsGroupPopulationsMatchingScoringNotMatch() {
+    group1 = Group.builder().scoring("Cohort").build();
+    group2 = Group.builder().populationBasis("Proportion").build();
+    boolean result = GroupPopulationUtil.isGroupPopulationsMatching(group1, group2);
     assertFalse(result);
   }
 
