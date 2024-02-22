@@ -93,14 +93,6 @@ public class MeasureServiceTest implements ResourceUtil {
     Stratification emptyStrat = new Stratification();
     // new group, not in DB, so no ID
 
-    MeasureDefinition measureDefinition1 =
-        MeasureDefinition.builder().term("test term").definition("test definition").build();
-    MeasureDefinition measureDefinition2 =
-        MeasureDefinition.builder()
-            .id("test id")
-            .term("test term 2")
-            .definition("test definition 2")
-            .build();
     Reference reference1 =
         Reference.builder().referenceType("test type").referenceText("test text").build();
     Reference reference2 =
@@ -112,7 +104,7 @@ public class MeasureServiceTest implements ResourceUtil {
     measureMetaData =
         MeasureMetaData.builder()
             .draft(true)
-            .measureDefinitions(List.of(measureDefinition1, measureDefinition2))
+            .definition("Test definition")
             .references(List.of(reference1, reference2))
             .build();
 
@@ -998,21 +990,6 @@ public class MeasureServiceTest implements ResourceUtil {
     assertThat(result.size(), is(equalTo(2)));
     assertThat(result.get(0), is(equalTo(measure1.getId())));
     assertThat(result.get(1), is(equalTo(measure2.getId())));
-  }
-
-  @Test
-  public void testUpdateMeasureDefinitionIdNullMetaData() {
-    MeasureMetaData metaData = null;
-    measureService.updateMeasureDefinitionId(metaData);
-    assertNull(metaData);
-  }
-
-  @Test
-  public void testUpdateMeasureDefinitionIdNullMeasureDefinitions() {
-    MeasureMetaData metaData = MeasureMetaData.builder().build();
-    measureService.updateMeasureDefinitionId(metaData);
-    assertNotNull(metaData);
-    assertNull(metaData.getMeasureDefinitions());
   }
 
   @Test
