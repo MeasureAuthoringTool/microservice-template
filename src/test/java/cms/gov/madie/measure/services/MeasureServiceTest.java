@@ -79,6 +79,7 @@ public class MeasureServiceTest implements ResourceUtil {
   private String elmJson;
   private Measure measure1;
   private Measure measure2;
+  private Measure measure3;
   private MeasureSet measureSet;
 
   @BeforeEach
@@ -158,6 +159,15 @@ public class MeasureServiceTest implements ResourceUtil {
             .lastModifiedBy("test user")
             .measureMetaData(measureMetaData)
             .build();
+
+    measure3 =
+            Measure.builder()
+                    .id("measure-id")
+                    .createdBy("test user")
+                    .measureMetaData(measureMetaData)
+                    .measureSet(measureSet)
+                    .measureSetId("measureSetId")
+                    .build();
 
     measureSet = MeasureSet.builder().owner("test user").measureSetId("measureSetId").build();
   }
@@ -1046,17 +1056,51 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  void testDeleteMeasureReferenceReturnsExceptionThrowsAccessException() {
-    String referenceId = "testreferenceid";
-    final Measure measure =
+  void testDeleteMeasureReference() {
+
+    Reference reference =
+            Reference.builder()
+                    .id("test id2")
+                    .referenceType("test type 2")
+                    .referenceText("test text 2")
+                    .build();
+    measureMetaData =
+            MeasureMetaData.builder()
+                    .draft(true)
+                    .definition("Test definition")
+                    .references(List.of(reference))
+                    .build();
+    final Measure updatedMeasure =
             Measure.builder()
                     .id("measure-id")
-                    .createdBy("newUser")
+                    .createdBy("OtherUser")
                     .measureMetaData(measureMetaData)
                     .measureSet(measureSet)
                     .measureSetId("measureSetId")
                     .build();
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure3));
+    when(measureSetService.findByMeasureSetId(anyString())).thenReturn(measureSet);
+
+    doReturn(updatedMeasure).when(measureRepository).save(any(Measure.class));
+    // before deletion
+    assertEquals(2, measure3.getMeasureMetaData().getReferences().size());
+    measureService.deleteMeasureReference("measure-id", "test id1", "test user");
+    // after deletion
+    assertEquals(1, updatedMeasure.getMeasureMetaData().getReferences().size());
+ }
+
+  @Test
+  void testDeleteMeasureReferenceReturnsExceptionForNullMeasureId() {
+    assertThrows(
+            InvalidIdException.class,
+            () -> measureService.deleteMeasureReference("", "grouptestid", "OtherUser"));
+  }
+
+  @Test
+  void testDeleteMeasureReferenceReturnsExceptionThrowsAccessException() {
+    String referenceId = "testreferenceid";
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure3));
     when(measureSetService.findByMeasureSetId(anyString())).thenReturn(measureSet);
 
     assertThrows(
@@ -1094,15 +1138,7 @@ public class MeasureServiceTest implements ResourceUtil {
 
   @Test
   void testDeleteMeasureReferenceReturnsExceptionForNullId() {
-    final Measure measure =
-            Measure.builder()
-                    .id("measure-id")
-                    .createdBy("test user")
-                    .measureMetaData(measureMetaData)
-                    .measureSet(measureSet)
-                    .measureSetId("measureSetId")
-                    .build();
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure3));
     when(measureSetService.findByMeasureSetId(anyString())).thenReturn(measureSet);
 
     assertThrows(
@@ -1112,16 +1148,7 @@ public class MeasureServiceTest implements ResourceUtil {
 
   @Test
   void testDeleteMeasureReferenceReturnsExceptionForReferenceNotFoundInMeasure() {
-
-    final Measure measure =
-            Measure.builder()
-                    .id("measure-id")
-                    .createdBy("test user")
-                    .measureMetaData(measureMetaData)
-                    .measureSet(measureSet)
-                    .measureSetId("measureSetId")
-                    .build();
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure3));
     when(measureSetService.findByMeasureSetId(anyString())).thenReturn(measureSet);
 
     assertThrows(
