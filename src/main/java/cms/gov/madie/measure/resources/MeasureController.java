@@ -324,7 +324,6 @@ public class MeasureController {
         principal.getName(),
         referenceId,
         measureId);
-
     return ResponseEntity.ok(
         measureService.deleteMeasureReference(measureId, referenceId, principal.getName()));
   }
