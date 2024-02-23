@@ -723,4 +723,23 @@ class MeasureControllerTest {
     assertEquals(stratification.getAssociation(), response.getBody().getAssociation());
     assertEquals(stratification.getAssociations(), response.getBody().getAssociations());
   }
+
+  @Test
+  void deleteMeasureReference() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    MeasureMetaData updatedMeasureMetaData = MeasureMetaData.builder().references(null).experimental(true).build();
+    Measure updatedMeasure =
+            Measure.builder().id("measure-id").createdBy("test.user").measureMetaData(updatedMeasureMetaData).build();
+    doReturn(updatedMeasure)
+            .when(measureService)
+            .deleteMeasureReference(any(String.class), any(String.class), any(String.class));
+
+    ResponseEntity<Measure> output =
+            controller.deleteMeasureReference("measure-id", "measurereferenceid", principal);
+
+    assertThat(output.getStatusCode(), is(equalTo(HttpStatus.OK)));
+    assertNull(output.getBody().getMeasureMetaData().getReferences());
+  }
 }

@@ -79,6 +79,7 @@ public class MeasureServiceTest implements ResourceUtil {
   private String elmJson;
   private Measure measure1;
   private Measure measure2;
+  private MeasureSet measureSet;
 
   @BeforeEach
   public void setUp() {
@@ -157,6 +158,8 @@ public class MeasureServiceTest implements ResourceUtil {
             .lastModifiedBy("test user")
             .measureMetaData(measureMetaData)
             .build();
+
+    measureSet = MeasureSet.builder().owner("test User").measureSetId("measureSetId").build();
   }
 
   @Test
@@ -1041,4 +1044,45 @@ public class MeasureServiceTest implements ResourceUtil {
     measureService.deleteVersionedMeasures(List.of(measure1, measure2));
     verify(measureRepository, times(0)).deleteAll(repositoryArgCaptor.capture());
   }
+
+  @Test
+  void testDeleteMeasureReferenceReturnsExceptionThrowsAccessException() {
+    String referenceId = "testreferenceid";
+    final Measure measure =
+            Measure.builder()
+                    .id("measure-id")
+                    .createdBy("newUser")
+                    .measureMetaData(measureMetaData)
+                    .measureSet(measureSet)
+                    .measureSetId("measureSetId")
+                    .build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(measureSetService.findByMeasureSetId(anyString())).thenReturn(measureSet);
+
+    assertThrows(
+            UnauthorizedException.class,
+            () -> measureService.deleteMeasureReference("measure-id", referenceId, "user2"));
+  }
+
+  @Test
+  void testDeleteMeasureGroupReturnsInvalidDraftStatusException() {
+    String referenceId = "testreferenceid";
+    measureMetaData.setDraft(false);
+
+    final Measure measure =
+            Measure.builder()
+                    .id("measure-id")
+                    .createdBy("OtherUser")
+                    .measureMetaData(measureMetaData)
+                    .measureSet(measureSet)
+                    .measureSetId("measureSetId")
+                    .build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(measureSetService.findByMeasureSetId(anyString())).thenReturn(measureSet);
+
+    assertThrows(
+            InvalidDraftStatusException.class,
+            () -> measureService.deleteMeasureReference("measure-id", referenceId, "user2"));
+  }
+
 }

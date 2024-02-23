@@ -386,7 +386,7 @@ public class MeasureService {
       throw new InvalidIdException("Measure Id cannot be null");
     }
 
-    Measure measure = this.findMeasureById(measureId);
+    Measure measure = findMeasureById(measureId);
     if (measure == null) {
       throw new ResourceNotFoundException("Measure", measureId);
     }
@@ -395,7 +395,7 @@ public class MeasureService {
       throw new InvalidDraftStatusException(measure.getId());
     }
 
-    this.verifyAuthorization(username, measure);
+    verifyAuthorization(username, measure);
 
     if (referenceId == null || referenceId.trim().isEmpty()) {
       throw new InvalidIdException("Measure Reference Id cannot be null");
