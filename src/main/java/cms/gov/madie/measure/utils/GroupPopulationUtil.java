@@ -28,7 +28,7 @@ public class GroupPopulationUtil {
               .filter(
                   originalGroup ->
                       newGroups.stream()
-                          .anyMatch(
+                          .allMatch(
                               newGroup -> isGroupPopulationsMatching(originalGroup, newGroup)))
               .toList();
       match = CollectionUtils.isNotEmpty(matchedGroups);
@@ -37,6 +37,14 @@ public class GroupPopulationUtil {
   }
 
   public static boolean isGroupPopulationsMatching(Group originalGroup, Group newGroup) {
+    if (!StringUtils.equals(originalGroup.getScoring(), newGroup.getScoring())) {
+      return false;
+    }
+
+    if (!StringUtils.equals(originalGroup.getPopulationBasis(), newGroup.getPopulationBasis())) {
+      return false;
+    }
+
     List<Population> originalValidPops = getValidPopulations(originalGroup);
     List<Population> newValidPops = getValidPopulations(newGroup);
     boolean populationsMatch = isPopulationMatch(originalValidPops, newValidPops);

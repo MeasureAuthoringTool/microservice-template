@@ -24,6 +24,7 @@ import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
 import gov.cms.madie.models.measure.Stratification;
 import gov.cms.madie.models.measure.TestCase;
+import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 
 @ExtendWith(MockitoExtension.class)
 public class MeasureTransferServiceTest {
@@ -94,7 +95,12 @@ public class MeasureTransferServiceTest {
             .populations(List.of(population1))
             .build();
 
-    testcase = TestCase.builder().id("testCaseId").build();
+    testcase =
+        TestCase.builder()
+            .id("testCaseId")
+            .groupPopulations(
+                List.of(TestCaseGroupPopulation.builder().groupId("testGoupId1").build()))
+            .build();
   }
 
   @Test
@@ -143,6 +149,21 @@ public class MeasureTransferServiceTest {
 
     assertNotNull(overwrittenMeasure.getId());
     assertEquals(1, overwrittenMeasure.getTestCases().size());
+    assertNull(overwrittenMeasure.getTestCases().get(0).getGroupPopulations());
+  }
+
+  @Test
+  public void testOverwriteExistingMeasureOriginalMeasureHasNoTestCases() {
+    Measure transferredMeasure = Measure.builder().model("QDM").groups(List.of(group1)).build();
+    measure1.setMeasureMetaData(MeasureMetaData.builder().draft(true).build());
+    measure1.setGroups(List.of(group1));
+    measure1.setTestCases(null);
+
+    Measure overwrittenMeasure =
+        measureTransferService.overwriteExistingMeasure(List.of(measure1), transferredMeasure);
+
+    assertNotNull(overwrittenMeasure.getId());
+    assertNull(overwrittenMeasure.getTestCases());
   }
 
   @Test

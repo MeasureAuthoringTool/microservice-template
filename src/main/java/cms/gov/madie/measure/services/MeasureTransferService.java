@@ -10,8 +10,8 @@ import org.springframework.stereotype.Service;
 import cms.gov.madie.measure.utils.GroupPopulationUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.TestCase;
 
 @Slf4j
 @Service
@@ -32,7 +32,18 @@ public class MeasureTransferService {
       transferredMeasure.setId(mostRecentMeasure.getId());
       if (GroupPopulationUtil.areGroupsAndPopulationsMatching(
           mostRecentMeasure.getGroups(), transferredMeasure.getGroups())) {
-        transferredMeasure.setTestCases(mostRecentMeasure.getTestCases());
+        List<TestCase> originalTestCases = mostRecentMeasure.getTestCases();
+        if (CollectionUtils.isNotEmpty(originalTestCases)) {
+          // test cases that need to be carried over to the new transferred measure,
+          // however, groupPopulations need to be wiped out because there is no way
+          // to map the group ids to multiple groups, if the group ids are different
+          // then execution will blow up. Users have to manually input expected values
+          originalTestCases =
+              originalTestCases.stream()
+                  .map(testCase -> testCase.toBuilder().groupPopulations(null).build())
+                  .collect(Collectors.toList());
+        }
+        transferredMeasure.setTestCases(originalTestCases);
         log.info(
             "Overwrite meausre id {} with the testcases from original measure",
             mostRecentMeasure.getId());
