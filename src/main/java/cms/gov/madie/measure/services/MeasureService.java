@@ -403,4 +403,44 @@ public class MeasureService {
       log.info("Versioned Measure IDs [{}] are deleted.", deletedMeasureIds);
     }
   }
+
+  public Measure deleteMeasureReference(String measureId, String referenceId, String username) {
+
+    if (measureId == null || measureId.trim().isEmpty()) {
+      throw new InvalidIdException("Measure Id cannot be null");
+    }
+
+    Measure measure = this.findMeasureById(measureId);
+    if (measure == null) {
+      throw new ResourceNotFoundException("Measure", measureId);
+    }
+
+    if (!measure.getMeasureMetaData().isDraft()) {
+      throw new InvalidDraftStatusException(measure.getId());
+    }
+
+    this.verifyAuthorization(username, measure);
+
+    if (referenceId == null || referenceId.trim().isEmpty()) {
+      throw new InvalidIdException("Measure Reference Id cannot be null");
+    }
+
+    List<Reference> remainingReferences =
+        measure.getMeasureMetaData().getReferences().stream()
+            .filter(reference -> !reference.getId().equals(referenceId))
+            .toList();
+
+    // to check if given reference id is present
+    if (remainingReferences.size() == measure.getMeasureMetaData().getReferences().size()) {
+      throw new ResourceNotFoundException("Measure Reference", referenceId);
+    }
+
+    measure.getMeasureMetaData().setReferences(remainingReferences);
+    log.info(
+        "User [{}] has successfully deleted a measure reference with Id [{}] from measure [{}]",
+        username,
+        referenceId,
+        measure.getId());
+    return measureRepository.save(measure);
+  }
 }

@@ -312,4 +312,20 @@ public class MeasureController {
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(measureSetService.createAndUpdateCmsId(measureSetId, principal.getName()));
   }
+
+  @DeleteMapping("/measures/{measureId}/references/{referenceId}")
+  public ResponseEntity<Measure> deleteMeasureReference(
+      @RequestBody @PathVariable String measureId,
+      @PathVariable String referenceId,
+      Principal principal) {
+
+    log.info(
+        "User [{}] is attempting to delete a measure reference with Id [{}] from measure [{}]",
+        principal.getName(),
+        referenceId,
+        measureId);
+
+    return ResponseEntity.ok(
+        measureService.deleteMeasureReference(measureId, referenceId, principal.getName()));
+  }
 }
