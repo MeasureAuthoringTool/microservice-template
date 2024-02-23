@@ -95,10 +95,10 @@ public class MeasureServiceTest implements ResourceUtil {
     // new group, not in DB, so no ID
 
     Reference reference1 =
-        Reference.builder().referenceType("test type").referenceText("test text").build();
+        Reference.builder().id("test id1").referenceType("test type").referenceText("test text").build();
     Reference reference2 =
         Reference.builder()
-            .id("test id")
+            .id("test id2")
             .referenceType("test type 2")
             .referenceText("test text 2")
             .build();
@@ -159,7 +159,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .measureMetaData(measureMetaData)
             .build();
 
-    measureSet = MeasureSet.builder().owner("test User").measureSetId("measureSetId").build();
+    measureSet = MeasureSet.builder().owner("test user").measureSetId("measureSetId").build();
   }
 
   @Test
@@ -1065,7 +1065,7 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  void testDeleteMeasureGroupReturnsInvalidDraftStatusException() {
+  void testDeleteMeasureReferenceReturnsInvalidDraftStatusException() {
     String referenceId = "testreferenceid";
     measureMetaData.setDraft(false);
 
@@ -1083,6 +1083,50 @@ public class MeasureServiceTest implements ResourceUtil {
     assertThrows(
             InvalidDraftStatusException.class,
             () -> measureService.deleteMeasureReference("measure-id", referenceId, "user2"));
+  }
+
+  @Test
+  void testDeleteMeasureReferenceReturnsExceptionForResourceNotFound() {
+    assertThrows(
+            ResourceNotFoundException.class,
+            () -> measureService.deleteMeasureReference("testid", "test id", "user2"));
+  }
+
+  @Test
+  void testDeleteMeasureReferenceReturnsExceptionForNullId() {
+    final Measure measure =
+            Measure.builder()
+                    .id("measure-id")
+                    .createdBy("test user")
+                    .measureMetaData(measureMetaData)
+                    .measureSet(measureSet)
+                    .measureSetId("measureSetId")
+                    .build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(measureSetService.findByMeasureSetId(anyString())).thenReturn(measureSet);
+
+    assertThrows(
+            InvalidIdException.class,
+            () -> measureService.deleteMeasureReference("measure-id", "", "test user"));
+  }
+
+  @Test
+  void testDeleteMeasureReferenceReturnsExceptionForReferenceNotFoundInMeasure() {
+
+    final Measure measure =
+            Measure.builder()
+                    .id("measure-id")
+                    .createdBy("test user")
+                    .measureMetaData(measureMetaData)
+                    .measureSet(measureSet)
+                    .measureSetId("measureSetId")
+                    .build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(measureSetService.findByMeasureSetId(anyString())).thenReturn(measureSet);
+
+    assertThrows(
+            ResourceNotFoundException.class,
+            () -> measureService.deleteMeasureReference("measure-id", "test id", "test user"));
   }
 
 }
