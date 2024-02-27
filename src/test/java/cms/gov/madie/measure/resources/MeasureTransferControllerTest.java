@@ -461,7 +461,8 @@ public class MeasureTransferControllerTest {
     assertEquals(
         copiedGroup.getPopulations().get(3).getId(), groups.get(0).getPopulations().get(3).getId());
     assertEquals("Numerator", groups.get(0).getPopulations().get(3).getDefinition());
-    assertEquals(PopulationType.NUMERATOR_EXCLUSION, groups.get(0).getPopulations().get(4).getName());
+    assertEquals(
+        PopulationType.NUMERATOR_EXCLUSION, groups.get(0).getPopulations().get(4).getName());
   }
 
   @Test
