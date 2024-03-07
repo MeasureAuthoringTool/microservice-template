@@ -42,4 +42,25 @@ public class QdmPackageService implements PackageService {
       throw new InternalServerException("An error occurred while creating a measure package.");
     }
   }
+
+  @Override
+  public byte[] getQRDA(Measure measure, String accessToken) {
+    URI uri = URI.create(qdmServiceConfig.getBaseUrl() + qdmServiceConfig.getCreateQrdaUrn());
+    HttpHeaders headers = new HttpHeaders();
+    headers.set(HttpHeaders.AUTHORIZATION, accessToken);
+    headers.set(HttpHeaders.ACCEPT, MediaType.ALL_VALUE);
+    headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+    HttpEntity<Measure> entity = new HttpEntity<>(measure, headers);
+    try {
+      log.info("requesting QRDA for measure [{}] from qdm service", measure.getId());
+      return qdmServiceRestTemplate.exchange(uri, HttpMethod.PUT, entity, byte[].class).getBody();
+    } catch (RestClientException ex) {
+      log.error(
+          "An error occurred while creating QRDA for QDM measure: "
+              + measure.getId()
+              + ", please check qdm service logs for more information",
+          ex);
+      throw new InternalServerException("An error occurred while creating a QRDA.");
+    }
+  }
 }

@@ -42,4 +42,14 @@ public class ExportService {
       }
     }
   }
+
+  public byte[] getQRDA(Measure measure, String accessToken) {
+    validateMetadata(measure);
+    ModelValidator modelValidator =
+        modelValidatorFactory.getModelValidator(ModelType.valueOfName(measure.getModel()));
+    modelValidator.validateGroups(measure);
+    PackageService packageService =
+        packageServiceFactory.getPackageService(ModelType.valueOfName(measure.getModel()));
+    return packageService.getQRDA(measure, accessToken);
+  }
 }
