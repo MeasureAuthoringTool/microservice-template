@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.utils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -72,7 +73,7 @@ public class GroupPopulationUtil {
           .filter(population -> !StringUtils.isBlank(population.getDefinition()))
           .collect(Collectors.toList());
     }
-    return null;
+    return Collections.emptyList();
   }
 
   static boolean isPopulationMatch(
@@ -107,7 +108,7 @@ public class GroupPopulationUtil {
           .filter(observation -> !StringUtils.isBlank(observation.getDefinition()))
           .collect(Collectors.toList());
     }
-    return null;
+    return Collections.emptyList();
   }
 
   static boolean isMeasureObservationMatch(
@@ -142,7 +143,7 @@ public class GroupPopulationUtil {
           .filter(stratification -> !StringUtils.isBlank(stratification.getCqlDefinition()))
           .collect(Collectors.toList());
     }
-    return null;
+    return Collections.emptyList();
   }
 
   static boolean isStratificationMatch(
