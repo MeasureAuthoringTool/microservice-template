@@ -4,6 +4,7 @@ import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.ExportService;
 import cms.gov.madie.measure.services.FhirServicesClient;
+import cms.gov.madie.measure.services.MeasureService;
 import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.TestCase;
@@ -39,12 +40,13 @@ class ExportControllerTest {
   @Mock private MeasureRepository measureRepository;
   @Mock private FhirServicesClient fhirServicesClient;
   @Mock private ExportService exportService;
+  @Mock private MeasureService measureService;
   @InjectMocks private ExportController exportController;
 
   @Test
   void getZipThrowsNotFoundException() {
     Principal principal = mock(Principal.class);
-    when(measureRepository.findById(anyString())).thenReturn(Optional.empty());
+    when(measureService.findMeasureById(anyString())).thenReturn(null);
     assertThrows(
         ResourceNotFoundException.class,
         () -> exportController.getZip(principal, "test_id", "Bearer TOKEN"));
@@ -63,7 +65,7 @@ class ExportControllerTest {
             .build();
 
     byte[] response = new byte[0];
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(measureService.findMeasureById(anyString())).thenReturn(measure);
     when(exportService.getMeasureExport(eq(measure), anyString())).thenReturn(response);
     ResponseEntity<byte[]> output = exportController.getZip(principal, "test_id", "Bearer TOKEN");
     assertEquals(HttpStatus.OK, output.getStatusCode());

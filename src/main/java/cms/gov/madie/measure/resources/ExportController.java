@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import cms.gov.madie.measure.services.ExportService;
+import cms.gov.madie.measure.services.MeasureService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +34,7 @@ public class ExportController {
   private final MeasureRepository measureRepository;
   private final FhirServicesClient fhirServicesClient;
   private final ExportService exportService;
+  private final MeasureService measureService;
 
   @GetMapping(path = "/measures/{id}/exports", produces = "application/zip")
   public ResponseEntity<byte[]> getZip(
@@ -43,13 +45,11 @@ public class ExportController {
     final String username = principal.getName();
     log.info("User [{}] is attempting to export measure [{}]", username, id);
 
-    Optional<Measure> measureOptional = measureRepository.findById(id);
+    Measure measure = measureService.findMeasureById(id);
 
-    if (measureOptional.isEmpty()) {
+    if (measure == null) {
       throw new ResourceNotFoundException("Measure", id);
     }
-
-    Measure measure = measureOptional.get();
 
     return ResponseEntity.ok()
         .header(
