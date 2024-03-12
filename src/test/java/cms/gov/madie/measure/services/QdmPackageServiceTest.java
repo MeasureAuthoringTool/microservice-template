@@ -48,11 +48,11 @@ class QdmPackageServiceTest {
             .model(String.valueOf(ModelType.QDM_5_6))
             .build();
     when(qdmServiceConfig.getBaseUrl()).thenReturn("baseurl");
-    when(qdmServiceConfig.getCreatePackageUrn()).thenReturn("/elm/uri");
   }
 
   @Test
   void getCreateMeasurePackage() {
+    when(qdmServiceConfig.getCreatePackageUrn()).thenReturn("/elm/uri");
     String packageContent = "Measure Package Contents";
     when(qdmServiceRestTemplate.exchange(
             any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
@@ -64,6 +64,7 @@ class QdmPackageServiceTest {
 
   @Test
   void getCreateMeasurePackageWhenQdmServiceReturnedErrors() {
+    when(qdmServiceConfig.getCreatePackageUrn()).thenReturn("/elm/uri");
     when(qdmServiceRestTemplate.exchange(
             any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
         .thenThrow(new RestClientException("something went wrong"));
@@ -74,5 +75,33 @@ class QdmPackageServiceTest {
             () -> qdmPackageService.getMeasurePackage(measure, token),
             errorMessage);
     assertThat(ex.getMessage(), is(equalTo(errorMessage)));
+  }
+
+  @Test
+  void testGetQRDASuccess() {
+    when(qdmServiceConfig.getCreateQrdaUrn()).thenReturn("/qrda");
+    String qrdaContent = "Test QRDA";
+    when(qdmServiceRestTemplate.exchange(
+            any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+        .thenReturn(ResponseEntity.ok(qrdaContent.getBytes()));
+    byte[] qrda = qdmPackageService.getQRDA(measure, token);
+    assertThat(qrda, is(notNullValue()));
+    assertThat(new String(qrda), is(equalTo(qrdaContent)));
+  }
+
+  @Test
+  void testGetQRDAThrowsRestClientException() {
+    when(qdmServiceConfig.getCreateQrdaUrn()).thenReturn("/qrda");
+    when(qdmServiceRestTemplate.exchange(
+            any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+        .thenThrow(new RestClientException("something went wrong"));
+    String errorMessage =
+        "An error occurred while creating QRDA for QDM measure: 1, please check qdm service logs for more information";
+    Exception ex =
+        assertThrows(
+            InternalServerException.class,
+            () -> qdmPackageService.getQRDA(measure, token),
+            errorMessage);
+    assertThat(ex.getMessage(), is(equalTo("An error occurred while creating a QRDA.")));
   }
 }

@@ -82,4 +82,32 @@ public class ExportController {
     return fhirServicesClient.getTestCaseExports(
         measure, accessToken, testCaseId, bundleType.orElse(("COLLECTION").toUpperCase()));
   }
+
+  @GetMapping(path = "/measures/{id}/test-cases/qrda", produces = "application/zip")
+  public ResponseEntity<byte[]> getQRDA(
+      Principal principal,
+      @PathVariable("id") String id,
+      @RequestHeader("Authorization") String accessToken) {
+
+    final String username = principal.getName();
+    log.info("User [{}] is attempting to export QRDA for measure [{}]", username, id);
+
+    Optional<Measure> measureOptional = measureRepository.findById(id);
+
+    if (measureOptional.isEmpty()) {
+      throw new ResourceNotFoundException("Measure", id);
+    }
+
+    Measure measure = measureOptional.get();
+
+    return ResponseEntity.ok()
+        .header(
+            HttpHeaders.CONTENT_DISPOSITION,
+            "attachment;filename=\""
+                + ExportFileNamesUtil.getExportFileName(measure)
+                + "-TestCases"
+                + ".zip\"")
+        .contentType(MediaType.APPLICATION_OCTET_STREAM)
+        .body(exportService.getQRDA(measure, accessToken));
+  }
 }

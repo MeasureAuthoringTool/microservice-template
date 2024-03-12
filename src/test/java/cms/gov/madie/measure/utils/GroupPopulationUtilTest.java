@@ -427,8 +427,6 @@ public class GroupPopulationUtilTest {
 
     GroupPopulationUtil.reorderGroupPopulations(reorderedGroups);
 
-    System.out.println("copiedGroup = " + copiedGroup.getPopulations().toString());
-
     assertEquals(1, reorderedGroups.size());
     assertEquals(3, reorderedGroups.get(0).getPopulations().size());
     assertEquals(

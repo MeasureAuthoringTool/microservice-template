@@ -168,4 +168,33 @@ class ExportControllerTest {
                 Optional.of("COLLECTION"),
                 asList("example-test-case-id-1", "example-test-case-id-2")));
   }
+
+  @Test
+  void testGetQRDAThrowsNotFoundException() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+    when(measureRepository.findById(anyString())).thenReturn(Optional.empty());
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> exportController.getQRDA(principal, "test_id", "Bearer TOKEN"));
+  }
+
+  @Test
+  void testGetQRDASuccess() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+    final Measure measure =
+        Measure.builder()
+            .ecqmTitle("test_ecqm_title")
+            .version(new Version(0, 0, 0))
+            .model("QiCore 4.1.1")
+            .createdBy("test.user")
+            .build();
+
+    byte[] response = new byte[0];
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(exportService.getQRDA(eq(measure), anyString())).thenReturn(response);
+    ResponseEntity<byte[]> output = exportController.getQRDA(principal, "test_id", "Bearer TOKEN");
+    assertEquals(HttpStatus.OK, output.getStatusCode());
+  }
 }
