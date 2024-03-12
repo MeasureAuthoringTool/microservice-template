@@ -3,7 +3,6 @@ package cms.gov.madie.measure.utils;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
@@ -204,13 +203,13 @@ public class GroupPopulationUtilTest {
   @Test
   public void testGetValidPopulationsGroupNull() {
     List<Population> result = GroupPopulationUtil.getValidPopulations(null);
-    assertNull(result);
+    assertTrue(CollectionUtils.isEmpty(result));
   }
 
   @Test
   public void testGetValidPopulationsPopulationsNull() {
     List<Population> result = GroupPopulationUtil.getValidPopulations(Group.builder().build());
-    assertNull(result);
+    assertTrue(CollectionUtils.isEmpty(result));
   }
 
   @Test
@@ -246,14 +245,14 @@ public class GroupPopulationUtilTest {
   @Test
   public void testGetValidObservationsGroupNull() {
     List<MeasureObservation> result = GroupPopulationUtil.getValidObservations(null);
-    assertNull(result);
+    assertTrue(CollectionUtils.isEmpty(result));
   }
 
   @Test
   public void testGetValidObservationsObservationsNull() {
     List<MeasureObservation> result =
         GroupPopulationUtil.getValidObservations(Group.builder().build());
-    assertNull(result);
+    assertTrue(CollectionUtils.isEmpty(result));
   }
 
   @Test
@@ -292,14 +291,14 @@ public class GroupPopulationUtilTest {
   @Test
   public void testGetValidStratificationsGroupNull() {
     List<Stratification> result = GroupPopulationUtil.getValidStratifications(null);
-    assertNull(result);
+    assertTrue(CollectionUtils.isEmpty(result));
   }
 
   @Test
   public void testGetValidStratificationsStratificationsNull() {
     List<Stratification> result =
         GroupPopulationUtil.getValidStratifications(Group.builder().build());
-    assertNull(result);
+    assertTrue(CollectionUtils.isEmpty(result));
   }
 
   @Test
