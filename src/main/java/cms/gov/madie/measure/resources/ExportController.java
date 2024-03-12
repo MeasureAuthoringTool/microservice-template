@@ -83,7 +83,7 @@ public class ExportController {
         measure, accessToken, testCaseId, bundleType.orElse(("COLLECTION").toUpperCase()));
   }
 
-  @GetMapping(path = "/measures/{id}/qdm/qrda", produces = "application/zip")
+  @GetMapping(path = "/measures/{id}/test-cases/qrda", produces = "application/zip")
   public ResponseEntity<byte[]> getQRDA(
       Principal principal,
       @PathVariable("id") String id,
