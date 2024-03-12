@@ -27,4 +27,10 @@ public class QicorePackageServiceTest {
     byte[] rawPackage = qicorePackageService.getMeasurePackage(new Measure(), "token");
     assertThat(new String(rawPackage), is(equalTo(measurePackage)));
   }
+
+  @Test
+  void testGetQRDA() {
+    byte[] qrda = qicorePackageService.getQRDA(new Measure(), "token");
+    assertThat(new String(qrda), is(equalTo("")));
+  }
 }

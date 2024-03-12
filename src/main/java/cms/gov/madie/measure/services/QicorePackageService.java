@@ -13,4 +13,10 @@ public class QicorePackageService implements PackageService {
   public byte[] getMeasurePackage(Measure measure, String accessToken) {
     return bundleService.getMeasureExport(measure, accessToken);
   }
+
+  @Override
+  public byte[] getQRDA(Measure measure, String accessToken) {
+    // to be implemented
+    return "".getBytes();
+  }
 }

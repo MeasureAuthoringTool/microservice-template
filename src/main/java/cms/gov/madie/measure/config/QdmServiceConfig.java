@@ -15,6 +15,9 @@ public class QdmServiceConfig {
   @Value("${madie.qdm-service.create-package-urn}")
   private String createPackageUrn;
 
+  @Value("${madie.qdm-service.create-qrda-urn}")
+  private String createQrdaUrn;
+
   @Bean
   public RestTemplate qdmServiceRestTemplate() {
     return new RestTemplate();
