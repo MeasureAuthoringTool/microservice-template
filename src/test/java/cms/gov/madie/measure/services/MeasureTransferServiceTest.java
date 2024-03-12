@@ -149,7 +149,7 @@ public class MeasureTransferServiceTest {
 
     assertNotNull(overwrittenMeasure.getId());
     assertEquals(1, overwrittenMeasure.getTestCases().size());
-    assertNull(overwrittenMeasure.getTestCases().get(0).getGroupPopulations());
+    assertNotNull(overwrittenMeasure.getTestCases().get(0).getGroupPopulations());
   }
 
   @Test
@@ -177,6 +177,8 @@ public class MeasureTransferServiceTest {
         measureTransferService.overwriteExistingMeasure(List.of(measure1), transferredMeasure);
 
     assertNotNull(overwrittenMeasure.getId());
-    assertNull(overwrittenMeasure.getTestCases());
+    assertNotNull(overwrittenMeasure.getTestCases());
+    assertNotNull(overwrittenMeasure.getTestCases().get(0));
+    assertNull(overwrittenMeasure.getTestCases().get(0).getGroupPopulations());
   }
 }
