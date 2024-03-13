@@ -35,7 +35,7 @@ public class MeasureTransferService {
           mostRecentMeasure.getGroups(), transferredMeasure.getGroups())) {
         transferredMeasure.setGroups(mostRecentMeasure.getGroups());
         log.info(
-            "Overwrite meausre id {} with the testcases from original measure",
+            "Overwrite measure id {} with the testcases from original measure",
             mostRecentMeasure.getId());
       } else {
         if (CollectionUtils.isNotEmpty(originalTestCases)) {
