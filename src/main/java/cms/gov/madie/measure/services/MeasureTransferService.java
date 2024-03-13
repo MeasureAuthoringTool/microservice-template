@@ -30,9 +30,14 @@ public class MeasureTransferService {
       draftdMeasures.sort(Comparator.comparing(Measure::getLastModifiedAt));
       Measure mostRecentMeasure = draftdMeasures.get(draftdMeasures.size() - 1);
       transferredMeasure.setId(mostRecentMeasure.getId());
+      List<TestCase> originalTestCases = mostRecentMeasure.getTestCases();
       if (GroupPopulationUtil.areGroupsAndPopulationsMatching(
           mostRecentMeasure.getGroups(), transferredMeasure.getGroups())) {
-        List<TestCase> originalTestCases = mostRecentMeasure.getTestCases();
+        transferredMeasure.setGroups(mostRecentMeasure.getGroups());
+        log.info(
+            "Overwrite measure id {} with the testcases from original measure",
+            mostRecentMeasure.getId());
+      } else {
         if (CollectionUtils.isNotEmpty(originalTestCases)) {
           // test cases that need to be carried over to the new transferred measure,
           // however, groupPopulations need to be wiped out because there is no way
@@ -43,11 +48,8 @@ public class MeasureTransferService {
                   .map(testCase -> testCase.toBuilder().groupPopulations(null).build())
                   .collect(Collectors.toList());
         }
-        transferredMeasure.setTestCases(originalTestCases);
-        log.info(
-            "Overwrite meausre id {} with the testcases from original measure",
-            mostRecentMeasure.getId());
       }
+      transferredMeasure.setTestCases(originalTestCases);
     }
     return transferredMeasure;
   }
