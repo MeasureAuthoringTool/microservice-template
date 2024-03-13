@@ -1,12 +1,16 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.dto.MadieFeatureFlag;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.repositories.OrganizationRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
 import cms.gov.madie.measure.utils.MeasureUtil;
 import cms.gov.madie.measure.utils.ResourceUtil;
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
+import gov.cms.madie.models.common.ModelType;
+import gov.cms.madie.models.common.Organization;
 import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.*;
 
@@ -14,6 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -64,21 +69,26 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class MeasureServiceTest implements ResourceUtil {
   @Mock private MeasureRepository measureRepository;
+  @Mock private OrganizationRepository organizationRepository;
   @Mock private ElmTranslatorClient elmTranslatorClient;
   @Mock private MeasureUtil measureUtil;
   @Mock private ActionLogService actionLogService;
   @Mock private MeasureSetService measureSetService;
   @Mock private TerminologyValidationService terminologyValidationService;
+  @Mock private AppConfigService appConfigService;
+  @Mock private MeasureTransferService measureTransferService;
 
   @InjectMocks private MeasureService measureService;
 
   @Captor private ArgumentCaptor<Measure> measureArgumentCaptor;
 
   private Group group2;
-  private MeasureMetaData measureMetaData;
+  private MeasureMetaData draftMeasureMetaData;
+  private MeasureMetaData finalMeasureMetaData;
   private String elmJson;
   private Measure measure1;
   private Measure measure2;
+  private List<Organization> organizationList;
 
   @BeforeEach
   public void setUp() {
@@ -101,11 +111,54 @@ public class MeasureServiceTest implements ResourceUtil {
             .referenceType("test type 2")
             .referenceText("test text 2")
             .build();
-    measureMetaData =
+
+    List<Reference> references =
+        List.of(
+            Reference.builder()
+                .id("test reference id")
+                .referenceText("test reference text")
+                .referenceType("DOCUMENT")
+                .build());
+    List<Endorsement> endorsements =
+        List.of(
+            Endorsement.builder()
+                .endorserSystemId("test endorsement system id")
+                .endorser("NQF")
+                .endorsementId("testEndorsementId")
+                .build());
+
+    List<Organization> developersList = new ArrayList<>();
+    developersList.add(Organization.builder().name("SB 2").build());
+    developersList.add(Organization.builder().name("SB 3").build());
+
+    draftMeasureMetaData =
         MeasureMetaData.builder()
+            .steward(Organization.builder().name("SB").build())
+            .developers(developersList)
+            .copyright("Copyright@SB")
+            .references(references)
             .draft(true)
-            .definition("Test definition")
-            .references(List.of(reference1, reference2))
+            .endorsements(endorsements)
+            .riskAdjustment("test risk adjustment")
+            .definition("test definition")
+            .experimental(false)
+            .transmissionFormat("test transmission format")
+            .supplementalDataElements("test supplemental data elements")
+            .build();
+
+    finalMeasureMetaData =
+        MeasureMetaData.builder()
+            .steward(Organization.builder().name("SB").build())
+            .developers(developersList)
+            .copyright("Copyright@SB")
+            .references(references)
+            .draft(false)
+            .endorsements(endorsements)
+            .riskAdjustment("test risk adjustment")
+            .definition("test definition")
+            .experimental(false)
+            .transmissionFormat("test transmission format")
+            .supplementalDataElements("test supplemental data elements")
             .build();
 
     // Present in DB and has ID
@@ -129,10 +182,13 @@ public class MeasureServiceTest implements ResourceUtil {
         Measure.builder()
             .active(true)
             .id("xyz-p13r-13ert")
+            .model(ModelType.QI_CORE.getValue())
             .cql("test cql")
             .elmJson(elmJson)
             .measureSetId("IDIDID")
+            .cqlLibraryName("MSR01Library")
             .measureName("MSR01")
+            .measureMetaData(draftMeasureMetaData)
             .version(new Version(0, 0, 1))
             .groups(groups)
             .createdAt(Instant.now())
@@ -148,15 +204,21 @@ public class MeasureServiceTest implements ResourceUtil {
             .cql("test cql")
             .elmJson(elmJson)
             .measureSetId("2D2D2D")
-            .measureName("MSR01")
+            .measureName("MSR02")
             .version(new Version(0, 0, 1))
             .groups(groups)
             .createdAt(Instant.now())
             .createdBy("test user")
             .lastModifiedAt(Instant.now())
             .lastModifiedBy("test user")
-            .measureMetaData(measureMetaData)
+            .measureMetaData(draftMeasureMetaData)
             .build();
+
+    organizationList = new ArrayList<>();
+    organizationList.add(Organization.builder().name("SB").url("SB Url").build());
+    organizationList.add(Organization.builder().name("SB 2").url("SB 2 Url").build());
+    organizationList.add(Organization.builder().name("CancerLinQ").url("CancerLinQ Url").build());
+    organizationList.add(Organization.builder().name("Innovaccer").url("Innovaccer Url").build());
   }
 
   @Test
@@ -516,7 +578,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
             .createdAt(createdAt)
             .createdBy(createdBy)
-            .measureMetaData(measureMetaData)
+            .measureMetaData(draftMeasureMetaData)
             .lastModifiedAt(createdAt)
             .lastModifiedBy(createdBy)
             .build();
@@ -528,7 +590,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .lastModifiedAt(null)
             .lastModifiedBy("Nobody")
             .versionId("VersionId")
-            .measureMetaData(measureMetaData)
+            .measureMetaData(draftMeasureMetaData)
             .build();
     when(measureUtil.isCqlLibraryNameChanged(any(Measure.class), any(Measure.class)))
         .thenReturn(true);
@@ -565,7 +627,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .cmsId("CMS_ID1")
             .versionId("VersionId")
             .cql("original cql here")
-            .measureMetaData(measureMetaData)
+            .measureMetaData(draftMeasureMetaData)
             .errors(List.of(MeasureErrorType.ERRORS_ELM_JSON))
             .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
             .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
@@ -604,7 +666,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .cmsId("CMS_ID1")
             .versionId("VersionId")
             .cql("original cql here")
-            .measureMetaData(measureMetaData)
+            .measureMetaData(draftMeasureMetaData)
             .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
             .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
             .build();
@@ -1041,4 +1103,490 @@ public class MeasureServiceTest implements ResourceUtil {
     measureService.deleteVersionedMeasures(List.of(measure1, measure2));
     verify(measureRepository, times(0)).deleteAll(repositoryArgCaptor.capture());
   }
+
+  //// New Tests after refactoring
+
+  @Test
+  public void testImportMeasureSuccess_QiCoreAndNewLibrary() throws Exception {
+    doReturn(measure1).when(measureRepository).save(any(Measure.class));
+    when(organizationRepository.findAll()).thenReturn(organizationList);
+
+    Measure persistedMeasure =
+        measureService.importMatMeasure(measure1, "1", "TOUCH_DOWN", "akinsgre");
+
+    assertNotNull(persistedMeasure);
+
+    assertEquals(measure1.getMeasureSetId(), persistedMeasure.getMeasureSetId());
+    assertEquals(measure1.getMeasureName(), persistedMeasure.getMeasureName());
+    assertEquals(measure1.getModel(), ModelType.QI_CORE.getValue());
+
+    assertEquals(measure1.getCqlLibraryName(), persistedMeasure.getCqlLibraryName());
+    assertEquals(measure1.getCql(), persistedMeasure.getCql());
+    assertEquals(measure1.getGroups().size(), persistedMeasure.getGroups().size());
+    assertEquals(
+        measure1.getGroups().get(0).getPopulations().get(0).getDescription(),
+        persistedMeasure.getGroups().get(0).getPopulations().get(0).getDescription());
+    assertEquals(
+        measure1.getMeasureMetaData().getReferences().get(0).getReferenceText(),
+        persistedMeasure.getMeasureMetaData().getReferences().get(0).getReferenceText());
+    assertEquals(
+        measure1.getMeasureMetaData().getEndorsements().get(0).getEndorser(),
+        persistedMeasure.getMeasureMetaData().getEndorsements().get(0).getEndorser());
+    assertEquals(
+        measure1.getMeasureMetaData().isDraft(), persistedMeasure.getMeasureMetaData().isDraft());
+    assertEquals(
+        measure1.getMeasureMetaData().getRiskAdjustment(),
+        persistedMeasure.getMeasureMetaData().getRiskAdjustment());
+    assertEquals(
+        measure1.getMeasureMetaData().getDefinition(),
+        persistedMeasure.getMeasureMetaData().getDefinition());
+    assertEquals(
+        measure1.getMeasureMetaData().isExperimental(),
+        persistedMeasure.getMeasureMetaData().isExperimental());
+    assertEquals(
+        measure1.getMeasureMetaData().getTransmissionFormat(),
+        persistedMeasure.getMeasureMetaData().getTransmissionFormat());
+    assertEquals(
+        measure1.getMeasureMetaData().getSupplementalDataElements(),
+        persistedMeasure.getMeasureMetaData().getSupplementalDataElements());
+
+    assertEquals("SB Url", persistedMeasure.getMeasureMetaData().getSteward().getUrl());
+    assertEquals(1, persistedMeasure.getMeasureMetaData().getDevelopers().size());
+    assertEquals("SB 2 Url", persistedMeasure.getMeasureMetaData().getDevelopers().get(0).getUrl());
+  }
+
+  @Test
+  public void testImportMeasureSuccess_EnableRepeatIsTrueAndQiCoreAndNewLibrary() throws Exception {
+    doReturn(true)
+        .when(appConfigService)
+        .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
+    doReturn(measure1).when(measureRepository).save(any(Measure.class));
+    when(organizationRepository.findAll()).thenReturn(organizationList);
+
+    Measure persistedMeasure =
+        measureService.importMatMeasure(measure1, "1", "TOUCH_DOWN", "akinsgre");
+
+    assertNotNull(persistedMeasure);
+
+    assertEquals(measure1.getMeasureSetId(), persistedMeasure.getMeasureSetId());
+    assertEquals(measure1.getMeasureName(), persistedMeasure.getMeasureName());
+    assertEquals(measure1.getModel(), ModelType.QI_CORE.getValue());
+
+    assertEquals(measure1.getCqlLibraryName(), persistedMeasure.getCqlLibraryName());
+    assertEquals(measure1.getCql(), persistedMeasure.getCql());
+    assertEquals(measure1.getGroups().size(), persistedMeasure.getGroups().size());
+    assertEquals(
+        measure1.getGroups().get(0).getPopulations().get(0).getDescription(),
+        persistedMeasure.getGroups().get(0).getPopulations().get(0).getDescription());
+    assertEquals(
+        measure1.getMeasureMetaData().getReferences().get(0).getReferenceText(),
+        persistedMeasure.getMeasureMetaData().getReferences().get(0).getReferenceText());
+    assertEquals(
+        measure1.getMeasureMetaData().getEndorsements().get(0).getEndorser(),
+        persistedMeasure.getMeasureMetaData().getEndorsements().get(0).getEndorser());
+    assertEquals(
+        measure1.getMeasureMetaData().isDraft(), persistedMeasure.getMeasureMetaData().isDraft());
+    assertEquals(
+        measure1.getMeasureMetaData().getRiskAdjustment(),
+        persistedMeasure.getMeasureMetaData().getRiskAdjustment());
+    assertEquals(
+        measure1.getMeasureMetaData().getDefinition(),
+        persistedMeasure.getMeasureMetaData().getDefinition());
+    assertEquals(
+        measure1.getMeasureMetaData().isExperimental(),
+        persistedMeasure.getMeasureMetaData().isExperimental());
+    assertEquals(
+        measure1.getMeasureMetaData().getTransmissionFormat(),
+        persistedMeasure.getMeasureMetaData().getTransmissionFormat());
+    assertEquals(
+        measure1.getMeasureMetaData().getSupplementalDataElements(),
+        persistedMeasure.getMeasureMetaData().getSupplementalDataElements());
+
+    assertEquals("SB Url", persistedMeasure.getMeasureMetaData().getSteward().getUrl());
+    assertEquals(1, persistedMeasure.getMeasureMetaData().getDevelopers().size());
+    assertEquals("SB 2 Url", persistedMeasure.getMeasureMetaData().getDevelopers().get(0).getUrl());
+  }
+
+  @Test
+  public void testImportMeasureFailure_EnableRepeatIsFalseAndWhenMeasureSetExists()
+      throws Exception {
+    doReturn(false)
+        .when(appConfigService)
+        .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
+    doReturn(List.of(measure1, measure2))
+        .when(measureRepository)
+        .findAllByMeasureSetId(eq("IDIDID"));
+
+    Exception exception =
+        assertThrows(
+            DuplicateMeasureException.class,
+            () -> {
+              measureService.importMatMeasure(measure1, "1", "TOUCH_DOWN", "akinsgre");
+              ;
+            });
+
+    String expectedMessage = "The measure already exists";
+    String actualMessage = exception.getMessage();
+
+    assertTrue(actualMessage.contains(expectedMessage));
+
+    verify(measureRepository, times(1)).findAllByMeasureSetId(anyString());
+  }
+
+  @Test
+  public void testImportMeasureFailure_EnableRepeatIsTrueAndQICCoreAndWhenMeasureSetExists()
+      throws Exception {
+    doReturn(true)
+        .when(appConfigService)
+        .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
+    doReturn(List.of(measure1, measure2))
+        .when(measureRepository)
+        .findAllByMeasureSetId(eq("IDIDID"));
+
+    Exception exception =
+        assertThrows(
+            DuplicateMeasureException.class,
+            () -> {
+              measureService.importMatMeasure(measure1, "1", "TOUCH_DOWN", "akinsgre");
+              ;
+            });
+
+    String expectedMessage = "The measure already exists";
+    String actualMessage = exception.getMessage();
+
+    assertTrue(actualMessage.contains(expectedMessage));
+
+    verify(measureRepository, times(1)).findAllByMeasureSetId(anyString());
+  }
+
+  @Test
+  public void testImportMeasureFailure_EnableRepeatFalseAndQiCoreAndDuplicateLibraryName()
+      throws Exception {
+    doReturn(false)
+        .when(appConfigService)
+        .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
+    doReturn(Optional.of(measure2))
+        .when(measureRepository)
+        .findByCqlLibraryName(eq("MSR01Library"));
+
+    Exception exception =
+        assertThrows(
+            DuplicateKeyException.class,
+            () -> {
+              measureService.importMatMeasure(measure1, "1", "TOUCH_DOWN", "akinsgre");
+              ;
+            });
+
+    String expectedMessage = "CQL library with given name already exists.";
+    String actualMessage = exception.getMessage();
+
+    assertTrue(actualMessage.contains(expectedMessage));
+
+    verify(measureRepository, times(1)).findAllByMeasureSetId(anyString());
+  }
+
+  @Test
+  public void testImportMeasureFailure_EnableRepeatTrueAndQiCoreAndDuplicateLibraryName()
+      throws Exception {
+    doReturn(true)
+        .when(appConfigService)
+        .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
+    doReturn(Optional.of(measure2))
+        .when(measureRepository)
+        .findByCqlLibraryName(eq("MSR01Library"));
+
+    Exception exception =
+        assertThrows(
+            DuplicateKeyException.class,
+            () -> {
+              measureService.importMatMeasure(measure1, "1", "TOUCH_DOWN", "akinsgre");
+              ;
+            });
+
+    String expectedMessage = "CQL library with given name already exists.";
+    String actualMessage = exception.getMessage();
+
+    assertTrue(actualMessage.contains(expectedMessage));
+
+    verify(measureRepository, times(1)).findAllByMeasureSetId(anyString());
+  }
+
+  @Test
+  public void testImportMeasureFailure_EnableRepeatTrueAndQdmAndDuplicateLibraryName()
+      throws Exception {
+    doReturn(true)
+        .when(appConfigService)
+        .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
+    measure1.setModel(ModelType.QDM_5_6.getValue());
+
+    doReturn(Optional.of(measure2))
+        .when(measureRepository)
+        .findByCqlLibraryName(eq("MSR01Library"));
+
+    Exception exception =
+        assertThrows(
+            DuplicateKeyException.class,
+            () -> {
+              measureService.importMatMeasure(measure1, "1", "TOUCH_DOWN", "akinsgre");
+              ;
+            });
+
+    String expectedMessage = "CQL library with given name already exists.";
+    String actualMessage = exception.getMessage();
+
+    assertTrue(actualMessage.contains(expectedMessage));
+
+    verify(measureRepository, times(1)).findAllByMeasureSetId(anyString());
+  }
+
+  @Test
+  public void testImportMeasureSuccess_EnableRepeatTrueAndQdmAndSameMeasureSetId()
+      throws Exception {
+    doReturn(true)
+        .when(appConfigService)
+        .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
+
+    measure1.setModel(ModelType.QDM_5_6.getValue());
+
+    measure2.setMeasureMetaData(finalMeasureMetaData);
+    measure2.setMeasureSetId(measure1.getMeasureSetId());
+    doReturn(List.of(measure2)).when(measureRepository).findAllByMeasureSetId(eq("IDIDID"));
+    doReturn(Optional.of(measure2))
+        .when(measureRepository)
+        .findByCqlLibraryName(eq("MSR01Library"));
+    when(organizationRepository.findAll()).thenReturn(organizationList);
+    doReturn(measure1).when(measureRepository).save(any(Measure.class));
+    doReturn(measure1)
+        .when(measureTransferService)
+        .overwriteExistingMeasure(ArgumentMatchers.anyList(), eq(measure1));
+    Measure persistedMeasure =
+        measureService.importMatMeasure(measure1, "1", "TOUCH_DOWN", "akinsgre");
+    assertEquals(measure1.getMeasureSetId(), persistedMeasure.getMeasureSetId());
+
+    verify(measureRepository, times(1)).findAllByMeasureSetId(anyString());
+    verify(measureRepository, times(1)).save(any(Measure.class));
+    verify(measureRepository, times(1)).deleteAll(ArgumentMatchers.anyList());
+    verify(measureTransferService, times(1))
+        .overwriteExistingMeasure(ArgumentMatchers.anyList(), eq(measure1));
+  }
+
+  @Test
+  public void testImportMeasureSuccess_EnableRepeatTransferIsTrueAndQdmAndNewLibrary()
+      throws Exception {
+    measure1.setModel(ModelType.QDM_5_6.getValue());
+    measure1.setMeasureSetId("3e3e3e");
+    doReturn(measure1).when(measureRepository).save(any(Measure.class));
+    doReturn(true)
+        .when(appConfigService)
+        .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
+    when(organizationRepository.findAll()).thenReturn(organizationList);
+
+    Measure persistedMeasure =
+        measureService.importMatMeasure(measure1, "1", "TOUCH_DOWN", "akinsgre");
+
+    assertNotNull(persistedMeasure);
+
+    assertEquals(measure1.getMeasureSetId(), persistedMeasure.getMeasureSetId());
+    assertEquals(measure1.getMeasureName(), persistedMeasure.getMeasureName());
+    assertEquals(measure1.getModel(), ModelType.QDM_5_6.getValue());
+    assertEquals(measure1.getCqlLibraryName(), persistedMeasure.getCqlLibraryName());
+    assertEquals(measure1.getCql(), persistedMeasure.getCql());
+    assertEquals(measure1.getGroups().size(), persistedMeasure.getGroups().size());
+    assertEquals(
+        measure1.getGroups().get(0).getPopulations().get(0).getDescription(),
+        persistedMeasure.getGroups().get(0).getPopulations().get(0).getDescription());
+    assertEquals(
+        measure1.getMeasureMetaData().getReferences().get(0).getReferenceText(),
+        persistedMeasure.getMeasureMetaData().getReferences().get(0).getReferenceText());
+    assertEquals(
+        measure1.getMeasureMetaData().getEndorsements().get(0).getEndorser(),
+        persistedMeasure.getMeasureMetaData().getEndorsements().get(0).getEndorser());
+    assertEquals(
+        measure1.getMeasureMetaData().isDraft(), persistedMeasure.getMeasureMetaData().isDraft());
+    assertEquals(
+        measure1.getMeasureMetaData().getRiskAdjustment(),
+        persistedMeasure.getMeasureMetaData().getRiskAdjustment());
+    assertEquals(
+        measure1.getMeasureMetaData().getDefinition(),
+        persistedMeasure.getMeasureMetaData().getDefinition());
+    assertEquals(
+        measure1.getMeasureMetaData().isExperimental(),
+        persistedMeasure.getMeasureMetaData().isExperimental());
+    assertEquals(
+        measure1.getMeasureMetaData().getTransmissionFormat(),
+        persistedMeasure.getMeasureMetaData().getTransmissionFormat());
+    assertEquals(
+        measure1.getMeasureMetaData().getSupplementalDataElements(),
+        persistedMeasure.getMeasureMetaData().getSupplementalDataElements());
+
+    assertEquals("SB Url", persistedMeasure.getMeasureMetaData().getSteward().getUrl());
+    assertEquals(1, persistedMeasure.getMeasureMetaData().getDevelopers().size());
+    assertEquals("SB 2 Url", persistedMeasure.getMeasureMetaData().getDevelopers().get(0).getUrl());
+  }
+
+  @Test
+  public void testImportMeasureSuccess_EnableRepeatTransferIsFalseAndQdmAndNewLibrary()
+      throws Exception {
+    measure1.setModel(ModelType.QDM_5_6.getValue());
+    doReturn(measure1).when(measureRepository).save(any(Measure.class));
+    doReturn(false)
+        .when(appConfigService)
+        .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
+    when(organizationRepository.findAll()).thenReturn(organizationList);
+
+    Measure persistedMeasure =
+        measureService.importMatMeasure(measure1, "1", "TOUCH_DOWN", "akinsgre");
+
+    assertNotNull(persistedMeasure);
+
+    assertEquals(measure1.getMeasureSetId(), persistedMeasure.getMeasureSetId());
+    assertEquals(measure1.getMeasureName(), persistedMeasure.getMeasureName());
+    assertEquals(measure1.getModel(), ModelType.QDM_5_6.getValue());
+    assertEquals(measure1.getCqlLibraryName(), persistedMeasure.getCqlLibraryName());
+    assertEquals(measure1.getCql(), persistedMeasure.getCql());
+    assertEquals(measure1.getGroups().size(), persistedMeasure.getGroups().size());
+    assertEquals(
+        measure1.getGroups().get(0).getPopulations().get(0).getDescription(),
+        persistedMeasure.getGroups().get(0).getPopulations().get(0).getDescription());
+    assertEquals(
+        measure1.getMeasureMetaData().getReferences().get(0).getReferenceText(),
+        persistedMeasure.getMeasureMetaData().getReferences().get(0).getReferenceText());
+    assertEquals(
+        measure1.getMeasureMetaData().getEndorsements().get(0).getEndorser(),
+        persistedMeasure.getMeasureMetaData().getEndorsements().get(0).getEndorser());
+    assertEquals(
+        measure1.getMeasureMetaData().isDraft(), persistedMeasure.getMeasureMetaData().isDraft());
+    assertEquals(
+        measure1.getMeasureMetaData().getRiskAdjustment(),
+        persistedMeasure.getMeasureMetaData().getRiskAdjustment());
+    assertEquals(
+        measure1.getMeasureMetaData().getDefinition(),
+        persistedMeasure.getMeasureMetaData().getDefinition());
+    assertEquals(
+        measure1.getMeasureMetaData().isExperimental(),
+        persistedMeasure.getMeasureMetaData().isExperimental());
+    assertEquals(
+        measure1.getMeasureMetaData().getTransmissionFormat(),
+        persistedMeasure.getMeasureMetaData().getTransmissionFormat());
+    assertEquals(
+        measure1.getMeasureMetaData().getSupplementalDataElements(),
+        persistedMeasure.getMeasureMetaData().getSupplementalDataElements());
+
+    assertEquals("SB Url", persistedMeasure.getMeasureMetaData().getSteward().getUrl());
+    assertEquals(1, persistedMeasure.getMeasureMetaData().getDevelopers().size());
+    assertEquals("SB 2 Url", persistedMeasure.getMeasureMetaData().getDevelopers().get(0).getUrl());
+  }
+
+  @Test
+  public void testImportMeasureFailure_EnableRepeatTransferIsFalseAndQdmAndExistsInMeasureSet()
+      throws Exception {
+    measure1.setModel(ModelType.QDM_5_6.getValue());
+    doReturn(false)
+        .when(appConfigService)
+        .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
+    doReturn(List.of(measure1, measure2))
+        .when(measureRepository)
+        .findAllByMeasureSetId(eq("IDIDID"));
+
+    Exception exception =
+        assertThrows(
+            DuplicateMeasureException.class,
+            () -> {
+              measureService.importMatMeasure(measure1, "1", "TOUCH_DOWN", "akinsgre");
+              ;
+            });
+
+    String expectedMessage = "The measure already exists";
+    String actualMessage = exception.getMessage();
+
+    assertTrue(actualMessage.contains(expectedMessage));
+
+    verify(measureRepository, times(1)).findAllByMeasureSetId(anyString());
+  }
+
+  @Test
+  public void testImportMeasureFailure_EnableRepeatTransferIsFalseAndQdmAndDuplicateCqlLibrary()
+      throws Exception {
+    measure1.setModel(ModelType.QDM_5_6.getValue());
+    doReturn(false)
+        .when(appConfigService)
+        .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
+    doReturn(Optional.of(measure2))
+        .when(measureRepository)
+        .findByCqlLibraryName(eq("MSR01Library"));
+
+    Exception exception =
+        assertThrows(
+            DuplicateKeyException.class,
+            () -> {
+              measureService.importMatMeasure(measure1, "1", "TOUCH_DOWN", "akinsgre");
+              ;
+            });
+
+    String expectedMessage = "CQL library with given name already exists.";
+    String actualMessage = exception.getMessage();
+
+    assertTrue(actualMessage.contains(expectedMessage));
+
+    verify(measureRepository, times(1)).findAllByMeasureSetId(anyString());
+  }
+  //    @Test
+  //    public void testCreateMeasureUpdateVersion() throws Exception {
+  //      String measureJson = new ObjectMapper().writeValueAsString(qdmMeasure);
+  //
+  //      ArgumentCaptor<Measure> persistedMeasureArgCaptor =
+  // ArgumentCaptor.forClass(Measure.class);
+  //
+  //      doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
+  //      when(elmTranslatorClient.getElmJsonForMatMeasure(anyString(), anyString(), anyString()))
+  //          .thenReturn(elmJson);
+  //      when(elmTranslatorClient.hasErrors(elmJson)).thenReturn(false);
+  //      doReturn(true)
+  //          .when(appConfigService)
+  //          .isFlagEnabled(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER);
+  //      doReturn("library MedicationDispenseTest version '3.2.000' using QDM version '5.6'")
+  //          .when(versionService)
+  //          .generateLibraryContentLine("MedicationDispenseTest", new Version(3, 2, 0));
+  //
+  //      doReturn("library MedicationDispenseTest version '0.0.000' using QDM version '5.6'")
+  //          .when(versionService)
+  //          .generateLibraryContentLine("MedicationDispenseTest", new Version(0, 0, 0));
+  //      when(organizationRepository.findAll()).thenReturn(organizationList);
+  //      doReturn(qdmMeasure).when(measureRepository).save(any(Measure.class));
+  //      doNothing()
+  //          .when(measureSetService)
+  //          .createMeasureSet(anyString(), anyString(), anyString(), anyString());
+  //
+  //      when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
+  //
+  //      mockMvc
+  //          .perform(
+  //              MockMvcRequestBuilders.post("/measure-transfer/mat-measures?cmsId=" + cmsId)
+  //                  .content(measureJson)
+  //                  .contentType(MediaType.APPLICATION_JSON_VALUE)
+  //                  .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
+  //                  .header(HARP_ID_HEADER_KEY, HARP_ID_HEADER_VALUE))
+  //          .andExpect(status().isCreated());
+  //
+  //      verify(measureRepository, times(1)).save(persistedMeasureArgCaptor.capture());
+  //      Measure persistedMeasure = persistedMeasureArgCaptor.getValue();
+  //      assertNotNull(persistedMeasure);
+  //      assertEquals(qdmMeasure.getMeasureSetId(), persistedMeasure.getMeasureSetId());
+  //      assertEquals(qdmMeasure.getMeasureName(), persistedMeasure.getMeasureName());
+  //      assertEquals(qdmMeasure.getCqlLibraryName(), persistedMeasure.getCqlLibraryName());
+  //      assertEquals(
+  //          "library MedicationDispenseTest version '0.0.000' using QDM version '5.6'",
+  //          persistedMeasure.getCql());
+  //
+  //      verify(actionLogService, times(1))
+  //          .logAction(
+  //              targetIdArgumentCaptor.capture(),
+  //              targetClassArgumentCaptor.capture(),
+  //              actionTypeArgumentCaptor.capture(),
+  //              performedByArgumentCaptor.capture());
+  //      assertNotNull(targetIdArgumentCaptor.getValue());
+  //      assertThat(targetClassArgumentCaptor.getValue(), is(equalTo(Measure.class)));
+  //      assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.IMPORTED)));
+  //      assertThat(performedByArgumentCaptor.getValue(), is(equalTo("testCreatedBy")));
+  //    }
 }

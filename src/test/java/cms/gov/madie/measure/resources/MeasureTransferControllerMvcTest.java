@@ -1,8 +1,6 @@
 package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.SecurityConfig;
-import cms.gov.madie.measure.dto.MadieFeatureFlag;
-import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.repositories.OrganizationRepository;
@@ -31,14 +29,9 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest({MeasureTransferController.class})
@@ -71,7 +64,6 @@ public class MeasureTransferControllerMvcTest {
 
   @Captor private ArgumentCaptor<ActionType> actionTypeArgumentCaptor;
   @Captor private ArgumentCaptor<Class> targetClassArgumentCaptor;
-  @Captor private ArgumentCaptor<String> targetIdArgumentCaptor;
   @Captor private ArgumentCaptor<String> performedByArgumentCaptor;
 
   @Autowired private MockMvc mockMvc;
@@ -195,164 +187,6 @@ public class MeasureTransferControllerMvcTest {
   }
 
   @Test
-  public void testCreateMeasureSuccess() throws Exception {
-    String measureJson = new ObjectMapper().writeValueAsString(measure);
-
-    ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
-
-    when(elmTranslatorClient.getElmJsonForMatMeasure(anyString(), anyString(), anyString()))
-        .thenReturn(elmJson);
-    when(elmTranslatorClient.hasErrors(elmJson)).thenReturn(false);
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
-    doNothing()
-        .when(measureSetService)
-        .createMeasureSet(anyString(), anyString(), anyString(), anyString());
-    doReturn(measure).when(measureRepository).save(any(Measure.class));
-    when(organizationRepository.findAll()).thenReturn(organizationList);
-
-    mockMvc
-        .perform(
-            MockMvcRequestBuilders.post("/measure-transfer/mat-measures?cmsId=" + cmsId)
-                .content(measureJson)
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
-                .header(HARP_ID_HEADER_KEY, HARP_ID_HEADER_VALUE))
-        .andExpect(status().isCreated());
-
-    verify(measureRepository, times(1)).save(persistedMeasureArgCaptor.capture());
-    Measure persistedMeasure = persistedMeasureArgCaptor.getValue();
-    assertNotNull(persistedMeasure);
-
-    assertEquals(measure.getMeasureSetId(), persistedMeasure.getMeasureSetId());
-    assertEquals(measure.getMeasureName(), persistedMeasure.getMeasureName());
-    assertEquals(measure.getCqlLibraryName(), persistedMeasure.getCqlLibraryName());
-    assertEquals(measure.getCql(), persistedMeasure.getCql());
-    assertEquals(measure.getGroups().size(), persistedMeasure.getGroups().size());
-    assertEquals(
-        measure.getGroups().get(0).getPopulations().get(0).getDescription(),
-        persistedMeasure.getGroups().get(0).getPopulations().get(0).getDescription());
-    assertEquals(
-        measure.getMeasureMetaData().getReferences().get(0).getReferenceText(),
-        persistedMeasure.getMeasureMetaData().getReferences().get(0).getReferenceText());
-    assertEquals(
-        measure.getMeasureMetaData().getEndorsements().get(0).getEndorser(),
-        persistedMeasure.getMeasureMetaData().getEndorsements().get(0).getEndorser());
-    assertEquals(
-        measure.getMeasureMetaData().isDraft(), persistedMeasure.getMeasureMetaData().isDraft());
-    assertEquals(
-        measure.getMeasureMetaData().getRiskAdjustment(),
-        persistedMeasure.getMeasureMetaData().getRiskAdjustment());
-    assertEquals(
-        measure.getMeasureMetaData().getDefinition(),
-        persistedMeasure.getMeasureMetaData().getDefinition());
-    assertEquals(
-        measure.getMeasureMetaData().isExperimental(),
-        persistedMeasure.getMeasureMetaData().isExperimental());
-    assertEquals(
-        measure.getMeasureMetaData().getTransmissionFormat(),
-        persistedMeasure.getMeasureMetaData().getTransmissionFormat());
-    assertEquals(
-        measure.getMeasureMetaData().getSupplementalDataElements(),
-        persistedMeasure.getMeasureMetaData().getSupplementalDataElements());
-
-    assertEquals("SB Url", persistedMeasure.getMeasureMetaData().getSteward().getUrl());
-    assertEquals(1, persistedMeasure.getMeasureMetaData().getDevelopers().size());
-    assertEquals("SB 2 Url", persistedMeasure.getMeasureMetaData().getDevelopers().get(0).getUrl());
-
-    verify(actionLogService, times(1))
-        .logAction(
-            targetIdArgumentCaptor.capture(),
-            targetClassArgumentCaptor.capture(),
-            actionTypeArgumentCaptor.capture(),
-            performedByArgumentCaptor.capture());
-    assertNotNull(targetIdArgumentCaptor.getValue());
-    assertThat(targetClassArgumentCaptor.getValue(), is(equalTo(Measure.class)));
-    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.IMPORTED)));
-    assertThat(performedByArgumentCaptor.getValue(), is(equalTo("testCreatedBy")));
-  }
-
-  @Test
-  public void testCreateMeasureFailureWhenDuplicateLibraryName() throws Exception {
-    String measureJson = new ObjectMapper().writeValueAsString(measure);
-
-    doThrow(new DuplicateKeyException("cqlLibraryName", "CQL library already exists."))
-        .when(measureService)
-        .checkDuplicateCqlLibraryName(anyString());
-
-    mockMvc
-        .perform(
-            MockMvcRequestBuilders.post("/measure-transfer/mat-measures?cmsId=" + cmsId)
-                .content(measureJson)
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
-                .header(HARP_ID_HEADER_KEY, HARP_ID_HEADER_VALUE))
-        .andExpect(status().isBadRequest())
-        .andExpect(
-            jsonPath("$.validationErrors.cqlLibraryName").value("CQL library already exists."));
-
-    verify(measureService, times(1)).checkDuplicateCqlLibraryName(eq(measure.getCqlLibraryName()));
-  }
-
-  @Test
-  public void testCreateMeasureUpdateVersion() throws Exception {
-    String measureJson = new ObjectMapper().writeValueAsString(qdmMeasure);
-
-    ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
-
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
-    when(elmTranslatorClient.getElmJsonForMatMeasure(anyString(), anyString(), anyString()))
-        .thenReturn(elmJson);
-    when(elmTranslatorClient.hasErrors(elmJson)).thenReturn(false);
-    doReturn(true)
-        .when(appConfigService)
-        .isFlagEnabled(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER);
-    doReturn("library MedicationDispenseTest version '3.2.000' using QDM version '5.6'")
-        .when(versionService)
-        .generateLibraryContentLine("MedicationDispenseTest", new Version(3, 2, 0));
-
-    doReturn("library MedicationDispenseTest version '0.0.000' using QDM version '5.6'")
-        .when(versionService)
-        .generateLibraryContentLine("MedicationDispenseTest", new Version(0, 0, 0));
-    when(organizationRepository.findAll()).thenReturn(organizationList);
-    doReturn(qdmMeasure).when(measureRepository).save(any(Measure.class));
-    doNothing()
-        .when(measureSetService)
-        .createMeasureSet(anyString(), anyString(), anyString(), anyString());
-
-    when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
-
-    mockMvc
-        .perform(
-            MockMvcRequestBuilders.post("/measure-transfer/mat-measures?cmsId=" + cmsId)
-                .content(measureJson)
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
-                .header(HARP_ID_HEADER_KEY, HARP_ID_HEADER_VALUE))
-        .andExpect(status().isCreated());
-
-    verify(measureRepository, times(1)).save(persistedMeasureArgCaptor.capture());
-    Measure persistedMeasure = persistedMeasureArgCaptor.getValue();
-    assertNotNull(persistedMeasure);
-    assertEquals(qdmMeasure.getMeasureSetId(), persistedMeasure.getMeasureSetId());
-    assertEquals(qdmMeasure.getMeasureName(), persistedMeasure.getMeasureName());
-    assertEquals(qdmMeasure.getCqlLibraryName(), persistedMeasure.getCqlLibraryName());
-    assertEquals(
-        "library MedicationDispenseTest version '0.0.000' using QDM version '5.6'",
-        persistedMeasure.getCql());
-
-    verify(actionLogService, times(1))
-        .logAction(
-            targetIdArgumentCaptor.capture(),
-            targetClassArgumentCaptor.capture(),
-            actionTypeArgumentCaptor.capture(),
-            performedByArgumentCaptor.capture());
-    assertNotNull(targetIdArgumentCaptor.getValue());
-    assertThat(targetClassArgumentCaptor.getValue(), is(equalTo(Measure.class)));
-    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.IMPORTED)));
-    assertThat(performedByArgumentCaptor.getValue(), is(equalTo("testCreatedBy")));
-  }
-
-  @Test
   public void testCreateMeasureFailureWhenInvalidApiKey() throws Exception {
     String measureJson = new ObjectMapper().writeValueAsString(measure);
 
@@ -374,73 +208,10 @@ public class MeasureTransferControllerMvcTest {
   public void testCreateMeasureSuccessWithNoElmJsonError() throws Exception {
     String measureJson = new ObjectMapper().writeValueAsString(measure);
 
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
-    when(elmTranslatorClient.getElmJsonForMatMeasure(
-            CQL, LAMBDA_TEST_API_KEY_HEADER_VALUE, HARP_ID_HEADER_VALUE))
-        .thenReturn(elmJson);
-    when(elmTranslatorClient.hasErrors(elmJson)).thenReturn(false);
-    doNothing()
-        .when(measureSetService)
-        .createMeasureSet(anyString(), anyString(), anyString(), anyString());
-    doReturn(measure).when(measureRepository).save(any(Measure.class));
-    doReturn(measureSet).when(measureSetRepository).save(any(MeasureSet.class));
-    when(organizationRepository.findAll()).thenReturn(organizationList);
-
-    MvcResult result =
-        mockMvc
-            .perform(
-                MockMvcRequestBuilders.post("/measure-transfer/mat-measures?cmsId=" + cmsId)
-                    .content(measureJson)
-                    .contentType(MediaType.APPLICATION_JSON_VALUE)
-                    .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
-                    .header(HARP_ID_HEADER_KEY, HARP_ID_HEADER_VALUE))
-            .andExpect(status().isCreated())
-            .andReturn();
-
-    assertEquals(HttpStatus.CREATED.value(), result.getResponse().getStatus());
-  }
-
-  @Test
-  public void testCreateMeasureSuccessWithElmJsonError() throws Exception {
-    String measureJson = new ObjectMapper().writeValueAsString(measure);
-
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
-    when(elmTranslatorClient.getElmJsonForMatMeasure(
-            CQL, LAMBDA_TEST_API_KEY_HEADER_VALUE, HARP_ID_HEADER_VALUE))
-        .thenReturn(elmJson);
-    when(elmTranslatorClient.hasErrors(elmJson)).thenReturn(true);
-    doReturn(measure).when(measureRepository).save(any(Measure.class));
-    doReturn(measureSet).when(measureSetRepository).save(any(MeasureSet.class));
-    when(organizationRepository.findAll()).thenReturn(organizationList);
-
-    MvcResult result =
-        mockMvc
-            .perform(
-                MockMvcRequestBuilders.post("/measure-transfer/mat-measures?cmsId=" + cmsId)
-                    .content(measureJson)
-                    .contentType(MediaType.APPLICATION_JSON_VALUE)
-                    .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
-                    .header(HARP_ID_HEADER_KEY, HARP_ID_HEADER_VALUE))
-            .andExpect(status().isCreated())
-            .andReturn();
-
-    assertEquals(HttpStatus.CREATED.value(), result.getResponse().getStatus());
-  }
-
-  @Test
-  public void testCreateMeasureSuccessWithElmTranslatorException() throws Exception {
-    String measureJson = new ObjectMapper().writeValueAsString(measure);
-
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
-    doThrow(
-            new CqlElmTranslationServiceException(
-                "There was an error calling CQL-ELM translation service for MAT transferred measure",
-                null))
-        .when(elmTranslatorClient)
-        .getElmJsonForMatMeasure(anyString(), anyString(), anyString());
-    doReturn(measure).when(measureRepository).save(any(Measure.class));
-    doReturn(measureSet).when(measureSetRepository).save(any(MeasureSet.class));
-    when(organizationRepository.findAll()).thenReturn(organizationList);
+    doReturn(measure)
+        .when(measureService)
+        .importMatMeasure(
+            any(Measure.class), any(String.class), any(String.class), any(String.class));
 
     MvcResult result =
         mockMvc
