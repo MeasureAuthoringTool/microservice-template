@@ -48,6 +48,9 @@ public class TestCaseService {
   @Getter
   private String madieJsonResourcesBaseUri;
 
+  private static final String QDM_PATIENT =
+      "{\"qdmVersion\":\"5.6\",\"dataElements\":[],\"_id\":\"OBJECTID\"}";
+
   @Autowired
   public TestCaseService(
       MeasureRepository measureRepository,
@@ -105,6 +108,8 @@ public class TestCaseService {
     }
 
     verifyUniqueTestCaseName(testCase, measure);
+
+    defaultTestCaseJsonForQdmMeasure(testCase, measure);
 
     TestCase enrichedTestCase = enrichNewTestCase(testCase, username);
     enrichedTestCase =
@@ -732,5 +737,13 @@ public class TestCaseService {
             "Unable to validate test case JSON due to errors, "
                 + "but outcome not able to be interpreted!")
         .build();
+  }
+
+  protected void defaultTestCaseJsonForQdmMeasure(TestCase testCase, Measure measure) {
+    if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(measure.getModel())
+        && StringUtils.isBlank(testCase.getJson())) {
+      String objectId = ObjectId.get().toHexString();
+      testCase.setJson(QDM_PATIENT.replace("OBJECTID", objectId));
+    }
   }
 }
