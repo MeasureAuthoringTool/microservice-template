@@ -1,44 +1,5 @@
 package cms.gov.madie.measure.services;
 
-import cms.gov.madie.measure.dto.MadieFeatureFlag;
-import cms.gov.madie.measure.exceptions.*;
-import cms.gov.madie.measure.repositories.MeasureRepository;
-import cms.gov.madie.measure.repositories.OrganizationRepository;
-import cms.gov.madie.measure.resources.DuplicateKeyException;
-import cms.gov.madie.measure.utils.MeasureUtil;
-import cms.gov.madie.measure.utils.ResourceUtil;
-import gov.cms.madie.models.access.AclSpecification;
-import gov.cms.madie.models.access.RoleEnum;
-import gov.cms.madie.models.common.ModelType;
-import gov.cms.madie.models.common.Organization;
-import gov.cms.madie.models.common.Version;
-import gov.cms.madie.models.measure.*;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
-import org.mockito.Captor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
 import static java.util.Collections.emptySet;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -65,6 +26,62 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+
+import cms.gov.madie.measure.dto.MadieFeatureFlag;
+import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
+import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
+import cms.gov.madie.measure.exceptions.DuplicateMeasureException;
+import cms.gov.madie.measure.exceptions.InvalidDeletionCredentialsException;
+import cms.gov.madie.measure.exceptions.InvalidMeasureStateException;
+import cms.gov.madie.measure.exceptions.InvalidMeasurementPeriodException;
+import cms.gov.madie.measure.exceptions.InvalidTerminologyException;
+import cms.gov.madie.measure.exceptions.InvalidVersionIdException;
+import cms.gov.madie.measure.exceptions.UnauthorizedException;
+import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.repositories.OrganizationRepository;
+import cms.gov.madie.measure.resources.DuplicateKeyException;
+import cms.gov.madie.measure.utils.MeasureUtil;
+import cms.gov.madie.measure.utils.ResourceUtil;
+import gov.cms.madie.models.access.AclSpecification;
+import gov.cms.madie.models.access.RoleEnum;
+import gov.cms.madie.models.common.ModelType;
+import gov.cms.madie.models.common.Organization;
+import gov.cms.madie.models.common.Version;
+import gov.cms.madie.models.measure.ElmJson;
+import gov.cms.madie.models.measure.Endorsement;
+import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureErrorType;
+import gov.cms.madie.models.measure.MeasureMetaData;
+import gov.cms.madie.models.measure.MeasureSet;
+import gov.cms.madie.models.measure.Population;
+import gov.cms.madie.models.measure.PopulationType;
+import gov.cms.madie.models.measure.Reference;
+import gov.cms.madie.models.measure.Stratification;
 
 @ExtendWith(MockitoExtension.class)
 public class MeasureServiceTest implements ResourceUtil {
@@ -95,22 +112,11 @@ public class MeasureServiceTest implements ResourceUtil {
     Stratification strat1 = new Stratification();
     strat1.setId("strat-1");
     strat1.setCqlDefinition("Initial Population");
-    strat1.setAssociation(PopulationType.INITIAL_POPULATION);
     Stratification strat2 = new Stratification();
     strat2.setCqlDefinition("denominator_define");
-    strat2.setAssociation(PopulationType.DENOMINATOR);
 
     Stratification emptyStrat = new Stratification();
     // new group, not in DB, so no ID
-
-    Reference reference1 =
-        Reference.builder().referenceType("test type").referenceText("test text").build();
-    Reference reference2 =
-        Reference.builder()
-            .id("test id")
-            .referenceType("test type 2")
-            .referenceText("test text 2")
-            .build();
 
     List<Reference> references =
         List.of(
@@ -1156,6 +1162,57 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
+  public void testImportMeasureSuccessMatchMeasureSteward() throws Exception {
+    doReturn(measure1).when(measureRepository).save(any(Measure.class));
+    when(organizationRepository.findAll()).thenReturn(organizationList);
+    measure1
+        .getMeasureMetaData()
+        .setSteward(Organization.builder().name("Innovaccer Anylytics").build());
+    Measure persistedMeasure =
+        measureService.importMatMeasure(measure1, "1", "TOUCH_DOWN", "akinsgre");
+
+    assertNotNull(persistedMeasure);
+
+    assertEquals(measure1.getMeasureSetId(), persistedMeasure.getMeasureSetId());
+    assertEquals(measure1.getMeasureName(), persistedMeasure.getMeasureName());
+    assertEquals(measure1.getModel(), ModelType.QI_CORE.getValue());
+
+    assertEquals(measure1.getCqlLibraryName(), persistedMeasure.getCqlLibraryName());
+    assertEquals(measure1.getCql(), persistedMeasure.getCql());
+    assertEquals(measure1.getGroups().size(), persistedMeasure.getGroups().size());
+    assertEquals(
+        measure1.getGroups().get(0).getPopulations().get(0).getDescription(),
+        persistedMeasure.getGroups().get(0).getPopulations().get(0).getDescription());
+    assertEquals(
+        measure1.getMeasureMetaData().getReferences().get(0).getReferenceText(),
+        persistedMeasure.getMeasureMetaData().getReferences().get(0).getReferenceText());
+    assertEquals(
+        measure1.getMeasureMetaData().getEndorsements().get(0).getEndorser(),
+        persistedMeasure.getMeasureMetaData().getEndorsements().get(0).getEndorser());
+    assertEquals(
+        measure1.getMeasureMetaData().isDraft(), persistedMeasure.getMeasureMetaData().isDraft());
+    assertEquals(
+        measure1.getMeasureMetaData().getRiskAdjustment(),
+        persistedMeasure.getMeasureMetaData().getRiskAdjustment());
+    assertEquals(
+        measure1.getMeasureMetaData().getDefinition(),
+        persistedMeasure.getMeasureMetaData().getDefinition());
+    assertEquals(
+        measure1.getMeasureMetaData().isExperimental(),
+        persistedMeasure.getMeasureMetaData().isExperimental());
+    assertEquals(
+        measure1.getMeasureMetaData().getTransmissionFormat(),
+        persistedMeasure.getMeasureMetaData().getTransmissionFormat());
+    assertEquals(
+        measure1.getMeasureMetaData().getSupplementalDataElements(),
+        persistedMeasure.getMeasureMetaData().getSupplementalDataElements());
+
+    assertEquals("Innovaccer Url", persistedMeasure.getMeasureMetaData().getSteward().getUrl());
+    assertEquals(1, persistedMeasure.getMeasureMetaData().getDevelopers().size());
+    assertEquals("SB 2 Url", persistedMeasure.getMeasureMetaData().getDevelopers().get(0).getUrl());
+  }
+
+  @Test
   public void testImportMeasureSuccessElmJsonErrorsAndEnableRepeatIsTrueAndQiCoreAndNewLibrary()
       throws Exception {
     doReturn(true)
@@ -1473,16 +1530,15 @@ public class MeasureServiceTest implements ResourceUtil {
     doReturn(measure1).when(measureRepository).save(any(Measure.class));
     doReturn(measure1)
         .when(measureTransferService)
-        .overwriteExistingMeasure(ArgumentMatchers.anyList(), eq(measure1));
+        .overwriteExistingMeasure(anyList(), eq(measure1));
     Measure persistedMeasure =
         measureService.importMatMeasure(measure1, "1", "TOUCH_DOWN", "akinsgre");
     assertEquals(measure1.getMeasureSetId(), persistedMeasure.getMeasureSetId());
 
     verify(measureRepository, times(1)).findAllByMeasureSetId(anyString());
     verify(measureRepository, times(1)).save(any(Measure.class));
-    verify(measureRepository, times(1)).deleteAll(ArgumentMatchers.anyList());
-    verify(measureTransferService, times(1))
-        .overwriteExistingMeasure(ArgumentMatchers.anyList(), eq(measure1));
+    verify(measureRepository, times(1)).deleteAll(anyList());
+    verify(measureTransferService, times(1)).overwriteExistingMeasure(anyList(), eq(measure1));
   }
 
   @Test
@@ -1504,16 +1560,15 @@ public class MeasureServiceTest implements ResourceUtil {
     doReturn(measure1).when(measureRepository).save(any(Measure.class));
     doReturn(measure1)
         .when(measureTransferService)
-        .overwriteExistingMeasure(ArgumentMatchers.anyList(), eq(measure1));
+        .overwriteExistingMeasure(anyList(), eq(measure1));
     Measure persistedMeasure =
         measureService.importMatMeasure(measure1, "1", "TOUCH_DOWN", "akinsgre");
     assertEquals(measure1.getMeasureSetId(), persistedMeasure.getMeasureSetId());
 
     verify(measureRepository, times(1)).findAllByMeasureSetId(anyString());
     verify(measureRepository, times(1)).save(any(Measure.class));
-    verify(measureRepository, times(1)).deleteAll(ArgumentMatchers.anyList());
-    verify(measureTransferService, times(1))
-        .overwriteExistingMeasure(ArgumentMatchers.anyList(), eq(measure1));
+    verify(measureRepository, times(1)).deleteAll(anyList());
+    verify(measureTransferService, times(1)).overwriteExistingMeasure(anyList(), eq(measure1));
   }
 
   @Test
