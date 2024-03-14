@@ -664,6 +664,48 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
+  public void testUpdateMeasureSavesMeasureWithUpdatedCqlAndErrors() {
+    Measure original =
+        Measure.builder()
+            .cqlLibraryName("OriginalLibName")
+            .measureName("Measure1")
+            .cmsId("CMS_ID1")
+            .versionId("VersionId")
+            .cql("original cql here")
+            .measureMetaData(draftMeasureMetaData)
+            .errors(List.of(MeasureErrorType.ERRORS_ELM_JSON))
+            .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
+            .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
+            .build();
+
+    Measure updated = original.toBuilder().cql("changed cql here").build();
+    when(measureUtil.isCqlLibraryNameChanged(any(Measure.class), any(Measure.class)))
+        .thenReturn(false);
+    when(measureUtil.isMeasurementPeriodChanged(any(Measure.class), any(Measure.class)))
+        .thenReturn(false);
+    when(measureUtil.isMeasureCqlChanged(any(Measure.class), any(Measure.class))).thenReturn(true);
+    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+        .thenReturn(ElmJson.builder().json("{\"library\": {}}").xml("<library></library>").build());
+    when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(false);
+
+    Measure expected =
+        updated.toBuilder()
+            .cqlErrors(true)
+            .error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES)
+            .build();
+    when(measureUtil.validateAllMeasureDependencies(any(Measure.class))).thenReturn(expected);
+    when(measureRepository.save(any(Measure.class))).thenReturn(expected);
+
+    Measure output = measureService.updateMeasure(original, "User1", updated, "Access Token");
+    assertThat(output, is(notNullValue()));
+    assertThat(output, is(equalTo(expected)));
+
+    verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
+    Measure persisted = measureArgumentCaptor.getValue();
+    assertThat(persisted, is(equalTo(expected)));
+  }
+
+  @Test
   public void testUpdateMeasureSavesMeasureWithUpdatedCqlAndErrorsGettingElm() {
     Measure original =
         Measure.builder()
