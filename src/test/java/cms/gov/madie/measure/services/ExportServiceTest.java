@@ -11,6 +11,8 @@ import gov.cms.madie.models.measure.MeasureMetaData;
 import gov.cms.madie.models.measure.MeasureSet;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
+import gov.cms.madie.models.measure.TestCase;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.*;
@@ -43,6 +46,7 @@ class ExportServiceTest {
   private final String token = "token";
   private Measure measure;
   private MeasureMetaData measureMetaData;
+  private TestCase testCase;
 
   @BeforeEach
   void setup() {
@@ -78,6 +82,8 @@ class ExportServiceTest {
             .developers(List.of(Organization.builder().name("ICF").build()))
             .build();
     measure.setMeasureMetaData(measureMetaData);
+    testCase = TestCase.builder().build();
+    measure.setTestCases(List.of(testCase));
   }
 
   @Test
@@ -165,5 +171,18 @@ class ExportServiceTest {
         .thenReturn(packageContent.getBytes());
     byte[] measurePackage = exportService.getQRDA(measure, token);
     assertThat(new String(measurePackage), is(equalTo(packageContent)));
+  }
+
+  @Test
+  void testGetQRDANoTestCases() {
+    measure.setTestCases(Collections.emptyList());
+    Exception ex =
+        Assertions.assertThrows(
+            InvalidResourceStateException.class, () -> exportService.getQRDA(measure, token));
+    assertThat(
+        ex.getMessage(),
+        is(
+            equalTo(
+                "Response could not be completed for Measure with ID measure-id, since there are no test cases in the measure.")));
   }
 }
