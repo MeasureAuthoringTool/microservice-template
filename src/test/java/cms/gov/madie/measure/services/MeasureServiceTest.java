@@ -1204,6 +1204,106 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
+  public void testImportMeasureSuccessNullDevelopersList() throws Exception {
+    measure1.getMeasureMetaData().setDevelopers(null);
+    doReturn(measure1).when(measureRepository).save(any(Measure.class));
+
+    when(organizationRepository.findAll()).thenReturn(organizationList);
+
+    Measure persistedMeasure =
+        measureService.importMatMeasure(measure1, "1", "TOUCH_DOWN", "akinsgre");
+
+    assertNotNull(persistedMeasure);
+
+    assertEquals(measure1.getMeasureSetId(), persistedMeasure.getMeasureSetId());
+    assertEquals(measure1.getMeasureName(), persistedMeasure.getMeasureName());
+    assertEquals(measure1.getModel(), ModelType.QI_CORE.getValue());
+
+    assertEquals(measure1.getCqlLibraryName(), persistedMeasure.getCqlLibraryName());
+    assertEquals(measure1.getCql(), persistedMeasure.getCql());
+    assertEquals(measure1.getGroups().size(), persistedMeasure.getGroups().size());
+    assertEquals(
+        measure1.getGroups().get(0).getPopulations().get(0).getDescription(),
+        persistedMeasure.getGroups().get(0).getPopulations().get(0).getDescription());
+    assertEquals(
+        measure1.getMeasureMetaData().getReferences().get(0).getReferenceText(),
+        persistedMeasure.getMeasureMetaData().getReferences().get(0).getReferenceText());
+    assertEquals(
+        measure1.getMeasureMetaData().getEndorsements().get(0).getEndorser(),
+        persistedMeasure.getMeasureMetaData().getEndorsements().get(0).getEndorser());
+    assertEquals(
+        measure1.getMeasureMetaData().isDraft(), persistedMeasure.getMeasureMetaData().isDraft());
+    assertEquals(
+        measure1.getMeasureMetaData().getRiskAdjustment(),
+        persistedMeasure.getMeasureMetaData().getRiskAdjustment());
+    assertEquals(
+        measure1.getMeasureMetaData().getDefinition(),
+        persistedMeasure.getMeasureMetaData().getDefinition());
+    assertEquals(
+        measure1.getMeasureMetaData().isExperimental(),
+        persistedMeasure.getMeasureMetaData().isExperimental());
+    assertEquals(
+        measure1.getMeasureMetaData().getTransmissionFormat(),
+        persistedMeasure.getMeasureMetaData().getTransmissionFormat());
+    assertEquals(
+        measure1.getMeasureMetaData().getSupplementalDataElements(),
+        persistedMeasure.getMeasureMetaData().getSupplementalDataElements());
+
+    assertEquals("SB Url", persistedMeasure.getMeasureMetaData().getSteward().getUrl());
+    assertNull(persistedMeasure.getMeasureMetaData().getDevelopers());
+  }
+
+  @Test
+  public void testImportMeasureSuccessEmptyDevelopersList() throws Exception {
+    measure1.getMeasureMetaData().setDevelopers(new ArrayList<Organization>());
+    doReturn(measure1).when(measureRepository).save(any(Measure.class));
+
+    when(organizationRepository.findAll()).thenReturn(organizationList);
+
+    Measure persistedMeasure =
+        measureService.importMatMeasure(measure1, "1", "TOUCH_DOWN", "akinsgre");
+
+    assertNotNull(persistedMeasure);
+
+    assertEquals(measure1.getMeasureSetId(), persistedMeasure.getMeasureSetId());
+    assertEquals(measure1.getMeasureName(), persistedMeasure.getMeasureName());
+    assertEquals(measure1.getModel(), ModelType.QI_CORE.getValue());
+
+    assertEquals(measure1.getCqlLibraryName(), persistedMeasure.getCqlLibraryName());
+    assertEquals(measure1.getCql(), persistedMeasure.getCql());
+    assertEquals(measure1.getGroups().size(), persistedMeasure.getGroups().size());
+    assertEquals(
+        measure1.getGroups().get(0).getPopulations().get(0).getDescription(),
+        persistedMeasure.getGroups().get(0).getPopulations().get(0).getDescription());
+    assertEquals(
+        measure1.getMeasureMetaData().getReferences().get(0).getReferenceText(),
+        persistedMeasure.getMeasureMetaData().getReferences().get(0).getReferenceText());
+    assertEquals(
+        measure1.getMeasureMetaData().getEndorsements().get(0).getEndorser(),
+        persistedMeasure.getMeasureMetaData().getEndorsements().get(0).getEndorser());
+    assertEquals(
+        measure1.getMeasureMetaData().isDraft(), persistedMeasure.getMeasureMetaData().isDraft());
+    assertEquals(
+        measure1.getMeasureMetaData().getRiskAdjustment(),
+        persistedMeasure.getMeasureMetaData().getRiskAdjustment());
+    assertEquals(
+        measure1.getMeasureMetaData().getDefinition(),
+        persistedMeasure.getMeasureMetaData().getDefinition());
+    assertEquals(
+        measure1.getMeasureMetaData().isExperimental(),
+        persistedMeasure.getMeasureMetaData().isExperimental());
+    assertEquals(
+        measure1.getMeasureMetaData().getTransmissionFormat(),
+        persistedMeasure.getMeasureMetaData().getTransmissionFormat());
+    assertEquals(
+        measure1.getMeasureMetaData().getSupplementalDataElements(),
+        persistedMeasure.getMeasureMetaData().getSupplementalDataElements());
+
+    assertEquals("SB Url", persistedMeasure.getMeasureMetaData().getSteward().getUrl());
+    assertEquals(0, persistedMeasure.getMeasureMetaData().getDevelopers().size());
+  }
+
+  @Test
   public void testImportMeasureSuccessMatchMeasureSteward() throws Exception {
     doReturn(measure1).when(measureRepository).save(any(Measure.class));
     when(organizationRepository.findAll()).thenReturn(organizationList);
