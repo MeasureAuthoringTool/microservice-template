@@ -1156,6 +1156,65 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
+  public void testImportMeasureSuccess_ElmJsonErrorsAndEnableRepeatIsTrueAndQiCoreAndNewLibrary()
+      throws Exception {
+    doReturn(true)
+        .when(appConfigService)
+        .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
+    doReturn(measure1).when(measureRepository).save(any(Measure.class));
+
+    when(elmTranslatorClient.getElmJsonForMatMeasure(anyString(), anyString(), anyString()))
+        .thenReturn(ElmJson.builder().json(elmJson).build());
+
+    when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(true);
+
+    when(organizationRepository.findAll()).thenReturn(organizationList);
+
+    Measure persistedMeasure =
+        measureService.importMatMeasure(measure1, "1", "TOUCH_DOWN", "akinsgre");
+
+    assertNotNull(persistedMeasure);
+
+    assertEquals(measure1.getMeasureSetId(), persistedMeasure.getMeasureSetId());
+    assertEquals(measure1.getMeasureName(), persistedMeasure.getMeasureName());
+    assertEquals(measure1.getModel(), ModelType.QI_CORE.getValue());
+
+    assertEquals(measure1.getCqlLibraryName(), persistedMeasure.getCqlLibraryName());
+    assertEquals(measure1.getCql(), persistedMeasure.getCql());
+    assertEquals(measure1.getGroups().size(), persistedMeasure.getGroups().size());
+    assertEquals(
+        measure1.getGroups().get(0).getPopulations().get(0).getDescription(),
+        persistedMeasure.getGroups().get(0).getPopulations().get(0).getDescription());
+    assertEquals(
+        measure1.getMeasureMetaData().getReferences().get(0).getReferenceText(),
+        persistedMeasure.getMeasureMetaData().getReferences().get(0).getReferenceText());
+    assertEquals(
+        measure1.getMeasureMetaData().getEndorsements().get(0).getEndorser(),
+        persistedMeasure.getMeasureMetaData().getEndorsements().get(0).getEndorser());
+    assertEquals(
+        measure1.getMeasureMetaData().isDraft(), persistedMeasure.getMeasureMetaData().isDraft());
+    assertEquals(
+        measure1.getMeasureMetaData().getRiskAdjustment(),
+        persistedMeasure.getMeasureMetaData().getRiskAdjustment());
+    assertEquals(
+        measure1.getMeasureMetaData().getDefinition(),
+        persistedMeasure.getMeasureMetaData().getDefinition());
+    assertEquals(
+        measure1.getMeasureMetaData().isExperimental(),
+        persistedMeasure.getMeasureMetaData().isExperimental());
+    assertEquals(
+        measure1.getMeasureMetaData().getTransmissionFormat(),
+        persistedMeasure.getMeasureMetaData().getTransmissionFormat());
+    assertEquals(
+        measure1.getMeasureMetaData().getSupplementalDataElements(),
+        persistedMeasure.getMeasureMetaData().getSupplementalDataElements());
+
+    assertEquals("SB Url", persistedMeasure.getMeasureMetaData().getSteward().getUrl());
+    assertEquals(1, persistedMeasure.getMeasureMetaData().getDevelopers().size());
+    assertEquals("SB 2 Url", persistedMeasure.getMeasureMetaData().getDevelopers().get(0).getUrl());
+  }
+
+  @Test
   public void testImportMeasureSuccess_EnableRepeatIsTrueAndQiCoreAndNewLibrary() throws Exception {
     doReturn(true)
         .when(appConfigService)
@@ -1371,6 +1430,37 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
+  public void testImportMeasureSuccess_EnableRepeatTrueAndQdmAndSameMeasureSetIdAndNoMeasureData()
+      throws Exception {
+    doReturn(true)
+        .when(appConfigService)
+        .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
+
+    measure1.setModel(ModelType.QDM_5_6.getValue());
+    measure1.setMeasureMetaData(null);
+    measure2.setMeasureMetaData(finalMeasureMetaData);
+    measure2.setMeasureSetId(measure1.getMeasureSetId());
+    doReturn(List.of(measure2)).when(measureRepository).findAllByMeasureSetId(eq("IDIDID"));
+    doReturn(Optional.of(measure2))
+        .when(measureRepository)
+        .findByCqlLibraryName(eq("MSR01Library"));
+    when(organizationRepository.findAll()).thenReturn(organizationList);
+    doReturn(measure1).when(measureRepository).save(any(Measure.class));
+    doReturn(measure1)
+        .when(measureTransferService)
+        .overwriteExistingMeasure(ArgumentMatchers.anyList(), eq(measure1));
+    Measure persistedMeasure =
+        measureService.importMatMeasure(measure1, "1", "TOUCH_DOWN", "akinsgre");
+    assertEquals(measure1.getMeasureSetId(), persistedMeasure.getMeasureSetId());
+
+    verify(measureRepository, times(1)).findAllByMeasureSetId(anyString());
+    verify(measureRepository, times(1)).save(any(Measure.class));
+    verify(measureRepository, times(1)).deleteAll(ArgumentMatchers.anyList());
+    verify(measureTransferService, times(1))
+        .overwriteExistingMeasure(ArgumentMatchers.anyList(), eq(measure1));
+  }
+
+  @Test
   public void testImportMeasureSuccess_EnableRepeatTransferIsTrueAndQdmAndNewLibrary()
       throws Exception {
     measure1.setModel(ModelType.QDM_5_6.getValue());
@@ -1475,6 +1565,28 @@ public class MeasureServiceTest implements ResourceUtil {
     assertEquals("SB Url", persistedMeasure.getMeasureMetaData().getSteward().getUrl());
     assertEquals(1, persistedMeasure.getMeasureMetaData().getDevelopers().size());
     assertEquals("SB 2 Url", persistedMeasure.getMeasureMetaData().getDevelopers().get(0).getUrl());
+  }
+
+  @Test
+  public void testImportMeasureSuccess_NoOrganizationsThrowRuntimeException() throws Exception {
+    measure1.setModel(ModelType.QDM_5_6.getValue());
+    doReturn(false)
+        .when(appConfigService)
+        .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
+
+    Exception exception =
+        assertThrows(
+            RuntimeException.class,
+            () -> {
+              measureService.importMatMeasure(measure1, "1", "TOUCH_DOWN", "akinsgre");
+              ;
+            });
+    String expectedMessage = "No organizations are available";
+    String actualMessage = exception.getMessage();
+
+    assertTrue(actualMessage.contains(expectedMessage));
+
+    verify(measureRepository, times(1)).findAllByMeasureSetId(anyString());
   }
 
   @Test
