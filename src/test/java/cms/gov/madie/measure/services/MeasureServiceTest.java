@@ -1107,7 +1107,7 @@ public class MeasureServiceTest implements ResourceUtil {
   //// New Tests after refactoring
 
   @Test
-  public void testImportMeasureSuccess_QiCoreAndNewLibrary() throws Exception {
+  public void testImportMeasureSuccessQiCoreAndNewLibrary() throws Exception {
     doReturn(measure1).when(measureRepository).save(any(Measure.class));
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
@@ -1156,7 +1156,7 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testImportMeasureSuccess_ElmJsonErrorsAndEnableRepeatIsTrueAndQiCoreAndNewLibrary()
+  public void testImportMeasureSuccessElmJsonErrorsAndEnableRepeatIsTrueAndQiCoreAndNewLibrary()
       throws Exception {
     doReturn(true)
         .when(appConfigService)
@@ -1215,7 +1215,7 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testImportMeasureSuccess_EnableRepeatIsTrueAndQiCoreAndNewLibrary() throws Exception {
+  public void testImportMeasureSuccessEnableRepeatIsTrueAndQiCoreAndNewLibrary() throws Exception {
     doReturn(true)
         .when(appConfigService)
         .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
@@ -1267,7 +1267,7 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testImportMeasureFailure_EnableRepeatIsFalseAndWhenMeasureSetExists()
+  public void testImportMeasureFailureEnableRepeatIsFalseAndWhenMeasureSetExists()
       throws Exception {
     doReturn(false)
         .when(appConfigService)
@@ -1293,7 +1293,7 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testImportMeasureFailure_EnableRepeatIsTrueAndQICCoreAndWhenMeasureSetExists()
+  public void testImportMeasureFailureEnableRepeatIsTrueAndQICCoreAndWhenMeasureSetExists()
       throws Exception {
     doReturn(true)
         .when(appConfigService)
@@ -1319,7 +1319,7 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testImportMeasureFailure_EnableRepeatFalseAndQiCoreAndDuplicateLibraryName()
+  public void testImportMeasureFailureEnableRepeatFalseAndQiCoreAndDuplicateLibraryName()
       throws Exception {
     doReturn(false)
         .when(appConfigService)
@@ -1345,7 +1345,7 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testImportMeasureFailure_EnableRepeatTrueAndQiCoreAndDuplicateLibraryName()
+  public void testImportMeasureFailureEnableRepeatTrueAndQiCoreAndDuplicateLibraryName()
       throws Exception {
     doReturn(true)
         .when(appConfigService)
@@ -1371,7 +1371,7 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testImportMeasureFailure_EnableRepeatTrueAndQdmAndDuplicateLibraryName()
+  public void testImportMeasureFailureEnableRepeatTrueAndQdmAndDuplicateLibraryName()
       throws Exception {
     doReturn(true)
         .when(appConfigService)
@@ -1399,8 +1399,7 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testImportMeasureSuccess_EnableRepeatTrueAndQdmAndSameMeasureSetId()
-      throws Exception {
+  public void testImportMeasureSuccessEnableRepeatTrueAndQdmAndSameMeasureSetId() throws Exception {
     doReturn(true)
         .when(appConfigService)
         .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
@@ -1430,7 +1429,7 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testImportMeasureSuccess_EnableRepeatTrueAndQdmAndSameMeasureSetIdAndNoMeasureData()
+  public void testImportMeasureSuccessEnableRepeatTrueAndQdmAndSameMeasureSetIdAndNoMeasureData()
       throws Exception {
     doReturn(true)
         .when(appConfigService)
@@ -1461,7 +1460,7 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testImportMeasureSuccess_EnableRepeatTransferIsTrueAndQdmAndNewLibrary()
+  public void testImportMeasureSuccessEnableRepeatTransferIsTrueAndQdmAndNewLibrary()
       throws Exception {
     measure1.setModel(ModelType.QDM_5_6.getValue());
     measure1.setMeasureSetId("3e3e3e");
@@ -1515,7 +1514,7 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testImportMeasureSuccess_EnableRepeatTransferIsFalseAndQdmAndNewLibrary()
+  public void testImportMeasureSuccessEnableRepeatTransferIsFalseAndQdmAndNewLibrary()
       throws Exception {
     measure1.setModel(ModelType.QDM_5_6.getValue());
     doReturn(measure1).when(measureRepository).save(any(Measure.class));
@@ -1568,7 +1567,7 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testImportMeasureSuccess_NoOrganizationsThrowRuntimeException() throws Exception {
+  public void testImportMeasureSuccessNoOrganizationsThrowRuntimeException() throws Exception {
     measure1.setModel(ModelType.QDM_5_6.getValue());
     doReturn(false)
         .when(appConfigService)
@@ -1590,7 +1589,7 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testImportMeasureFailure_EnableRepeatTransferIsFalseAndQdmAndExistsInMeasureSet()
+  public void testImportMeasureFailureEnableRepeatTransferIsFalseAndQdmAndExistsInMeasureSet()
       throws Exception {
     measure1.setModel(ModelType.QDM_5_6.getValue());
     doReturn(false)
@@ -1617,7 +1616,7 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testImportMeasureFailure_EnableRepeatTransferIsFalseAndQdmAndDuplicateCqlLibrary()
+  public void testImportMeasureFailureEnableRepeatTransferIsFalseAndQdmAndDuplicateCqlLibrary()
       throws Exception {
     measure1.setModel(ModelType.QDM_5_6.getValue());
     doReturn(false)
@@ -1642,63 +1641,4 @@ public class MeasureServiceTest implements ResourceUtil {
 
     verify(measureRepository, times(1)).findAllByMeasureSetId(anyString());
   }
-  //    @Test
-  //    public void testCreateMeasureUpdateVersion() throws Exception {
-  //      String measureJson = new ObjectMapper().writeValueAsString(qdmMeasure);
-  //
-  //      ArgumentCaptor<Measure> persistedMeasureArgCaptor =
-  // ArgumentCaptor.forClass(Measure.class);
-  //
-  //      doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
-  //      when(elmTranslatorClient.getElmJsonForMatMeasure(anyString(), anyString(), anyString()))
-  //          .thenReturn(elmJson);
-  //      when(elmTranslatorClient.hasErrors(elmJson)).thenReturn(false);
-  //      doReturn(true)
-  //          .when(appConfigService)
-  //          .isFlagEnabled(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER);
-  //      doReturn("library MedicationDispenseTest version '3.2.000' using QDM version '5.6'")
-  //          .when(versionService)
-  //          .generateLibraryContentLine("MedicationDispenseTest", new Version(3, 2, 0));
-  //
-  //      doReturn("library MedicationDispenseTest version '0.0.000' using QDM version '5.6'")
-  //          .when(versionService)
-  //          .generateLibraryContentLine("MedicationDispenseTest", new Version(0, 0, 0));
-  //      when(organizationRepository.findAll()).thenReturn(organizationList);
-  //      doReturn(qdmMeasure).when(measureRepository).save(any(Measure.class));
-  //      doNothing()
-  //          .when(measureSetService)
-  //          .createMeasureSet(anyString(), anyString(), anyString(), anyString());
-  //
-  //      when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
-  //
-  //      mockMvc
-  //          .perform(
-  //              MockMvcRequestBuilders.post("/measure-transfer/mat-measures?cmsId=" + cmsId)
-  //                  .content(measureJson)
-  //                  .contentType(MediaType.APPLICATION_JSON_VALUE)
-  //                  .header(LAMBDA_TEST_API_KEY_HEADER, LAMBDA_TEST_API_KEY_HEADER_VALUE)
-  //                  .header(HARP_ID_HEADER_KEY, HARP_ID_HEADER_VALUE))
-  //          .andExpect(status().isCreated());
-  //
-  //      verify(measureRepository, times(1)).save(persistedMeasureArgCaptor.capture());
-  //      Measure persistedMeasure = persistedMeasureArgCaptor.getValue();
-  //      assertNotNull(persistedMeasure);
-  //      assertEquals(qdmMeasure.getMeasureSetId(), persistedMeasure.getMeasureSetId());
-  //      assertEquals(qdmMeasure.getMeasureName(), persistedMeasure.getMeasureName());
-  //      assertEquals(qdmMeasure.getCqlLibraryName(), persistedMeasure.getCqlLibraryName());
-  //      assertEquals(
-  //          "library MedicationDispenseTest version '0.0.000' using QDM version '5.6'",
-  //          persistedMeasure.getCql());
-  //
-  //      verify(actionLogService, times(1))
-  //          .logAction(
-  //              targetIdArgumentCaptor.capture(),
-  //              targetClassArgumentCaptor.capture(),
-  //              actionTypeArgumentCaptor.capture(),
-  //              performedByArgumentCaptor.capture());
-  //      assertNotNull(targetIdArgumentCaptor.getValue());
-  //      assertThat(targetClassArgumentCaptor.getValue(), is(equalTo(Measure.class)));
-  //      assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.IMPORTED)));
-  //      assertThat(performedByArgumentCaptor.getValue(), is(equalTo("testCreatedBy")));
-  //    }
 }

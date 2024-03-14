@@ -502,7 +502,7 @@ public class MeasureService {
       log.debug(
           "No organizations are available while transferring MAT measure : [{}]",
           measure.getMeasureName());
-      throw new RuntimeException("No organizations are available");
+      throw new MissingOrgException(measure.getMeasureName());
     }
     updateOrganizationName(measure);
     Organization steward = measure.getMeasureMetaData().getSteward();
