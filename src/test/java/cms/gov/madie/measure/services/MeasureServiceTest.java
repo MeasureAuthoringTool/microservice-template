@@ -1168,6 +1168,11 @@ public class MeasureServiceTest implements ResourceUtil {
     measure1
         .getMeasureMetaData()
         .setSteward(Organization.builder().name("Innovaccer Anylytics").build());
+
+    measure1
+        .getMeasureMetaData()
+        .getDevelopers()
+        .add(Organization.builder().name("Innovaccer Anylytics").build());
     Measure persistedMeasure =
         measureService.importMatMeasure(measure1, "1", "TOUCH_DOWN", "akinsgre");
 
@@ -1208,8 +1213,10 @@ public class MeasureServiceTest implements ResourceUtil {
         persistedMeasure.getMeasureMetaData().getSupplementalDataElements());
 
     assertEquals("Innovaccer Url", persistedMeasure.getMeasureMetaData().getSteward().getUrl());
-    assertEquals(1, persistedMeasure.getMeasureMetaData().getDevelopers().size());
+    assertEquals(2, persistedMeasure.getMeasureMetaData().getDevelopers().size());
     assertEquals("SB 2 Url", persistedMeasure.getMeasureMetaData().getDevelopers().get(0).getUrl());
+    assertEquals(
+        "Innovaccer Url", persistedMeasure.getMeasureMetaData().getDevelopers().get(1).getUrl());
   }
 
   @Test
