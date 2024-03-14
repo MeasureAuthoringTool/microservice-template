@@ -1621,6 +1621,36 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
+  public void testImportMeasureSuccessMissingCqlLibraryName() throws Exception {
+    doReturn(true)
+        .when(appConfigService)
+        .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
+
+    measure1.setModel(ModelType.QDM_5_6.getValue());
+    measure1.setMeasureMetaData(null);
+    measure2.setMeasureMetaData(finalMeasureMetaData);
+    measure2.setMeasureSetId(measure1.getMeasureSetId());
+    measure1.setCqlLibraryName("");
+    doReturn(List.of(measure2)).when(measureRepository).findAllByMeasureSetId(eq("IDIDID"));
+    //    doReturn(Optional.of(measure2))
+    //        .when(measureRepository)
+    //        .findByCqlLibraryName(eq("MSR01Library"));
+    when(organizationRepository.findAll()).thenReturn(organizationList);
+    doReturn(measure1).when(measureRepository).save(any(Measure.class));
+    doReturn(measure1)
+        .when(measureTransferService)
+        .overwriteExistingMeasure(anyList(), eq(measure1));
+    Measure persistedMeasure =
+        measureService.importMatMeasure(measure1, "1", "TOUCH_DOWN", "akinsgre");
+    assertEquals(measure1.getMeasureSetId(), persistedMeasure.getMeasureSetId());
+
+    verify(measureRepository, times(1)).findAllByMeasureSetId(anyString());
+    verify(measureRepository, times(1)).save(any(Measure.class));
+    verify(measureRepository, times(1)).deleteAll(anyList());
+    verify(measureTransferService, times(1)).overwriteExistingMeasure(anyList(), eq(measure1));
+  }
+
+  @Test
   public void testImportMeasureSuccessEnableRepeatTransferIsTrueAndQdmAndNewLibrary()
       throws Exception {
     measure1.setModel(ModelType.QDM_5_6.getValue());
