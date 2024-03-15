@@ -4,6 +4,7 @@ import cms.gov.madie.measure.dto.ValidList;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.MeasureService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.TestCase;
@@ -21,6 +22,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -154,6 +156,22 @@ public class TestCaseController {
 
     for (TestCaseImportRequest request : testCaseImportRequests) {
       request.setPatientId(UUID.randomUUID());
+      // append given and family name to the import object to report to outcome
+      try {
+        String familyName =
+            testCaseService.getPatientFamilyName(ModelType.QDM_5_6.getValue(), request.getJson());
+            request.setFamilyName(familyName);
+        String givenName =
+            testCaseService.getPatientGivenName(ModelType.QDM_5_6.getValue(), request.getJson());
+            request.setGivenNames(Collections.singletonList(givenName));
+      } catch (JsonProcessingException ex) {
+        log.info(
+            "User {} is unable to import test case with patient id : "
+                + "{} because of JsonProcessingException: "
+                + ex.getMessage(),
+            userName,
+            request.getPatientId());
+      }
     }
     var testCaseImportOutcomes =
         testCaseService.importTestCases(
