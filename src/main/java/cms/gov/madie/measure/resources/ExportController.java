@@ -104,7 +104,7 @@ public class ExportController {
         .header(
             HttpHeaders.CONTENT_DISPOSITION,
             "attachment;filename=\""
-                + ExportFileNamesUtil.getExportFileName(measure)
+                + ExportFileNamesUtil.getTestCaseExportZipName(measure)
                 + "-TestCases"
                 + ".zip\"")
         .contentType(MediaType.APPLICATION_OCTET_STREAM)
