@@ -151,19 +151,19 @@ class ExportServiceTest {
   }
 
   @Test
-  void testGetQRDA() {
+  void testGetMeasurePackageWhenMetaDataIsNull() {
+    measure.setMeasureMetaData(null);
     when(modelValidatorFactory.getModelValidator(any())).thenReturn(qdmModelValidator);
     doNothing().when(qdmModelValidator).validateGroups(any(Measure.class));
     when(packageServiceFactory.getPackageService(any())).thenReturn(qdmPackageService);
-    when(qdmPackageService.getQRDA(any(Measure.class), anyString()))
+    when(qdmPackageService.getMeasurePackage(any(Measure.class), anyString()))
         .thenReturn(packageContent.getBytes());
-    byte[] measurePackage = exportService.getQRDA(measure, token);
+    byte[] measurePackage = exportService.getMeasureExport(measure, token);
     assertThat(new String(measurePackage), is(equalTo(packageContent)));
   }
 
   @Test
-  void testGetQRDAMetaDataIsNull() {
-    measure.setMeasureMetaData(null);
+  void testGetQRDA() {
     when(modelValidatorFactory.getModelValidator(any())).thenReturn(qdmModelValidator);
     doNothing().when(qdmModelValidator).validateGroups(any(Measure.class));
     when(packageServiceFactory.getPackageService(any())).thenReturn(qdmPackageService);

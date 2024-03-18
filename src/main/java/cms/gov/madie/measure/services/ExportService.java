@@ -48,8 +48,6 @@ public class ExportService {
       throw new InvalidResourceStateException(
           "Measure", measure.getId(), "since there are no test cases in the measure.");
     }
-    // ?
-    validateMetadata(measure);
     ModelValidator modelValidator =
         modelValidatorFactory.getModelValidator(ModelType.valueOfName(measure.getModel()));
     modelValidator.validateGroups(measure);
