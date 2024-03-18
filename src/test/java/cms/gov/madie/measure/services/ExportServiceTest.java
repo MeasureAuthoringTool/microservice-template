@@ -46,7 +46,6 @@ class ExportServiceTest {
   private final String token = "token";
   private Measure measure;
   private MeasureMetaData measureMetaData;
-  private TestCase testCase;
 
   @BeforeEach
   void setup() {
@@ -82,7 +81,7 @@ class ExportServiceTest {
             .developers(List.of(Organization.builder().name("ICF").build()))
             .build();
     measure.setMeasureMetaData(measureMetaData);
-    testCase = TestCase.builder().build();
+    TestCase testCase = TestCase.builder().build();
     measure.setTestCases(List.of(testCase));
   }
 
