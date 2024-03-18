@@ -171,6 +171,7 @@ public class TestCaseController {
                 + ex.getMessage(),
             userName,
             request.getPatientId());
+        throw new RuntimeException(ex.getMessage());
       }
     }
     var testCaseImportOutcomes =
