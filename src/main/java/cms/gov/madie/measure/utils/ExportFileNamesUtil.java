@@ -12,11 +12,6 @@ public class ExportFileNamesUtil {
   }
 
   public static String getTestCaseExportZipName(Measure measure) {
-    return measure.getEcqmTitle()
-        + "-v"
-        + measure.getVersion().toString()
-        + "-"
-        + measure.getModel()
-        + "-TestCases";
+    return measure.getEcqmTitle() + "-v" + measure.getVersion().toString() + "-TestCases";
   }
 }
