@@ -1,7 +1,5 @@
 package cms.gov.madie.measure.resources;
 
-import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
-import cms.gov.madie.measure.exceptions.DuplicateMeasureException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.repositories.OrganizationRepository;
@@ -13,7 +11,6 @@ import cms.gov.madie.measure.services.MeasureSetService;
 import cms.gov.madie.measure.services.MeasureTransferService;
 import cms.gov.madie.measure.services.VersionService;
 import gov.cms.madie.models.common.ActionType;
-import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.common.Organization;
 import gov.cms.madie.models.measure.*;
 import gov.cms.madie.models.common.Version;
@@ -30,21 +27,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class MeasureTransferControllerTest {
@@ -198,321 +187,20 @@ public class MeasureTransferControllerTest {
 
   @Test
   public void createMeasureSuccessTest() {
+    request.addHeader("harp-id", "akinsgre");
     ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
-    doReturn(measure).when(repository).save(any(Measure.class));
-    when(organizationRepository.findAll()).thenReturn(organizationList);
-
-    ResponseEntity<Measure> response =
-        controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY);
-
-    verify(repository, times(1)).save(persistedMeasureArgCaptor.capture());
-    Measure persistedMeasure = response.getBody();
-    assertNotNull(persistedMeasure);
-
-    assertEquals(measure.getMeasureSetId(), persistedMeasure.getMeasureSetId());
-    assertEquals(measure.getMeasureName(), persistedMeasure.getMeasureName());
-    assertEquals(measure.getCqlLibraryName(), persistedMeasure.getCqlLibraryName());
-    assertEquals(measure.getCql(), persistedMeasure.getCql());
-    assertEquals(measure.getGroups().size(), persistedMeasure.getGroups().size());
-    assertEquals(
-        measure.getGroups().get(0).getPopulations().get(0).getDescription(),
-        persistedMeasure.getGroups().get(0).getPopulations().get(0).getDescription());
-    assertEquals(
-        measure.getMeasureMetaData().getReferences().get(0).getReferenceText(),
-        persistedMeasure.getMeasureMetaData().getReferences().get(0).getReferenceText());
-    assertEquals(
-        measure.getMeasureMetaData().getEndorsements().get(0).getEndorser(),
-        persistedMeasure.getMeasureMetaData().getEndorsements().get(0).getEndorser());
-    assertTrue(persistedMeasure.getMeasureMetaData().isDraft());
-    assertEquals(
-        measure.getMeasureMetaData().getRiskAdjustment(),
-        persistedMeasure.getMeasureMetaData().getRiskAdjustment());
-    assertEquals(
-        measure.getMeasureMetaData().getDefinition(),
-        persistedMeasure.getMeasureMetaData().getDefinition());
-    assertEquals(
-        measure.getMeasureMetaData().isExperimental(),
-        persistedMeasure.getMeasureMetaData().isExperimental());
-    assertEquals(
-        measure.getMeasureMetaData().getTransmissionFormat(),
-        persistedMeasure.getMeasureMetaData().getTransmissionFormat());
-    assertEquals(
-        measure.getMeasureMetaData().getSupplementalDataElements(),
-        persistedMeasure.getMeasureMetaData().getSupplementalDataElements());
-    assertEquals("SB Url", persistedMeasure.getMeasureMetaData().getSteward().getUrl());
-    assertEquals(1, persistedMeasure.getMeasureMetaData().getDevelopers().size());
-    assertEquals("SB 2 Url", persistedMeasure.getMeasureMetaData().getDevelopers().get(0).getUrl());
-
-    verify(actionLogService, times(1))
-        .logAction(
-            targetIdArgumentCaptor.capture(),
-            targetClassArgumentCaptor.capture(),
-            actionTypeArgumentCaptor.capture(),
-            performedByArgumentCaptor.capture());
-    assertNotNull(targetIdArgumentCaptor.getValue());
-    assertThat(targetClassArgumentCaptor.getValue(), is(equalTo(Measure.class)));
-    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.IMPORTED)));
-    assertThat(performedByArgumentCaptor.getValue(), is(equalTo("testCreatedBy")));
-  }
-
-  @Test
-  public void createMeasureSuccessDefaultToDraftTest() {
-    ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
-    measure.setMeasureMetaData(null);
-    doReturn(measure).when(repository).save(any(Measure.class));
-    when(organizationRepository.findAll()).thenReturn(organizationList);
-
-    ResponseEntity<Measure> response =
-        controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY);
-
-    verify(repository, times(1)).save(persistedMeasureArgCaptor.capture());
-    Measure persistedMeasure = response.getBody();
-    assertNotNull(persistedMeasure);
-
-    assertEquals(measure.getMeasureSetId(), persistedMeasure.getMeasureSetId());
-    assertEquals(measure.getMeasureName(), persistedMeasure.getMeasureName());
-    assertEquals(measure.getCqlLibraryName(), persistedMeasure.getCqlLibraryName());
-    assertEquals(measure.getCql(), persistedMeasure.getCql());
-    assertEquals(measure.getGroups().size(), persistedMeasure.getGroups().size());
-    assertEquals(
-        measure.getGroups().get(0).getPopulations().get(0).getDescription(),
-        persistedMeasure.getGroups().get(0).getPopulations().get(0).getDescription());
-    assertTrue(persistedMeasure.getMeasureMetaData().isDraft());
-
-    verify(actionLogService, times(1))
-        .logAction(
-            targetIdArgumentCaptor.capture(),
-            targetClassArgumentCaptor.capture(),
-            actionTypeArgumentCaptor.capture(),
-            performedByArgumentCaptor.capture());
-    assertNotNull(targetIdArgumentCaptor.getValue());
-    assertThat(targetClassArgumentCaptor.getValue(), is(equalTo(Measure.class)));
-    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.IMPORTED)));
-    assertThat(performedByArgumentCaptor.getValue(), is(equalTo("testCreatedBy")));
-  }
-
-  @Test
-  public void createMeasureDuplicateCqlLibraryTest() {
-    doThrow(new DuplicateKeyException("cqlLibraryName", "CQL library already exists."))
+    doReturn(measure)
         .when(measureService)
-        .checkDuplicateCqlLibraryName(anyString());
-
-    assertThrows(
-        DuplicateKeyException.class,
-        () -> controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY));
-  }
-
-  @Test
-  public void createMeasureNoElmJsonErrorTest() {
-    ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
-
-    when(elmJson.getJson()).thenReturn(ELM_JSON_SUCCESS);
-    doReturn(elmJson)
-        .when(elmTranslatorClient)
-        .getElmJsonForMatMeasure(CQL, LAMBDA_TEST_API_KEY, null);
-    doReturn(false).when(elmTranslatorClient).hasErrors(elmJson);
-    doReturn(measure).when(repository).save(any(Measure.class));
-    when(organizationRepository.findAll()).thenReturn(organizationList);
+        .importMatMeasure(
+            any(Measure.class), any(String.class), any(String.class), any(String.class));
 
     ResponseEntity<Measure> response =
         controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY);
 
-    verify(repository, times(1)).save(persistedMeasureArgCaptor.capture());
+    verify(measureService, times(1))
+        .importMatMeasure(
+            any(Measure.class), any(String.class), any(String.class), any(String.class));
     Measure persistedMeasure = response.getBody();
     assertNotNull(persistedMeasure);
-
-    assertFalse(measure.isCqlErrors());
-    assertEquals(measure.getElmJson(), ELM_JSON_SUCCESS);
-
-    verify(actionLogService, times(1))
-        .logAction(
-            targetIdArgumentCaptor.capture(),
-            targetClassArgumentCaptor.capture(),
-            actionTypeArgumentCaptor.capture(),
-            performedByArgumentCaptor.capture());
-    assertNotNull(targetIdArgumentCaptor.getValue());
-    assertThat(targetClassArgumentCaptor.getValue(), is(equalTo(Measure.class)));
-  }
-
-  @Test
-  public void createMeasureElmJsonExceptionTest() {
-    ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
-    doThrow(
-            new CqlElmTranslationServiceException(
-                "There was an error calling CQL-ELM translation service for MAT transferred measure",
-                null))
-        .when(elmTranslatorClient)
-        .getElmJsonForMatMeasure(anyString(), anyString(), anyString());
-
-    measure.setCqlErrors(true);
-    measure.setElmJson(ELM_JSON_FAIL);
-    doReturn(measure).when(repository).save(any(Measure.class));
-    doReturn(measureSet).when(measureSetRepository).save(any(MeasureSet.class));
-    when(organizationRepository.findAll()).thenReturn(organizationList);
-
-    ResponseEntity<Measure> response =
-        controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY);
-
-    verify(repository, times(1)).save(persistedMeasureArgCaptor.capture());
-    Measure persistedMeasure = response.getBody();
-    assertNotNull(persistedMeasure);
-    assertTrue(measure.isCqlErrors());
-    assertEquals(measure.getElmJson(), ELM_JSON_FAIL);
-
-    verify(actionLogService, times(1))
-        .logAction(
-            targetIdArgumentCaptor.capture(),
-            targetClassArgumentCaptor.capture(),
-            actionTypeArgumentCaptor.capture(),
-            performedByArgumentCaptor.capture());
-    assertNotNull(targetIdArgumentCaptor.getValue());
-    assertThat(targetClassArgumentCaptor.getValue(), is(equalTo(Measure.class)));
-  }
-
-  @Test
-  public void removesStewardIfOrganizationIsNotFound() {
-    measure.getMeasureMetaData().getSteward().setName("Random steward name");
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
-    doReturn(measure).when(repository).save(any(Measure.class));
-    when(organizationRepository.findAll()).thenReturn(organizationList);
-
-    ResponseEntity<Measure> response =
-        controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY);
-
-    Measure persistedMeasure = response.getBody();
-    assertNotNull(persistedMeasure);
-    assertNull(persistedMeasure.getMeasureMetaData().getSteward());
-  }
-
-  @Test
-  public void removesDeveloperIfOrganizationIsNotFound() {
-    measure
-        .getMeasureMetaData()
-        .setDevelopers(List.of(Organization.builder().name("Random steward name").build()));
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
-    doReturn(measure).when(repository).save(any(Measure.class));
-    when(organizationRepository.findAll()).thenReturn(organizationList);
-
-    ResponseEntity<Measure> response =
-        controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY);
-
-    Measure persistedMeasure = response.getBody();
-    assertNotNull(persistedMeasure);
-    assertEquals(0, persistedMeasure.getMeasureMetaData().getDevelopers().size());
-  }
-
-  @Test
-  public void throwsExceptionWhenOrganizationListIsEmpty() {
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
-    when(organizationRepository.findAll()).thenReturn(null);
-
-    assertThrows(
-        RuntimeException.class,
-        () -> controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY));
-  }
-
-  @Test
-  public void verifyIfOrganizationNamesAreUpdated() {
-    // CancerLin Q is updated to CancerLinQ & Innovaccer Anylytics should be updated to Innovaccer
-    measure.getMeasureMetaData().getSteward().setName("CancerLin Q");
-    measure
-        .getMeasureMetaData()
-        .getDevelopers()
-        .add(Organization.builder().name("CancerLin Q").build());
-    measure
-        .getMeasureMetaData()
-        .getDevelopers()
-        .add(Organization.builder().name("Innovaccer Anylytics").build());
-
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
-    doReturn(measure).when(repository).save(any(Measure.class));
-    when(organizationRepository.findAll()).thenReturn(organizationList);
-
-    ResponseEntity<Measure> response =
-        controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY);
-
-    Measure persistedMeasure = response.getBody();
-    assertNotNull(persistedMeasure);
-    assertEquals("CancerLinQ", persistedMeasure.getMeasureMetaData().getSteward().getName());
-    assertEquals("CancerLinQ Url", persistedMeasure.getMeasureMetaData().getSteward().getUrl());
-
-    assertEquals(3, persistedMeasure.getMeasureMetaData().getDevelopers().size());
-    assertEquals(
-        "CancerLinQ", persistedMeasure.getMeasureMetaData().getDevelopers().get(1).getName());
-    assertEquals(
-        "CancerLinQ Url", persistedMeasure.getMeasureMetaData().getDevelopers().get(1).getUrl());
-    assertEquals(
-        "Innovaccer", persistedMeasure.getMeasureMetaData().getDevelopers().get(2).getName());
-    assertEquals(
-        "Innovaccer Url", persistedMeasure.getMeasureMetaData().getDevelopers().get(2).getUrl());
-  }
-
-  @Test
-  public void testCreateMeasureDuplicateMeasureExceptionForQiCore() {
-    when(measureService.findAllByMeasureSetId(anyString()))
-        .thenReturn(List.of(Measure.builder().id("testMeasureId").build()));
-
-    assertThrows(
-        DuplicateMeasureException.class,
-        () -> controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY));
-  }
-
-  @Test
-  public void testCreateMeasureNoOverwrittenNoDeleteForQiCore() {
-    when(measureService.findAllByMeasureSetId(anyString())).thenReturn(Collections.emptyList());
-    doNothing().when(measureService).checkDuplicateCqlLibraryName(anyString());
-
-    when(elmJson.getJson()).thenReturn(ELM_JSON_SUCCESS);
-    doReturn(elmJson)
-        .when(elmTranslatorClient)
-        .getElmJsonForMatMeasure(CQL, LAMBDA_TEST_API_KEY, null);
-    doReturn(false).when(elmTranslatorClient).hasErrors(elmJson);
-
-    doReturn(measure).when(repository).save(any(Measure.class));
-    when(organizationRepository.findAll()).thenReturn(organizationList);
-
-    ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
-    ResponseEntity<Measure> response =
-        controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY);
-    verify(repository, times(1)).save(persistedMeasureArgCaptor.capture());
-
-    Measure persistedMeasure = response.getBody();
-    assertNotNull(persistedMeasure);
-
-    verify(measureService, times(0)).deleteVersionedMeasures(any(List.class));
-    verify(measureTransferService, times(0))
-        .overwriteExistingMeasure(any(List.class), any(Measure.class));
-  }
-
-  @Test
-  public void testCreateMeasureSuccessForQDM() {
-    measure.setModel(ModelType.QDM_5_6.getValue());
-    Measure measureWithSameMeasureSetId =
-        Measure.builder().id("testMeasureId").measureSetId("abc-pqr-xyz").build();
-    when(organizationRepository.findAll()).thenReturn(organizationList);
-    when(measureService.findAllByMeasureSetId(anyString()))
-        .thenReturn(List.of(measureWithSameMeasureSetId));
-    doNothing().when(measureService).deleteVersionedMeasures(any(List.class));
-    when(measureTransferService.overwriteExistingMeasure(any(List.class), any(Measure.class)))
-        .thenReturn(measure);
-    doReturn(measure).when(repository).save(any(Measure.class));
-
-    ArgumentCaptor<Measure> persistedMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
-    ResponseEntity<Measure> response =
-        controller.createMeasure(request, measure, cmsId, LAMBDA_TEST_API_KEY);
-    verify(repository, times(1)).save(persistedMeasureArgCaptor.capture());
-
-    Measure persistedMeasure = response.getBody();
-    assertNotNull(persistedMeasure);
-
-    assertEquals(measure.getMeasureSetId(), persistedMeasure.getMeasureSetId());
-    assertEquals(measure.getMeasureName(), persistedMeasure.getMeasureName());
-    assertEquals(measure.getCqlLibraryName(), persistedMeasure.getCqlLibraryName());
-    assertEquals(measure.getCql(), persistedMeasure.getCql());
-    assertEquals("testCaseId", persistedMeasure.getTestCases().get(0).getId());
   }
 }
