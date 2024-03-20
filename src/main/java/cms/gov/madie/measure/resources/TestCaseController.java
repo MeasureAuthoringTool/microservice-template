@@ -166,7 +166,7 @@ public class TestCaseController {
             testCaseService.getPatientGivenName(ModelType.QDM_5_6.getValue(), request.getJson());
             request.setGivenNames(Collections.singletonList(givenName));
       } catch (JsonProcessingException ex) {
-        log.info(
+        log.error(
             "User {} is unable to import test case with patient id : "
                 + "{} because of JsonProcessingException: "
                 + ex,
