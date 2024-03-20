@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.dto.ValidList;
+import cms.gov.madie.measure.exceptions.InvalidRequestException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.MeasureService;
@@ -168,10 +169,10 @@ public class TestCaseController {
         log.info(
             "User {} is unable to import test case with patient id : "
                 + "{} because of JsonProcessingException: "
-                + ex.getMessage(),
+                + ex,
             userName,
             request.getPatientId());
-        throw new RuntimeException(ex.getMessage());
+        throw new InvalidRequestException(ex.getMessage());
       }
     }
     var testCaseImportOutcomes =

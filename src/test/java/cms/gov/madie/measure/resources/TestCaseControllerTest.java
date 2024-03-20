@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.dto.ValidList;
+import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
@@ -377,7 +378,7 @@ public class TestCaseControllerTest {
         testPatientId, Objects.requireNonNull(responseEntity.getBody()).get(0).getPatientId());
   }
   @Test
-  void importQdmTestCasesFailure() throws RuntimeException, JsonProcessingException {
+  void importQdmTestCasesFailure() throws InvalidIdException, JsonProcessingException {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
