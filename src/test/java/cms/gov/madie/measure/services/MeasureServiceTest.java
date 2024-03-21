@@ -191,6 +191,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .model(ModelType.QI_CORE.getValue())
             .cql("test cql")
             .elmJson(elmJson)
+            .active(true)
             .measureSetId("IDIDID")
             .cqlLibraryName("MSR01Library")
             .measureName("MSR01")
@@ -209,6 +210,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .id("xyz-p13r-13ert")
             .cql("test cql")
             .elmJson(elmJson)
+            .active(true)
             .measureSetId("2D2D2D")
             .measureName("MSR02")
             .version(new Version(0, 0, 1))
@@ -1118,17 +1120,17 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testFindAllByMeasureSetId() {
-    when(measureRepository.findAllByMeasureSetId(anyString()))
+  void testFindAllByMeasureSetId() {
+    when(measureRepository.findAllByMeasureSetIdAndActive(anyString(), anyBoolean()))
         .thenReturn(List.of(measure1, measure2));
 
     List<Measure> results = measureService.findAllByMeasureSetId("testMeasureSetId1");
 
-    assertTrue(results.size() == 2);
+    assertEquals(2, results.size());
   }
 
   @Test
-  public void testDeleteVersionedMeasuresOnlyVersionedMeasuresDeleted() {
+  void testDeleteVersionedMeasuresOnlyVersionedMeasuresDeleted() {
     measure1.setId("testId1");
     measure1.setMeasureMetaData(MeasureMetaData.builder().draft(false).build());
     measure2.setId("testId2");
@@ -1140,13 +1142,13 @@ public class MeasureServiceTest implements ResourceUtil {
 
     List<Measure> deletedMeasures = repositoryArgCaptor.getValue();
     // measure1 is versioned and only measure1 is deleted:
-    assertTrue(deletedMeasures.size() == 1);
+    assertEquals(1, deletedMeasures.size());
     assertEquals("testId1", deletedMeasures.get(0).getId());
     assertEquals("IDIDID", deletedMeasures.get(0).getMeasureSetId());
   }
 
   @Test
-  public void testDeleteVersionedMeasuresNotDeletedMetaDataNull() {
+  void testDeleteVersionedMeasuresNotDeletedMetaDataNull() {
     ArgumentCaptor<List<Measure>> repositoryArgCaptor = ArgumentCaptor.forClass(List.class);
     measureService.deleteVersionedMeasures(List.of(measure1, measure2));
     verify(measureRepository, times(0)).deleteAll(repositoryArgCaptor.capture());
@@ -1155,7 +1157,7 @@ public class MeasureServiceTest implements ResourceUtil {
   //// New Tests after refactoring
 
   @Test
-  public void testImportMeasureSuccessQiCoreAndNewLibrary() throws Exception {
+  void testImportMeasureSuccessQiCoreAndNewLibrary() {
     doReturn(measure1).when(measureRepository).save(any(Measure.class));
     when(organizationRepository.findAll()).thenReturn(organizationList);
 
@@ -1204,7 +1206,7 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testImportMeasureSuccessNullDevelopersList() throws Exception {
+  void testImportMeasureSuccessNullDevelopersList() {
     measure1.getMeasureMetaData().setDevelopers(null);
     doReturn(measure1).when(measureRepository).save(any(Measure.class));
 
@@ -1254,8 +1256,8 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testImportMeasureSuccessEmptyDevelopersList() throws Exception {
-    measure1.getMeasureMetaData().setDevelopers(new ArrayList<Organization>());
+  void testImportMeasureSuccessEmptyDevelopersList() {
+    measure1.getMeasureMetaData().setDevelopers(new ArrayList<>());
     doReturn(measure1).when(measureRepository).save(any(Measure.class));
 
     when(organizationRepository.findAll()).thenReturn(organizationList);
@@ -1304,7 +1306,7 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testImportMeasureSuccessMatchMeasureSteward() throws Exception {
+  void testImportMeasureSuccessMatchMeasureSteward() {
     doReturn(measure1).when(measureRepository).save(any(Measure.class));
     when(organizationRepository.findAll()).thenReturn(organizationList);
     measure1
@@ -1362,8 +1364,7 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testImportMeasureSuccessElmJsonErrorsAndEnableRepeatIsTrueAndQiCoreAndNewLibrary()
-      throws Exception {
+  void testImportMeasureSuccessElmJsonErrorsAndEnableRepeatIsTrueAndQiCoreAndNewLibrary() {
     doReturn(true)
         .when(appConfigService)
         .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
@@ -1421,7 +1422,7 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testImportMeasureSuccessElmJsonErrorsThrowsError() throws Exception {
+  void testImportMeasureSuccessElmJsonErrorsThrowsError() {
     doReturn(true)
         .when(appConfigService)
         .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
@@ -1478,7 +1479,7 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testImportMeasureSuccessEnableRepeatIsTrueAndQiCoreAndNewLibrary() throws Exception {
+  void testImportMeasureSuccessEnableRepeatIsTrueAndQiCoreAndNewLibrary() {
     doReturn(true)
         .when(appConfigService)
         .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
@@ -1530,14 +1531,13 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testImportMeasureFailureEnableRepeatIsFalseAndWhenMeasureSetExists()
-      throws Exception {
+  void testImportMeasureFailureEnableRepeatIsFalseAndWhenMeasureSetExists() {
     doReturn(false)
         .when(appConfigService)
         .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
     doReturn(List.of(measure1, measure2))
         .when(measureRepository)
-        .findAllByMeasureSetId(eq("IDIDID"));
+        .findAllByMeasureSetIdAndActive(eq("IDIDID"), eq(true));
 
     Exception exception =
         assertThrows(
@@ -1552,18 +1552,17 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertTrue(actualMessage.contains(expectedMessage));
 
-    verify(measureRepository, times(1)).findAllByMeasureSetId(anyString());
+    verify(measureRepository, times(1)).findAllByMeasureSetIdAndActive(anyString(), anyBoolean());
   }
 
   @Test
-  public void testImportMeasureFailureEnableRepeatIsTrueAndQICCoreAndWhenMeasureSetExists()
-      throws Exception {
+  void testImportMeasureFailureEnableRepeatIsTrueAndQICCoreAndWhenMeasureSetExists() {
     doReturn(true)
         .when(appConfigService)
         .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
     doReturn(List.of(measure1, measure2))
         .when(measureRepository)
-        .findAllByMeasureSetId(eq("IDIDID"));
+        .findAllByMeasureSetIdAndActive(eq("IDIDID"), eq(true));
 
     Exception exception =
         assertThrows(
@@ -1578,12 +1577,11 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertTrue(actualMessage.contains(expectedMessage));
 
-    verify(measureRepository, times(1)).findAllByMeasureSetId(anyString());
+    verify(measureRepository, times(1)).findAllByMeasureSetIdAndActive(anyString(), anyBoolean());
   }
 
   @Test
-  public void testImportMeasureFailureEnableRepeatFalseAndQiCoreAndDuplicateLibraryName()
-      throws Exception {
+  void testImportMeasureFailureEnableRepeatFalseAndQiCoreAndDuplicateLibraryName() {
     doReturn(false)
         .when(appConfigService)
         .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
@@ -1604,12 +1602,11 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertTrue(actualMessage.contains(expectedMessage));
 
-    verify(measureRepository, times(1)).findAllByMeasureSetId(anyString());
+    verify(measureRepository, times(1)).findAllByMeasureSetIdAndActive(anyString(), anyBoolean());
   }
 
   @Test
-  public void testImportMeasureFailureEnableRepeatTrueAndQiCoreAndDuplicateLibraryName()
-      throws Exception {
+  void testImportMeasureFailureEnableRepeatTrueAndQiCoreAndDuplicateLibraryName() {
     doReturn(true)
         .when(appConfigService)
         .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
@@ -1630,12 +1627,11 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertTrue(actualMessage.contains(expectedMessage));
 
-    verify(measureRepository, times(1)).findAllByMeasureSetId(anyString());
+    verify(measureRepository, times(1)).findAllByMeasureSetIdAndActive(anyString(), anyBoolean());
   }
 
   @Test
-  public void testImportMeasureFailureEnableRepeatTrueAndQdmAndDuplicateLibraryName()
-      throws Exception {
+  void testImportMeasureFailureEnableRepeatTrueAndQdmAndDuplicateLibraryName() {
     doReturn(true)
         .when(appConfigService)
         .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
@@ -1658,11 +1654,11 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertTrue(actualMessage.contains(expectedMessage));
 
-    verify(measureRepository, times(1)).findAllByMeasureSetId(anyString());
+    verify(measureRepository, times(1)).findAllByMeasureSetIdAndActive(anyString(), anyBoolean());
   }
 
   @Test
-  public void testImportMeasureSuccessEnableRepeatTrueAndQdmAndSameMeasureSetId() throws Exception {
+  void testImportMeasureSuccessEnableRepeatTrueAndQdmAndSameMeasureSetId() {
     doReturn(true)
         .when(appConfigService)
         .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
@@ -1671,7 +1667,9 @@ public class MeasureServiceTest implements ResourceUtil {
 
     measure2.setMeasureMetaData(finalMeasureMetaData);
     measure2.setMeasureSetId(measure1.getMeasureSetId());
-    doReturn(List.of(measure2)).when(measureRepository).findAllByMeasureSetId(eq("IDIDID"));
+    doReturn(List.of(measure2))
+        .when(measureRepository)
+        .findAllByMeasureSetIdAndActive(eq("IDIDID"), eq(true));
     doReturn(Optional.of(measure2))
         .when(measureRepository)
         .findByCqlLibraryName(eq("MSR01Library"));
@@ -1684,15 +1682,14 @@ public class MeasureServiceTest implements ResourceUtil {
         measureService.importMatMeasure(measure1, "1", "TOUCH_DOWN", "akinsgre");
     assertEquals(measure1.getMeasureSetId(), persistedMeasure.getMeasureSetId());
 
-    verify(measureRepository, times(1)).findAllByMeasureSetId(anyString());
+    verify(measureRepository, times(1)).findAllByMeasureSetIdAndActive(anyString(), anyBoolean());
     verify(measureRepository, times(1)).save(any(Measure.class));
     verify(measureRepository, times(1)).deleteAll(anyList());
     verify(measureTransferService, times(1)).overwriteExistingMeasure(anyList(), eq(measure1));
   }
 
   @Test
-  public void testImportMeasureSuccessEnableRepeatTrueAndQdmAndSameMeasureSetIdAndNoMeasureData()
-      throws Exception {
+  void testImportMeasureSuccessEnableRepeatTrueAndQdmAndSameMeasureSetIdAndNoMeasureData() {
     doReturn(true)
         .when(appConfigService)
         .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
@@ -1701,7 +1698,9 @@ public class MeasureServiceTest implements ResourceUtil {
     measure1.setMeasureMetaData(null);
     measure2.setMeasureMetaData(finalMeasureMetaData);
     measure2.setMeasureSetId(measure1.getMeasureSetId());
-    doReturn(List.of(measure2)).when(measureRepository).findAllByMeasureSetId(eq("IDIDID"));
+    doReturn(List.of(measure2))
+        .when(measureRepository)
+        .findAllByMeasureSetIdAndActive(eq("IDIDID"), eq(true));
     doReturn(Optional.of(measure2))
         .when(measureRepository)
         .findByCqlLibraryName(eq("MSR01Library"));
@@ -1714,14 +1713,14 @@ public class MeasureServiceTest implements ResourceUtil {
         measureService.importMatMeasure(measure1, "1", "TOUCH_DOWN", "akinsgre");
     assertEquals(measure1.getMeasureSetId(), persistedMeasure.getMeasureSetId());
 
-    verify(measureRepository, times(1)).findAllByMeasureSetId(anyString());
+    verify(measureRepository, times(1)).findAllByMeasureSetIdAndActive(anyString(), anyBoolean());
     verify(measureRepository, times(1)).save(any(Measure.class));
     verify(measureRepository, times(1)).deleteAll(anyList());
     verify(measureTransferService, times(1)).overwriteExistingMeasure(anyList(), eq(measure1));
   }
 
   @Test
-  public void testImportMeasureSuccessMissingCqlLibraryName() throws Exception {
+  void testImportMeasureSuccessMissingCqlLibraryName() {
     doReturn(true)
         .when(appConfigService)
         .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
@@ -1731,7 +1730,9 @@ public class MeasureServiceTest implements ResourceUtil {
     measure2.setMeasureMetaData(finalMeasureMetaData);
     measure2.setMeasureSetId(measure1.getMeasureSetId());
     measure1.setCqlLibraryName("");
-    doReturn(List.of(measure2)).when(measureRepository).findAllByMeasureSetId(eq("IDIDID"));
+    doReturn(List.of(measure2))
+        .when(measureRepository)
+        .findAllByMeasureSetIdAndActive(eq("IDIDID"), eq(true));
     //    doReturn(Optional.of(measure2))
     //        .when(measureRepository)
     //        .findByCqlLibraryName(eq("MSR01Library"));
@@ -1744,15 +1745,14 @@ public class MeasureServiceTest implements ResourceUtil {
         measureService.importMatMeasure(measure1, "1", "TOUCH_DOWN", "akinsgre");
     assertEquals(measure1.getMeasureSetId(), persistedMeasure.getMeasureSetId());
 
-    verify(measureRepository, times(1)).findAllByMeasureSetId(anyString());
+    verify(measureRepository, times(1)).findAllByMeasureSetIdAndActive(anyString(), anyBoolean());
     verify(measureRepository, times(1)).save(any(Measure.class));
     verify(measureRepository, times(1)).deleteAll(anyList());
     verify(measureTransferService, times(1)).overwriteExistingMeasure(anyList(), eq(measure1));
   }
 
   @Test
-  public void testImportMeasureSuccessEnableRepeatTransferIsTrueAndQdmAndNewLibrary()
-      throws Exception {
+  void testImportMeasureSuccessEnableRepeatTransferIsTrueAndQdmAndNewLibrary() {
     measure1.setModel(ModelType.QDM_5_6.getValue());
     measure1.setMeasureSetId("3e3e3e");
     doReturn(measure1).when(measureRepository).save(any(Measure.class));
@@ -1805,8 +1805,7 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testImportMeasureSuccessEnableRepeatTransferIsFalseAndQdmAndNewLibrary()
-      throws Exception {
+  void testImportMeasureSuccessEnableRepeatTransferIsFalseAndQdmAndNewLibrary() {
     measure1.setModel(ModelType.QDM_5_6.getValue());
     doReturn(measure1).when(measureRepository).save(any(Measure.class));
     doReturn(false)
@@ -1858,7 +1857,7 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testImportMeasureSuccessNoOrganizationsThrowRuntimeException() throws Exception {
+  void testImportMeasureSuccessNoOrganizationsThrowRuntimeException() {
     measure1.setModel(ModelType.QDM_5_6.getValue());
     doReturn(false)
         .when(appConfigService)
@@ -1876,19 +1875,18 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertTrue(actualMessage.contains(expectedMessage));
 
-    verify(measureRepository, times(1)).findAllByMeasureSetId(anyString());
+    verify(measureRepository, times(1)).findAllByMeasureSetIdAndActive(anyString(), anyBoolean());
   }
 
   @Test
-  public void testImportMeasureFailureEnableRepeatTransferIsFalseAndQdmAndExistsInMeasureSet()
-      throws Exception {
+  void testImportMeasureFailureEnableRepeatTransferIsFalseAndQdmAndExistsInMeasureSet() {
     measure1.setModel(ModelType.QDM_5_6.getValue());
     doReturn(false)
         .when(appConfigService)
         .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
     doReturn(List.of(measure1, measure2))
         .when(measureRepository)
-        .findAllByMeasureSetId(eq("IDIDID"));
+        .findAllByMeasureSetIdAndActive(eq("IDIDID"), eq(true));
 
     Exception exception =
         assertThrows(
@@ -1903,12 +1901,11 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertTrue(actualMessage.contains(expectedMessage));
 
-    verify(measureRepository, times(1)).findAllByMeasureSetId(anyString());
+    verify(measureRepository, times(1)).findAllByMeasureSetIdAndActive(anyString(), anyBoolean());
   }
 
   @Test
-  public void testImportMeasureFailureEnableRepeatTransferIsFalseAndQdmAndDuplicateCqlLibrary()
-      throws Exception {
+  void testImportMeasureFailureEnableRepeatTransferIsFalseAndQdmAndDuplicateCqlLibrary() {
     measure1.setModel(ModelType.QDM_5_6.getValue());
     doReturn(false)
         .when(appConfigService)
@@ -1930,6 +1927,6 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertTrue(actualMessage.contains(expectedMessage));
 
-    verify(measureRepository, times(1)).findAllByMeasureSetId(anyString());
+    verify(measureRepository, times(1)).findAllByMeasureSetIdAndActive(anyString(), anyBoolean());
   }
 }
