@@ -37,6 +37,8 @@ class UpdateQdmMeasureGroupStratificationsChangeUnitTest {
   void testStratsAreUpdatedAndRollbackHoldsMeasures() throws Exception {
     List<Measure> qdmMeasures =
         List.of(
+            Measure.builder().measureName("M0_DEAD").active(false).build(),
+            Measure.builder().measureName("M0_NOGROUPS").active(true).groups(List.of()).build(),
             Measure.builder()
                 .measureName("M1_NeedsIds")
                 .active(true)
