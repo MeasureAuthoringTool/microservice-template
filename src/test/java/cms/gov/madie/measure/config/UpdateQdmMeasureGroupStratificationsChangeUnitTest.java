@@ -15,7 +15,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
-import static org.hamcrest.CoreMatchers.any;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -29,78 +28,102 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class UpdateQdmMeasureGroupStratificationsChangeUnitTest {
 
-    @Mock
-    private MeasureRepository measureRepository;
+  @Mock private MeasureRepository measureRepository;
 
-    @Captor
-    private ArgumentCaptor<Measure> measureArgumentCaptor;
-    @InjectMocks UpdateQdmMeasureGroupStratificationsChangeUnit changeUnit;
+  @Captor private ArgumentCaptor<Measure> measureArgumentCaptor;
+  @InjectMocks UpdateQdmMeasureGroupStratificationsChangeUnit changeUnit;
 
-    @Test
-    void testStratsAreUpdatedAndRollbackHoldsMeasures() throws Exception {
-        List<Measure> qdmMeasures = List.of(
-                Measure.builder()
-                        .measureName("M1_NeedsIds").active(true).model(ModelType.QDM_5_6.getValue())
-                        .groups(List.of(Group.builder().stratifications(
-                                List.of(Stratification.builder().cqlDefinition("ipp").build(), Stratification.builder().cqlDefinition("denom").build())
-                        ).build()))
-                        .build(),
-                Measure.builder()
-                        .measureName("M2_Good").active(true).model(ModelType.QDM_5_6.getValue())
-                        .groups(List.of(Group.builder().stratifications(
-                                List.of(Stratification.builder().id("ExistingID1").cqlDefinition("ipp2").build(), Stratification.builder().id("ExistingID2").cqlDefinition("denom2").build())
-                        ).build()))
-                        .build(),
-                Measure.builder()
-                        .measureName("M3_Needs1ID").active(true).model(ModelType.QDM_5_6.getValue())
-                        .groups(List.of(Group.builder().stratifications(
-                                List.of(Stratification.builder().id("ExistingID1").cqlDefinition("ipp2").build(), Stratification.builder().cqlDefinition("denom2").build())
-                        ).build()))
-                        .build(),
-                Measure.builder()
-                        .measureName("M4_NoStrats").active(true).model(ModelType.QDM_5_6.getValue())
-                        .groups(List.of(Group.builder().stratifications(List.of()).build()))
-                        .build()
-        );
+  @Test
+  void testStratsAreUpdatedAndRollbackHoldsMeasures() throws Exception {
+    List<Measure> qdmMeasures =
+        List.of(
+            Measure.builder()
+                .measureName("M1_NeedsIds")
+                .active(true)
+                .model(ModelType.QDM_5_6.getValue())
+                .groups(
+                    List.of(
+                        Group.builder()
+                            .stratifications(
+                                List.of(
+                                    Stratification.builder().cqlDefinition("ipp").build(),
+                                    Stratification.builder().cqlDefinition("denom").build()))
+                            .build()))
+                .build(),
+            Measure.builder()
+                .measureName("M2_Good")
+                .active(true)
+                .model(ModelType.QDM_5_6.getValue())
+                .groups(
+                    List.of(
+                        Group.builder()
+                            .stratifications(
+                                List.of(
+                                    Stratification.builder()
+                                        .id("ExistingID1")
+                                        .cqlDefinition("ipp2")
+                                        .build(),
+                                    Stratification.builder()
+                                        .id("ExistingID2")
+                                        .cqlDefinition("denom2")
+                                        .build()))
+                            .build()))
+                .build(),
+            Measure.builder()
+                .measureName("M3_Needs1ID")
+                .active(true)
+                .model(ModelType.QDM_5_6.getValue())
+                .groups(
+                    List.of(
+                        Group.builder()
+                            .stratifications(
+                                List.of(
+                                    Stratification.builder()
+                                        .id("ExistingID1")
+                                        .cqlDefinition("ipp2")
+                                        .build(),
+                                    Stratification.builder().cqlDefinition("denom2").build()))
+                            .build()))
+                .build(),
+            Measure.builder()
+                .measureName("M4_NoStrats")
+                .active(true)
+                .model(ModelType.QDM_5_6.getValue())
+                .groups(List.of(Group.builder().stratifications(List.of()).build()))
+                .build());
 
-        when(measureRepository.findAllByModel(anyString()))
-                .thenReturn(qdmMeasures);
+    when(measureRepository.findAllByModel(anyString())).thenReturn(qdmMeasures);
 
-        changeUnit.updateQdmMeasureGroupStratifications(measureRepository);
-        List<Measure> preUpdateMeasures = changeUnit.getTempMeasures();
-        assertThat(preUpdateMeasures, is(notNullValue()));
-        assertThat(preUpdateMeasures.size(), is(equalTo(2)));
-        verify(measureRepository, times(2)).save(measureArgumentCaptor.capture());
-        List<Measure> allUpdatedMeasures = measureArgumentCaptor.getAllValues();
-        assertThat(allUpdatedMeasures, is(notNullValue()));
-        assertThat(allUpdatedMeasures.size(), is(equalTo(2)));
-        assertThat(allUpdatedMeasures.get(0).getMeasureName(), is(equalTo("M1_NeedsIds")));
-        assertThat(allUpdatedMeasures.get(1).getMeasureName(), is(equalTo("M3_Needs1ID")));
-    }
+    changeUnit.updateQdmMeasureGroupStratifications(measureRepository);
+    List<Measure> preUpdateMeasures = changeUnit.getTempMeasures();
+    assertThat(preUpdateMeasures, is(notNullValue()));
+    assertThat(preUpdateMeasures.size(), is(equalTo(2)));
+    verify(measureRepository, times(2)).save(measureArgumentCaptor.capture());
+    List<Measure> allUpdatedMeasures = measureArgumentCaptor.getAllValues();
+    assertThat(allUpdatedMeasures, is(notNullValue()));
+    assertThat(allUpdatedMeasures.size(), is(equalTo(2)));
+    assertThat(allUpdatedMeasures.get(0).getMeasureName(), is(equalTo("M1_NeedsIds")));
+    assertThat(allUpdatedMeasures.get(1).getMeasureName(), is(equalTo("M3_Needs1ID")));
+  }
 
-    @Test
-    void testRollbackDoesNothingForNullTempMeasures() throws Exception {
-        changeUnit.setTempMeasures(null);
-        changeUnit.rollbackExecution(measureRepository);
-        verifyNoInteractions(measureRepository);
-    }
+  @Test
+  void testRollbackDoesNothingForNullTempMeasures() throws Exception {
+    changeUnit.setTempMeasures(null);
+    changeUnit.rollbackExecution(measureRepository);
+    verifyNoInteractions(measureRepository);
+  }
 
-    @Test
-    void testRollbackDoesNothingForEmptyTempMeasures() throws Exception {
-        changeUnit.setTempMeasures(List.of());
-        changeUnit.rollbackExecution(measureRepository);
-        verifyNoInteractions(measureRepository);
-    }
+  @Test
+  void testRollbackDoesNothingForEmptyTempMeasures() throws Exception {
+    changeUnit.setTempMeasures(List.of());
+    changeUnit.rollbackExecution(measureRepository);
+    verifyNoInteractions(measureRepository);
+  }
 
-    @Test
-    void testRollbackHandlesRollback() throws Exception {
-        changeUnit.setTempMeasures(List.of(
-                Measure.builder().build(),
-                Measure.builder().build()
-        ));
-        changeUnit.rollbackExecution(measureRepository);
-        verify(measureRepository, times(2)).save(measureArgumentCaptor.capture());
-    }
-
-
+  @Test
+  void testRollbackHandlesRollback() throws Exception {
+    changeUnit.setTempMeasures(List.of(Measure.builder().build(), Measure.builder().build()));
+    changeUnit.rollbackExecution(measureRepository);
+    verify(measureRepository, times(2)).save(measureArgumentCaptor.capture());
+  }
 }
