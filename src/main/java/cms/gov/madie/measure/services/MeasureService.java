@@ -383,8 +383,7 @@ public class MeasureService {
   }
 
   public List<Measure> findAllByMeasureSetId(String measureSetId) {
-    List<Measure> measures = measureRepository.findAllByMeasureSetId(measureSetId);
-    return measures;
+    return measureRepository.findAllByMeasureSetIdAndActive(measureSetId, true);
   }
 
   public void deleteVersionedMeasures(List<Measure> measures) {
@@ -392,16 +391,12 @@ public class MeasureService {
     List<Measure> versionedMeasures =
         measures.stream()
             .filter(
-                measure -> {
-                  return measure.getMeasureMetaData() != null
-                      && !measure.getMeasureMetaData().isDraft();
-                })
+                measure ->
+                    measure.getMeasureMetaData() != null && !measure.getMeasureMetaData().isDraft())
             .collect(Collectors.toList());
     if (!CollectionUtils.isEmpty(versionedMeasures)) {
       String deletedMeasureIds =
-          versionedMeasures.stream()
-              .map(measure -> measure.getId())
-              .collect(Collectors.joining(","));
+          versionedMeasures.stream().map(Measure::getId).collect(Collectors.joining(","));
       measureRepository.deleteAll(versionedMeasures);
       log.info("Versioned Measure IDs [{}] are deleted.", deletedMeasureIds);
     }

@@ -57,5 +57,5 @@ public interface MeasureRepository
 
   List<Measure> findAllByModel(String model);
 
-  List<Measure> findAllByMeasureSetId(String measureSetId);
+  List<Measure> findAllByMeasureSetIdAndActive(String measureSetId, boolean isActive);
 }
