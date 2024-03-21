@@ -377,6 +377,7 @@ public class TestCaseControllerTest {
     assertEquals(
         testPatientId, Objects.requireNonNull(responseEntity.getBody()).get(0).getPatientId());
   }
+
   @Test
   void importQdmTestCasesFailure() throws InvalidIdException, JsonProcessingException {
     Principal principal = mock(Principal.class);
@@ -384,16 +385,18 @@ public class TestCaseControllerTest {
 
     UUID testPatientId = UUID.randomUUID();
     var testCaseImportRequest =
-            TestCaseImportRequest.builder()
-                    .patientId(testPatientId)
-                    .json("test case import json")
-                    .build();
+        TestCaseImportRequest.builder()
+            .patientId(testPatientId)
+            .json("test case import json")
+            .build();
 
-    when(testCaseService.getPatientFamilyName(any(), any())).thenThrow(new JsonProcessingException("error") {
-    });
-    assertThrows(RuntimeException.class, ()-> {
-      controller.importTestCasesQdm(
+    when(testCaseService.getPatientFamilyName(any(), any()))
+        .thenThrow(new JsonProcessingException("error") {});
+    assertThrows(
+        RuntimeException.class,
+        () -> {
+          controller.importTestCasesQdm(
               List.of(testCaseImportRequest), measure.getId(), "TOKEN", principal);
-    });
+        });
   }
 }
