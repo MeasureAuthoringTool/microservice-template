@@ -1,10 +1,12 @@
 package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.dto.ValidList;
+import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.MeasureService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.common.Version;
@@ -374,5 +376,27 @@ public class TestCaseControllerTest {
     assertEquals(1, Objects.requireNonNull(responseEntity.getBody()).size());
     assertEquals(
         testPatientId, Objects.requireNonNull(responseEntity.getBody()).get(0).getPatientId());
+  }
+
+  @Test
+  void importQdmTestCasesFailure() throws InvalidIdException, JsonProcessingException {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    UUID testPatientId = UUID.randomUUID();
+    var testCaseImportRequest =
+        TestCaseImportRequest.builder()
+            .patientId(testPatientId)
+            .json("test case import json")
+            .build();
+
+    when(testCaseService.getPatientFamilyName(any(), any()))
+        .thenThrow(new JsonProcessingException("error") {});
+    assertThrows(
+        RuntimeException.class,
+        () -> {
+          controller.importTestCasesQdm(
+              List.of(testCaseImportRequest), measure.getId(), "TOKEN", principal);
+        });
   }
 }
