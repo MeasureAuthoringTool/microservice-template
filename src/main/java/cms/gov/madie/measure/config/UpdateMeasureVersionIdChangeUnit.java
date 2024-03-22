@@ -40,6 +40,6 @@ public class UpdateMeasureVersionIdChangeUnit {
 
   @RollbackExecution
   public void rollbackExecution() {
-    log.debug("Something went wrong while updating measure version ids.");
+    log.error("Something went wrong while updating measure version ids.");
   }
 }
