@@ -161,10 +161,10 @@ public class TestCaseController {
       try {
         String familyName =
             testCaseService.getPatientFamilyName(ModelType.QDM_5_6.getValue(), request.getJson());
-            request.setFamilyName(familyName);
+        request.setFamilyName(familyName);
         String givenName =
             testCaseService.getPatientGivenName(ModelType.QDM_5_6.getValue(), request.getJson());
-            request.setGivenNames(Collections.singletonList(givenName));
+        request.setGivenNames(Collections.singletonList(givenName));
       } catch (JsonProcessingException ex) {
         log.error(
             "User {} is unable to import test case with patient id : "

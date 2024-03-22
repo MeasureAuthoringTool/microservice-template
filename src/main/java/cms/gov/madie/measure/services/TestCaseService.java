@@ -599,8 +599,8 @@ public class TestCaseService {
       String model) {
     TestCaseImportOutcome failureOutcome =
         TestCaseImportOutcome.builder()
-                .familyName(testCaseImportRequest.getFamilyName())
-                .givenNames(testCaseImportRequest.getGivenNames())
+            .familyName(testCaseImportRequest.getFamilyName())
+            .givenNames(testCaseImportRequest.getGivenNames())
             .patientId(testCaseImportRequest.getPatientId())
             .successful(false)
             .build();
@@ -614,8 +614,8 @@ public class TestCaseService {
           updatedTestCase.getPatientId());
       TestCaseImportOutcome testCaseImportOutcome =
           TestCaseImportOutcome.builder()
-                  .familyName(testCaseImportRequest.getFamilyName())
-                  .givenNames(testCaseImportRequest.getGivenNames())
+              .familyName(testCaseImportRequest.getFamilyName())
+              .givenNames(testCaseImportRequest.getGivenNames())
               .patientId(updatedTestCase.getPatientId())
               .successful(true)
               .build();
