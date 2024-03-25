@@ -5,14 +5,8 @@ import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
 import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeService;
 import cms.gov.madie.measure.validations.CqlObservationFunctionService;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import gov.cms.madie.models.measure.Group;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.MeasureErrorType;
-import gov.cms.madie.models.measure.Population;
-import gov.cms.madie.models.measure.QdmMeasure;
+import gov.cms.madie.models.measure.*;
 import gov.cms.madie.models.common.ModelType;
-import gov.cms.madie.models.measure.DefDescPair;
-import gov.cms.madie.models.measure.SupplementalData;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,7 +44,6 @@ class MeasureUtilTest {
 
   @Mock private CqlDefinitionReturnTypeService cqlDefinitionReturnTypeService;
   @Mock private CqlObservationFunctionService cqlObservationFunctionService;
-
   @InjectMocks private MeasureUtil measureUtil;
 
   @Test
@@ -985,6 +978,78 @@ class MeasureUtilTest {
     changed.setRiskAdjustments(ravs2);
 
     result = measureUtil.isRiskAdjustmentChanged(changed, original);
+    assertTrue(result);
+  }
+
+  @Test
+  public void isTestCaseConfigurationChanged_returnsFalse_forNullObjects() {
+    Measure updatingMeasure = Measure.builder().testCaseConfiguration(null).build();
+    Measure existingMeasure = Measure.builder().testCaseConfiguration(null).build();
+    boolean result = measureUtil.isTestCaseConfigurationChanged(updatingMeasure, existingMeasure);
+    assertFalse(result);
+  }
+
+  @Test
+  public void isTestCaseConfigurationChanged_returnsTrue_whenNewConfigurationIsAdded() {
+    TestCaseConfiguration testCaseConfiguration =
+        TestCaseConfiguration.builder()
+            .id("test-case-config")
+            .sdeIncluded(false)
+            .manifestExpansion(
+                ManifestExpansion.builder().id("manifest-123").fullUrl("manifest-123-url").build())
+            .build();
+    Measure updatingMeasure =
+        Measure.builder().testCaseConfiguration(testCaseConfiguration).build();
+    Measure existingMeasure = Measure.builder().testCaseConfiguration(null).build();
+    boolean result = measureUtil.isTestCaseConfigurationChanged(updatingMeasure, existingMeasure);
+    assertTrue(result);
+  }
+
+  @Test
+  public void isTestCaseConfigurationChanged_returnsTrue_whenSdeIsUpdated() {
+    TestCaseConfiguration existingTestCaseConfiguration =
+        TestCaseConfiguration.builder()
+            .id("test-case-config")
+            .sdeIncluded(false)
+            .manifestExpansion(
+                ManifestExpansion.builder().id("manifest-123").fullUrl("manifest-123-url").build())
+            .build();
+    TestCaseConfiguration newTestCaseConfiguration =
+        TestCaseConfiguration.builder()
+            .id("test-case-config")
+            .sdeIncluded(true)
+            .manifestExpansion(
+                ManifestExpansion.builder().id("manifest-123").fullUrl("manifest-123-url").build())
+            .build();
+    Measure updatingMeasure =
+        Measure.builder().testCaseConfiguration(newTestCaseConfiguration).build();
+    Measure existingMeasure =
+        Measure.builder().testCaseConfiguration(existingTestCaseConfiguration).build();
+    boolean result = measureUtil.isTestCaseConfigurationChanged(updatingMeasure, existingMeasure);
+    assertTrue(result);
+  }
+
+  @Test
+  public void isTestCaseConfigurationChanged_returnsTrue_whenManifestExpansionIsUpdated() {
+    TestCaseConfiguration existingTestCaseConfiguration =
+        TestCaseConfiguration.builder()
+            .id("test-case-config")
+            .sdeIncluded(true)
+            .manifestExpansion(
+                ManifestExpansion.builder().id("manifest-123").fullUrl("manifest-123-url").build())
+            .build();
+    TestCaseConfiguration newTestCaseConfiguration =
+        TestCaseConfiguration.builder()
+            .id("test-case-config")
+            .sdeIncluded(true)
+            .manifestExpansion(
+                ManifestExpansion.builder().id("manifest-456").fullUrl("manifest-456-url").build())
+            .build();
+    Measure updatingMeasure =
+        Measure.builder().testCaseConfiguration(newTestCaseConfiguration).build();
+    Measure existingMeasure =
+        Measure.builder().testCaseConfiguration(existingTestCaseConfiguration).build();
+    boolean result = measureUtil.isTestCaseConfigurationChanged(updatingMeasure, existingMeasure);
     assertTrue(result);
   }
 }
