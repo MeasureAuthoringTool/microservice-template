@@ -558,7 +558,7 @@ public class TestCaseService {
     }
   }
 
-  private String getPatientFamilyName(String model, String json) throws JsonProcessingException {
+  public String getPatientFamilyName(String model, String json) throws JsonProcessingException {
     String patientFamilyName = null;
     if (ModelType.QI_CORE.getValue().equalsIgnoreCase(model)) {
       patientFamilyName = JsonUtil.getPatientName(json, "family");
@@ -568,7 +568,7 @@ public class TestCaseService {
     return patientFamilyName;
   }
 
-  private String getPatientGivenName(String model, String json) throws JsonProcessingException {
+  public String getPatientGivenName(String model, String json) throws JsonProcessingException {
     String patientGivenName = null;
     if (ModelType.QI_CORE.getValue().equalsIgnoreCase(model)) {
       patientGivenName = JsonUtil.getPatientName(json, "given");
@@ -599,6 +599,8 @@ public class TestCaseService {
       String model) {
     TestCaseImportOutcome failureOutcome =
         TestCaseImportOutcome.builder()
+            .familyName(testCaseImportRequest.getFamilyName())
+            .givenNames(testCaseImportRequest.getGivenNames())
             .patientId(testCaseImportRequest.getPatientId())
             .successful(false)
             .build();
@@ -612,6 +614,8 @@ public class TestCaseService {
           updatedTestCase.getPatientId());
       TestCaseImportOutcome testCaseImportOutcome =
           TestCaseImportOutcome.builder()
+              .familyName(testCaseImportRequest.getFamilyName())
+              .givenNames(testCaseImportRequest.getGivenNames())
               .patientId(updatedTestCase.getPatientId())
               .successful(true)
               .build();
