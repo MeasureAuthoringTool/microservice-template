@@ -78,10 +78,10 @@ class ElmTranslatorClientTest {
   }
 
   @Test
-  void testHasErrorsReturnsTrue() {
+  void testHasErrorsReturnsTrueWithExternalErrors() {
     final String json =
         "{\n"
-            + "          \"errorExceptions\": [{\n"
+            + "          \"externalErrors\": [{\n"
             + "                                  \"startLine\" : 2,\n"
             + "                                  \"startChar\" : 1,\n"
             + "                                  \"endLine\" : 2,\n"
@@ -97,6 +97,79 @@ class ElmTranslatorClientTest {
     ElmJson elmJson = ElmJson.builder().json(json).build();
     boolean output = elmTranslatorClient.hasErrors(elmJson);
     assertThat(output, is(true));
+  }
+
+  @Test
+  void testHasErrorsReturnsFalseWithNoExternalErrors() {
+    final String json = "{\n" + "          \"externalErrors\": []\n" + "        }";
+    ElmJson elmJson = ElmJson.builder().json(json).build();
+    boolean output = elmTranslatorClient.hasErrors(elmJson);
+    assertThat(output, is(false));
+  }
+
+  @Test
+  void testHasErrorsReturnsTrueWithParsingErrors() {
+    final String json =
+        "{\n"
+            + "          \"errorExceptions\": [{\n"
+            + "                                  \"startLine\" : 2,\n"
+            + "                                  \"startChar\" : 1,\n"
+            + "                                  \"endLine\" : 2,\n"
+            + "                                  \"endChar\" : 6,\n"
+            + "                                  \"errorType\" : null,\n"
+            + "                                  \"errorSeverity\" : \"Error\",\n"
+            + "                                  \"targetIncludeLibraryId\" : \"TestLib\",\n"
+            + "                                  \"targetIncludeLibraryVersionId\" : \"2\",\n"
+            + "                                  \"type\" : \"parsing\",\n"
+            + "                                  \"message\" : \"Could not resolve identifier define in the current library.\"\n"
+            + "                                }]\n"
+            + "        }";
+    ElmJson elmJson = ElmJson.builder().json(json).build();
+    boolean output = elmTranslatorClient.hasErrors(elmJson);
+    assertThat(output, is(true));
+  }
+
+  @Test
+  void testHasErrorsReturnsFalseWithNoErrorType() {
+    final String json =
+        "{\n"
+            + "          \"errorExceptions\": [{\n"
+            + "                                  \"startLine\" : 2,\n"
+            + "                                  \"startChar\" : 1,\n"
+            + "                                  \"endLine\" : 2,\n"
+            + "                                  \"endChar\" : 6,\n"
+            + "                                  \"errorType\" : null,\n"
+            + "                                  \"errorSeverity\" : \"Error\",\n"
+            + "                                  \"targetIncludeLibraryId\" : \"TestLib\",\n"
+            + "                                  \"targetIncludeLibraryVersionId\" : \"2\",\n"
+            + "                                  \"message\" : \"Could not resolve identifier define in the current library.\"\n"
+            + "                                }]\n"
+            + "        }";
+    ElmJson elmJson = ElmJson.builder().json(json).build();
+    boolean output = elmTranslatorClient.hasErrors(elmJson);
+    assertThat(output, is(false));
+  }
+
+  @Test
+  void testHasErrorsReturnsFalseWithOtherErrorType() {
+    final String json =
+        "{\n"
+            + "          \"errorExceptions\": [{\n"
+            + "                                  \"startLine\" : 2,\n"
+            + "                                  \"startChar\" : 1,\n"
+            + "                                  \"endLine\" : 2,\n"
+            + "                                  \"endChar\" : 6,\n"
+            + "                                  \"errorType\" : null,\n"
+            + "                                  \"errorSeverity\" : \"Error\",\n"
+            + "                                  \"targetIncludeLibraryId\" : \"TestLib\",\n"
+            + "                                  \"targetIncludeLibraryVersionId\" : \"2\",\n"
+            + "                                  \"type\" : \"other\",\n"
+            + "                                  \"message\" : \"Could not resolve identifier define in the current library.\"\n"
+            + "                                }]\n"
+            + "        }";
+    ElmJson elmJson = ElmJson.builder().json(json).build();
+    boolean output = elmTranslatorClient.hasErrors(elmJson);
+    assertThat(output, is(false));
   }
 
   @Test
