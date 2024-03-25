@@ -982,7 +982,7 @@ class MeasureUtilTest {
   }
 
   @Test
-  public void isTestCaseConfigurationChanged_returnsFalse_forNullObjects() {
+  public void isTestCaseConfigurationChangedReturnsFalseForNullObjects() {
     Measure updatingMeasure = Measure.builder().testCaseConfiguration(null).build();
     Measure existingMeasure = Measure.builder().testCaseConfiguration(null).build();
     boolean result = measureUtil.isTestCaseConfigurationChanged(updatingMeasure, existingMeasure);
@@ -990,7 +990,7 @@ class MeasureUtilTest {
   }
 
   @Test
-  public void isTestCaseConfigurationChanged_returnsTrue_whenNewConfigurationIsAdded() {
+  public void isTestCaseConfigurationChangedReturnsTrueWhenNewConfigurationIsAdded() {
     TestCaseConfiguration testCaseConfiguration =
         TestCaseConfiguration.builder()
             .id("test-case-config")
@@ -1006,7 +1006,7 @@ class MeasureUtilTest {
   }
 
   @Test
-  public void isTestCaseConfigurationChanged_returnsTrue_whenSdeIsUpdated() {
+  public void isTestCaseConfigurationChangedReturnsTrueWhenSdeIsUpdated() {
     TestCaseConfiguration existingTestCaseConfiguration =
         TestCaseConfiguration.builder()
             .id("test-case-config")
@@ -1030,7 +1030,7 @@ class MeasureUtilTest {
   }
 
   @Test
-  public void isTestCaseConfigurationChanged_returnsTrue_whenManifestExpansionIsUpdated() {
+  public void isTestCaseConfigurationChangedReturnsTrueWhenManifestExpansionIsUpdated() {
     TestCaseConfiguration existingTestCaseConfiguration =
         TestCaseConfiguration.builder()
             .id("test-case-config")
