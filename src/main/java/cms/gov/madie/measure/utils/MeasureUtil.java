@@ -175,6 +175,11 @@ public class MeasureUtil {
     return !Objects.equals(persistedMeasure.getCqlLibraryName(), measure.getCqlLibraryName());
   }
 
+  public boolean isTestCaseConfigurationChanged(Measure updatingMeasure, Measure existingMeasure) {
+    return !Objects.deepEquals(
+        updatingMeasure.getTestCaseConfiguration(), existingMeasure.getTestCaseConfiguration());
+  }
+
   public boolean isMeasurementPeriodChanged(Measure measure, Measure persistedMeasure) {
     return !Objects.equals(
             persistedMeasure.getMeasurementPeriodStart(), measure.getMeasurementPeriodStart())

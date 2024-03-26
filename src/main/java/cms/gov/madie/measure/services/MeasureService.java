@@ -160,6 +160,13 @@ public class MeasureService {
     if (StringUtils.isBlank(existingMeasure.getMeasureSetId())) {
       existingMeasure.setMeasureSetId(UUID.randomUUID().toString());
     }
+    if (measureUtil.isTestCaseConfigurationChanged(updatingMeasure, existingMeasure)) {
+      log.info(
+          "Measure ID {}, Test Case Configuration has been updated to [{}] by User : [{}] ",
+          existingMeasure.getId(),
+          updatingMeasure.getTestCaseConfiguration(),
+          username);
+    }
 
     if (measureUtil.isMeasurementPeriodChanged(updatingMeasure, existingMeasure)) {
       validateMeasurementPeriod(

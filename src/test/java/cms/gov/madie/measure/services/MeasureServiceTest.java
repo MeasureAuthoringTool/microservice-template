@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import gov.cms.madie.models.measure.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -71,17 +72,6 @@ import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.common.Organization;
 import gov.cms.madie.models.common.Version;
-import gov.cms.madie.models.measure.ElmJson;
-import gov.cms.madie.models.measure.Endorsement;
-import gov.cms.madie.models.measure.Group;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.MeasureErrorType;
-import gov.cms.madie.models.measure.MeasureMetaData;
-import gov.cms.madie.models.measure.MeasureSet;
-import gov.cms.madie.models.measure.Population;
-import gov.cms.madie.models.measure.PopulationType;
-import gov.cms.madie.models.measure.Reference;
-import gov.cms.madie.models.measure.Stratification;
 
 @ExtendWith(MockitoExtension.class)
 public class MeasureServiceTest implements ResourceUtil {
@@ -589,8 +579,16 @@ public class MeasureServiceTest implements ResourceUtil {
             .measureMetaData(draftMeasureMetaData)
             .lastModifiedAt(createdAt)
             .lastModifiedBy(createdBy)
+            .testCaseConfiguration(null)
             .build();
 
+    TestCaseConfiguration newTestCaseConfiguration =
+        TestCaseConfiguration.builder()
+            .id("test-case-config")
+            .sdeIncluded(true)
+            .manifestExpansion(
+                ManifestExpansion.builder().id("manifest-456").fullUrl("manifest-456-url").build())
+            .build();
     Measure updated =
         original.toBuilder()
             .createdAt(Instant.now())
@@ -598,6 +596,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .lastModifiedAt(null)
             .lastModifiedBy("Nobody")
             .versionId("VersionId")
+            .testCaseConfiguration(newTestCaseConfiguration)
             .measureMetaData(draftMeasureMetaData)
             .build();
     when(measureUtil.isCqlLibraryNameChanged(any(Measure.class), any(Measure.class)))
