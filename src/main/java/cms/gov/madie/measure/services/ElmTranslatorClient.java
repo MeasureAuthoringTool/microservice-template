@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
-import java.util.Iterator;
 
 @Slf4j
 @Service
@@ -47,21 +45,7 @@ public class ElmTranslatorClient {
     try {
       ObjectMapper mapper = new ObjectMapper();
       JsonNode jsonNode = mapper.readTree(elmJson.getJson());
-      boolean parsingErrors = false;
-      if (jsonNode.has("errorExceptions")) {
-        JsonNode errorExceptionsNode = jsonNode.get("errorExceptions");
-        Iterator<JsonNode> entyIter = errorExceptionsNode.iterator();
-        while (entyIter.hasNext()) {
-          JsonNode errorNode = entyIter.next();
-          if (errorNode.get("type") != null
-              && errorNode.get("type").asText().equalsIgnoreCase("parsing")) {
-            parsingErrors = true;
-            break;
-          }
-        }
-      }
-      return (jsonNode.has("externalErrors") && jsonNode.get("externalErrors").size() > 0)
-          || parsingErrors;
+      return jsonNode.has("errorExceptions") && jsonNode.get("errorExceptions").size() > 0;
     } catch (Exception ex) {
       log.error("An error occurred parsing the response from the CQL-ELM translation service", ex);
       throw new CqlElmTranslationServiceException(
