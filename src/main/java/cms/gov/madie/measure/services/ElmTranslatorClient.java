@@ -55,6 +55,8 @@ public class ElmTranslatorClient {
           JsonNode errorNode = entyIter.next();
           if (errorNode.get("type") != null
               && errorNode.get("type").asText().equalsIgnoreCase("parsing")) {
+            System.out.println(
+                "hasErrors(): errorExceptions = " + errorNode.toPrettyString() + "\n\n");
             parsingErrors = true;
             break;
           }
