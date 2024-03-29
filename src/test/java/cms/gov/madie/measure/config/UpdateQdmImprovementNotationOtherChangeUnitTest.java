@@ -1,12 +1,9 @@
 package cms.gov.madie.measure.config;
 
 import com.mongodb.bulk.BulkWriteResult;
-import gov.cms.madie.models.measure.Measure;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.internal.verification.Times;
@@ -24,11 +21,9 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class UpdateQdmImprovementNotationOtherChangeUnitTest {
-  @Mock
-  private MongoTemplate mongoTemplate;
+  @Mock private MongoTemplate mongoTemplate;
 
-  @InjectMocks
-  UpdateQdmImprovementNotationOtherChangeUnit changeUnit;
+  @InjectMocks UpdateQdmImprovementNotationOtherChangeUnit changeUnit;
 
   private BulkOperations bulkOperations;
 
@@ -38,9 +33,8 @@ public class UpdateQdmImprovementNotationOtherChangeUnitTest {
     BulkWriteResult result = mock(BulkWriteResult.class);
 
     when(mongoTemplate.bulkOps(eq(BulkOperations.BulkMode.UNORDERED), eq("measure")))
-      .thenReturn(bulkOperations);
-    when(bulkOperations.execute())
-      .thenReturn(result);
+        .thenReturn(bulkOperations);
+    when(bulkOperations.execute()).thenReturn(result);
   }
 
   @Test

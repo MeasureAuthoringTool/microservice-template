@@ -907,7 +907,7 @@ public class MeasureControllerMvcTest {
     saved.setEcqmTitle(ecqmTitle);
     saved.setVersionId(measureId);
     saved.setImprovementNotation("Other");
-    saved.setImprovementNotationOther("TestingOther");
+    saved.setImprovementNotationDescription("TestingOther");
     when(measureService.findMeasureById(anyString())).thenReturn(saved);
     when(measureService.updateMeasure(
             any(Measure.class), anyString(), any(Measure.class), anyString()))
