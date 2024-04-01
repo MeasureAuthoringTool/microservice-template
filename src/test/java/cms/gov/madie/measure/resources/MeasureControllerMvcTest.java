@@ -907,14 +907,14 @@ public class MeasureControllerMvcTest {
     saved.setEcqmTitle(ecqmTitle);
     saved.setVersionId(measureId);
     saved.setImprovementNotation("Other");
-    saved.setImprovementNotationOther("TestingOther");
+    saved.setImprovementNotationDescription("TestingOther");
     when(measureService.findMeasureById(anyString())).thenReturn(saved);
     when(measureService.updateMeasure(
             any(Measure.class), anyString(), any(Measure.class), anyString()))
         .thenReturn(saved);
 
     final String measureAsJson =
-        "{\"measureName\": \"%s\",\"measureSetId\":\"%s\", \"cqlLibraryName\": \"%s\" , \"ecqmTitle\": \"%s\", \"model\": \"%s\", \"id\":\"%s\", \"versionId\":\"%s\", \"scoring\":\"Cohort\",\"improvementNotation\": \"%s\",\"improvementNotationOther\": \"%s\"}"
+        "{\"measureName\": \"%s\",\"measureSetId\":\"%s\", \"cqlLibraryName\": \"%s\" , \"ecqmTitle\": \"%s\", \"model\": \"%s\", \"id\":\"%s\", \"versionId\":\"%s\", \"scoring\":\"Cohort\",\"improvementNotation\": \"%s\",\"improvementNotationDescription\": \"%s\"}"
             .formatted(
                 measureName,
                 measureSetId,
@@ -935,7 +935,7 @@ public class MeasureControllerMvcTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.improvementNotation").value("Other"))
-        .andExpect(jsonPath("$.improvementNotationOther").value("TestingOther"));
+        .andExpect(jsonPath("$.improvementNotationDescription").value("TestingOther"));
     verifyNoMoreInteractions(measureRepository);
   }
 
