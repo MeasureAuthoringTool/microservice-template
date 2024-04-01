@@ -914,7 +914,7 @@ public class MeasureControllerMvcTest {
         .thenReturn(saved);
 
     final String measureAsJson =
-        "{\"measureName\": \"%s\",\"measureSetId\":\"%s\", \"cqlLibraryName\": \"%s\" , \"ecqmTitle\": \"%s\", \"model\": \"%s\", \"id\":\"%s\", \"versionId\":\"%s\", \"scoring\":\"Cohort\",\"improvementNotation\": \"%s\",\"improvementNotationOther\": \"%s\"}"
+        "{\"measureName\": \"%s\",\"measureSetId\":\"%s\", \"cqlLibraryName\": \"%s\" , \"ecqmTitle\": \"%s\", \"model\": \"%s\", \"id\":\"%s\", \"versionId\":\"%s\", \"scoring\":\"Cohort\",\"improvementNotation\": \"%s\",\"improvementNotationDescription\": \"%s\"}"
             .formatted(
                 measureName,
                 measureSetId,
@@ -935,7 +935,7 @@ public class MeasureControllerMvcTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.improvementNotation").value("Other"))
-        .andExpect(jsonPath("$.improvementNotationOther").value("TestingOther"));
+        .andExpect(jsonPath("$.improvementNotationDescription").value("TestingOther"));
     verifyNoMoreInteractions(measureRepository);
   }
 

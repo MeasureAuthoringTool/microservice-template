@@ -27,7 +27,8 @@ public class UpdateQdmImprovementNotationOtherChangeUnit {
   @RollbackExecution
   public void rollbackExecution(MongoTemplate mongoTemplate) {
     log.debug(
-        "Something went wrong while updating the measure improvement notation description. rolling back the updates.");
+        "Something went wrong while updating the measure improvement notation description."
+            + "Rolling back the updates.");
     BulkWriteResult result =
         renameDocumentField(
             mongoTemplate, "improvementNotationDescription", "improvementNotationOther");
