@@ -44,7 +44,10 @@ public class ExportService {
   }
 
   public byte[] getQRDA(Measure measure, String accessToken) {
-    validateMetadata(measure);
+    if (CollectionUtils.isEmpty(measure.getTestCases())) {
+      throw new InvalidResourceStateException(
+          "Measure", measure.getId(), "since there are no test cases in the measure.");
+    }
     ModelValidator modelValidator =
         modelValidatorFactory.getModelValidator(ModelType.valueOfName(measure.getModel()));
     modelValidator.validateGroups(measure);

@@ -58,7 +58,6 @@ public class ValidationController {
     final String fileName = StringUtils.cleanPath(multipartFile.getOriginalFilename());
     final String username = principal.getName();
     VirusScanResponseDto scanResponse = virusScanClient.scanFile(multipartFile.getResource());
-
     if (scanResponse.getFilesScanned() == 0) {
       log.warn(
           "User [{}] tried to validate file [{}] but virus scan service "

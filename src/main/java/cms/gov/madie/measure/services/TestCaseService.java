@@ -48,6 +48,9 @@ public class TestCaseService {
   @Getter
   private String madieJsonResourcesBaseUri;
 
+  private static final String QDM_PATIENT =
+      "{\"qdmVersion\":\"5.6\",\"dataElements\":[],\"_id\":\"OBJECTID\"}";
+
   @Autowired
   public TestCaseService(
       MeasureRepository measureRepository,
@@ -105,6 +108,8 @@ public class TestCaseService {
     }
 
     verifyUniqueTestCaseName(testCase, measure);
+
+    defaultTestCaseJsonForQdmMeasure(testCase, measure);
 
     TestCase enrichedTestCase = enrichNewTestCase(testCase, username);
     enrichedTestCase =
@@ -553,7 +558,7 @@ public class TestCaseService {
     }
   }
 
-  private String getPatientFamilyName(String model, String json) throws JsonProcessingException {
+  public String getPatientFamilyName(String model, String json) throws JsonProcessingException {
     String patientFamilyName = null;
     if (ModelType.QI_CORE.getValue().equalsIgnoreCase(model)) {
       patientFamilyName = JsonUtil.getPatientName(json, "family");
@@ -563,7 +568,7 @@ public class TestCaseService {
     return patientFamilyName;
   }
 
-  private String getPatientGivenName(String model, String json) throws JsonProcessingException {
+  public String getPatientGivenName(String model, String json) throws JsonProcessingException {
     String patientGivenName = null;
     if (ModelType.QI_CORE.getValue().equalsIgnoreCase(model)) {
       patientGivenName = JsonUtil.getPatientName(json, "given");
@@ -594,6 +599,8 @@ public class TestCaseService {
       String model) {
     TestCaseImportOutcome failureOutcome =
         TestCaseImportOutcome.builder()
+            .familyName(testCaseImportRequest.getFamilyName())
+            .givenNames(testCaseImportRequest.getGivenNames())
             .patientId(testCaseImportRequest.getPatientId())
             .successful(false)
             .build();
@@ -607,6 +614,8 @@ public class TestCaseService {
           updatedTestCase.getPatientId());
       TestCaseImportOutcome testCaseImportOutcome =
           TestCaseImportOutcome.builder()
+              .familyName(testCaseImportRequest.getFamilyName())
+              .givenNames(testCaseImportRequest.getGivenNames())
               .patientId(updatedTestCase.getPatientId())
               .successful(true)
               .build();
@@ -732,5 +741,13 @@ public class TestCaseService {
             "Unable to validate test case JSON due to errors, "
                 + "but outcome not able to be interpreted!")
         .build();
+  }
+
+  protected void defaultTestCaseJsonForQdmMeasure(TestCase testCase, Measure measure) {
+    if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(measure.getModel())
+        && StringUtils.isBlank(testCase.getJson())) {
+      String objectId = ObjectId.get().toHexString();
+      testCase.setJson(QDM_PATIENT.replace("OBJECTID", objectId));
+    }
   }
 }

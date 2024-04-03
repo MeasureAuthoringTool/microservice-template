@@ -2292,4 +2292,28 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertEquals(testCase.getDescription(), JsonUtil.getTestDescriptionQdm(testCaseImportQdm));
     assertTrue(response.get(0).isSuccessful());
   }
+
+  @Test
+  void testDefaultTestCaseJsonForQdmMeasureWhenJsonIsNull() {
+    testCase.setJson(null);
+    measure.setModel(ModelType.QDM_5_6.toString());
+    measure.setTestCases(List.of(testCase));
+
+    testCaseService.defaultTestCaseJsonForQdmMeasure(testCase, measure);
+    assertNotNull(testCase.getJson());
+    assertTrue(testCase.getJson().contains("qdmVersion"));
+    assertTrue(testCase.getJson().contains("5.6"));
+    assertTrue(testCase.getJson().contains("dataElements"));
+    assertTrue(testCase.getJson().contains("_id"));
+  }
+
+  @Test
+  void testDefaultTestCaseJsonForQdmMeasureWhenJsonIsNotNull() {
+    measure.setModel(ModelType.QDM_5_6.toString());
+    measure.setTestCases(List.of(testCase));
+
+    testCaseService.defaultTestCaseJsonForQdmMeasure(testCase, measure);
+    assertNotNull(testCase.getJson());
+    assertEquals(testCase.getJson(), "{\"resourceType\":\"Patient\"}");
+  }
 }
