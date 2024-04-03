@@ -8,8 +8,4 @@ logging:
   pattern:
     console: "%d{dd-MM-yyyy HH:mm:ss.SSS} [%thread] %mdc %-5level %logger{36}.%M - %msg%n"
     
-hapi-fhir:
-  url: ${HAPI_FHIR_URL:http://localhost:8080/fhir}
 
-server:
-  port: 8081
