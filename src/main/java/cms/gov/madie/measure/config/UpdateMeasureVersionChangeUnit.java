@@ -30,7 +30,6 @@ public class UpdateMeasureVersionChangeUnit {
                       "updateMeasureVersion(): measure id = "
                           + measure.getId()
                           + " measure cms id = "
-                          + measure.getCmsId()
                           + " version = "
                           + measure.getVersion().toString()
                           + " revision number = "
@@ -72,7 +71,6 @@ public class UpdateMeasureVersionChangeUnit {
                       "rollbackExecution(): measure id = "
                           + measure.getId()
                           + " measure cms id = "
-                          + measure.getCmsId()
                           + " version = "
                           + measure.getVersion().toString());
                 }

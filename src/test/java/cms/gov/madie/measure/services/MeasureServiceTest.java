@@ -519,11 +519,7 @@ public class MeasureServiceTest implements ResourceUtil {
   @Test
   public void testUpdateMeasureThrowsExceptionForDuplicateLibraryName() {
     Measure original =
-        Measure.builder()
-            .cqlLibraryName("OriginalLibName")
-            .measureName("Measure1")
-            .cmsId("CMS_ID1")
-            .build();
+        Measure.builder().cqlLibraryName("OriginalLibName").measureName("Measure1").build();
 
     Measure updated = original.toBuilder().cqlLibraryName("Changed_Name").build();
 
@@ -543,7 +539,6 @@ public class MeasureServiceTest implements ResourceUtil {
         Measure.builder()
             .cqlLibraryName("OriginalLibName")
             .measureName("Measure1")
-            .cmsId("CMS_ID1")
             .versionId("VersionId")
             .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
             .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
@@ -569,7 +564,6 @@ public class MeasureServiceTest implements ResourceUtil {
         Measure.builder()
             .cqlLibraryName("OriginalLibName")
             .measureName("Measure1")
-            .cmsId("CMS_ID1")
             .measureSetId("MeasureSetId")
             .cqlLibraryName("CqlLibraryName")
             .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
@@ -631,7 +625,6 @@ public class MeasureServiceTest implements ResourceUtil {
         Measure.builder()
             .cqlLibraryName("OriginalLibName")
             .measureName("Measure1")
-            .cmsId("CMS_ID1")
             .versionId("VersionId")
             .cql("original cql here")
             .measureMetaData(draftMeasureMetaData)
@@ -670,7 +663,6 @@ public class MeasureServiceTest implements ResourceUtil {
         Measure.builder()
             .cqlLibraryName("OriginalLibName")
             .measureName("Measure1")
-            .cmsId("CMS_ID1")
             .versionId("VersionId")
             .cql("original cql here")
             .measureMetaData(draftMeasureMetaData)
@@ -712,7 +704,6 @@ public class MeasureServiceTest implements ResourceUtil {
         Measure.builder()
             .cqlLibraryName("OriginalLibName")
             .measureName("Measure1")
-            .cmsId("CMS_ID1")
             .versionId("VersionId")
             .cql("original cql here")
             .measureMetaData(draftMeasureMetaData)
