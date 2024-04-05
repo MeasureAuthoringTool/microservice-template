@@ -11,7 +11,7 @@ import org.springframework.util.CollectionUtils;
 
 @Slf4j
 @Service(ServiceConstants.QICORE_VALIDATOR)
-public class QiCoreModelValidator implements ModelValidator {
+public class QiCoreModelValidator extends ModelValidator {
 
   @Override
   public void validateGroupAssociations(Group group) {

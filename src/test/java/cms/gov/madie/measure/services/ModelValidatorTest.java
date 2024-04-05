@@ -3,11 +3,14 @@ package cms.gov.madie.measure.services;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
 import cms.gov.madie.measure.factories.ModelValidatorFactory;
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureErrorType;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -199,5 +202,37 @@ class ModelValidatorTest {
           "Response could not be completed for Measure with ID 1, since there is at least one Population Criteria with no type.",
           e.getMessage());
     }
+  }
+
+  @Test
+  void testValidateCqlErrorsWhenMeasureHasCQLErrors() {
+    assertNotNull(modelValidatorFactory);
+    Measure measure =
+        Measure.builder()
+            .id("1")
+            .errors(List.of(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES))
+            .build();
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
+    assertTrue(validator instanceof QiCoreModelValidator);
+    assertThrows(InvalidResourceStateException.class, () -> validator.validateCqlErrors(measure));
+  }
+
+  @Test
+  void testValidateCqlErrorsWhenIsCQLErrorIsTrue() {
+    assertNotNull(modelValidatorFactory);
+    Measure measure = Measure.builder().id("1").cqlErrors(true).build();
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QDM_5_6);
+    assertTrue(validator instanceof QdmModelValidator);
+    assertThrows(InvalidResourceStateException.class, () -> validator.validateCqlErrors(measure));
+  }
+
+  @Test
+  void testValidateCqlErrorsWhenNoErrors() {
+    assertNotNull(modelValidatorFactory);
+    Measure measure =
+        Measure.builder().id("1").errors(Collections.emptyList()).cqlErrors(false).build();
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
+    assertTrue(validator instanceof QiCoreModelValidator);
+    assertDoesNotThrow(() -> validator.validateCqlErrors(measure));
   }
 }
