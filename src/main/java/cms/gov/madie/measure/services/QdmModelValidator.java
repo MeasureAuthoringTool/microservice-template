@@ -10,7 +10,7 @@ import org.springframework.util.CollectionUtils;
 
 @Slf4j
 @Service(ServiceConstants.QDM_VALIDATOR)
-public class QdmModelValidator implements ModelValidator {
+public class QdmModelValidator extends ModelValidator {
 
   @Override
   public void validateGroupAssociations(Group group) {

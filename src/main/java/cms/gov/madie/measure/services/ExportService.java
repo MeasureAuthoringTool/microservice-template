@@ -21,6 +21,7 @@ public class ExportService {
     ModelValidator modelValidator =
         modelValidatorFactory.getModelValidator(ModelType.valueOfName(measure.getModel()));
     modelValidator.validateGroups(measure);
+    modelValidator.validateCqlErrors(measure);
     PackageService packageService =
         packageServiceFactory.getPackageService(ModelType.valueOfName(measure.getModel()));
     return packageService.getMeasurePackage(measure, accessToken);
