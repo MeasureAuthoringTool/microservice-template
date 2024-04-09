@@ -100,14 +100,6 @@ public class ExportController {
 
     Measure measure = measureOptional.get();
 
-    return ResponseEntity.ok()
-        .header(
-            HttpHeaders.CONTENT_DISPOSITION,
-            "attachment;filename=\""
-                + ExportFileNamesUtil.getTestCaseExportZipName(measure)
-                + "-TestCases"
-                + ".zip\"")
-        .contentType(MediaType.APPLICATION_OCTET_STREAM)
-        .body(exportService.getQRDA(measure, accessToken));
+    return exportService.getQRDA(measure, accessToken);
   }
 }
