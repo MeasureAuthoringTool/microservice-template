@@ -4,6 +4,7 @@ import cms.gov.madie.measure.exceptions.InvalidGroupException;
 import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.QdmMeasure;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -30,6 +31,11 @@ public class QdmModelValidator extends ModelValidator {
     if (CollectionUtils.isEmpty(measure.getGroups())) {
       throw new InvalidResourceStateException(
           "Measure", measure.getId(), "since there is no population criteria on the measure.");
+    }
+    QdmMeasure qdmMeasure = (QdmMeasure) measure;
+    if (CollectionUtils.isEmpty(qdmMeasure.getBaseConfigurationTypes())) {
+      throw new InvalidResourceStateException(
+          "Measure", measure.getId(), "since there are no measure types for the measure.");
     }
   }
 }
