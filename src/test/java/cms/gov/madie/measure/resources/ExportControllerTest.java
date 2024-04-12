@@ -191,9 +191,9 @@ class ExportControllerTest {
             .createdBy("test.user")
             .build();
 
-    byte[] response = new byte[0];
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    when(exportService.getQRDA(eq(measure), anyString())).thenReturn(response);
+    when(exportService.getQRDA(eq(measure), anyString()))
+        .thenReturn(new ResponseEntity<>(new byte[0], HttpStatus.OK));
     ResponseEntity<byte[]> output = exportController.getQRDA(principal, "test_id", "Bearer TOKEN");
     assertEquals(HttpStatus.OK, output.getStatusCode());
   }
