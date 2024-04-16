@@ -265,7 +265,6 @@ class BundleServiceTest implements ResourceUtil {
 
     PackageDto output = bundleService.getMeasureExport(measure, "Bearer TOKEN");
     assertNotNull(output);
-    ZipInputStream z = new ZipInputStream(new ByteArrayInputStream(output.getExportPackage()));
     assertNotNull(output);
     assertTrue(Arrays.equals("TEST".getBytes(), output.getExportPackage()));
   }
