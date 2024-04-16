@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.config.QdmServiceConfig;
+import cms.gov.madie.measure.dto.PackageDto;
 import cms.gov.madie.measure.exceptions.InternalServerException;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.Measure;
@@ -57,7 +58,8 @@ class QdmPackageServiceTest {
     when(qdmServiceRestTemplate.exchange(
             any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
         .thenReturn(ResponseEntity.ok(packageContent.getBytes()));
-    byte[] packageContents = qdmPackageService.getMeasurePackage(measure, token);
+    PackageDto measurePackage = qdmPackageService.getMeasurePackage(measure, token);
+    byte[] packageContents = measurePackage.getExportPackage();
     assertThat(packageContents, is(notNullValue()));
     assertThat(new String(packageContents), is(equalTo(packageContent)));
   }
