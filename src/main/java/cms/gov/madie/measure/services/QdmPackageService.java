@@ -29,9 +29,10 @@ public class QdmPackageService implements PackageService {
     if (!measure.getMeasureMetaData().isDraft()) {
       Optional<Export> savedExport = repository.findByMeasureId(measure.getId());
       if (savedExport.isPresent()) {
+        log.info("returning persisted export for measure [{}]", measure.getId());
         return PackageDto.builder()
             .fromStorage(true)
-            .exportPackage(savedExport.get().getMeasureBundleJson().getBytes())
+            .exportPackage(savedExport.get().getPackageData())
             .build();
       }
     }

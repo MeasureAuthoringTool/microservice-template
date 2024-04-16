@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.resources;
 
+import cms.gov.madie.measure.dto.PackageDto;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.ExportService;
@@ -53,7 +54,7 @@ class ExportControllerTest {
   }
 
   @Test
-  void getZipReturnsAResponse() {
+  void getZipReturnsACreatedResponse() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
     final Measure measure =
@@ -66,7 +67,28 @@ class ExportControllerTest {
 
     byte[] response = new byte[0];
     when(measureService.findMeasureById(anyString())).thenReturn(measure);
-    when(exportService.getMeasureExport(eq(measure), anyString())).thenReturn(response);
+    when(exportService.getMeasureExport(eq(measure), anyString()))
+        .thenReturn(PackageDto.builder().fromStorage(false).exportPackage(response).build());
+    ResponseEntity<byte[]> output = exportController.getZip(principal, "test_id", "Bearer TOKEN");
+    assertEquals(HttpStatus.CREATED, output.getStatusCode());
+  }
+
+  @Test
+  void getZipFromStorageReturnsAnOKResponse() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+    final Measure measure =
+        Measure.builder()
+            .ecqmTitle("test_ecqm_title")
+            .version(new Version(0, 0, 0))
+            .model("QiCore 4.1.1")
+            .createdBy("test.user")
+            .build();
+
+    byte[] response = new byte[0];
+    when(measureService.findMeasureById(anyString())).thenReturn(measure);
+    when(exportService.getMeasureExport(eq(measure), anyString()))
+        .thenReturn(PackageDto.builder().fromStorage(true).exportPackage(response).build());
     ResponseEntity<byte[]> output = exportController.getZip(principal, "test_id", "Bearer TOKEN");
     assertEquals(HttpStatus.OK, output.getStatusCode());
   }

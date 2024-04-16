@@ -82,7 +82,7 @@ public class VersionService {
     Measure upversionedMeasure = version(versionType, username, measure);
 
     var measurePackage = qdmPackageService.getMeasurePackage(upversionedMeasure, accessToken);
-    saveMeasureBundle(upversionedMeasure, new String(measurePackage.getExportPackage()), username);
+    savePackageData(upversionedMeasure, measurePackage.getExportPackage(), username);
 
     return applyMeasureVersion(versionType, username, upversionedMeasure);
   }
@@ -307,6 +307,16 @@ public class VersionService {
   private void saveMeasureBundle(Measure savedMeasure, String measureBundle, String username) {
     Export export =
         Export.builder().measureId(savedMeasure.getId()).measureBundleJson(measureBundle).build();
+    Export savedExport = exportRepository.save(export);
+    log.info(
+        "User [{}] successfully saved versioned measure's export data with ID [{}]",
+        username,
+        savedExport.getId());
+  }
+
+  private void savePackageData(Measure savedMeasure, byte[] packageData, String username) {
+    Export export =
+        Export.builder().measureId(savedMeasure.getId()).packageData(packageData).build();
     Export savedExport = exportRepository.save(export);
     log.info(
         "User [{}] successfully saved versioned measure's export data with ID [{}]",
