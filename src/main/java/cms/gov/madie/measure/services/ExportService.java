@@ -8,6 +8,7 @@ import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.Measure;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -45,7 +46,7 @@ public class ExportService {
     }
   }
 
-  public byte[] getQRDA(Measure measure, String accessToken) {
+  public ResponseEntity<byte[]> getQRDA(Measure measure, String accessToken) {
     if (CollectionUtils.isEmpty(measure.getTestCases())) {
       throw new InvalidResourceStateException(
           "Measure", measure.getId(), "since there are no test cases in the measure.");

@@ -3,6 +3,7 @@ package cms.gov.madie.measure.services;
 import cms.gov.madie.measure.dto.PackageDto;
 import gov.cms.madie.models.measure.Measure;
 import lombok.AllArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,8 +17,8 @@ public class QicorePackageService implements PackageService {
   }
 
   @Override
-  public byte[] getQRDA(Measure measure, String accessToken) {
+  public ResponseEntity<byte[]> getQRDA(Measure measure, String accessToken) {
     // to be implemented
-    return "".getBytes();
+    throw new UnsupportedOperationException("method not yet implemented");
   }
 }

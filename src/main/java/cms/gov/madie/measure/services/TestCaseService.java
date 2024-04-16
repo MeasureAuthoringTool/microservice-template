@@ -30,6 +30,8 @@ import org.springframework.web.client.HttpClientErrorException;
 import java.time.Instant;
 import java.util.*;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 
@@ -111,6 +113,10 @@ public class TestCaseService {
 
     defaultTestCaseJsonForQdmMeasure(testCase, measure);
 
+    if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(measure.getModel())) {
+      checkTestCaseSpecialCharacters(testCase);
+    }
+
     TestCase enrichedTestCase = enrichNewTestCase(testCase, username);
     enrichedTestCase =
         validateTestCaseAsResource(
@@ -147,6 +153,9 @@ public class TestCaseService {
 
     List<TestCase> enrichedTestCases = new ArrayList<>(newTestCases.size());
     for (TestCase testCase : newTestCases) {
+      if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(measure.getModel())) {
+        checkTestCaseSpecialCharacters(testCase);
+      }
       TestCase enriched = enrichNewTestCase(testCase, username);
       enriched =
           validateTestCaseAsResource(
@@ -271,6 +280,10 @@ public class TestCaseService {
 
     if (!measure.getMeasureMetaData().isDraft()) {
       throw new InvalidDraftStatusException(measure.getId());
+    }
+
+    if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(measure.getModel())) {
+      checkTestCaseSpecialCharacters(testCase);
     }
 
     if (measure.getTestCases() == null) {
@@ -748,6 +761,21 @@ public class TestCaseService {
         && StringUtils.isBlank(testCase.getJson())) {
       String objectId = ObjectId.get().toHexString();
       testCase.setJson(QDM_PATIENT.replace("OBJECTID", objectId));
+    }
+  }
+
+  protected void checkTestCaseSpecialCharacters(TestCase testCase) {
+    if (StringUtils.isBlank(testCase.getTitle()) || StringUtils.isBlank(testCase.getSeries())) {
+      throw new InvalidRequestException("Test Case title and group are required");
+    }
+    Pattern special = Pattern.compile("[(){}\\[\\]<>/|\"':;,.~`!@#$%^&*_+=\\\\]");
+    Matcher titleHasSpecial = special.matcher(testCase.getTitle());
+    Matcher groupHasSpecial = special.matcher(testCase.getSeries());
+    if (titleHasSpecial.find()) {
+      throw new SpecialCharacterException("Title");
+    }
+    if (groupHasSpecial.find()) {
+      throw new SpecialCharacterException("Group");
     }
   }
 }

@@ -23,6 +23,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -175,9 +177,9 @@ class ExportServiceTest {
     doNothing().when(qdmModelValidator).validateGroups(any(Measure.class));
     when(packageServiceFactory.getPackageService(any())).thenReturn(qdmPackageService);
     when(qdmPackageService.getQRDA(any(Measure.class), anyString()))
-        .thenReturn(packageContent.getBytes());
-    byte[] measurePackage = exportService.getQRDA(measure, token);
-    assertThat(new String(measurePackage), is(equalTo(packageContent)));
+        .thenReturn(new ResponseEntity<>(packageContent.getBytes(), HttpStatus.OK));
+    ResponseEntity<byte[]> measurePackage = exportService.getQRDA(measure, token);
+    assertThat(new String(measurePackage.getBody()), is(equalTo(packageContent)));
   }
 
   @Test
