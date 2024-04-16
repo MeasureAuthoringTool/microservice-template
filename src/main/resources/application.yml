@@ -36,6 +36,7 @@ madie:
       elm-json-uri: /cql/translator/cql
       elm-json-uri-for-mat-transferred-measure: /mat/translator/cqlToElm
   virus-scan:
+    disable-scan: ${DISABLE_VIRUS_SCAN:true}
     service:
       base-url: ${VIRUS_SCAN_SERVICE_URL:http://localhost:5000}
       scan-file-uri: /scan-file

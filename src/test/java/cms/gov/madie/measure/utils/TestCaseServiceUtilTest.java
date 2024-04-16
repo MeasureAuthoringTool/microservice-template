@@ -30,13 +30,10 @@ import gov.cms.madie.models.measure.TestCaseStratificationValue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 public class TestCaseServiceUtilTest {
-
-  @InjectMocks private TestCaseServiceUtil testCaseServiceUtil;
   private Population population1;
   private Population population2;
   private Population population3;
@@ -148,14 +145,14 @@ public class TestCaseServiceUtilTest {
 
   @Test
   public void testGetGroupsWithValidPopulationsReturnsNullWithNullInput() {
-    List<Group> changedGroups = testCaseServiceUtil.getGroupsWithValidPopulations(null);
+    List<Group> changedGroups = TestCaseServiceUtil.getGroupsWithValidPopulations(null);
     assertThat(changedGroups, is(nullValue()));
   }
 
   @Test
   public void testGetGroupsWithValidPopulationsReturnsNullPopulations() {
     group = Group.builder().id("testGroupId").build();
-    List<Group> changedGroups = testCaseServiceUtil.getGroupsWithValidPopulations(List.of(group));
+    List<Group> changedGroups = TestCaseServiceUtil.getGroupsWithValidPopulations(List.of(group));
     assertNotNull(changedGroups);
     assertThat(changedGroups.size(), is(1));
     assertNull(changedGroups.get(0).getPopulations());
@@ -179,7 +176,7 @@ public class TestCaseServiceUtilTest {
             .populationBasis("Boolean")
             .populations(List.of(population1, population2, population3, population4, population5))
             .build();
-    List<Group> changedGroups = testCaseServiceUtil.getGroupsWithValidPopulations(List.of(group));
+    List<Group> changedGroups = TestCaseServiceUtil.getGroupsWithValidPopulations(List.of(group));
     assertNotNull(changedGroups);
     assertThat(changedGroups.size(), is(1));
     assertNotNull(changedGroups.get(0));
@@ -189,7 +186,7 @@ public class TestCaseServiceUtilTest {
 
   @Test
   public void testGetGroupsWithValidPopulationsNoRemoval() {
-    List<Group> changedGroups = testCaseServiceUtil.getGroupsWithValidPopulations(List.of(group));
+    List<Group> changedGroups = TestCaseServiceUtil.getGroupsWithValidPopulations(List.of(group));
     assertNotNull(changedGroups);
     assertThat(changedGroups.size(), is(1));
     assertNotNull(changedGroups.get(0));
@@ -200,7 +197,7 @@ public class TestCaseServiceUtilTest {
   @Test
   public void testMatchCriteriaGroupsSuccessAllMatch() {
     boolean result =
-        testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
+        TestCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
     assertTrue(result);
     assertThat(testCase, is(notNullValue()));
     assertThat(testCase.getGroupPopulations().size(), is(equalTo(1)));
@@ -227,7 +224,7 @@ public class TestCaseServiceUtilTest {
   @Test
   public void testMatchCriteriaGroupsNullGroup() {
     boolean result =
-        testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, null, testCase);
+        TestCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, null, testCase);
     assertFalse(result);
   }
 
@@ -235,7 +232,7 @@ public class TestCaseServiceUtilTest {
   public void testMatchCriteriaGroupsNullTestCaseGroupPopulations() {
     testCaseGroupPopulations.clear();
     boolean result =
-        testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
+        TestCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
     assertFalse(result);
   }
 
@@ -251,7 +248,7 @@ public class TestCaseServiceUtilTest {
             .build();
     testCaseGroupPopulations.add(testCaseGroupPopulation1);
     boolean result =
-        testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
+        TestCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
     assertFalse(result);
   }
 
@@ -264,7 +261,7 @@ public class TestCaseServiceUtilTest {
             .populationBasis("Boolean")
             .build();
     boolean result =
-        testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
+        TestCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
     assertFalse(result);
   }
 
@@ -275,7 +272,7 @@ public class TestCaseServiceUtilTest {
         TestCaseGroupPopulation.builder().populationBasis("Encounter").build();
     testCaseGroupPopulations.add(testCaseGroupPopulation1);
     boolean result =
-        testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
+        TestCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
     assertFalse(result);
   }
 
@@ -291,7 +288,7 @@ public class TestCaseServiceUtilTest {
             .build();
     testCaseGroupPopulations.add(testCaseGroupPopulation1);
     boolean result =
-        testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
+        TestCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
     assertFalse(result);
   }
 
@@ -311,7 +308,7 @@ public class TestCaseServiceUtilTest {
             .build();
     testCaseGroupPopulations.add(testCaseGroupPopulation1);
     boolean result =
-        testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
+        TestCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
     assertFalse(result);
   }
 
@@ -324,7 +321,7 @@ public class TestCaseServiceUtilTest {
             .populations(List.of(population1, population2, population3, population4, population5))
             .build();
     boolean result =
-        testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
+        TestCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
     assertTrue(result);
   }
 
@@ -338,7 +335,7 @@ public class TestCaseServiceUtilTest {
             .populations(List.of(population1, population2, population3, population4, population5))
             .build();
     boolean result =
-        testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
+        TestCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, List.of(group), testCase);
     assertTrue(result);
   }
 
@@ -364,7 +361,7 @@ public class TestCaseServiceUtilTest {
             .build();
 
     boolean result =
-        testCaseServiceUtil.matchCriteriaGroups(List.of(groupPopulation), List.of(group), testCase);
+        TestCaseServiceUtil.matchCriteriaGroups(List.of(groupPopulation), List.of(group), testCase);
     assertTrue(result);
   }
 
@@ -419,7 +416,7 @@ public class TestCaseServiceUtilTest {
             .build();
 
     boolean result =
-        testCaseServiceUtil.matchCriteriaGroups(List.of(groupPopulation), List.of(group), testCase);
+        TestCaseServiceUtil.matchCriteriaGroups(List.of(groupPopulation), List.of(group), testCase);
     assertTrue(result);
   }
 
@@ -450,7 +447,7 @@ public class TestCaseServiceUtilTest {
             .build();
 
     boolean result =
-        testCaseServiceUtil.matchCriteriaGroups(List.of(groupPopulation), List.of(group), testCase);
+        TestCaseServiceUtil.matchCriteriaGroups(List.of(groupPopulation), List.of(group), testCase);
     assertTrue(result);
   }
 
@@ -512,7 +509,7 @@ public class TestCaseServiceUtilTest {
     measureGroups.add(group);
 
     List<TestCaseGroupPopulation> testCaseGroups =
-        testCaseServiceUtil.assignStratificationValuesQdm(importedGroups, measureGroups);
+        TestCaseServiceUtil.assignStratificationValuesQdm(importedGroups, measureGroups);
 
     assertNull(testCaseGroups);
   }
@@ -548,7 +545,7 @@ public class TestCaseServiceUtilTest {
     importedGroups.add(stratPopultion);
 
     List<TestCaseGroupPopulation> testCaseGroups =
-        testCaseServiceUtil.assignStratificationValuesQdm(importedGroups, measureGroups);
+        TestCaseServiceUtil.assignStratificationValuesQdm(importedGroups, measureGroups);
 
     assertEquals(1, testCaseGroups.size());
     assertThat(testCaseGroups.get(0).getStratificationValues(), not(empty()));
@@ -645,7 +642,7 @@ public class TestCaseServiceUtilTest {
     importedGroups.add(stratPopCriteria4);
 
     List<TestCaseGroupPopulation> testCaseGroups =
-        testCaseServiceUtil.assignStratificationValuesQdm(importedGroups, measureGroups);
+        TestCaseServiceUtil.assignStratificationValuesQdm(importedGroups, measureGroups);
 
     assertEquals(2, testCaseGroups.size());
     assertThat(testCaseGroups.get(0).getStratificationValues(), not(empty()));
@@ -744,7 +741,7 @@ public class TestCaseServiceUtilTest {
     importedGroups.add(stratPopCriteria4);
 
     List<TestCaseGroupPopulation> testCaseGroups =
-        testCaseServiceUtil.assignStratificationValuesQdm(importedGroups, measureGroups);
+        TestCaseServiceUtil.assignStratificationValuesQdm(importedGroups, measureGroups);
 
     assertEquals(2, testCaseGroups.size());
     assertThat(testCaseGroups.get(0).getStratificationValues(), not(empty()));
@@ -845,7 +842,7 @@ public class TestCaseServiceUtilTest {
     importedGroups.add(stratPopCriteria4);
 
     List<TestCaseGroupPopulation> testCaseGroups =
-        testCaseServiceUtil.assignStratificationValuesQdm(importedGroups, measureGroups);
+        TestCaseServiceUtil.assignStratificationValuesQdm(importedGroups, measureGroups);
 
     assertNull(testCaseGroups);
   }
@@ -930,7 +927,7 @@ public class TestCaseServiceUtilTest {
     importedGroups.add(stratPopCriteria3);
 
     List<TestCaseGroupPopulation> testCaseGroups =
-        testCaseServiceUtil.assignStratificationValuesQdm(importedGroups, measureGroups);
+        TestCaseServiceUtil.assignStratificationValuesQdm(importedGroups, measureGroups);
 
     assertNull(testCaseGroups);
   }
@@ -957,7 +954,7 @@ public class TestCaseServiceUtilTest {
             .build());
 
     List<TestCaseGroupPopulation> testCaseGroups =
-        testCaseServiceUtil.assignStratificationValuesQdm(importedGroups, measureGroups);
+        TestCaseServiceUtil.assignStratificationValuesQdm(importedGroups, measureGroups);
     assertNull(testCaseGroups);
   }
 
@@ -991,7 +988,7 @@ public class TestCaseServiceUtilTest {
     importedGroups.add(importedStratGroup);
 
     List<TestCaseGroupPopulation> testCaseGroups =
-        testCaseServiceUtil.assignStratificationValuesQdm(importedGroups, measureGroups);
+        TestCaseServiceUtil.assignStratificationValuesQdm(importedGroups, measureGroups);
 
     assertEquals(1, testCaseGroups.get(0).getStratificationValues().size());
     assertEquals(
@@ -1028,7 +1025,7 @@ public class TestCaseServiceUtilTest {
     importedGroups.add(importedStratGroup);
 
     List<TestCaseGroupPopulation> testCaseGroups =
-        testCaseServiceUtil.assignStratificationValuesQdm(importedGroups, measureGroups);
+        TestCaseServiceUtil.assignStratificationValuesQdm(importedGroups, measureGroups);
 
     assertEquals(1, testCaseGroups.get(0).getStratificationValues().size());
     assertEquals(
@@ -1050,7 +1047,7 @@ public class TestCaseServiceUtilTest {
     TestCaseGroupPopulation groupPopulation =
         TestCaseGroupPopulation.builder().populationValues(List.of(populationValue1)).build();
 
-    testCaseServiceUtil.assignObservationValues(newTestCase, List.of(groupPopulation), "Boolean");
+    TestCaseServiceUtil.assignObservationValues(newTestCase, List.of(groupPopulation), "Boolean");
 
     assertEquals(newTestCase.getGroupPopulations().get(0).getPopulationValues().size(), 6);
     assertEquals(
@@ -1073,7 +1070,7 @@ public class TestCaseServiceUtilTest {
     TestCaseGroupPopulation groupPopulation =
         TestCaseGroupPopulation.builder().populationValues(List.of(populationValue1)).build();
 
-    testCaseServiceUtil.assignObservationValues(newTestCase, List.of(groupPopulation), "Boolean");
+    TestCaseServiceUtil.assignObservationValues(newTestCase, List.of(groupPopulation), "Boolean");
 
     assertEquals(newTestCase.getGroupPopulations().get(0).getPopulationValues().size(), 6);
     assertEquals(
@@ -1096,7 +1093,7 @@ public class TestCaseServiceUtilTest {
     TestCaseGroupPopulation groupPopulation =
         TestCaseGroupPopulation.builder().populationValues(List.of(populationValue1)).build();
 
-    testCaseServiceUtil.assignObservationValues(newTestCase, List.of(groupPopulation), "Encounter");
+    TestCaseServiceUtil.assignObservationValues(newTestCase, List.of(groupPopulation), "Encounter");
 
     assertEquals(newTestCase.getGroupPopulations().get(0).getPopulationValues().size(), 6);
     assertEquals(
@@ -1106,14 +1103,14 @@ public class TestCaseServiceUtilTest {
   @Test
   public void testGetObservationPopulationsReturnsNull() {
     List<TestCasePopulationValue> populationValues =
-        testCaseServiceUtil.getObservationPopulations(null);
+        TestCaseServiceUtil.getObservationPopulations(null);
     assertNull(populationValues);
   }
 
   @Test
   public void testGetRevisedGroupPopulationReturnsEmptyListForNull() {
     List<TestCaseGroupPopulation> output =
-        testCaseServiceUtil.getNonObservationGroupPopulations(null);
+        TestCaseServiceUtil.getNonObservationGroupPopulations(null);
     assertThat(output, is(notNullValue()));
     assertThat(output.isEmpty(), is(true));
   }
@@ -1122,7 +1119,7 @@ public class TestCaseServiceUtilTest {
   public void testGetRevisedGroupPopulationReturnsEmptyListForEmptyInput() {
     final List<TestCaseGroupPopulation> originalTestCaseGroupPopulations = List.of();
     List<TestCaseGroupPopulation> output =
-        testCaseServiceUtil.getNonObservationGroupPopulations(originalTestCaseGroupPopulations);
+        TestCaseServiceUtil.getNonObservationGroupPopulations(originalTestCaseGroupPopulations);
     assertThat(output, is(notNullValue()));
     assertThat(output.isEmpty(), is(true));
   }
@@ -1142,7 +1139,7 @@ public class TestCaseServiceUtilTest {
                 .scoring(MeasureScoring.PROPORTION.toString())
                 .build());
     List<TestCaseGroupPopulation> output =
-        testCaseServiceUtil.getNonObservationGroupPopulations(originalTestCaseGroupPopulations);
+        TestCaseServiceUtil.getNonObservationGroupPopulations(originalTestCaseGroupPopulations);
     assertThat(output, is(notNullValue()));
     assertThat(output.size(), is(equalTo(2)));
     assertThat(output.get(0), is(notNullValue()));
@@ -1213,7 +1210,7 @@ public class TestCaseServiceUtilTest {
                             .build()))
                 .build());
     List<TestCaseGroupPopulation> output =
-        testCaseServiceUtil.getNonObservationGroupPopulations(originalTestCaseGroupPopulations);
+        TestCaseServiceUtil.getNonObservationGroupPopulations(originalTestCaseGroupPopulations);
     assertThat(output, is(notNullValue()));
     assertThat(output.size(), is(equalTo(2)));
     assertThat(output.get(0), is(notNullValue()));

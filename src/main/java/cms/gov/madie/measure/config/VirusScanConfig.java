@@ -19,6 +19,9 @@ public class VirusScanConfig {
   @Value("${madie.virus-scan.service.api-key}")
   private String apiKey;
 
+  @Value("${madie.virus-scan.disable-scan}")
+  private boolean scanDisabled;
+
   @Bean
   public RestTemplate virusScanRestTemplate() {
     return new RestTemplate();

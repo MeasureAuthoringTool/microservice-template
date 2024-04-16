@@ -24,13 +24,11 @@ import gov.cms.madie.models.measure.TestCasePopulationValue;
 import gov.cms.madie.models.measure.TestCaseStratificationValue;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Service
 @AllArgsConstructor
 public class TestCaseServiceUtil {
 
@@ -55,7 +53,7 @@ public class TestCaseServiceUtil {
    * @param originalGroups Target measure's Population Criteria.
    * @return New List with populations associated with definitions.
    */
-  public List<Group> getGroupsWithValidPopulations(List<Group> originalGroups) {
+  public static List<Group> getGroupsWithValidPopulations(List<Group> originalGroups) {
     if (isEmpty(originalGroups)) {
       return null;
     }
@@ -72,7 +70,7 @@ public class TestCaseServiceUtil {
   }
 
   // match criteria groups from MeasureReport in imported json file
-  public boolean matchCriteriaGroups(
+  public static boolean matchCriteriaGroups(
       List<TestCaseGroupPopulation> testCaseGroupPopulations,
       List<Group> groups,
       TestCase newTestCase) {
@@ -114,7 +112,7 @@ public class TestCaseServiceUtil {
     return isValid;
   }
 
-  private TestCaseGroupPopulation assignTestCaseGroupPopulation(Group group) {
+  private static TestCaseGroupPopulation assignTestCaseGroupPopulation(Group group) {
     return TestCaseGroupPopulation.builder()
         .groupId(group.getId())
         .scoring(group.getScoring())
@@ -134,7 +132,7 @@ public class TestCaseServiceUtil {
    *     imported Population Criteria. True = matches, False, does not match.
    * @return isValid
    */
-  private boolean mapPopulationValues(
+  private static boolean mapPopulationValues(
       Group group,
       List<TestCaseGroupPopulation> nonObsPopulations,
       int measureGroupNumber,
@@ -185,7 +183,7 @@ public class TestCaseServiceUtil {
     return isValid;
   }
 
-  private Set<PopulationType> getObservationTypesForGroup(Group group) {
+  private static Set<PopulationType> getObservationTypesForGroup(Group group) {
     Set<PopulationType> types = new HashSet<>();
     if (group != null
         && !isEmpty(group.getPopulations())
@@ -208,7 +206,7 @@ public class TestCaseServiceUtil {
     return types;
   }
 
-  private List<TestCasePopulationValue> mapObservations(
+  private static List<TestCasePopulationValue> mapObservations(
       TestCaseGroupPopulation importedGroup, Group measrueGroup) {
     List<TestCasePopulationValue> observationPopVals = new ArrayList<>();
     Set<PopulationType> observationPopulationTypes = getObservationTypesForGroup(measrueGroup);
@@ -222,7 +220,7 @@ public class TestCaseServiceUtil {
     return observationPopVals;
   }
 
-  private int assignPopulationValues(
+  private static int assignPopulationValues(
       Population population,
       List<TestCaseGroupPopulation> testCaseGroupPopulations,
       int measureGroupNumber,
@@ -289,13 +287,14 @@ public class TestCaseServiceUtil {
     return matchedNumber;
   }
 
-  private Optional<Population> findGroupPopulation(Group group, TestCasePopulationValue popValue) {
+  private static Optional<Population> findGroupPopulation(
+      Group group, TestCasePopulationValue popValue) {
     return group.getPopulations().stream()
         .filter(p -> p.getName().name().equalsIgnoreCase(popValue.getName().toString()))
         .findFirst();
   }
 
-  public List<TestCaseGroupPopulation> assignStratificationValuesQdm(
+  public static List<TestCaseGroupPopulation> assignStratificationValuesQdm(
       List<TestCaseGroupPopulation> testCaseGroupPopulations, List<Group> measureGroups) {
 
     // Break up single list of pop values and strats into separate lists
@@ -346,7 +345,7 @@ public class TestCaseServiceUtil {
     return new ArrayList<>(populationCriteria);
   }
 
-  private void addStrat(
+  private static void addStrat(
       TestCaseGroupPopulation populationCriteria, TestCaseStratificationValue strat) {
     if (populationCriteria.getStratificationValues() == null) {
       List<TestCaseStratificationValue> strats = new ArrayList<>();
@@ -357,7 +356,7 @@ public class TestCaseServiceUtil {
     }
   }
 
-  private Object getPopulationExpected(
+  private static Object getPopulationExpected(
       String populationBasis, TestCasePopulationValue populationValue) {
     Object expected;
     if (populationBasis != null && populationBasis.equalsIgnoreCase("boolean")) {
@@ -374,7 +373,7 @@ public class TestCaseServiceUtil {
   }
 
   // testCaseGroupPopulations may contain observations that are not in group
-  protected List<TestCaseGroupPopulation> getNonObservationGroupPopulations(
+  public static List<TestCaseGroupPopulation> getNonObservationGroupPopulations(
       List<TestCaseGroupPopulation> testCaseGroupPopulations) {
     List<TestCaseGroupPopulation> revisedGroupPopulations = new ArrayList<>();
     if (!isEmpty(testCaseGroupPopulations)) {
@@ -395,7 +394,7 @@ public class TestCaseServiceUtil {
     return revisedGroupPopulations;
   }
 
-  public void assignObservationValues(
+  public static void assignObservationValues(
       TestCase newTestCase,
       List<TestCaseGroupPopulation> testCaseGroupPopulations,
       String populationBasis) {
@@ -417,7 +416,7 @@ public class TestCaseServiceUtil {
     newTestCase.setGroupPopulations(newGroupPopulations);
   }
 
-  private List<TestCasePopulationValue> convertPopulationValues(
+  private static List<TestCasePopulationValue> convertPopulationValues(
       List<TestCasePopulationValue> observationValues, String populationBasis) {
     List<TestCasePopulationValue> observationPopulationValues = new ArrayList<>();
     if (!isEmpty(observationValues)) {
@@ -434,7 +433,7 @@ public class TestCaseServiceUtil {
     return observationPopulationValues;
   }
 
-  protected List<TestCasePopulationValue> getObservationPopulations(
+  public static List<TestCasePopulationValue> getObservationPopulations(
       List<TestCaseGroupPopulation> testCaseGroupPopulations) {
     if (!isEmpty(testCaseGroupPopulations)
         && !isEmpty(testCaseGroupPopulations.get(0).getPopulationValues())) {
