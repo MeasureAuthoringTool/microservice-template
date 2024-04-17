@@ -801,7 +801,7 @@ public class TestCaseService {
         return TestCaseImportOutcome.builder()
             .patientId(testCaseImportRequest.getPatientId())
             .successful(false)
-            .message("Test Case Title is required.")
+            .message(ex.getMessage())
             .build();
       } catch (SpecialCharacterException ex) {
         return TestCaseImportOutcome.builder()
