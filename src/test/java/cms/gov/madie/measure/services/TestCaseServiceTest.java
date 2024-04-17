@@ -2510,6 +2510,6 @@ public class TestCaseServiceTest implements ResourceUtil {
             "TOKEN",
             ModelType.QDM_5_6.getValue());
     assertFalse(response.get(0).isSuccessful());
-    assertEquals("Test Case Title is required.", response.get(0).getMessage());
+    assertEquals("Test Case title is required.", response.get(0).getMessage());
   }
 }
