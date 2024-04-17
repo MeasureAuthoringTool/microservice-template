@@ -1729,7 +1729,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
     assertFalse(response.get(0).isSuccessful());
     assertEquals(
-        "The Family and Given combination on the Patient resource in the Test Case JSON is already used in another test case on this measure.  The combination must be unique (case insensitive, spaces ignored) across all test cases associated with the measure.",
+        "The Family and Given name combination on the Patient resource in the Test Case JSON is already used in another test case on this measure. The combination must be unique (case insensitive, spaces ignored) across all test cases associated with the measure.",
         response.get(0).getMessage());
   }
 
@@ -2335,7 +2335,7 @@ public class TestCaseServiceTest implements ResourceUtil {
         response.get(0).getMessage(),
         is(
             equalTo(
-                "observation values were not imported. MADiE cannot import expected values for Continuous Variable measures with multiple population criteria.")));
+                "Observation values were not imported. MADiE cannot import expected values for Continuous Variable measures with multiple population criteria.")));
   }
 
   @Test

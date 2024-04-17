@@ -533,7 +533,7 @@ public class TestCaseService {
                 qdmMeasure.getScoring(), MeasureScoring.CONTINUOUS_VARIABLE.toString())
             && measure.getGroups().size() > 1) {
           warningMessage =
-              "observation values were not imported. MADiE cannot import expected "
+              "Observation values were not imported. MADiE cannot import expected "
                   + "values for Continuous Variable measures with multiple population criteria.";
         }
       }
@@ -543,7 +543,7 @@ public class TestCaseService {
           TestCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, groups, newTestCase);
       if (!matched) {
         warningMessage =
-            "the measure populations do not match the populations in the import file. "
+            "The measure populations do not match the populations in the import file. "
                 + "The Test Case has been imported, but no expected values have been set.";
       }
       return updateTestCaseJsonAndSaveTestCase(
@@ -691,8 +691,8 @@ public class TestCaseService {
 
   private String formatErrorMessage(Exception e) {
     return e.getClass().getSimpleName().equals("DuplicateTestCaseNameException")
-        ? "The Family and Given combination on the Patient resource in the Test Case JSON"
-            + " is already used in another test case on this measure.  The combination"
+        ? "The Family and Given name combination on the Patient resource in the Test Case JSON"
+            + " is already used in another test case on this measure. The combination"
             + " must be unique (case insensitive, spaces ignored) across all test cases"
             + " associated with the measure."
         : e.getMessage();
