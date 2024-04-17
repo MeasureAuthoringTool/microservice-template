@@ -2,6 +2,7 @@ package cms.gov.madie.measure.services;
 
 import java.lang.reflect.InvocationTargetException;
 
+import cms.gov.madie.measure.dto.PackageDto;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
 import gov.cms.madie.models.measure.ElmJson;
@@ -57,7 +58,7 @@ public class BundleService {
     return export.getMeasureBundleJson();
   }
 
-  public byte[] getMeasureExport(Measure measure, String accessToken) {
+  public PackageDto getMeasureExport(Measure measure, String accessToken) {
     if (measure == null) {
       return null;
     }
@@ -66,7 +67,10 @@ public class BundleService {
       if (measure.getMeasureMetaData().isDraft()) {
         try {
           retrieveElmJson(measure, accessToken);
-          return fhirServicesClient.getMeasureBundleExport(measure, accessToken);
+          return PackageDto.builder()
+              .fromStorage(false)
+              .exportPackage(fhirServicesClient.getMeasureBundleExport(measure, accessToken))
+              .build();
         } catch (RestClientException | IllegalArgumentException ex) {
           log.error("An error occurred while bundling measure {}", measure.getId(), ex);
           throw new BundleOperationException("Measure", measure.getId(), ex);
@@ -85,7 +89,10 @@ public class BundleService {
       String model = measure.getModel();
 
       PackagingUtility utility = PackagingUtilityFactory.getInstance(model);
-      return utility.getZipBundle(export, exportFileName);
+      return PackageDto.builder()
+          .fromStorage(true)
+          .exportPackage(utility.getZipBundle(export, exportFileName))
+          .build();
     } catch (RestClientException
         | IllegalArgumentException
         | InstantiationException

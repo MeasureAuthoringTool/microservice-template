@@ -40,6 +40,7 @@ public class VersionService {
   private final FhirServicesClient fhirServicesClient;
   private final ExportRepository exportRepository;
   private final MeasureService measureService;
+  private final QdmPackageService qdmPackageService;
 
   public enum VersionValidationResult {
     VALID,
@@ -73,39 +74,63 @@ public class VersionService {
     if (measure instanceof FhirMeasure) {
       return versionFhirMeasure(versionType, username, accessToken, measure);
     }
-    return versionQdmMeasure(versionType, username, measure);
+    return versionQdmMeasure(versionType, username, measure, accessToken);
   }
 
-  private Measure versionQdmMeasure(String versionType, String username, Measure measure)
-      throws Exception {
-    return version(versionType, username, measure);
+  private Measure versionQdmMeasure(
+      String versionType, String username, Measure measure, String accessToken) throws Exception {
+    Measure upversionedMeasure = version(versionType, username, measure);
+
+    var measurePackage = qdmPackageService.getMeasurePackage(upversionedMeasure, accessToken);
+    savePackageData(upversionedMeasure, measurePackage.getExportPackage(), username);
+
+    return applyMeasureVersion(versionType, username, upversionedMeasure);
   }
 
+  /**
+   * This method will first apply the version operation to the measure, fetch the FHIR bundle for
+   * the measure, persist the measure bundle to the exports collection, and finally persist the
+   * upversioned measure to the database.
+   *
+   * @param versionType
+   * @param username
+   * @param accessToken
+   * @param measure
+   * @return
+   * @throws Exception
+   */
   private Measure versionFhirMeasure(
       String versionType, String username, String accessToken, Measure measure) throws Exception {
-    Measure savedMeasure = version(versionType, username, measure);
-    var measureBundle = fhirServicesClient.getMeasureBundle(savedMeasure, accessToken, "export");
-    saveMeasureBundle(savedMeasure, measureBundle, username);
-    return savedMeasure;
+    Measure upversionedMeasure = version(versionType, username, measure);
+    var measureBundle =
+        fhirServicesClient.getMeasureBundle(upversionedMeasure, accessToken, "export");
+    saveMeasureBundle(upversionedMeasure, measureBundle, username);
+    return applyMeasureVersion(versionType, username, upversionedMeasure);
   }
 
   private Measure version(String versionType, String username, Measure measure) throws Exception {
-    measure.getMeasureMetaData().setDraft(false);
-    measure.setLastModifiedAt(Instant.now());
-    measure.setLastModifiedBy(username);
-    Version oldVersion = measure.getVersion();
-    Version newVersion = getNextVersion(measure, versionType);
-    measure.setVersion(newVersion);
+    Measure upversionedMeasure = measure.toBuilder().build();
+    upversionedMeasure.getMeasureMetaData().setDraft(false);
+    upversionedMeasure.setLastModifiedAt(Instant.now());
+    upversionedMeasure.setLastModifiedBy(username);
+    Version oldVersion = upversionedMeasure.getVersion();
+    Version newVersion = getNextVersion(upversionedMeasure, versionType);
+    upversionedMeasure.setVersion(newVersion);
     String newCql =
-        measure
+        upversionedMeasure
             .getCql()
             .replace(
-                generateLibraryContentLine(measure.getCqlLibraryName(), oldVersion),
-                generateLibraryContentLine(measure.getCqlLibraryName(), newVersion));
-    measure.setCql(newCql);
-    Measure savedMeasure = measureRepository.save(measure);
+                generateLibraryContentLine(upversionedMeasure.getCqlLibraryName(), oldVersion),
+                generateLibraryContentLine(upversionedMeasure.getCqlLibraryName(), newVersion));
+    upversionedMeasure.setCql(newCql);
+    return upversionedMeasure;
+  }
+
+  private Measure applyMeasureVersion(
+      String versionType, String username, Measure upversionedMeasure) {
+    Measure savedMeasure = measureRepository.save(upversionedMeasure);
     actionLogService.logAction(
-        measure.getId(),
+        upversionedMeasure.getId(),
         Measure.class,
         VERSION_TYPE_MAJOR.equalsIgnoreCase(versionType)
             ? ActionType.VERSIONED_MAJOR
@@ -282,6 +307,16 @@ public class VersionService {
   private void saveMeasureBundle(Measure savedMeasure, String measureBundle, String username) {
     Export export =
         Export.builder().measureId(savedMeasure.getId()).measureBundleJson(measureBundle).build();
+    Export savedExport = exportRepository.save(export);
+    log.info(
+        "User [{}] successfully saved versioned measure's export data with ID [{}]",
+        username,
+        savedExport.getId());
+  }
+
+  private void savePackageData(Measure savedMeasure, byte[] packageData, String username) {
+    Export export =
+        Export.builder().measureId(savedMeasure.getId()).packageData(packageData).build();
     Export savedExport = exportRepository.save(export);
     log.info(
         "User [{}] successfully saved versioned measure's export data with ID [{}]",

@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.dto.PackageDto;
 import gov.cms.madie.models.measure.Measure;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -11,7 +12,7 @@ public class QicorePackageService implements PackageService {
   private final BundleService bundleService;
 
   @Override
-  public byte[] getMeasurePackage(Measure measure, String accessToken) {
+  public PackageDto getMeasurePackage(Measure measure, String accessToken) {
     return bundleService.getMeasureExport(measure, accessToken);
   }
 
