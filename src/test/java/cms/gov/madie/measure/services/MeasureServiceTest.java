@@ -240,6 +240,7 @@ public class MeasureServiceTest implements ResourceUtil {
     MeasureSet measureSet = MeasureSet.builder().owner("OWNER").build();
     when(measureSetService.findByMeasureSetId(anyString())).thenReturn(measureSet);
     measureService.verifyAuthorizationByMeasureSetId("OWNER", "MS123", true);
+    verify(measureSetService, times(1)).findByMeasureSetId(eq("MS123"));
   }
 
   @Test
@@ -250,6 +251,7 @@ public class MeasureServiceTest implements ResourceUtil {
     MeasureSet measureSet = MeasureSet.builder().owner("OWNER").acls(List.of(acl1)).build();
     when(measureSetService.findByMeasureSetId(anyString())).thenReturn(measureSet);
     measureService.verifyAuthorizationByMeasureSetId("THEUSER", "MS123", false);
+    verify(measureSetService, times(1)).findByMeasureSetId(eq("MS123"));
   }
 
   @Test
