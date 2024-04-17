@@ -231,8 +231,8 @@ public class MeasureServiceTest implements ResourceUtil {
     MeasureSet measureSet = MeasureSet.builder().owner("OWNER").build();
     when(measureSetService.findByMeasureSetId(anyString())).thenReturn(measureSet);
     assertThrows(
-        UnauthorizedException.class, () ->
-            measureService.verifyAuthorizationByMeasureSetId("THEUSER", "MS123", true));
+        UnauthorizedException.class,
+        () -> measureService.verifyAuthorizationByMeasureSetId("THEUSER", "MS123", true));
   }
 
   @Test
@@ -260,8 +260,8 @@ public class MeasureServiceTest implements ResourceUtil {
     MeasureSet measureSet = MeasureSet.builder().owner("OWNER").acls(List.of(acl1)).build();
     when(measureSetService.findByMeasureSetId(anyString())).thenReturn(measureSet);
     assertThrows(
-        UnauthorizedException.class, () ->
-    measureService.verifyAuthorizationByMeasureSetId("THEUSER", "MS123", true));
+        UnauthorizedException.class,
+        () -> measureService.verifyAuthorizationByMeasureSetId("THEUSER", "MS123", true));
   }
 
   @Test

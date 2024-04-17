@@ -54,7 +54,11 @@ public class MeasureService {
     }
 
     verifyMeasureSetAuthorization(
-        username, "MeasureSet", measureSetId, ownerOnly ? List.of() : List.of(RoleEnum.SHARED_WITH), measureSet);
+        username,
+        "MeasureSet",
+        measureSetId,
+        ownerOnly ? List.of() : List.of(RoleEnum.SHARED_WITH),
+        measureSet);
   }
 
   /**

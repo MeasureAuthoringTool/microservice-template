@@ -12,7 +12,6 @@ import gov.cms.madie.models.measure.MeasureMetaData;
 import gov.cms.madie.models.measure.MeasureSet;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
-import gov.cms.madie.models.measure.QdmMeasure;
 import gov.cms.madie.models.measure.TestCase;
 
 import lombok.extern.slf4j.Slf4j;
@@ -97,7 +96,11 @@ class ExportServiceTest {
     doNothing().when(qdmModelValidator).validateGroups(any(Measure.class));
     when(packageServiceFactory.getPackageService(any())).thenReturn(qdmPackageService);
     when(qdmPackageService.getMeasurePackage(any(Measure.class), anyString()))
-        .thenReturn(PackageDto.builder().fromStorage(false).exportPackage(packageContent.getBytes()).build());
+        .thenReturn(
+            PackageDto.builder()
+                .fromStorage(false)
+                .exportPackage(packageContent.getBytes())
+                .build());
     PackageDto output = exportService.getMeasureExport(measure, token);
     byte[] measurePackage = output.getExportPackage();
     assertThat(new String(measurePackage), is(equalTo(packageContent)));
@@ -109,7 +112,11 @@ class ExportServiceTest {
     doNothing().when(qicoreModelValidator).validateGroups(any(Measure.class));
     when(packageServiceFactory.getPackageService(any())).thenReturn(qicorePackageService);
     when(qicorePackageService.getMeasurePackage(any(Measure.class), anyString()))
-        .thenReturn(PackageDto.builder().fromStorage(false).exportPackage(packageContent.getBytes()).build());
+        .thenReturn(
+            PackageDto.builder()
+                .fromStorage(false)
+                .exportPackage(packageContent.getBytes())
+                .build());
     PackageDto output = exportService.getMeasureExport(measure, token);
     byte[] measurePackage = output.getExportPackage();
     assertThat(new String(measurePackage), is(equalTo(packageContent)));
@@ -163,7 +170,8 @@ class ExportServiceTest {
     when(modelValidatorFactory.getModelValidator(any())).thenReturn(qdmModelValidator);
     doNothing().when(qdmModelValidator).validateGroups(any(Measure.class));
     when(packageServiceFactory.getPackageService(any())).thenReturn(qdmPackageService);
-    PackageDto packageDto = PackageDto.builder().fromStorage(false).exportPackage(packageContent.getBytes()).build();
+    PackageDto packageDto =
+        PackageDto.builder().fromStorage(false).exportPackage(packageContent.getBytes()).build();
     when(qdmPackageService.getMeasurePackage(any(Measure.class), anyString()))
         .thenReturn(packageDto);
     PackageDto output = exportService.getMeasureExport(measure, token);

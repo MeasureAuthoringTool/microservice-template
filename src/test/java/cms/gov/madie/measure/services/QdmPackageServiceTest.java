@@ -73,15 +73,17 @@ class QdmPackageServiceTest {
     assertThat(new String(packageContents), is(equalTo(packageContent)));
   }
 
-
   @Test
   void getCreateMeasurePackageForVersionedWithExistingPersistedExport() {
     measure.getMeasureMetaData().setDraft(false);
     String packageContent = "Measure Package Contents";
     when(exportRepository.findByMeasureId(anyString()))
-        .thenReturn(Optional.of(
-            Export.builder().measureId(measure.getId()).packageData(packageContent.getBytes()).build()
-        ));
+        .thenReturn(
+            Optional.of(
+                Export.builder()
+                    .measureId(measure.getId())
+                    .packageData(packageContent.getBytes())
+                    .build()));
     PackageDto measurePackage = qdmPackageService.getMeasurePackage(measure, token);
     assertThat(measurePackage.isFromStorage(), is(true));
     byte[] packageContents = measurePackage.getExportPackage();
@@ -89,17 +91,15 @@ class QdmPackageServiceTest {
     assertThat(new String(packageContents), is(equalTo(packageContent)));
   }
 
-
   @Test
   void getCreateMeasurePackageForVersionedWithMissingPersistedExport() {
     measure.getMeasureMetaData().setDraft(false);
     when(qdmServiceConfig.getCreatePackageUrn()).thenReturn("/elm/uri");
     String packageContent = "Measure Package Contents";
     when(qdmServiceRestTemplate.exchange(
-        any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+            any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
         .thenReturn(ResponseEntity.ok(packageContent.getBytes()));
-    when(exportRepository.findByMeasureId(anyString()))
-        .thenReturn(Optional.empty());
+    when(exportRepository.findByMeasureId(anyString())).thenReturn(Optional.empty());
     PackageDto measurePackage = qdmPackageService.getMeasurePackage(measure, token);
     assertThat(measurePackage.isFromStorage(), is(false));
     byte[] packageContents = measurePackage.getExportPackage();

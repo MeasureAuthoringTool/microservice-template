@@ -53,8 +53,8 @@ public class ExportController {
     }
     var packageDto = exportService.getMeasureExport(measure, accessToken);
 
-    return ResponseEntity
-        .status(packageDto.isFromStorage() ? HttpStatus.OK.value() : HttpStatus.CREATED.value())
+    return ResponseEntity.status(
+            packageDto.isFromStorage() ? HttpStatus.OK.value() : HttpStatus.CREATED.value())
         .header(
             HttpHeaders.CONTENT_DISPOSITION,
             "attachment;filename=\"" + ExportFileNamesUtil.getExportFileName(measure) + ".zip\"")

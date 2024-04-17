@@ -44,7 +44,8 @@ public class QdmPackageService implements PackageService {
     HttpEntity<Measure> entity = new HttpEntity<>(measure, headers);
     try {
       log.info("requesting measure package for measure [{}] from qdm service", measure.getId());
-      byte[] exportPackage = qdmServiceRestTemplate.exchange(uri, HttpMethod.PUT, entity, byte[].class).getBody();
+      byte[] exportPackage =
+          qdmServiceRestTemplate.exchange(uri, HttpMethod.PUT, entity, byte[].class).getBody();
       return PackageDto.builder().exportPackage(exportPackage).fromStorage(false).build();
     } catch (RestClientException ex) {
       log.error(
