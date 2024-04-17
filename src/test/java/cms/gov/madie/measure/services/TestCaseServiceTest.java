@@ -5,7 +5,9 @@ import cms.gov.madie.measure.dto.MeasureTestCaseValidationReport;
 import cms.gov.madie.measure.exceptions.DuplicateTestCaseNameException;
 import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
+import cms.gov.madie.measure.exceptions.InvalidRequestException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.exceptions.SpecialCharacterException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.utils.JsonUtil;
@@ -123,7 +125,8 @@ public class TestCaseServiceTest implements ResourceUtil {
     testCase = new TestCase();
     testCase.setId("TESTID");
     testCase.setTitle("IPPPass");
-    testCase.setSeries("BloodPressure>124");
+    //    testCase.setSeries("BloodPressure>124");
+    testCase.setSeries("BloodPressure bigger than 124");
     testCase.setCreatedBy("TestUser");
     testCase.setLastModifiedBy("TestUser2");
     testCase.setJson("{\"resourceType\":\"Patient\"}");
@@ -630,9 +633,11 @@ public class TestCaseServiceTest implements ResourceUtil {
     List<TestCase> existingTestCases = new ArrayList<>();
     existingTestCases.add(TestCase.builder().id("Test1ID").title("Test0").build());
     measure.setTestCases(existingTestCases);
+    measure.setModel(ModelType.QDM_5_6.getValue());
     List<TestCase> newTestCases =
         List.of(
-            TestCase.builder().title("Test1").build(), TestCase.builder().title("Test2").build());
+            TestCase.builder().title("Test1").series("series1").build(),
+            TestCase.builder().title("Test2").series("series2").build());
     String measureId = measure.getId();
     String username = "user01";
     String accessToken = "Bearer Token";
@@ -2355,5 +2360,130 @@ public class TestCaseServiceTest implements ResourceUtil {
     testCaseService.defaultTestCaseJsonForQdmMeasure(testCase, measure);
     assertNotNull(testCase.getJson());
     assertEquals(testCase.getJson(), "{\"resourceType\":\"Patient\"}");
+  }
+
+  @Test
+  public void testUpdateTestCaseForQdm() {
+    String patientId = "66056973fc02b60000d076e9";
+    ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
+    Instant createdAt = Instant.now().minus(300, ChronoUnit.SECONDS);
+    String json =
+        "{\"qdmVersion\": \"5.6\",\n"
+            + " \"dataElements\": [],\n"
+            + " \"_id\": \"66056973fc02b60000d076e9\"\n"
+            + "}";
+    TestCase originalTestCase =
+        testCase.toBuilder()
+            .title("test title")
+            .createdAt(createdAt)
+            .createdBy("test.user5")
+            .lastModifiedAt(createdAt)
+            .lastModifiedBy("test.user5")
+            .json(json)
+            .build();
+    List<TestCase> testCases = new ArrayList<>();
+    testCases.add(originalTestCase);
+    Measure originalMeasure =
+        measure.toBuilder()
+            .model(ModelType.QDM_5_6.getValue())
+            .measureMetaData(MeasureMetaData.builder().draft(true).build())
+            .cqlLibraryName("Test1CQLLibraryName")
+            .testCases(testCases)
+            .build();
+    when(measureService.findMeasureById(anyString())).thenReturn(originalMeasure);
+
+    TestCase updatingTestCase =
+        testCase.toBuilder().title("UpdatedTitle").series("UpdatedSeries").json(json).build();
+    Mockito.doAnswer((args) -> args.getArgument(0))
+        .when(measureRepository)
+        .save(any(Measure.class));
+    TestCase updatedTestCase =
+        testCaseService.updateTestCase(updatingTestCase, measure.getId(), "test.user5", "TOKEN");
+    assertNotNull(updatedTestCase);
+
+    verify(measureRepository, times(1)).save(measureCaptor.capture());
+    assertEquals(updatingTestCase.getId(), updatedTestCase.getId());
+    Measure savedMeasure = measureCaptor.getValue();
+    assertEquals(measure.getLastModifiedBy(), savedMeasure.getLastModifiedBy());
+    assertEquals(measure.getLastModifiedAt(), savedMeasure.getLastModifiedAt());
+    assertNotNull(savedMeasure.getTestCases());
+    assertEquals(1, savedMeasure.getTestCases().size());
+
+    assertTrue(savedMeasure.getTestCases().get(0).getJson().contains(patientId));
+
+    int lastModCompareTo =
+        updatedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
+    assertEquals("test.user5", updatedTestCase.getLastModifiedBy());
+    assertEquals(originalTestCase.getCreatedBy(), updatedTestCase.getCreatedBy());
+    assertEquals(1, lastModCompareTo);
+    assertNotEquals(updatedTestCase.getLastModifiedAt(), updatedTestCase.getCreatedAt());
+    assertEquals("test.user5", updatedTestCase.getCreatedBy());
+  }
+
+  @Test
+  public void testPersistTestCaseForQdm() {
+    List<TestCase> existingTestCases = new ArrayList<>();
+    TestCase existingTestCase =
+        TestCase.builder().id("Test1ID").title("Test0").series("series").build();
+    existingTestCases.add(existingTestCase);
+    measure.setTestCases(existingTestCases);
+    measure.setModel(ModelType.QDM_5_6.getValue());
+    ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
+    Optional<Measure> optional = Optional.of(measure);
+    Mockito.doReturn(optional).when(measureRepository).findById(any(String.class));
+
+    Mockito.doReturn(measure).when(measureRepository).save(any(Measure.class));
+
+    TestCase persistTestCase =
+        testCaseService.persistTestCase(testCase, measure.getId(), "test.user", "TOKEN");
+    assertThat(persistTestCase, is(notNullValue()));
+    assertThat(persistTestCase.getId(), is(notNullValue()));
+    assertThat(persistTestCase.getTitle(), is(equalTo(testCase.getTitle())));
+    verify(measureRepository, times(1)).save(measureCaptor.capture());
+    Measure savedMeasure = measureCaptor.getValue();
+    assertEquals(measure.getLastModifiedBy(), savedMeasure.getLastModifiedBy());
+    assertEquals(measure.getLastModifiedAt(), savedMeasure.getLastModifiedAt());
+    assertNotNull(savedMeasure.getTestCases());
+    assertEquals(2, savedMeasure.getTestCases().size());
+    assertThat(savedMeasure.getTestCases().get(0), is(equalTo(existingTestCase)));
+    TestCase capturedTestCase = savedMeasure.getTestCases().get(1);
+    int lastModCompareTo =
+        capturedTestCase.getLastModifiedAt().compareTo(Instant.now().minus(60, ChronoUnit.SECONDS));
+    assertEquals("test.user", capturedTestCase.getLastModifiedBy());
+    assertEquals("test.user", capturedTestCase.getCreatedBy());
+    assertEquals(1, lastModCompareTo);
+    assertEquals(capturedTestCase.getLastModifiedAt(), capturedTestCase.getCreatedAt());
+  }
+
+  @Test
+  public void testCheckTestCaseSpecialCharactersInvalidTitle() {
+    TestCase testCase = TestCase.builder().title("invalid title {}").series("series").build();
+    assertThrows(
+        SpecialCharacterException.class,
+        () -> testCaseService.checkTestCaseSpecialCharacters(testCase));
+  }
+
+  @Test
+  public void testCheckTestCaseSpecialCharactersInvalidGroup() {
+    TestCase testCase = TestCase.builder().title("title").series("invalid series ^&").build();
+    assertThrows(
+        SpecialCharacterException.class,
+        () -> testCaseService.checkTestCaseSpecialCharacters(testCase));
+  }
+
+  @Test
+  public void testCheckTestCaseSpecialCharactersMissingTitle() {
+    TestCase testCase = TestCase.builder().series("series").build();
+    assertThrows(
+        InvalidRequestException.class,
+        () -> testCaseService.checkTestCaseSpecialCharacters(testCase));
+  }
+
+  @Test
+  public void testCheckTestCaseSpecialCharactersMissingGroup() {
+    TestCase testCase = TestCase.builder().title("title").build();
+    assertThrows(
+        InvalidRequestException.class,
+        () -> testCaseService.checkTestCaseSpecialCharacters(testCase));
   }
 }

@@ -3,11 +3,15 @@ package cms.gov.madie.measure.services;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
 import cms.gov.madie.measure.factories.ModelValidatorFactory;
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureErrorType;
+import gov.cms.madie.models.measure.MeasureGroupTypes;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -17,8 +21,10 @@ import org.springframework.test.context.ActiveProfiles;
 
 import cms.gov.madie.measure.exceptions.InvalidGroupException;
 import gov.cms.madie.models.common.ModelType;
+import gov.cms.madie.models.measure.BaseConfigurationTypes;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.PopulationType;
+import gov.cms.madie.models.measure.QdmMeasure;
 import gov.cms.madie.models.measure.Stratification;
 
 @ExtendWith(MockitoExtension.class)
@@ -199,5 +205,83 @@ class ModelValidatorTest {
           "Response could not be completed for Measure with ID 1, since there is at least one Population Criteria with no type.",
           e.getMessage());
     }
+  }
+
+  @Test
+  void testQiCoreModelValidatorTestMeasureDoesHaveMeasuretypes() {
+    assertNotNull(modelValidatorFactory);
+    Measure measure =
+        Measure.builder()
+            .id("1")
+            .groups(
+                List.of(
+                    Group.builder().measureGroupTypes(List.of(MeasureGroupTypes.OUTCOME)).build()))
+            .build();
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
+    assertTrue(validator instanceof QiCoreModelValidator);
+    assertDoesNotThrow(() -> validator.validateGroups(measure));
+  }
+
+  @Test
+  void testValidateCqlErrorsWhenMeasureHasCQLErrors() {
+    assertNotNull(modelValidatorFactory);
+    Measure measure =
+        Measure.builder()
+            .id("1")
+            .errors(List.of(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES))
+            .build();
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
+    assertTrue(validator instanceof QiCoreModelValidator);
+    assertThrows(InvalidResourceStateException.class, () -> validator.validateCqlErrors(measure));
+  }
+
+  @Test
+  void testValidateCqlErrorsWhenIsCQLErrorIsTrue() {
+    assertNotNull(modelValidatorFactory);
+    Measure measure = Measure.builder().id("1").cqlErrors(true).build();
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QDM_5_6);
+    assertTrue(validator instanceof QdmModelValidator);
+    assertThrows(InvalidResourceStateException.class, () -> validator.validateCqlErrors(measure));
+  }
+
+  @Test
+  void testValidateCqlErrorsWhenNoErrors() {
+    assertNotNull(modelValidatorFactory);
+    Measure measure =
+        Measure.builder().id("1").errors(Collections.emptyList()).cqlErrors(false).build();
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
+    assertTrue(validator instanceof QiCoreModelValidator);
+    assertDoesNotThrow(() -> validator.validateCqlErrors(measure));
+  }
+
+  @Test
+  void testQdmModelValidatorTestMeasureHasNoMeasuretypes() {
+    assertNotNull(modelValidatorFactory);
+    QdmMeasure measure =
+        QdmMeasure.builder().id("1").groups(List.of(Group.builder().build())).build();
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QDM_5_6);
+    assertTrue(validator instanceof QdmModelValidator);
+    try {
+      validator.validateGroups(measure);
+      fail("Should fail because, there should be at least one population criteria");
+    } catch (InvalidResourceStateException e) {
+      assertEquals(
+          "Response could not be completed for Measure with ID 1, since there are no measure types for the measure.",
+          e.getMessage());
+    }
+  }
+
+  @Test
+  void testQdmModelValidatorTestMeasureDoesHaveMeasuretypes() {
+    assertNotNull(modelValidatorFactory);
+    QdmMeasure measure =
+        QdmMeasure.builder()
+            .id("1")
+            .groups(List.of(Group.builder().build()))
+            .baseConfigurationTypes(List.of(BaseConfigurationTypes.OUTCOME))
+            .build();
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QDM_5_6);
+    assertTrue(validator instanceof QdmModelValidator);
+    assertDoesNotThrow(() -> validator.validateGroups(measure));
   }
 }

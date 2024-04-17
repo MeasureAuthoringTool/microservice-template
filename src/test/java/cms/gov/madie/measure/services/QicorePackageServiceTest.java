@@ -7,9 +7,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
@@ -30,7 +30,10 @@ public class QicorePackageServiceTest {
 
   @Test
   void testGetQRDA() {
-    byte[] qrda = qicorePackageService.getQRDA(new Measure(), "token");
-    assertThat(new String(qrda), is(equalTo("")));
+    Exception ex =
+        assertThrows(
+            UnsupportedOperationException.class,
+            () -> qicorePackageService.getQRDA(new Measure(), "token"));
+    assertThat(ex.getMessage(), containsString("method not yet implemented"));
   }
 }
