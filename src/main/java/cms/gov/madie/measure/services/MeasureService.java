@@ -45,6 +45,22 @@ public class MeasureService {
 
   private final TerminologyValidationService terminologyValidationService;
 
+  public void verifyAuthorizationByMeasureSetId(
+      String username, String measureSetId, boolean ownerOnly) {
+    MeasureSet measureSet = measureSetService.findByMeasureSetId(measureSetId);
+    if (measureSet == null) {
+      throw new InvalidMeasureStateException(
+          "No measure set exists for measure set ID " + measureSetId);
+    }
+
+    verifyMeasureSetAuthorization(
+        username,
+        "MeasureSet",
+        measureSetId,
+        ownerOnly ? List.of() : List.of(RoleEnum.SHARED_WITH),
+        measureSet);
+  }
+
   /**
    * Throws unAuthorizedException, if the measure is not owned by the user or if the measure is not
    * shared with the user
@@ -71,6 +87,15 @@ public class MeasureService {
           "No measure set exists for measure with ID " + measure.getId());
     }
 
+    verifyMeasureSetAuthorization(username, "Measure", measure.getId(), roles, measureSet);
+  }
+
+  private void verifyMeasureSetAuthorization(
+      String username,
+      String target,
+      String targetId,
+      List<RoleEnum> roles,
+      MeasureSet measureSet) {
     List<RoleEnum> allowedRoles = roles == null ? List.of() : roles;
     if (!measureSet.getOwner().equalsIgnoreCase(username)
         && (CollectionUtils.isEmpty(measureSet.getAcls())
@@ -79,7 +104,7 @@ public class MeasureService {
                     acl ->
                         acl.getUserId().equalsIgnoreCase(username)
                             && acl.getRoles().stream().anyMatch(allowedRoles::contains)))) {
-      throw new UnauthorizedException("Measure", measure.getId(), username);
+      throw new UnauthorizedException(target, targetId, username);
     }
   }
 

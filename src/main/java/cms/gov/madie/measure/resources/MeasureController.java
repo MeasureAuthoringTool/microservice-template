@@ -309,6 +309,7 @@ public class MeasureController {
   @PutMapping("/measures/{measureSetId}/create-cms-id")
   public ResponseEntity<MeasureSet> createCmsId(
       @PathVariable String measureSetId, Principal principal) {
+    measureService.verifyAuthorizationByMeasureSetId(principal.getName(), measureSetId, true);
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(measureSetService.createAndUpdateCmsId(measureSetId, principal.getName()));
   }

@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.dto.PackageDto;
 import gov.cms.madie.models.measure.Measure;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,11 +22,13 @@ public class QicorePackageServiceTest {
 
   @Test
   void getMeasurePackage() {
-    String measurePackage = "measure package";
-    when(bundleService.getMeasureExport(any(Measure.class), anyString()))
-        .thenReturn(measurePackage.getBytes());
-    byte[] rawPackage = qicorePackageService.getMeasurePackage(new Measure(), "token");
-    assertThat(new String(rawPackage), is(equalTo(measurePackage)));
+    String measurePackageStr = "measure package";
+    PackageDto packageDto =
+        PackageDto.builder().fromStorage(false).exportPackage(measurePackageStr.getBytes()).build();
+    when(bundleService.getMeasureExport(any(Measure.class), anyString())).thenReturn(packageDto);
+    PackageDto measurePackage = qicorePackageService.getMeasurePackage(new Measure(), "token");
+    byte[] rawPackage = measurePackage.getExportPackage();
+    assertThat(new String(rawPackage), is(equalTo(measurePackageStr)));
   }
 
   @Test

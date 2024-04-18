@@ -1,15 +1,20 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.config.QdmServiceConfig;
+import cms.gov.madie.measure.dto.PackageDto;
 import cms.gov.madie.measure.exceptions.InternalServerException;
+import cms.gov.madie.measure.repositories.ExportRepository;
 import gov.cms.madie.models.common.ModelType;
+import gov.cms.madie.models.measure.Export;
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureMetaData;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -18,6 +23,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
+import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -25,6 +31,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -33,6 +40,7 @@ import static org.mockito.Mockito.when;
 class QdmPackageServiceTest {
   @Mock private QdmServiceConfig qdmServiceConfig;
   @Mock private RestTemplate qdmServiceRestTemplate;
+  @Mock private ExportRepository exportRepository;
   @InjectMocks private QdmPackageService qdmPackageService;
 
   private final String token = "token";
@@ -46,8 +54,9 @@ class QdmPackageServiceTest {
             .ecqmTitle("test")
             .cql("fake cql")
             .model(String.valueOf(ModelType.QDM_5_6))
+            .measureMetaData(MeasureMetaData.builder().draft(true).build())
             .build();
-    when(qdmServiceConfig.getBaseUrl()).thenReturn("baseurl");
+    Mockito.lenient().when(qdmServiceConfig.getBaseUrl()).thenReturn("baseurl");
   }
 
   @Test
@@ -57,7 +66,43 @@ class QdmPackageServiceTest {
     when(qdmServiceRestTemplate.exchange(
             any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
         .thenReturn(ResponseEntity.ok(packageContent.getBytes()));
-    byte[] packageContents = qdmPackageService.getMeasurePackage(measure, token);
+    PackageDto measurePackage = qdmPackageService.getMeasurePackage(measure, token);
+    assertThat(measurePackage.isFromStorage(), is(false));
+    byte[] packageContents = measurePackage.getExportPackage();
+    assertThat(packageContents, is(notNullValue()));
+    assertThat(new String(packageContents), is(equalTo(packageContent)));
+  }
+
+  @Test
+  void getCreateMeasurePackageForVersionedWithExistingPersistedExport() {
+    measure.getMeasureMetaData().setDraft(false);
+    String packageContent = "Measure Package Contents";
+    when(exportRepository.findByMeasureId(anyString()))
+        .thenReturn(
+            Optional.of(
+                Export.builder()
+                    .measureId(measure.getId())
+                    .packageData(packageContent.getBytes())
+                    .build()));
+    PackageDto measurePackage = qdmPackageService.getMeasurePackage(measure, token);
+    assertThat(measurePackage.isFromStorage(), is(true));
+    byte[] packageContents = measurePackage.getExportPackage();
+    assertThat(packageContents, is(notNullValue()));
+    assertThat(new String(packageContents), is(equalTo(packageContent)));
+  }
+
+  @Test
+  void getCreateMeasurePackageForVersionedWithMissingPersistedExport() {
+    measure.getMeasureMetaData().setDraft(false);
+    when(qdmServiceConfig.getCreatePackageUrn()).thenReturn("/elm/uri");
+    String packageContent = "Measure Package Contents";
+    when(qdmServiceRestTemplate.exchange(
+            any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+        .thenReturn(ResponseEntity.ok(packageContent.getBytes()));
+    when(exportRepository.findByMeasureId(anyString())).thenReturn(Optional.empty());
+    PackageDto measurePackage = qdmPackageService.getMeasurePackage(measure, token);
+    assertThat(measurePackage.isFromStorage(), is(false));
+    byte[] packageContents = measurePackage.getExportPackage();
     assertThat(packageContents, is(notNullValue()));
     assertThat(new String(packageContents), is(equalTo(packageContent)));
   }
