@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Optional;
 
 import cms.gov.madie.measure.services.MeasureSetService;
+import gov.cms.madie.models.dto.MeasureList;
 import gov.cms.madie.models.measure.*;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -1147,32 +1148,14 @@ public class MeasureControllerMvcTest {
 
   @Test
   public void testGetMeasuresNoQueryParams() throws Exception {
-    Measure m1 =
-        Measure.builder()
-            .active(true)
-            .measureName("Measure1")
-            .cqlLibraryName("TestLib1")
-            .createdBy("test-okta-user-id-123")
-            .model(MODEL)
-            .build();
-    Measure m2 =
-        Measure.builder()
-            .active(true)
-            .measureName("Measure2")
-            .cqlLibraryName("TestLib2")
-            .createdBy("test-okta-user-id-123")
-            .model(MODEL)
-            .build();
-    Measure m3 =
-        Measure.builder()
-            .active(true)
-            .measureName("Measure3")
-            .cqlLibraryName("TestLib3")
-            .createdBy("test-okta-user-id-999")
-            .model(MODEL)
-            .build();
+    MeasureList m1 =
+        MeasureList.builder().active(true).measureName("Measure1").model(MODEL).build();
+    MeasureList m2 =
+        MeasureList.builder().active(true).measureName("Measure2").model(MODEL).build();
+    MeasureList m3 =
+        MeasureList.builder().active(true).measureName("Measure3").model(MODEL).build();
 
-    Page<Measure> allMeasures = new PageImpl<>(List.of(m1, m2, m3));
+    Page<MeasureList> allMeasures = new PageImpl<>(List.of(m1, m2, m3));
 
     when(measureService.getMeasures(any(Boolean.class), any(Pageable.class), eq(TEST_USER_ID)))
         .thenReturn(allMeasures);
@@ -1195,32 +1178,14 @@ public class MeasureControllerMvcTest {
 
   @Test
   public void testGetMeasuresWithCurrentUserFalse() throws Exception {
-    Measure m1 =
-        Measure.builder()
-            .active(true)
-            .measureName("Measure1")
-            .cqlLibraryName("TestLib1")
-            .createdBy("test-okta-user-id-123")
-            .model(MODEL)
-            .build();
-    Measure m2 =
-        Measure.builder()
-            .active(true)
-            .measureName("Measure2")
-            .cqlLibraryName("TestLib2")
-            .createdBy("test-okta-user-id-123")
-            .model(MODEL)
-            .build();
-    Measure m3 =
-        Measure.builder()
-            .active(true)
-            .measureName("Measure3")
-            .cqlLibraryName("TestLib3")
-            .createdBy("test-okta-user-id-999")
-            .model(MODEL)
-            .build();
+    MeasureList m1 =
+        MeasureList.builder().active(true).measureName("Measure1").model(MODEL).build();
+    MeasureList m2 =
+        MeasureList.builder().active(true).measureName("Measure2").model(MODEL).build();
+    MeasureList m3 =
+        MeasureList.builder().active(true).measureName("Measure3").model(MODEL).build();
 
-    Page<Measure> allMeasures = new PageImpl<>(List.of(m1, m2, m3));
+    Page<MeasureList> allMeasures = new PageImpl<>(List.of(m1, m2, m3));
     when(measureService.getMeasures(eq(false), any(Pageable.class), eq(TEST_USER_ID)))
         .thenReturn(allMeasures);
 
@@ -1246,32 +1211,14 @@ public class MeasureControllerMvcTest {
 
   @Test
   public void getMeasuresWithCustomPaging() throws Exception {
-    Measure m1 =
-        Measure.builder()
-            .active(true)
-            .measureName("Measure1")
-            .cqlLibraryName("TestLib1")
-            .createdBy("test-okta-user-id-123")
-            .model(MODEL)
-            .build();
-    Measure m2 =
-        Measure.builder()
-            .active(true)
-            .measureName("Measure2")
-            .cqlLibraryName("TestLib2")
-            .createdBy("test-okta-user-id-123")
-            .model(MODEL)
-            .build();
-    Measure m3 =
-        Measure.builder()
-            .active(true)
-            .measureName("Measure3")
-            .cqlLibraryName("TestLib3")
-            .createdBy("test-okta-user-id-999")
-            .model(MODEL)
-            .build();
+    MeasureList m1 =
+        MeasureList.builder().active(true).measureName("Measure1").model(MODEL).build();
+    MeasureList m2 =
+        MeasureList.builder().active(true).measureName("Measure2").model(MODEL).build();
+    MeasureList m3 =
+        MeasureList.builder().active(true).measureName("Measure3").model(MODEL).build();
 
-    Page<Measure> allMeasures = new PageImpl<>(List.of(m1, m2, m3));
+    Page<MeasureList> allMeasures = new PageImpl<>(List.of(m1, m2, m3));
     when(measureService.getMeasures(eq(false), any(Pageable.class), eq(TEST_USER_ID)))
         .thenReturn(allMeasures);
 
@@ -1305,25 +1252,17 @@ public class MeasureControllerMvcTest {
 
   @Test
   public void testGetMeasuresFilterByCurrentUser() throws Exception {
-    Measure m1 =
-        Measure.builder()
-            .active(true)
-            .measureName("Measure1")
-            .cqlLibraryName("TestLib1")
-            .createdBy("test-okta-user-id-123")
-            .model(MODEL)
-            .build();
-    Measure m2 =
-        Measure.builder()
+    MeasureList m1 =
+        MeasureList.builder().active(true).measureName("Measure1").model(MODEL).build();
+    MeasureList m2 =
+        MeasureList.builder()
             .active(true)
             .measureName("Measure2")
-            .cqlLibraryName("TestLib2")
-            .createdBy("test-okta-user-id-123")
             .model(MODEL)
             .active(true)
             .build();
 
-    final Page<Measure> measures = new PageImpl<>(List.of(m1, m2));
+    final Page<MeasureList> measures = new PageImpl<>(List.of(m1, m2));
 
     when(measureService.getMeasures(eq(true), any(Pageable.class), eq(TEST_USER_ID)))
         .thenReturn(measures);
@@ -1554,26 +1493,14 @@ public class MeasureControllerMvcTest {
 
   @Test
   public void testSearchMeasuresByMeasureNameOrEcqmTitleNoQueryParams() throws Exception {
-    Measure m1 =
-        Measure.builder()
-            .measureName("measure-1")
-            .ecqmTitle("test-ecqm-title-1")
-            .createdBy("test-user-1")
-            .build();
-    Measure m2 =
-        Measure.builder()
-            .measureName("measure-2")
-            .ecqmTitle("test-ecqm-title-1")
-            .createdBy("test-user-2")
-            .build();
-    Measure m3 =
-        Measure.builder()
-            .measureName("measure-3")
-            .ecqmTitle("test-ecqm-title-3")
-            .createdBy("test-user-1")
-            .build();
+    MeasureList m1 =
+        MeasureList.builder().measureName("measure-1").ecqmTitle("test-ecqm-title-1").build();
+    MeasureList m2 =
+        MeasureList.builder().measureName("measure-2").ecqmTitle("test-ecqm-title-1").build();
+    MeasureList m3 =
+        MeasureList.builder().measureName("measure-3").ecqmTitle("test-ecqm-title-3").build();
 
-    Page<Measure> allMeasures = new PageImpl<>(List.of(m1, m2, m3));
+    Page<MeasureList> allMeasures = new PageImpl<>(List.of(m1, m2, m3));
 
     doReturn(allMeasures)
         .when(measureService)
@@ -1600,26 +1527,14 @@ public class MeasureControllerMvcTest {
 
   @Test
   public void testSearchMeasuresByMeasureNameOrEcqmTitleWithCurrentUserFalse() throws Exception {
-    Measure m1 =
-        Measure.builder()
-            .measureName("measure-1")
-            .ecqmTitle("test-ecqm-title-1")
-            .createdBy("test-user-1")
-            .build();
-    Measure m2 =
-        Measure.builder()
-            .measureName("measure-2")
-            .ecqmTitle("test-ecqm-title-1")
-            .createdBy("test-user-2")
-            .build();
-    Measure m3 =
-        Measure.builder()
-            .measureName("measure-3")
-            .ecqmTitle("test-ecqm-title-3")
-            .createdBy("test-user-1")
-            .build();
+    MeasureList m1 =
+        MeasureList.builder().measureName("measure-1").ecqmTitle("test-ecqm-title-1").build();
+    MeasureList m2 =
+        MeasureList.builder().measureName("measure-2").ecqmTitle("test-ecqm-title-1").build();
+    MeasureList m3 =
+        MeasureList.builder().measureName("measure-3").ecqmTitle("test-ecqm-title-3").build();
 
-    Page<Measure> allMeasures = new PageImpl<>(List.of(m1, m2, m3));
+    Page<MeasureList> allMeasures = new PageImpl<>(List.of(m1, m2, m3));
 
     doReturn(allMeasures)
         .when(measureService)
@@ -1648,26 +1563,14 @@ public class MeasureControllerMvcTest {
 
   @Test
   public void testSearchMeasuresByMeasureNameOrEcqmTitleFilterByCurrentUser() throws Exception {
-    Measure m1 =
-        Measure.builder()
-            .measureName("measure-1")
-            .ecqmTitle("test-ecqm-title-1")
-            .createdBy(TEST_USER_ID)
-            .build();
-    Measure m2 =
-        Measure.builder()
-            .measureName("measure-2")
-            .ecqmTitle("test-ecqm-title-1")
-            .createdBy(TEST_USER_ID)
-            .build();
-    Measure m3 =
-        Measure.builder()
-            .measureName("measure-3")
-            .ecqmTitle("test-ecqm-title-3")
-            .createdBy(TEST_USER_ID)
-            .build();
+    MeasureList m1 =
+        MeasureList.builder().measureName("measure-1").ecqmTitle("test-ecqm-title-1").build();
+    MeasureList m2 =
+        MeasureList.builder().measureName("measure-2").ecqmTitle("test-ecqm-title-1").build();
+    MeasureList m3 =
+        MeasureList.builder().measureName("measure-3").ecqmTitle("test-ecqm-title-3").build();
 
-    final Page<Measure> measures = new PageImpl<>(List.of(m1, m2, m3));
+    final Page<MeasureList> measures = new PageImpl<>(List.of(m1, m2, m3));
 
     doReturn(measures)
         .when(measureService)

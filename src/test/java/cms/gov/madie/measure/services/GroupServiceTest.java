@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import cms.gov.madie.measure.factories.ModelValidatorFactory;
+import gov.cms.madie.models.dto.MeasureList;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -85,6 +86,7 @@ public class GroupServiceTest implements ResourceUtil {
   private Group group2;
   private Group ratioGroup;
   private Measure measure;
+  private MeasureList measureList;
   private Stratification strata1;
   private Stratification stratification;
   private TestCasePopulationValue testCasePopulationValue1;
@@ -211,6 +213,17 @@ public class GroupServiceTest implements ResourceUtil {
             .measureMetaData(MeasureMetaData.builder().draft(true).build())
             .build();
 
+    measureList =
+        MeasureList.builder()
+            .model(ModelType.QI_CORE.getValue())
+            .active(true)
+            .id("xyz-p13r-13ert")
+            .measureSetId("IDIDID")
+            .measureName("MSR01")
+            .version(new Version(0, 0, 1))
+            .measureMetaData(MeasureMetaData.builder().draft(true).build())
+            .build();
+
     stratification = new Stratification();
     stratification.setId("stratId");
     stratification.setCqlDefinition("truebool1");
@@ -246,27 +259,23 @@ public class GroupServiceTest implements ResourceUtil {
 
   @Test
   public void testFindAllByActiveOmitsAndRetrievesCorrectly() {
-    Measure m1 =
-        Measure.builder()
+    MeasureList m1 =
+        MeasureList.builder()
             .active(true)
             .id("xyz-p13r-459b")
             .measureName("Measure1")
-            .cqlLibraryName("TestLib1")
-            .createdBy("test-okta-user-id-123")
             .model("QI-Core")
             .build();
-    Measure m2 =
-        Measure.builder()
+    MeasureList m2 =
+        MeasureList.builder()
             .id("xyz-p13r-459a")
             .active(false)
             .measureName("Measure2")
-            .cqlLibraryName("TestLib2")
-            .createdBy("test-okta-user-id-123")
             .model("QI-Core")
             .active(true)
             .build();
-    Page<Measure> activeMeasures = new PageImpl<>(List.of(measure, m1));
-    Page<Measure> inactiveMeasures = new PageImpl<>(List.of(m2));
+    Page<MeasureList> activeMeasures = new PageImpl<>(List.of(measureList, m1));
+    Page<MeasureList> inactiveMeasures = new PageImpl<>(List.of(m2));
     PageRequest initialPage = PageRequest.of(0, 10);
 
     when(measureRepository.findAllByActive(eq(true), any(PageRequest.class)))

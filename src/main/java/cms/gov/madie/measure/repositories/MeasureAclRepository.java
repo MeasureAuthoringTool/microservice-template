@@ -1,6 +1,6 @@
 package cms.gov.madie.measure.repositories;
 
-import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.dto.MeasureList;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -13,5 +13,5 @@ public interface MeasureAclRepository {
    * @param pageable- instance of Pageable
    * @return Pageable List of measures
    */
-  Page<Measure> findMyActiveMeasures(String userId, Pageable pageable, String searchTerm);
+  Page<MeasureList> findMyActiveMeasures(String userId, Pageable pageable, String searchTerm);
 }

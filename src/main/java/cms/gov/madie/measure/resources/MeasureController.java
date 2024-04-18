@@ -8,6 +8,7 @@ import cms.gov.madie.measure.services.GroupService;
 import cms.gov.madie.measure.services.MeasureService;
 import cms.gov.madie.measure.services.MeasureSetService;
 import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.dto.MeasureList;
 import gov.cms.madie.models.measure.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -58,23 +59,16 @@ public class MeasureController {
   }
 
   @GetMapping("/measures")
-  public ResponseEntity<Page<Measure>> getMeasures(
+  public ResponseEntity<Page<MeasureList>> getMeasures(
       Principal principal,
       @RequestParam(required = false, defaultValue = "false", name = "currentUser")
           boolean filterByCurrentUser,
       @RequestParam(required = false, defaultValue = "10", name = "limit") int limit,
       @RequestParam(required = false, defaultValue = "0", name = "page") int page) {
     final String username = principal.getName();
-    Page<Measure> measures;
+    Page<MeasureList> measures;
     final Pageable pageReq = PageRequest.of(page, limit, Sort.by("lastModifiedAt").descending());
     measures = measureService.getMeasures(filterByCurrentUser, pageReq, username);
-    measures.map(
-        measure -> {
-          MeasureSet measureSet =
-              measureSetRepository.findByMeasureSetId(measure.getMeasureSetId()).orElse(null);
-          measure.setMeasureSet(measureSet);
-          return measure;
-        });
     return ResponseEntity.ok(measures);
   }
 
@@ -282,7 +276,7 @@ public class MeasureController {
   }
 
   @GetMapping("/measures/search/{criteria}")
-  public ResponseEntity<Page<Measure>> findAllByMeasureNameOrEcqmTitle(
+  public ResponseEntity<Page<MeasureList>> findAllByMeasureNameOrEcqmTitle(
       Principal principal,
       @RequestParam(required = false, defaultValue = "false", name = "currentUser")
           boolean filterByCurrentUser,
@@ -293,7 +287,7 @@ public class MeasureController {
     final String username = principal.getName();
     final Pageable pageReq = PageRequest.of(page, limit, Sort.by("lastModifiedAt").descending());
 
-    Page<Measure> measures =
+    Page<MeasureList> measures =
         measureService.getMeasuresByCriteria(filterByCurrentUser, pageReq, username, criteria);
     measures.map(
         measure -> {
