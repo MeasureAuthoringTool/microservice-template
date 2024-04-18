@@ -471,6 +471,10 @@ public class TestCaseService {
                     .message("Test Case file is missing.")
                     .build();
               }
+              TestCaseImportOutcome outCome = checkErrorSpecialChar(model, testCaseImportRequest);
+              if (outCome != null) {
+                return outCome;
+              }
               if (isEmpty(measure.getTestCases())) {
                 return validateTestCaseJsonAndCreateTestCase(
                     testCaseImportRequest, measure, userName, accessToken, model);
@@ -765,17 +769,48 @@ public class TestCaseService {
   }
 
   protected void checkTestCaseSpecialCharacters(TestCase testCase) {
-    if (StringUtils.isBlank(testCase.getTitle()) || StringUtils.isBlank(testCase.getSeries())) {
-      throw new InvalidRequestException("Test Case title and group are required");
+    if (StringUtils.isBlank(testCase.getTitle())) {
+      throw new InvalidRequestException("Test Case title is required.");
     }
     Pattern special = Pattern.compile("[(){}\\[\\]<>/|\"':;,.~`!@#$%^&*_+=\\\\]");
     Matcher titleHasSpecial = special.matcher(testCase.getTitle());
-    Matcher groupHasSpecial = special.matcher(testCase.getSeries());
     if (titleHasSpecial.find()) {
       throw new SpecialCharacterException("Title");
     }
-    if (groupHasSpecial.find()) {
-      throw new SpecialCharacterException("Group");
+    if (StringUtils.isNotBlank(testCase.getSeries())) {
+      Matcher groupHasSpecial = special.matcher(testCase.getSeries());
+      if (groupHasSpecial.find()) {
+        throw new SpecialCharacterException("Group");
+      }
     }
+  }
+
+  protected TestCaseImportOutcome checkErrorSpecialChar(
+      String model, TestCaseImportRequest testCaseImportRequest) {
+    if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(model)) {
+      try {
+        checkTestCaseSpecialCharacters(
+            TestCase.builder()
+                .title(
+                    testCaseImportRequest.getGivenNames() != null
+                        ? testCaseImportRequest.getGivenNames().get(0)
+                        : null)
+                .series(testCaseImportRequest.getFamilyName())
+                .build());
+      } catch (InvalidRequestException ex) {
+        return TestCaseImportOutcome.builder()
+            .patientId(testCaseImportRequest.getPatientId())
+            .successful(false)
+            .message(ex.getMessage())
+            .build();
+      } catch (SpecialCharacterException ex) {
+        return TestCaseImportOutcome.builder()
+            .patientId(testCaseImportRequest.getPatientId())
+            .successful(false)
+            .message("Test Cases Group or Title cannot contain special characters.")
+            .build();
+      }
+    }
+    return null;
   }
 }

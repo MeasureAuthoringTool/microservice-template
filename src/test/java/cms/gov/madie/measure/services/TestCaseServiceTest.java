@@ -62,6 +62,7 @@ import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -2164,6 +2165,8 @@ public class TestCaseServiceTest implements ResourceUtil {
         TestCaseImportRequest.builder()
             .patientId(testCase.getPatientId())
             .json(testCaseImportQdm)
+            .givenNames(Collections.singletonList("testGivenName"))
+            .familyName("testFamilyName")
             .build();
 
     var response =
@@ -2223,6 +2226,8 @@ public class TestCaseServiceTest implements ResourceUtil {
         TestCaseImportRequest.builder()
             .patientId(testCase.getPatientId())
             .json(testCaseImportQdm)
+            .givenNames(Collections.singletonList("testGivenName"))
+            .familyName("testFamilyName")
             .build();
 
     var response =
@@ -2282,6 +2287,8 @@ public class TestCaseServiceTest implements ResourceUtil {
         TestCaseImportRequest.builder()
             .patientId(testCase.getPatientId())
             .json(testCaseImportQdm)
+            .givenNames(Collections.singletonList("testGivenName"))
+            .familyName("testFamilyName")
             .build();
 
     var response =
@@ -2442,8 +2449,67 @@ public class TestCaseServiceTest implements ResourceUtil {
   @Test
   public void testCheckTestCaseSpecialCharactersMissingGroup() {
     TestCase testCase = TestCase.builder().title("title").build();
-    assertThrows(
-        InvalidRequestException.class,
-        () -> testCaseService.checkTestCaseSpecialCharacters(testCase));
+    assertDoesNotThrow(() -> testCaseService.checkTestCaseSpecialCharacters(testCase));
+  }
+
+  @Test
+  void importTestCasesDoesNotCreateNewTitleOrGroupHasSpecialCharacters() throws IOException {
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
+    String patientId = UUID.randomUUID().toString();
+    String json =
+        "{\"qdmVersion\": \"5.6\",\n"
+            + " \"dataElements\": [],\n"
+            + " \"_id\": "
+            + patientId
+            + "\n"
+            + "}";
+    var testCaseImportRequest =
+        TestCaseImportRequest.builder()
+            .patientId(UUID.fromString(patientId))
+            .json(json)
+            .familyName("inavid ^&")
+            .givenNames(Collections.singletonList("invalid ()"))
+            .build();
+
+    var response =
+        testCaseService.importTestCases(
+            List.of(testCaseImportRequest),
+            measure.getId(),
+            "test.user",
+            "TOKEN",
+            ModelType.QDM_5_6.getValue());
+    assertFalse(response.get(0).isSuccessful());
+    assertEquals(
+        "Test Cases Group or Title cannot contain special characters.",
+        response.get(0).getMessage());
+  }
+
+  @Test
+  void importTestCasesDoesNotCreateNewTitleMissing() throws IOException {
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
+    String patientId = UUID.randomUUID().toString();
+    String json =
+        "{\"qdmVersion\": \"5.6\",\n"
+            + " \"dataElements\": [],\n"
+            + " \"_id\": "
+            + patientId
+            + "\n"
+            + "}";
+    var testCaseImportRequest =
+        TestCaseImportRequest.builder()
+            .patientId(UUID.fromString(patientId))
+            .json(json)
+            .familyName("testFamilyName")
+            .build();
+
+    var response =
+        testCaseService.importTestCases(
+            List.of(testCaseImportRequest),
+            measure.getId(),
+            "test.user",
+            "TOKEN",
+            ModelType.QDM_5_6.getValue());
+    assertFalse(response.get(0).isSuccessful());
+    assertEquals("Test Case title is required.", response.get(0).getMessage());
   }
 }
