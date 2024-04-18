@@ -533,7 +533,7 @@ public class TestCaseService {
                 qdmMeasure.getScoring(), MeasureScoring.CONTINUOUS_VARIABLE.toString())
             && measure.getGroups().size() > 1) {
           warningMessage =
-              "Observation values were not imported. MADiE cannot import expected "
+              "observation values were not imported. MADiE cannot import expected "
                   + "values for Continuous Variable measures with multiple population criteria.";
         }
       }
@@ -543,7 +543,7 @@ public class TestCaseService {
           TestCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, groups, newTestCase);
       if (!matched) {
         warningMessage =
-            "The measure populations do not match the populations in the import file. "
+            "the measure populations do not match the populations in the import file. "
                 + "The Test Case has been imported, but no expected values have been set.";
       }
       return updateTestCaseJsonAndSaveTestCase(

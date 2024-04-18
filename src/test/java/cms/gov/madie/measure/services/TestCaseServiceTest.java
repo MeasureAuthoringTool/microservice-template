@@ -2335,7 +2335,7 @@ public class TestCaseServiceTest implements ResourceUtil {
         response.get(0).getMessage(),
         is(
             equalTo(
-                "Observation values were not imported. MADiE cannot import expected values for Continuous Variable measures with multiple population criteria.")));
+                "observation values were not imported. MADiE cannot import expected values for Continuous Variable measures with multiple population criteria.")));
   }
 
   @Test
