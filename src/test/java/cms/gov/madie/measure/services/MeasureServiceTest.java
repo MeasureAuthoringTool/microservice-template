@@ -220,6 +220,53 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
+  public void testVerifyAuthorizationByMeasureSetIdThrowsExceptionForMissingMeasureSet() {
+    assertThrows(
+        InvalidMeasureStateException.class,
+        () -> measureService.verifyAuthorizationByMeasureSetId("THEUSER", "MS123", true));
+  }
+
+  @Test
+  public void testVerifyAuthorizationByMeasureSetIdThrowsExceptionForEmptyAclsAndNonOwner() {
+    MeasureSet measureSet = MeasureSet.builder().owner("OWNER").build();
+    when(measureSetService.findByMeasureSetId(anyString())).thenReturn(measureSet);
+    assertThrows(
+        UnauthorizedException.class,
+        () -> measureService.verifyAuthorizationByMeasureSetId("THEUSER", "MS123", true));
+  }
+
+  @Test
+  public void testVerifyAuthorizationByMeasureSetIdDoesNothingForEmptyAclsAndOwner() {
+    MeasureSet measureSet = MeasureSet.builder().owner("OWNER").build();
+    when(measureSetService.findByMeasureSetId(anyString())).thenReturn(measureSet);
+    measureService.verifyAuthorizationByMeasureSetId("OWNER", "MS123", true);
+    verify(measureSetService, times(1)).findByMeasureSetId(eq("MS123"));
+  }
+
+  @Test
+  public void testVerifyAuthorizationByMeasureSetIdDoesNothingForAclsAndSharedWith() {
+    AclSpecification acl1 = new AclSpecification();
+    acl1.setRoles(List.of(RoleEnum.SHARED_WITH));
+    acl1.setUserId("THEUSER");
+    MeasureSet measureSet = MeasureSet.builder().owner("OWNER").acls(List.of(acl1)).build();
+    when(measureSetService.findByMeasureSetId(anyString())).thenReturn(measureSet);
+    measureService.verifyAuthorizationByMeasureSetId("THEUSER", "MS123", false);
+    verify(measureSetService, times(1)).findByMeasureSetId(eq("MS123"));
+  }
+
+  @Test
+  public void testVerifyAuthorizationByMeasureSetIdDoesNothingForAclsAndSharedWithButOwnerOnly() {
+    AclSpecification acl1 = new AclSpecification();
+    acl1.setRoles(List.of(RoleEnum.SHARED_WITH));
+    acl1.setUserId("THEUSER");
+    MeasureSet measureSet = MeasureSet.builder().owner("OWNER").acls(List.of(acl1)).build();
+    when(measureSetService.findByMeasureSetId(anyString())).thenReturn(measureSet);
+    assertThrows(
+        UnauthorizedException.class,
+        () -> measureService.verifyAuthorizationByMeasureSetId("THEUSER", "MS123", true));
+  }
+
+  @Test
   public void testVerifyAuthorizationThrowsExceptionForMissingMeasureSet() {
     assertThrows(
         InvalidMeasureStateException.class,

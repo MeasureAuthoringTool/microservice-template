@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.dto.PackageDto;
 import cms.gov.madie.measure.exceptions.BadVersionRequestException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.MeasureNotDraftableException;
@@ -55,6 +56,8 @@ public class VersionServiceTest {
   @Mock ExportRepository exportRepository;
 
   @Mock MeasureService measureService;
+
+  @Mock QdmPackageService qdmPackageService;
 
   @InjectMocks VersionService versionService;
 
@@ -471,6 +474,18 @@ public class VersionServiceTest {
     updatedMeasure.setMeasureMetaData(updatedMetaData);
     when(measureRepository.save(any(Measure.class))).thenReturn(updatedMeasure);
 
+    byte[] exportPackage = "Look, I'm a measure package".getBytes();
+    when(qdmPackageService.getMeasurePackage(any(Measure.class), anyString()))
+        .thenReturn(PackageDto.builder().fromStorage(false).exportPackage(exportPackage).build());
+
+    when(exportRepository.save(any(Export.class)))
+        .thenAnswer(
+            invocationOnMock -> {
+              Export ex = invocationOnMock.getArgument(0);
+              ex.setId("ID123");
+              return ex;
+            });
+
     versionService.createVersion("testMeasureId", "MINOR", "testUser", "accesstoken");
 
     verify(measureRepository, times(1)).save(measureCaptor.capture());
@@ -479,6 +494,10 @@ public class VersionServiceTest {
     assertEquals(savedValue.getVersion().getMinor(), 4);
     assertEquals(savedValue.getVersion().getRevisionNumber(), 0);
     assertFalse(savedValue.getMeasureMetaData().isDraft());
+    verify(exportRepository, times(1)).save(exportArgumentCaptor.capture());
+    Export export = exportArgumentCaptor.getValue();
+    assertThat(export.getMeasureId(), is(equalTo(updatedMeasure.getId())));
+    assertThat(export.getPackageData(), is(equalTo(exportPackage)));
   }
 
   @Test

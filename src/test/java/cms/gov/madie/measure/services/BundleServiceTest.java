@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.dto.PackageDto;
 import cms.gov.madie.measure.exceptions.BundleOperationException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
@@ -205,9 +206,9 @@ class BundleServiceTest implements ResourceUtil {
     measure.setModel("QI-Core v4.1.1");
     when(exportRepository.findByMeasureId(anyString())).thenReturn(Optional.of(export));
 
-    byte[] output = bundleService.getMeasureExport(measure, "Bearer TOKEN");
+    PackageDto output = bundleService.getMeasureExport(measure, "Bearer TOKEN");
     assertNotNull(output);
-    ZipInputStream z = new ZipInputStream(new ByteArrayInputStream(output));
+    ZipInputStream z = new ZipInputStream(new ByteArrayInputStream(output.getExportPackage()));
     ZipEntry entry = z.getNextEntry();
     String fileName = entry.getName();
     assertEquals(fileName, "resources/TestCreateNewLibrary-1.0.000.xml");
@@ -262,9 +263,10 @@ class BundleServiceTest implements ResourceUtil {
         .when(fhirServicesClient)
         .getMeasureBundleExport(any(Measure.class), eq("Bearer TOKEN"));
 
-    byte[] output = bundleService.getMeasureExport(measure, "Bearer TOKEN");
+    PackageDto output = bundleService.getMeasureExport(measure, "Bearer TOKEN");
     assertNotNull(output);
-    assertTrue(Arrays.equals("TEST".getBytes(), output));
+    assertNotNull(output);
+    assertTrue(Arrays.equals("TEST".getBytes(), output.getExportPackage()));
   }
 
   @Test
@@ -299,8 +301,7 @@ class BundleServiceTest implements ResourceUtil {
 
   @Test
   void testExportBundleMeasureForNullMeasureReturnsNull() throws IOException {
-
-    byte[] output = bundleService.getMeasureExport(null, "Bearer TOKEN");
+    PackageDto output = bundleService.getMeasureExport(null, "Bearer TOKEN");
     assertNull(output);
   }
 }
