@@ -11,7 +11,6 @@ import cms.gov.madie.measure.exceptions.SpecialCharacterException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.utils.JsonUtil;
-import cms.gov.madie.measure.utils.TestCaseServiceUtil;
 import cms.gov.madie.measure.utils.ResourceUtil;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -35,6 +34,7 @@ import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.HapiOperationOutcome;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureMetaData;
+import gov.cms.madie.models.measure.MeasureObservation;
 import gov.cms.madie.models.measure.MeasureScoring;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
@@ -95,7 +95,6 @@ import static org.mockito.Mockito.when;
 public class TestCaseServiceTest implements ResourceUtil {
   @Mock private MeasureRepository measureRepository;
   @Mock private ActionLogService actionLogService;
-  @Mock private TestCaseServiceUtil testCaseServiceUtil;
 
   @Spy private ObjectMapper mapper;
 
@@ -1731,7 +1730,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
     assertFalse(response.get(0).isSuccessful());
     assertEquals(
-        "The Family and Given combination on the Patient resource in the Test Case JSON is already used in another test case on this measure.  The combination must be unique (case insensitive, spaces ignored) across all test cases associated with the measure.",
+        "The Family and Given name combination on the Patient resource in the Test Case JSON is already used in another test case on this measure. The combination must be unique (case insensitive, spaces ignored) across all test cases associated with the measure.",
         response.get(0).getMessage());
   }
 
@@ -1868,13 +1867,6 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     TestCase updatedTestCase = testCase;
     updatedTestCase.setJson(testCaseImportWithMeasureReport);
-
-    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
-        .thenReturn(List.of(group));
-    when(testCaseServiceUtil.matchCriteriaGroups(
-            any(List.class), any(List.class), any(TestCase.class)))
-        .thenReturn(true);
-
     doReturn(updatedTestCase)
         .when(testCaseService)
         .updateTestCase(any(), anyString(), anyString(), anyString());
@@ -1930,13 +1922,6 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     TestCase updatedTestCase = testCase;
     updatedTestCase.setJson(testCaseImportWithMeasureReport);
-
-    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
-        .thenReturn(List.of(group));
-    when(testCaseServiceUtil.matchCriteriaGroups(
-            any(List.class), any(List.class), any(TestCase.class)))
-        .thenReturn(true);
-
     doReturn(updatedTestCase)
         .when(testCaseService)
         .updateTestCase(any(), anyString(), anyString(), anyString());
@@ -1979,9 +1964,6 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     TestCase updatedTestCase = testCase;
     updatedTestCase.setJson(testCaseImportWithMeasureReport);
-
-    when(testCaseServiceUtil.getGroupsWithValidPopulations(any(List.class)))
-        .thenReturn(List.of(group));
 
     doReturn(updatedTestCase)
         .when(testCaseService)
@@ -2254,10 +2236,8 @@ public class TestCaseServiceTest implements ResourceUtil {
             .build();
 
     population1 = Population.builder().name(PopulationType.INITIAL_POPULATION).build();
-    population2 = Population.builder().name(PopulationType.DENOMINATOR).build();
-    population3 = Population.builder().name(PopulationType.DENOMINATOR_EXCLUSION).build();
-    population4 = Population.builder().name(PopulationType.NUMERATOR).build();
-    population5 = Population.builder().name(PopulationType.DENOMINATOR_EXCEPTION).build();
+    population2 = Population.builder().name(PopulationType.MEASURE_POPULATION).build();
+    var observation = MeasureObservation.builder().definition("test function").build();
 
     Stratification strat = new Stratification();
     strat.setId("testStratId");
@@ -2269,7 +2249,8 @@ public class TestCaseServiceTest implements ResourceUtil {
             .id("testGroupId")
             .scoring(MeasureScoring.CONTINUOUS_VARIABLE.name())
             .populationBasis("Encounter")
-            .populations(List.of(population1, population2, population3, population4, population5))
+            .populations(List.of(population1, population2))
+            .measureObservations(List.of(observation))
             .stratifications(List.of(strat))
             .build();
     qdmMeasure.setGroups(List.of(group));
@@ -2303,6 +2284,67 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertNotNull(testCase.getDescription());
     assertEquals(testCase.getDescription(), JsonUtil.getTestDescriptionQdm(testCaseImportQdm));
     assertTrue(response.get(0).isSuccessful());
+  }
+
+  @Test
+  void importQdmTestCasesForCVMeasureWithMultipleGroups() throws JsonProcessingException {
+    String testCaseData = getData("/cv_qdm_test_with_multiple_groups.json");
+    QdmMeasure qdmMeasure =
+        QdmMeasure.builder()
+            .id("testMeasureId")
+            .model(ModelType.QDM_5_6.getValue())
+            .scoring(MeasureScoring.CONTINUOUS_VARIABLE.toString())
+            .build();
+
+    population1 =
+        Population.builder().name(PopulationType.INITIAL_POPULATION).definition("IP").build();
+    population2 =
+        Population.builder().name(PopulationType.MEASURE_POPULATION).definition("MSR POP").build();
+    var observation = MeasureObservation.builder().definition("test function").build();
+    Group group1 =
+        Group.builder()
+            .id("1")
+            .scoring(MeasureScoring.CONTINUOUS_VARIABLE.name())
+            .populationBasis("Encounter")
+            .populations(List.of(population1, population2))
+            .measureObservations(List.of(observation))
+            .build();
+    Group group2 = group1.toBuilder().id("2").build();
+    qdmMeasure.setGroups(List.of(group1, group2));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(qdmMeasure));
+
+    TestCase updatedTestCase = testCase;
+    updatedTestCase.setDescription(qdmTestCaseDescription);
+    String json = JsonUtil.getTestCaseJson(testCaseData);
+    updatedTestCase.setJson(json);
+
+    doReturn(updatedTestCase)
+        .when(testCaseService)
+        .updateTestCase(any(), anyString(), anyString(), anyString());
+    var testCaseImportRequest =
+        TestCaseImportRequest.builder()
+            .familyName("John")
+            .givenNames(List.of("Doe"))
+            .patientId(testCase.getPatientId())
+            .json(testCaseData)
+            .build();
+
+    var response =
+        testCaseService.importTestCases(
+            List.of(testCaseImportRequest),
+            measure.getId(),
+            "test.user",
+            "TOKEN",
+            ModelType.QDM_5_6.getValue());
+    assertEquals(1, response.size());
+    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
+    assertNotNull(testCase.getDescription());
+    assertTrue(response.get(0).isSuccessful());
+    assertThat(
+        response.get(0).getMessage(),
+        is(
+            equalTo(
+                "observation values were not imported. MADiE cannot import expected values for Continuous Variable measures with multiple population criteria.")));
   }
 
   @Test

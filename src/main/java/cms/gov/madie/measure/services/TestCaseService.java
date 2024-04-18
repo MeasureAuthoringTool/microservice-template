@@ -7,6 +7,8 @@ import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.HapiOperationOutcome;
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureScoring;
+import gov.cms.madie.models.measure.QdmMeasure;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import gov.cms.madie.models.measure.Group;
@@ -44,7 +46,6 @@ public class TestCaseService {
   private FhirServicesClient fhirServicesClient;
   private ObjectMapper mapper;
   private MeasureService measureService;
-  private TestCaseServiceUtil testCaseServiceUtil;
 
   @Value("${madie.json.resources.base-uri}")
   @Getter
@@ -59,14 +60,12 @@ public class TestCaseService {
       ActionLogService actionLogService,
       FhirServicesClient fhirServicesClient,
       ObjectMapper mapper,
-      MeasureService measureService,
-      TestCaseServiceUtil testCaseServiceUtil) {
+      MeasureService measureService) {
     this.measureRepository = measureRepository;
     this.actionLogService = actionLogService;
     this.fhirServicesClient = fhirServicesClient;
     this.mapper = mapper;
     this.measureService = measureService;
-    this.testCaseServiceUtil = testCaseServiceUtil;
   }
 
   protected TestCase enrichNewTestCase(TestCase testCase, String username) {
@@ -509,11 +508,10 @@ public class TestCaseService {
       String accessToken,
       String model) {
     try {
-      String patientFamilyName = getPatientFamilyName(model, testCaseImportRequest.getJson());
-      String patientGivenName = getPatientGivenName(model, testCaseImportRequest.getJson());
-      log.info(
-          "Test Case title + Test Case Group:  {}", patientGivenName + " " + patientFamilyName);
-      if (StringUtils.isBlank(patientGivenName)) {
+      String familyName = getPatientFamilyName(model, testCaseImportRequest.getJson());
+      String givenName = getPatientGivenName(model, testCaseImportRequest.getJson());
+      log.info("Test Case title + Test Case Group:  {}", givenName + " " + familyName);
+      if (StringUtils.isBlank(givenName)) {
         return TestCaseImportOutcome.builder()
             .patientId(testCaseImportRequest.getPatientId())
             .successful(false)
@@ -522,32 +520,34 @@ public class TestCaseService {
       }
       TestCase newTestCase =
           TestCase.builder()
-              .title(patientGivenName)
-              .series(patientFamilyName)
+              .title(givenName)
+              .series(familyName)
               .patientId(testCaseImportRequest.getPatientId())
               .build();
-
       List<TestCaseGroupPopulation> testCaseGroupPopulations =
           getTestCaseGroupPopulationsFromImportRequest(
               model, testCaseImportRequest.getJson(), measure);
-
-      List<Group> groups = testCaseServiceUtil.getGroupsWithValidPopulations(measure.getGroups());
-
-      // Ignore stratifications for QICore
+      List<Group> groups = TestCaseServiceUtil.getGroupsWithValidPopulations(measure.getGroups());
+      String warningMessage = null;
       if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(model)) {
         testCaseGroupPopulations =
-            testCaseServiceUtil.assignStratificationValuesQdm(testCaseGroupPopulations, groups);
+            TestCaseServiceUtil.assignStratificationValuesQdm(testCaseGroupPopulations, groups);
+        QdmMeasure qdmMeasure = (QdmMeasure) measure;
+        if (StringUtils.equals(
+                qdmMeasure.getScoring(), MeasureScoring.CONTINUOUS_VARIABLE.toString())
+            && measure.getGroups().size() > 1) {
+          warningMessage =
+              "observation values were not imported. MADiE cannot import expected "
+                  + "values for Continuous Variable measures with multiple population criteria.";
+        }
       }
-
       // Compare main populations from the measure pop criteria against incoming test case.
-      // Check includes Stratifications and excludes Observations.
+      // Check includes Stratification and excludes Observations.
       boolean matched =
-          testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, groups, newTestCase);
-
-      String warningMessage = null;
+          TestCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, groups, newTestCase);
       if (!matched) {
         warningMessage =
-            "The measure populations do not match the populations in the import file. "
+            "the measure populations do not match the populations in the import file. "
                 + "The Test Case has been imported, but no expected values have been set.";
       }
       return updateTestCaseJsonAndSaveTestCase(
@@ -569,8 +569,7 @@ public class TestCaseService {
           .patientId(testCaseImportRequest.getPatientId())
           .successful(false)
           .message(
-              "Error while processing Test Case JSON."
-                  + " Please make sure Test Case JSON is valid.")
+              "Error while processing Test Case JSON. Please make sure Test Case JSON is valid.")
           .build();
     }
   }
@@ -696,8 +695,8 @@ public class TestCaseService {
 
   private String formatErrorMessage(Exception e) {
     return e.getClass().getSimpleName().equals("DuplicateTestCaseNameException")
-        ? "The Family and Given combination on the Patient resource in the Test Case JSON"
-            + " is already used in another test case on this measure.  The combination"
+        ? "The Family and Given name combination on the Patient resource in the Test Case JSON"
+            + " is already used in another test case on this measure. The combination"
             + " must be unique (case insensitive, spaces ignored) across all test cases"
             + " associated with the measure."
         : e.getMessage();
