@@ -2323,6 +2323,8 @@ public class TestCaseServiceTest implements ResourceUtil {
         .updateTestCase(any(), anyString(), anyString(), anyString());
     var testCaseImportRequest =
         TestCaseImportRequest.builder()
+            .familyName("John")
+            .givenNames(List.of("Doe"))
             .patientId(testCase.getPatientId())
             .json(testCaseData)
             .build();
