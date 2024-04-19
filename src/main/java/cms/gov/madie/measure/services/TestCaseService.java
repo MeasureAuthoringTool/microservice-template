@@ -771,7 +771,7 @@ public class TestCaseService {
     if (StringUtils.isBlank(testCase.getTitle())) {
       throw new InvalidRequestException("Test Case title is required.");
     }
-    Pattern alpahNumeric = Pattern.compile("^[a-zA-Z0-9\s]*$");
+    Pattern alpahNumeric = Pattern.compile("^[a-zA-Z0-9\s_-]*$");
     Matcher title = alpahNumeric.matcher(testCase.getTitle());
     if (!title.matches()) {
       throw new SpecialCharacterException("Title");
