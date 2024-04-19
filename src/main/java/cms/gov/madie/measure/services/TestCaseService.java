@@ -771,14 +771,14 @@ public class TestCaseService {
     if (StringUtils.isBlank(testCase.getTitle())) {
       throw new InvalidRequestException("Test Case title is required.");
     }
-    Pattern special = Pattern.compile("[(){}\\[\\]<>/|\"':;,.~`!@#$%^&*_+=\\\\]");
-    Matcher titleHasSpecial = special.matcher(testCase.getTitle());
-    if (titleHasSpecial.find()) {
+    Pattern alpahNumeric = Pattern.compile("^[a-zA-Z0-9\s]*$");
+    Matcher title = alpahNumeric.matcher(testCase.getTitle());
+    if (!title.matches()) {
       throw new SpecialCharacterException("Title");
     }
     if (StringUtils.isNotBlank(testCase.getSeries())) {
-      Matcher groupHasSpecial = special.matcher(testCase.getSeries());
-      if (groupHasSpecial.find()) {
+      Matcher group = alpahNumeric.matcher(testCase.getSeries());
+      if (!group.matches()) {
         throw new SpecialCharacterException("Group");
       }
     }
