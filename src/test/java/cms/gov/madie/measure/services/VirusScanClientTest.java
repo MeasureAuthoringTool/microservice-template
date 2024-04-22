@@ -82,4 +82,13 @@ class VirusScanClientTest {
     VirusScanResponseDto output = virusScanClient.scanFile(resource);
     assertThat(output, is(equalTo(scanResponseDto)));
   }
+
+  @Test
+  void testScanFileWhenScanDisabled() {
+    Resource resource = Mockito.mock(Resource.class);
+    when(virusScanConfig.isScanDisabled()).thenReturn(true);
+    VirusScanResponseDto output = virusScanClient.scanFile(resource);
+    assertThat(output.getCleanFileCount(), is(equalTo(output.getFilesScanned())));
+    assertThat(output.getInfectedFileCount(), is(equalTo(0)));
+  }
 }

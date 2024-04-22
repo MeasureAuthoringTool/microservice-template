@@ -943,8 +943,7 @@ public class MeasureControllerMvcTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(
-            jsonPath("$.validationErrors.cqlLibraryName")
-                .value("Measure Library Name is invalid."));
+            jsonPath("$.validationErrors.measure").value("Measure Library Name is invalid."));
     verifyNoInteractions(measureRepository);
   }
 
@@ -961,8 +960,7 @@ public class MeasureControllerMvcTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(
-            jsonPath("$.validationErrors.cqlLibraryName")
-                .value("Measure Library Name is invalid."));
+            jsonPath("$.validationErrors.measure").value("Measure Library Name is invalid."));
     verifyNoInteractions(measureRepository);
   }
 
@@ -979,8 +977,7 @@ public class MeasureControllerMvcTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(
-            jsonPath("$.validationErrors.cqlLibraryName")
-                .value("Measure Library Name is invalid."));
+            jsonPath("$.validationErrors.measure").value("Measure Library Name is invalid."));
     verifyNoInteractions(measureRepository);
   }
 
@@ -997,8 +994,7 @@ public class MeasureControllerMvcTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(
-            jsonPath("$.validationErrors.cqlLibraryName")
-                .value("Measure Library Name is invalid."));
+            jsonPath("$.validationErrors.measure").value("Measure Library Name is invalid."));
     verifyNoInteractions(measureRepository);
   }
 

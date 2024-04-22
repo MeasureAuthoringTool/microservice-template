@@ -25,6 +25,12 @@ public class VirusScanClient {
   private RestTemplate virusScanRestTemplate;
 
   public VirusScanResponseDto scanFile(Resource fileResource) {
+    // return clean scan results if virus scanning is disabled
+    if (virusScanConfig.isScanDisabled()) {
+      log.info("Virus scanning is disabled.");
+      return VirusScanResponseDto.builder().filesScanned(1).cleanFileCount(1).build();
+    }
+
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.MULTIPART_FORM_DATA);
     headers.set("apikey", virusScanConfig.getApiKey());
