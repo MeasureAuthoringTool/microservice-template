@@ -100,6 +100,9 @@ public class MeasureControllerMvcTest {
 
   private static final String MODEL = ModelType.QI_CORE.toString();
 
+  private static final String LIBRARY_NAME_VALIDATION_ERROR =
+      "Library name must start with an upper case letter, followed by alpha-numeric character(s) and must not contain spaces or other special characters except of underscore for QDM.";
+
   public String toJsonString(Object obj) throws JsonProcessingException {
     ObjectMapper mapper = new ObjectMapper();
     mapper.registerModule(new JavaTimeModule());
@@ -943,9 +946,7 @@ public class MeasureControllerMvcTest {
                 .content(measureAsJson)
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
-        .andExpect(
-            jsonPath("$.validationErrors.cqlLibraryName")
-                .value("Measure Library Name is invalid."));
+        .andExpect(jsonPath("$.validationErrors.measure").value(LIBRARY_NAME_VALIDATION_ERROR));
     verifyNoInteractions(measureRepository);
   }
 
@@ -961,9 +962,7 @@ public class MeasureControllerMvcTest {
                 .content(measureAsJson)
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
-        .andExpect(
-            jsonPath("$.validationErrors.cqlLibraryName")
-                .value("Measure Library Name is invalid."));
+        .andExpect(jsonPath("$.validationErrors.measure").value(LIBRARY_NAME_VALIDATION_ERROR));
     verifyNoInteractions(measureRepository);
   }
 
@@ -979,9 +978,7 @@ public class MeasureControllerMvcTest {
                 .content(measureAsJson)
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
-        .andExpect(
-            jsonPath("$.validationErrors.cqlLibraryName")
-                .value("Measure Library Name is invalid."));
+        .andExpect(jsonPath("$.validationErrors.measure").value(LIBRARY_NAME_VALIDATION_ERROR));
     verifyNoInteractions(measureRepository);
   }
 
@@ -997,9 +994,7 @@ public class MeasureControllerMvcTest {
                 .content(measureAsJson)
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
-        .andExpect(
-            jsonPath("$.validationErrors.cqlLibraryName")
-                .value("Measure Library Name is invalid."));
+        .andExpect(jsonPath("$.validationErrors.measure").value(LIBRARY_NAME_VALIDATION_ERROR));
     verifyNoInteractions(measureRepository);
   }
 
