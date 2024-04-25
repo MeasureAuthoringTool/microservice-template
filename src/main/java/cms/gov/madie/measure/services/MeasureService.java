@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.dto.MadieFeatureFlag;
+import cms.gov.madie.measure.dto.MeasureListDTO;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.repositories.OrganizationRepository;
@@ -13,7 +14,6 @@ import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.common.Organization;
 import gov.cms.madie.models.common.Version;
-import gov.cms.madie.models.dto.MeasureList;
 import gov.cms.madie.models.measure.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -254,7 +254,7 @@ public class MeasureService {
     measure.setMeasurementPeriodEnd(Date.from(endInstant));
   }
 
-  public Page<MeasureList> getMeasures(
+  public Page<MeasureListDTO> getMeasures(
       boolean filterByCurrentUser, Pageable pageReq, String username) {
     return filterByCurrentUser
         ? measureRepository.findMyActiveMeasures(username, pageReq, null)
@@ -389,7 +389,7 @@ public class MeasureService {
         .stream().map(Measure::getId).collect(Collectors.toList());
   }
 
-  public Page<MeasureList> getMeasuresByCriteria(
+  public Page<MeasureListDTO> getMeasuresByCriteria(
       boolean filterByCurrentUser, Pageable pageReq, String username, String criteria) {
     return filterByCurrentUser
         ? measureRepository.findMyActiveMeasures(username, pageReq, criteria)

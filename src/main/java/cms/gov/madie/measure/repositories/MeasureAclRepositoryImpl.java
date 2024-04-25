@@ -1,8 +1,8 @@
 package cms.gov.madie.measure.repositories;
 
 import cms.gov.madie.measure.dto.FacetDTO;
+import cms.gov.madie.measure.dto.MeasureListDTO;
 import gov.cms.madie.models.access.RoleEnum;
-import gov.cms.madie.models.dto.MeasureList;
 import gov.cms.madie.models.measure.Measure;
 
 import org.apache.commons.lang3.StringUtils;
@@ -28,7 +28,7 @@ public class MeasureAclRepositoryImpl implements MeasureAclRepository {
   }
 
   @Override
-  public Page<MeasureList> findMyActiveMeasures(
+  public Page<MeasureListDTO> findMyActiveMeasures(
       String userId, Pageable pageable, String searchTerm) {
     // join measure and measure_set to lookup owner and ACL info
     LookupOperation lookupOperation =
@@ -69,7 +69,7 @@ public class MeasureAclRepositoryImpl implements MeasureAclRepository {
                 sort(pageable.getSort()),
                 skip(pageable.getOffset()),
                 limit(pageable.getPageSize()),
-                project(MeasureList.class))
+                project(MeasureListDTO.class))
             .as("queryResults");
 
     Aggregation pipeline = newAggregation(lookupOperation, matchOperation, facets);

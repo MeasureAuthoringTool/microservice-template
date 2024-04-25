@@ -1,6 +1,5 @@
 package cms.gov.madie.measure.dto;
 
-import gov.cms.madie.models.dto.MeasureList;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,5 +14,5 @@ import java.util.List;
 public class FacetDTO {
 
   List<Object> count;
-  List<MeasureList> queryResults;
+  List<MeasureListDTO> queryResults;
 }

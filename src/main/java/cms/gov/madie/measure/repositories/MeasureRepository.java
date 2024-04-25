@@ -3,7 +3,7 @@ package cms.gov.madie.measure.repositories;
 import java.util.List;
 import java.util.Optional;
 
-import gov.cms.madie.models.dto.MeasureList;
+import cms.gov.madie.measure.dto.MeasureListDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.Aggregation;
@@ -18,7 +18,7 @@ public interface MeasureRepository
 
   Optional<Measure> findByIdAndActive(String id, Boolean active);
 
-  Page<MeasureList> findAllByActive(Boolean active, Pageable page);
+  Page<MeasureListDTO> findAllByActive(Boolean active, Pageable page);
 
   @Aggregation(
       pipeline = {
@@ -46,7 +46,7 @@ public interface MeasureRepository
           + "{$or: [{'measureName' : { $regex : /\\Q?0\\E/, $options: 'i' } },"
           + "{'ecqmTitle' : { $regex : /\\Q?0\\E/, $options: 'i' }}]} "
           + "]}")
-  Page<MeasureList> findAllByMeasureNameOrEcqmTitle(String criteria, Pageable page);
+  Page<MeasureListDTO> findAllByMeasureNameOrEcqmTitle(String criteria, Pageable page);
 
   boolean existsByMeasureSetIdAndActiveAndMeasureMetaDataDraft(
       String setId, boolean active, boolean draft);

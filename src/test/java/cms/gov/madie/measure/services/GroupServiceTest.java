@@ -21,8 +21,8 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import cms.gov.madie.measure.dto.MeasureListDTO;
 import cms.gov.madie.measure.factories.ModelValidatorFactory;
-import gov.cms.madie.models.dto.MeasureList;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -86,7 +86,7 @@ public class GroupServiceTest implements ResourceUtil {
   private Group group2;
   private Group ratioGroup;
   private Measure measure;
-  private MeasureList measureList;
+  private MeasureListDTO measureList;
   private Stratification strata1;
   private Stratification stratification;
   private TestCasePopulationValue testCasePopulationValue1;
@@ -214,7 +214,7 @@ public class GroupServiceTest implements ResourceUtil {
             .build();
 
     measureList =
-        MeasureList.builder()
+        MeasureListDTO.builder()
             .model(ModelType.QI_CORE.getValue())
             .active(true)
             .id("xyz-p13r-13ert")
@@ -259,23 +259,23 @@ public class GroupServiceTest implements ResourceUtil {
 
   @Test
   public void testFindAllByActiveOmitsAndRetrievesCorrectly() {
-    MeasureList m1 =
-        MeasureList.builder()
+    MeasureListDTO m1 =
+        MeasureListDTO.builder()
             .active(true)
             .id("xyz-p13r-459b")
             .measureName("Measure1")
             .model("QI-Core")
             .build();
-    MeasureList m2 =
-        MeasureList.builder()
+    MeasureListDTO m2 =
+        MeasureListDTO.builder()
             .id("xyz-p13r-459a")
             .active(false)
             .measureName("Measure2")
             .model("QI-Core")
             .active(true)
             .build();
-    Page<MeasureList> activeMeasures = new PageImpl<>(List.of(measureList, m1));
-    Page<MeasureList> inactiveMeasures = new PageImpl<>(List.of(m2));
+    Page<MeasureListDTO> activeMeasures = new PageImpl<>(List.of(measureList, m1));
+    Page<MeasureListDTO> inactiveMeasures = new PageImpl<>(List.of(m2));
     PageRequest initialPage = PageRequest.of(0, 10);
 
     when(measureRepository.findAllByActive(eq(true), any(PageRequest.class)))

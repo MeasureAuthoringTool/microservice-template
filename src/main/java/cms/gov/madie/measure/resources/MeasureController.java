@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.resources;
 
+import cms.gov.madie.measure.dto.MeasureListDTO;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
@@ -8,7 +9,6 @@ import cms.gov.madie.measure.services.GroupService;
 import cms.gov.madie.measure.services.MeasureService;
 import cms.gov.madie.measure.services.MeasureSetService;
 import gov.cms.madie.models.common.ActionType;
-import gov.cms.madie.models.dto.MeasureList;
 import gov.cms.madie.models.measure.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -59,14 +59,14 @@ public class MeasureController {
   }
 
   @GetMapping("/measures")
-  public ResponseEntity<Page<MeasureList>> getMeasures(
+  public ResponseEntity<Page<MeasureListDTO>> getMeasures(
       Principal principal,
       @RequestParam(required = false, defaultValue = "false", name = "currentUser")
           boolean filterByCurrentUser,
       @RequestParam(required = false, defaultValue = "10", name = "limit") int limit,
       @RequestParam(required = false, defaultValue = "0", name = "page") int page) {
     final String username = principal.getName();
-    Page<MeasureList> measures;
+    Page<MeasureListDTO> measures;
     final Pageable pageReq = PageRequest.of(page, limit, Sort.by("lastModifiedAt").descending());
     measures = measureService.getMeasures(filterByCurrentUser, pageReq, username);
     return ResponseEntity.ok(measures);
@@ -276,7 +276,7 @@ public class MeasureController {
   }
 
   @GetMapping("/measures/search/{criteria}")
-  public ResponseEntity<Page<MeasureList>> findAllByMeasureNameOrEcqmTitle(
+  public ResponseEntity<Page<MeasureListDTO>> findAllByMeasureNameOrEcqmTitle(
       Principal principal,
       @RequestParam(required = false, defaultValue = "false", name = "currentUser")
           boolean filterByCurrentUser,
@@ -287,7 +287,7 @@ public class MeasureController {
     final String username = principal.getName();
     final Pageable pageReq = PageRequest.of(page, limit, Sort.by("lastModifiedAt").descending());
 
-    Page<MeasureList> measures =
+    Page<MeasureListDTO> measures =
         measureService.getMeasuresByCriteria(filterByCurrentUser, pageReq, username, criteria);
     measures.map(
         measure -> {

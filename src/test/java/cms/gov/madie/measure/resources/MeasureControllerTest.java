@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.resources;
 
+import cms.gov.madie.measure.dto.MeasureListDTO;
 import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
@@ -14,7 +15,6 @@ import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.Version;
-import gov.cms.madie.models.dto.MeasureList;
 import gov.cms.madie.models.measure.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,7 +59,7 @@ class MeasureControllerTest {
   @InjectMocks private MeasureController controller;
 
   private Measure measure1;
-  private MeasureList measureList;
+  private MeasureListDTO measureList;
 
   @Captor private ArgumentCaptor<ActionType> actionTypeArgumentCaptor;
   @Captor private ArgumentCaptor<Class> targetClassArgumentCaptor;
@@ -77,7 +77,7 @@ class MeasureControllerTest {
             .build();
 
     measureList =
-        MeasureList.builder()
+        MeasureListDTO.builder()
             .active(true)
             .measureSetId("IDIDID")
             .measureName("MSR01")
@@ -106,13 +106,13 @@ class MeasureControllerTest {
 
   @Test
   void getMeasuresWithoutCurrentUserFilter() {
-    Page<MeasureList> measures = new PageImpl<>(List.of(measureList));
+    Page<MeasureListDTO> measures = new PageImpl<>(List.of(measureList));
 
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
     when(measureService.getMeasures(eq(false), any(Pageable.class), eq("test.user")))
         .thenReturn(measures);
-    ResponseEntity<Page<MeasureList>> response = controller.getMeasures(principal, false, 10, 0);
+    ResponseEntity<Page<MeasureListDTO>> response = controller.getMeasures(principal, false, 10, 0);
     verify(measureService, times(1)).getMeasures(eq(false), any(Pageable.class), eq("test.user"));
     verifyNoMoreInteractions(repository);
     assertNotNull(response.getBody());
@@ -123,13 +123,13 @@ class MeasureControllerTest {
 
   @Test
   void getMeasuresWithCurrentUserFilter() {
-    Page<MeasureList> measures = new PageImpl<>(List.of(measureList));
+    Page<MeasureListDTO> measures = new PageImpl<>(List.of(measureList));
     when(measureService.getMeasures(eq(true), any(Pageable.class), eq("test.user")))
         .thenReturn(measures);
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
-    ResponseEntity<Page<MeasureList>> response = controller.getMeasures(principal, true, 10, 0);
+    ResponseEntity<Page<MeasureListDTO>> response = controller.getMeasures(principal, true, 10, 0);
     verify(measureService, times(1)).getMeasures(eq(true), any(Pageable.class), eq("test.user"));
 
     verifyNoMoreInteractions(repository);
@@ -623,7 +623,7 @@ class MeasureControllerTest {
   @Test
   void searchMeasuresByNameOrEcqmTitleWithoutCurrentUserFilter()
       throws UnsupportedEncodingException {
-    Page<MeasureList> measures = new PageImpl<>(List.of(measureList));
+    Page<MeasureListDTO> measures = new PageImpl<>(List.of(measureList));
     doReturn(measures)
         .when(measureService)
         .getMeasuresByCriteria(
@@ -632,7 +632,7 @@ class MeasureControllerTest {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
-    ResponseEntity<Page<MeasureList>> response =
+    ResponseEntity<Page<MeasureListDTO>> response =
         controller.findAllByMeasureNameOrEcqmTitle(principal, false, "test criteria", 10, 0);
     verify(measureService, times(1))
         .getMeasuresByCriteria(
@@ -647,7 +647,7 @@ class MeasureControllerTest {
 
   @Test
   void searchMeasuresByNameOrEcqmTitleWithCurrentUserFilter() {
-    Page<MeasureList> measures = new PageImpl<>(List.of(measureList));
+    Page<MeasureListDTO> measures = new PageImpl<>(List.of(measureList));
 
     doReturn(measures)
         .when(measureService)
@@ -655,7 +655,7 @@ class MeasureControllerTest {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
-    ResponseEntity<Page<MeasureList>> response =
+    ResponseEntity<Page<MeasureListDTO>> response =
         controller.findAllByMeasureNameOrEcqmTitle(principal, true, "test criteria", 10, 0);
     verify(measureService, times(1))
         .getMeasuresByCriteria(eq(true), any(Pageable.class), eq("test.user"), eq("test criteria"));
