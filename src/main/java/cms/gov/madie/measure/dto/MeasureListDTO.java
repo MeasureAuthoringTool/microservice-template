@@ -46,8 +46,7 @@ public class MeasureListDTO {
       groups = {Measure.ValidationOrder5.class})
   private String model;
 
-  @DocumentReference(lookup = "'owner': ?#{#owner}")
-  private MeasureSet measureSet;
+  @DocumentReference private MeasureSet measureSet;
 
   private boolean active;
   private String ecqmTitle;
