@@ -11,5 +11,3 @@ logging:
 hapi-fhir:
   url: ${HAPI_FHIR_URL:http://localhost:8080/fhir}
 
-server:
-  port: 8081

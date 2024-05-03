@@ -943,8 +943,9 @@ public class MeasureControllerMvcTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(
-            jsonPath("$.validationErrors.cqlLibraryName")
-                .value("Measure Library Name is invalid."));
+            jsonPath("$.validationErrors.measure")
+                .value(
+                    "Library name must start with an upper case letter, followed by alpha-numeric character(s) and must not contain spaces or other special characters except of underscore for QDM."));
     verifyNoInteractions(measureRepository);
   }
 
@@ -961,8 +962,9 @@ public class MeasureControllerMvcTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(
-            jsonPath("$.validationErrors.cqlLibraryName")
-                .value("Measure Library Name is invalid."));
+            jsonPath("$.validationErrors.measure")
+                .value(
+                    "Library name must start with an upper case letter, followed by alpha-numeric character(s) and must not contain spaces or other special characters except of underscore for QDM."));
     verifyNoInteractions(measureRepository);
   }
 
@@ -979,8 +981,9 @@ public class MeasureControllerMvcTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(
-            jsonPath("$.validationErrors.cqlLibraryName")
-                .value("Measure Library Name is invalid."));
+            jsonPath("$.validationErrors.measure")
+                .value(
+                    "Library name must start with an upper case letter, followed by alpha-numeric character(s) and must not contain spaces or other special characters except of underscore for QDM."));
     verifyNoInteractions(measureRepository);
   }
 
@@ -997,8 +1000,9 @@ public class MeasureControllerMvcTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isBadRequest())
         .andExpect(
-            jsonPath("$.validationErrors.cqlLibraryName")
-                .value("Measure Library Name is invalid."));
+            jsonPath("$.validationErrors.measure")
+                .value(
+                    "Library name must start with an upper case letter, followed by alpha-numeric character(s) and must not contain spaces or other special characters except of underscore for QDM."));
     verifyNoInteractions(measureRepository);
   }
 
