@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.dto.PackageDto;
 import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
 import cms.gov.madie.measure.factories.ModelValidatorFactory;
 import cms.gov.madie.measure.factories.PackageServiceFactory;
@@ -17,7 +18,7 @@ public class ExportService {
   private final PackageServiceFactory packageServiceFactory;
   private final ModelValidatorFactory modelValidatorFactory;
 
-  public byte[] getMeasureExport(Measure measure, String accessToken) {
+  public PackageDto getMeasureExport(Measure measure, String accessToken) {
     validateMetadata(measure);
     ModelValidator modelValidator =
         modelValidatorFactory.getModelValidator(ModelType.valueOfName(measure.getModel()));

@@ -7,6 +7,8 @@ import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.HapiOperationOutcome;
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureScoring;
+import gov.cms.madie.models.measure.QdmMeasure;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import gov.cms.madie.models.measure.Group;
@@ -44,7 +46,6 @@ public class TestCaseService {
   private FhirServicesClient fhirServicesClient;
   private ObjectMapper mapper;
   private MeasureService measureService;
-  private TestCaseServiceUtil testCaseServiceUtil;
 
   @Value("${madie.json.resources.base-uri}")
   @Getter
@@ -59,14 +60,12 @@ public class TestCaseService {
       ActionLogService actionLogService,
       FhirServicesClient fhirServicesClient,
       ObjectMapper mapper,
-      MeasureService measureService,
-      TestCaseServiceUtil testCaseServiceUtil) {
+      MeasureService measureService) {
     this.measureRepository = measureRepository;
     this.actionLogService = actionLogService;
     this.fhirServicesClient = fhirServicesClient;
     this.mapper = mapper;
     this.measureService = measureService;
-    this.testCaseServiceUtil = testCaseServiceUtil;
   }
 
   protected TestCase enrichNewTestCase(TestCase testCase, String username) {
@@ -471,6 +470,10 @@ public class TestCaseService {
                     .message("Test Case file is missing.")
                     .build();
               }
+              TestCaseImportOutcome outCome = checkErrorSpecialChar(model, testCaseImportRequest);
+              if (outCome != null) {
+                return outCome;
+              }
               if (isEmpty(measure.getTestCases())) {
                 return validateTestCaseJsonAndCreateTestCase(
                     testCaseImportRequest, measure, userName, accessToken, model);
@@ -505,11 +508,10 @@ public class TestCaseService {
       String accessToken,
       String model) {
     try {
-      String patientFamilyName = getPatientFamilyName(model, testCaseImportRequest.getJson());
-      String patientGivenName = getPatientGivenName(model, testCaseImportRequest.getJson());
-      log.info(
-          "Test Case title + Test Case Group:  {}", patientGivenName + " " + patientFamilyName);
-      if (StringUtils.isBlank(patientGivenName)) {
+      String familyName = getPatientFamilyName(model, testCaseImportRequest.getJson());
+      String givenName = getPatientGivenName(model, testCaseImportRequest.getJson());
+      log.info("Test Case title + Test Case Group:  {}", givenName + " " + familyName);
+      if (StringUtils.isBlank(givenName)) {
         return TestCaseImportOutcome.builder()
             .patientId(testCaseImportRequest.getPatientId())
             .successful(false)
@@ -518,32 +520,34 @@ public class TestCaseService {
       }
       TestCase newTestCase =
           TestCase.builder()
-              .title(patientGivenName)
-              .series(patientFamilyName)
+              .title(givenName)
+              .series(familyName)
               .patientId(testCaseImportRequest.getPatientId())
               .build();
-
       List<TestCaseGroupPopulation> testCaseGroupPopulations =
           getTestCaseGroupPopulationsFromImportRequest(
               model, testCaseImportRequest.getJson(), measure);
-
-      List<Group> groups = testCaseServiceUtil.getGroupsWithValidPopulations(measure.getGroups());
-
-      // Ignore stratifications for QICore
+      List<Group> groups = TestCaseServiceUtil.getGroupsWithValidPopulations(measure.getGroups());
+      String warningMessage = null;
       if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(model)) {
         testCaseGroupPopulations =
-            testCaseServiceUtil.assignStratificationValuesQdm(testCaseGroupPopulations, groups);
+            TestCaseServiceUtil.assignStratificationValuesQdm(testCaseGroupPopulations, groups);
+        QdmMeasure qdmMeasure = (QdmMeasure) measure;
+        if (StringUtils.equals(
+                qdmMeasure.getScoring(), MeasureScoring.CONTINUOUS_VARIABLE.toString())
+            && measure.getGroups().size() > 1) {
+          warningMessage =
+              "observation values were not imported. MADiE cannot import expected "
+                  + "values for Continuous Variable measures with multiple population criteria.";
+        }
       }
-
       // Compare main populations from the measure pop criteria against incoming test case.
-      // Check includes Stratifications and excludes Observations.
+      // Check includes Stratification and excludes Observations.
       boolean matched =
-          testCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, groups, newTestCase);
-
-      String warningMessage = null;
+          TestCaseServiceUtil.matchCriteriaGroups(testCaseGroupPopulations, groups, newTestCase);
       if (!matched) {
         warningMessage =
-            "The measure populations do not match the populations in the import file. "
+            "the measure populations do not match the populations in the import file. "
                 + "The Test Case has been imported, but no expected values have been set.";
       }
       return updateTestCaseJsonAndSaveTestCase(
@@ -565,8 +569,7 @@ public class TestCaseService {
           .patientId(testCaseImportRequest.getPatientId())
           .successful(false)
           .message(
-              "Error while processing Test Case JSON."
-                  + " Please make sure Test Case JSON is valid.")
+              "Error while processing Test Case JSON. Please make sure Test Case JSON is valid.")
           .build();
     }
   }
@@ -692,8 +695,8 @@ public class TestCaseService {
 
   private String formatErrorMessage(Exception e) {
     return e.getClass().getSimpleName().equals("DuplicateTestCaseNameException")
-        ? "The Family and Given combination on the Patient resource in the Test Case JSON"
-            + " is already used in another test case on this measure.  The combination"
+        ? "The Family and Given name combination on the Patient resource in the Test Case JSON"
+            + " is already used in another test case on this measure. The combination"
             + " must be unique (case insensitive, spaces ignored) across all test cases"
             + " associated with the measure."
         : e.getMessage();
@@ -765,17 +768,48 @@ public class TestCaseService {
   }
 
   protected void checkTestCaseSpecialCharacters(TestCase testCase) {
-    if (StringUtils.isBlank(testCase.getTitle()) || StringUtils.isBlank(testCase.getSeries())) {
-      throw new InvalidRequestException("Test Case title and group are required");
+    if (StringUtils.isBlank(testCase.getTitle())) {
+      throw new InvalidRequestException("Test Case title is required.");
     }
-    Pattern special = Pattern.compile("[(){}\\[\\]<>/|\"':;,.~`!@#$%^&*_+=\\\\]");
-    Matcher titleHasSpecial = special.matcher(testCase.getTitle());
-    Matcher groupHasSpecial = special.matcher(testCase.getSeries());
-    if (titleHasSpecial.find()) {
+    Pattern alpahNumeric = Pattern.compile("^[a-zA-Z0-9\s_-]*$");
+    Matcher title = alpahNumeric.matcher(testCase.getTitle());
+    if (!title.matches()) {
       throw new SpecialCharacterException("Title");
     }
-    if (groupHasSpecial.find()) {
-      throw new SpecialCharacterException("Group");
+    if (StringUtils.isNotBlank(testCase.getSeries())) {
+      Matcher group = alpahNumeric.matcher(testCase.getSeries());
+      if (!group.matches()) {
+        throw new SpecialCharacterException("Group");
+      }
     }
+  }
+
+  protected TestCaseImportOutcome checkErrorSpecialChar(
+      String model, TestCaseImportRequest testCaseImportRequest) {
+    if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(model)) {
+      try {
+        checkTestCaseSpecialCharacters(
+            TestCase.builder()
+                .title(
+                    testCaseImportRequest.getGivenNames() != null
+                        ? testCaseImportRequest.getGivenNames().get(0)
+                        : null)
+                .series(testCaseImportRequest.getFamilyName())
+                .build());
+      } catch (InvalidRequestException ex) {
+        return TestCaseImportOutcome.builder()
+            .patientId(testCaseImportRequest.getPatientId())
+            .successful(false)
+            .message(ex.getMessage())
+            .build();
+      } catch (SpecialCharacterException ex) {
+        return TestCaseImportOutcome.builder()
+            .patientId(testCaseImportRequest.getPatientId())
+            .successful(false)
+            .message("Test Cases Group or Title cannot contain special characters.")
+            .build();
+      }
+    }
+    return null;
   }
 }

@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.dto.MadieFeatureFlag;
+import cms.gov.madie.measure.dto.MeasureListDTO;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.repositories.OrganizationRepository;
@@ -45,6 +46,22 @@ public class MeasureService {
 
   private final TerminologyValidationService terminologyValidationService;
 
+  public void verifyAuthorizationByMeasureSetId(
+      String username, String measureSetId, boolean ownerOnly) {
+    MeasureSet measureSet = measureSetService.findByMeasureSetId(measureSetId);
+    if (measureSet == null) {
+      throw new InvalidMeasureStateException(
+          "No measure set exists for measure set ID " + measureSetId);
+    }
+
+    verifyMeasureSetAuthorization(
+        username,
+        "MeasureSet",
+        measureSetId,
+        ownerOnly ? List.of() : List.of(RoleEnum.SHARED_WITH),
+        measureSet);
+  }
+
   /**
    * Throws unAuthorizedException, if the measure is not owned by the user or if the measure is not
    * shared with the user
@@ -71,6 +88,15 @@ public class MeasureService {
           "No measure set exists for measure with ID " + measure.getId());
     }
 
+    verifyMeasureSetAuthorization(username, "Measure", measure.getId(), roles, measureSet);
+  }
+
+  private void verifyMeasureSetAuthorization(
+      String username,
+      String target,
+      String targetId,
+      List<RoleEnum> roles,
+      MeasureSet measureSet) {
     List<RoleEnum> allowedRoles = roles == null ? List.of() : roles;
     if (!measureSet.getOwner().equalsIgnoreCase(username)
         && (CollectionUtils.isEmpty(measureSet.getAcls())
@@ -79,7 +105,7 @@ public class MeasureService {
                     acl ->
                         acl.getUserId().equalsIgnoreCase(username)
                             && acl.getRoles().stream().anyMatch(allowedRoles::contains)))) {
-      throw new UnauthorizedException("Measure", measure.getId(), username);
+      throw new UnauthorizedException(target, targetId, username);
     }
   }
 
@@ -228,7 +254,8 @@ public class MeasureService {
     measure.setMeasurementPeriodEnd(Date.from(endInstant));
   }
 
-  public Page<Measure> getMeasures(boolean filterByCurrentUser, Pageable pageReq, String username) {
+  public Page<MeasureListDTO> getMeasures(
+      boolean filterByCurrentUser, Pageable pageReq, String username) {
     return filterByCurrentUser
         ? measureRepository.findMyActiveMeasures(username, pageReq, null)
         : measureRepository.findAllByActive(true, pageReq);
@@ -362,7 +389,7 @@ public class MeasureService {
         .stream().map(Measure::getId).collect(Collectors.toList());
   }
 
-  public Page<Measure> getMeasuresByCriteria(
+  public Page<MeasureListDTO> getMeasuresByCriteria(
       boolean filterByCurrentUser, Pageable pageReq, String username, String criteria) {
     return filterByCurrentUser
         ? measureRepository.findMyActiveMeasures(username, pageReq, criteria)

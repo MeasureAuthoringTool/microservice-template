@@ -407,7 +407,7 @@ public final class JsonUtil {
     }
   }
 
-  protected static void setObservationValuesForCV(
+  static void setObservationValuesForCV(
       JsonNode population, List<TestCasePopulationValue> populationValues, Measure measure) {
     QdmMeasure qdmMeasure = (QdmMeasure) measure;
     if (StringUtils.equals(
@@ -420,7 +420,9 @@ public final class JsonUtil {
                 .build();
         populationValues.add(populationValue);
       }
-      if (population.get("OBSERV") != null) {
+      if (population.get("OBSERV") != null
+          && CollectionUtils.isNotEmpty(measure.getGroups())
+          && measure.getGroups().size() == 1) {
         for (JsonNode observation : population.get("OBSERV")) {
           if (observation != null) {
             TestCasePopulationValue populationValue =

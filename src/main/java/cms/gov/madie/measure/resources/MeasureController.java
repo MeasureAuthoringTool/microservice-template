@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.resources;
 
+import cms.gov.madie.measure.dto.MeasureListDTO;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
@@ -58,14 +59,14 @@ public class MeasureController {
   }
 
   @GetMapping("/measures")
-  public ResponseEntity<Page<Measure>> getMeasures(
+  public ResponseEntity<Page<MeasureListDTO>> getMeasures(
       Principal principal,
       @RequestParam(required = false, defaultValue = "false", name = "currentUser")
           boolean filterByCurrentUser,
       @RequestParam(required = false, defaultValue = "10", name = "limit") int limit,
       @RequestParam(required = false, defaultValue = "0", name = "page") int page) {
     final String username = principal.getName();
-    Page<Measure> measures;
+    Page<MeasureListDTO> measures;
     final Pageable pageReq = PageRequest.of(page, limit, Sort.by("lastModifiedAt").descending());
     measures = measureService.getMeasures(filterByCurrentUser, pageReq, username);
     measures.map(
@@ -282,7 +283,7 @@ public class MeasureController {
   }
 
   @GetMapping("/measures/search/{criteria}")
-  public ResponseEntity<Page<Measure>> findAllByMeasureNameOrEcqmTitle(
+  public ResponseEntity<Page<MeasureListDTO>> findAllByMeasureNameOrEcqmTitle(
       Principal principal,
       @RequestParam(required = false, defaultValue = "false", name = "currentUser")
           boolean filterByCurrentUser,
@@ -293,7 +294,7 @@ public class MeasureController {
     final String username = principal.getName();
     final Pageable pageReq = PageRequest.of(page, limit, Sort.by("lastModifiedAt").descending());
 
-    Page<Measure> measures =
+    Page<MeasureListDTO> measures =
         measureService.getMeasuresByCriteria(filterByCurrentUser, pageReq, username, criteria);
     measures.map(
         measure -> {
@@ -309,6 +310,7 @@ public class MeasureController {
   @PutMapping("/measures/{measureSetId}/create-cms-id")
   public ResponseEntity<MeasureSet> createCmsId(
       @PathVariable String measureSetId, Principal principal) {
+    measureService.verifyAuthorizationByMeasureSetId(principal.getName(), measureSetId, true);
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(measureSetService.createAndUpdateCmsId(measureSetId, principal.getName()));
   }
