@@ -2,6 +2,7 @@ package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.services.VersionService;
+import cms.gov.madie.measure.services.MeasureService;
 import gov.cms.madie.models.measure.Measure;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,7 @@ import static cms.gov.madie.measure.services.VersionService.VersionValidationRes
 public class MeasureVersionController {
 
   private final VersionService versionService;
+  private final MeasureService measureService;
 
   @PutMapping("/{id}/version")
   public ResponseEntity<Measure> createVersion(
@@ -45,6 +47,13 @@ public class MeasureVersionController {
       return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
     return new ResponseEntity<>(HttpStatus.OK);
+  }
+
+  @GetMapping("/{id}/next-version")
+  public ResponseEntity<String> getNextVersionNumber(
+      @PathVariable("id") String id, @RequestParam String versionType) {
+    Measure measure = measureService.findMeasureById(id);
+    return ResponseEntity.ok(versionService.getNextVersion(measure, versionType).toString());
   }
 
   @PostMapping("/{id}/draft")

@@ -5,6 +5,7 @@ import cms.gov.madie.measure.exceptions.MeasureNotDraftableException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.services.VersionService;
+import cms.gov.madie.measure.services.MeasureService;
 import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureMetaData;
@@ -40,6 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class MeasureVersionControllerMvcTest {
 
   @MockBean private VersionService versionService;
+  @MockBean private MeasureService measureService;
 
   @Captor private ArgumentCaptor<Measure> measureArgumentCaptor;
 
