@@ -268,7 +268,7 @@ public class VersionService {
     }
   }
 
-  protected Version getNextVersion(Measure measure, String versionType) {
+  public Version getNextVersion(Measure measure, String versionType) {
     Version version;
 
     if (VERSION_TYPE_MAJOR.equalsIgnoreCase(versionType)) {

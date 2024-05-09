@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import cms.gov.madie.measure.dto.MeasureListDTO;
 import gov.cms.madie.models.measure.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -95,6 +96,7 @@ public class MeasureServiceTest implements ResourceUtil {
   private String elmJson;
   private Measure measure1;
   private Measure measure2;
+  private MeasureListDTO measureList;
   private List<Organization> organizationList;
 
   @BeforeEach
@@ -181,7 +183,6 @@ public class MeasureServiceTest implements ResourceUtil {
             .model(ModelType.QI_CORE.getValue())
             .cql("test cql")
             .elmJson(elmJson)
-            .active(true)
             .measureSetId("IDIDID")
             .cqlLibraryName("MSR01Library")
             .measureName("MSR01")
@@ -200,7 +201,6 @@ public class MeasureServiceTest implements ResourceUtil {
             .id("xyz-p13r-13ert")
             .cql("test cql")
             .elmJson(elmJson)
-            .active(true)
             .measureSetId("2D2D2D")
             .measureName("MSR02")
             .version(new Version(0, 0, 1))
@@ -210,6 +210,17 @@ public class MeasureServiceTest implements ResourceUtil {
             .lastModifiedAt(Instant.now())
             .lastModifiedBy("test user")
             .measureMetaData(draftMeasureMetaData)
+            .build();
+
+    measureList =
+        MeasureListDTO.builder()
+            .active(true)
+            .id("xyz-p13r-13ert")
+            .model(ModelType.QI_CORE.getValue())
+            .measureSetId("IDIDID")
+            .measureName("MSR01")
+            .measureMetaData(draftMeasureMetaData)
+            .version(new Version(0, 0, 1))
             .build();
 
     organizationList = new ArrayList<>();
@@ -824,27 +835,23 @@ public class MeasureServiceTest implements ResourceUtil {
 
   @Test
   public void testFindAllByActiveOmitsAndRetrievesCorrectly() {
-    Measure m1 =
-        Measure.builder()
+    MeasureListDTO m1 =
+        MeasureListDTO.builder()
             .active(true)
             .id("xyz-p13r-459b")
             .measureName("Measure1")
-            .cqlLibraryName("TestLib1")
-            .createdBy("test-okta-user-id-123")
             .model("QI-Core")
             .build();
-    Measure m2 =
-        Measure.builder()
+    MeasureListDTO m2 =
+        MeasureListDTO.builder()
             .id("xyz-p13r-459a")
             .active(false)
             .measureName("Measure2")
-            .cqlLibraryName("TestLib2")
-            .createdBy("test-okta-user-id-123")
             .model("QI-Core")
             .active(true)
             .build();
-    Page<Measure> activeMeasures = new PageImpl<>(List.of(measure1, m1));
-    Page<Measure> inactiveMeasures = new PageImpl<>(List.of(m2));
+    Page<MeasureListDTO> activeMeasures = new PageImpl<>(List.of(measureList, m1));
+    Page<MeasureListDTO> inactiveMeasures = new PageImpl<>(List.of(m2));
     PageRequest initialPage = PageRequest.of(0, 10);
 
     when(measureRepository.findAllByActive(eq(true), any(PageRequest.class)))

@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.dto.MadieFeatureFlag;
+import cms.gov.madie.measure.dto.MeasureListDTO;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.repositories.OrganizationRepository;
@@ -253,7 +254,8 @@ public class MeasureService {
     measure.setMeasurementPeriodEnd(Date.from(endInstant));
   }
 
-  public Page<Measure> getMeasures(boolean filterByCurrentUser, Pageable pageReq, String username) {
+  public Page<MeasureListDTO> getMeasures(
+      boolean filterByCurrentUser, Pageable pageReq, String username) {
     return filterByCurrentUser
         ? measureRepository.findMyActiveMeasures(username, pageReq, null)
         : measureRepository.findAllByActive(true, pageReq);
@@ -387,7 +389,7 @@ public class MeasureService {
         .stream().map(Measure::getId).collect(Collectors.toList());
   }
 
-  public Page<Measure> getMeasuresByCriteria(
+  public Page<MeasureListDTO> getMeasuresByCriteria(
       boolean filterByCurrentUser, Pageable pageReq, String username, String criteria) {
     return filterByCurrentUser
         ? measureRepository.findMyActiveMeasures(username, pageReq, criteria)
