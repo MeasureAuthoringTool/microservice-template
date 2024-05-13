@@ -401,19 +401,21 @@ public class MeasureService {
       List<Reference> references =
           (List<Reference>)
               metaData.getReferences().stream()
-                  .map(
-                      reference ->
-                          Reference.builder()
-                              .id(
-                                  StringUtils.isBlank(reference.getId())
-                                      ? UUID.randomUUID().toString()
-                                      : reference.getId())
-                              .referenceText(reference.getReferenceText())
-                              .referenceType(reference.getReferenceType())
-                              .build())
+                  .map(reference -> updateReference(reference))
                   .toList();
       metaData.setReferences(references);
     }
+  }
+
+  private Reference updateReference(Reference reference) {
+    return Reference.builder()
+        .id(
+            StringUtils.isBlank(reference.getId())
+                ? UUID.randomUUID().toString()
+                : reference.getId())
+        .referenceText(reference.getReferenceText())
+        .referenceType(reference.getReferenceType())
+        .build();
   }
 
   public List<Measure> findAllByMeasureSetId(String measureSetId) {
