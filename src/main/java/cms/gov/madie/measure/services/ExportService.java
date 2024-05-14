@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.dto.PackageDto;
+import cms.gov.madie.measure.dto.QrdaRequestDTO;
 import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
 import cms.gov.madie.measure.factories.ModelValidatorFactory;
 import cms.gov.madie.measure.factories.PackageServiceFactory;
@@ -50,13 +51,15 @@ public class ExportService {
     }
   }
 
-  public ResponseEntity<byte[]> getQRDA(Measure measure, String accessToken) {
-    if (CollectionUtils.isEmpty(measure.getTestCases())) {
+  public ResponseEntity<byte[]> getQRDA(QrdaRequestDTO qrdaRequestDTO, String accessToken) {
+    if (CollectionUtils.isEmpty(qrdaRequestDTO.getMeasure().getTestCases())) {
       throw new InvalidResourceStateException(
-          "Measure", measure.getId(), "since there are no test cases in the measure.");
+          "Measure",
+          qrdaRequestDTO.getMeasure().getId(),
+          "since there are no test cases in the measure.");
     }
     PackageService packageService =
-        packageServiceFactory.getPackageService(ModelType.valueOfName(measure.getModel()));
-    return packageService.getQRDA(measure, accessToken);
+        packageServiceFactory.getPackageService(ModelType.valueOfName(qrdaRequestDTO.getMeasure().getModel()));
+    return packageService.getQRDA(qrdaRequestDTO, accessToken);
   }
 }
