@@ -6,9 +6,11 @@ import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.MeasureNotDraftableException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
+import cms.gov.madie.measure.repositories.CqmMeasureRepository;
 import cms.gov.madie.measure.repositories.ExportRepository;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import gov.cms.madie.models.common.Version;
+import gov.cms.madie.models.cqm.CqmMeasure;
 import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
@@ -46,6 +48,7 @@ import static org.mockito.Mockito.*;
 public class VersionServiceTest {
 
   @Mock private MeasureRepository measureRepository;
+  @Mock private CqmMeasureRepository cqmMeasureRepository;
 
   @Mock ActionLogService actionLogService;
 
@@ -62,6 +65,7 @@ public class VersionServiceTest {
   @InjectMocks VersionService versionService;
 
   @Captor private ArgumentCaptor<Measure> measureCaptor;
+  @Captor private ArgumentCaptor<CqmMeasure> cqmMeasureCaptor;
 
   @Captor private ArgumentCaptor<Export> exportArgumentCaptor;
 
@@ -441,7 +445,7 @@ public class VersionServiceTest {
   }
 
   @Test
-  public void testCreateVersionMinorSuccess() throws Exception {
+  public void testCreateQdmVersionMinorSuccess() throws Exception {
     QdmMeasure existingMeasure =
         QdmMeasure.builder()
             .id("testMeasureId")
@@ -489,6 +493,7 @@ public class VersionServiceTest {
     versionService.createVersion("testMeasureId", "MINOR", "testUser", "accesstoken");
 
     verify(measureRepository, times(1)).save(measureCaptor.capture());
+    verify(cqmMeasureRepository, times(1)).save(cqmMeasureCaptor.capture());
     Measure savedValue = measureCaptor.getValue();
     assertEquals(savedValue.getVersion().getMajor(), 2);
     assertEquals(savedValue.getVersion().getMinor(), 4);

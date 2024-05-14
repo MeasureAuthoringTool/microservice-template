@@ -4,15 +4,18 @@ import cms.gov.madie.measure.exceptions.BadVersionRequestException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.MeasureNotDraftableException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.repositories.CqmMeasureRepository;
 import cms.gov.madie.measure.repositories.ExportRepository;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.Version;
+import gov.cms.madie.models.cqm.CqmMeasure;
 import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Export;
 import gov.cms.madie.models.measure.FhirMeasure;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.QdmMeasure;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import lombok.AllArgsConstructor;
@@ -39,6 +42,7 @@ public class VersionService {
   private final ElmTranslatorClient elmTranslatorClient;
   private final FhirServicesClient fhirServicesClient;
   private final ExportRepository exportRepository;
+  private final CqmMeasureRepository cqmMeasureRepository;
   private final MeasureService measureService;
   private final QdmPackageService qdmPackageService;
 
@@ -74,6 +78,7 @@ public class VersionService {
     if (measure instanceof FhirMeasure) {
       return versionFhirMeasure(versionType, username, accessToken, measure);
     }
+
     return versionQdmMeasure(versionType, username, measure, accessToken);
   }
 
@@ -82,7 +87,14 @@ public class VersionService {
     Measure upversionedMeasure = version(versionType, username, measure);
 
     var measurePackage = qdmPackageService.getMeasurePackage(upversionedMeasure, accessToken);
+    // convert to CqmMeasure
+
     savePackageData(upversionedMeasure, measurePackage.getExportPackage(), username);
+
+    CqmMeasure cqmMeasure =
+        qdmPackageService.convertCqm((QdmMeasure) upversionedMeasure, accessToken);
+    //	save CqmMeasure
+    cqmMeasureRepository.save(cqmMeasure);
 
     return applyMeasureVersion(versionType, username, upversionedMeasure);
   }
