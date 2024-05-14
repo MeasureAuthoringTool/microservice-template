@@ -94,7 +94,7 @@ public class VersionService {
     CqmMeasure cqmMeasure =
         qdmPackageService.convertCqm((QdmMeasure) upversionedMeasure, accessToken);
     //	save CqmMeasure
-    CqmMeasure savedMeasure = cqmMeasureRepository.save(cqmMeasure);
+    cqmMeasureRepository.save(cqmMeasure);
 
     return applyMeasureVersion(versionType, username, upversionedMeasure);
   }
