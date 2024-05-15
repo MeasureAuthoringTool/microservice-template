@@ -157,10 +157,10 @@ public class VersionService {
 
   private Measure validateVersionOptions(
       String id, String versionType, String username, String accessToken) {
-    Measure measure =
-        measureRepository
-            .findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Measure", id));
+    Measure measure = measureService.findMeasureById(id);
+    if (measure == null) {
+      throw new ResourceNotFoundException("Measure", id);
+    }
 
     if (!VERSION_TYPE_MAJOR.equalsIgnoreCase(versionType)
         && !VERSION_TYPE_MINOR.equalsIgnoreCase(versionType)
