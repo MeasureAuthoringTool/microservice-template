@@ -10,7 +10,7 @@
   </parent>
   <groupId>com.semanticbits.measureservice</groupId>
   <artifactId>measureservice</artifactId>
-  <version>0.0.3</version>
+  <version>0.0.2</version>
   <name>Measure Service</name>
   <description>Measure Service for MADiE</description>
   <properties>
