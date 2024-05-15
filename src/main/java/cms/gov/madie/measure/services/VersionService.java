@@ -88,11 +88,11 @@ public class VersionService {
 
     var measurePackage = qdmPackageService.getMeasurePackage(upversionedMeasure, accessToken);
     // convert to CqmMeasure
-
-    savePackageData(upversionedMeasure, measurePackage.getExportPackage(), username);
-
     CqmMeasure cqmMeasure =
         qdmPackageService.convertCqm((QdmMeasure) upversionedMeasure, accessToken);
+
+    // save exports
+    savePackageData(upversionedMeasure, measurePackage.getExportPackage(), username);
     //	save CqmMeasure
     cqmMeasureRepository.save(cqmMeasure);
 
