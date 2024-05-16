@@ -62,6 +62,8 @@ public class VersionServiceTest {
 
   @Mock QdmPackageService qdmPackageService;
 
+  @Mock ExportService exportService;
+
   @InjectMocks VersionService versionService;
 
   @Captor private ArgumentCaptor<Measure> measureCaptor;
@@ -496,7 +498,7 @@ public class VersionServiceTest {
     when(measureRepository.save(any(Measure.class))).thenReturn(updatedMeasure);
 
     byte[] exportPackage = "Look, I'm a measure package".getBytes();
-    when(qdmPackageService.getMeasurePackage(any(Measure.class), anyString()))
+    when(exportService.getMeasureExport(any(Measure.class), anyString()))
         .thenReturn(PackageDto.builder().fromStorage(false).exportPackage(exportPackage).build());
 
     when(exportRepository.save(any(Export.class)))
