@@ -45,6 +45,7 @@ public class VersionService {
   private final CqmMeasureRepository cqmMeasureRepository;
   private final MeasureService measureService;
   private final QdmPackageService qdmPackageService;
+  private final ExportService exportService;
 
   public enum VersionValidationResult {
     VALID,
@@ -86,7 +87,8 @@ public class VersionService {
       String versionType, String username, Measure measure, String accessToken) throws Exception {
     Measure upversionedMeasure = version(versionType, username, measure);
 
-    var measurePackage = qdmPackageService.getMeasurePackage(upversionedMeasure, accessToken);
+    var measurePackage = exportService.getMeasureExport(upversionedMeasure, accessToken);
+
     // convert to CqmMeasure
     CqmMeasure cqmMeasure =
         qdmPackageService.convertCqm((QdmMeasure) upversionedMeasure, accessToken);
