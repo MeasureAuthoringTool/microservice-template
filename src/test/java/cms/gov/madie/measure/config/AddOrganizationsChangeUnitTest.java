@@ -24,7 +24,7 @@ class AddOrganizationsChangeUnitTest {
 
     ArgumentCaptor<List<Organization>> organizationList = ArgumentCaptor.forClass(List.class);
     verify(organizationRepository, new Times(1)).insert(organizationList.capture());
-    assertEquals(238, organizationList.getValue().size());
+    assertEquals(266, organizationList.getValue().size());
   }
 
   @Test
