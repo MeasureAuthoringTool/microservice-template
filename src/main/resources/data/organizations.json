@@ -760,7 +760,7 @@
     "url": "https://www.ntst.com/"
   },
   {
-    "name": "American Society of Anesthesiologist  (ASA)",
+    "name": "American Society of Anesthesiologist (ASA)",
     "oid": "2.16.840.1.113883.3.8238",
     "url": "https://www.asahq.org/"
   },
@@ -1313,16 +1313,6 @@
     "name": "University of Hawaii",
     "oid": "e960eebc-a69f-11ea-bb37-0242ac130002",
     "url": "https://www.hawaii.edu/"
-  },
-  {
-    "name": "American Society of Anesthesiologist (ASA)",
-    "oid": "2.16.840.1.113883.3.8238",
-    "url": "https://www.asahq.org/"
-  },
-  {
-    "name": "Centers for the Study of Services d/b/a Consumers' Checkbook",
-    "oid": "e96046b0-a69f-11ea-bb37-0242ac130002",
-    "url": "https://www.checkbook.org/"
   },
   {
     "name": "Evidium, Inc.",
