@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MeasureUtil {
   private final CqlDefinitionReturnTypeService cqlDefinitionReturnTypeService;
   private final CqlObservationFunctionService cqlObservationFunctionService;
-  private final ValidLibraryNameValidator validLibraryNameValidator;
+  private ValidLibraryNameValidator validLibraryNameValidator = new ValidLibraryNameValidator();
 
   /**
    * Validates measure group population define return types and observation function return types
@@ -57,7 +57,7 @@ public class MeasureUtil {
       errors.add(MeasureErrorType.MISSING_ELM);
     }
 
-    if(!validLibraryNameValidator.isValid(measure, null)){
+    if (!validLibraryNameValidator.isValid(measure, null)) {
       errors.add(MeasureErrorType.INVALID_LIBRARY_NAME);
     }
 
@@ -116,8 +116,6 @@ public class MeasureUtil {
     }
     return result;
   }
-
-
 
   /**
    * Functional method to remove an error from a set. If the errors set is not null and not empty,
