@@ -760,7 +760,7 @@
     "url": "https://www.ntst.com/"
   },
   {
-    "name": "American Society of Anesthesiologist  (ASA)",
+    "name": "American Society of Anesthesiologist (ASA)",
     "oid": "2.16.840.1.113883.3.8238",
     "url": "https://www.asahq.org/"
   },
@@ -1188,5 +1188,135 @@
     "name": "American Society of Hematology",
     "oid": "2.16.840.1.113883.3.9353",
     "url": "www.hematology.org"
+  },
+  {
+    "name": "Digital2DNA Software LLC",
+    "oid": "e960e23c-a69f-11ea-bb37-0242ac130002",
+    "url": "https://digital2dna.com/"
+  },
+  {
+    "name": "TruBridge",
+    "oid": "2.16.840.1.113883.3.107",
+    "url": "https://trubridge.com/"
+  },
+  {
+    "name": "3Cloud Solutions",
+    "oid": "e96086c0-a69f-11ea-bb37-0242ac130002",
+    "url": "https://3cloudsolutions.com/"
+  },
+  {
+    "name": "Allymar Health Solutions",
+    "oid": "e960e7a0-a69f-11ea-bb37-0242ac130002",
+    "url": "https://allymarhealth.com/"
+  },
+  {
+    "name": "American Academy of Otolaryngology-Head and Neck Surgery Foundation",
+    "oid": "e9608a58-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.entnet.org/"
+  },
+  {
+    "name": "Capitol Technology University",
+    "oid": "e96080a8-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.captechu.edu/"
+  },
+  {
+    "name": "Cleveland Clinic",
+    "oid": "2.16.840.1.113883.3.5581",
+    "url": "https://my.clevelandclinic.org/"
+  },
+  {
+    "name": "Cognizant",
+    "oid": "e960e9f8-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.cognizant.com/us/en"
+  },
+  {
+    "name": "Concerto Renal Services",
+    "oid": "e9608bac-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.concertors.com/"
+  },
+  {
+    "name": "Field Health System",
+    "oid": "e960eab6-a69f-11ea-bb37-0242ac130002",
+    "url": "https://fhsms.org/"
+  },
+  {
+    "name": "Fly Health LLC",
+    "oid": "e960e0fc-a69f-11ea-bb37-0242ac130002",
+    "url": "https://fly.health/"
+  },
+  {
+    "name": "Galileo Health",
+    "oid": "e96088f0-a69f-11ea-bb37-0242ac130002",
+    "url": "https://galileo.io/"
+  },
+  {
+    "name": "Google LLC",
+    "oid": "e9608526-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.google.com/"
+  },
+  {
+    "name": "Maryland Health Services Cost Review Commission",
+    "oid": "2.16.840.1.113883.17.9502",
+    "url": "https://hscrc.maryland.gov"
+  },
+  {
+    "name": "MedOne Systems",
+    "oid": "e960ed40-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.medonesystems.com/"
+  },
+  {
+    "name": "More Informatics",
+    "oid": "e960ec78-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.moreinformatics.com/"
+  },
+  {
+    "name": "Office Practicum",
+    "oid": "e960e3ea-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.officepracticum.com/"
+  },
+  {
+    "name": "Omniwound",
+    "oid": "e96081e8-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.omniwound.com/"
+  },
+  {
+    "name": "Parete Group",
+    "oid": "e96082c4-a69f-11ea-bb37-0242ac130002",
+    "url": "http://paretegroup.com/"
+  },
+  {
+    "name": "Reli Group",
+    "oid": "e960e930-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.religroupinc.com/"
+  },
+  {
+    "name": "Signify Health",
+    "oid": "e960e6a6-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.signifyhealth.com/"
+  },
+  {
+    "name": "University of Florida",
+    "oid": "e9608d50-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.ufl.edu/"
+  },
+  {
+    "name": "University of Utah",
+    "oid": "e960e318-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.utah.edu/"
+  },
+  {
+    "name": "Virtusa",
+    "oid": "e960e4b2-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.virtusa.com/"
+  },
+  {
+    "name": "University of Hawaii",
+    "oid": "e960eebc-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.hawaii.edu/"
+  },
+  {
+    "name": "Evidium, Inc.",
+    "oid": "e960ef70-a69f-11ea-bb37-0242ac130002",
+    "url": "https://www.evidium.com/"
   }
 ]
