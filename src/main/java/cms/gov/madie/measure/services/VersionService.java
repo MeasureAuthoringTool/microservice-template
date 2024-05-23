@@ -45,6 +45,7 @@ public class VersionService {
   private final CqmMeasureRepository cqmMeasureRepository;
   private final MeasureService measureService;
   private final QdmPackageService qdmPackageService;
+  private final ExportService exportService;
 
   public enum VersionValidationResult {
     VALID,
@@ -86,13 +87,14 @@ public class VersionService {
       String versionType, String username, Measure measure, String accessToken) throws Exception {
     Measure upversionedMeasure = version(versionType, username, measure);
 
-    var measurePackage = qdmPackageService.getMeasurePackage(upversionedMeasure, accessToken);
+    var measurePackage = exportService.getMeasureExport(upversionedMeasure, accessToken);
+
     // convert to CqmMeasure
-
-    savePackageData(upversionedMeasure, measurePackage.getExportPackage(), username);
-
     CqmMeasure cqmMeasure =
         qdmPackageService.convertCqm((QdmMeasure) upversionedMeasure, accessToken);
+
+    // save exports
+    savePackageData(upversionedMeasure, measurePackage.getExportPackage(), username);
     //	save CqmMeasure
     cqmMeasureRepository.save(cqmMeasure);
 
@@ -157,10 +159,10 @@ public class VersionService {
 
   private Measure validateVersionOptions(
       String id, String versionType, String username, String accessToken) {
-    Measure measure =
-        measureRepository
-            .findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Measure", id));
+    Measure measure = measureService.findMeasureById(id);
+    if (measure == null) {
+      throw new ResourceNotFoundException("Measure", id);
+    }
 
     if (!VERSION_TYPE_MAJOR.equalsIgnoreCase(versionType)
         && !VERSION_TYPE_MINOR.equalsIgnoreCase(versionType)
