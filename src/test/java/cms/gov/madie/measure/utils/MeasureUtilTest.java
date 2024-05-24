@@ -6,6 +6,7 @@ import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeService;
 import cms.gov.madie.measure.validations.CqlObservationFunctionService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import gov.cms.madie.models.measure.*;
+import gov.cms.madie.models.validators.ValidLibraryNameValidator;
 import gov.cms.madie.models.common.ModelType;
 
 import org.junit.jupiter.api.Test;
@@ -32,18 +33,21 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class MeasureUtilTest {
 
   @Mock private CqlDefinitionReturnTypeService cqlDefinitionReturnTypeService;
   @Mock private CqlObservationFunctionService cqlObservationFunctionService;
+  @Mock private ValidLibraryNameValidator validLibraryNameValidator;
   @InjectMocks private MeasureUtil measureUtil;
 
   @Test
@@ -116,7 +120,7 @@ class MeasureUtilTest {
     doReturn(false)
         .when(cqlDefinitionReturnTypeService)
         .isDefineInElm(any(DefDescPair.class), anyString());
-
+    when(validLibraryNameValidator.isValid(any(Measure.class), isNull())).thenReturn(true);
     Measure output = measureUtil.validateAllMeasureDependencies(measure);
     assertThat(output, is(notNullValue()));
     assertThat(output.isCqlErrors(), is(false));
@@ -185,6 +189,7 @@ class MeasureUtilTest {
   @Test
   public void testValidateAllMeasureGroupReturnTypesReturnsNoErrorsForNoGroups() {
     Measure measure = Measure.builder().elmJson("{}").groups(List.of()).build();
+    when(validLibraryNameValidator.isValid(any(Measure.class), isNull())).thenReturn(true);
     Measure output = measureUtil.validateAllMeasureDependencies(measure);
     assertThat(output, is(notNullValue()));
     assertThat(output.getErrors(), is(notNullValue()));
@@ -207,7 +212,7 @@ class MeasureUtilTest {
                                 Population.builder().definition("GOOD DEFINE HERE").build()))
                         .build()))
             .build();
-
+    when(validLibraryNameValidator.isValid(any(Measure.class), isNull())).thenReturn(true);
     Measure output = measureUtil.validateAllMeasureDependencies(measure);
     assertThat(output, is(notNullValue()));
     assertThat(output.getErrors(), is(notNullValue()));
@@ -239,7 +244,7 @@ class MeasureUtilTest {
     doNothing()
         .when(cqlObservationFunctionService)
         .validateObservationFunctions(any(Group.class), anyString());
-
+    when(validLibraryNameValidator.isValid(any(Measure.class), isNull())).thenReturn(true);
     Measure output = measureUtil.validateAllMeasureDependencies(measure);
     assertThat(output, is(notNullValue()));
     assertThat(output.getErrors(), is(notNullValue()));
@@ -347,7 +352,7 @@ class MeasureUtilTest {
   public void
       testValidateAllMeasureGroupReturnTypesReturnsMeasureWithNoErrorForNoGroupsExistWithNoElm() {
     Measure measure = Measure.builder().elmJson(null).groups(List.of()).build();
-
+    when(validLibraryNameValidator.isValid(any(Measure.class), isNull())).thenReturn(true);
     Measure output = measureUtil.validateAllMeasureDependencies(measure);
     assertThat(output, is(notNullValue()));
     assertThat(output.isCqlErrors(), is(false));
@@ -364,7 +369,7 @@ class MeasureUtilTest {
             .groups(List.of())
             .error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES)
             .build();
-
+    when(validLibraryNameValidator.isValid(any(Measure.class), isNull())).thenReturn(true);
     Measure output = measureUtil.validateAllMeasureDependencies(measure);
     assertThat(output, is(notNullValue()));
     assertThat(output.isCqlErrors(), is(false));
@@ -825,7 +830,7 @@ class MeasureUtilTest {
             .model(ModelType.QDM_5_6.getValue())
             .error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES)
             .build();
-
+    when(validLibraryNameValidator.isValid(any(Measure.class), isNull())).thenReturn(true);
     Measure output = measureUtil.validateAllMeasureDependencies(measure);
     assertThat(output, is(notNullValue()));
     assertThat(output.getErrors(), is(notNullValue()));
@@ -851,7 +856,7 @@ class MeasureUtilTest {
                                 Population.builder().definition("GOOD DEFINE HERE").build()))
                         .build()))
             .build();
-
+    when(validLibraryNameValidator.isValid(any(Measure.class), isNull())).thenReturn(true);
     Measure output = measureUtil.validateAllMeasureDependencies(measure);
     assertThat(output, is(notNullValue()));
     assertThat(output.getErrors(), is(notNullValue()));

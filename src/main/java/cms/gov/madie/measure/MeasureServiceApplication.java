@@ -1,6 +1,7 @@
 package cms.gov.madie.measure;
 
 import cms.gov.madie.measure.services.LogInterceptor;
+import gov.cms.madie.models.validators.ValidLibraryNameValidator;
 import io.mongock.runner.springboot.EnableMongock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -20,6 +21,11 @@ public class MeasureServiceApplication {
 
   public static void main(String[] args) {
     SpringApplication.run(MeasureServiceApplication.class, args);
+  }
+
+  @Bean
+  public ValidLibraryNameValidator libraryNameValidator() {
+    return new ValidLibraryNameValidator();
   }
 
   @Bean
