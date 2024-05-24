@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MeasureUtil {
   private final CqlDefinitionReturnTypeService cqlDefinitionReturnTypeService;
   private final CqlObservationFunctionService cqlObservationFunctionService;
-  private ValidLibraryNameValidator validLibraryNameValidator = new ValidLibraryNameValidator();
+  private ValidLibraryNameValidator validLibraryNameValidator;
 
   /**
    * Validates measure group population define return types and observation function return types
