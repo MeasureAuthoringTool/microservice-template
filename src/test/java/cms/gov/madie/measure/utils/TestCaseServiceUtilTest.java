@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -66,6 +67,8 @@ public class TestCaseServiceUtilTest {
   private List<TestCaseGroupPopulation> testCaseGroupPopulations = new ArrayList<>();
   TestCaseGroupPopulation testCaseGroupPopulation1 = null;
   TestCaseGroupPopulation testCaseGroupPopulation2 = null;
+  private MeasureObservation measureObservation1 = null;
+  private MeasureObservation measureObservation2 = null;
 
   private TestCase testCase;
 
@@ -140,6 +143,21 @@ public class TestCaseServiceUtilTest {
             .series("BloodPressure>124")
             .json("{\"resourceType\":\"Patient\"}")
             .patientId(UUID.randomUUID())
+            .build();
+
+    measureObservation1 =
+        MeasureObservation.builder()
+            .id("measureObservationId1")
+            .definition("Measure Observation")
+            .criteriaReference("criteriaReference1")
+            .aggregateMethod("Count")
+            .build();
+    measureObservation2 =
+        MeasureObservation.builder()
+            .id("measureObservationId2")
+            .definition("Measure Observation")
+            .criteriaReference("criteriaReference2")
+            .aggregateMethod("Average")
             .build();
   }
 
@@ -1219,5 +1237,203 @@ public class TestCaseServiceUtilTest {
     assertThat(output.get(1), is(notNullValue()));
     assertThat(output.get(1).getPopulationValues(), is(notNullValue()));
     assertThat(output.get(1).getPopulationValues().size(), is(equalTo(3)));
+  }
+
+  @Test
+  void testAssignObservationIdAndCriteriaReferenceCV() {
+    group =
+        Group.builder()
+            .id("group1")
+            .scoring(MeasureScoring.CONTINUOUS_VARIABLE.toString())
+            .measureObservations(List.of(measureObservation1))
+            .build();
+
+    TestCasePopulationValue measurePopulationValue =
+        TestCasePopulationValue.builder()
+            .name(PopulationType.MEASURE_POPULATION)
+            .expected("2")
+            .build();
+    TestCasePopulationValue measureObservationValue =
+        TestCasePopulationValue.builder()
+            .name(PopulationType.MEASURE_POPULATION_OBSERVATION)
+            .expected("3")
+            .build();
+    TestCaseGroupPopulation groupPopulation =
+        TestCaseGroupPopulation.builder()
+            .populationValues(
+                List.of(testCasePopulationValue1, measurePopulationValue, measureObservationValue))
+            .build();
+
+    List<TestCaseGroupPopulation> results =
+        TestCaseServiceUtil.assignObservationIdAndCriteriaReferenceCVAndRatio(
+            List.of(groupPopulation), List.of(group));
+    assertThat(results.size(), is(equalTo(1)));
+    assertThat(results.get(0).getPopulationValues().size(), is(equalTo(3)));
+    assertThat(
+        results.get(0).getPopulationValues().get(2).getId(),
+        is(equalTo("measurePopulationObservation0")));
+    assertThat(
+        results.get(0).getPopulationValues().get(2).getCriteriaReference(),
+        is(equalTo("criteriaReference1")));
+  }
+
+  @Test
+  void testAssignObservationIdAndCriteriaReferenceRatio() {
+    group =
+        Group.builder()
+            .id("group1")
+            .scoring(MeasureScoring.RATIO.toString())
+            .measureObservations(List.of(measureObservation1, measureObservation2))
+            .build();
+
+    TestCasePopulationValue valueDenomObserv =
+        TestCasePopulationValue.builder()
+            .name(PopulationType.DENOMINATOR_OBSERVATION)
+            .expected("2")
+            .build();
+    TestCasePopulationValue valueNumerObserv =
+        TestCasePopulationValue.builder()
+            .name(PopulationType.NUMERATOR_OBSERVATION)
+            .expected("3")
+            .build();
+    TestCaseGroupPopulation groupPopulation =
+        TestCaseGroupPopulation.builder()
+            .populationValues(
+                List.of(
+                    testCasePopulationValue1,
+                    testCasePopulationValue2,
+                    valueDenomObserv,
+                    testCasePopulationValue4,
+                    valueNumerObserv))
+            .build();
+
+    List<TestCaseGroupPopulation> results =
+        TestCaseServiceUtil.assignObservationIdAndCriteriaReferenceCVAndRatio(
+            List.of(groupPopulation), List.of(group));
+    assertThat(results.size(), is(equalTo(1)));
+    assertThat(results.get(0).getPopulationValues().size(), is(equalTo(5)));
+    assertThat(
+        results.get(0).getPopulationValues().get(2).getId(),
+        is(equalTo("denominatorObservation0")));
+    assertThat(
+        results.get(0).getPopulationValues().get(2).getCriteriaReference(),
+        is(equalTo("criteriaReference1")));
+    assertThat(
+        results.get(0).getPopulationValues().get(4).getId(), is(equalTo("numeratorObservation1")));
+    assertThat(
+        results.get(0).getPopulationValues().get(4).getCriteriaReference(),
+        is(equalTo("criteriaReference2")));
+  }
+
+  @Test
+  void testAssignObservationIdAndCriteriaReferenceCVAndRatioGroupsNull() {
+    List<TestCaseGroupPopulation> results =
+        TestCaseServiceUtil.assignObservationIdAndCriteriaReferenceCVAndRatio(
+            testCaseGroupPopulations, Collections.emptyList());
+    assertThat(results.size(), is(equalTo(1)));
+    assertThat(results.get(0).getPopulationValues().size(), is(equalTo(5)));
+  }
+
+  @Test
+  void testAssignObservationIdAndCriteriaReferenceCVAndRatioPopulationValuesNull() {
+    List<TestCaseGroupPopulation> results =
+        TestCaseServiceUtil.assignObservationIdAndCriteriaReferenceCVAndRatio(
+            Collections.emptyList(), List.of(group));
+    assertThat(results.size(), is(equalTo(0)));
+  }
+
+  @Test
+  void testAssignObservationIdAndCriteriaReferenceCVAndRatioGroupAndPopulationDifferent() {
+    List<TestCaseGroupPopulation> results =
+        TestCaseServiceUtil.assignObservationIdAndCriteriaReferenceCVAndRatio(
+            testCaseGroupPopulations, List.of(Group.builder().build(), Group.builder().build()));
+    assertThat(results.size(), is(equalTo(1)));
+    assertThat(results.get(0).getPopulationValues().size(), is(equalTo(5)));
+    assertNull(results.get(0).getPopulationValues().get(0).getCriteriaReference());
+    assertNull(results.get(0).getPopulationValues().get(1).getCriteriaReference());
+    assertNull(results.get(0).getPopulationValues().get(2).getCriteriaReference());
+    assertNull(results.get(0).getPopulationValues().get(3).getCriteriaReference());
+    assertNull(results.get(0).getPopulationValues().get(4).getCriteriaReference());
+  }
+
+  @Test
+  void testAssignObservationIdAndCriteriaReferenceCVAndRatioNoPopulationValues() {
+    group =
+        Group.builder()
+            .id("group1")
+            .scoring(MeasureScoring.RATIO.toString())
+            .measureObservations(List.of(measureObservation1))
+            .build();
+    TestCaseGroupPopulation groupPopulation = TestCaseGroupPopulation.builder().build();
+    List<TestCaseGroupPopulation> results =
+        TestCaseServiceUtil.assignObservationIdAndCriteriaReferenceCVAndRatio(
+            List.of(groupPopulation), List.of(group));
+    assertThat(results.size(), is(equalTo(1)));
+    assertNull(results.get(0).getPopulationValues());
+  }
+
+  @Test
+  void testAssignObservationIdAndCriteriaReferenceCVMeasureObservationsNull() {
+    group =
+        Group.builder()
+            .id("group1")
+            .scoring(MeasureScoring.CONTINUOUS_VARIABLE.toString())
+            .measureObservations(List.of(measureObservation1))
+            .build();
+
+    TestCasePopulationValue measurePopulationValue =
+        TestCasePopulationValue.builder()
+            .name(PopulationType.MEASURE_POPULATION)
+            .expected("2")
+            .build();
+    TestCaseGroupPopulation groupPopulation =
+        TestCaseGroupPopulation.builder()
+            .populationValues(List.of(testCasePopulationValue1, measurePopulationValue))
+            .build();
+
+    List<TestCaseGroupPopulation> results =
+        TestCaseServiceUtil.assignObservationIdAndCriteriaReferenceCVAndRatio(
+            List.of(groupPopulation), List.of(group));
+    assertThat(results.size(), is(equalTo(1)));
+    assertThat(results.get(0).getPopulationValues().size(), is(equalTo(2)));
+  }
+
+  @Test
+  void testAssignObservationIdAndCriteriaReferenceNonCVRatio() {
+    List<TestCaseGroupPopulation> results =
+        TestCaseServiceUtil.assignObservationIdAndCriteriaReferenceCVAndRatio(
+            testCaseGroupPopulations, List.of(group));
+    assertThat(results.size(), is(equalTo(1)));
+    assertThat(results.get(0).getPopulationValues().size(), is(equalTo(5)));
+    assertNull(results.get(0).getPopulationValues().get(0).getCriteriaReference());
+    assertNull(results.get(0).getPopulationValues().get(1).getCriteriaReference());
+    assertNull(results.get(0).getPopulationValues().get(2).getCriteriaReference());
+    assertNull(results.get(0).getPopulationValues().get(3).getCriteriaReference());
+    assertNull(results.get(0).getPopulationValues().get(4).getCriteriaReference());
+  }
+
+  @Test
+  void testAssignObservationIdAndCriteriaReferenceRatioObservationsNull() {
+    group =
+        Group.builder()
+            .id("group1")
+            .scoring(MeasureScoring.RATIO.toString())
+            .measureObservations(List.of(measureObservation1, measureObservation2))
+            .build();
+    TestCaseGroupPopulation groupPopulation =
+        TestCaseGroupPopulation.builder()
+            .populationValues(
+                List.of(
+                    testCasePopulationValue1, testCasePopulationValue2, testCasePopulationValue4))
+            .build();
+
+    List<TestCaseGroupPopulation> results =
+        TestCaseServiceUtil.assignObservationIdAndCriteriaReferenceCVAndRatio(
+            List.of(groupPopulation), List.of(group));
+    assertThat(results.size(), is(equalTo(1)));
+    assertThat(results.get(0).getPopulationValues().size(), is(equalTo(3)));
+    assertNull(results.get(0).getPopulationValues().get(0).getCriteriaReference());
+    assertNull(results.get(0).getPopulationValues().get(1).getCriteriaReference());
+    assertNull(results.get(0).getPopulationValues().get(2).getCriteriaReference());
   }
 }

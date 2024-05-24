@@ -512,11 +512,8 @@ public class TestCaseService {
       String givenName = getPatientGivenName(model, testCaseImportRequest.getJson());
       log.info("Test Case title + Test Case Group:  {}", givenName + " " + familyName);
       if (StringUtils.isBlank(givenName)) {
-        return TestCaseImportOutcome.builder()
-            .patientId(testCaseImportRequest.getPatientId())
-            .successful(false)
-            .message("Test Case Title is required.")
-            .build();
+        return buildTestCaseImportOutcome(
+            testCaseImportRequest.getPatientId(), false, "Test Case Title is required.");
       }
       TestCase newTestCase =
           TestCase.builder()
@@ -533,8 +530,7 @@ public class TestCaseService {
         testCaseGroupPopulations =
             TestCaseServiceUtil.assignStratificationValuesQdm(testCaseGroupPopulations, groups);
         QdmMeasure qdmMeasure = (QdmMeasure) measure;
-        if (StringUtils.equals(
-                qdmMeasure.getScoring(), MeasureScoring.CONTINUOUS_VARIABLE.toString())
+        if (MeasureScoring.CONTINUOUS_VARIABLE.toString().equalsIgnoreCase(qdmMeasure.getScoring())
             && measure.getGroups().size() > 1) {
           warningMessage =
               "observation values were not imported. MADiE cannot import expected "
@@ -549,6 +545,10 @@ public class TestCaseService {
         warningMessage =
             "the measure populations do not match the populations in the import file. "
                 + "The Test Case has been imported, but no expected values have been set.";
+      }
+      if (ModelType.QI_CORE.getValue().equalsIgnoreCase(model)) {
+        TestCaseServiceUtil.assignObservationIdAndCriteriaReferenceCVAndRatio(
+            testCaseGroupPopulations, groups);
       }
       return updateTestCaseJsonAndSaveTestCase(
           newTestCase,
@@ -565,12 +565,10 @@ public class TestCaseService {
               + ex.getMessage(),
           userName,
           testCaseImportRequest.getPatientId());
-      return TestCaseImportOutcome.builder()
-          .patientId(testCaseImportRequest.getPatientId())
-          .successful(false)
-          .message(
-              "Error while processing Test Case JSON. Please make sure Test Case JSON is valid.")
-          .build();
+      return buildTestCaseImportOutcome(
+          testCaseImportRequest.getPatientId(),
+          false,
+          "Error while processing Test Case JSON. Please make sure Test Case JSON is valid.");
     }
   }
 
@@ -811,5 +809,14 @@ public class TestCaseService {
       }
     }
     return null;
+  }
+
+  private TestCaseImportOutcome buildTestCaseImportOutcome(
+      UUID patientId, boolean successful, String message) {
+    return TestCaseImportOutcome.builder()
+        .patientId(patientId)
+        .successful(successful)
+        .message(message)
+        .build();
   }
 }

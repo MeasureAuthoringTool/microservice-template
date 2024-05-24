@@ -16,6 +16,7 @@ import java.util.UUID;
 
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.MeasureObservation;
+import gov.cms.madie.models.measure.MeasureScoring;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
 import gov.cms.madie.models.measure.TestCase;
@@ -442,5 +443,69 @@ public class TestCaseServiceUtil {
           .toList();
     }
     return null;
+  }
+
+  public static List<TestCaseGroupPopulation> assignObservationIdAndCriteriaReferenceCVAndRatio(
+      List<TestCaseGroupPopulation> testCaseGroupPopulations, List<Group> measureGroups) {
+    if (isNotEmpty(measureGroups)
+        && isNotEmpty(testCaseGroupPopulations)
+        && testCaseGroupPopulations.size() == measureGroups.size()) {
+      int index = 0;
+      for (Group group : measureGroups) {
+        List<MeasureObservation> observations = group.getMeasureObservations();
+        if (isNotEmpty(observations)) {
+          List<TestCasePopulationValue> values =
+              testCaseGroupPopulations.get(index).getPopulationValues();
+          if (isNotEmpty(values)) {
+            if (MeasureScoring.CONTINUOUS_VARIABLE
+                .toString()
+                .equalsIgnoreCase(group.getScoring())) {
+              MeasureObservation observation = observations.get(0);
+              List<TestCasePopulationValue> measurePopulationObservations =
+                  values.stream()
+                      .filter(
+                          value ->
+                              PopulationType.MEASURE_POPULATION_OBSERVATION
+                                  .name()
+                                  .equalsIgnoreCase(value.getName().name()))
+                      .toList();
+              if (isNotEmpty(measurePopulationObservations)) {
+                int number = 0;
+                for (TestCasePopulationValue value : measurePopulationObservations) {
+                  value.setId("measurePopulationObservation" + String.valueOf(number));
+                  value.setCriteriaReference(observation.getCriteriaReference());
+                  number++;
+                }
+              }
+            } else if (MeasureScoring.RATIO.toString().equalsIgnoreCase(group.getScoring())) {
+              List<TestCasePopulationValue> denomAndNumerObservations =
+                  values.stream()
+                      .filter(
+                          value ->
+                              PopulationType.DENOMINATOR_OBSERVATION
+                                      .name()
+                                      .equalsIgnoreCase(value.getName().name())
+                                  || PopulationType.NUMERATOR_OBSERVATION
+                                      .name()
+                                      .equalsIgnoreCase(value.getName().name()))
+                      .toList();
+              if (isNotEmpty(denomAndNumerObservations)) {
+                int number = 0;
+                for (TestCasePopulationValue value : denomAndNumerObservations) {
+                  value.setId(
+                      (number == 0 ? "denominator" : "numerator")
+                          + "Observation"
+                          + String.valueOf(number));
+                  value.setCriteriaReference(observations.get(number).getCriteriaReference());
+                  number++;
+                }
+              }
+            }
+          }
+        }
+        index++;
+      }
+    }
+    return testCaseGroupPopulations;
   }
 }
