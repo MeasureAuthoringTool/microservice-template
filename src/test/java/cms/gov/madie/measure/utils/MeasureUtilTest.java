@@ -188,7 +188,8 @@ class MeasureUtilTest {
 
   @Test
   public void testValidateAllMeasureGroupReturnTypesReturnsNoErrorsForNoGroups() {
-    Measure measure = Measure.builder().elmJson("{}").groups(List.of()).build();
+    Measure measure =
+        Measure.builder().elmJson("{}").cqlLibraryName("NotNull").groups(List.of()).build();
     when(validLibraryNameValidator.isValid(any(Measure.class), isNull())).thenReturn(true);
     Measure output = measureUtil.validateAllMeasureDependencies(measure);
     assertThat(output, is(notNullValue()));
@@ -201,6 +202,7 @@ class MeasureUtilTest {
     Measure measure =
         Measure.builder()
             .elmJson("{}")
+            .cqlLibraryName("NotNull")
             .groups(
                 List.of(
                     Group.builder().id("Group1").populations(null).build(),
@@ -225,6 +227,7 @@ class MeasureUtilTest {
     Measure measure =
         Measure.builder()
             .elmJson("{}")
+            .cqlLibraryName("NotNull")
             .model(ModelType.QI_CORE.getValue())
             .error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES)
             .groups(
@@ -351,7 +354,8 @@ class MeasureUtilTest {
   @Test
   public void
       testValidateAllMeasureGroupReturnTypesReturnsMeasureWithNoErrorForNoGroupsExistWithNoElm() {
-    Measure measure = Measure.builder().elmJson(null).groups(List.of()).build();
+    Measure measure =
+        Measure.builder().elmJson(null).cqlLibraryName("NotNull").groups(List.of()).build();
     when(validLibraryNameValidator.isValid(any(Measure.class), isNull())).thenReturn(true);
     Measure output = measureUtil.validateAllMeasureDependencies(measure);
     assertThat(output, is(notNullValue()));
@@ -366,6 +370,7 @@ class MeasureUtilTest {
     Measure measure =
         Measure.builder()
             .elmJson(null)
+            .cqlLibraryName("NotNull")
             .groups(List.of())
             .error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES)
             .build();
@@ -829,6 +834,7 @@ class MeasureUtilTest {
             .elmJson("{}")
             .model(ModelType.QDM_5_6.getValue())
             .error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES)
+            .cqlLibraryName("NotNull")
             .build();
     when(validLibraryNameValidator.isValid(any(Measure.class), isNull())).thenReturn(true);
     Measure output = measureUtil.validateAllMeasureDependencies(measure);
@@ -844,6 +850,7 @@ class MeasureUtilTest {
         QdmMeasure.builder()
             .elmJson("{}")
             .model(ModelType.QDM_5_6.getValue())
+            .cqlLibraryName("NotNull")
             .error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES)
             .groups(
                 List.of(
@@ -1056,5 +1063,15 @@ class MeasureUtilTest {
         Measure.builder().testCaseConfiguration(existingTestCaseConfiguration).build();
     boolean result = measureUtil.isTestCaseConfigurationChanged(updatingMeasure, existingMeasure);
     assertTrue(result);
+  }
+
+  @Test
+  public void testCqlLibraryNameEmptyGetRejected() {
+    Measure measure = Measure.builder().elmJson("{}").groups(List.of()).build();
+    when(validLibraryNameValidator.isValid(any(Measure.class), isNull())).thenReturn(true);
+    Measure output = measureUtil.validateAllMeasureDependencies(measure);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.getErrors(), is(notNullValue()));
+    assertThat(output.getErrors().isEmpty(), is(false));
   }
 }
