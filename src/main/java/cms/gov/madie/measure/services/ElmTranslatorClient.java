@@ -2,11 +2,13 @@ package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.config.ElmTranslatorClientConfig;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
+import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.ElmJson;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -24,9 +26,9 @@ public class ElmTranslatorClient {
   private ElmTranslatorClientConfig elmTranslatorClientConfig;
   private RestTemplate elmTranslatorRestTemplate;
 
-  public ElmJson getElmJson(final String cql, String accessToken) {
+  public ElmJson getElmJson(final String cql, String measureModel, String accessToken) {
     try {
-      URI uri = getElmJsonURI(false);
+      URI uri = getElmJsonURI(measureModel, false);
       HttpEntity<String> cqlEntity = getCqlHttpEntity(cql, accessToken, null, null);
       return elmTranslatorRestTemplate
           .exchange(uri, HttpMethod.PUT, cqlEntity, ElmJson.class)
@@ -53,9 +55,10 @@ public class ElmTranslatorClient {
     }
   }
 
-  public ElmJson getElmJsonForMatMeasure(final String cql, String apiKey, String harpId) {
+  public ElmJson getElmJsonForMatMeasure(
+      final String cql, String measureModel, String apiKey, String harpId) {
     try {
-      URI uri = getElmJsonURI(true);
+      URI uri = getElmJsonURI(measureModel, true);
       HttpEntity<String> cqlEntity = getCqlHttpEntity(cql, null, apiKey, harpId);
 
       return elmTranslatorRestTemplate
@@ -67,9 +70,10 @@ public class ElmTranslatorClient {
     }
   }
 
-  protected URI getElmJsonURI(boolean isForMatTransferred) {
+  protected URI getElmJsonURI(String measureModel, boolean isForMatTransferred) {
     return URI.create(
         elmTranslatorClientConfig.getCqlElmServiceBaseUrl()
+            + (StringUtils.equals(measureModel, ModelType.QDM_5_6.getValue()) ? "/qdm" : "/fhir")
             + (isForMatTransferred
                 ? elmTranslatorClientConfig.getCqlElmServiceUriForMatTransferredMeasure()
                 : elmTranslatorClientConfig.getCqlElmServiceElmJsonUri()));

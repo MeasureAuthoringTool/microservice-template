@@ -466,7 +466,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .build();
 
     when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
-    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString()))
         .thenReturn(ElmJson.builder().json(elmJson).build());
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(false);
     doNothing().when(terminologyValidationService).validateTerminology(anyString(), anyString());
@@ -500,7 +500,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .build();
 
     when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
-    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString()))
         .thenReturn(ElmJson.builder().json(elmJson).build());
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(true);
     doThrow(InvalidTerminologyException.class)
@@ -552,7 +552,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .build();
 
     when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
-    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString()))
         .thenReturn(ElmJson.builder().json(elmJson).build());
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(false);
     doNothing().when(terminologyValidationService).validateTerminology(anyString(), anyString());
@@ -685,6 +685,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .measureName("Measure1")
             .versionId("VersionId")
             .cql("original cql here")
+            .model(ModelType.QDM_5_6.getValue())
             .measureMetaData(draftMeasureMetaData)
             .errors(List.of(MeasureErrorType.ERRORS_ELM_JSON))
             .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
@@ -697,7 +698,7 @@ public class MeasureServiceTest implements ResourceUtil {
     when(measureUtil.isMeasurementPeriodChanged(any(Measure.class), any(Measure.class)))
         .thenReturn(false);
     when(measureUtil.isMeasureCqlChanged(any(Measure.class), any(Measure.class))).thenReturn(true);
-    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString()))
         .thenReturn(ElmJson.builder().json("{\"library\": {}}").xml("<library></library>").build());
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(false);
 
@@ -723,6 +724,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .measureName("Measure1")
             .versionId("VersionId")
             .cql("original cql here")
+            .model(ModelType.QDM_5_6.getValue())
             .measureMetaData(draftMeasureMetaData)
             .errors(List.of(MeasureErrorType.ERRORS_ELM_JSON))
             .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
@@ -735,7 +737,7 @@ public class MeasureServiceTest implements ResourceUtil {
     when(measureUtil.isMeasurementPeriodChanged(any(Measure.class), any(Measure.class)))
         .thenReturn(false);
     when(measureUtil.isMeasureCqlChanged(any(Measure.class), any(Measure.class))).thenReturn(true);
-    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString()))
         .thenReturn(ElmJson.builder().json("{\"library\": {}}").xml("<library></library>").build());
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(false);
 
@@ -763,6 +765,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .cqlLibraryName("OriginalLibName")
             .measureName("Measure1")
             .versionId("VersionId")
+            .model(ModelType.QDM_5_6.getValue())
             .cql("original cql here")
             .measureMetaData(draftMeasureMetaData)
             .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
@@ -775,7 +778,7 @@ public class MeasureServiceTest implements ResourceUtil {
     when(measureUtil.isMeasurementPeriodChanged(any(Measure.class), any(Measure.class)))
         .thenReturn(false);
     when(measureUtil.isMeasureCqlChanged(any(Measure.class), any(Measure.class))).thenReturn(true);
-    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString()))
         .thenReturn(ElmJson.builder().json("{\"library\": {}}").xml("<library></library>").build());
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(true);
 
@@ -813,8 +816,12 @@ public class MeasureServiceTest implements ResourceUtil {
 
   @Test
   public void testUpdateElmThrowsExceptionIfElmHasErrors() {
-    final Measure measure = Measure.builder().cql("some really good cql here").build();
-    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+    final Measure measure =
+        Measure.builder()
+            .cql("some really good cql here")
+            .model(ModelType.QDM_5_6.getValue())
+            .build();
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString()))
         .thenReturn(ElmJson.builder().json("{\"library\": {}}").xml("<library></library>").build());
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(true);
     assertThrows(
@@ -824,8 +831,12 @@ public class MeasureServiceTest implements ResourceUtil {
 
   @Test
   public void testUpdateElmReturnsElmJson() {
-    final Measure measure = Measure.builder().cql("some really good cql here").build();
-    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+    final Measure measure =
+        Measure.builder()
+            .cql("some really good cql here")
+            .model(ModelType.QDM_5_6.getValue())
+            .build();
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString()))
         .thenReturn(ElmJson.builder().json("{\"library\": {}}").xml("<library></library>").build());
     Measure output = measureService.updateElm(measure, "Access Token");
     assertThat(output, is(notNullValue()));
@@ -1414,7 +1425,8 @@ public class MeasureServiceTest implements ResourceUtil {
         .isFlagEnabled(eq(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER));
     doReturn(measure1).when(measureRepository).save(any(Measure.class));
 
-    when(elmTranslatorClient.getElmJsonForMatMeasure(anyString(), anyString(), anyString()))
+    when(elmTranslatorClient.getElmJsonForMatMeasure(
+            anyString(), anyString(), anyString(), anyString()))
         .thenReturn(ElmJson.builder().json(elmJson).build());
 
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(true);
@@ -1474,7 +1486,7 @@ public class MeasureServiceTest implements ResourceUtil {
 
     doThrow(new CqlElmTranslationServiceException(elmJson, null))
         .when(elmTranslatorClient)
-        .getElmJsonForMatMeasure(anyString(), anyString(), anyString());
+        .getElmJsonForMatMeasure(anyString(), anyString(), anyString(), anyString());
 
     when(organizationRepository.findAll()).thenReturn(organizationList);
 

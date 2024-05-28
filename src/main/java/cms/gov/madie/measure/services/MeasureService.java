@@ -312,7 +312,8 @@ public class MeasureService {
 
   public Measure updateElm(Measure measure, String accessToken) {
     if (measure != null && StringUtils.isNotBlank(measure.getCql())) {
-      final ElmJson elmJson = elmTranslatorClient.getElmJson(measure.getCql(), accessToken);
+      final ElmJson elmJson =
+          elmTranslatorClient.getElmJson(measure.getCql(), measure.getModel(), accessToken);
       if (elmTranslatorClient.hasErrors(elmJson)) {
         throw new CqlElmTranslationErrorException(measure.getMeasureName());
       }
@@ -506,7 +507,8 @@ public class MeasureService {
 
     try {
       final ElmJson elmJson =
-          elmTranslatorClient.getElmJsonForMatMeasure(measure.getCql(), apiKey, harpId);
+          elmTranslatorClient.getElmJsonForMatMeasure(
+              measure.getCql(), measure.getModel(), apiKey, harpId);
       if (elmTranslatorClient.hasErrors(elmJson)) {
         measure.setCqlErrors(true);
       }
