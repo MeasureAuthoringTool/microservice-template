@@ -4,6 +4,7 @@ import cms.gov.madie.measure.dto.PackageDto;
 import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
 import cms.gov.madie.measure.factories.ModelValidatorFactory;
 import cms.gov.madie.measure.factories.PackageServiceFactory;
+import cms.gov.madie.measure.utils.MeasureUtil;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.Measure;
 import lombok.AllArgsConstructor;
@@ -17,11 +18,14 @@ import org.springframework.util.CollectionUtils;
 public class ExportService {
   private final PackageServiceFactory packageServiceFactory;
   private final ModelValidatorFactory modelValidatorFactory;
+  private final MeasureUtil measureUtil;
 
   public PackageDto getMeasureExport(Measure measure, String accessToken) {
     validateMetadata(measure);
+
     ModelValidator modelValidator =
         modelValidatorFactory.getModelValidator(ModelType.valueOfName(measure.getModel()));
+    measure = measureUtil.validateAllMeasureDependencies(measure);
     modelValidator.validateGroups(measure);
     modelValidator.validateCqlErrors(measure);
     PackageService packageService =
