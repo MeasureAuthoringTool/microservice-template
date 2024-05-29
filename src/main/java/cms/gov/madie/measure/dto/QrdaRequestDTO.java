@@ -12,9 +12,6 @@ import lombok.NoArgsConstructor;
 @Builder(toBuilder = true)
 public class QrdaRequestDTO {
   Measure measure;
-  String coveragePercentage;
-  Integer passPercentage;
-  String passFailRatio;
   Object options;
   Object[] testCaseDtos;
 }
