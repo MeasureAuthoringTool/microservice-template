@@ -1072,7 +1072,7 @@ class MeasureUtilTest {
     Measure output = measureUtil.validateAllMeasureDependencies(measure);
     assertThat(output, is(notNullValue()));
     assertThat(output.getErrors(), is(notNullValue()));
-    assertThat(output.getErrors().isEmpty(), is(false));
+    assertThat(output.getErrors().contains(MeasureErrorType.INVALID_LIBRARY_NAME), is(true));
   }
 
   @Test
@@ -1088,5 +1088,6 @@ class MeasureUtilTest {
     assertThat(output, is(notNullValue()));
     assertThat(output.getErrors(), is(notNullValue()));
     assertThat(output.getErrors().isEmpty(), is(false));
+    assertThat(output.getErrors().contains(MeasureErrorType.INVALID_LIBRARY_NAME), is(true));
   }
 }
