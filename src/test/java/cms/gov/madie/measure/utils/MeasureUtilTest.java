@@ -1074,4 +1074,19 @@ class MeasureUtilTest {
     assertThat(output.getErrors(), is(notNullValue()));
     assertThat(output.getErrors().isEmpty(), is(false));
   }
+
+  @Test
+  public void testCqlLibraryNameLong64GetRejected() {
+    Measure measure =
+        Measure.builder()
+            .cqlLibraryName("1234567812345678123456781234567812345678123456781234567812345678a")
+            .elmJson("{}")
+            .groups(List.of())
+            .build();
+    when(validLibraryNameValidator.isValid(any(Measure.class), isNull())).thenReturn(true);
+    Measure output = measureUtil.validateAllMeasureDependencies(measure);
+    assertThat(output, is(notNullValue()));
+    assertThat(output.getErrors(), is(notNullValue()));
+    assertThat(output.getErrors().isEmpty(), is(false));
+  }
 }
