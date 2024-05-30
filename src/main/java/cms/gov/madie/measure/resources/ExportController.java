@@ -4,7 +4,7 @@ import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 
-import cms.gov.madie.measure.dto.QrdaRequestDTO;
+import cms.gov.madie.measure.dto.qrda.QrdaRequestDTO;
 import cms.gov.madie.measure.services.ExportService;
 import cms.gov.madie.measure.services.MeasureService;
 import org.springframework.http.HttpHeaders;

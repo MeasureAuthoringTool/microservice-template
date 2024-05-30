@@ -1,7 +1,7 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.dto.PackageDto;
-import cms.gov.madie.measure.dto.QrdaRequestDTO;
+import cms.gov.madie.measure.dto.qrda.QrdaRequestDTO;
 import gov.cms.madie.models.measure.Measure;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;

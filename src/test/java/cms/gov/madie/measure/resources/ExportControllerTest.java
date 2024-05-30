@@ -1,7 +1,7 @@
 package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.dto.PackageDto;
-import cms.gov.madie.measure.dto.QrdaRequestDTO;
+import cms.gov.madie.measure.dto.qrda.QrdaRequestDTO;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.ExportService;
@@ -217,20 +217,13 @@ class ExportControllerTest {
             .build();
 
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
-    when(exportService.getQRDA(
-            eq(QrdaRequestDTO.builder().measure(measure).coveragePercentage("").build()),
-            anyString()))
+    when(exportService.getQRDA(eq(QrdaRequestDTO.builder().measure(measure).build()), anyString()))
         .thenReturn(new ResponseEntity<>(new byte[0], HttpStatus.OK));
     ResponseEntity<byte[]> output =
         exportController.getQRDA(
             principal,
             "test_id",
-            QrdaRequestDTO.builder()
-                .measure(measure)
-                .coveragePercentage("")
-                .passPercentage(0)
-                .passFailRatio("5/10")
-                .build(),
+            QrdaRequestDTO.builder().measure(measure).build(),
             "Bearer TOKEN");
     assertEquals(HttpStatus.OK, output.getStatusCode());
   }

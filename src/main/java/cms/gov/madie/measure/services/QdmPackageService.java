@@ -2,7 +2,7 @@ package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.config.QdmServiceConfig;
 import cms.gov.madie.measure.dto.PackageDto;
-import cms.gov.madie.measure.dto.QrdaRequestDTO;
+import cms.gov.madie.measure.dto.qrda.QrdaRequestDTO;
 import cms.gov.madie.measure.exceptions.InternalServerException;
 import cms.gov.madie.measure.repositories.ExportRepository;
 import gov.cms.madie.models.cqm.CqmMeasure;

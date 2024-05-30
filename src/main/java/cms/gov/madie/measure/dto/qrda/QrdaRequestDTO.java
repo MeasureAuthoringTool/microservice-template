@@ -1,4 +1,4 @@
-package cms.gov.madie.measure.dto;
+package cms.gov.madie.measure.dto.qrda;
 
 import gov.cms.madie.models.measure.Measure;
 import lombok.AllArgsConstructor;
@@ -13,5 +13,5 @@ import lombok.NoArgsConstructor;
 public class QrdaRequestDTO {
   Measure measure;
   Object options;
-  Object[] testCaseDtos;
+  QrdaGroupDTO[] groupDTOs;
 }

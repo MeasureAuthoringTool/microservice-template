@@ -1,7 +1,7 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.dto.PackageDto;
-import cms.gov.madie.measure.dto.QrdaRequestDTO;
+import cms.gov.madie.measure.dto.qrda.QrdaRequestDTO;
 import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
 import cms.gov.madie.measure.factories.ModelValidatorFactory;
 import cms.gov.madie.measure.factories.PackageServiceFactory;
@@ -195,8 +195,7 @@ class ExportServiceTest {
     when(qdmPackageService.getQRDA(any(QrdaRequestDTO.class), anyString()))
         .thenReturn(new ResponseEntity<>(packageContent.getBytes(), HttpStatus.OK));
     ResponseEntity<byte[]> measurePackage =
-        exportService.getQRDA(
-            QrdaRequestDTO.builder().measure(measure).coveragePercentage("").build(), token);
+        exportService.getQRDA(QrdaRequestDTO.builder().measure(measure).build(), token);
     assertThat(new String(measurePackage.getBody()), is(equalTo(packageContent)));
   }
 
@@ -206,10 +205,7 @@ class ExportServiceTest {
     Exception ex =
         Assertions.assertThrows(
             InvalidResourceStateException.class,
-            () ->
-                exportService.getQRDA(
-                    QrdaRequestDTO.builder().measure(measure).coveragePercentage("").build(),
-                    token));
+            () -> exportService.getQRDA(QrdaRequestDTO.builder().measure(measure).build(), token));
     assertThat(
         ex.getMessage(),
         is(
