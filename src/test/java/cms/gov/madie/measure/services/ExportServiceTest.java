@@ -190,8 +190,6 @@ class ExportServiceTest {
 
   @Test
   void testGetQRDA() {
-    when(modelValidatorFactory.getModelValidator(any())).thenReturn(qdmModelValidator);
-    doNothing().when(qdmModelValidator).validateGroups(any(Measure.class));
     when(packageServiceFactory.getPackageService(any())).thenReturn(qdmPackageService);
     when(qdmPackageService.getQRDA(any(Measure.class), anyString()))
         .thenReturn(new ResponseEntity<>(packageContent.getBytes(), HttpStatus.OK));

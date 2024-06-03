@@ -55,9 +55,6 @@ public class ExportService {
       throw new InvalidResourceStateException(
           "Measure", measure.getId(), "since there are no test cases in the measure.");
     }
-    ModelValidator modelValidator =
-        modelValidatorFactory.getModelValidator(ModelType.valueOfName(measure.getModel()));
-    modelValidator.validateGroups(measure);
     PackageService packageService =
         packageServiceFactory.getPackageService(ModelType.valueOfName(measure.getModel()));
     return packageService.getQRDA(measure, accessToken);
