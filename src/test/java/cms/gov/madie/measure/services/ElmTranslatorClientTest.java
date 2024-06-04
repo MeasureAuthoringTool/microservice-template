@@ -51,7 +51,7 @@ class ElmTranslatorClientTest {
         .thenThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN));
     assertThrows(
         CqlElmTranslationServiceException.class,
-        () -> elmTranslatorClient.getElmJson("TEST_CQL", "TEST_TOKEN"));
+        () -> elmTranslatorClient.getElmJson("TEST_CQL", "QDM v5.6", "TEST_TOKEN"));
   }
 
   @Test
@@ -60,7 +60,7 @@ class ElmTranslatorClientTest {
     when(restTemplate.exchange(
             any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
         .thenReturn(ResponseEntity.ok(elmJson));
-    ElmJson output = elmTranslatorClient.getElmJson("TEST_CQL", "TEST_TOKEN");
+    ElmJson output = elmTranslatorClient.getElmJson("TEST_CQL", "QDM v5.6", "TEST_TOKEN");
     assertThat(output, is(equalTo(elmJson)));
   }
 
@@ -135,7 +135,8 @@ class ElmTranslatorClientTest {
             any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
         .thenReturn(ResponseEntity.ok(elmJson));
     ElmJson output =
-        elmTranslatorClient.getElmJsonForMatMeasure("TEST_CQL", "ABCDE", "TEST_HARP_ID");
+        elmTranslatorClient.getElmJsonForMatMeasure(
+            "TEST_CQL", "QDM v5.6", "ABCDE", "TEST_HARP_ID");
     assertThat(output, is(equalTo(elmJson)));
   }
 
@@ -144,7 +145,9 @@ class ElmTranslatorClientTest {
     CqlElmTranslationServiceException exception =
         assertThrows(
             CqlElmTranslationServiceException.class,
-            () -> elmTranslatorClient.getElmJsonForMatMeasure("TEST_CQL", "ABCDE", "TEST_HARP_ID"));
+            () ->
+                elmTranslatorClient.getElmJsonForMatMeasure(
+                    "TEST_CQL", "QDM v5.6", "ABCDE", "TEST_HARP_ID"));
 
     assertThat(
         exception.getMessage(),

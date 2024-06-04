@@ -9,6 +9,7 @@ import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.CqmMeasureRepository;
 import cms.gov.madie.measure.repositories.ExportRepository;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.cqm.CqmMeasure;
 import gov.cms.madie.models.measure.ElmJson;
@@ -297,6 +298,7 @@ public class VersionServiceTest {
             .measureName("test measure")
             .createdBy("testUser")
             .cqlErrors(false)
+            .model(ModelType.QDM_5_6.getValue())
             .cql("test cql")
             .measureSet(measureSet)
             .build();
@@ -307,7 +309,7 @@ public class VersionServiceTest {
     when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
 
     ElmJson elmJson = ElmJson.builder().json(ELMJON_ERROR).build();
-    when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(elmJson);
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString())).thenReturn(elmJson);
     when(elmTranslatorClient.hasErrors(any())).thenReturn(true);
 
     assertThrows(
@@ -324,6 +326,7 @@ public class VersionServiceTest {
             .createdBy("testUser")
             .cqlErrors(false)
             .cql("test cql")
+            .model(ModelType.QDM_5_6.getValue())
             .build();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(true);
@@ -332,7 +335,7 @@ public class VersionServiceTest {
     when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
 
     ElmJson elmJson = ElmJson.builder().json(ELMJON_ERROR).build();
-    when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(elmJson);
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString())).thenReturn(elmJson);
     when(elmTranslatorClient.hasErrors(any())).thenReturn(true);
 
     assertThrows(
@@ -349,6 +352,7 @@ public class VersionServiceTest {
             .id("testMeasureId")
             .createdBy("testUser")
             .cql("library Test1CQLLib version '2.3.001")
+            .model(ModelType.QDM_5_6.getValue())
             .build();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(true);
@@ -359,7 +363,7 @@ public class VersionServiceTest {
     when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
 
     ElmJson elmJson = ElmJson.builder().json(ELMJON_NO_ERROR).build();
-    when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(elmJson);
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString())).thenReturn(elmJson);
     when(elmTranslatorClient.hasErrors(any())).thenReturn(false);
     var validationResult =
         versionService.checkValidVersioning("testMeasureId", "MAJOR", "testUser", "accesstoken");
@@ -373,6 +377,7 @@ public class VersionServiceTest {
             .id("testMeasureId")
             .createdBy("testUser")
             .cql("library Test1CQLLib version '2.3.001")
+            .model(ModelType.QDM_5_6.getValue())
             .build();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(true);
@@ -381,7 +386,7 @@ public class VersionServiceTest {
     when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
 
     ElmJson elmJson = ElmJson.builder().json(ELMJON_NO_ERROR).build();
-    when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(elmJson);
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString())).thenReturn(elmJson);
     when(elmTranslatorClient.hasErrors(any())).thenReturn(false);
     var validationResult =
         versionService.checkValidVersioning("testMeasureId", "MAJOR", "testUser", "accesstoken");
@@ -411,6 +416,7 @@ public class VersionServiceTest {
             .measureSetId("testMeasureSetId")
             .createdBy("testUser")
             .cql("library Test1CQLLib version '2.3.001'")
+            .model(ModelType.QDM_5_6.getValue())
             .measureSet(measureSet)
             .build();
     MeasureMetaData metaData = new MeasureMetaData();
@@ -422,7 +428,7 @@ public class VersionServiceTest {
     when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
 
     ElmJson elmJson = ElmJson.builder().json(ELMJON_NO_ERROR).build();
-    when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(elmJson);
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString())).thenReturn(elmJson);
     when(elmTranslatorClient.hasErrors(any())).thenReturn(false);
 
     Version newVersion = Version.builder().major(2).minor(2).revisionNumber(2).build();
@@ -470,6 +476,7 @@ public class VersionServiceTest {
             .measureSetId("testMeasureSetId")
             .createdBy("testUser")
             .cql("library Test1CQLLib version '2.3.001'")
+            .model(ModelType.QDM_5_6.getValue())
             .measureSet(measureSet)
             .build();
     MeasureMetaData metaData = new MeasureMetaData();
@@ -482,7 +489,7 @@ public class VersionServiceTest {
     when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
 
     ElmJson elmJson = ElmJson.builder().json(ELMJON_NO_ERROR).build();
-    when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(elmJson);
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString())).thenReturn(elmJson);
     when(elmTranslatorClient.hasErrors(any())).thenReturn(false);
 
     Version newVersion = Version.builder().major(2).minor(3).revisionNumber(2).build();
@@ -530,6 +537,7 @@ public class VersionServiceTest {
         FhirMeasure.builder()
             .id("testMeasureId")
             .measureSetId("testMeasureSetId")
+            .model(ModelType.QDM_5_6.getValue())
             .createdBy("testUser")
             .cql("library Test1CQLLib version '2.3.001'")
             .measureSet(measureSet)
@@ -544,7 +552,7 @@ public class VersionServiceTest {
     when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
 
     ElmJson elmJson = ElmJson.builder().json(ELMJON_NO_ERROR).build();
-    when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(elmJson);
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString())).thenReturn(elmJson);
     when(elmTranslatorClient.hasErrors(any())).thenReturn(false);
 
     Version newVersion = Version.builder().major(2).minor(3).revisionNumber(1).build();

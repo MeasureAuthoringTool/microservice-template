@@ -275,7 +275,8 @@ public class VersionService {
       throw new BadVersionRequestException(
           "Measure", measure.getId(), username, "Measure has no CQL.");
     } else {
-      final ElmJson elmJson = elmTranslatorClient.getElmJson(measure.getCql(), accessToken);
+      final ElmJson elmJson =
+          elmTranslatorClient.getElmJson(measure.getCql(), measure.getModel(), accessToken);
       if (elmTranslatorClient.hasErrors(elmJson)) {
         throw new CqlElmTranslationErrorException(measure.getMeasureName());
       }
