@@ -452,16 +452,6 @@ public class MeasureService {
         && ModelType.QDM_5_6.getValue().equals(measure.getModel())) {
       // throws an error if there is a duplicate anywhere
       this.checkDuplicateCqlLibraryName(measure.getCqlLibraryName(), measure.getMeasureSetId());
-      Version oldVersion = measure.getVersion();
-      Version newVersion = new Version(0, 0, 0);
-      String newCql =
-          measure
-              .getCql()
-              .replace(
-                  "library " + measure.getCqlLibraryName() + " version " + "'" + oldVersion + "'",
-                  "library " + measure.getCqlLibraryName() + " version " + "'" + newVersion + "'");
-      measure.setCql(newCql);
-      measure.setVersion(newVersion);
     }
 
     this.setMeasureElmJsonAndErrors(measure, apiKey, harpId);
