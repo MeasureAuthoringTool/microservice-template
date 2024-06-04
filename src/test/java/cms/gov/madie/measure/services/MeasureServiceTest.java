@@ -1827,6 +1827,7 @@ public class MeasureServiceTest implements ResourceUtil {
     assertEquals(measure1.getModel(), ModelType.QDM_5_6.getValue());
     assertEquals(measure1.getCqlLibraryName(), persistedMeasure.getCqlLibraryName());
     assertEquals(measure1.getCql(), persistedMeasure.getCql());
+    assertEquals(measure1.getVersion(), persistedMeasure.getVersion());
     assertEquals(measure1.getGroups().size(), persistedMeasure.getGroups().size());
     assertEquals(
         measure1.getGroups().get(0).getPopulations().get(0).getDescription(),
