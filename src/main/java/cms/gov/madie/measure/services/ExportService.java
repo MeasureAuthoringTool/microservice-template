@@ -59,7 +59,8 @@ public class ExportService {
           "since there are no test cases in the measure.");
     }
     PackageService packageService =
-        packageServiceFactory.getPackageService(ModelType.valueOfName(qrdaRequestDTO.getMeasure().getModel()));
+        packageServiceFactory.getPackageService(
+            ModelType.valueOfName(qrdaRequestDTO.getMeasure().getModel()));
     return packageService.getQRDA(qrdaRequestDTO, accessToken);
   }
 }
