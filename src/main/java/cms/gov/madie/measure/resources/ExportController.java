@@ -4,6 +4,7 @@ import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 
+import cms.gov.madie.measure.dto.qrda.QrdaRequestDTO;
 import cms.gov.madie.measure.services.ExportService;
 import cms.gov.madie.measure.services.MeasureService;
 import org.springframework.http.HttpHeaders;
@@ -86,10 +87,11 @@ public class ExportController {
         measure, accessToken, testCaseId, bundleType.orElse(("COLLECTION").toUpperCase()));
   }
 
-  @GetMapping(path = "/measures/{id}/test-cases/qrda", produces = "application/zip")
+  @PutMapping(path = "/measures/{id}/test-cases/qrda", produces = "application/zip")
   public ResponseEntity<byte[]> getQRDA(
       Principal principal,
       @PathVariable("id") String id,
+      @RequestBody QrdaRequestDTO requestDTO,
       @RequestHeader("Authorization") String accessToken) {
 
     final String username = principal.getName();
@@ -101,8 +103,6 @@ public class ExportController {
       throw new ResourceNotFoundException("Measure", id);
     }
 
-    Measure measure = measureOptional.get();
-
-    return exportService.getQRDA(measure, accessToken);
+    return exportService.getQRDA(requestDTO, accessToken);
   }
 }
