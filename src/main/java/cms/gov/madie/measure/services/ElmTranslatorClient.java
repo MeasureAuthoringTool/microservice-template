@@ -71,9 +71,14 @@ public class ElmTranslatorClient {
   }
 
   protected URI getElmJsonURI(String measureModel, boolean isForMatTransferred) {
+    var isQdm = StringUtils.equals(measureModel, ModelType.QDM_5_6.getValue());
+    String baseUrl =
+        isQdm
+            ? elmTranslatorClientConfig.getQdmCqlElmServiceBaseUrl()
+            : elmTranslatorClientConfig.getFhirCqlElmServiceBaseUrl();
     return URI.create(
-        elmTranslatorClientConfig.getCqlElmServiceBaseUrl()
-            + (StringUtils.equals(measureModel, ModelType.QDM_5_6.getValue()) ? "/qdm" : "/fhir")
+        baseUrl
+            + (isQdm ? "/qdm" : "/fhir")
             + (isForMatTransferred
                 ? elmTranslatorClientConfig.getCqlElmServiceUriForMatTransferredMeasure()
                 : elmTranslatorClientConfig.getCqlElmServiceElmJsonUri()));
