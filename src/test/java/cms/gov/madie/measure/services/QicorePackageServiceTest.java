@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.dto.PackageDto;
+import cms.gov.madie.measure.dto.qrda.QrdaRequestDTO;
 import gov.cms.madie.models.measure.Measure;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,7 +37,9 @@ public class QicorePackageServiceTest {
     Exception ex =
         assertThrows(
             UnsupportedOperationException.class,
-            () -> qicorePackageService.getQRDA(new Measure(), "token"));
+            () ->
+                qicorePackageService.getQRDA(
+                    QrdaRequestDTO.builder().measure(new Measure()).build(), "token"));
     assertThat(ex.getMessage(), containsString("method not yet implemented"));
   }
 }
