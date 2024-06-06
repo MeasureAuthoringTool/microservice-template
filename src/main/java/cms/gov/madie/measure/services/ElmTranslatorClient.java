@@ -78,7 +78,6 @@ public class ElmTranslatorClient {
             : elmTranslatorClientConfig.getFhirCqlElmServiceBaseUrl();
     return URI.create(
         baseUrl
-            + (isQdm ? "/qdm" : "/fhir")
             + (isForMatTransferred
                 ? elmTranslatorClientConfig.getCqlElmServiceUriForMatTransferredMeasure()
                 : elmTranslatorClientConfig.getCqlElmServiceElmJsonUri()));
