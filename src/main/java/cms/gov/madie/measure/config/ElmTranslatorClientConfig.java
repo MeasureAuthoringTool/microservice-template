@@ -10,8 +10,11 @@ import org.springframework.web.client.RestTemplate;
 @Configuration
 public class ElmTranslatorClientConfig {
 
-  @Value("${madie.cql-elm.service.base-url}")
-  private String cqlElmServiceBaseUrl;
+  @Value("${madie.cql-elm.service.qdm-base-url}")
+  private String qdmCqlElmServiceBaseUrl;
+
+  @Value("${madie.cql-elm.service.fhir-base-url}")
+  private String fhirCqlElmServiceBaseUrl;
 
   @Value("${madie.cql-elm.service.elm-json-uri}")
   private String cqlElmServiceElmJsonUri;

@@ -57,7 +57,9 @@ public class MeasureUtil {
       errors.add(MeasureErrorType.MISSING_ELM);
     }
 
-    if (!validLibraryNameValidator.isValid(measure, null)) {
+    if (!validLibraryNameValidator.isValid(measure, null)
+        || measure.getCqlLibraryName() == null
+        || measure.getCqlLibraryName().length() > 64) {
       errors.add(MeasureErrorType.INVALID_LIBRARY_NAME);
     }
 

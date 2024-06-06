@@ -32,7 +32,8 @@ madie:
       test-cases: /fhir/test-cases
   cql-elm:
     service:
-      base-url: ${ELM_TRANSLATOR_SERVICE_URL:http://localhost:8084/api}
+      qdm-base-url: ${QDM_ELM_TRANSLATOR_SERVICE_URL:http://localhost:8084/api}
+      fhir-base-url: ${FHIR_ELM_TRANSLATOR_SERVICE_URL:http://localhost:8083/api}
       elm-json-uri: /cql/translator/cql
       elm-json-uri-for-mat-transferred-measure: /mat/translator/cqlToElm
   virus-scan:

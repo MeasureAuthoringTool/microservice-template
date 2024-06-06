@@ -7,6 +7,7 @@ import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
 import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
 import cms.gov.madie.measure.repositories.ExportRepository;
 import cms.gov.madie.measure.utils.ResourceUtil;
+import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Export;
 import gov.cms.madie.models.measure.Group;
@@ -82,6 +83,7 @@ class BundleServiceTest implements ResourceUtil {
             .active(true)
             .id("xyz-p13r-13ert")
             .cql("test cql")
+            .model(ModelType.QDM_5_6.getValue())
             .cqlErrors(false)
             .elmJson(elmJson)
             .measureSetId("IDIDID")
@@ -120,7 +122,7 @@ class BundleServiceTest implements ResourceUtil {
 
   @Test
   void testBundleMeasureThrowsOperationException() {
-    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString()))
         .thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
     when(fhirServicesClient.getMeasureBundle(any(Measure.class), anyString(), anyString()))
         .thenThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN));
@@ -131,7 +133,7 @@ class BundleServiceTest implements ResourceUtil {
 
   @Test
   void testBundleMeasureThrowsCqlElmTranslationServiceException() {
-    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString()))
         .thenThrow(
             new CqlElmTranslationServiceException(
                 "There was an error calling CQL-ELM translation service", new Exception()));
@@ -142,7 +144,7 @@ class BundleServiceTest implements ResourceUtil {
 
   @Test
   void testBundleMeasureThrowsCqlElmTranslatorExceptionWithErrors() {
-    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString()))
         .thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(true);
     assertThrows(
@@ -155,7 +157,7 @@ class BundleServiceTest implements ResourceUtil {
     final String json = "{\"message\": \"GOOD JSON\"}";
     when(fhirServicesClient.getMeasureBundle(any(Measure.class), anyString(), anyString()))
         .thenReturn(json);
-    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString()))
         .thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
     assertThat(measure.getMeasureMetaData().isDraft(), is(equalTo(true)));
     String output = bundleService.bundleMeasure(measure, "Bearer TOKEN", "calculation");
@@ -254,7 +256,7 @@ class BundleServiceTest implements ResourceUtil {
             .developers(List.of(Organization.builder().name("ICF").build()))
             .build());
     measure.setModel("QI-Core v4.1.1");
-    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString()))
         .thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
     // doThrow(new
     // HttpClientErrorException(HttpStatus.FORBIDDEN)).when(fhirServicesClient).getMeasureBundleExport(any(Measure.class), eq("")))
@@ -281,7 +283,7 @@ class BundleServiceTest implements ResourceUtil {
             .developers(List.of(Organization.builder().name("ICF").build()))
             .build());
     measure.setModel("QI-Core v4.1.1");
-    when(elmTranslatorClient.getElmJson(anyString(), anyString()))
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString()))
         .thenReturn(ElmJson.builder().json("{}").xml("<></>").build());
     doThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN))
         .when(fhirServicesClient)
