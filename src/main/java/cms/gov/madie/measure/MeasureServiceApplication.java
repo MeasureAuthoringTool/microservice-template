@@ -12,6 +12,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+@import cms.gov.madie.measure.services.DELETETHIS;
 
 @SpringBootApplication
 @EnableMongock
@@ -29,13 +30,14 @@ public class MeasureServiceApplication {
   }
 
   @Bean
-  public WebMvcConfigurer corsConfigurer(@Autowired LogInterceptor logInterceptor) {
+  public WebMvcConfigurer corsConfigurer(@Autowired LogInterceptor logInterceptor, @Autowired DELETETHIS fakeWaf) {
     return new WebMvcConfigurer() {
 
       @Override
       public void addInterceptors(InterceptorRegistry registry) {
         WebMvcConfigurer.super.addInterceptors(registry);
         registry.addInterceptor(logInterceptor);
+        registry.addInterceptor(fakeWaf);
       }
 
       @Override
