@@ -18,6 +18,9 @@ public class QdmServiceConfig {
   @Value("${madie.qdm-service.create-qrda-urn}")
   private String createQrdaUrn;
 
+  @Value("${madie.qdm-service.retrieve-cqmmeasure-urn}")
+  private String retrieveCqmMeasureUrn;
+
   @Bean
   public RestTemplate qdmServiceRestTemplate() {
     return new RestTemplate();

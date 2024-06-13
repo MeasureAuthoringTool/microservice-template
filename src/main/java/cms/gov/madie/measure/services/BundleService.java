@@ -122,7 +122,8 @@ public class BundleService {
           "Measure", measure.getId(), "since there are no associated population criteria.");
     }
 
-    final ElmJson elmJson = elmTranslatorClient.getElmJson(measure.getCql(), accessToken);
+    final ElmJson elmJson =
+        elmTranslatorClient.getElmJson(measure.getCql(), measure.getModel(), accessToken);
     if (elmTranslatorClient.hasErrors(elmJson)) {
       throw new CqlElmTranslationErrorException(measure.getMeasureName());
     }

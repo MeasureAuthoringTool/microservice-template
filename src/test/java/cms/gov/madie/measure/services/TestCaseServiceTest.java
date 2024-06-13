@@ -30,6 +30,7 @@ import java.nio.charset.Charset;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
+import gov.cms.madie.models.dto.TestCaseExportMetaData;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.HapiOperationOutcome;
 import gov.cms.madie.models.measure.Measure;
@@ -106,6 +107,7 @@ public class TestCaseServiceTest implements ResourceUtil {
   @Captor private ArgumentCaptor<ActionType> actionTypeArgumentCaptor;
   @Captor private ArgumentCaptor<String> targetIdArgumentCaptor;
   @Captor private ArgumentCaptor<Class> targetClassArgumentCaptor;
+  @Captor private ArgumentCaptor<Measure> measureArgumentCaptor;
 
   private TestCase testCase;
   private Measure measure;
@@ -1649,6 +1651,46 @@ public class TestCaseServiceTest implements ResourceUtil {
   }
 
   @Test
+  void importTestCasesExistingWithExportMetaDataReturnValidOutcomes()
+      throws JsonProcessingException {
+    measure.setTestCases(List.of(testCase));
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
+
+    TestCase updatedTestCase = testCase;
+    updatedTestCase.setJson(testCaseImportWithMeasureReport);
+
+    doReturn(updatedTestCase)
+        .when(testCaseService)
+        .updateTestCase(any(), anyString(), anyString(), anyString());
+    var testCaseImportRequest =
+        TestCaseImportRequest.builder()
+            .patientId(testCase.getPatientId())
+            .testCaseMetaData(
+                TestCaseExportMetaData.builder()
+                    .description("metaDataDescription")
+                    .patientId(testCase.getPatientId().toString())
+                    .series("metaDataSeries")
+                    .title("metaDataTitle")
+                    .testCaseId(testCase.getId())
+                    .build())
+            .json(testCaseImportWithMeasureReport)
+            .build();
+
+    var response =
+        testCaseService.importTestCases(
+            List.of(testCaseImportRequest),
+            measure.getId(),
+            "test.user",
+            "TOKEN",
+            ModelType.QI_CORE.getValue());
+    assertEquals(1, response.size());
+    assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
+    assertNotNull(testCase.getDescription());
+    assertEquals(testCase.getDescription(), "metaDataDescription");
+    assertTrue(response.get(0).isSuccessful());
+  }
+
+  @Test
   void importTestCasesReturnValidOutcomeWithAnyExceptionsWhileUpdatingTestCases() {
     measure.setTestCases(List.of(testCase));
     when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
@@ -1885,6 +1927,81 @@ public class TestCaseServiceTest implements ResourceUtil {
             ModelType.QI_CORE.getValue());
     assertEquals(1, response.size());
     assertEquals(testCase.getPatientId(), response.get(0).getPatientId());
+    assertTrue(response.get(0).isSuccessful());
+  }
+
+  @Test
+  void importTestCasesCreateNewWithExportMetaDataAllCriteriaMatched() {
+    population1 =
+        Population.builder()
+            .name(PopulationType.INITIAL_POPULATION)
+            .definition("Initial Population")
+            .build();
+    population2 =
+        Population.builder().name(PopulationType.DENOMINATOR).definition("Denominator").build();
+    population3 =
+        Population.builder()
+            .name(PopulationType.DENOMINATOR_EXCLUSION)
+            .definition("Denominator Exclusion")
+            .build();
+    population4 =
+        Population.builder().name(PopulationType.NUMERATOR).definition("Numerator").build();
+    population5 =
+        Population.builder()
+            .name(PopulationType.DENOMINATOR_EXCEPTION)
+            .definition("Numerator Exception")
+            .build();
+    group =
+        Group.builder()
+            .id("testGroupId")
+            .scoring(MeasureScoring.COHORT.name())
+            .populations(List.of(population1, population2, population3, population4, population5))
+            .populationBasis("Encounter")
+            .build();
+    measure.setGroups(List.of(group));
+    List<TestCase> testCases = new ArrayList<>();
+    testCases.add(testCase);
+    measure.setTestCases(testCases);
+    when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
+    when(measureService.findMeasureById(anyString())).thenReturn(measure);
+    when(fhirServicesClient.validateBundle(anyString(), anyString()))
+        .thenReturn(
+            ResponseEntity.ok(HapiOperationOutcome.builder().code(200).successful(true).build()));
+
+    TestCase updatedTestCase = testCase;
+    updatedTestCase.setJson(testCaseImportWithMeasureReport);
+    UUID patientId = UUID.randomUUID();
+    var testCaseImportRequest =
+        TestCaseImportRequest.builder()
+            .patientId(patientId)
+            .json(testCaseImportWithMeasureReport)
+            .testCaseMetaData(
+                TestCaseExportMetaData.builder()
+                    .description("metaDataDescription")
+                    .patientId(patientId.toString())
+                    .series("metaDataSeries")
+                    .title("metaDataTitle")
+                    .testCaseId("ObjectID123")
+                    .build())
+            .build();
+
+    var response =
+        testCaseService.importTestCases(
+            List.of(testCaseImportRequest),
+            measure.getId(),
+            "test.user",
+            "TOKEN",
+            ModelType.QI_CORE.getValue());
+    assertEquals(1, response.size());
+
+    verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
+    Measure measureOutput = measureArgumentCaptor.getValue();
+    assertThat(measureOutput, is(notNullValue()));
+    assertThat(measureOutput.getTestCases(), is(notNullValue()));
+    assertThat(measureOutput.getTestCases().size(), is(equalTo(2)));
+    assertThat(measureOutput.getTestCases().get(0), is(equalTo(testCase)));
+    assertThat(measureOutput.getTestCases().get(1), is(notNullValue()));
+    assertThat(measureOutput.getTestCases().get(1).getPatientId(), is(equalTo(patientId)));
     assertTrue(response.get(0).isSuccessful());
   }
 
@@ -2553,5 +2670,221 @@ public class TestCaseServiceTest implements ResourceUtil {
             ModelType.QDM_5_6.getValue());
     assertFalse(response.get(0).isSuccessful());
     assertEquals("Test Case title is required.", response.get(0).getMessage());
+  }
+
+  @Test
+  void testGetDescriptionWithNullImportRequest() throws JsonProcessingException {
+    final String bundleJson =
+        """
+        {
+          "resourceType": "Bundle",
+          "id": "IP-Pass-CVPatient",
+          "meta": {
+            "versionId": "1",
+            "lastUpdated": "2022-09-14T15:14:42.152+00:00"
+          },
+          "type": "collection",
+          "entry": [
+          {
+              "resource": {
+                "resourceType": "MeasureReport",
+                "id": "34c3e75a-c127-4236-8057-300a5ad5f8e3",
+                "meta": {
+                  "profile": [ "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/test-case-cqfm" ]
+                },
+
+                "extension": [ {
+                  "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-testCaseDescription",
+                  "valueMarkdown": "tcdescription123"
+                } ],
+                "group": [],
+                "evaluatedResource": [ ]
+              }
+            }
+          ]
+        }
+        """;
+    String output = testCaseService.getDescription(ModelType.QI_CORE.getValue(), bundleJson, null);
+    assertThat(output, is(equalTo("tcdescription123")));
+  }
+
+  @Test
+  void testGetDescriptionWithNullExportMetaData() throws JsonProcessingException {
+    final String bundleJson =
+        """
+        {
+          "resourceType": "Bundle",
+          "id": "IP-Pass-CVPatient",
+          "meta": {
+            "versionId": "1",
+            "lastUpdated": "2022-09-14T15:14:42.152+00:00"
+          },
+          "type": "collection",
+          "entry": [
+          {
+              "resource": {
+                "resourceType": "MeasureReport",
+                "id": "34c3e75a-c127-4236-8057-300a5ad5f8e3",
+                "meta": {
+                  "profile": [ "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/test-case-cqfm" ]
+                },
+
+                "extension": [ {
+                  "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-testCaseDescription",
+                  "valueMarkdown": "tcdescription123"
+                } ],
+                "group": [],
+                "evaluatedResource": [ ]
+              }
+            }
+          ]
+        }
+        """;
+    TestCaseImportRequest importRequest =
+        TestCaseImportRequest.builder().testCaseMetaData(null).build();
+    String output =
+        testCaseService.getDescription(ModelType.QI_CORE.getValue(), bundleJson, importRequest);
+    assertThat(output, is(equalTo("tcdescription123")));
+  }
+
+  @Test
+  void testGetDescriptionWithNullExportMetaDataDescription() throws JsonProcessingException {
+    final String bundleJson =
+        """
+        {
+          "resourceType": "Bundle",
+          "id": "IP-Pass-CVPatient",
+          "meta": {
+            "versionId": "1",
+            "lastUpdated": "2022-09-14T15:14:42.152+00:00"
+          },
+          "type": "collection",
+          "entry": [
+          {
+              "resource": {
+                "resourceType": "MeasureReport",
+                "id": "34c3e75a-c127-4236-8057-300a5ad5f8e3",
+                "meta": {
+                  "profile": [ "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/test-case-cqfm" ]
+                },
+
+                "extension": [ {
+                  "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-testCaseDescription",
+                  "valueMarkdown": "tcdescription123"
+                } ],
+                "group": [],
+                "evaluatedResource": [ ]
+              }
+            }
+          ]
+        }
+        """;
+    TestCaseImportRequest importRequest =
+        TestCaseImportRequest.builder()
+            .testCaseMetaData(TestCaseExportMetaData.builder().description(null).build())
+            .build();
+    String output =
+        testCaseService.getDescription(ModelType.QI_CORE.getValue(), bundleJson, importRequest);
+    assertThat(output, is(equalTo("tcdescription123")));
+  }
+
+  @Test
+  void testGetDescriptionWithValidExportMetaDataDescription() throws JsonProcessingException {
+    final String bundleJson =
+        """
+        {
+          "resourceType": "Bundle",
+          "id": "IP-Pass-CVPatient",
+          "meta": {
+            "versionId": "1",
+            "lastUpdated": "2022-09-14T15:14:42.152+00:00"
+          },
+          "type": "collection",
+          "entry": [
+          {
+              "resource": {
+                "resourceType": "MeasureReport",
+                "id": "34c3e75a-c127-4236-8057-300a5ad5f8e3",
+                "meta": {
+                  "profile": [ "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/test-case-cqfm" ]
+                },
+
+                "extension": [ {
+                  "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-testCaseDescription",
+                  "valueMarkdown": "tcdescription123"
+                } ],
+                "group": [],
+                "evaluatedResource": [ ]
+              }
+            }
+          ]
+        }
+        """;
+    TestCaseImportRequest importRequest =
+        TestCaseImportRequest.builder()
+            .testCaseMetaData(
+                TestCaseExportMetaData.builder().description("metaDataDescription").build())
+            .build();
+    String output =
+        testCaseService.getDescription(ModelType.QI_CORE.getValue(), bundleJson, importRequest);
+    assertThat(output, is(equalTo("metaDataDescription")));
+  }
+
+  @Test
+  void testGetTitleWithNullImportRequest() {
+    String output = testCaseService.getTitle(null, "theGivenName");
+    assertThat(output, is(equalTo("theGivenName")));
+  }
+
+  @Test
+  void testGetTitleWithNullExportMetaData() {
+    TestCaseImportRequest importRequest =
+        TestCaseImportRequest.builder().testCaseMetaData(null).build();
+    String output = testCaseService.getTitle(importRequest, "theGivenName");
+    assertThat(output, is(equalTo("theGivenName")));
+  }
+
+  @Test
+  void testGetTitleWithValidExportMetaData() {
+    TestCaseImportRequest importRequest =
+        TestCaseImportRequest.builder()
+            .testCaseMetaData(TestCaseExportMetaData.builder().title("metaDataTitle").build())
+            .build();
+    String output = testCaseService.getTitle(importRequest, "theGivenName");
+    assertThat(output, is(equalTo("metaDataTitle")));
+  }
+
+  @Test
+  void testGetSeriesWithNullImportRequest() {
+    String output = testCaseService.getSeries(null, "theFamilyName");
+    assertThat(output, is(equalTo("theFamilyName")));
+  }
+
+  @Test
+  void testGetSeriesWithNullExportMetaData() {
+    TestCaseImportRequest importRequest =
+        TestCaseImportRequest.builder().testCaseMetaData(null).build();
+    String output = testCaseService.getSeries(importRequest, "theFamilyName");
+    assertThat(output, is(equalTo("theFamilyName")));
+  }
+
+  @Test
+  void testGetSeriesWithValidExportMetaDataMissingSeries() {
+    TestCaseImportRequest importRequest =
+        TestCaseImportRequest.builder()
+            .testCaseMetaData(TestCaseExportMetaData.builder().series(null).build())
+            .build();
+    String output = testCaseService.getSeries(importRequest, "theFamilyName");
+    assertThat(output, is(nullValue()));
+  }
+
+  @Test
+  void testGetSeriesWithValidExportMetaDataWithSeries() {
+    TestCaseImportRequest importRequest =
+        TestCaseImportRequest.builder()
+            .testCaseMetaData(TestCaseExportMetaData.builder().series("metaDataSeries").build())
+            .build();
+    String output = testCaseService.getSeries(importRequest, "theFamilyName");
+    assertThat(output, is(equalTo("metaDataSeries")));
   }
 }

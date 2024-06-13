@@ -6,9 +6,12 @@ import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.MeasureNotDraftableException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
+import cms.gov.madie.measure.repositories.CqmMeasureRepository;
 import cms.gov.madie.measure.repositories.ExportRepository;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.common.Version;
+import gov.cms.madie.models.cqm.CqmMeasure;
 import gov.cms.madie.models.measure.ElmJson;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
@@ -46,6 +49,7 @@ import static org.mockito.Mockito.*;
 public class VersionServiceTest {
 
   @Mock private MeasureRepository measureRepository;
+  @Mock private CqmMeasureRepository cqmMeasureRepository;
 
   @Mock ActionLogService actionLogService;
 
@@ -59,9 +63,12 @@ public class VersionServiceTest {
 
   @Mock QdmPackageService qdmPackageService;
 
+  @Mock ExportService exportService;
+
   @InjectMocks VersionService versionService;
 
   @Captor private ArgumentCaptor<Measure> measureCaptor;
+  @Captor private ArgumentCaptor<CqmMeasure> cqmMeasureCaptor;
 
   @Captor private ArgumentCaptor<Export> exportArgumentCaptor;
 
@@ -111,11 +118,13 @@ public class VersionServiceTest {
           .scoringUnit("test-scoring-unit")
           .build();
 
+  MeasureSet measureSet = MeasureSet.builder().measureSetId("MS123").cmsId(144).build();
+
   private final Instant today = Instant.now();
 
   @Test
   public void testCheckValidVersioningThrowsResourceNotFoundException() {
-    when(measureRepository.findById(anyString())).thenReturn(Optional.empty());
+    when(measureService.findMeasureById(anyString())).thenReturn(null);
 
     assertThrows(
         ResourceNotFoundException.class,
@@ -126,7 +135,7 @@ public class VersionServiceTest {
 
   @Test
   public void testCreateVersionThrowsResourceNotFoundException() {
-    when(measureRepository.findById(anyString())).thenReturn(Optional.empty());
+    when(measureService.findMeasureById(anyString())).thenReturn(null);
 
     assertThrows(
         ResourceNotFoundException.class,
@@ -135,8 +144,9 @@ public class VersionServiceTest {
 
   @Test
   public void testCreateVersionThrowsBadVersionRequestExceptionForInvalidVersionType() {
-    Measure existingMeasure = Measure.builder().id("testMeasureId").createdBy("testUser").build();
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+    Measure existingMeasure =
+        Measure.builder().id("testMeasureId").createdBy("testUser").measureSet(measureSet).build();
+    when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
 
     assertThrows(
         BadVersionRequestException.class,
@@ -148,7 +158,7 @@ public class VersionServiceTest {
   @Test
   public void testCheckValidVersioningThrowsBadVersionRequestExceptionForInvalidVersionType() {
     Measure existingMeasure = Measure.builder().id("testMeasureId").createdBy("testUser").build();
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+    when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
 
     assertThrows(
         BadVersionRequestException.class,
@@ -161,7 +171,7 @@ public class VersionServiceTest {
   public void testCheckValidVersioningThrowsUnauthorizedExceptionForNonOwner() {
     Measure existingMeasure =
         Measure.builder().id("testMeasureId").createdBy("anotherUser").build();
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+    when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
     doThrow(new UnauthorizedException("Measure", "testMeasureId", "testUser"))
         .when(measureService)
         .verifyAuthorization(anyString(), any(Measure.class));
@@ -176,8 +186,12 @@ public class VersionServiceTest {
   @Test
   public void testCreateVersionThrowsUnauthorizedExceptionForNonOwner() {
     Measure existingMeasure =
-        Measure.builder().id("testMeasureId").createdBy("anotherUser").build();
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+        Measure.builder()
+            .id("testMeasureId")
+            .createdBy("anotherUser")
+            .measureSet(measureSet)
+            .build();
+    when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
     doThrow(new UnauthorizedException("Measure", "testMeasureId", "testUser"))
         .when(measureService)
         .verifyAuthorization(anyString(), any(Measure.class));
@@ -189,12 +203,13 @@ public class VersionServiceTest {
 
   @Test
   public void testCreateVersionThrowsBadVersionRequestExceptionForNonDraftMeasure() {
-    Measure existingMeasure = Measure.builder().id("testMeasureId").createdBy("testUser").build();
+    Measure existingMeasure =
+        Measure.builder().id("testMeasureId").createdBy("testUser").measureSet(measureSet).build();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(false);
     existingMeasure.setMeasureMetaData(metaData);
 
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+    when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
 
     assertThrows(
         BadVersionRequestException.class,
@@ -202,13 +217,13 @@ public class VersionServiceTest {
   }
 
   @Test
-  public void testCCheckValidVersioningThrowsBadVersionRequestExceptionForNonDraftMeasure() {
+  public void testCheckValidVersioningThrowsBadVersionRequestExceptionForNonDraftMeasure() {
     Measure existingMeasure = Measure.builder().id("testMeasureId").createdBy("testUser").build();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(false);
     existingMeasure.setMeasureMetaData(metaData);
 
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+    when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
 
     assertThrows(
         BadVersionRequestException.class,
@@ -220,12 +235,17 @@ public class VersionServiceTest {
   @Test
   public void testCreateVersionThrowsBadVersionRequestExceptionForCqlErrors() {
     Measure existingMeasure =
-        Measure.builder().id("testMeasureId").createdBy("testUser").cqlErrors(true).build();
+        Measure.builder()
+            .id("testMeasureId")
+            .createdBy("testUser")
+            .cqlErrors(true)
+            .measureSet(measureSet)
+            .build();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(true);
     existingMeasure.setMeasureMetaData(metaData);
 
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+    when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
 
     assertThrows(
         BadVersionRequestException.class,
@@ -240,7 +260,7 @@ public class VersionServiceTest {
     metaData.setDraft(true);
     existingMeasure.setMeasureMetaData(metaData);
 
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+    when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
 
     assertThrows(
         BadVersionRequestException.class,
@@ -257,12 +277,13 @@ public class VersionServiceTest {
             .createdBy("testUser")
             .cqlErrors(false)
             .cql("")
+            .measureSet(measureSet)
             .build();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(true);
     existingMeasure.setMeasureMetaData(metaData);
 
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+    when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
 
     assertThrows(
         BadVersionRequestException.class,
@@ -277,16 +298,18 @@ public class VersionServiceTest {
             .measureName("test measure")
             .createdBy("testUser")
             .cqlErrors(false)
+            .model(ModelType.QDM_5_6.getValue())
             .cql("test cql")
+            .measureSet(measureSet)
             .build();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(true);
     existingMeasure.setMeasureMetaData(metaData);
 
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+    when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
 
     ElmJson elmJson = ElmJson.builder().json(ELMJON_ERROR).build();
-    when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(elmJson);
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString())).thenReturn(elmJson);
     when(elmTranslatorClient.hasErrors(any())).thenReturn(true);
 
     assertThrows(
@@ -303,15 +326,16 @@ public class VersionServiceTest {
             .createdBy("testUser")
             .cqlErrors(false)
             .cql("test cql")
+            .model(ModelType.QDM_5_6.getValue())
             .build();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(true);
     existingMeasure.setMeasureMetaData(metaData);
 
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+    when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
 
     ElmJson elmJson = ElmJson.builder().json(ELMJON_ERROR).build();
-    when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(elmJson);
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString())).thenReturn(elmJson);
     when(elmTranslatorClient.hasErrors(any())).thenReturn(true);
 
     assertThrows(
@@ -328,6 +352,7 @@ public class VersionServiceTest {
             .id("testMeasureId")
             .createdBy("testUser")
             .cql("library Test1CQLLib version '2.3.001")
+            .model(ModelType.QDM_5_6.getValue())
             .build();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(true);
@@ -335,10 +360,10 @@ public class VersionServiceTest {
     List<TestCase> testCases = List.of(TestCase.builder().validResource(false).build());
     existingMeasure.setTestCases(testCases);
 
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+    when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
 
     ElmJson elmJson = ElmJson.builder().json(ELMJON_NO_ERROR).build();
-    when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(elmJson);
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString())).thenReturn(elmJson);
     when(elmTranslatorClient.hasErrors(any())).thenReturn(false);
     var validationResult =
         versionService.checkValidVersioning("testMeasureId", "MAJOR", "testUser", "accesstoken");
@@ -352,15 +377,16 @@ public class VersionServiceTest {
             .id("testMeasureId")
             .createdBy("testUser")
             .cql("library Test1CQLLib version '2.3.001")
+            .model(ModelType.QDM_5_6.getValue())
             .build();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(true);
     existingMeasure.setMeasureMetaData(metaData);
 
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+    when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
 
     ElmJson elmJson = ElmJson.builder().json(ELMJON_NO_ERROR).build();
-    when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(elmJson);
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString())).thenReturn(elmJson);
     when(elmTranslatorClient.hasErrors(any())).thenReturn(false);
     var validationResult =
         versionService.checkValidVersioning("testMeasureId", "MAJOR", "testUser", "accesstoken");
@@ -390,6 +416,8 @@ public class VersionServiceTest {
             .measureSetId("testMeasureSetId")
             .createdBy("testUser")
             .cql("library Test1CQLLib version '2.3.001'")
+            .model(ModelType.QDM_5_6.getValue())
+            .measureSet(measureSet)
             .build();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(true);
@@ -397,10 +425,10 @@ public class VersionServiceTest {
     Version version = Version.builder().major(2).minor(3).revisionNumber(1).build();
     existingMeasure.setVersion(version);
 
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+    when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
 
     ElmJson elmJson = ElmJson.builder().json(ELMJON_NO_ERROR).build();
-    when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(elmJson);
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString())).thenReturn(elmJson);
     when(elmTranslatorClient.hasErrors(any())).thenReturn(false);
 
     Version newVersion = Version.builder().major(2).minor(2).revisionNumber(2).build();
@@ -441,13 +469,15 @@ public class VersionServiceTest {
   }
 
   @Test
-  public void testCreateVersionMinorSuccess() throws Exception {
+  public void testCreateQdmVersionMinorSuccess() throws Exception {
     QdmMeasure existingMeasure =
         QdmMeasure.builder()
             .id("testMeasureId")
             .measureSetId("testMeasureSetId")
             .createdBy("testUser")
             .cql("library Test1CQLLib version '2.3.001'")
+            .model(ModelType.QDM_5_6.getValue())
+            .measureSet(measureSet)
             .build();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(true);
@@ -456,10 +486,10 @@ public class VersionServiceTest {
     existingMeasure.setVersion(version);
     List<TestCase> testCases = List.of(TestCase.builder().validResource(true).build());
     existingMeasure.setTestCases(testCases);
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+    when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
 
     ElmJson elmJson = ElmJson.builder().json(ELMJON_NO_ERROR).build();
-    when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(elmJson);
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString())).thenReturn(elmJson);
     when(elmTranslatorClient.hasErrors(any())).thenReturn(false);
 
     Version newVersion = Version.builder().major(2).minor(3).revisionNumber(2).build();
@@ -475,7 +505,7 @@ public class VersionServiceTest {
     when(measureRepository.save(any(Measure.class))).thenReturn(updatedMeasure);
 
     byte[] exportPackage = "Look, I'm a measure package".getBytes();
-    when(qdmPackageService.getMeasurePackage(any(Measure.class), anyString()))
+    when(exportService.getMeasureExport(any(Measure.class), anyString()))
         .thenReturn(PackageDto.builder().fromStorage(false).exportPackage(exportPackage).build());
 
     when(exportRepository.save(any(Export.class)))
@@ -489,6 +519,7 @@ public class VersionServiceTest {
     versionService.createVersion("testMeasureId", "MINOR", "testUser", "accesstoken");
 
     verify(measureRepository, times(1)).save(measureCaptor.capture());
+    verify(cqmMeasureRepository, times(1)).save(cqmMeasureCaptor.capture());
     Measure savedValue = measureCaptor.getValue();
     assertEquals(savedValue.getVersion().getMajor(), 2);
     assertEquals(savedValue.getVersion().getMinor(), 4);
@@ -506,8 +537,10 @@ public class VersionServiceTest {
         FhirMeasure.builder()
             .id("testMeasureId")
             .measureSetId("testMeasureSetId")
+            .model(ModelType.QDM_5_6.getValue())
             .createdBy("testUser")
             .cql("library Test1CQLLib version '2.3.001'")
+            .measureSet(measureSet)
             .build();
     MeasureMetaData metaData = new MeasureMetaData();
     metaData.setDraft(true);
@@ -516,10 +549,10 @@ public class VersionServiceTest {
     existingMeasure.setVersion(version);
     List<TestCase> testCases = List.of(TestCase.builder().validResource(true).build());
     existingMeasure.setTestCases(testCases);
-    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+    when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
 
     ElmJson elmJson = ElmJson.builder().json(ELMJON_NO_ERROR).build();
-    when(elmTranslatorClient.getElmJson(anyString(), anyString())).thenReturn(elmJson);
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString())).thenReturn(elmJson);
     when(elmTranslatorClient.hasErrors(any())).thenReturn(false);
 
     Version newVersion = Version.builder().major(2).minor(3).revisionNumber(1).build();

@@ -1,9 +1,11 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.dto.PackageDto;
+import cms.gov.madie.measure.dto.qrda.QrdaRequestDTO;
 import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
 import cms.gov.madie.measure.factories.ModelValidatorFactory;
 import cms.gov.madie.measure.factories.PackageServiceFactory;
+import cms.gov.madie.measure.utils.MeasureUtil;
 import gov.cms.madie.models.common.Organization;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
@@ -13,7 +15,7 @@ import gov.cms.madie.models.measure.MeasureSet;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
 import gov.cms.madie.models.measure.TestCase;
-
+import gov.cms.madie.models.validators.ValidLibraryNameValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,6 +47,8 @@ class ExportServiceTest {
   @Mock private QdmPackageService qdmPackageService;
   @Mock private QiCoreModelValidator qicoreModelValidator;
   @Mock private QdmModelValidator qdmModelValidator;
+  @Mock private ValidLibraryNameValidator validLibraryNameValidator;
+  @Mock private MeasureUtil measureUtil;
   @InjectMocks ExportService exportService;
 
   private final String packageContent = "raw package";
@@ -94,6 +98,8 @@ class ExportServiceTest {
   void testGetQdmMeasurePackage() {
     when(modelValidatorFactory.getModelValidator(any())).thenReturn(qdmModelValidator);
     doNothing().when(qdmModelValidator).validateGroups(any(Measure.class));
+    when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
+        .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
     when(packageServiceFactory.getPackageService(any())).thenReturn(qdmPackageService);
     when(qdmPackageService.getMeasurePackage(any(Measure.class), anyString()))
         .thenReturn(
@@ -110,6 +116,8 @@ class ExportServiceTest {
   void testGetQiCoreMeasurePackage() {
     when(modelValidatorFactory.getModelValidator(any())).thenReturn(qicoreModelValidator);
     doNothing().when(qicoreModelValidator).validateGroups(any(Measure.class));
+    when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
+        .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
     when(packageServiceFactory.getPackageService(any())).thenReturn(qicorePackageService);
     when(qicorePackageService.getMeasurePackage(any(Measure.class), anyString()))
         .thenReturn(
@@ -169,6 +177,8 @@ class ExportServiceTest {
     measure.setMeasureMetaData(null);
     when(modelValidatorFactory.getModelValidator(any())).thenReturn(qdmModelValidator);
     doNothing().when(qdmModelValidator).validateGroups(any(Measure.class));
+    when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
+        .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
     when(packageServiceFactory.getPackageService(any())).thenReturn(qdmPackageService);
     PackageDto packageDto =
         PackageDto.builder().fromStorage(false).exportPackage(packageContent.getBytes()).build();
@@ -181,12 +191,11 @@ class ExportServiceTest {
 
   @Test
   void testGetQRDA() {
-    when(modelValidatorFactory.getModelValidator(any())).thenReturn(qdmModelValidator);
-    doNothing().when(qdmModelValidator).validateGroups(any(Measure.class));
     when(packageServiceFactory.getPackageService(any())).thenReturn(qdmPackageService);
-    when(qdmPackageService.getQRDA(any(Measure.class), anyString()))
+    when(qdmPackageService.getQRDA(any(QrdaRequestDTO.class), anyString()))
         .thenReturn(new ResponseEntity<>(packageContent.getBytes(), HttpStatus.OK));
-    ResponseEntity<byte[]> measurePackage = exportService.getQRDA(measure, token);
+    ResponseEntity<byte[]> measurePackage =
+        exportService.getQRDA(QrdaRequestDTO.builder().measure(measure).build(), token);
     assertThat(new String(measurePackage.getBody()), is(equalTo(packageContent)));
   }
 
@@ -195,7 +204,8 @@ class ExportServiceTest {
     measure.setTestCases(Collections.emptyList());
     Exception ex =
         Assertions.assertThrows(
-            InvalidResourceStateException.class, () -> exportService.getQRDA(measure, token));
+            InvalidResourceStateException.class,
+            () -> exportService.getQRDA(QrdaRequestDTO.builder().measure(measure).build(), token));
     assertThat(
         ex.getMessage(),
         is(

@@ -17,6 +17,7 @@ import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureErrorType;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.QdmMeasure;
+import gov.cms.madie.models.validators.ValidLibraryNameValidator;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MeasureUtil {
   private final CqlDefinitionReturnTypeService cqlDefinitionReturnTypeService;
   private final CqlObservationFunctionService cqlObservationFunctionService;
+  private ValidLibraryNameValidator validLibraryNameValidator;
 
   /**
    * Validates measure group population define return types and observation function return types
@@ -53,6 +55,12 @@ public class MeasureUtil {
     if (elmJson == null) {
       cqlErrors = true;
       errors.add(MeasureErrorType.MISSING_ELM);
+    }
+
+    if (!validLibraryNameValidator.isValid(measure, null)
+        || measure.getCqlLibraryName() == null
+        || measure.getCqlLibraryName().length() > 64) {
+      errors.add(MeasureErrorType.INVALID_LIBRARY_NAME);
     }
 
     if (ModelType.QI_CORE.getValue().equalsIgnoreCase(measure.getModel())) {

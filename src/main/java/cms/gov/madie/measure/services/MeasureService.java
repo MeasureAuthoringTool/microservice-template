@@ -312,7 +312,8 @@ public class MeasureService {
 
   public Measure updateElm(Measure measure, String accessToken) {
     if (measure != null && StringUtils.isNotBlank(measure.getCql())) {
-      final ElmJson elmJson = elmTranslatorClient.getElmJson(measure.getCql(), accessToken);
+      final ElmJson elmJson =
+          elmTranslatorClient.getElmJson(measure.getCql(), measure.getModel(), accessToken);
       if (elmTranslatorClient.hasErrors(elmJson)) {
         throw new CqlElmTranslationErrorException(measure.getMeasureName());
       }
@@ -401,19 +402,21 @@ public class MeasureService {
       List<Reference> references =
           (List<Reference>)
               metaData.getReferences().stream()
-                  .map(
-                      reference ->
-                          Reference.builder()
-                              .id(
-                                  StringUtils.isBlank(reference.getId())
-                                      ? UUID.randomUUID().toString()
-                                      : reference.getId())
-                              .referenceText(reference.getReferenceText())
-                              .referenceType(reference.getReferenceType())
-                              .build())
+                  .map(reference -> updateReference(reference))
                   .toList();
       metaData.setReferences(references);
     }
+  }
+
+  private Reference updateReference(Reference reference) {
+    return Reference.builder()
+        .id(
+            StringUtils.isBlank(reference.getId())
+                ? UUID.randomUUID().toString()
+                : reference.getId())
+        .referenceText(reference.getReferenceText())
+        .referenceType(reference.getReferenceType())
+        .build();
   }
 
   public List<Measure> findAllByMeasureSetId(String measureSetId) {
@@ -450,16 +453,6 @@ public class MeasureService {
         && ModelType.QDM_5_6.getValue().equals(measure.getModel())) {
       // throws an error if there is a duplicate anywhere
       this.checkDuplicateCqlLibraryName(measure.getCqlLibraryName(), measure.getMeasureSetId());
-      Version oldVersion = measure.getVersion();
-      Version newVersion = new Version(0, 0, 0);
-      String newCql =
-          measure
-              .getCql()
-              .replace(
-                  "library " + measure.getCqlLibraryName() + " version " + "'" + oldVersion + "'",
-                  "library " + measure.getCqlLibraryName() + " version " + "'" + newVersion + "'");
-      measure.setCql(newCql);
-      measure.setVersion(newVersion);
     }
 
     this.setMeasureElmJsonAndErrors(measure, apiKey, harpId);
@@ -504,7 +497,8 @@ public class MeasureService {
 
     try {
       final ElmJson elmJson =
-          elmTranslatorClient.getElmJsonForMatMeasure(measure.getCql(), apiKey, harpId);
+          elmTranslatorClient.getElmJsonForMatMeasure(
+              measure.getCql(), measure.getModel(), apiKey, harpId);
       if (elmTranslatorClient.hasErrors(elmJson)) {
         measure.setCqlErrors(true);
       }

@@ -2,12 +2,15 @@ package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.config.QdmServiceConfig;
 import cms.gov.madie.measure.dto.PackageDto;
+import cms.gov.madie.measure.dto.qrda.QrdaRequestDTO;
 import cms.gov.madie.measure.exceptions.InternalServerException;
 import cms.gov.madie.measure.repositories.ExportRepository;
 import gov.cms.madie.models.common.ModelType;
+import gov.cms.madie.models.cqm.CqmMeasure;
 import gov.cms.madie.models.measure.Export;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureMetaData;
+import gov.cms.madie.models.measure.QdmMeasure;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -129,9 +132,32 @@ class QdmPackageServiceTest {
     when(qdmServiceRestTemplate.exchange(
             any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
         .thenReturn(ResponseEntity.ok(qrdaContent.getBytes()));
-    ResponseEntity<byte[]> qrda = qdmPackageService.getQRDA(measure, token);
+    ResponseEntity<byte[]> qrda =
+        qdmPackageService.getQRDA(QrdaRequestDTO.builder().measure(measure).build(), token);
     assertThat(qrda, is(notNullValue()));
     assertThat(new String(qrda.getBody()), is(equalTo(qrdaContent)));
+  }
+
+  @Test
+  void testConvertCqmSuccess() {
+    when(qdmServiceConfig.getRetrieveCqmMeasureUrn()).thenReturn("/cqm");
+    // Measure
+    QdmMeasure qdmMeasure =
+        QdmMeasure.builder()
+            .id("testId")
+            .measureSetId("testMeasureSetId")
+            .cqlLibraryName("TestCqlLibraryName")
+            .ecqmTitle("testECqm")
+            .measureName("testMeasureName")
+            .versionId("0.0.000")
+            .build();
+    CqmMeasure cqmMeasure = CqmMeasure.builder().build();
+    when(qdmServiceRestTemplate.exchange(
+            any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+        .thenReturn(ResponseEntity.ok(cqmMeasure));
+    CqmMeasure cqm = qdmPackageService.convertCqm(qdmMeasure, token);
+    assertThat(cqm, is(notNullValue()));
+    assertThat(cqm, is(equalTo(cqmMeasure)));
   }
 
   @Test
@@ -145,7 +171,8 @@ class QdmPackageServiceTest {
     Exception ex =
         assertThrows(
             InternalServerException.class,
-            () -> qdmPackageService.getQRDA(measure, token),
+            () ->
+                qdmPackageService.getQRDA(QrdaRequestDTO.builder().measure(measure).build(), token),
             errorMessage);
     assertThat(ex.getMessage(), is(equalTo("An error occurred while creating a QRDA.")));
   }
