@@ -273,9 +273,6 @@ public class TestCaseService {
 
   public TestCase updateTestCase(
       TestCase testCase, String measureId, String username, String accessToken) {
-
-    log.info("updated???");
-
     Measure measure = measureService.findMeasureById(measureId);
     if (measure == null) {
       throw new ResourceNotFoundException("Measure", measureId);
@@ -329,7 +326,6 @@ public class TestCaseService {
           JsonUtil.replacePatientRefs(
               validatedTestCase.getJson(), validatedTestCase.getPatientId().toString()));
     }
-    log.info("adding test case: {}", validatedTestCase);
     measure.getTestCases().add(validatedTestCase);
 
     measureRepository.save(measure);
@@ -510,7 +506,6 @@ public class TestCaseService {
                     null,
                     model);
               } else {
-                log.info("went here");
                 return validateTestCaseJsonAndCreateTestCase(
                     testCaseImportRequest, measure, userName, accessToken, model);
               }
@@ -628,8 +623,6 @@ public class TestCaseService {
       String accessToken,
       String warningMessage,
       String model) {
-
-    log.info("did we get here?");
     TestCaseImportOutcome failureOutcome =
         TestCaseImportOutcome.builder()
             .familyName(testCaseImportRequest.getFamilyName())
