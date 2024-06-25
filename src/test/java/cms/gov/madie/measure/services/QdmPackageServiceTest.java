@@ -132,10 +132,10 @@ class QdmPackageServiceTest {
     when(qdmServiceRestTemplate.exchange(
             any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
         .thenReturn(ResponseEntity.ok(qrdaContent.getBytes()));
-    ResponseEntity<byte[]> qrda =
+    byte[] qrda =
         qdmPackageService.getQRDA(QrdaRequestDTO.builder().measure(measure).build(), token);
     assertThat(qrda, is(notNullValue()));
-    assertThat(new String(qrda.getBody()), is(equalTo(qrdaContent)));
+    assertThat(new String(qrda), is(equalTo(qrdaContent)));
   }
 
   @Test

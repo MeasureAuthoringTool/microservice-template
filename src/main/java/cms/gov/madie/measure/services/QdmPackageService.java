@@ -60,7 +60,7 @@ public class QdmPackageService implements PackageService {
   }
 
   @Override
-  public ResponseEntity<byte[]> getQRDA(QrdaRequestDTO qrdaRequestDTO, String accessToken) {
+  public byte[] getQRDA(QrdaRequestDTO qrdaRequestDTO, String accessToken) {
     URI uri = URI.create(qdmServiceConfig.getBaseUrl() + qdmServiceConfig.getCreateQrdaUrn());
     HttpHeaders headers = new HttpHeaders();
     headers.set(HttpHeaders.AUTHORIZATION, accessToken);
@@ -70,7 +70,7 @@ public class QdmPackageService implements PackageService {
     try {
       log.info(
           "requesting QRDA for measure [{}] from qdm service", qrdaRequestDTO.getMeasure().getId());
-      return qdmServiceRestTemplate.exchange(uri, HttpMethod.PUT, entity, byte[].class);
+      return qdmServiceRestTemplate.exchange(uri, HttpMethod.PUT, entity, byte[].class).getBody();
     } catch (RestClientException ex) {
       log.error(
           "An error occurred while creating QRDA for QDM measure: "
