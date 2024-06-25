@@ -103,6 +103,9 @@ public class ExportController {
       throw new ResourceNotFoundException("Measure", id);
     }
 
-    return exportService.getQRDA(requestDTO, accessToken);
+    return ResponseEntity.status(HttpStatus.OK)
+        .header(HttpHeaders.CONTENT_DISPOSITION)
+        .contentType(MediaType.APPLICATION_OCTET_STREAM)
+        .body(exportService.getQRDA(requestDTO, accessToken));
   }
 }
