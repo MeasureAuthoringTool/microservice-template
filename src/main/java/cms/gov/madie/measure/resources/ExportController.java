@@ -104,7 +104,11 @@ public class ExportController {
     }
 
     return ResponseEntity.status(HttpStatus.OK)
-        .header(HttpHeaders.CONTENT_DISPOSITION)
+        .header(
+            HttpHeaders.CONTENT_DISPOSITION,
+            "attachment;filename=\""
+                + ExportFileNamesUtil.getExportFileName(requestDTO.getMeasure())
+                + ".zip\"")
         .contentType(MediaType.APPLICATION_OCTET_STREAM)
         .body(exportService.getQRDA(requestDTO, accessToken));
   }
