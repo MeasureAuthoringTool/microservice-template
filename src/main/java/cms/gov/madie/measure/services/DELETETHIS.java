@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Slf4j
-@Component
+@Componentm
 public class DELETETHIS implements HandlerInterceptor {
 
   @Override
