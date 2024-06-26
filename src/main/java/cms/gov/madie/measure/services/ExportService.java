@@ -10,7 +10,6 @@ import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.Measure;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -51,7 +50,7 @@ public class ExportService {
     }
   }
 
-  public ResponseEntity<byte[]> getQRDA(QrdaRequestDTO qrdaRequestDTO, String accessToken) {
+  public byte[] getQRDA(QrdaRequestDTO qrdaRequestDTO, String accessToken) {
     if (CollectionUtils.isEmpty(qrdaRequestDTO.getMeasure().getTestCases())) {
       throw new InvalidResourceStateException(
           "Measure",

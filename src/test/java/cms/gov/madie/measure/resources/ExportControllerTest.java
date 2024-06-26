@@ -218,7 +218,7 @@ class ExportControllerTest {
 
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
     when(exportService.getQRDA(eq(QrdaRequestDTO.builder().measure(measure).build()), anyString()))
-        .thenReturn(new ResponseEntity<>(new byte[0], HttpStatus.OK));
+        .thenReturn(new byte[0]);
     ResponseEntity<byte[]> output =
         exportController.getQRDA(
             principal,

@@ -29,7 +29,7 @@ public class CqmMeasureService {
       // if not versioned, Convert Measure to CqmMeasure with madie-qdm-service
       cqmMeasure = qdmPackageService.convertCqm(measure, accessToken);
     } else {
-      // 	otherwise, get the CqmMeasure from the repo
+      // otherwise, get the CqmMeasure from the repo
       cqmMeasure =
           cqmMeasureRepo.findByHqmfSetIdAndHqmfVersionNumber(
               measure.getMeasureSetId(), measure.getVersionId());

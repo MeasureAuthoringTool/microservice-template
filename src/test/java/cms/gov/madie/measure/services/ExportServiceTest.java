@@ -24,8 +24,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -193,10 +191,10 @@ class ExportServiceTest {
   void testGetQRDA() {
     when(packageServiceFactory.getPackageService(any())).thenReturn(qdmPackageService);
     when(qdmPackageService.getQRDA(any(QrdaRequestDTO.class), anyString()))
-        .thenReturn(new ResponseEntity<>(packageContent.getBytes(), HttpStatus.OK));
-    ResponseEntity<byte[]> measurePackage =
+        .thenReturn(packageContent.getBytes());
+    byte[] measurePackage =
         exportService.getQRDA(QrdaRequestDTO.builder().measure(measure).build(), token);
-    assertThat(new String(measurePackage.getBody()), is(equalTo(packageContent)));
+    assertThat(new String(measurePackage), is(equalTo(packageContent)));
   }
 
   @Test

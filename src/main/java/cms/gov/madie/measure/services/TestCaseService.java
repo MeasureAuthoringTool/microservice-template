@@ -23,6 +23,7 @@ import gov.cms.madie.models.measure.TestCaseImportOutcome;
 import gov.cms.madie.models.measure.TestCaseImportRequest;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -434,6 +435,17 @@ public class TestCaseService {
     return "Succesfully deleted provided test cases";
   }
 
+  /**
+   * This logic is shared by both the QI-Core "Import from MADiE" workflow, and QDM "Import from
+   * Bonnie" workflow
+   *
+   * @param testCaseImportRequests
+   * @param measureId
+   * @param userName
+   * @param accessToken
+   * @param model
+   * @return
+   */
   public List<TestCaseImportOutcome> importTestCases(
       List<TestCaseImportRequest> testCaseImportRequests,
       String measureId,
@@ -517,8 +529,8 @@ public class TestCaseService {
       }
       TestCase newTestCase =
           TestCase.builder()
-              .title(givenName)
-              .series(familyName)
+              .title(getTitle(testCaseImportRequest, givenName))
+              .series(getSeries(testCaseImportRequest, familyName))
               .patientId(testCaseImportRequest.getPatientId())
               .build();
       List<TestCaseGroupPopulation> testCaseGroupPopulations =
@@ -619,7 +631,8 @@ public class TestCaseService {
             .successful(false)
             .build();
     try {
-      existingTestCase.setDescription(getDescription(model, testCaseImportRequest.getJson()));
+      existingTestCase.setDescription(
+          getDescription(model, testCaseImportRequest.getJson(), testCaseImportRequest));
       existingTestCase.setJson(getJson(model, testCaseImportRequest.getJson()));
       TestCase updatedTestCase = updateTestCase(existingTestCase, measureId, userName, accessToken);
       log.info(
@@ -660,10 +673,10 @@ public class TestCaseService {
       return failureOutcome;
     } catch (Exception e) {
       log.info(
-          "User {} is unable to import test case with patient id : {}; Error Message : {}",
+          "User {} is unable to import test case with patient id : {}; Error Message:",
           userName,
           testCaseImportRequest.getPatientId(),
-          e.getMessage());
+          e);
       failureOutcome.setMessage(
           "Unable to import test case, please try again. "
               + "If the error persists, Please contact helpdesk.");
@@ -671,10 +684,29 @@ public class TestCaseService {
     }
   }
 
-  private String getDescription(String model, String json) throws JsonProcessingException {
+  protected String getTitle(TestCaseImportRequest importRequest, final String givenName) {
+    return importRequest == null || importRequest.getTestCaseMetaData() == null
+        ? givenName
+        : importRequest.getTestCaseMetaData().getTitle();
+  }
+
+  protected String getSeries(TestCaseImportRequest importRequest, final String familyName) {
+    return importRequest == null || importRequest.getTestCaseMetaData() == null
+        ? familyName
+        : importRequest.getTestCaseMetaData().getSeries();
+  }
+
+  protected String getDescription(
+      String model, String json, TestCaseImportRequest testCaseImportRequest)
+      throws JsonProcessingException {
     String description = null;
     if (ModelType.QI_CORE.getValue().equalsIgnoreCase(model)) {
-      description = JsonUtil.getTestDescription(json);
+      String defaultDescription = JsonUtil.getTestDescription(json);
+      description =
+          testCaseImportRequest == null || testCaseImportRequest.getTestCaseMetaData() == null
+              ? defaultDescription
+              : ObjectUtils.defaultIfNull(
+                  testCaseImportRequest.getTestCaseMetaData().getDescription(), defaultDescription);
     } else if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(model)) {
       description = JsonUtil.getTestDescriptionQdm(json);
     }
