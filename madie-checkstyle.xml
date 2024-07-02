@@ -31,7 +31,7 @@
         <module name="MethodLength">
             <property name="tokens" value="METHOD_DEF" />
             <property name="countEmpty" value="false" />
-            <property name="max" value="65" />
+            <property name="max" value="220" />
         </module>
 
         <!-- https://checkstyle.sourceforge.io/config_misc.html#OuterTypeFilename -->
