@@ -190,7 +190,7 @@ public class TestCaseController {
     return testCase;
   }
 
-  @PutMapping(ControllerUtil.TEST_CASES + "/{testCaseId}/shiftDates")
+  @PutMapping(ControllerUtil.TEST_CASES + "/{testCaseId}/qdm/shiftDates")
   public ResponseEntity<TestCase> shiftTestCaseDates(
       @PathVariable String measureId,
       @PathVariable String testCaseId,

@@ -11,6 +11,7 @@ import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.common.Version;
 import cms.gov.madie.measure.services.TestCaseService;
+import cms.gov.madie.measure.services.TestCaseShiftDatesService;
 import gov.cms.madie.models.measure.TestCaseImportOutcome;
 import gov.cms.madie.models.measure.TestCaseImportRequest;
 import org.bson.types.ObjectId;
@@ -45,6 +46,7 @@ public class TestCaseControllerTest {
   @Mock private TestCaseService testCaseService;
   @Mock private MeasureRepository repository;
   @Mock private MeasureService measureService;
+  @Mock private TestCaseShiftDatesService testCaseShiftDatesService;
 
   @InjectMocks private TestCaseController controller;
 
@@ -60,6 +62,7 @@ public class TestCaseControllerTest {
     testCase.setCreatedBy("TestUser");
     testCase.setLastModifiedBy("TestUser2");
     testCase.setDescription("TESTCASEDESCRIPTION");
+    testCase.setJson("date1");
 
     measure = new Measure();
     measure.setId(ObjectId.get().toString());
@@ -398,5 +401,27 @@ public class TestCaseControllerTest {
           controller.importTestCasesQdm(
               List.of(testCaseImportRequest), measure.getId(), "TOKEN", principal);
         });
+  }
+
+  @Test
+  void shiftTestCaseDates() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    testCase.setJson("Date2");
+    doReturn(testCase)
+        .when(testCaseShiftDatesService)
+        .shiftTestCaseDates(
+            any(String.class),
+            any(String.class),
+            any(Integer.class),
+            any(String.class),
+            anyString());
+    ResponseEntity<TestCase> response =
+        controller.shiftTestCaseDates(measure.getId(), testCase.getId(), 1, "TOKEN", principal);
+
+    assertNotNull(response.getBody());
+
+    assertEquals("Date2", response.getBody().getJson());
   }
 }

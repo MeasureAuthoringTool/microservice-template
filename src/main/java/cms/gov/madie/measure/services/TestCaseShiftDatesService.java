@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import cms.gov.madie.measure.exceptions.CqmConversionException;
@@ -49,11 +49,8 @@ import gov.cms.madie.models.cqm.datacriteria.PatientCareExperience;
 import gov.cms.madie.models.cqm.datacriteria.PatientCharacteristic;
 import gov.cms.madie.models.cqm.datacriteria.PatientCharacteristicBirthdate;
 import gov.cms.madie.models.cqm.datacriteria.PatientCharacteristicClinicalTrialParticipant;
-import gov.cms.madie.models.cqm.datacriteria.PatientCharacteristicEthnicity;
 import gov.cms.madie.models.cqm.datacriteria.PatientCharacteristicExpired;
 import gov.cms.madie.models.cqm.datacriteria.PatientCharacteristicPayer;
-import gov.cms.madie.models.cqm.datacriteria.PatientCharacteristicRace;
-import gov.cms.madie.models.cqm.datacriteria.PatientCharacteristicSex;
 import gov.cms.madie.models.cqm.datacriteria.PhysicalExamOrder;
 import gov.cms.madie.models.cqm.datacriteria.PhysicalExamPerformed;
 import gov.cms.madie.models.cqm.datacriteria.PhysicalExamRecommended;
@@ -61,7 +58,6 @@ import gov.cms.madie.models.cqm.datacriteria.ProcedureOrder;
 import gov.cms.madie.models.cqm.datacriteria.ProcedurePerformed;
 import gov.cms.madie.models.cqm.datacriteria.ProcedureRecommended;
 import gov.cms.madie.models.cqm.datacriteria.ProviderCareExperience;
-import gov.cms.madie.models.cqm.datacriteria.RelatedPerson;
 import gov.cms.madie.models.cqm.datacriteria.SubstanceAdministered;
 import gov.cms.madie.models.cqm.datacriteria.SubstanceOrder;
 import gov.cms.madie.models.cqm.datacriteria.SubstanceRecommended;
@@ -98,16 +94,10 @@ public class TestCaseShiftDatesService {
       testCase = existingOpt.get();
     }
 
-    ObjectMapper mapper =
-        new ObjectMapper().registerModule(new JavaTimeModule()).registerModule(new Jdk8Module());
-    //    mapper.findAndRegisterModules();
-    //    mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+    ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
+    mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
     try {
-
-      System.out.println("testCase.getJson() -> " + testCase.getJson());
-
       TestCaseJson testCaseJson = mapper.readValue(testCase.getJson(), TestCaseJson.class);
-      System.out.println("testCaseJson -> " + testCaseJson.toString());
       if (testCaseJson != null) {
         List<DataElement> elements = testCaseJson.getDataElements();
         if (CollectionUtils.isNotEmpty(elements)) {
@@ -115,29 +105,28 @@ public class TestCaseShiftDatesService {
             shiftDates(element, shifted);
           }
         }
-        System.out.println("testCaseJson after shifting -> " + testCaseJson.toString());
-        // ObjectWriter ow = mapper.writer();
-        mapper.setDateFormat(null);
+        // mapper.setDateFormat(null);
         String newJson = mapper.writeValueAsString(testCaseJson);
+        System.out.println("newJson -> \n" + newJson);
         testCase.setJson(newJson);
+        testCaseService.updateTestCase(testCase, measureId, username, accessToken);
       }
     } catch (JsonProcessingException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      throw new CqmConversionException("JsonProcessingException for test case id : " + testCaseId);
     }
 
     return testCase;
   }
 
   void shiftDates(DataElement dataElement, int shifted) {
-    String type = dataElement.get_type();
+    String type = dataElement.get_type() != null ? dataElement.get_type() : "";
 
     switch (type) {
       case "QDM::AdverseEvent":
         AdverseEvent adverseEvent = (AdverseEvent) dataElement;
         adverseEvent.shiftDates(shifted);
         break;
-      case "QDM::Allergy/Intolerance":
+      case "QDM::AllergyIntolerance":
         AllergyIntolerance allergyIntolerance = (AllergyIntolerance) dataElement;
         allergyIntolerance.shiftDates(shifted);
         break;
@@ -165,7 +154,7 @@ public class TestCaseShiftDatesService {
         DeviceOrder deviceOrder = (DeviceOrder) dataElement;
         deviceOrder.shiftDates(shifted);
         break;
-      case "DeviceRecommended":
+      case "QDM::DeviceRecommended":
         DeviceRecommended deviceRecommended = (DeviceRecommended) dataElement;
         deviceRecommended.shiftDates(shifted);
         break;
@@ -198,7 +187,7 @@ public class TestCaseShiftDatesService {
         EncounterRecommended encounterRecommended = (EncounterRecommended) dataElement;
         encounterRecommended.shiftDates(shifted);
         break;
-      case "FamilyHistory":
+      case "QDM::FamilyHistory":
         FamilyHistory familyHistory = (FamilyHistory) dataElement;
         familyHistory.shiftDates(shifted);
         break;
@@ -222,7 +211,7 @@ public class TestCaseShiftDatesService {
         InterventionRecommended interventionRecommended = (InterventionRecommended) dataElement;
         interventionRecommended.shiftDates(shifted);
         break;
-      case "LaboratoryTestOrder":
+      case "QDM::LaboratoryTestOrder":
         LaboratoryTestOrder laboratoryTestOrder = (LaboratoryTestOrder) dataElement;
         laboratoryTestOrder.shiftDates(shifted);
         break;
@@ -278,10 +267,6 @@ public class TestCaseShiftDatesService {
                 (PatientCharacteristicClinicalTrialParticipant) dataElement;
         patientCharacteristicClinicalTrialParticipant.shiftDates(shifted);
         break;
-      case "QDM::PatientCharacteristicEthnicity":
-        PatientCharacteristicEthnicity patientCharacteristicEthnicity =
-            (PatientCharacteristicEthnicity) dataElement;
-        break;
       case "QDM::PatientCharacteristicExpired":
         PatientCharacteristicExpired patientCharacteristicExpired =
             (PatientCharacteristicExpired) dataElement;
@@ -291,13 +276,6 @@ public class TestCaseShiftDatesService {
         PatientCharacteristicPayer patientCharacteristicPayer =
             (PatientCharacteristicPayer) dataElement;
         patientCharacteristicPayer.shiftDates(shifted);
-        break;
-      case "QDM::PatientCharacteristicRace":
-        PatientCharacteristicRace patientCharacteristicRace =
-            (PatientCharacteristicRace) dataElement;
-        break;
-      case "QDM::PatientCharacteristicSex":
-        PatientCharacteristicSex patientCharacteristicSex = (PatientCharacteristicSex) dataElement;
         break;
       case "QDM::PhysicalExamOrder":
         PhysicalExamOrder physicalExamOrder = (PhysicalExamOrder) dataElement;
@@ -327,9 +305,6 @@ public class TestCaseShiftDatesService {
         ProcedureOrder procedureOrder = (ProcedureOrder) dataElement;
         procedureOrder.shiftDates(shifted);
         break;
-      case "QDM::RelatedPerson":
-        RelatedPerson relatedPerson = (RelatedPerson) dataElement;
-        break;
       case "QDM::SubstanceAdministered":
         SubstanceAdministered substanceAdministered = (SubstanceAdministered) dataElement;
         substanceAdministered.shiftDates(shifted);
@@ -342,7 +317,7 @@ public class TestCaseShiftDatesService {
         SubstanceRecommended substanceRecommended = (SubstanceRecommended) dataElement;
         substanceRecommended.shiftDates(shifted);
         break;
-      case "Symptom":
+      case "QDM::Symptom":
         Symptom symptom = (Symptom) dataElement;
         symptom.shiftDates(shifted);
         break;
