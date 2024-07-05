@@ -24,12 +24,11 @@ public class UpdateMeasureTypesChangeUnit {
     log.info("Updating measure types");
     List<Measure> measures = measureRepository.findAll();
 
-    HashMap<BaseConfigurationTypes, BaseConfigurationTypes> updatedMeasureTypeReplacementsMap =
-        new HashMap<>();
+    HashMap<String, BaseConfigurationTypes> updatedMeasureTypeReplacementsMap = new HashMap<>();
     updatedMeasureTypeReplacementsMap.put(
-        BaseConfigurationTypes.COST_OR_RESOURCE_USE, BaseConfigurationTypes.RESOURCE_USE);
+        "COST_OR_RESOURCE_USE", BaseConfigurationTypes.RESOURCE_USE);
     updatedMeasureTypeReplacementsMap.put(
-        BaseConfigurationTypes.PATIENT_ENGAGEMENT_OR_EXPERIENCE, BaseConfigurationTypes.EXPERIENCE);
+        "PATIENT_ENGAGEMENT_OR_EXPERIENCE", BaseConfigurationTypes.EXPERIENCE);
 
     if (CollectionUtils.isNotEmpty(measures)) {
       measures.forEach(
@@ -42,7 +41,7 @@ public class UpdateMeasureTypesChangeUnit {
                         .map(
                             baseConfigurationType ->
                                 updatedMeasureTypeReplacementsMap.getOrDefault(
-                                    baseConfigurationType, baseConfigurationType))
+                                    baseConfigurationType.name(), baseConfigurationType))
                         .collect(Collectors.toList());
 
                 qdmMeasure.setBaseConfigurationTypes(updatedMeasureTypes);
