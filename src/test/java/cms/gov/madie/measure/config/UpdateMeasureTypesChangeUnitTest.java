@@ -41,9 +41,7 @@ public class UpdateMeasureTypesChangeUnitTest {
             .id("xyz-p13r-13ert")
             .model(ModelType.QDM_5_6.getValue())
             .baseConfigurationTypes(
-                List.of(
-                    BaseConfigurationTypes.PATIENT_ENGAGEMENT_OR_EXPERIENCE,
-                    BaseConfigurationTypes.COST_OR_RESOURCE_USE))
+                List.of(BaseConfigurationTypes.EXPERIENCE, BaseConfigurationTypes.RESOURCE_USE))
             .cql("test cql")
             .elmJson("")
             .measureSetId("IDIDID")
