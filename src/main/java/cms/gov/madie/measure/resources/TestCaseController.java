@@ -197,7 +197,6 @@ public class TestCaseController {
       @RequestParam(name = "shifted", defaultValue = "0") int shifted,
       @RequestHeader("Authorization") String accessToken,
       Principal principal) {
-
     return ResponseEntity.ok(
         testCaseShiftDatesService.shiftTestCaseDates(
             measureId, testCaseId, shifted, principal.getName(), accessToken));

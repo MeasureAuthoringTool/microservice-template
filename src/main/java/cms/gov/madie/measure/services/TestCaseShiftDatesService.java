@@ -105,13 +105,12 @@ public class TestCaseShiftDatesService {
             shiftDates(element, shifted);
           }
         }
-        // mapper.setDateFormat(null);
         String newJson = mapper.writeValueAsString(testCaseJson);
-        System.out.println("newJson -> \n" + newJson);
         testCase.setJson(newJson);
         testCaseService.updateTestCase(testCase, measureId, username, accessToken);
       }
     } catch (JsonProcessingException e) {
+      e.printStackTrace();
       throw new CqmConversionException("JsonProcessingException for test case id : " + testCaseId);
     }
 
