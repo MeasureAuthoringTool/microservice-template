@@ -1,56 +1,37 @@
 package cms.gov.madie.measure.config;
 
-import cms.gov.madie.measure.repositories.MeasureRepository;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.BaseConfigurationTypes;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.QdmMeasure;
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
+import org.bson.Document;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @ChangeUnit(id = "measure_types_update", order = "1", author = "madie_dev")
 public class UpdateMeasureTypesChangeUnit {
 
   @Execution
-  public void updateMeasureTypes(MeasureRepository measureRepository) {
-    log.info("Updating measure types");
-    List<Measure> measures = measureRepository.findAll();
+  public void updateMeasureTypes(MongoDatabase mongoDatabase) {
 
-    HashMap<String, BaseConfigurationTypes> updatedMeasureTypeReplacementsMap = new HashMap<>();
-    updatedMeasureTypeReplacementsMap.put(
-        "COST_OR_RESOURCE_USE", BaseConfigurationTypes.RESOURCE_USE);
-    updatedMeasureTypeReplacementsMap.put(
-        "PATIENT_ENGAGEMENT_OR_EXPERIENCE", BaseConfigurationTypes.EXPERIENCE);
+    MongoCollection<Document> collection = mongoDatabase.getCollection("measure");
 
-    if (CollectionUtils.isNotEmpty(measures)) {
-      measures.forEach(
-          measure -> {
-            if (measure.getModel().equalsIgnoreCase(ModelType.QDM_5_6.getValue())) {
-              QdmMeasure qdmMeasure = (QdmMeasure) measure;
-              if (CollectionUtils.isNotEmpty(qdmMeasure.getBaseConfigurationTypes())) {
-                List<BaseConfigurationTypes> updatedMeasureTypes =
-                    qdmMeasure.getBaseConfigurationTypes().stream()
-                        .map(
-                            baseConfigurationType ->
-                                updatedMeasureTypeReplacementsMap.getOrDefault(
-                                    baseConfigurationType.name(), baseConfigurationType))
-                        .collect(Collectors.toList());
+    // Filter to match only documents where model is QDM
+    Document filter = new Document("model", ModelType.QDM_5_6.getValue());
 
-                qdmMeasure.setBaseConfigurationTypes(updatedMeasureTypes);
-                measureRepository.save(qdmMeasure);
-              }
-            }
-          });
-    }
-    log.info("Completed updateMeasureTypes()");
+    collection.updateMany(
+        Filters.and(filter, Filters.in("baseConfigurationTypes", "COST_OR_RESOURCE_USE")),
+        Updates.set("baseConfigurationTypes.$", BaseConfigurationTypes.RESOURCE_USE));
+
+    collection.updateMany(
+            Filters.and(filter, Filters.in("baseConfigurationTypes", "PATIENT_ENGAGEMENT_OR_EXPERIENCE")),
+            Updates.set("baseConfigurationTypes.$", BaseConfigurationTypes.EXPERIENCE));
   }
 
   @RollbackExecution
