@@ -726,10 +726,9 @@ public class TestCaseService {
 
   private String formatErrorMessage(Exception e) {
     return e.getClass().getSimpleName().equals("DuplicateTestCaseNameException")
-        ? "The Family and Given name combination on the Patient resource in the Test Case JSON"
-            + " is already used in another test case on this measure. The combination"
-            + " must be unique (case insensitive, spaces ignored) across all test cases"
-            + " associated with the measure."
+        ? "The Test Case Group and Title are already used in another test case on this "
+            + "measure. The combination must be unique (case insensitive,"
+            + " spaces ignored) across all test cases associated with the measure."
         : e.getMessage();
   }
 
