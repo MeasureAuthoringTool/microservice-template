@@ -73,7 +73,6 @@ import gov.cms.madie.models.cqm.datacriteria.SubstanceRecommended;
 import gov.cms.madie.models.cqm.datacriteria.Symptom;
 import gov.cms.madie.models.cqm.datacriteria.basetypes.DataElement;
 import gov.cms.madie.models.cqm.datacriteria.basetypes.Interval;
-import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.TestCase;
 
 @ExtendWith(MockitoExtension.class)
@@ -82,7 +81,6 @@ public class TestCaseShiftDatesServiceTest {
   @InjectMocks private TestCaseShiftDatesService testCaseShiftDatesService;
 
   private TestCase testCase;
-  private Measure measure;
   private static final String json =
       "{\"qdmVersion\":\"5.6\",\"dataElements\":[{\"dataElementCodes\":[{\"code\":\"14463-4\",\"system\":\"2.16.840.1.113883.6.1\",\"version\":null,\"display\":\"Chlamydia trachomatis [Presence] in Cervix by Organism specific culture\"}],\"_id\":\"666b3dda1d026b000017e20b\",\"performer\":[],\"relatedTo\":[],\"qdmTitle\":\"Laboratory Test, Performed\",\"hqmfOid\":\"2.16.840.1.113883.10.20.28.4.42\",\"qdmCategory\":\"laboratory_test\",\"qdmStatus\":\"performed\",\"qdmVersion\":\"5.6\",\"_type\":\"QDM::LaboratoryTestPerformed\",\"description\":\"Laboratory Test, Performed: Chlamydia Screening\",\"codeListId\":\"2.16.840.1.113883.3.464.1003.110.12.1052\",\"id\":\"666b3dda1d026b000017e20a\",\"components\":[{\"qdmVersion\":\"5.6\",\"_type\":\"QDM::Component\",\"_id\":\"666b3e2e1d026b000017e28d\",\"code\":{\"code\":\"105604006\",\"system\":\"2.16.840.1.113883.6.96\",\"version\":null,\"display\":\"Deficiency of naturally occurring coagulation factor inhibitor (disorder)\"}}],\"relevantPeriod\":{\"low\":\"2024-02-29T00:00:00.000+00:00\",\"high\":\"2024-06-28T00:00:00.000+00:00\",\"lowClosed\":true,\"highClosed\":true},\"relevantDatetime\":\"2024-06-29T00:00:00.000+00:00\",\"authorDatetime\":\"2024-02-29T00:00:00.000+00:00\",\"resultDatetime\":\"2024-02-29T00:00:00.000+00:00\"}],\"_id\":\"66698bcec3b50c0000acc383\"}";
   private static final String dateTimeString = "2024-02-29T00:00:00.000Z";
@@ -92,11 +90,6 @@ public class TestCaseShiftDatesServiceTest {
     testCase = new TestCase();
     testCase.setId("TESTID");
     testCase.setJson(json);
-
-    measure = new Measure();
-    measure.setCreatedBy("test.user5");
-    measure.setId("TestMeasureId");
-    measure.setTestCases(List.of(testCase));
   }
 
   @Test
