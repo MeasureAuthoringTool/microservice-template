@@ -99,6 +99,7 @@ public class TestCaseShiftDatesService {
     try {
       TestCaseJson testCaseJson = mapper.readValue(testCase.getJson(), TestCaseJson.class);
       if (testCaseJson != null) {
+        testCaseJson.setBirthDatetime(testCaseJson.shiftDateByYear(shifted));
         List<DataElement> elements = testCaseJson.getDataElements();
         if (CollectionUtils.isNotEmpty(elements)) {
           for (DataElement element : elements) {
