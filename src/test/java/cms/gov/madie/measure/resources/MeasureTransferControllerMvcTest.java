@@ -127,11 +127,9 @@ public class MeasureTransferControllerMvcTest {
             .references(references)
             .draft(true)
             .endorsements(endorsements)
-            .riskAdjustment("test risk adjustment")
             .definition("test definition")
             .experimental(false)
             .transmissionFormat("test transmission format")
-            .supplementalDataElements("test supplemental data elements")
             .build();
 
     measure =

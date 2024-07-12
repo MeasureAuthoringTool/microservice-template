@@ -12,7 +12,6 @@ import io.mongock.api.annotations.RollbackExecution;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 
-
 @Slf4j
 @ChangeUnit(id = "measure_types_update", order = "1", author = "madie_dev")
 public class UpdateMeasureTypesChangeUnit {
@@ -30,8 +29,9 @@ public class UpdateMeasureTypesChangeUnit {
         Updates.set("baseConfigurationTypes.$", BaseConfigurationTypes.RESOURCE_USE));
 
     collection.updateMany(
-            Filters.and(filter, Filters.in("baseConfigurationTypes", "PATIENT_ENGAGEMENT_OR_EXPERIENCE")),
-            Updates.set("baseConfigurationTypes.$", BaseConfigurationTypes.EXPERIENCE));
+        Filters.and(
+            filter, Filters.in("baseConfigurationTypes", "PATIENT_ENGAGEMENT_OR_EXPERIENCE")),
+        Updates.set("baseConfigurationTypes.$", BaseConfigurationTypes.EXPERIENCE));
   }
 
   @RollbackExecution

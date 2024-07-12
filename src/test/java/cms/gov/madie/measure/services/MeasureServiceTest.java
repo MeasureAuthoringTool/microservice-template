@@ -137,11 +137,9 @@ public class MeasureServiceTest implements ResourceUtil {
             .references(references)
             .draft(true)
             .endorsements(endorsements)
-            .riskAdjustment("test risk adjustment")
             .definition("test definition")
             .experimental(false)
             .transmissionFormat("test transmission format")
-            .supplementalDataElements("test supplemental data elements")
             .build();
 
     finalMeasureMetaData =
@@ -152,11 +150,9 @@ public class MeasureServiceTest implements ResourceUtil {
             .references(references)
             .draft(false)
             .endorsements(endorsements)
-            .riskAdjustment("test risk adjustment")
             .definition("test definition")
             .experimental(false)
             .transmissionFormat("test transmission format")
-            .supplementalDataElements("test supplemental data elements")
             .build();
 
     // Present in DB and has ID
@@ -1240,9 +1236,6 @@ public class MeasureServiceTest implements ResourceUtil {
     assertEquals(
         measure1.getMeasureMetaData().isDraft(), persistedMeasure.getMeasureMetaData().isDraft());
     assertEquals(
-        measure1.getMeasureMetaData().getRiskAdjustment(),
-        persistedMeasure.getMeasureMetaData().getRiskAdjustment());
-    assertEquals(
         measure1.getMeasureMetaData().getDefinition(),
         persistedMeasure.getMeasureMetaData().getDefinition());
     assertEquals(
@@ -1251,9 +1244,6 @@ public class MeasureServiceTest implements ResourceUtil {
     assertEquals(
         measure1.getMeasureMetaData().getTransmissionFormat(),
         persistedMeasure.getMeasureMetaData().getTransmissionFormat());
-    assertEquals(
-        measure1.getMeasureMetaData().getSupplementalDataElements(),
-        persistedMeasure.getMeasureMetaData().getSupplementalDataElements());
 
     assertEquals("SB Url", persistedMeasure.getMeasureMetaData().getSteward().getUrl());
     assertEquals(1, persistedMeasure.getMeasureMetaData().getDevelopers().size());
@@ -1291,9 +1281,6 @@ public class MeasureServiceTest implements ResourceUtil {
     assertEquals(
         measure1.getMeasureMetaData().isDraft(), persistedMeasure.getMeasureMetaData().isDraft());
     assertEquals(
-        measure1.getMeasureMetaData().getRiskAdjustment(),
-        persistedMeasure.getMeasureMetaData().getRiskAdjustment());
-    assertEquals(
         measure1.getMeasureMetaData().getDefinition(),
         persistedMeasure.getMeasureMetaData().getDefinition());
     assertEquals(
@@ -1302,9 +1289,6 @@ public class MeasureServiceTest implements ResourceUtil {
     assertEquals(
         measure1.getMeasureMetaData().getTransmissionFormat(),
         persistedMeasure.getMeasureMetaData().getTransmissionFormat());
-    assertEquals(
-        measure1.getMeasureMetaData().getSupplementalDataElements(),
-        persistedMeasure.getMeasureMetaData().getSupplementalDataElements());
 
     assertEquals("SB Url", persistedMeasure.getMeasureMetaData().getSteward().getUrl());
     assertNull(persistedMeasure.getMeasureMetaData().getDevelopers());
@@ -1341,9 +1325,6 @@ public class MeasureServiceTest implements ResourceUtil {
     assertEquals(
         measure1.getMeasureMetaData().isDraft(), persistedMeasure.getMeasureMetaData().isDraft());
     assertEquals(
-        measure1.getMeasureMetaData().getRiskAdjustment(),
-        persistedMeasure.getMeasureMetaData().getRiskAdjustment());
-    assertEquals(
         measure1.getMeasureMetaData().getDefinition(),
         persistedMeasure.getMeasureMetaData().getDefinition());
     assertEquals(
@@ -1352,9 +1333,6 @@ public class MeasureServiceTest implements ResourceUtil {
     assertEquals(
         measure1.getMeasureMetaData().getTransmissionFormat(),
         persistedMeasure.getMeasureMetaData().getTransmissionFormat());
-    assertEquals(
-        measure1.getMeasureMetaData().getSupplementalDataElements(),
-        persistedMeasure.getMeasureMetaData().getSupplementalDataElements());
 
     assertEquals("SB Url", persistedMeasure.getMeasureMetaData().getSteward().getUrl());
     assertEquals(0, persistedMeasure.getMeasureMetaData().getDevelopers().size());
@@ -1396,9 +1374,6 @@ public class MeasureServiceTest implements ResourceUtil {
     assertEquals(
         measure1.getMeasureMetaData().isDraft(), persistedMeasure.getMeasureMetaData().isDraft());
     assertEquals(
-        measure1.getMeasureMetaData().getRiskAdjustment(),
-        persistedMeasure.getMeasureMetaData().getRiskAdjustment());
-    assertEquals(
         measure1.getMeasureMetaData().getDefinition(),
         persistedMeasure.getMeasureMetaData().getDefinition());
     assertEquals(
@@ -1407,9 +1382,6 @@ public class MeasureServiceTest implements ResourceUtil {
     assertEquals(
         measure1.getMeasureMetaData().getTransmissionFormat(),
         persistedMeasure.getMeasureMetaData().getTransmissionFormat());
-    assertEquals(
-        measure1.getMeasureMetaData().getSupplementalDataElements(),
-        persistedMeasure.getMeasureMetaData().getSupplementalDataElements());
 
     assertEquals("Innovaccer Url", persistedMeasure.getMeasureMetaData().getSteward().getUrl());
     assertEquals(2, persistedMeasure.getMeasureMetaData().getDevelopers().size());
@@ -1457,9 +1429,6 @@ public class MeasureServiceTest implements ResourceUtil {
     assertEquals(
         measure1.getMeasureMetaData().isDraft(), persistedMeasure.getMeasureMetaData().isDraft());
     assertEquals(
-        measure1.getMeasureMetaData().getRiskAdjustment(),
-        persistedMeasure.getMeasureMetaData().getRiskAdjustment());
-    assertEquals(
         measure1.getMeasureMetaData().getDefinition(),
         persistedMeasure.getMeasureMetaData().getDefinition());
     assertEquals(
@@ -1468,9 +1437,6 @@ public class MeasureServiceTest implements ResourceUtil {
     assertEquals(
         measure1.getMeasureMetaData().getTransmissionFormat(),
         persistedMeasure.getMeasureMetaData().getTransmissionFormat());
-    assertEquals(
-        measure1.getMeasureMetaData().getSupplementalDataElements(),
-        persistedMeasure.getMeasureMetaData().getSupplementalDataElements());
 
     assertEquals("SB Url", persistedMeasure.getMeasureMetaData().getSteward().getUrl());
     assertEquals(1, persistedMeasure.getMeasureMetaData().getDevelopers().size());
@@ -1514,9 +1480,6 @@ public class MeasureServiceTest implements ResourceUtil {
     assertEquals(
         measure1.getMeasureMetaData().isDraft(), persistedMeasure.getMeasureMetaData().isDraft());
     assertEquals(
-        measure1.getMeasureMetaData().getRiskAdjustment(),
-        persistedMeasure.getMeasureMetaData().getRiskAdjustment());
-    assertEquals(
         measure1.getMeasureMetaData().getDefinition(),
         persistedMeasure.getMeasureMetaData().getDefinition());
     assertEquals(
@@ -1525,9 +1488,6 @@ public class MeasureServiceTest implements ResourceUtil {
     assertEquals(
         measure1.getMeasureMetaData().getTransmissionFormat(),
         persistedMeasure.getMeasureMetaData().getTransmissionFormat());
-    assertEquals(
-        measure1.getMeasureMetaData().getSupplementalDataElements(),
-        persistedMeasure.getMeasureMetaData().getSupplementalDataElements());
 
     assertEquals("SB Url", persistedMeasure.getMeasureMetaData().getSteward().getUrl());
     assertEquals(1, persistedMeasure.getMeasureMetaData().getDevelopers().size());
@@ -1566,9 +1526,6 @@ public class MeasureServiceTest implements ResourceUtil {
     assertEquals(
         measure1.getMeasureMetaData().isDraft(), persistedMeasure.getMeasureMetaData().isDraft());
     assertEquals(
-        measure1.getMeasureMetaData().getRiskAdjustment(),
-        persistedMeasure.getMeasureMetaData().getRiskAdjustment());
-    assertEquals(
         measure1.getMeasureMetaData().getDefinition(),
         persistedMeasure.getMeasureMetaData().getDefinition());
     assertEquals(
@@ -1577,9 +1534,6 @@ public class MeasureServiceTest implements ResourceUtil {
     assertEquals(
         measure1.getMeasureMetaData().getTransmissionFormat(),
         persistedMeasure.getMeasureMetaData().getTransmissionFormat());
-    assertEquals(
-        measure1.getMeasureMetaData().getSupplementalDataElements(),
-        persistedMeasure.getMeasureMetaData().getSupplementalDataElements());
 
     assertEquals("SB Url", persistedMeasure.getMeasureMetaData().getSteward().getUrl());
     assertEquals(1, persistedMeasure.getMeasureMetaData().getDevelopers().size());
@@ -1841,9 +1795,6 @@ public class MeasureServiceTest implements ResourceUtil {
     assertEquals(
         measure1.getMeasureMetaData().isDraft(), persistedMeasure.getMeasureMetaData().isDraft());
     assertEquals(
-        measure1.getMeasureMetaData().getRiskAdjustment(),
-        persistedMeasure.getMeasureMetaData().getRiskAdjustment());
-    assertEquals(
         measure1.getMeasureMetaData().getDefinition(),
         persistedMeasure.getMeasureMetaData().getDefinition());
     assertEquals(
@@ -1852,9 +1803,6 @@ public class MeasureServiceTest implements ResourceUtil {
     assertEquals(
         measure1.getMeasureMetaData().getTransmissionFormat(),
         persistedMeasure.getMeasureMetaData().getTransmissionFormat());
-    assertEquals(
-        measure1.getMeasureMetaData().getSupplementalDataElements(),
-        persistedMeasure.getMeasureMetaData().getSupplementalDataElements());
 
     assertEquals("SB Url", persistedMeasure.getMeasureMetaData().getSteward().getUrl());
     assertEquals(1, persistedMeasure.getMeasureMetaData().getDevelopers().size());
@@ -1893,9 +1841,6 @@ public class MeasureServiceTest implements ResourceUtil {
     assertEquals(
         measure1.getMeasureMetaData().isDraft(), persistedMeasure.getMeasureMetaData().isDraft());
     assertEquals(
-        measure1.getMeasureMetaData().getRiskAdjustment(),
-        persistedMeasure.getMeasureMetaData().getRiskAdjustment());
-    assertEquals(
         measure1.getMeasureMetaData().getDefinition(),
         persistedMeasure.getMeasureMetaData().getDefinition());
     assertEquals(
@@ -1904,9 +1849,6 @@ public class MeasureServiceTest implements ResourceUtil {
     assertEquals(
         measure1.getMeasureMetaData().getTransmissionFormat(),
         persistedMeasure.getMeasureMetaData().getTransmissionFormat());
-    assertEquals(
-        measure1.getMeasureMetaData().getSupplementalDataElements(),
-        persistedMeasure.getMeasureMetaData().getSupplementalDataElements());
 
     assertEquals("SB Url", persistedMeasure.getMeasureMetaData().getSteward().getUrl());
     assertEquals(1, persistedMeasure.getMeasureMetaData().getDevelopers().size());
