@@ -7,6 +7,8 @@ import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.MeasureService;
 import cms.gov.madie.measure.services.TestCaseService;
+import cms.gov.madie.measure.services.TestCaseShiftDatesService;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.cms.madie.models.measure.Measure;
@@ -57,6 +59,7 @@ public class TestCaseControllerMvcTest {
   @Captor ArgumentCaptor<String> measureIdCaptor;
   @Captor ArgumentCaptor<String> testCaseIdCaptor;
   @Captor ArgumentCaptor<String> usernameCaptor;
+  @MockBean private TestCaseShiftDatesService testCaseShiftDatesService;
 
   private TestCase testCase;
   private static final String TEST_ID = "TESTID";

@@ -10,6 +10,7 @@ import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.TestCase;
 import cms.gov.madie.measure.services.TestCaseService;
+import cms.gov.madie.measure.services.TestCaseShiftDatesService;
 import cms.gov.madie.measure.utils.ControllerUtil;
 import cms.gov.madie.measure.utils.UserInputSanitizeUtil;
 import gov.cms.madie.models.measure.TestCaseImportOutcome;
@@ -36,6 +37,7 @@ public class TestCaseController {
   private final TestCaseService testCaseService;
   private final MeasureRepository measureRepository;
   private final MeasureService measureService;
+  private final TestCaseShiftDatesService testCaseShiftDatesService;
 
   @PostMapping(ControllerUtil.TEST_CASES)
   public ResponseEntity<TestCase> addTestCase(
@@ -186,5 +188,17 @@ public class TestCaseController {
     testCase.setTitle(UserInputSanitizeUtil.sanitizeUserInput(testCase.getTitle()));
     testCase.setSeries(UserInputSanitizeUtil.sanitizeUserInput(testCase.getSeries()));
     return testCase;
+  }
+
+  @PutMapping(ControllerUtil.TEST_CASES + "/{testCaseId}/qdm/shiftDates")
+  public ResponseEntity<TestCase> shiftTestCaseDates(
+      @PathVariable String measureId,
+      @PathVariable String testCaseId,
+      @RequestParam(name = "shifted", defaultValue = "0") int shifted,
+      @RequestHeader("Authorization") String accessToken,
+      Principal principal) {
+    return ResponseEntity.ok(
+        testCaseShiftDatesService.shiftTestCaseDates(
+            measureId, testCaseId, shifted, principal.getName(), accessToken));
   }
 }
