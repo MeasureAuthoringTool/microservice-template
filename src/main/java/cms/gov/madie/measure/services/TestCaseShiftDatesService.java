@@ -95,14 +95,13 @@ public class TestCaseShiftDatesService {
       testCase = existingOpt.get();
     }
 
-    shiftDatesForTestCase(testCase, shifted, measureId, username, accessToken);
+    shiftDatesForTestCase(testCase, shifted);
     testCaseService.updateTestCase(testCase, measureId, username, accessToken);
 
     return testCase;
   }
 
-  protected TestCase shiftDatesForTestCase(
-      TestCase testCase, int shifted, String measureId, String username, String accessToken) {
+  protected TestCase shiftDatesForTestCase(TestCase testCase, int shifted) {
     try {
       TestCaseJson testCaseJson = mapper.readValue(testCase.getJson(), TestCaseJson.class);
       testCaseJson.setBirthDatetime(testCaseJson.shiftDateByYear(shifted));
@@ -117,10 +116,13 @@ public class TestCaseShiftDatesService {
     } catch (JsonProcessingException e) {
       log.error("JsonProcessingException -> " + e.getMessage());
       throw new CqmConversionException(
-          "JsonProcessingException for test case id : " + testCase.getId());
+          "An issue occurred while shifting the test case dates for the test case id : "
+              + testCase.getId());
     } catch (Exception e) {
       log.error("Exception -> " + e.getMessage());
-      throw new CqmConversionException("Exception for test case id : " + testCase.getId());
+      throw new CqmConversionException(
+          "An issue occurred while shifting the test case dates for the test case id : "
+              + testCase.getId());
     }
     return testCase;
   }
