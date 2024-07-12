@@ -115,11 +115,11 @@ public class TestCaseShiftDatesService {
       String newJson = mapper.writeValueAsString(testCaseJson);
       testCase.setJson(newJson);
     } catch (JsonProcessingException e) {
-      e.printStackTrace();
+      log.error("JsonProcessingException -> " + e.getMessage());
       throw new CqmConversionException(
           "JsonProcessingException for test case id : " + testCase.getId());
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error("Exception -> " + e.getMessage());
       throw new CqmConversionException("Exception for test case id : " + testCase.getId());
     }
     return testCase;
