@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import cms.gov.madie.measure.exceptions.CqmConversionException;
@@ -73,6 +72,8 @@ public class TestCaseShiftDatesService {
 
   private final TestCaseService testCaseService;
 
+  private ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
+
   @Autowired
   public TestCaseShiftDatesService(TestCaseService testCaseService) {
     this.testCaseService = testCaseService;
@@ -94,235 +95,188 @@ public class TestCaseShiftDatesService {
       testCase = existingOpt.get();
     }
 
-    ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
-    mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
-    try {
-      TestCaseJson testCaseJson = mapper.readValue(testCase.getJson(), TestCaseJson.class);
-      if (testCaseJson != null) {
-        testCaseJson.setBirthDatetime(testCaseJson.shiftDateByYear(shifted));
-        List<DataElement> elements = testCaseJson.getDataElements();
-        if (CollectionUtils.isNotEmpty(elements)) {
-          for (DataElement element : elements) {
-            shiftDates(element, shifted);
-          }
-        }
-        String newJson = mapper.writeValueAsString(testCaseJson);
-        testCase.setJson(newJson);
-        testCaseService.updateTestCase(testCase, measureId, username, accessToken);
-      }
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
-      throw new CqmConversionException("JsonProcessingException for test case id : " + testCaseId);
-    }
+    shiftDatesForTestCase(testCase, shifted, measureId, username, accessToken);
+    testCaseService.updateTestCase(testCase, measureId, username, accessToken);
 
     return testCase;
   }
 
-  void shiftDates(DataElement dataElement, int shifted) {
-    String type = dataElement.get_type() != null ? dataElement.get_type() : "";
+  protected TestCase shiftDatesForTestCase(
+      TestCase testCase, int shifted, String measureId, String username, String accessToken) {
+    try {
+      TestCaseJson testCaseJson = mapper.readValue(testCase.getJson(), TestCaseJson.class);
+      testCaseJson.setBirthDatetime(testCaseJson.shiftDateByYear(shifted));
+      List<DataElement> elements = testCaseJson.getDataElements();
+      if (CollectionUtils.isNotEmpty(elements)) {
+        for (DataElement element : elements) {
+          shiftDates(element, shifted);
+        }
+      }
+      String newJson = mapper.writeValueAsString(testCaseJson);
+      testCase.setJson(newJson);
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+      throw new CqmConversionException(
+          "JsonProcessingException for test case id : " + testCase.getId());
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new CqmConversionException("Exception for test case id : " + testCase.getId());
+    }
+    return testCase;
+  }
 
-    switch (type) {
-      case "QDM::AdverseEvent":
-        AdverseEvent adverseEvent = (AdverseEvent) dataElement;
-        adverseEvent.shiftDates(shifted);
-        break;
-      case "QDM::AllergyIntolerance":
-        AllergyIntolerance allergyIntolerance = (AllergyIntolerance) dataElement;
-        allergyIntolerance.shiftDates(shifted);
-        break;
-      case "QDM::AssessmentOrder":
-        AssessmentOrder assessmentOrder = (AssessmentOrder) dataElement;
-        assessmentOrder.shiftDates(shifted);
-        break;
-      case "QDM::AssessmentPerformed":
-        AssessmentPerformed assessmentPerformed = (AssessmentPerformed) dataElement;
-        assessmentPerformed.shiftDates(shifted);
-        break;
-      case "QDM::AssessmentRecommended":
-        AssessmentRecommended assessmentRecommended = (AssessmentRecommended) dataElement;
-        assessmentRecommended.shiftDates(shifted);
-        break;
-      case "QDM::CareGoal":
-        CareGoal careGoal = (CareGoal) dataElement;
-        careGoal.shiftDates(shifted);
-        break;
-      case "QDM::CommunicationPerformed":
-        CommunicationPerformed communicationPerformed = (CommunicationPerformed) dataElement;
-        communicationPerformed.shiftDates(shifted);
-        break;
-      case "QDM::DeviceOrder":
-        DeviceOrder deviceOrder = (DeviceOrder) dataElement;
-        deviceOrder.shiftDates(shifted);
-        break;
-      case "QDM::DeviceRecommended":
-        DeviceRecommended deviceRecommended = (DeviceRecommended) dataElement;
-        deviceRecommended.shiftDates(shifted);
-        break;
-      case "QDM::Diagnosis":
-        Diagnosis diagnosis = (Diagnosis) dataElement;
-        diagnosis.shiftDates(shifted);
-        break;
-      case "QDM::DiagnosticStudyOrder":
-        DiagnosticStudyOrder diagnosticStudyOrder = (DiagnosticStudyOrder) dataElement;
-        diagnosticStudyOrder.shiftDates(shifted);
-        break;
-      case "QDM::DiagnosticStudyPerformed":
-        DiagnosticStudyPerformed diagnosticStudyPerformed = (DiagnosticStudyPerformed) dataElement;
-        diagnosticStudyPerformed.shiftDates(shifted);
-        break;
-      case "QDM::DiagnosticStudyRecommended":
-        DiagnosticStudyRecommended diagnosticStudyRecommended =
-            (DiagnosticStudyRecommended) dataElement;
-        diagnosticStudyRecommended.shiftDates(shifted);
-        break;
-      case "QDM::EncounterOrder":
-        EncounterOrder encounterOrder = (EncounterOrder) dataElement;
-        encounterOrder.shiftDates(shifted);
-        break;
-      case "QDM::EncounterPerformed":
-        EncounterPerformed encounterPerformed = (EncounterPerformed) dataElement;
-        encounterPerformed.shiftDates(shifted);
-        break;
-      case "QDM::EncounterRecommended":
-        EncounterRecommended encounterRecommended = (EncounterRecommended) dataElement;
-        encounterRecommended.shiftDates(shifted);
-        break;
-      case "QDM::FamilyHistory":
-        FamilyHistory familyHistory = (FamilyHistory) dataElement;
-        familyHistory.shiftDates(shifted);
-        break;
-      case "QDM::ImmunizationAdministered":
-        ImmunizationAdministered immunizationAdministered = (ImmunizationAdministered) dataElement;
-        immunizationAdministered.shiftDates(shifted);
-        break;
-      case "QDM::ImmunizationOrder":
-        ImmunizationOrder immunizationOrder = (ImmunizationOrder) dataElement;
-        immunizationOrder.shiftDates(shifted);
-        break;
-      case "QDM::InterventionOrder":
-        InterventionOrder interventionOrder = (InterventionOrder) dataElement;
-        interventionOrder.shiftDates(shifted);
-        break;
-      case "QDM::InterventionPerformed":
-        InterventionPerformed interventionPerformed = (InterventionPerformed) dataElement;
-        interventionPerformed.shiftDates(shifted);
-        break;
-      case "QDM::InterventionRecommended":
-        InterventionRecommended interventionRecommended = (InterventionRecommended) dataElement;
-        interventionRecommended.shiftDates(shifted);
-        break;
-      case "QDM::LaboratoryTestOrder":
-        LaboratoryTestOrder laboratoryTestOrder = (LaboratoryTestOrder) dataElement;
-        laboratoryTestOrder.shiftDates(shifted);
-        break;
-      case "QDM::LaboratoryTestPerformed":
-        LaboratoryTestPerformed laboratoryTestPerformed = (LaboratoryTestPerformed) dataElement;
-        laboratoryTestPerformed.shiftDates(shifted);
-        break;
-      case "QDM::LaboratoryTestRecommended":
-        LaboratoryTestRecommended laboratoryTestRecommended =
-            (LaboratoryTestRecommended) dataElement;
-        laboratoryTestRecommended.shiftDates(shifted);
-        break;
-      case "QDM::MedicationActive":
-        MedicationActive medicationActive = (MedicationActive) dataElement;
-        medicationActive.shiftDates(shifted);
-        break;
-      case "QDM::MedicationAdministered":
-        MedicationAdministered medicationAdministered = (MedicationAdministered) dataElement;
-        medicationAdministered.shiftDates(shifted);
-        break;
-      case "QDM::MedicationDischarge":
-        MedicationDischarge medicationDischarge = (MedicationDischarge) dataElement;
-        medicationDischarge.shiftDates(shifted);
-        break;
-      case "QDM::MedicationDispensed":
-        MedicationDispensed medicationDispensed = (MedicationDispensed) dataElement;
-        medicationDispensed.shiftDates(shifted);
-        break;
-      case "QDM::MedicationOrder":
-        MedicationOrder medicationOrder = (MedicationOrder) dataElement;
-        medicationOrder.shiftDates(shifted);
-        break;
-      case "QDM::Participation":
-        Participation participation = (Participation) dataElement;
-        participation.shiftDates(shifted);
-        break;
-      case "QDM::PatientCareExperience":
-        PatientCareExperience patientCareExperience = (PatientCareExperience) dataElement;
-        patientCareExperience.shiftDates(shifted);
-        break;
-      case "QDM::PatientCharacteristic":
-        PatientCharacteristic patientCharacteristic = (PatientCharacteristic) dataElement;
-        patientCharacteristic.shiftDates(shifted);
-        break;
-      case "QDM::PatientCharacteristicBirthdate":
-        PatientCharacteristicBirthdate patientCharacteristicBirthdate =
-            (PatientCharacteristicBirthdate) dataElement;
-        patientCharacteristicBirthdate.shiftDates(shifted);
-        break;
-      case "QDM::PatientCharacteristicClinicalTrialParticipant":
-        PatientCharacteristicClinicalTrialParticipant
-            patientCharacteristicClinicalTrialParticipant =
-                (PatientCharacteristicClinicalTrialParticipant) dataElement;
-        patientCharacteristicClinicalTrialParticipant.shiftDates(shifted);
-        break;
-      case "QDM::PatientCharacteristicExpired":
-        PatientCharacteristicExpired patientCharacteristicExpired =
-            (PatientCharacteristicExpired) dataElement;
-        patientCharacteristicExpired.shiftDates(shifted);
-        break;
-      case "QDM::PatientCharacteristicPayer":
-        PatientCharacteristicPayer patientCharacteristicPayer =
-            (PatientCharacteristicPayer) dataElement;
-        patientCharacteristicPayer.shiftDates(shifted);
-        break;
-      case "QDM::PhysicalExamOrder":
-        PhysicalExamOrder physicalExamOrder = (PhysicalExamOrder) dataElement;
-        physicalExamOrder.shiftDates(shifted);
-        break;
-      case "QDM::PhysicalExamPerformed":
-        PhysicalExamPerformed physicalExamPerformed = (PhysicalExamPerformed) dataElement;
-        physicalExamPerformed.shiftDates(shifted);
-        break;
-      case "QDM::PhysicalExamRecommended":
-        PhysicalExamRecommended physicalExamRecommended = (PhysicalExamRecommended) dataElement;
-        physicalExamRecommended.shiftDates(shifted);
-        break;
-      case "QDM::ProcedurePerformed":
-        ProcedurePerformed procedurePerformed = (ProcedurePerformed) dataElement;
-        procedurePerformed.shiftDates(shifted);
-        break;
-      case "QDM::ProcedureRecommended":
-        ProcedureRecommended procedureRecommended = (ProcedureRecommended) dataElement;
-        procedureRecommended.shiftDates(shifted);
-        break;
-      case "QDM::ProviderCareExperience":
-        ProviderCareExperience providerCareExperience = (ProviderCareExperience) dataElement;
-        providerCareExperience.shiftDates(shifted);
-        break;
-      case "QDM::ProcedureOrder":
-        ProcedureOrder procedureOrder = (ProcedureOrder) dataElement;
-        procedureOrder.shiftDates(shifted);
-        break;
-      case "QDM::SubstanceAdministered":
-        SubstanceAdministered substanceAdministered = (SubstanceAdministered) dataElement;
-        substanceAdministered.shiftDates(shifted);
-        break;
-      case "QDM::SubstanceOrder":
-        SubstanceOrder substanceOrder = (SubstanceOrder) dataElement;
-        substanceOrder.shiftDates(shifted);
-        break;
-      case "QDM::SubstanceRecommended":
-        SubstanceRecommended substanceRecommended = (SubstanceRecommended) dataElement;
-        substanceRecommended.shiftDates(shifted);
-        break;
-      case "QDM::Symptom":
-        Symptom symptom = (Symptom) dataElement;
-        symptom.shiftDates(shifted);
-        break;
-      default:
-        throw new CqmConversionException("Unsupported data type: " + type);
+  void shiftDates(DataElement dataElement, int shifted) {
+    if (dataElement instanceof AdverseEvent) {
+      AdverseEvent adverseEvent = (AdverseEvent) dataElement;
+      adverseEvent.shiftDates(shifted);
+    } else if (dataElement instanceof AllergyIntolerance) {
+      AllergyIntolerance allergyIntolerance = (AllergyIntolerance) dataElement;
+      allergyIntolerance.shiftDates(shifted);
+    } else if (dataElement instanceof AssessmentOrder) {
+      AssessmentOrder assessmentOrder = (AssessmentOrder) dataElement;
+      assessmentOrder.shiftDates(shifted);
+    } else if (dataElement instanceof AssessmentPerformed) {
+      AssessmentPerformed assessmentPerformed = (AssessmentPerformed) dataElement;
+      assessmentPerformed.shiftDates(shifted);
+    } else if (dataElement instanceof AssessmentRecommended) {
+      AssessmentRecommended assessmentRecommended = (AssessmentRecommended) dataElement;
+      assessmentRecommended.shiftDates(shifted);
+    } else if (dataElement instanceof CareGoal) {
+      CareGoal careGoal = (CareGoal) dataElement;
+      careGoal.shiftDates(shifted);
+    } else if (dataElement instanceof CommunicationPerformed) {
+      CommunicationPerformed communicationPerformed = (CommunicationPerformed) dataElement;
+      communicationPerformed.shiftDates(shifted);
+    } else if (dataElement instanceof DeviceOrder) {
+      DeviceOrder deviceOrder = (DeviceOrder) dataElement;
+      deviceOrder.shiftDates(shifted);
+    } else if (dataElement instanceof DeviceRecommended) {
+      DeviceRecommended deviceRecommended = (DeviceRecommended) dataElement;
+      deviceRecommended.shiftDates(shifted);
+    } else if (dataElement instanceof Diagnosis) {
+      Diagnosis diagnosis = (Diagnosis) dataElement;
+      diagnosis.shiftDates(shifted);
+    } else if (dataElement instanceof DiagnosticStudyOrder) {
+      DiagnosticStudyOrder diagnosticStudyOrder = (DiagnosticStudyOrder) dataElement;
+      diagnosticStudyOrder.shiftDates(shifted);
+    } else if (dataElement instanceof DiagnosticStudyPerformed) {
+      DiagnosticStudyPerformed diagnosticStudyPerformed = (DiagnosticStudyPerformed) dataElement;
+      diagnosticStudyPerformed.shiftDates(shifted);
+    } else if (dataElement instanceof DiagnosticStudyRecommended) {
+      DiagnosticStudyRecommended diagnosticStudyRecommended =
+          (DiagnosticStudyRecommended) dataElement;
+      diagnosticStudyRecommended.shiftDates(shifted);
+    } else if (dataElement instanceof EncounterOrder) {
+      EncounterOrder encounterOrder = (EncounterOrder) dataElement;
+      encounterOrder.shiftDates(shifted);
+    } else if (dataElement instanceof EncounterPerformed) {
+      EncounterPerformed encounterPerformed = (EncounterPerformed) dataElement;
+      encounterPerformed.shiftDates(shifted);
+    } else if (dataElement instanceof EncounterRecommended) {
+      EncounterRecommended encounterRecommended = (EncounterRecommended) dataElement;
+      encounterRecommended.shiftDates(shifted);
+    } else if (dataElement instanceof FamilyHistory) {
+      FamilyHistory familyHistory = (FamilyHistory) dataElement;
+      familyHistory.shiftDates(shifted);
+    } else if (dataElement instanceof ImmunizationAdministered) {
+      ImmunizationAdministered immunizationAdministered = (ImmunizationAdministered) dataElement;
+      immunizationAdministered.shiftDates(shifted);
+    } else if (dataElement instanceof ImmunizationOrder) {
+      ImmunizationOrder immunizationOrder = (ImmunizationOrder) dataElement;
+      immunizationOrder.shiftDates(shifted);
+    } else if (dataElement instanceof InterventionOrder) {
+      InterventionOrder interventionOrder = (InterventionOrder) dataElement;
+      interventionOrder.shiftDates(shifted);
+    } else if (dataElement instanceof InterventionPerformed) {
+      InterventionPerformed interventionPerformed = (InterventionPerformed) dataElement;
+      interventionPerformed.shiftDates(shifted);
+    } else if (dataElement instanceof InterventionRecommended) {
+      InterventionRecommended interventionRecommended = (InterventionRecommended) dataElement;
+      interventionRecommended.shiftDates(shifted);
+    } else if (dataElement instanceof LaboratoryTestOrder) {
+      LaboratoryTestOrder laboratoryTestOrder = (LaboratoryTestOrder) dataElement;
+      laboratoryTestOrder.shiftDates(shifted);
+    } else if (dataElement instanceof LaboratoryTestPerformed) {
+      LaboratoryTestPerformed laboratoryTestPerformed = (LaboratoryTestPerformed) dataElement;
+      laboratoryTestPerformed.shiftDates(shifted);
+    } else if (dataElement instanceof LaboratoryTestRecommended) {
+      LaboratoryTestRecommended laboratoryTestRecommended = (LaboratoryTestRecommended) dataElement;
+      laboratoryTestRecommended.shiftDates(shifted);
+    } else if (dataElement instanceof MedicationActive) {
+      MedicationActive medicationActive = (MedicationActive) dataElement;
+      medicationActive.shiftDates(shifted);
+    } else if (dataElement instanceof MedicationAdministered) {
+      MedicationAdministered medicationAdministered = (MedicationAdministered) dataElement;
+      medicationAdministered.shiftDates(shifted);
+    } else if (dataElement instanceof MedicationDischarge) {
+      MedicationDischarge medicationDischarge = (MedicationDischarge) dataElement;
+      medicationDischarge.shiftDates(shifted);
+    } else if (dataElement instanceof MedicationDispensed) {
+      MedicationDispensed medicationDispensed = (MedicationDispensed) dataElement;
+      medicationDispensed.shiftDates(shifted);
+    } else if (dataElement instanceof MedicationOrder) {
+      MedicationOrder medicationOrder = (MedicationOrder) dataElement;
+      medicationOrder.shiftDates(shifted);
+    } else if (dataElement instanceof Participation) {
+      Participation participation = (Participation) dataElement;
+      participation.shiftDates(shifted);
+    } else if (dataElement instanceof PatientCareExperience) {
+      PatientCareExperience patientCareExperience = (PatientCareExperience) dataElement;
+      patientCareExperience.shiftDates(shifted);
+    } else if (dataElement instanceof PatientCharacteristic) {
+      PatientCharacteristic patientCharacteristic = (PatientCharacteristic) dataElement;
+      patientCharacteristic.shiftDates(shifted);
+    } else if (dataElement instanceof PatientCharacteristicBirthdate) {
+      PatientCharacteristicBirthdate patientCharacteristicBirthdate =
+          (PatientCharacteristicBirthdate) dataElement;
+      patientCharacteristicBirthdate.shiftDates(shifted);
+    } else if (dataElement instanceof PatientCharacteristicClinicalTrialParticipant) {
+      PatientCharacteristicClinicalTrialParticipant patientCharacteristicClinicalTrialParticipant =
+          (PatientCharacteristicClinicalTrialParticipant) dataElement;
+      patientCharacteristicClinicalTrialParticipant.shiftDates(shifted);
+    } else if (dataElement instanceof PatientCharacteristicExpired) {
+      PatientCharacteristicExpired patientCharacteristicExpired =
+          (PatientCharacteristicExpired) dataElement;
+      patientCharacteristicExpired.shiftDates(shifted);
+    } else if (dataElement instanceof PatientCharacteristicPayer) {
+      PatientCharacteristicPayer patientCharacteristicPayer =
+          (PatientCharacteristicPayer) dataElement;
+      patientCharacteristicPayer.shiftDates(shifted);
+    } else if (dataElement instanceof PhysicalExamOrder) {
+      PhysicalExamOrder physicalExamOrder = (PhysicalExamOrder) dataElement;
+      physicalExamOrder.shiftDates(shifted);
+    } else if (dataElement instanceof PhysicalExamPerformed) {
+      PhysicalExamPerformed physicalExamPerformed = (PhysicalExamPerformed) dataElement;
+      physicalExamPerformed.shiftDates(shifted);
+    } else if (dataElement instanceof PhysicalExamRecommended) {
+      PhysicalExamRecommended physicalExamRecommended = (PhysicalExamRecommended) dataElement;
+      physicalExamRecommended.shiftDates(shifted);
+    } else if (dataElement instanceof ProcedurePerformed) {
+      ProcedurePerformed procedurePerformed = (ProcedurePerformed) dataElement;
+      procedurePerformed.shiftDates(shifted);
+    } else if (dataElement instanceof ProcedureRecommended) {
+      ProcedureRecommended procedureRecommended = (ProcedureRecommended) dataElement;
+      procedureRecommended.shiftDates(shifted);
+    } else if (dataElement instanceof ProviderCareExperience) {
+      ProviderCareExperience providerCareExperience = (ProviderCareExperience) dataElement;
+      providerCareExperience.shiftDates(shifted);
+    } else if (dataElement instanceof ProcedureOrder) {
+      ProcedureOrder procedureOrder = (ProcedureOrder) dataElement;
+      procedureOrder.shiftDates(shifted);
+    } else if (dataElement instanceof SubstanceAdministered) {
+      SubstanceAdministered substanceAdministered = (SubstanceAdministered) dataElement;
+      substanceAdministered.shiftDates(shifted);
+    } else if (dataElement instanceof SubstanceOrder) {
+      SubstanceOrder substanceOrder = (SubstanceOrder) dataElement;
+      substanceOrder.shiftDates(shifted);
+    } else if (dataElement instanceof SubstanceRecommended) {
+      SubstanceRecommended substanceRecommended = (SubstanceRecommended) dataElement;
+      substanceRecommended.shiftDates(shifted);
+    } else if (dataElement instanceof Symptom) {
+      Symptom symptom = (Symptom) dataElement;
+      symptom.shiftDates(shifted);
+    } else {
+      throw new CqmConversionException("Unsupported data type: " + dataElement.toString());
     }
   }
 }
