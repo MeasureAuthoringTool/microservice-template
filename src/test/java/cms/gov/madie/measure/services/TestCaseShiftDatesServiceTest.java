@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -808,5 +809,39 @@ public class TestCaseShiftDatesServiceTest {
   private ZonedDateTime getZonedDateTime(String dateTimeStr) {
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
     return ZonedDateTime.parse(dateTimeStr, formatter);
+  }
+
+  @Test
+  public void shiftAllTestCaseDates() {
+    when(testCaseService.findTestCasesByMeasureId(anyString())).thenReturn(List.of(testCase));
+    when(testCaseService.updateTestCase(any(TestCase.class), anyString(), anyString(), anyString()))
+        .thenReturn(testCase);
+
+    List<TestCase> modified =
+        testCaseShiftDatesService.shiftAllTestCaseDates("TestMeasureId", 1, "test.user", "TOKEN");
+
+    assertNotNull(modified);
+    assertEquals(modified.size(), 1);
+    assertTrue(modified.get(0).getJson().contains("2025"));
+  }
+
+  @Test
+  public void shiftAllTestCaseDatesNoResourceFound() {
+    when(testCaseService.findTestCasesByMeasureId(anyString())).thenReturn(Collections.emptyList());
+
+    assertThrows(
+        ResourceNotFoundException.class,
+        () ->
+            testCaseShiftDatesService.shiftAllTestCaseDates(
+                "TestMeasureId", 1, "test.user", "TOKEN"));
+  }
+
+  @Test
+  public void shiftDatesForTestCaseNoJson() {
+    assertThrows(
+        CqmConversionException.class,
+        () ->
+            testCaseShiftDatesService.shiftDatesForTestCase(
+                TestCase.builder().id("testCaseId").build(), 1));
   }
 }

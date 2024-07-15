@@ -424,4 +424,24 @@ public class TestCaseControllerTest {
 
     assertEquals("Date2", response.getBody().getJson());
   }
+
+  @Test
+  void shiftDatesForAllTestCases() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    testCase.setJson("Date2");
+    TestCase testCase2 = TestCase.builder().json("Date3").build();
+    doReturn(List.of(testCase, testCase2))
+        .when(testCaseShiftDatesService)
+        .shiftAllTestCaseDates(
+            any(String.class), any(Integer.class), any(String.class), anyString());
+    ResponseEntity<List<TestCase>> response =
+        controller.shiftAllTestCaseDates(measure.getId(), 1, "TOKEN", principal);
+
+    assertNotNull(response.getBody());
+    assertEquals(response.getBody().size(), 2);
+    assertEquals("Date2", response.getBody().get(0).getJson());
+    assertEquals("Date3", response.getBody().get(1).getJson());
+  }
 }
