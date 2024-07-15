@@ -201,4 +201,15 @@ public class TestCaseController {
         testCaseShiftDatesService.shiftTestCaseDates(
             measureId, testCaseId, shifted, principal.getName(), accessToken));
   }
+
+  @GetMapping(ControllerUtil.TEST_CASES + "/qdm/shiftAllDates")
+  public ResponseEntity<List<TestCase>> shiftAllTestCaseDates(
+      @PathVariable String measureId,
+      @RequestParam(name = "shifted", defaultValue = "0") int shifted,
+      @RequestHeader("Authorization") String accessToken,
+      Principal principal) {
+    return ResponseEntity.ok(
+        testCaseShiftDatesService.shiftAllTestCaseDates(
+            measureId, shifted, principal.getName(), accessToken));
+  }
 }

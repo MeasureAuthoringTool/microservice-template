@@ -2,7 +2,7 @@ spring:
   data:
     mongodb:
       database: ${MONGO_DATABASE:madie}
-      uri: ${MONGO_URI:mongodb://${DBUSER}:${DBPASS}@localhost:27017/madie}?authSource=admin&maxPoolSize=50&connectTimeoutMS=2000&serverSelectionTimeoutMS=2000
+      uri: ${MONGO_URI:mongodb://${DBUSER:root}:${DBPASS:E5press0}@localhost:27017/madie}?authSource=admin&maxPoolSize=50&connectTimeoutMS=2000&serverSelectionTimeoutMS=2000
       auto-index-creation: true
   servlet:
     multipart:
@@ -53,7 +53,7 @@ madie:
     create-qrda-urn: /qdm/measures/package/qrda
     retrieve-cqmmeasure-urn: /qdm/measures/cqm
   service-config:
-    json-url: ${SERVICE_CONFIG_JSON_URL:http://localhost:9000/env-config/serviceConfig.json}
+    json-url: ${SERVICE_CONFIG_JSON_URL:https://madie.cms.gov/env-config/serviceConfig.json}
 
 
 management:
