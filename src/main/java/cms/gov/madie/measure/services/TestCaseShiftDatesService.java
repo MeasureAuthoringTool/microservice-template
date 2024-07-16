@@ -2,6 +2,7 @@ package cms.gov.madie.measure.services;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -280,5 +281,21 @@ public class TestCaseShiftDatesService {
     } else {
       throw new CqmConversionException("Unsupported data type: " + dataElement.toString());
     }
+  }
+
+  public List<TestCase> shiftAllTestCaseDates(
+      String measureId, int shifted, String username, String accessToken) {
+    List<TestCase> testCases = testCaseService.findTestCasesByMeasureId(measureId);
+    if (CollectionUtils.isEmpty(testCases)) {
+      throw new ResourceNotFoundException("TestCases", measureId);
+    }
+
+    List<TestCase> modifiedTestCases =
+        testCases.stream()
+            .map(testCase -> shiftDatesForTestCase(testCase, shifted))
+            .collect(Collectors.toList());
+    return modifiedTestCases.stream()
+        .map(testCase -> testCaseService.updateTestCase(testCase, measureId, username, accessToken))
+        .collect(Collectors.toList());
   }
 }
