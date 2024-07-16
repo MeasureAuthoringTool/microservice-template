@@ -589,4 +589,43 @@ public class MeasureService {
               });
     }
   }
+
+  public Boolean isCmsAssociationValid(
+      String username, String qiCoreMeasureId, String qdmMeasureId) {
+    if (qiCoreMeasureId == null || qdmMeasureId == null) {
+      throw new InvalidIdException("CMS ID could not be associated. Please try again.");
+    }
+
+    Measure persistedQiCoreMeasure = findMeasureById(qiCoreMeasureId);
+    Measure persistedQdmMeasure = findMeasureById(qdmMeasureId);
+
+    if (persistedQiCoreMeasure == null || persistedQdmMeasure == null) {
+      throw new ResourceNotFoundException("CMS ID could not be associated. Please try again.");
+    }
+
+    // only owners(not shared users) can perform cms id association
+    if (!((persistedQiCoreMeasure.getMeasureSet().getOwner().equals(username))
+        && (persistedQdmMeasure.getMeasureSet().getOwner().equals(username)))) {
+      throw new UnauthorizedException("CMS ID could not be associated. Please try again.");
+    }
+
+    if (persistedQiCoreMeasure.getModel().equals(persistedQdmMeasure.getModel())) {
+      throw new InvalidRequestException("CMS ID could not be associated. Please try again.");
+    }
+
+    if (persistedQdmMeasure.getMeasureSet().getCmsId() == null) {
+      throw new InvalidRequestException("CMS ID could not be associated. Please try again.");
+    }
+
+    if (persistedQiCoreMeasure.getMeasureSet().getCmsId() != null) {
+      throw new InvalidResourceStateException(
+          "CMS ID could not be associated. The QI-Core measure already has a CMS ID.");
+    }
+
+    if (!persistedQiCoreMeasure.getMeasureMetaData().isDraft()) {
+      throw new InvalidResourceStateException(
+          "CMS ID could not be associated. The QI-Core measure is versioned.");
+    }
+    return true;
+  }
 }

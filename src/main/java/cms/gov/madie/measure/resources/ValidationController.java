@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.services.FhirServicesClient;
+import cms.gov.madie.measure.services.MeasureService;
 import cms.gov.madie.measure.services.VirusScanClient;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,11 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.ObjectError;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
@@ -32,6 +29,7 @@ public class ValidationController {
   private FhirServicesClient fhirServicesClient;
   private VirusScanClient virusScanClient;
   private ObjectMapper mapper;
+  private MeasureService measureService;
 
   @PostMapping(
       path = "/bundles",
@@ -99,5 +97,15 @@ public class ValidationController {
                           + "Please contact the help desk for error code V100."))
               .build());
     }
+  }
+
+  @PutMapping("/cms-association/{qiCoreMeasureId}/{qdmMeasureId}")
+  public ResponseEntity<Boolean> isCmsAssociationValid(
+      Principal principal,
+      @PathVariable String qiCoreMeasureId,
+      @PathVariable String qdmMeasureId) {
+
+    return ResponseEntity.ok(
+        measureService.isCmsAssociationValid(principal.getName(), qiCoreMeasureId, qdmMeasureId));
   }
 }
