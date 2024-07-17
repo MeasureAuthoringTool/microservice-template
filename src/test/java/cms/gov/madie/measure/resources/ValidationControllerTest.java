@@ -1,9 +1,6 @@
 package cms.gov.madie.measure.resources;
 
-import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.FhirServicesClient;
-import cms.gov.madie.measure.services.MeasureService;
-import cms.gov.madie.measure.services.MeasureSetService;
 import cms.gov.madie.measure.services.VirusScanClient;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,7 +32,9 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ValidationControllerTest {
@@ -45,9 +44,6 @@ class ValidationControllerTest {
   @Mock private VirusScanClient virusScanClient;
 
   @Mock private ObjectMapper mapper;
-  @Mock private MeasureRepository measureRepository;
-  @Mock private MeasureSetService measureSetService;
-  @Mock private MeasureService measureService;
 
   @InjectMocks private ValidationController validationController;
 
