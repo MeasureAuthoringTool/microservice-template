@@ -314,4 +314,13 @@ public class MeasureController {
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(measureSetService.createAndUpdateCmsId(measureSetId, principal.getName()));
   }
+
+  @PutMapping("/measures/cms-id-association")
+  public ResponseEntity<String> associateCmsId(
+      Principal principal,
+      @RequestParam(required = true, name = "qiCoreMeasureId") String qiCoreMeasureId,
+      @RequestParam(required = true, name = "qdmMeasureId") String qdmMeasureId) {
+    return ResponseEntity.ok(
+        measureService.associateCmsId(principal.getName(), qiCoreMeasureId, qdmMeasureId));
+  }
 }

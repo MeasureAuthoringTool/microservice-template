@@ -98,14 +98,4 @@ public class ValidationController {
               .build());
     }
   }
-
-  @PutMapping("/cms-association/{qiCoreMeasureId}/{qdmMeasureId}")
-  public ResponseEntity<Boolean> isCmsAssociationValid(
-      Principal principal,
-      @PathVariable String qiCoreMeasureId,
-      @PathVariable String qdmMeasureId) {
-
-    return ResponseEntity.ok(
-        measureService.isCmsAssociationValid(principal.getName(), qiCoreMeasureId, qdmMeasureId));
-  }
 }

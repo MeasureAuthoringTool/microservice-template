@@ -1925,15 +1925,13 @@ public class MeasureServiceTest implements ResourceUtil {
   @Test
   public void testValidateCmsAssociationThrowsExceptionForNullQiCoreMeasureId() {
     assertThrows(
-        InvalidIdException.class,
-        () -> measureService.isCmsAssociationValid("OWNER", null, "qdmId"));
+        InvalidIdException.class, () -> measureService.associateCmsId("OWNER", null, "qdmId"));
   }
 
   @Test
   public void testValidateCmsAssociationThrowsExceptionForNullQDMCoreMeasureId() {
     assertThrows(
-        InvalidIdException.class,
-        () -> measureService.isCmsAssociationValid("OWNER", "qiCoreId", null));
+        InvalidIdException.class, () -> measureService.associateCmsId("OWNER", "qiCoreId", null));
   }
 
   @Test
@@ -1941,7 +1939,7 @@ public class MeasureServiceTest implements ResourceUtil {
     when(measureRepository.findById(anyString())).thenReturn(Optional.empty());
     assertThrows(
         ResourceNotFoundException.class,
-        () -> measureService.isCmsAssociationValid("OWNER", "qiCoreMeasureId", "qdmMeasureId"));
+        () -> measureService.associateCmsId("OWNER", "qiCoreMeasureId", "qdmMeasureId"));
   }
 
   @Test
@@ -1953,7 +1951,7 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertThrows(
         UnauthorizedException.class,
-        () -> measureService.isCmsAssociationValid("newowner", "qiCoreMeasureId", "qdmMeasureId"));
+        () -> measureService.associateCmsId("newowner", "qiCoreMeasureId", "qdmMeasureId"));
   }
 
   @Test
@@ -1964,7 +1962,7 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertThrows(
         InvalidRequestException.class,
-        () -> measureService.isCmsAssociationValid("OWNER", "qiCoreMeasureId", "qiCoreMeasureId"));
+        () -> measureService.associateCmsId("OWNER", "qiCoreMeasureId", "qiCoreMeasureId"));
   }
 
   @Test
@@ -1975,7 +1973,7 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertThrows(
         InvalidRequestException.class,
-        () -> measureService.isCmsAssociationValid("OWNER", "qdmMeasureId", "qdmMeasureId"));
+        () -> measureService.associateCmsId("OWNER", "qdmMeasureId", "qdmMeasureId"));
   }
 
   @Test
@@ -1987,7 +1985,7 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertThrows(
         InvalidRequestException.class,
-        () -> measureService.isCmsAssociationValid("OWNER", "qiCoreMeasureId", "qdmMeasureId"));
+        () -> measureService.associateCmsId("OWNER", "qiCoreMeasureId", "qdmMeasureId"));
   }
 
   @Test
@@ -1999,7 +1997,7 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertThrows(
         InvalidResourceStateException.class,
-        () -> measureService.isCmsAssociationValid("OWNER", "qiCoreMeasureId", "qdmMeasureId"));
+        () -> measureService.associateCmsId("OWNER", "qiCoreMeasureId", "qdmMeasureId"));
   }
 
   @Test
@@ -2016,7 +2014,7 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertThrows(
         InvalidResourceStateException.class,
-        () -> measureService.isCmsAssociationValid("OWNER", "qiCoreMeasureId", "qdmMeasureId"));
+        () -> measureService.associateCmsId("OWNER", "qiCoreMeasureId", "qdmMeasureId"));
   }
 
   @Test
@@ -2030,8 +2028,7 @@ public class MeasureServiceTest implements ResourceUtil {
     when(measureSetService.findByMeasureSetId("IDIDID")).thenReturn(qiCoreMeasureSet);
     when(measureSetService.findByMeasureSetId("2D2D2D")).thenReturn(qdmMeasureSet);
 
-    boolean result =
-        measureService.isCmsAssociationValid("OWNER", "qiCoreMeasureId", "qdmMeasureId");
-    assertTrue(result);
+    String result = measureService.associateCmsId("OWNER", "qiCoreMeasureId", "qdmMeasureId");
+    assertEquals(result, "CMS Ids are associated successfully");
   }
 }

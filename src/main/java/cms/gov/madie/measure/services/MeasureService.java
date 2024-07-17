@@ -590,8 +590,7 @@ public class MeasureService {
     }
   }
 
-  public Boolean isCmsAssociationValid(
-      String username, String qiCoreMeasureId, String qdmMeasureId) {
+  public String associateCmsId(String username, String qiCoreMeasureId, String qdmMeasureId) {
     if (qiCoreMeasureId == null || qdmMeasureId == null) {
       log.info(
           "CMS ID could not be associated. Measure Ids [{}],[{}} cannot be null",
@@ -600,53 +599,63 @@ public class MeasureService {
       throw new InvalidIdException("CMS ID could not be associated. Please try again.");
     }
 
-    Measure persistedQiCoreMeasure = findMeasureById(qiCoreMeasureId);
-    Measure persistedQdmMeasure = findMeasureById(qdmMeasureId);
+    Measure qiCoreMeasure = findMeasureById(qiCoreMeasureId);
+    Measure qdmMeasure = findMeasureById(qdmMeasureId);
 
-    if (persistedQiCoreMeasure == null || persistedQdmMeasure == null) {
+    if (qiCoreMeasure == null || qdmMeasure == null) {
       log.info(
           "CMS ID could not be associated. Measures with given Ids [{}],[{}] are not found",
           qiCoreMeasureId,
           qdmMeasureId);
       throw new ResourceNotFoundException("CMS ID could not be associated. Please try again.");
     }
+    validateCmsIdAssociation(username, qiCoreMeasure, qdmMeasure);
+
+    return "CMS Ids are associated successfully";
+  }
+
+  public boolean validateCmsIdAssociation(
+      String username, Measure qiCoreMeasure, Measure qdmMeasure) {
 
     // only owners(not shared users) can perform cms id association
-    if (!((persistedQiCoreMeasure.getMeasureSet().getOwner().equals(username))
-        && (persistedQdmMeasure.getMeasureSet().getOwner().equals(username)))) {
+    if (!(StringUtils.equals(qiCoreMeasure.getMeasureSet().getOwner(), username)
+        && StringUtils.equals(qdmMeasure.getMeasureSet().getOwner(), username))) {
       log.info(
-          "CMS ID could not be associated. User is not authorized to perform CMS id association");
+          "CMS ID could not be associated for measures with IDs [{}], [{}]. User is not authorized "
+              + "to perform CMS id association",
+          qiCoreMeasure.getId(),
+          qdmMeasure.getId());
       throw new UnauthorizedException("CMS ID could not be associated. Please try again.");
     }
 
-    if (persistedQiCoreMeasure.getModel().equals(persistedQdmMeasure.getModel())) {
+    if (StringUtils.equals(qiCoreMeasure.getModel(), qdmMeasure.getModel())) {
       log.info(
           "CMS ID could not be associated. Both measures with IDs [{}],[{}] are of same model type",
-          qiCoreMeasureId,
-          qdmMeasureId);
+          qiCoreMeasure.getId(),
+          qdmMeasure.getId());
       throw new InvalidRequestException("CMS ID could not be associated. Please try again.");
     }
 
-    if (persistedQdmMeasure.getMeasureSet().getCmsId() == null) {
+    if (qdmMeasure.getMeasureSet().getCmsId() == null) {
       log.info(
           "CMS ID could not be associated. QDM measure with Id [{}] doesn't have CMS ID "
               + "associated with it",
-          qdmMeasureId);
+          qdmMeasure.getId());
       throw new InvalidRequestException("CMS ID could not be associated. Please try again.");
     }
 
-    if (persistedQiCoreMeasure.getMeasureSet().getCmsId() != null) {
+    if (qiCoreMeasure.getMeasureSet().getCmsId() != null) {
       log.info(
           "CMS ID could not be associated. The QI-Core measure with Id [{}] already has a CMS ID.",
-          qiCoreMeasureId);
+          qiCoreMeasure.getId());
       throw new InvalidResourceStateException(
           "CMS ID could not be associated. The QI-Core measure already has a CMS ID.");
     }
 
-    if (!persistedQiCoreMeasure.getMeasureMetaData().isDraft()) {
+    if (!qiCoreMeasure.getMeasureMetaData().isDraft()) {
       log.info(
           "CMS ID could not be associated. The QI-Core measure with Id [{}] is versioned.",
-          qiCoreMeasureId);
+          qiCoreMeasure.getId());
       throw new InvalidResourceStateException(
           "CMS ID could not be associated. The QI-Core measure is versioned.");
     }

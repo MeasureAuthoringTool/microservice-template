@@ -735,4 +735,17 @@ class MeasureControllerTest {
     assertEquals(stratification.getAssociation(), response.getBody().getAssociation());
     assertEquals(stratification.getAssociations(), response.getBody().getAssociations());
   }
+
+  @Test
+  public void testValidateCmsAssociationSuccessfully() {
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    when(measureService.associateCmsId(any(String.class), any(String.class), any(String.class)))
+        .thenReturn("CMS Ids are associated successfully");
+
+    ResponseEntity<String> result =
+        controller.associateCmsId(principal, "qiCoreMeasureId", "qdmMeasureId");
+    assertThat(result.getStatusCode(), is(equalTo(HttpStatus.OK)));
+  }
 }

@@ -7,13 +7,7 @@ import cms.gov.madie.measure.services.MeasureSetService;
 import cms.gov.madie.measure.services.VirusScanClient;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import gov.cms.madie.models.common.ModelType;
-import gov.cms.madie.models.common.Organization;
-import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.HapiOperationOutcome;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.MeasureMetaData;
-import gov.cms.madie.models.measure.MeasureSet;
 import gov.cms.madie.models.scanner.ScanValidationDto;
 import gov.cms.madie.models.scanner.VirusScanResponseDto;
 import gov.cms.madie.models.scanner.VirusScanResultDto;
@@ -33,16 +27,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
-import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
-import java.util.function.BooleanSupplier;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -200,17 +190,5 @@ class ValidationControllerTest {
             equalTo(
                 "There was an error importing this file. "
                     + "Please contact the help desk for error code V100.")));
-  }
-
-  @Test
-  public void testValidateCmsAssociationSuccessfully() {
-    Principal principal = mock(Principal.class);
-    when(principal.getName()).thenReturn("test.user");
-
-    when(measureService.isCmsAssociationValid(any(String.class), any(String.class), any(String.class))).thenReturn(true);
-
-    ResponseEntity<Boolean> result =
-            validationController.isCmsAssociationValid(principal, "qiCoreMeasureId", "qdmMeasureId");
-    assertThat(result.getStatusCode(), is(equalTo(HttpStatus.OK)));
   }
 }
