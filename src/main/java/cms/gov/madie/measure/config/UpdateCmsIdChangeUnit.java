@@ -16,6 +16,7 @@ import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.util.Pair;
 
 import java.util.List;
@@ -47,7 +48,7 @@ public class UpdateCmsIdChangeUnit {
       return;
     }
 
-    List<Pair<Query, Update>> updatePairs =
+    List<Pair<Query, UpdateDefinition>> updatePairs =
         measureMetas.stream()
             .map(
                 measureMeta -> {
@@ -56,13 +57,15 @@ public class UpdateCmsIdChangeUnit {
                       Query.query(Criteria.where("measureSetId").is(measureMeta.getMeasureSetId()));
                   // make sure there is no FHIR appended to the cms id
                   String cmsId = measureMeta.getCmsId().trim().replace("FHIR", "");
-                  Update update = Update.update("cmsId", Integer.parseInt(cmsId));
+                  // Update update = Update.update("cmsId", Integer.parseInt(cmsId));
+                  UpdateDefinition update = Update.update("cmsId", Integer.parseInt(cmsId));
                   return Pair.of(query, update);
                 })
             .toList();
 
     BulkOperations bulkOperations =
         mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, "measureSet");
+    // BulOperations.updateMulti(List<Pair<Query, UpdateDefinition>> updates)
     bulkOperations.updateMulti(updatePairs);
     bulkOperations.execute();
   }
