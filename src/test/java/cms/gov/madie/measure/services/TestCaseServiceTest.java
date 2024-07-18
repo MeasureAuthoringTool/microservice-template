@@ -359,7 +359,7 @@ public class TestCaseServiceTest implements ResourceUtil {
             .build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
 
-    TestCaseService spy = Mockito.spy(testCaseService);
+    // TestCaseService spy = Mockito.spy(testCaseService);
     List<TestCase> validatedTestCases =
         List.of(
             TestCase.builder()
@@ -384,11 +384,11 @@ public class TestCaseServiceTest implements ResourceUtil {
                 .json("{}")
                 .build());
     doReturn(validatedTestCases)
-        .when(spy)
+        .when(testCaseService)
         .updateTestCaseValidResourcesForMeasure(any(Measure.class), anyString());
 
     MeasureTestCaseValidationReport output =
-        spy.updateTestCaseValidResourcesWithReport(measureId, accessToken);
+        testCaseService.updateTestCaseValidResourcesWithReport(measureId, accessToken);
     assertThat(output, is(notNullValue()));
     assertThat(output.getMeasureId(), is(equalTo(measureId)));
     assertThat(output.getJobStatus(), is(equalTo(JobStatus.COMPLETED)));
@@ -421,17 +421,18 @@ public class TestCaseServiceTest implements ResourceUtil {
     Measure measure =
         Measure.builder().testCases(List.of(testCase)).model(ModelType.QI_CORE.getValue()).build();
     final String accessToken = "Bearer Token";
-    TestCaseService spy = Mockito.spy(testCaseService);
+    // TestCaseService spy = Mockito.spy(testCaseService);
     TestCase validatedTestCase =
         testCase.toBuilder()
             .hapiOperationOutcome(HapiOperationOutcome.builder().build())
             .validResource(true)
             .build();
     doReturn(List.of(validatedTestCase))
-        .when(spy)
+        .when(testCaseService)
         .validateTestCasesAsResources(anyList(), any(ModelType.class), anyString());
 
-    List<TestCase> output = spy.updateTestCaseValidResourcesForMeasure(measure, accessToken);
+    List<TestCase> output =
+        testCaseService.updateTestCaseValidResourcesForMeasure(measure, accessToken);
 
     assertThat(output, is(notNullValue()));
     assertThat(output.size(), is(equalTo(1)));
