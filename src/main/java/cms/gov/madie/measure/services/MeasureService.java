@@ -593,9 +593,9 @@ public class MeasureService {
   }
 
   public MeasureSet associateCmsId(String username, String qiCoreMeasureId, String qdmMeasureId) {
-    if (qiCoreMeasureId == null || qdmMeasureId == null) {
+    if (StringUtils.isBlank(qiCoreMeasureId) || StringUtils.isBlank(qdmMeasureId)) {
       log.info(
-          "CMS ID could not be associated. Measure Ids [{}],[{}} cannot be null",
+          "CMS ID could not be associated. Measure Ids [{}],[{}] cannot be null",
           qiCoreMeasureId,
           qdmMeasureId);
       throw new InvalidIdException("CMS ID could not be associated. Please try again.");
@@ -614,14 +614,14 @@ public class MeasureService {
 
     validateCmsIdAssociation(username, qiCoreMeasure, qdmMeasure);
 
-    MeasureSet measureSet = measureSetService.findByMeasureSetId(qiCoreMeasure.getMeasureSetId());
+    MeasureSet measureSet = qiCoreMeasure.getMeasureSet();
     measureSet.setCmsId(qdmMeasure.getMeasureSet().getCmsId());
     measureSetRepository.save(measureSet);
 
     return measureSet;
   }
 
-  public List<Measure> checkDuplicateCmsId(Integer qdmCmsId) {
+  public List<Measure> getQiCoreMeasuresByCmsId(Integer qdmCmsId) {
     return measureRepository.findAllByModel(ModelType.QI_CORE.getValue()).stream()
         .filter(
             measure -> {
@@ -683,7 +683,7 @@ public class MeasureService {
           "CMS ID could not be associated. The QI-Core measure is versioned.");
     }
 
-    if (!CollectionUtils.isEmpty(checkDuplicateCmsId(qdmMeasure.getMeasureSet().getCmsId()))) {
+    if (!CollectionUtils.isEmpty(getQiCoreMeasuresByCmsId(qdmMeasure.getMeasureSet().getCmsId()))) {
       log.info(
           "CMS ID could not be associated. A QI-Core measure already utilizes the CMS ID [{}].",
           qdmMeasure.getMeasureSet().getCmsId());
