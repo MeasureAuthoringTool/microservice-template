@@ -25,7 +25,6 @@ import gov.cms.madie.models.measure.MeasureGroupTypes;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
 import gov.cms.madie.models.measure.Stratification;
-import gov.cms.madie.models.measure.SupplementalData;
 
 @ExtendWith(MockitoExtension.class)
 class CqlDefinitionReturnTypeServiceTest implements ResourceUtil {
@@ -235,7 +234,7 @@ class CqlDefinitionReturnTypeServiceTest implements ResourceUtil {
     String elmJson = getData("/test_elm.json");
 
     DefDescPair sde =
-        SupplementalData.builder().definition("fun23").description("Please Help Me").build();
+        DefDescPair.builder().definition("fun23").description("Please Help Me").build();
     boolean isValid = qlDefinitionReturnTypeService.isDefineInElm(sde, elmJson);
     assertThat(isValid, is(true));
   }
@@ -245,7 +244,7 @@ class CqlDefinitionReturnTypeServiceTest implements ResourceUtil {
     String elmJson = getData("/test_elm.json");
 
     DefDescPair sde =
-        SupplementalData.builder().definition("fun34").description("Please Help Me").build();
+        DefDescPair.builder().definition("fun34").description("Please Help Me").build();
     boolean isValid = qlDefinitionReturnTypeService.isDefineInElm(sde, elmJson);
     assertThat(isValid, is(false));
   }
@@ -255,7 +254,7 @@ class CqlDefinitionReturnTypeServiceTest implements ResourceUtil {
     String elmJson = "{ curroped: json";
 
     DefDescPair sde =
-        SupplementalData.builder().definition("fun34").description("Please Help Me").build();
+        DefDescPair.builder().definition("fun34").description("Please Help Me").build();
     boolean isValid = qlDefinitionReturnTypeService.isDefineInElm(sde, elmJson);
     assertThat(isValid, is(false));
   }
