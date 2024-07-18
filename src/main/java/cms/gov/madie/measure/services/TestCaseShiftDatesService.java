@@ -49,8 +49,11 @@ import gov.cms.madie.models.cqm.datacriteria.PatientCareExperience;
 import gov.cms.madie.models.cqm.datacriteria.PatientCharacteristic;
 import gov.cms.madie.models.cqm.datacriteria.PatientCharacteristicBirthdate;
 import gov.cms.madie.models.cqm.datacriteria.PatientCharacteristicClinicalTrialParticipant;
+import gov.cms.madie.models.cqm.datacriteria.PatientCharacteristicEthnicity;
 import gov.cms.madie.models.cqm.datacriteria.PatientCharacteristicExpired;
 import gov.cms.madie.models.cqm.datacriteria.PatientCharacteristicPayer;
+import gov.cms.madie.models.cqm.datacriteria.PatientCharacteristicRace;
+import gov.cms.madie.models.cqm.datacriteria.PatientCharacteristicSex;
 import gov.cms.madie.models.cqm.datacriteria.PhysicalExamOrder;
 import gov.cms.madie.models.cqm.datacriteria.PhysicalExamPerformed;
 import gov.cms.madie.models.cqm.datacriteria.PhysicalExamRecommended;
@@ -58,6 +61,7 @@ import gov.cms.madie.models.cqm.datacriteria.ProcedureOrder;
 import gov.cms.madie.models.cqm.datacriteria.ProcedurePerformed;
 import gov.cms.madie.models.cqm.datacriteria.ProcedureRecommended;
 import gov.cms.madie.models.cqm.datacriteria.ProviderCareExperience;
+import gov.cms.madie.models.cqm.datacriteria.RelatedPerson;
 import gov.cms.madie.models.cqm.datacriteria.SubstanceAdministered;
 import gov.cms.madie.models.cqm.datacriteria.SubstanceOrder;
 import gov.cms.madie.models.cqm.datacriteria.SubstanceRecommended;
@@ -278,6 +282,11 @@ public class TestCaseShiftDatesService {
     } else if (dataElement instanceof Symptom) {
       Symptom symptom = (Symptom) dataElement;
       symptom.shiftDates(shifted);
+    } else if (dataElement instanceof PatientCharacteristicEthnicity
+        || dataElement instanceof PatientCharacteristicSex
+        || dataElement instanceof PatientCharacteristicRace
+        || dataElement instanceof RelatedPerson) {
+      // no dates to shift
     } else {
       throw new CqmConversionException("Unsupported data type: " + dataElement.toString());
     }
