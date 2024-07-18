@@ -74,7 +74,7 @@ class MeasureUtilTest {
   public void testCqlDefinitionNotPresentForSupplementalData_ValidJson()
       throws JsonProcessingException {
     DefDescPair supplementalData =
-        SupplementalData.builder()
+        DefDescPair.builder()
             .definition("THIS_DEFINITION")
             .description("Just a dumb definition")
             .build();
@@ -104,7 +104,7 @@ class MeasureUtilTest {
   public void testCqlDefinitionNotPresentForRiskAdjustmentValidJson()
       throws JsonProcessingException {
     DefDescPair riskAdjustmentVariables =
-        SupplementalData.builder()
+        DefDescPair.builder()
             .definition("THIS_DEFINITION")
             .description("Just a dumb definition")
             .build();
@@ -134,7 +134,7 @@ class MeasureUtilTest {
   public void testCqlDefinitionPresentForSupplementalDataValidJson()
       throws JsonProcessingException {
     DefDescPair supplementalData =
-        SupplementalData.builder()
+        DefDescPair.builder()
             .definition("THIS_DEFINITION")
             .description("Just a dumb definition")
             .build();
@@ -164,7 +164,7 @@ class MeasureUtilTest {
   public void testCqlDefinitionNotPresentForSupplementalDataNullElm()
       throws JsonProcessingException {
     DefDescPair supplementalData =
-        SupplementalData.builder()
+        DefDescPair.builder()
             .definition("THIS_DEFINITION")
             .description("Just a dumb definition")
             .build();
@@ -654,7 +654,7 @@ class MeasureUtilTest {
   @Test
   public void testIsSupplementalDataChanged_ReturnsTrueForAddNonNullSupplementalData() {
     DefDescPair supplementalData1 =
-        SupplementalData.builder()
+        DefDescPair.builder()
             .definition("THIS_DEFINITION")
             .description("Just a dumb definition")
             .build();
@@ -666,7 +666,7 @@ class MeasureUtilTest {
   @Test
   public void testIsSupplementalDataChanged_ReturnsTrueForSupplementalDataToNull() {
     DefDescPair supplementalData1 =
-        SupplementalData.builder()
+        DefDescPair.builder()
             .definition("THIS_DEFINITION")
             .description("Just a dumb definition")
             .build();
@@ -686,7 +686,7 @@ class MeasureUtilTest {
   @Test
   public void testIsSupplementalDataChanged_ReturnsTrueForRemovedSupplementalData() {
     DefDescPair supplementalData1 =
-        SupplementalData.builder()
+        DefDescPair.builder()
             .definition("THIS_DEFINITION")
             .description("Just a dumb definition")
             .build();
@@ -700,7 +700,7 @@ class MeasureUtilTest {
   public void testIsSupplementalDataChanged_ReturnsTrueForNewNonNullSupplementalData() {
     final Measure original = Measure.builder().supplementalData(Collections.emptyList()).build();
     DefDescPair supplementalData1 =
-        SupplementalData.builder()
+        DefDescPair.builder()
             .definition("THIS_DEFINITION")
             .description("Just a dumb definition")
             .build();
@@ -722,7 +722,7 @@ class MeasureUtilTest {
   public void testIsSupplementalDataChanged_ReturnsTrueForChanged() {
 
     DefDescPair supplementalData1 =
-        SupplementalData.builder()
+        DefDescPair.builder()
             .definition("THIS_DEFINITION")
             .description("Just a dumb definition")
             .build();
@@ -734,7 +734,7 @@ class MeasureUtilTest {
         };
 
     DefDescPair supplementalData2 =
-        SupplementalData.builder()
+        DefDescPair.builder()
             .definition("THAT_DEFINITION")
             .description("Just aother dumb definition")
             .build();
@@ -758,7 +758,7 @@ class MeasureUtilTest {
   public void testIsSupplementalDataChanged_ReturnsFalseForUnchanged() {
 
     DefDescPair supplementalData1 =
-        SupplementalData.builder()
+        DefDescPair.builder()
             .definition("THIS_DEFINITION")
             .description("Just a dumb definition")
             .build();
