@@ -41,6 +41,7 @@ import java.util.Set;
 
 import cms.gov.madie.measure.dto.MeasureListDTO;
 import cms.gov.madie.measure.exceptions.*;
+import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import gov.cms.madie.models.measure.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -69,6 +70,7 @@ import gov.cms.madie.models.common.Version;
 @ExtendWith(MockitoExtension.class)
 public class MeasureServiceTest implements ResourceUtil {
   @Mock private MeasureRepository measureRepository;
+  @Mock private MeasureSetRepository measureSetRepository;
   @Mock private OrganizationRepository organizationRepository;
   @Mock private ElmTranslatorClient elmTranslatorClient;
   @Mock private MeasureUtil measureUtil;
@@ -2017,18 +2019,66 @@ public class MeasureServiceTest implements ResourceUtil {
         () -> measureService.associateCmsId("OWNER", "qiCoreMeasureId", "qdmMeasureId"));
   }
 
-  //  @Test
-  //  public void testValidateCmsAssociationSuccessfully() {
-  //    MeasureSet qiCoreMeasureSet =
-  //        MeasureSet.builder().measureSetId("IDIDID").owner("OWNER").build();
-  //    MeasureSet qdmMeasureSet =
-  //        MeasureSet.builder().measureSetId("2D2D2D").owner("OWNER").cmsId(12).build();
-  //    when(measureRepository.findById("qiCoreMeasureId")).thenReturn(Optional.of(measure1));
-  //    when(measureRepository.findById("qdmMeasureId")).thenReturn(Optional.of(measure2));
-  //    when(measureSetService.findByMeasureSetId("IDIDID")).thenReturn(qiCoreMeasureSet);
-  //    when(measureSetService.findByMeasureSetId("2D2D2D")).thenReturn(qdmMeasureSet);
-  //
-  //    String result = measureService.associateCmsId("OWNER", "qiCoreMeasureId", "qdmMeasureId");
-  //    assertEquals(result, "CMS Ids are associated successfully");
-  //  }
+  @Test
+  public void testValidateCmsAssociationThrowsExceptionWhenAnyQICoreMeasureHasSameCmsId() {
+    Measure qiCoreMeasure =
+        Measure.builder()
+            .model(ModelType.QI_CORE.getValue())
+            .measureSetId("NewIDIDID")
+            .measureMetaData(draftMeasureMetaData)
+            .build();
+    MeasureSet qiCoreMeasureSet =
+        MeasureSet.builder().measureSetId("IDIDID").owner("OWNER").build();
+    MeasureSet qiCoreMeasureSet2 =
+        MeasureSet.builder().measureSetId("NewIDIDID").cmsId(12).owner("OWNER").build();
+    MeasureSet qdmMeasureSet =
+        MeasureSet.builder().measureSetId("2D2D2D").owner("OWNER").cmsId(12).build();
+    when(measureRepository.findById("qiCoreMeasureId")).thenReturn(Optional.of(measure1));
+    when(measureRepository.findById("qdmMeasureId")).thenReturn(Optional.of(measure2));
+    when(measureSetService.findByMeasureSetId("IDIDID")).thenReturn(qiCoreMeasureSet);
+    when(measureSetService.findByMeasureSetId("2D2D2D")).thenReturn(qdmMeasureSet);
+
+    when(measureRepository.findAllByModel(ModelType.QI_CORE.getValue()))
+        .thenReturn(List.of(measure1, qiCoreMeasure));
+    when(measureSetService.findByMeasureSetId("NewIDIDID")).thenReturn(qiCoreMeasureSet2);
+
+    assertThrows(
+        InvalidResourceStateException.class,
+        () -> measureService.associateCmsId("OWNER", "qiCoreMeasureId", "qdmMeasureId"));
+  }
+
+  @Test
+  public void testValidateCmsAssociationSuccessfully() {
+    Measure qiCoreMeasure =
+        Measure.builder()
+            .model(ModelType.QI_CORE.getValue())
+            .measureSetId("NewIDIDID")
+            .measureMetaData(draftMeasureMetaData)
+            .build();
+    MeasureSet qiCoreMeasureSet =
+        MeasureSet.builder().measureSetId("IDIDID").owner("OWNER").build();
+    MeasureSet qiCoreMeasureSet2 =
+        MeasureSet.builder().measureSetId("NewIDIDID").cmsId(13).owner("OWNER").build();
+    MeasureSet updatedQiCoreMeasureSet =
+        MeasureSet.builder().measureSetId("IDIDID").cmsId(12).owner("OWNER").build();
+    MeasureSet qdmMeasureSet =
+        MeasureSet.builder().measureSetId("2D2D2D").owner("OWNER").cmsId(12).build();
+    when(measureRepository.findById("qiCoreMeasureId")).thenReturn(Optional.of(measure1));
+    when(measureRepository.findById("qdmMeasureId")).thenReturn(Optional.of(measure2));
+    when(measureSetService.findByMeasureSetId("IDIDID")).thenReturn(qiCoreMeasureSet);
+    when(measureSetService.findByMeasureSetId("2D2D2D")).thenReturn(qdmMeasureSet);
+
+    when(measureRepository.findAllByModel(ModelType.QI_CORE.getValue()))
+        .thenReturn(List.of(measure1, qiCoreMeasure));
+    when(measureSetService.findByMeasureSetId("NewIDIDID")).thenReturn(qiCoreMeasureSet2);
+    when(measureSetRepository.save(any(MeasureSet.class))).thenReturn(updatedQiCoreMeasureSet);
+
+    MeasureSet updatedMeasureSet =
+        measureService.associateCmsId("OWNER", "qiCoreMeasureId", "qdmMeasureId");
+    assertThat(updatedMeasureSet.getOwner(), is(equalTo(updatedQiCoreMeasureSet.getOwner())));
+    assertThat(
+        updatedMeasureSet.getMeasureSetId(),
+        is(equalTo(updatedQiCoreMeasureSet.getMeasureSetId())));
+    assertThat(updatedMeasureSet.getCmsId(), is(equalTo(updatedQiCoreMeasureSet.getCmsId())));
+  }
 }
