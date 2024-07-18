@@ -4,6 +4,7 @@ import cms.gov.madie.measure.dto.MadieFeatureFlag;
 import cms.gov.madie.measure.dto.MeasureListDTO;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.repositories.OrganizationRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
 import cms.gov.madie.measure.utils.GroupPopulationUtil;
@@ -37,6 +38,7 @@ import java.util.stream.Collectors;
 public class MeasureService {
   private final MeasureRepository measureRepository;
   private final OrganizationRepository organizationRepository;
+  private final MeasureSetRepository measureSetRepository;
   private final ElmTranslatorClient elmTranslatorClient;
   private final MeasureUtil measureUtil;
   private final ActionLogService actionLogService;
@@ -590,7 +592,7 @@ public class MeasureService {
     }
   }
 
-  public String associateCmsId(String username, String qiCoreMeasureId, String qdmMeasureId) {
+  public MeasureSet associateCmsId(String username, String qiCoreMeasureId, String qdmMeasureId) {
     if (qiCoreMeasureId == null || qdmMeasureId == null) {
       log.info(
           "CMS ID could not be associated. Measure Ids [{}],[{}} cannot be null",
@@ -609,9 +611,30 @@ public class MeasureService {
           qdmMeasureId);
       throw new ResourceNotFoundException("CMS ID could not be associated. Please try again.");
     }
+
     validateCmsIdAssociation(username, qiCoreMeasure, qdmMeasure);
 
-    return "CMS Ids are associated successfully";
+    MeasureSet measureSet = measureSetService.findByMeasureSetId(qiCoreMeasure.getMeasureSetId());
+    measureSet.setCmsId(qdmMeasure.getMeasureSet().getCmsId());
+    measureSetRepository.save(measureSet);
+
+    return measureSet;
+  }
+
+  public List<Measure> checkDuplicateCmsId(Integer qdmCmsId) {
+    return measureRepository.findAllByModel(ModelType.QI_CORE.getValue()).stream()
+        .filter(
+            measure -> {
+              Optional<MeasureSet> measureSets =
+                  Optional.ofNullable(
+                      measureSetService.findByMeasureSetId(measure.getMeasureSetId()));
+              return measureSets
+                  .map(
+                      measureSet ->
+                          measureSet.getCmsId() != null && measureSet.getCmsId().equals(qdmCmsId))
+                  .orElse(false);
+            })
+        .toList();
   }
 
   public boolean validateCmsIdAssociation(
@@ -658,6 +681,14 @@ public class MeasureService {
           qiCoreMeasure.getId());
       throw new InvalidResourceStateException(
           "CMS ID could not be associated. The QI-Core measure is versioned.");
+    }
+
+    if (!CollectionUtils.isEmpty(checkDuplicateCmsId(qdmMeasure.getMeasureSet().getCmsId()))) {
+      log.info(
+          "CMS ID could not be associated. A QI-Core measure already utilizes the CMS ID [{}].",
+          qdmMeasure.getMeasureSet().getCmsId());
+      throw new InvalidResourceStateException(
+          "CMS ID could not be associated. A QI-Core measure already utilizes that CMS ID.");
     }
     return true;
   }

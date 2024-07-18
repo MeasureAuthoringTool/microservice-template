@@ -316,7 +316,7 @@ public class MeasureController {
   }
 
   @PutMapping("/measures/cms-id-association")
-  public ResponseEntity<String> associateCmsId(
+  public ResponseEntity<MeasureSet> associateCmsId(
       Principal principal,
       @RequestParam(required = true, name = "qiCoreMeasureId") String qiCoreMeasureId,
       @RequestParam(required = true, name = "qdmMeasureId") String qdmMeasureId) {
