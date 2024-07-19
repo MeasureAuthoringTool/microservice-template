@@ -2024,8 +2024,6 @@ public class MeasureServiceTest implements ResourceUtil {
             .build();
     MeasureSet qiCoreMeasureSet =
         MeasureSet.builder().measureSetId("IDIDID").owner("OWNER").build();
-    MeasureSet qiCoreMeasureSet2 =
-        MeasureSet.builder().measureSetId("NewIDIDID").cmsId(12).owner("OWNER").build();
     MeasureSet qdmMeasureSet =
         MeasureSet.builder().measureSetId("2D2D2D").owner("OWNER").cmsId(12).build();
 
