@@ -32,12 +32,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import cms.gov.madie.measure.dto.MeasureListDTO;
 import cms.gov.madie.measure.exceptions.*;
@@ -2033,14 +2028,13 @@ public class MeasureServiceTest implements ResourceUtil {
         MeasureSet.builder().measureSetId("NewIDIDID").cmsId(12).owner("OWNER").build();
     MeasureSet qdmMeasureSet =
         MeasureSet.builder().measureSetId("2D2D2D").owner("OWNER").cmsId(12).build();
+
     when(measureRepository.findById("qiCoreMeasureId")).thenReturn(Optional.of(measure1));
     when(measureRepository.findById("qdmMeasureId")).thenReturn(Optional.of(measure2));
     when(measureSetService.findByMeasureSetId("IDIDID")).thenReturn(qiCoreMeasureSet);
     when(measureSetService.findByMeasureSetId("2D2D2D")).thenReturn(qdmMeasureSet);
-
-    when(measureRepository.findAllByModel(ModelType.QI_CORE.getValue()))
-        .thenReturn(List.of(measure1, qiCoreMeasure));
-    when(measureSetService.findByMeasureSetId("NewIDIDID")).thenReturn(qiCoreMeasureSet2);
+    when(measureRepository.findAllByModelAndCmsId(any(String.class), any(Integer.class)))
+        .thenReturn(List.of(qiCoreMeasure));
 
     assertThrows(
         InvalidResourceStateException.class,
@@ -2049,16 +2043,9 @@ public class MeasureServiceTest implements ResourceUtil {
 
   @Test
   public void testValidateCmsAssociationSuccessfully() {
-    Measure qiCoreMeasure =
-        Measure.builder()
-            .model(ModelType.QI_CORE.getValue())
-            .measureSetId("NewIDIDID")
-            .measureMetaData(draftMeasureMetaData)
-            .build();
+
     MeasureSet qiCoreMeasureSet =
         MeasureSet.builder().measureSetId("IDIDID").owner("OWNER").build();
-    MeasureSet qiCoreMeasureSet2 =
-        MeasureSet.builder().measureSetId("NewIDIDID").cmsId(13).owner("OWNER").build();
     MeasureSet updatedQiCoreMeasureSet =
         MeasureSet.builder().measureSetId("IDIDID").cmsId(12).owner("OWNER").build();
     MeasureSet qdmMeasureSet =
@@ -2068,9 +2055,8 @@ public class MeasureServiceTest implements ResourceUtil {
     when(measureSetService.findByMeasureSetId("IDIDID")).thenReturn(qiCoreMeasureSet);
     when(measureSetService.findByMeasureSetId("2D2D2D")).thenReturn(qdmMeasureSet);
 
-    when(measureRepository.findAllByModel(ModelType.QI_CORE.getValue()))
-        .thenReturn(List.of(measure1, qiCoreMeasure));
-    when(measureSetService.findByMeasureSetId("NewIDIDID")).thenReturn(qiCoreMeasureSet2);
+    when(measureRepository.findAllByModelAndCmsId(any(String.class), any(Integer.class)))
+        .thenReturn(List.of());
     when(measureSetRepository.save(any(MeasureSet.class))).thenReturn(updatedQiCoreMeasureSet);
 
     MeasureSet updatedMeasureSet =

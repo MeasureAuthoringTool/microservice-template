@@ -622,23 +622,10 @@ public class MeasureService {
   }
 
   public List<Measure> getQiCoreMeasuresByCmsId(Integer qdmCmsId) {
-    return measureRepository.findAllByModel(ModelType.QI_CORE.getValue()).stream()
-        .filter(
-            measure -> {
-              Optional<MeasureSet> measureSets =
-                  Optional.ofNullable(
-                      measureSetService.findByMeasureSetId(measure.getMeasureSetId()));
-              return measureSets
-                  .map(
-                      measureSet ->
-                          measureSet.getCmsId() != null && measureSet.getCmsId().equals(qdmCmsId))
-                  .orElse(false);
-            })
-        .toList();
+    return measureRepository.findAllByModelAndCmsId(ModelType.QI_CORE.getValue(), qdmCmsId);
   }
 
-  public boolean validateCmsIdAssociation(
-      String username, Measure qiCoreMeasure, Measure qdmMeasure) {
+  public void validateCmsIdAssociation(String username, Measure qiCoreMeasure, Measure qdmMeasure) {
 
     // only owners(not shared users) can perform cms id association
     if (!(StringUtils.equals(qiCoreMeasure.getMeasureSet().getOwner(), username)
@@ -690,6 +677,5 @@ public class MeasureService {
       throw new InvalidResourceStateException(
           "CMS ID could not be associated. A QI-Core measure already utilizes that CMS ID.");
     }
-    return true;
   }
 }
