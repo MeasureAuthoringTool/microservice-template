@@ -6,4 +6,8 @@ public class InvalidResourceStateException extends RuntimeException {
   public InvalidResourceStateException(String type, String id, String cause) {
     super(String.format(MESSAGE, type, id, cause));
   }
+
+  public InvalidResourceStateException(String message) {
+    super(message);
+  }
 }
