@@ -6,4 +6,8 @@ public class UnauthorizedException extends RuntimeException {
   public UnauthorizedException(String type, String id, String user) {
     super(String.format(MESSAGE, user, type, id));
   }
+
+  public UnauthorizedException(String message) {
+    super(message);
+  }
 }

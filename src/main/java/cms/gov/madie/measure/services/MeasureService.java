@@ -4,6 +4,7 @@ import cms.gov.madie.measure.dto.MadieFeatureFlag;
 import cms.gov.madie.measure.dto.MeasureListDTO;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.repositories.OrganizationRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
 import cms.gov.madie.measure.utils.GroupPopulationUtil;
@@ -37,6 +38,7 @@ import java.util.stream.Collectors;
 public class MeasureService {
   private final MeasureRepository measureRepository;
   private final OrganizationRepository organizationRepository;
+  private final MeasureSetRepository measureSetRepository;
   private final ElmTranslatorClient elmTranslatorClient;
   private final MeasureUtil measureUtil;
   private final ActionLogService actionLogService;
@@ -587,6 +589,93 @@ public class MeasureService {
                   d.setName(modifiedOrganizations.get(d.getName()));
                 }
               });
+    }
+  }
+
+  public MeasureSet associateCmsId(String username, String qiCoreMeasureId, String qdmMeasureId) {
+    if (StringUtils.isBlank(qiCoreMeasureId) || StringUtils.isBlank(qdmMeasureId)) {
+      log.info(
+          "CMS ID could not be associated. Measure Ids [{}],[{}] cannot be null",
+          qiCoreMeasureId,
+          qdmMeasureId);
+      throw new InvalidIdException("CMS ID could not be associated. Please try again.");
+    }
+
+    Measure qiCoreMeasure = findMeasureById(qiCoreMeasureId);
+    Measure qdmMeasure = findMeasureById(qdmMeasureId);
+
+    if (qiCoreMeasure == null || qdmMeasure == null) {
+      log.info(
+          "CMS ID could not be associated. Measures with given Ids [{}],[{}] are not found",
+          qiCoreMeasureId,
+          qdmMeasureId);
+      throw new ResourceNotFoundException("CMS ID could not be associated. Please try again.");
+    }
+
+    validateCmsIdAssociation(username, qiCoreMeasure, qdmMeasure);
+
+    MeasureSet measureSet = qiCoreMeasure.getMeasureSet();
+    measureSet.setCmsId(qdmMeasure.getMeasureSet().getCmsId());
+    measureSetRepository.save(measureSet);
+
+    return measureSet;
+  }
+
+  public List<Measure> getQiCoreMeasuresByCmsId(Integer qdmCmsId) {
+    return measureRepository.findAllByModelAndCmsId(ModelType.QI_CORE.getValue(), qdmCmsId);
+  }
+
+  public void validateCmsIdAssociation(String username, Measure qiCoreMeasure, Measure qdmMeasure) {
+
+    // only owners(not shared users) can perform cms id association
+    if (!(StringUtils.equals(qiCoreMeasure.getMeasureSet().getOwner(), username)
+        && StringUtils.equals(qdmMeasure.getMeasureSet().getOwner(), username))) {
+      log.info(
+          "CMS ID could not be associated for measures with IDs [{}], [{}]. User is not authorized "
+              + "to perform CMS id association",
+          qiCoreMeasure.getId(),
+          qdmMeasure.getId());
+      throw new UnauthorizedException("CMS ID could not be associated. Please try again.");
+    }
+
+    if (StringUtils.equals(qiCoreMeasure.getModel(), qdmMeasure.getModel())) {
+      log.info(
+          "CMS ID could not be associated. Both measures with IDs [{}],[{}] are of same model type",
+          qiCoreMeasure.getId(),
+          qdmMeasure.getId());
+      throw new InvalidRequestException("CMS ID could not be associated. Please try again.");
+    }
+
+    if (qdmMeasure.getMeasureSet().getCmsId() == null) {
+      log.info(
+          "CMS ID could not be associated. QDM measure with Id [{}] doesn't have CMS ID "
+              + "associated with it",
+          qdmMeasure.getId());
+      throw new InvalidRequestException("CMS ID could not be associated. Please try again.");
+    }
+
+    if (qiCoreMeasure.getMeasureSet().getCmsId() != null) {
+      log.info(
+          "CMS ID could not be associated. The QI-Core measure with Id [{}] already has a CMS ID.",
+          qiCoreMeasure.getId());
+      throw new InvalidResourceStateException(
+          "CMS ID could not be associated. The QI-Core measure already has a CMS ID.");
+    }
+
+    if (!qiCoreMeasure.getMeasureMetaData().isDraft()) {
+      log.info(
+          "CMS ID could not be associated. The QI-Core measure with Id [{}] is versioned.",
+          qiCoreMeasure.getId());
+      throw new InvalidResourceStateException(
+          "CMS ID could not be associated. The QI-Core measure is versioned.");
+    }
+
+    if (!CollectionUtils.isEmpty(getQiCoreMeasuresByCmsId(qdmMeasure.getMeasureSet().getCmsId()))) {
+      log.info(
+          "CMS ID could not be associated. A QI-Core measure already utilizes the CMS ID [{}].",
+          qdmMeasure.getMeasureSet().getCmsId());
+      throw new InvalidResourceStateException(
+          "CMS ID could not be associated. A QI-Core measure already utilizes that CMS ID.");
     }
   }
 }
