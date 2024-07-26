@@ -601,9 +601,6 @@ public class MeasureService {
         qiCoreMeasure.getId(),
         qdmMeasure.getId());
 
-    if (qdmMeasureMetaData.isExperimental()) {
-      qiCoreMeasureMetaData.setExperimental(qdmMeasureMetaData.isExperimental());
-    }
     if (!CollectionUtils.isEmpty(qdmMeasureMetaData.getEndorsements())) {
       qiCoreMeasureMetaData.setEndorsements(qdmMeasureMetaData.getEndorsements());
     }
