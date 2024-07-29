@@ -743,11 +743,12 @@ class MeasureControllerTest {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
-    when(measureService.associateCmsId(any(String.class), any(String.class), any(String.class)))
+    when(measureService.associateCmsId(
+            any(String.class), any(String.class), any(String.class), any(Boolean.class)))
         .thenReturn(qiCoreMeasureSet);
 
     ResponseEntity<MeasureSet> result =
-        controller.associateCmsId(principal, "qiCoreMeasureId", "qdmMeasureId");
+        controller.associateCmsId(principal, "qiCoreMeasureId", "qdmMeasureId", false);
     assertThat(result.getStatusCode(), is(equalTo(HttpStatus.OK)));
   }
 }

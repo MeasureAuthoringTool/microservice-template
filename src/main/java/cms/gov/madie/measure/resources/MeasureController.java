@@ -318,9 +318,11 @@ public class MeasureController {
   @PutMapping("/measures/cms-id-association")
   public ResponseEntity<MeasureSet> associateCmsId(
       Principal principal,
-      @RequestParam(required = true, name = "qiCoreMeasureId") String qiCoreMeasureId,
-      @RequestParam(required = true, name = "qdmMeasureId") String qdmMeasureId) {
+      @RequestParam String qiCoreMeasureId,
+      @RequestParam String qdmMeasureId,
+      @RequestParam(defaultValue = "false") boolean copyMetaData) {
     return ResponseEntity.ok(
-        measureService.associateCmsId(principal.getName(), qiCoreMeasureId, qdmMeasureId));
+        measureService.associateCmsId(
+            principal.getName(), qiCoreMeasureId, qdmMeasureId, copyMetaData));
   }
 }

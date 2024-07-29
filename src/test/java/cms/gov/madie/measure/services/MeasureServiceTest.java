@@ -1922,13 +1922,15 @@ public class MeasureServiceTest implements ResourceUtil {
   @Test
   public void testValidateCmsAssociationThrowsExceptionForNullQiCoreMeasureId() {
     assertThrows(
-        InvalidIdException.class, () -> measureService.associateCmsId("OWNER", null, "qdmId"));
+        InvalidIdException.class,
+        () -> measureService.associateCmsId("OWNER", null, "qdmId", false));
   }
 
   @Test
   public void testValidateCmsAssociationThrowsExceptionForNullQDMCoreMeasureId() {
     assertThrows(
-        InvalidIdException.class, () -> measureService.associateCmsId("OWNER", "qiCoreId", null));
+        InvalidIdException.class,
+        () -> measureService.associateCmsId("OWNER", "qiCoreId", null, false));
   }
 
   @Test
@@ -1936,7 +1938,7 @@ public class MeasureServiceTest implements ResourceUtil {
     when(measureRepository.findById(anyString())).thenReturn(Optional.empty());
     assertThrows(
         ResourceNotFoundException.class,
-        () -> measureService.associateCmsId("OWNER", "qiCoreMeasureId", "qdmMeasureId"));
+        () -> measureService.associateCmsId("OWNER", "qiCoreMeasureId", "qdmMeasureId", false));
   }
 
   @Test
@@ -1948,7 +1950,7 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertThrows(
         UnauthorizedException.class,
-        () -> measureService.associateCmsId("newowner", "qiCoreMeasureId", "qdmMeasureId"));
+        () -> measureService.associateCmsId("newowner", "qiCoreMeasureId", "qdmMeasureId", false));
   }
 
   @Test
@@ -1959,7 +1961,7 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertThrows(
         InvalidRequestException.class,
-        () -> measureService.associateCmsId("OWNER", "qiCoreMeasureId", "qiCoreMeasureId"));
+        () -> measureService.associateCmsId("OWNER", "qiCoreMeasureId", "qiCoreMeasureId", false));
   }
 
   @Test
@@ -1970,7 +1972,7 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertThrows(
         InvalidRequestException.class,
-        () -> measureService.associateCmsId("OWNER", "qdmMeasureId", "qdmMeasureId"));
+        () -> measureService.associateCmsId("OWNER", "qdmMeasureId", "qdmMeasureId", false));
   }
 
   @Test
@@ -1982,7 +1984,7 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertThrows(
         InvalidRequestException.class,
-        () -> measureService.associateCmsId("OWNER", "qiCoreMeasureId", "qdmMeasureId"));
+        () -> measureService.associateCmsId("OWNER", "qiCoreMeasureId", "qdmMeasureId", false));
   }
 
   @Test
@@ -1994,7 +1996,7 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertThrows(
         InvalidResourceStateException.class,
-        () -> measureService.associateCmsId("OWNER", "qiCoreMeasureId", "qdmMeasureId"));
+        () -> measureService.associateCmsId("OWNER", "qiCoreMeasureId", "qdmMeasureId", false));
   }
 
   @Test
@@ -2011,7 +2013,7 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertThrows(
         InvalidResourceStateException.class,
-        () -> measureService.associateCmsId("OWNER", "qiCoreMeasureId", "qdmMeasureId"));
+        () -> measureService.associateCmsId("OWNER", "qiCoreMeasureId", "qdmMeasureId", false));
   }
 
   @Test
@@ -2036,11 +2038,11 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertThrows(
         InvalidResourceStateException.class,
-        () -> measureService.associateCmsId("OWNER", "qiCoreMeasureId", "qdmMeasureId"));
+        () -> measureService.associateCmsId("OWNER", "qiCoreMeasureId", "qdmMeasureId", false));
   }
 
   @Test
-  public void testValidateCmsAssociationSuccessfully() {
+  public void testValidateCmsAssociationSuccessfullyWithoutCpyingMetaData() {
 
     MeasureSet qiCoreMeasureSet =
         MeasureSet.builder().measureSetId("IDIDID").owner("OWNER").build();
@@ -2058,7 +2060,34 @@ public class MeasureServiceTest implements ResourceUtil {
     when(measureSetRepository.save(any(MeasureSet.class))).thenReturn(updatedQiCoreMeasureSet);
 
     MeasureSet updatedMeasureSet =
-        measureService.associateCmsId("OWNER", "qiCoreMeasureId", "qdmMeasureId");
+        measureService.associateCmsId("OWNER", "qiCoreMeasureId", "qdmMeasureId", false);
+    assertThat(updatedMeasureSet.getOwner(), is(equalTo(updatedQiCoreMeasureSet.getOwner())));
+    assertThat(
+        updatedMeasureSet.getMeasureSetId(),
+        is(equalTo(updatedQiCoreMeasureSet.getMeasureSetId())));
+    assertThat(updatedMeasureSet.getCmsId(), is(equalTo(updatedQiCoreMeasureSet.getCmsId())));
+  }
+
+  @Test
+  public void testValidateCmsAssociationSuccessfullyWithCpyingMetaData() {
+
+    MeasureSet qiCoreMeasureSet =
+        MeasureSet.builder().measureSetId("IDIDID").owner("OWNER").build();
+    MeasureSet updatedQiCoreMeasureSet =
+        MeasureSet.builder().measureSetId("IDIDID").cmsId(12).owner("OWNER").build();
+    MeasureSet qdmMeasureSet =
+        MeasureSet.builder().measureSetId("2D2D2D").owner("OWNER").cmsId(12).build();
+    when(measureRepository.findById("qiCoreMeasureId")).thenReturn(Optional.of(measure1));
+    when(measureRepository.findById("qdmMeasureId")).thenReturn(Optional.of(measure2));
+    when(measureSetService.findByMeasureSetId("IDIDID")).thenReturn(qiCoreMeasureSet);
+    when(measureSetService.findByMeasureSetId("2D2D2D")).thenReturn(qdmMeasureSet);
+
+    when(measureRepository.findAllByModelAndCmsId(any(String.class), any(Integer.class)))
+        .thenReturn(List.of());
+    when(measureSetRepository.save(any(MeasureSet.class))).thenReturn(updatedQiCoreMeasureSet);
+
+    MeasureSet updatedMeasureSet =
+        measureService.associateCmsId("OWNER", "qiCoreMeasureId", "qdmMeasureId", true);
     assertThat(updatedMeasureSet.getOwner(), is(equalTo(updatedQiCoreMeasureSet.getOwner())));
     assertThat(
         updatedMeasureSet.getMeasureSetId(),

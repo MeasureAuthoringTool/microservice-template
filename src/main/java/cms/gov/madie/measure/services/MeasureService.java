@@ -592,7 +592,58 @@ public class MeasureService {
     }
   }
 
-  public MeasureSet associateCmsId(String username, String qiCoreMeasureId, String qdmMeasureId) {
+  public void copyQdmMetaData(Measure qiCoreMeasure, Measure qdmMeasure) {
+    MeasureMetaData qiCoreMeasureMetaData = qiCoreMeasure.getMeasureMetaData();
+    MeasureMetaData qdmMeasureMetaData = qdmMeasure.getMeasureMetaData();
+
+    log.info(
+        "Copying the meta data from QDM measure [{}] to QI Core measure[{}]",
+        qiCoreMeasure.getId(),
+        qdmMeasure.getId());
+
+    if (!CollectionUtils.isEmpty(qdmMeasureMetaData.getEndorsements())) {
+      qiCoreMeasureMetaData.setEndorsements(qdmMeasureMetaData.getEndorsements());
+    }
+    if (qdmMeasureMetaData.getSteward() != null) {
+      qiCoreMeasureMetaData.setSteward(qdmMeasureMetaData.getSteward());
+    }
+    if (!CollectionUtils.isEmpty(qdmMeasureMetaData.getDevelopers())) {
+      qiCoreMeasureMetaData.setDevelopers(qdmMeasureMetaData.getDevelopers());
+    }
+    if (StringUtils.isNotBlank(qdmMeasureMetaData.getDescription())) {
+      qiCoreMeasureMetaData.setDescription(qdmMeasureMetaData.getDescription());
+    }
+    if (StringUtils.isNotBlank(qdmMeasureMetaData.getRationale())) {
+      qiCoreMeasureMetaData.setRationale(qdmMeasureMetaData.getRationale());
+    }
+    if (StringUtils.isNotBlank(qdmMeasureMetaData.getGuidance())) {
+      qiCoreMeasureMetaData.setGuidance(qdmMeasureMetaData.getGuidance());
+    }
+    if (StringUtils.isNotBlank(qdmMeasureMetaData.getDefinition())) {
+      qiCoreMeasureMetaData.setDefinition(qdmMeasureMetaData.getDefinition());
+    }
+    if (StringUtils.isNotBlank(qdmMeasureMetaData.getClinicalRecommendation())) {
+      qiCoreMeasureMetaData.setClinicalRecommendation(
+          qdmMeasureMetaData.getClinicalRecommendation());
+    }
+    if (!CollectionUtils.isEmpty(qdmMeasureMetaData.getReferences())) {
+      qiCoreMeasureMetaData.setReferences(qdmMeasureMetaData.getReferences());
+    }
+    if (StringUtils.isNotBlank(qdmMeasureMetaData.getCopyright())) {
+      qiCoreMeasureMetaData.setCopyright(qdmMeasureMetaData.getCopyright());
+    }
+    if (StringUtils.isNotBlank(qdmMeasureMetaData.getDisclaimer())) {
+      qiCoreMeasureMetaData.setDisclaimer(qdmMeasureMetaData.getDisclaimer());
+    }
+
+    qiCoreMeasure.setMeasurementPeriodStart(qdmMeasure.getMeasurementPeriodStart());
+    qiCoreMeasure.setMeasurementPeriodEnd(qdmMeasure.getMeasurementPeriodEnd());
+
+    measureRepository.save(qiCoreMeasure);
+  }
+
+  public MeasureSet associateCmsId(
+      String username, String qiCoreMeasureId, String qdmMeasureId, boolean copyMetaData) {
     if (StringUtils.isBlank(qiCoreMeasureId) || StringUtils.isBlank(qdmMeasureId)) {
       log.info(
           "CMS ID could not be associated. Measure Ids [{}],[{}] cannot be null",
@@ -614,9 +665,25 @@ public class MeasureService {
 
     validateCmsIdAssociation(username, qiCoreMeasure, qdmMeasure);
 
+    if (copyMetaData) {
+      copyQdmMetaData(qiCoreMeasure, qdmMeasure);
+      log.info(
+          "User [{}] successfully copied the meta data from QDM Measure with Id [{}] to "
+              + "QI Core Measure with Id [{}]",
+          username,
+          qdmMeasureId,
+          qiCoreMeasureId);
+    }
+
     MeasureSet measureSet = qiCoreMeasure.getMeasureSet();
     measureSet.setCmsId(qdmMeasure.getMeasureSet().getCmsId());
     measureSetRepository.save(measureSet);
+    log.info(
+        "User [{}] successfully associated the measures [{}], [{}] with CMS ID [{}]",
+        username,
+        qiCoreMeasureId,
+        qdmMeasureId,
+        measureSet.getCmsId());
 
     return measureSet;
   }
