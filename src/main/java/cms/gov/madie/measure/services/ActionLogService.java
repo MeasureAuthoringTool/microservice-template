@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Arrays;
 
 @Slf4j
 @Service
@@ -18,7 +19,11 @@ public class ActionLogService {
   private final MeasureActionLogRepository actionLogRepository;
 
   public boolean logAction(
-      final String targetId, Class targetClass, final ActionType actionType, final String userId) {
+      final String targetId,
+      Class targetClass,
+      final ActionType actionType,
+      final String userId,
+      final String... additionalActionMessage) {
     final String collection = ActionLogCollectionType.getCollectionNameForClazz(targetClass);
 
     return actionLogRepository.pushEvent(
@@ -27,6 +32,7 @@ public class ActionLogService {
             .actionType(actionType)
             .performedBy(userId)
             .performedAt(Instant.now())
+            .additionalActionMessage(Arrays.toString(additionalActionMessage))
             .build(),
         collection);
   }

@@ -685,6 +685,23 @@ public class MeasureService {
         qdmMeasureId,
         measureSet.getCmsId());
 
+    String associationSuccessMessage =
+        "Measures with IDs %s, %s are Associated with CMS ID %s on %s.";
+    String copyMetaDataStatusMessage =
+        copyMetaData ? "Metadata was copied over" : "Metadata was NOT copied over";
+
+    actionLogService.logAction(
+        measureSet.getId(),
+        Measure.class,
+        ActionType.ASSOCIATED,
+        username,
+        String.format(
+            associationSuccessMessage + copyMetaDataStatusMessage,
+            qiCoreMeasureId,
+            qdmMeasureId,
+            measureSet.getCmsId(),
+            Instant.now()));
+
     return measureSet;
   }
 
