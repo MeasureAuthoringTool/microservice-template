@@ -1,5 +1,29 @@
 package cms.gov.madie.measure.resources;
 
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.util.StopWatch;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import cms.gov.madie.measure.dto.ImpactedMeasureValidationReport;
 import cms.gov.madie.measure.dto.MeasureTestCaseValidationReport;
 import cms.gov.madie.measure.dto.MeasureTestCaseValidationReportSummary;
@@ -16,16 +40,6 @@ import gov.cms.madie.models.measure.MeasureSet;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.util.StopWatch;
-import org.springframework.web.bind.annotation.*;
-
-import java.security.Principal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.*;
 
 @Slf4j
 @RestController
@@ -122,6 +136,34 @@ public class AdminController {
       measureRepository.delete(measureToDelete);
       actionLogService.logAction(id, Measure.class, ActionType.DELETED, principal.getName());
       return ResponseEntity.ok(measureToDelete);
+    }
+    throw new ResourceNotFoundException(id);
+  }
+
+  @GetMapping("/measures/{id}/sharedWith")
+  @PreAuthorize("#request.getHeader('api-key') == #apiKey")
+  public ResponseEntity<Map> getMeasureSharedWith(
+      HttpServletRequest request,
+      @Value("${admin-api-key}") String apiKey,
+      Principal principal,
+      @RequestHeader("Authorization") String accessToken,
+      @PathVariable String id) {
+
+    Measure measureToGet = measureService.findMeasureById(id);
+    if (measureToGet != null) {
+
+      Map<String, String> result = new LinkedHashMap<>();
+
+      result.put("measureName", measureToGet.getMeasureName());
+      result.put("measureId", measureToGet.getId());
+      result.put("measureOwner", measureToGet.getMeasureSet().getOwner());
+      result.put(
+          "sharedWith",
+          measureToGet.getMeasureSet().getAcls() != null
+              ? measureToGet.getMeasureSet().getAcls().toString()
+              : "[]");
+
+      return ResponseEntity.ok(result);
     }
     throw new ResourceNotFoundException(id);
   }
