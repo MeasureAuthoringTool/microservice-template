@@ -162,9 +162,6 @@ public class MeasureService {
       metaData.setDraft(true);
       measureCopy.setMeasureMetaData(metaData);
     }
-    if (measureCopy.getModel().equals(ModelType.QDM_5_6.getValue())) {
-      measureCopy.getMeasureMetaData().setExperimental(null);
-    }
 
     Measure savedMeasure = measureRepository.save(measureCopy);
     log.info(
