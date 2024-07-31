@@ -340,10 +340,7 @@ public class AdminControllerMvcTest {
                 .header("Authorization", "test-okta"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.measureId", equalTo("12345")))
-        .andExpect(
-            jsonPath(
-                "$.sharedWith",
-                equalTo("[AclSpecification(userId=raoulduke, roles=[SHARED_WITH])]")));
+        .andExpect(jsonPath("$.sharedWith.[0]userId", equalTo("raoulduke")));
   }
 
   @Test
@@ -363,7 +360,7 @@ public class AdminControllerMvcTest {
                 .header("Authorization", "test-okta"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.measureId", equalTo("12345")))
-        .andExpect(jsonPath("$.sharedWith", equalTo("[]")));
+        .andExpect(jsonPath("$.sharedWith", equalTo(null)));
   }
 
   @Test

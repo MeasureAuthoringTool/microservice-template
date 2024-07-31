@@ -142,7 +142,7 @@ public class AdminController {
 
   @GetMapping("/measures/{id}/sharedWith")
   @PreAuthorize("#request.getHeader('api-key') == #apiKey")
-  public ResponseEntity<Map> getMeasureSharedWith(
+  public ResponseEntity<Map<String, Object>> getMeasureSharedWith(
       HttpServletRequest request,
       @Value("${admin-api-key}") String apiKey,
       Principal principal,
@@ -152,16 +152,12 @@ public class AdminController {
     Measure measureToGet = measureService.findMeasureById(id);
     if (measureToGet != null) {
 
-      Map<String, String> result = new LinkedHashMap<>();
+      Map<String, Object> result = new LinkedHashMap<>();
 
       result.put("measureName", measureToGet.getMeasureName());
       result.put("measureId", measureToGet.getId());
       result.put("measureOwner", measureToGet.getMeasureSet().getOwner());
-      result.put(
-          "sharedWith",
-          measureToGet.getMeasureSet().getAcls() != null
-              ? measureToGet.getMeasureSet().getAcls().toString()
-              : "[]");
+      result.put("sharedWith", measureToGet.getMeasureSet().getAcls());
 
       return ResponseEntity.ok(result);
     }
