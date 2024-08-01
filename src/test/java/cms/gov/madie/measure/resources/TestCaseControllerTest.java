@@ -11,7 +11,7 @@ import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.common.Version;
 import cms.gov.madie.measure.services.TestCaseService;
-import cms.gov.madie.measure.services.TestCaseShiftDatesService;
+import cms.gov.madie.measure.services.QdmTestCaseShiftDatesService;
 import gov.cms.madie.models.measure.TestCaseImportOutcome;
 import gov.cms.madie.models.measure.TestCaseImportRequest;
 import org.bson.types.ObjectId;
@@ -46,7 +46,7 @@ public class TestCaseControllerTest {
   @Mock private TestCaseService testCaseService;
   @Mock private MeasureRepository repository;
   @Mock private MeasureService measureService;
-  @Mock private TestCaseShiftDatesService testCaseShiftDatesService;
+  @Mock private QdmTestCaseShiftDatesService qdmTestCaseShiftDatesService;
 
   @InjectMocks private TestCaseController controller;
 
@@ -410,7 +410,7 @@ public class TestCaseControllerTest {
 
     testCase.setJson("Date2");
     doReturn(testCase)
-        .when(testCaseShiftDatesService)
+        .when(qdmTestCaseShiftDatesService)
         .shiftTestCaseDates(
             any(String.class),
             any(String.class),
@@ -433,7 +433,7 @@ public class TestCaseControllerTest {
     testCase.setJson("Date2");
     TestCase testCase2 = TestCase.builder().json("Date3").build();
     doReturn(List.of(testCase, testCase2))
-        .when(testCaseShiftDatesService)
+        .when(qdmTestCaseShiftDatesService)
         .shiftAllTestCaseDates(
             any(String.class), any(Integer.class), any(String.class), anyString());
     ResponseEntity<List<TestCase>> response =

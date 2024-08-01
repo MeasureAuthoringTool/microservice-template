@@ -77,9 +77,9 @@ import gov.cms.madie.models.cqm.datacriteria.basetypes.Interval;
 import gov.cms.madie.models.measure.TestCase;
 
 @ExtendWith(MockitoExtension.class)
-public class TestCaseShiftDatesServiceTest {
+public class TestCaseShiftDatesServiceQdmTest {
   @Mock private TestCaseService testCaseService;
-  @InjectMocks private TestCaseShiftDatesService testCaseShiftDatesService;
+  @InjectMocks private QdmTestCaseShiftDatesService qdmTestCaseShiftDatesService;
 
   private TestCase testCase;
   private static final String json =
@@ -98,7 +98,7 @@ public class TestCaseShiftDatesServiceTest {
     when(testCaseService.findTestCasesByMeasureId(anyString())).thenReturn(List.of(testCase));
 
     TestCase modified =
-        testCaseShiftDatesService.shiftTestCaseDates(
+        qdmTestCaseShiftDatesService.shiftTestCaseDates(
             "TestMeasureId", "TESTID", 1, "test.user", "TOKEN");
 
     assertNotNull(modified);
@@ -112,7 +112,7 @@ public class TestCaseShiftDatesServiceTest {
     assertThrows(
         ResourceNotFoundException.class,
         () ->
-            testCaseShiftDatesService.shiftTestCaseDates(
+            qdmTestCaseShiftDatesService.shiftTestCaseDates(
                 "TestMeasureId", "TESTID", 1, "test.user", "TOKEN"));
   }
 
@@ -123,7 +123,7 @@ public class TestCaseShiftDatesServiceTest {
     assertThrows(
         ResourceNotFoundException.class,
         () ->
-            testCaseShiftDatesService.shiftTestCaseDates(
+            qdmTestCaseShiftDatesService.shiftTestCaseDates(
                 "TestMeasureId", "TestIdNotFound", 1, "test.user", "TOKEN"));
   }
 
@@ -136,7 +136,7 @@ public class TestCaseShiftDatesServiceTest {
     assertThrows(
         CqmConversionException.class,
         () ->
-            testCaseShiftDatesService.shiftTestCaseDates(
+            qdmTestCaseShiftDatesService.shiftTestCaseDates(
                 "TestMeasureId", "TESTID", 1, "test.user", "TOKEN"));
   }
 
@@ -152,7 +152,7 @@ public class TestCaseShiftDatesServiceTest {
     when(testCaseService.findTestCasesByMeasureId(anyString())).thenReturn(List.of(testCase));
 
     TestCase modified =
-        testCaseShiftDatesService.shiftTestCaseDates(
+        qdmTestCaseShiftDatesService.shiftTestCaseDates(
             "TestMeasureId", "TESTID", 1, "test.user", "TOKEN");
 
     assertNotNull(modified);
@@ -166,7 +166,7 @@ public class TestCaseShiftDatesServiceTest {
     // adverseEvent.setRelevantDatetime(getZonedDateTime("2024-07-03T08:15:30.000+00.00"));
     adverseEvent.setRelevantDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(adverseEvent, 1);
+    qdmTestCaseShiftDatesService.shiftDates(adverseEvent, 1);
 
     assertEquals(adverseEvent.getAuthorDatetime().getYear(), 2025);
     assertEquals(adverseEvent.getRelevantDatetime().getYear(), 2025);
@@ -181,7 +181,7 @@ public class TestCaseShiftDatesServiceTest {
     allergyIntolerance.setAuthorDatetime(getZonedDateTime(dateTimeString));
     allergyIntolerance.setPrevalencePeriod(prevalencePeriod);
 
-    testCaseShiftDatesService.shiftDates(allergyIntolerance, 1);
+    qdmTestCaseShiftDatesService.shiftDates(allergyIntolerance, 1);
 
     assertEquals(allergyIntolerance.getAuthorDatetime().getYear(), 2025);
     assertEquals(allergyIntolerance.getPrevalencePeriod().getLow().getYear(), 2025);
@@ -193,7 +193,7 @@ public class TestCaseShiftDatesServiceTest {
     AssessmentOrder assessmentOrder = new AssessmentOrder();
     assessmentOrder.setAuthorDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(assessmentOrder, 1);
+    qdmTestCaseShiftDatesService.shiftDates(assessmentOrder, 1);
 
     assertEquals(assessmentOrder.getAuthorDatetime().getYear(), 2025);
   }
@@ -208,7 +208,7 @@ public class TestCaseShiftDatesServiceTest {
     assessmentPerformed.setRelevantDatetime(getZonedDateTime(dateTimeString));
     assessmentPerformed.setRelevantPeriod(relevantPeriod);
 
-    testCaseShiftDatesService.shiftDates(assessmentPerformed, 1);
+    qdmTestCaseShiftDatesService.shiftDates(assessmentPerformed, 1);
 
     assertEquals(assessmentPerformed.getAuthorDatetime().getYear(), 2025);
     assertEquals(assessmentPerformed.getRelevantDatetime().getYear(), 2025);
@@ -221,7 +221,7 @@ public class TestCaseShiftDatesServiceTest {
     AssessmentRecommended assessmentRecommended = new AssessmentRecommended();
     assessmentRecommended.setAuthorDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(assessmentRecommended, 1);
+    qdmTestCaseShiftDatesService.shiftDates(assessmentRecommended, 1);
 
     assertEquals(assessmentRecommended.getAuthorDatetime().getYear(), 2025);
   }
@@ -235,7 +235,7 @@ public class TestCaseShiftDatesServiceTest {
     relevantPeriod.setHigh(getZonedDateTime(dateTimeString));
     careGoal.setRelevantPeriod(relevantPeriod);
 
-    testCaseShiftDatesService.shiftDates(careGoal, 1);
+    qdmTestCaseShiftDatesService.shiftDates(careGoal, 1);
 
     assertEquals(careGoal.getStatusDate().getYear(), 2025);
     assertEquals(careGoal.getRelevantPeriod().getLow().getYear(), 2025);
@@ -254,7 +254,7 @@ public class TestCaseShiftDatesServiceTest {
     communicationPerformed.setSentDatetime(getZonedDateTime(dateTimeString));
     communicationPerformed.setReceivedDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(communicationPerformed, 1);
+    qdmTestCaseShiftDatesService.shiftDates(communicationPerformed, 1);
 
     assertEquals(communicationPerformed.getAuthorDatetime().getYear(), 2025);
     assertEquals(communicationPerformed.getSentDatetime().getYear(), 2025);
@@ -266,7 +266,7 @@ public class TestCaseShiftDatesServiceTest {
     DeviceOrder deviceOrder = new DeviceOrder();
     deviceOrder.setAuthorDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(deviceOrder, 1);
+    qdmTestCaseShiftDatesService.shiftDates(deviceOrder, 1);
 
     assertEquals(deviceOrder.getAuthorDatetime().getYear(), 2025);
   }
@@ -276,7 +276,7 @@ public class TestCaseShiftDatesServiceTest {
     DeviceRecommended deviceRecommended = new DeviceRecommended();
     deviceRecommended.setAuthorDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(deviceRecommended, 1);
+    qdmTestCaseShiftDatesService.shiftDates(deviceRecommended, 1);
 
     assertEquals(deviceRecommended.getAuthorDatetime().getYear(), 2025);
   }
@@ -290,7 +290,7 @@ public class TestCaseShiftDatesServiceTest {
     prevalencePeriod.setHigh(getZonedDateTime(dateTimeString));
     diagnosis.setPrevalencePeriod(prevalencePeriod);
 
-    testCaseShiftDatesService.shiftDates(diagnosis, 1);
+    qdmTestCaseShiftDatesService.shiftDates(diagnosis, 1);
 
     assertEquals(diagnosis.getAuthorDatetime().getYear(), 2025);
     assertEquals(diagnosis.getPrevalencePeriod().getLow().getYear(), 2025);
@@ -302,7 +302,7 @@ public class TestCaseShiftDatesServiceTest {
     DiagnosticStudyOrder diagnosticStudyOrder = new DiagnosticStudyOrder();
     diagnosticStudyOrder.setAuthorDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(diagnosticStudyOrder, 1);
+    qdmTestCaseShiftDatesService.shiftDates(diagnosticStudyOrder, 1);
 
     assertEquals(diagnosticStudyOrder.getAuthorDatetime().getYear(), 2025);
   }
@@ -319,7 +319,7 @@ public class TestCaseShiftDatesServiceTest {
     diagnosticStudyPerformed.setRelevantPeriod(relevantPeriod);
     diagnosticStudyPerformed.setResultDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(diagnosticStudyPerformed, 1);
+    qdmTestCaseShiftDatesService.shiftDates(diagnosticStudyPerformed, 1);
 
     assertEquals(diagnosticStudyPerformed.getAuthorDatetime().getYear(), 2025);
     assertEquals(diagnosticStudyPerformed.getRelevantDatetime().getYear(), 2025);
@@ -334,7 +334,7 @@ public class TestCaseShiftDatesServiceTest {
 
     diagnosticStudyRecommended.setAuthorDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(diagnosticStudyRecommended, 1);
+    qdmTestCaseShiftDatesService.shiftDates(diagnosticStudyRecommended, 1);
 
     assertEquals(diagnosticStudyRecommended.getAuthorDatetime().getYear(), 2025);
   }
@@ -344,7 +344,7 @@ public class TestCaseShiftDatesServiceTest {
     EncounterOrder encounterOrder = new EncounterOrder();
     encounterOrder.setAuthorDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(encounterOrder, 1);
+    qdmTestCaseShiftDatesService.shiftDates(encounterOrder, 1);
 
     assertEquals(encounterOrder.getAuthorDatetime().getYear(), 2025);
   }
@@ -358,7 +358,7 @@ public class TestCaseShiftDatesServiceTest {
     encounterPerformed.setAuthorDatetime(getZonedDateTime(dateTimeString));
     encounterPerformed.setRelevantPeriod(relevantPeriod);
 
-    testCaseShiftDatesService.shiftDates(encounterPerformed, 1);
+    qdmTestCaseShiftDatesService.shiftDates(encounterPerformed, 1);
 
     assertEquals(encounterPerformed.getAuthorDatetime().getYear(), 2025);
     assertEquals(encounterPerformed.getRelevantPeriod().getLow().getYear(), 2025);
@@ -370,7 +370,7 @@ public class TestCaseShiftDatesServiceTest {
     EncounterRecommended encounterRecommended = new EncounterRecommended();
     encounterRecommended.setAuthorDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(encounterRecommended, 1);
+    qdmTestCaseShiftDatesService.shiftDates(encounterRecommended, 1);
 
     assertEquals(encounterRecommended.getAuthorDatetime().getYear(), 2025);
   }
@@ -380,7 +380,7 @@ public class TestCaseShiftDatesServiceTest {
     FamilyHistory familyHistory = new FamilyHistory();
     familyHistory.setAuthorDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(familyHistory, 1);
+    qdmTestCaseShiftDatesService.shiftDates(familyHistory, 1);
 
     assertEquals(familyHistory.getAuthorDatetime().getYear(), 2025);
   }
@@ -392,7 +392,7 @@ public class TestCaseShiftDatesServiceTest {
 
     immunizationAdministered.setRelevantDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(immunizationAdministered, 1);
+    qdmTestCaseShiftDatesService.shiftDates(immunizationAdministered, 1);
 
     assertEquals(immunizationAdministered.getAuthorDatetime().getYear(), 2025);
     assertEquals(immunizationAdministered.getRelevantDatetime().getYear(), 2025);
@@ -404,7 +404,7 @@ public class TestCaseShiftDatesServiceTest {
     immunizationOrder.setAuthorDatetime(getZonedDateTime(dateTimeString));
     immunizationOrder.setActiveDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(immunizationOrder, 1);
+    qdmTestCaseShiftDatesService.shiftDates(immunizationOrder, 1);
 
     assertEquals(immunizationOrder.getAuthorDatetime().getYear(), 2025);
     assertEquals(immunizationOrder.getActiveDatetime().getYear(), 2025);
@@ -415,7 +415,7 @@ public class TestCaseShiftDatesServiceTest {
     InterventionOrder interventionOrder = new InterventionOrder();
     interventionOrder.setAuthorDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(interventionOrder, 1);
+    qdmTestCaseShiftDatesService.shiftDates(interventionOrder, 1);
 
     assertEquals(interventionOrder.getAuthorDatetime().getYear(), 2025);
   }
@@ -430,7 +430,7 @@ public class TestCaseShiftDatesServiceTest {
     interventionPerformed.setRelevantDatetime(getZonedDateTime(dateTimeString));
     interventionPerformed.setRelevantPeriod(relevantPeriod);
 
-    testCaseShiftDatesService.shiftDates(interventionPerformed, 1);
+    qdmTestCaseShiftDatesService.shiftDates(interventionPerformed, 1);
 
     assertEquals(interventionPerformed.getAuthorDatetime().getYear(), 2025);
     assertEquals(interventionPerformed.getRelevantDatetime().getYear(), 2025);
@@ -443,7 +443,7 @@ public class TestCaseShiftDatesServiceTest {
     InterventionRecommended interventionRecommended = new InterventionRecommended();
     interventionRecommended.setAuthorDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(interventionRecommended, 1);
+    qdmTestCaseShiftDatesService.shiftDates(interventionRecommended, 1);
 
     assertEquals(interventionRecommended.getAuthorDatetime().getYear(), 2025);
   }
@@ -453,7 +453,7 @@ public class TestCaseShiftDatesServiceTest {
     LaboratoryTestOrder laboratoryTestOrder = new LaboratoryTestOrder();
     laboratoryTestOrder.setAuthorDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(laboratoryTestOrder, 1);
+    qdmTestCaseShiftDatesService.shiftDates(laboratoryTestOrder, 1);
 
     assertEquals(laboratoryTestOrder.getAuthorDatetime().getYear(), 2025);
   }
@@ -469,7 +469,7 @@ public class TestCaseShiftDatesServiceTest {
     laboratoryTestPerformed.setRelevantPeriod(relevantPeriod);
     laboratoryTestPerformed.setResultDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(laboratoryTestPerformed, 1);
+    qdmTestCaseShiftDatesService.shiftDates(laboratoryTestPerformed, 1);
 
     assertEquals(laboratoryTestPerformed.getAuthorDatetime().getYear(), 2025);
     assertEquals(laboratoryTestPerformed.getRelevantDatetime().getYear(), 2025);
@@ -483,7 +483,7 @@ public class TestCaseShiftDatesServiceTest {
     LaboratoryTestRecommended laboratoryTestRecommended = new LaboratoryTestRecommended();
     laboratoryTestRecommended.setAuthorDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(laboratoryTestRecommended, 1);
+    qdmTestCaseShiftDatesService.shiftDates(laboratoryTestRecommended, 1);
 
     assertEquals(laboratoryTestRecommended.getAuthorDatetime().getYear(), 2025);
   }
@@ -497,7 +497,7 @@ public class TestCaseShiftDatesServiceTest {
     medicationActive.setRelevantDatetime(getZonedDateTime(dateTimeString));
     medicationActive.setRelevantPeriod(relevantPeriod);
 
-    testCaseShiftDatesService.shiftDates(medicationActive, 1);
+    qdmTestCaseShiftDatesService.shiftDates(medicationActive, 1);
 
     assertEquals(medicationActive.getRelevantDatetime().getYear(), 2025);
     assertEquals(medicationActive.getRelevantPeriod().getLow().getYear(), 2025);
@@ -514,7 +514,7 @@ public class TestCaseShiftDatesServiceTest {
     medicationAdministered.setRelevantDatetime(getZonedDateTime(dateTimeString));
     medicationAdministered.setRelevantPeriod(relevantPeriod);
 
-    testCaseShiftDatesService.shiftDates(medicationAdministered, 1);
+    qdmTestCaseShiftDatesService.shiftDates(medicationAdministered, 1);
 
     assertEquals(medicationAdministered.getAuthorDatetime().getYear(), 2025);
     assertEquals(medicationAdministered.getRelevantDatetime().getYear(), 2025);
@@ -527,7 +527,7 @@ public class TestCaseShiftDatesServiceTest {
     MedicationDischarge medicationDischarge = new MedicationDischarge();
     medicationDischarge.setAuthorDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(medicationDischarge, 1);
+    qdmTestCaseShiftDatesService.shiftDates(medicationDischarge, 1);
 
     assertEquals(medicationDischarge.getAuthorDatetime().getYear(), 2025);
   }
@@ -542,7 +542,7 @@ public class TestCaseShiftDatesServiceTest {
     medicationDispensed.setRelevantDatetime(getZonedDateTime(dateTimeString));
     medicationDispensed.setRelevantPeriod(relevantPeriod);
 
-    testCaseShiftDatesService.shiftDates(medicationDispensed, 1);
+    qdmTestCaseShiftDatesService.shiftDates(medicationDispensed, 1);
 
     assertEquals(medicationDispensed.getAuthorDatetime().getYear(), 2025);
     assertEquals(medicationDispensed.getRelevantDatetime().getYear(), 2025);
@@ -559,7 +559,7 @@ public class TestCaseShiftDatesServiceTest {
     medicationOrder.setAuthorDatetime(getZonedDateTime(dateTimeString));
     medicationOrder.setRelevantPeriod(relevantPeriod);
 
-    testCaseShiftDatesService.shiftDates(medicationOrder, 1);
+    qdmTestCaseShiftDatesService.shiftDates(medicationOrder, 1);
 
     assertEquals(medicationOrder.getAuthorDatetime().getYear(), 2025);
     assertEquals(medicationOrder.getRelevantPeriod().getLow().getYear(), 2025);
@@ -574,7 +574,7 @@ public class TestCaseShiftDatesServiceTest {
     participationPeriod.setHigh(getZonedDateTime(dateTimeString));
     participation.setParticipationPeriod(participationPeriod);
 
-    testCaseShiftDatesService.shiftDates(participation, 1);
+    qdmTestCaseShiftDatesService.shiftDates(participation, 1);
 
     assertEquals(participation.getParticipationPeriod().getLow().getYear(), 2025);
     assertEquals(participation.getParticipationPeriod().getHigh().getYear(), 2025);
@@ -585,7 +585,7 @@ public class TestCaseShiftDatesServiceTest {
     PatientCareExperience patientCareExperience = new PatientCareExperience();
     patientCareExperience.setAuthorDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(patientCareExperience, 1);
+    qdmTestCaseShiftDatesService.shiftDates(patientCareExperience, 1);
 
     assertEquals(patientCareExperience.getAuthorDatetime().getYear(), 2025);
   }
@@ -595,7 +595,7 @@ public class TestCaseShiftDatesServiceTest {
     PatientCharacteristic patientCharacteristic = new PatientCharacteristic();
     patientCharacteristic.setAuthorDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(patientCharacteristic, 1);
+    qdmTestCaseShiftDatesService.shiftDates(patientCharacteristic, 1);
 
     assertEquals(patientCharacteristic.getAuthorDatetime().getYear(), 2025);
   }
@@ -607,7 +607,7 @@ public class TestCaseShiftDatesServiceTest {
 
     patientCharacteristicBirthdate.setBirthDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(patientCharacteristicBirthdate, 1);
+    qdmTestCaseShiftDatesService.shiftDates(patientCharacteristicBirthdate, 1);
 
     assertEquals(patientCharacteristicBirthdate.getBirthDatetime().getYear(), 2025);
   }
@@ -621,7 +621,7 @@ public class TestCaseShiftDatesServiceTest {
     relevantPeriod.setHigh(getZonedDateTime(dateTimeString));
     patientCharacteristicClinicalTrialParticipant.setRelevantPeriod(relevantPeriod);
 
-    testCaseShiftDatesService.shiftDates(patientCharacteristicClinicalTrialParticipant, 1);
+    qdmTestCaseShiftDatesService.shiftDates(patientCharacteristicClinicalTrialParticipant, 1);
 
     assertEquals(
         patientCharacteristicClinicalTrialParticipant.getRelevantPeriod().getLow().getYear(), 2025);
@@ -636,7 +636,7 @@ public class TestCaseShiftDatesServiceTest {
 
     patientCharacteristicExpired.setExpiredDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(patientCharacteristicExpired, 1);
+    qdmTestCaseShiftDatesService.shiftDates(patientCharacteristicExpired, 1);
 
     assertEquals(patientCharacteristicExpired.getExpiredDatetime().getYear(), 2025);
   }
@@ -649,7 +649,7 @@ public class TestCaseShiftDatesServiceTest {
     relevantPeriod.setHigh(getZonedDateTime(dateTimeString));
     patientCharacteristicPayer.setRelevantPeriod(relevantPeriod);
 
-    testCaseShiftDatesService.shiftDates(patientCharacteristicPayer, 1);
+    qdmTestCaseShiftDatesService.shiftDates(patientCharacteristicPayer, 1);
 
     assertEquals(patientCharacteristicPayer.getRelevantPeriod().getLow().getYear(), 2025);
     assertEquals(patientCharacteristicPayer.getRelevantPeriod().getHigh().getYear(), 2025);
@@ -660,7 +660,7 @@ public class TestCaseShiftDatesServiceTest {
     PhysicalExamOrder physicalExamOrder = new PhysicalExamOrder();
     physicalExamOrder.setAuthorDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(physicalExamOrder, 1);
+    qdmTestCaseShiftDatesService.shiftDates(physicalExamOrder, 1);
 
     assertEquals(physicalExamOrder.getAuthorDatetime().getYear(), 2025);
   }
@@ -675,7 +675,7 @@ public class TestCaseShiftDatesServiceTest {
     physicalExamPerformed.setRelevantDatetime(getZonedDateTime(dateTimeString));
     physicalExamPerformed.setRelevantPeriod(relevantPeriod);
 
-    testCaseShiftDatesService.shiftDates(physicalExamPerformed, 1);
+    qdmTestCaseShiftDatesService.shiftDates(physicalExamPerformed, 1);
 
     assertEquals(physicalExamPerformed.getAuthorDatetime().getYear(), 2025);
     assertEquals(physicalExamPerformed.getRelevantDatetime().getYear(), 2025);
@@ -688,7 +688,7 @@ public class TestCaseShiftDatesServiceTest {
     PhysicalExamRecommended physicalExamRecommended = new PhysicalExamRecommended();
     physicalExamRecommended.setAuthorDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(physicalExamRecommended, 1);
+    qdmTestCaseShiftDatesService.shiftDates(physicalExamRecommended, 1);
 
     assertEquals(physicalExamRecommended.getAuthorDatetime().getYear(), 2025);
   }
@@ -698,7 +698,7 @@ public class TestCaseShiftDatesServiceTest {
     ProcedureOrder procedureOrder = new ProcedureOrder();
     procedureOrder.setAuthorDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(procedureOrder, 1);
+    qdmTestCaseShiftDatesService.shiftDates(procedureOrder, 1);
 
     assertEquals(procedureOrder.getAuthorDatetime().getYear(), 2025);
   }
@@ -713,7 +713,7 @@ public class TestCaseShiftDatesServiceTest {
     procedurePerformed.setRelevantDatetime(getZonedDateTime(dateTimeString));
     procedurePerformed.setRelevantPeriod(relevantPeriod);
 
-    testCaseShiftDatesService.shiftDates(procedurePerformed, 1);
+    qdmTestCaseShiftDatesService.shiftDates(procedurePerformed, 1);
 
     assertEquals(procedurePerformed.getAuthorDatetime().getYear(), 2025);
     assertEquals(procedurePerformed.getRelevantDatetime().getYear(), 2025);
@@ -726,7 +726,7 @@ public class TestCaseShiftDatesServiceTest {
     ProcedureRecommended procedureRecommended = new ProcedureRecommended();
     procedureRecommended.setAuthorDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(procedureRecommended, 1);
+    qdmTestCaseShiftDatesService.shiftDates(procedureRecommended, 1);
 
     assertEquals(procedureRecommended.getAuthorDatetime().getYear(), 2025);
   }
@@ -736,7 +736,7 @@ public class TestCaseShiftDatesServiceTest {
     ProviderCareExperience providerCareExperience = new ProviderCareExperience();
     providerCareExperience.setAuthorDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(providerCareExperience, 1);
+    qdmTestCaseShiftDatesService.shiftDates(providerCareExperience, 1);
 
     assertEquals(providerCareExperience.getAuthorDatetime().getYear(), 2025);
   }
@@ -751,7 +751,7 @@ public class TestCaseShiftDatesServiceTest {
     substanceAdministered.setRelevantDatetime(getZonedDateTime(dateTimeString));
     substanceAdministered.setRelevantPeriod(relevantPeriod);
 
-    testCaseShiftDatesService.shiftDates(substanceAdministered, 1);
+    qdmTestCaseShiftDatesService.shiftDates(substanceAdministered, 1);
 
     assertEquals(substanceAdministered.getAuthorDatetime().getYear(), 2025);
     assertEquals(substanceAdministered.getRelevantDatetime().getYear(), 2025);
@@ -768,7 +768,7 @@ public class TestCaseShiftDatesServiceTest {
     substanceOrder.setAuthorDatetime(getZonedDateTime(dateTimeString));
     substanceOrder.setRelevantPeriod(relevantPeriod);
 
-    testCaseShiftDatesService.shiftDates(substanceOrder, 1);
+    qdmTestCaseShiftDatesService.shiftDates(substanceOrder, 1);
 
     assertEquals(substanceOrder.getAuthorDatetime().getYear(), 2025);
     assertEquals(substanceOrder.getRelevantPeriod().getLow().getYear(), 2025);
@@ -780,7 +780,7 @@ public class TestCaseShiftDatesServiceTest {
     SubstanceRecommended substanceRecommended = new SubstanceRecommended();
     substanceRecommended.setAuthorDatetime(getZonedDateTime(dateTimeString));
 
-    testCaseShiftDatesService.shiftDates(substanceRecommended, 1);
+    qdmTestCaseShiftDatesService.shiftDates(substanceRecommended, 1);
 
     assertEquals(substanceRecommended.getAuthorDatetime().getYear(), 2025);
   }
@@ -793,7 +793,7 @@ public class TestCaseShiftDatesServiceTest {
     prevalencePeriod.setHigh(getZonedDateTime(dateTimeString));
     symptom.setPrevalencePeriod(prevalencePeriod);
 
-    testCaseShiftDatesService.shiftDates(symptom, 1);
+    qdmTestCaseShiftDatesService.shiftDates(symptom, 1);
 
     assertEquals(symptom.getPrevalencePeriod().getLow().getYear(), 2025);
     assertEquals(symptom.getPrevalencePeriod().getHigh().getYear(), 2025);
@@ -803,7 +803,7 @@ public class TestCaseShiftDatesServiceTest {
   public void shiftDatesUnsupportedDataType() {
     assertThrows(
         CqmConversionException.class,
-        () -> testCaseShiftDatesService.shiftDates(new DataElement(), 1));
+        () -> qdmTestCaseShiftDatesService.shiftDates(new DataElement(), 1));
   }
 
   private ZonedDateTime getZonedDateTime(String dateTimeStr) {
@@ -818,7 +818,8 @@ public class TestCaseShiftDatesServiceTest {
         .thenReturn(testCase);
 
     List<TestCase> modified =
-        testCaseShiftDatesService.shiftAllTestCaseDates("TestMeasureId", 1, "test.user", "TOKEN");
+        qdmTestCaseShiftDatesService.shiftAllTestCaseDates(
+            "TestMeasureId", 1, "test.user", "TOKEN");
 
     assertNotNull(modified);
     assertEquals(modified.size(), 1);
@@ -832,7 +833,7 @@ public class TestCaseShiftDatesServiceTest {
     assertThrows(
         ResourceNotFoundException.class,
         () ->
-            testCaseShiftDatesService.shiftAllTestCaseDates(
+            qdmTestCaseShiftDatesService.shiftAllTestCaseDates(
                 "TestMeasureId", 1, "test.user", "TOKEN"));
   }
 
@@ -841,7 +842,7 @@ public class TestCaseShiftDatesServiceTest {
     assertThrows(
         CqmConversionException.class,
         () ->
-            testCaseShiftDatesService.shiftDatesForTestCase(
+            qdmTestCaseShiftDatesService.shiftDatesForTestCase(
                 TestCase.builder().id("testCaseId").build(), 1));
   }
 }

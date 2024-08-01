@@ -5,6 +5,7 @@ import cms.gov.madie.measure.exceptions.InvalidRequestException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.MeasureService;
+import cms.gov.madie.measure.services.QdmTestCaseShiftDatesService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.Measure;
@@ -37,7 +38,8 @@ public class TestCaseController {
   private final TestCaseService testCaseService;
   private final MeasureRepository measureRepository;
   private final MeasureService measureService;
-  private final TestCaseShiftDatesService testCaseShiftDatesService;
+  private final QdmTestCaseShiftDatesService qdmTestCaseShiftDatesService;
+  private final FhirServicesClient fhirServicesClient;
 
   @PostMapping(ControllerUtil.TEST_CASES)
   public ResponseEntity<TestCase> addTestCase(
@@ -198,7 +200,7 @@ public class TestCaseController {
       @RequestHeader("Authorization") String accessToken,
       Principal principal) {
     return ResponseEntity.ok(
-        testCaseShiftDatesService.shiftTestCaseDates(
+        qdmTestCaseShiftDatesService.shiftTestCaseDates(
             measureId, testCaseId, shifted, principal.getName(), accessToken));
   }
 
@@ -209,7 +211,7 @@ public class TestCaseController {
       @RequestHeader("Authorization") String accessToken,
       Principal principal) {
     return ResponseEntity.ok(
-        testCaseShiftDatesService.shiftAllTestCaseDates(
+        qdmTestCaseShiftDatesService.shiftAllTestCaseDates(
             measureId, shifted, principal.getName(), accessToken));
   }
 }

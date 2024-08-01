@@ -73,14 +73,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
-public class TestCaseShiftDatesService {
+public class QdmTestCaseShiftDatesService {
 
   private final TestCaseService testCaseService;
 
   private ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
   @Autowired
-  public TestCaseShiftDatesService(TestCaseService testCaseService) {
+  public QdmTestCaseShiftDatesService(TestCaseService testCaseService) {
     this.testCaseService = testCaseService;
   }
 
