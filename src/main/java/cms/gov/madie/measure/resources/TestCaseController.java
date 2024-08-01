@@ -4,16 +4,17 @@ import cms.gov.madie.measure.dto.ValidList;
 import cms.gov.madie.measure.exceptions.InvalidRequestException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.services.FhirServicesClient;
 import cms.gov.madie.measure.services.MeasureService;
 import cms.gov.madie.measure.services.QdmTestCaseShiftDatesService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import gov.cms.madie.models.common.ModelType;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.TestCase;
 import cms.gov.madie.measure.services.TestCaseService;
-import cms.gov.madie.measure.services.TestCaseShiftDatesService;
 import cms.gov.madie.measure.utils.ControllerUtil;
 import cms.gov.madie.measure.utils.UserInputSanitizeUtil;
+import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.QdmMeasure;
+import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseImportOutcome;
 import gov.cms.madie.models.measure.TestCaseImportRequest;
 import lombok.RequiredArgsConstructor;
@@ -25,10 +26,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -213,5 +211,73 @@ public class TestCaseController {
     return ResponseEntity.ok(
         qdmTestCaseShiftDatesService.shiftAllTestCaseDates(
             measureId, shifted, principal.getName(), accessToken));
+  }
+
+  @PutMapping(ControllerUtil.TEST_CASES + "/{testCaseId}/shift-dates")
+  public ResponseEntity<Void> shiftQiCoreTestCaseDates(
+      @PathVariable String measureId,
+      @PathVariable String testCaseId,
+      @RequestParam(name = "shifted", defaultValue = "0") int shifted,
+      @RequestHeader("Authorization") String accessToken,
+      Principal principal) {
+    log.info(
+        "User [{}] requested date shift for test case [{}] associated with measure [{}] of [{}] years",
+        principal.getName(),
+        testCaseId,
+        measureId,
+        shifted);
+    Measure measure = measureService.findMeasureById(measureId);
+    measureService.verifyAuthorization(principal.getName(), measure);
+    if (measure instanceof QdmMeasure) {
+      throw new ResourceNotFoundException("QICore Measure", measureId);
+    }
+    Optional<TestCase> targetTestCase =
+        measure.getTestCases().stream()
+            .filter(tc -> tc.getId().equalsIgnoreCase(testCaseId))
+            .findFirst();
+
+    if (targetTestCase.isPresent()) {
+      TestCase shiftedTestCase = testCaseService.shiftQiCoreTestCaseDates(targetTestCase.get(), shifted, accessToken);
+      if (shiftedTestCase != null) {
+        testCaseService.updateTestCase(shiftedTestCase, measureId, principal.getName(), accessToken);
+        return ResponseEntity.noContent().build(); // 204
+      }
+      throw new InvalidRequestException(
+          "Unable to shift dates for test case [" + testCaseId + "]");
+    }
+    throw new ResourceNotFoundException("Test Case", testCaseId);
+  }
+
+  /**
+   * Adds/subtracts years from all date/dateTime values across all
+   * Test Cases associated with the provided measure, saving the
+   * modified Test Cases, and returning the Test Case IDs for
+   * unprocessable Test Cases.
+   *
+   * @param measureId ID for target measure
+   * @param shifted Positive or negative integer indicating number of years to add/sub.
+   * @param principal User making the request.
+   * @param accessToken Requesting user's access token.
+   * @return List of Test Case IDs that could not be processed.
+   */
+  @PutMapping(ControllerUtil.TEST_CASES + "/shift-dates")
+  public ResponseEntity<List<String>> shiftMultiQiCoreTestCaseDates(
+      @PathVariable String measureId,
+      @RequestParam(name = "shifted", defaultValue = "0") int shifted,
+      Principal principal,
+      @RequestHeader("Authorization") String accessToken) {
+    Measure measure = measureService.findMeasureById(measureId);
+    measureService.verifyAuthorization(principal.getName(), measure);
+    if (measure instanceof QdmMeasure) {
+      throw new ResourceNotFoundException("QICore Measure", measureId);
+    }
+    List<TestCase> testCases = testCaseService.findTestCasesByMeasureId(measureId);
+    List<TestCase> shiftedTestCases = testCaseService.shiftMultiQiCoreTestCaseDates(testCases, shifted, accessToken);
+    List<String> shiftedIds = shiftedTestCases.stream()
+        .map(testCase -> testCaseService.updateTestCase(testCase, measureId, principal.getName(), accessToken))
+        .map(TestCase::getId).toList();
+    List<String> originalIds = new ArrayList<>(testCases.stream().map((TestCase::getId)).toList());
+    originalIds.removeAll(shiftedIds);
+    return ResponseEntity.ok(originalIds);
   }
 }

@@ -24,6 +24,7 @@ import gov.cms.madie.models.measure.TestCaseImportRequest;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
@@ -769,6 +770,28 @@ public class TestCaseService {
           .message("An unknown exception occurred while validating the test case JSON.")
           .build();
     }
+  }
+
+  public List<TestCase> shiftMultiQiCoreTestCaseDates(List<TestCase> testCases, int shifted, String accessToken){
+    if (CollectionUtils.isEmpty(testCases)) {
+      return Collections.emptyList();
+    }
+    return fhirServicesClient.shiftTestCaseDates(
+        testCases, shifted, accessToken).getBody();
+  }
+
+  public TestCase shiftQiCoreTestCaseDates(TestCase testCase, int shifted, String accessToken){
+    if(testCase == null) {
+      return null;
+    }
+    List<TestCase> shiftedTestCases = fhirServicesClient
+        .shiftTestCaseDates(List.of(testCase), shifted, accessToken)
+        .getBody();
+
+    if(CollectionUtils.isNotEmpty(shiftedTestCases)) {
+      return shiftedTestCases.get(0);
+    }
+    return null;
   }
 
   private HapiOperationOutcome handleJsonProcessingException() {
