@@ -32,6 +32,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
+
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
@@ -282,31 +285,29 @@ public class MeasureController {
             measureId, groupId, stratificationId, principal.getName()));
   }
 
-  @GetMapping("/measures/search/{criteria}")
+  @GetMapping("/measures/search")
   public ResponseEntity<Page<MeasureListDTO>> findAllByMeasureNameOrEcqmTitle(
-      Principal principal,
-      @RequestParam(required = false, defaultValue = "false", name = "currentUser")
-          boolean filterByCurrentUser,
-      @PathVariable("criteria") String criteria,
-      @RequestParam(required = false, defaultValue = "10", name = "limit") int limit,
-      @RequestParam(required = false, defaultValue = "0", name = "page") int page) {
+          Principal principal,
+          @RequestParam(required = false, defaultValue = "false", name = "currentUser") boolean filterByCurrentUser,
+          @RequestParam(required = false, name = "query") String query,
+          @RequestParam(required = false, defaultValue = "10", name = "limit") int limit,
+          @RequestParam(required = false, defaultValue = "0", name = "page") int page) {
 
     final String username = principal.getName();
     final Pageable pageReq = PageRequest.of(page, limit, Sort.by("lastModifiedAt").descending());
 
-    Page<MeasureListDTO> measures =
-        measureService.getMeasuresByCriteria(filterByCurrentUser, pageReq, username, criteria);
+    // We need to decode the encoded strings we send over or we can't find stuff
+    String decodedQuery = URLDecoder.decode(query, StandardCharsets.UTF_8);
+    Page<MeasureListDTO> measures = measureService.getMeasuresByCriteria(filterByCurrentUser, pageReq, username, decodedQuery);
     measures.map(
-        measure -> {
-          MeasureSet measureSet =
-              measureSetRepository.findByMeasureSetId(measure.getMeasureSetId()).orElse(null);
-          measure.setMeasureSet(measureSet);
-          return measure;
-        });
+            measure -> {
+              MeasureSet measureSet = measureSetRepository.findByMeasureSetId(measure.getMeasureSetId()).orElse(null);
+              measure.setMeasureSet(measureSet);
+              return measure;
+            });
 
     return ResponseEntity.ok(measures);
   }
-
   @PutMapping("/measures/{measureSetId}/create-cms-id")
   public ResponseEntity<MeasureSet> createCmsId(
       @PathVariable String measureSetId, Principal principal) {
