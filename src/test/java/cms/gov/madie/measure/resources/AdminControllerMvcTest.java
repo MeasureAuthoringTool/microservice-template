@@ -320,6 +320,35 @@ public class AdminControllerMvcTest {
   }
 
   @Test
+  public void testAdminMultipleMeasuresGetSharedWith() throws Exception {
+    Measure msr1 = Measure.builder().id("12345").build();
+    AclSpecification acl1 = new AclSpecification();
+    acl1.setUserId("raoulduke");
+    acl1.setRoles(List.of(RoleEnum.SHARED_WITH));
+
+    Measure msr2 = Measure.builder().id("6789").build();
+
+    List<AclSpecification> acls = List.of(acl1);
+    MeasureSet measureSet = MeasureSet.builder().acls(acls).build();
+    msr1.setMeasureSet(measureSet);
+    msr2.setMeasureSet(measureSet);
+    when(measureService.findMeasureById(eq("12345"))).thenReturn(msr1);
+    when(measureService.findMeasureById(eq("6789"))).thenReturn(msr2);
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get("/admin/measures/sharedWith?measureids=12345,6789")
+                .with(csrf())
+                .with(user(TEST_USER_ID))
+                .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
+                .header("Authorization", "test-okta"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].measureId", equalTo("12345")))
+        .andExpect(jsonPath("$[1].measureId", equalTo("6789")))
+        .andExpect(jsonPath("$[0].sharedWith.[0]userId", equalTo("raoulduke")));
+  }
+
+  @Test
   public void testAdminMeasureGetSharedWith() throws Exception {
     Measure testMsr = Measure.builder().id("12345").build();
     AclSpecification acl1 = new AclSpecification();
@@ -333,14 +362,14 @@ public class AdminControllerMvcTest {
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders.get("/admin/measures/{id}/sharedWith", "12345")
+            MockMvcRequestBuilders.get("/admin/measures/sharedWith?measureids=12345")
                 .with(csrf())
                 .with(user(TEST_USER_ID))
                 .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
                 .header("Authorization", "test-okta"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.measureId", equalTo("12345")))
-        .andExpect(jsonPath("$.sharedWith.[0]userId", equalTo("raoulduke")));
+        .andExpect(jsonPath("$[0].measureId", equalTo("12345")))
+        .andExpect(jsonPath("$[0].sharedWith.[0]userId", equalTo("raoulduke")));
   }
 
   @Test
@@ -353,14 +382,14 @@ public class AdminControllerMvcTest {
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders.get("/admin/measures/{id}/sharedWith", "12345")
+            MockMvcRequestBuilders.get("/admin/measures/sharedWith?measureids=12345")
                 .with(csrf())
                 .with(user(TEST_USER_ID))
                 .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
                 .header("Authorization", "test-okta"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.measureId", equalTo("12345")))
-        .andExpect(jsonPath("$.sharedWith", equalTo(null)));
+        .andExpect(jsonPath("$[0].measureId", equalTo("12345")))
+        .andExpect(jsonPath("$[0].sharedWith", equalTo(null)));
   }
 
   @Test

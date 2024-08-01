@@ -11,6 +11,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.codehaus.plexus.util.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -140,28 +141,34 @@ public class AdminController {
     throw new ResourceNotFoundException(id);
   }
 
-  @GetMapping("/measures/{id}/sharedWith")
+  @GetMapping("/measures/sharedWith")
   @PreAuthorize("#request.getHeader('api-key') == #apiKey")
-  public ResponseEntity<Map<String, Object>> getMeasureSharedWith(
+  public ResponseEntity<List<Map<String, Object>>> getMeasureSharedWith(
       HttpServletRequest request,
       @Value("${admin-api-key}") String apiKey,
       Principal principal,
       @RequestHeader("Authorization") String accessToken,
-      @PathVariable String id) {
+      @RequestParam(required = true, name = "measureids") String measureids) {
 
-    Measure measureToGet = measureService.findMeasureById(id);
-    if (measureToGet != null) {
+    List<Map<String, Object>> results = new ArrayList<Map<String, Object>>();
+    String[] ids = StringUtils.split(measureids, ",");
+    for (String id : ids) {
+      Measure measureToGet = measureService.findMeasureById(id);
+      if (measureToGet != null) {
 
-      Map<String, Object> result = new LinkedHashMap<>();
+        Map<String, Object> result = new LinkedHashMap<>();
 
-      result.put("measureName", measureToGet.getMeasureName());
-      result.put("measureId", measureToGet.getId());
-      result.put("measureOwner", measureToGet.getMeasureSet().getOwner());
-      result.put("sharedWith", measureToGet.getMeasureSet().getAcls());
+        result.put("measureName", measureToGet.getMeasureName());
+        result.put("measureId", measureToGet.getId());
+        result.put("measureOwner", measureToGet.getMeasureSet().getOwner());
+        result.put("sharedWith", measureToGet.getMeasureSet().getAcls());
 
-      return ResponseEntity.ok(result);
+        results.add(result);
+      } else {
+        throw new ResourceNotFoundException(id);
+      }
     }
-    throw new ResourceNotFoundException(id);
+    return ResponseEntity.ok(results);
   }
 
   private Callable<MeasureTestCaseValidationReport> buildCallableForMeasureId(
