@@ -1229,8 +1229,8 @@ public class MeasureServiceTest implements ResourceUtil {
         measure1.getMeasureMetaData().getDefinition(),
         persistedMeasure.getMeasureMetaData().getDefinition());
     assertEquals(
-        measure1.getMeasureMetaData().isExperimental(),
-        persistedMeasure.getMeasureMetaData().isExperimental());
+        measure1.getMeasureMetaData().getExperimental(),
+        persistedMeasure.getMeasureMetaData().getExperimental());
     assertEquals(
         measure1.getMeasureMetaData().getTransmissionFormat(),
         persistedMeasure.getMeasureMetaData().getTransmissionFormat());
@@ -1274,8 +1274,8 @@ public class MeasureServiceTest implements ResourceUtil {
         measure1.getMeasureMetaData().getDefinition(),
         persistedMeasure.getMeasureMetaData().getDefinition());
     assertEquals(
-        measure1.getMeasureMetaData().isExperimental(),
-        persistedMeasure.getMeasureMetaData().isExperimental());
+        measure1.getMeasureMetaData().getExperimental(),
+        persistedMeasure.getMeasureMetaData().getExperimental());
     assertEquals(
         measure1.getMeasureMetaData().getTransmissionFormat(),
         persistedMeasure.getMeasureMetaData().getTransmissionFormat());
@@ -1318,8 +1318,8 @@ public class MeasureServiceTest implements ResourceUtil {
         measure1.getMeasureMetaData().getDefinition(),
         persistedMeasure.getMeasureMetaData().getDefinition());
     assertEquals(
-        measure1.getMeasureMetaData().isExperimental(),
-        persistedMeasure.getMeasureMetaData().isExperimental());
+        measure1.getMeasureMetaData().getExperimental(),
+        persistedMeasure.getMeasureMetaData().getExperimental());
     assertEquals(
         measure1.getMeasureMetaData().getTransmissionFormat(),
         persistedMeasure.getMeasureMetaData().getTransmissionFormat());
@@ -1367,8 +1367,8 @@ public class MeasureServiceTest implements ResourceUtil {
         measure1.getMeasureMetaData().getDefinition(),
         persistedMeasure.getMeasureMetaData().getDefinition());
     assertEquals(
-        measure1.getMeasureMetaData().isExperimental(),
-        persistedMeasure.getMeasureMetaData().isExperimental());
+        measure1.getMeasureMetaData().getExperimental(),
+        persistedMeasure.getMeasureMetaData().getExperimental());
     assertEquals(
         measure1.getMeasureMetaData().getTransmissionFormat(),
         persistedMeasure.getMeasureMetaData().getTransmissionFormat());
@@ -1422,8 +1422,8 @@ public class MeasureServiceTest implements ResourceUtil {
         measure1.getMeasureMetaData().getDefinition(),
         persistedMeasure.getMeasureMetaData().getDefinition());
     assertEquals(
-        measure1.getMeasureMetaData().isExperimental(),
-        persistedMeasure.getMeasureMetaData().isExperimental());
+        measure1.getMeasureMetaData().getExperimental(),
+        persistedMeasure.getMeasureMetaData().getExperimental());
     assertEquals(
         measure1.getMeasureMetaData().getTransmissionFormat(),
         persistedMeasure.getMeasureMetaData().getTransmissionFormat());
@@ -1473,8 +1473,8 @@ public class MeasureServiceTest implements ResourceUtil {
         measure1.getMeasureMetaData().getDefinition(),
         persistedMeasure.getMeasureMetaData().getDefinition());
     assertEquals(
-        measure1.getMeasureMetaData().isExperimental(),
-        persistedMeasure.getMeasureMetaData().isExperimental());
+        measure1.getMeasureMetaData().getExperimental(),
+        persistedMeasure.getMeasureMetaData().getExperimental());
     assertEquals(
         measure1.getMeasureMetaData().getTransmissionFormat(),
         persistedMeasure.getMeasureMetaData().getTransmissionFormat());
@@ -1519,8 +1519,8 @@ public class MeasureServiceTest implements ResourceUtil {
         measure1.getMeasureMetaData().getDefinition(),
         persistedMeasure.getMeasureMetaData().getDefinition());
     assertEquals(
-        measure1.getMeasureMetaData().isExperimental(),
-        persistedMeasure.getMeasureMetaData().isExperimental());
+        measure1.getMeasureMetaData().getExperimental(),
+        persistedMeasure.getMeasureMetaData().getExperimental());
     assertEquals(
         measure1.getMeasureMetaData().getTransmissionFormat(),
         persistedMeasure.getMeasureMetaData().getTransmissionFormat());
@@ -1788,8 +1788,8 @@ public class MeasureServiceTest implements ResourceUtil {
         measure1.getMeasureMetaData().getDefinition(),
         persistedMeasure.getMeasureMetaData().getDefinition());
     assertEquals(
-        measure1.getMeasureMetaData().isExperimental(),
-        persistedMeasure.getMeasureMetaData().isExperimental());
+        measure1.getMeasureMetaData().getExperimental(),
+        persistedMeasure.getMeasureMetaData().getExperimental());
     assertEquals(
         measure1.getMeasureMetaData().getTransmissionFormat(),
         persistedMeasure.getMeasureMetaData().getTransmissionFormat());
@@ -1834,8 +1834,8 @@ public class MeasureServiceTest implements ResourceUtil {
         measure1.getMeasureMetaData().getDefinition(),
         persistedMeasure.getMeasureMetaData().getDefinition());
     assertEquals(
-        measure1.getMeasureMetaData().isExperimental(),
-        persistedMeasure.getMeasureMetaData().isExperimental());
+        measure1.getMeasureMetaData().getExperimental(),
+        persistedMeasure.getMeasureMetaData().getExperimental());
     assertEquals(
         measure1.getMeasureMetaData().getTransmissionFormat(),
         persistedMeasure.getMeasureMetaData().getTransmissionFormat());
