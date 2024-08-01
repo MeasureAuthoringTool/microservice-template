@@ -7,9 +7,12 @@ import gov.cms.madie.models.measure.HapiOperationOutcome;
 import gov.cms.madie.models.measure.Measure;
 import java.net.URI;
 import java.util.List;
+
+import gov.cms.madie.models.measure.TestCase;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -99,6 +102,24 @@ public class FhirServicesClient {
       return new ResponseEntity<>(
           ex.getResponseBodyAsByteArray(), HttpStatus.valueOf(ex.getStatusCode().value()));
     }
+  }
+
+  public ResponseEntity<List<TestCase>> shiftTestCaseDates(
+      List<TestCase> testCases, int shifted, String accessToken) {
+    URI uri =
+        URI.create(
+            fhirServicesConfig.getMadieFhirServiceBaseUrl()
+                + fhirServicesConfig.getMadieFhirServiceTestCaseUri()
+                + "/shift-dates?shifted="
+                + shifted);
+    HttpHeaders headers = new HttpHeaders();
+    headers.set(HttpHeaders.AUTHORIZATION, accessToken);
+    headers.set(HttpHeaders.ACCEPT, MediaType.ALL_VALUE);
+    headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+    HttpEntity<List<TestCase>> testCasesEntity = new HttpEntity<>(testCases, headers);
+
+    return fhirServicesRestTemplate.exchange(
+        uri, HttpMethod.PUT, testCasesEntity, new ParameterizedTypeReference<>() {});
   }
 
   private URI buildMadieFhirServiceUri(String bundleType, String fhirServiceUri) {
