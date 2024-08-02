@@ -1494,8 +1494,9 @@ public class MeasureControllerMvcTest {
     MvcResult result =
         mockMvc
             .perform(
-                get("/measures/search/measure")
+                get("/measures/search")
                     .with(user(TEST_USER_ID))
+                        .queryParam("query", "measure")
                     .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andReturn();
@@ -1525,8 +1526,9 @@ public class MeasureControllerMvcTest {
     MvcResult result =
         mockMvc
             .perform(
-                get("/measures/search/ecqm")
+                get("/measures/search")
                     .with(user(TEST_USER_ID))
+                        .queryParam("query", "ecqm")
                     .queryParam("currentUser", "false")
                     .queryParam("limit", "8")
                     .queryParam("page", "1")
@@ -1558,8 +1560,9 @@ public class MeasureControllerMvcTest {
     MvcResult result =
         mockMvc
             .perform(
-                get("/measures/search/measure")
+                get("/measures/search")
                     .with(user(TEST_USER_ID))
+                        .queryParam("query", "measure")
                     .queryParam("currentUser", "true")
                     .queryParam("limit", "8")
                     .queryParam("page", "1")
