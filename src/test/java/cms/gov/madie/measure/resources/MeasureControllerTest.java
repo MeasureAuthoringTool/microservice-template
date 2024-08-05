@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.resources;
 
+import cms.gov.madie.measure.dto.LibraryUsage;
 import cms.gov.madie.measure.dto.MeasureListDTO;
 import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
@@ -750,5 +751,18 @@ class MeasureControllerTest {
     ResponseEntity<MeasureSet> result =
         controller.associateCmsId(principal, "qiCoreMeasureId", "qdmMeasureId", false);
     assertThat(result.getStatusCode(), is(equalTo(HttpStatus.OK)));
+  }
+
+  @Test
+  void testGetLibraryUsage() {
+    String libraryName = "Helper";
+    String owner = "john";
+    LibraryUsage libraryUsage = LibraryUsage.builder().name(libraryName).owner(owner).build();
+    when(measureService.findLibraryUsage(anyString())).thenReturn(List.of(libraryUsage));
+    ResponseEntity<List<LibraryUsage>> response = controller.getLibraryUsage(libraryName);
+    List<LibraryUsage> usage = response.getBody();
+    assertThat(usage.size(), is(equalTo(1)));
+    assertThat(usage.get(0).getName(), is(equalTo(libraryName)));
+    assertThat(usage.get(0).getOwner(), is(equalTo(owner)));
   }
 }

@@ -1,8 +1,10 @@
 package cms.gov.madie.measure.repositories;
 
 import cms.gov.madie.measure.dto.FacetDTO;
+import cms.gov.madie.measure.dto.LibraryUsage;
 import cms.gov.madie.measure.dto.MeasureListDTO;
 import gov.cms.madie.models.access.RoleEnum;
+import gov.cms.madie.models.library.CqlLibrary;
 import gov.cms.madie.models.measure.Measure;
 
 import org.apache.commons.lang3.StringUtils;
@@ -27,16 +29,19 @@ public class MeasureAclRepositoryImpl implements MeasureAclRepository {
     this.mongoTemplate = mongoTemplate;
   }
 
+  private LookupOperation getLookupOperation() {
+    return LookupOperation.newLookup()
+      .from("measureSet")
+      .localField("measureSetId")
+      .foreignField("measureSetId")
+      .as("measureSet");
+  }
+
   @Override
   public Page<MeasureListDTO> findMyActiveMeasures(
       String userId, Pageable pageable, String searchTerm) {
     // join measure and measure_set to lookup owner and ACL info
-    LookupOperation lookupOperation =
-        LookupOperation.newLookup()
-            .from("measureSet")
-            .localField("measureSetId")
-            .foreignField("measureSetId")
-            .as("measureSet");
+    LookupOperation lookupOperation = getLookupOperation();
 
     // prepare measure search criteria
     Criteria measureCriteria = Criteria.where("active").is(true);
@@ -79,5 +84,29 @@ public class MeasureAclRepositoryImpl implements MeasureAclRepository {
 
     return new PageImpl<>(
         results.get(0).getQueryResults(), pageable, results.get(0).getCount().size());
+  }
+
+  @Override
+  public List<LibraryUsage> findLibraryUsageByLibraryName(String name) {
+    LookupOperation lookupOperation = getLookupOperation();
+    MatchOperation matchOperation =
+      match(
+        new Criteria()
+          .andOperator(
+            Criteria.where("includedLibraries.name").is(name),
+            Criteria.where("active").is(true)));
+    ProjectionOperation projectionOperation =
+      project("version")
+        .and("measureName")
+        .as("name")
+        .and("measureSet.owner")
+        .as("owner")
+        .andExclude("_id");
+    UnwindOperation unwindOperation = unwind("owner");
+    Aggregation aggregation =
+      newAggregation(matchOperation, lookupOperation, projectionOperation, unwindOperation);
+    return mongoTemplate
+      .aggregate(aggregation, Measure.class, LibraryUsage.class)
+      .getMappedResults();
   }
 }

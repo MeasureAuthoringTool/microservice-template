@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.repositories;
 
 import cms.gov.madie.measure.dto.FacetDTO;
+import cms.gov.madie.measure.dto.LibraryUsage;
 import cms.gov.madie.measure.dto.MeasureListDTO;
 import org.bson.Document;
 
@@ -97,5 +98,20 @@ public class MeasureAclRepositoryImplTest {
     List<MeasureListDTO> page1Measures = page.getContent();
     assertEquals(page1Measures.get(0).getEcqmTitle(), measure1.getEcqmTitle());
     assertEquals(page1Measures.get(1).getEcqmTitle(), measure2.getEcqmTitle());
+  }
+
+  @Test
+  void testFindLibraryUsageByLibraryName() {
+    String libraryName = "test";
+    String owner = "john";
+    LibraryUsage usage = LibraryUsage.builder().name(libraryName).owner(owner).build();
+    AggregationResults result = new AggregationResults<>(List.of(usage), new Document());
+
+    when(mongoTemplate.aggregate(any(Aggregation.class), (Class<?>) any(), any()))
+      .thenReturn(result);
+    List<LibraryUsage> libraryUsages = measureAclRepository.findLibraryUsageByLibraryName(libraryName);
+    assertEquals(libraryUsages.size(), 1);
+    assertEquals(libraryUsages.get(0).getName(),  libraryName);
+    assertEquals(libraryUsages.get(0).getOwner(), owner);
   }
 }

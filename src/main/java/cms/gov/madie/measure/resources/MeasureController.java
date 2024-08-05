@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.resources;
 
+import cms.gov.madie.measure.dto.LibraryUsage;
 import cms.gov.madie.measure.dto.MeasureListDTO;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -325,5 +327,13 @@ public class MeasureController {
     return ResponseEntity.ok(
         measureService.associateCmsId(
             principal.getName(), qiCoreMeasureId, qdmMeasureId, copyMetaData));
+  }
+
+  @GetMapping(
+    value = "/measures/library/usage",
+    produces = {MediaType.APPLICATION_JSON_VALUE})
+  public ResponseEntity<List<LibraryUsage>> getLibraryUsage(
+    @RequestParam("libraryName") String libraryName) {
+    return ResponseEntity.ok().body(measureService.findLibraryUsage(libraryName));
   }
 }

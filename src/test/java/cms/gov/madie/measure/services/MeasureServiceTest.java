@@ -34,6 +34,7 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+import cms.gov.madie.measure.dto.LibraryUsage;
 import cms.gov.madie.measure.dto.MeasureListDTO;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
@@ -2093,5 +2094,26 @@ public class MeasureServiceTest implements ResourceUtil {
         updatedMeasureSet.getMeasureSetId(),
         is(equalTo(updatedQiCoreMeasureSet.getMeasureSetId())));
     assertThat(updatedMeasureSet.getCmsId(), is(equalTo(updatedQiCoreMeasureSet.getCmsId())));
+  }
+
+  @Test
+  void testFindLibraryUsage() {
+    String libraryName = "test";
+    String owner = "john";
+    LibraryUsage usage = LibraryUsage.builder().name(libraryName).owner(owner).build();
+    when(measureRepository.findLibraryUsageByLibraryName(anyString()))
+      .thenReturn(List.of(usage));
+    List<LibraryUsage> libraryUsages = measureService.findLibraryUsage(libraryName);
+    assertThat(libraryUsages.size(), is(equalTo(1)));
+    assertThat(libraryUsages.get(0).getName(), is(equalTo(libraryName)));
+    assertThat(libraryUsages.get(0).getOwner(), is(equalTo(owner)));
+  }
+
+  @Test
+  void testFindLibraryUsageWhenLibraryNameBlank() {
+    Exception ex =
+      assertThrows(
+        InvalidRequestException.class, () -> measureService.findLibraryUsage(null));
+    assertThat(ex.getMessage(), is(equalTo("Please provide library name.")));
   }
 }
