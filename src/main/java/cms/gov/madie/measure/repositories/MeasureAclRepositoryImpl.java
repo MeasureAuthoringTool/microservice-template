@@ -4,7 +4,6 @@ import cms.gov.madie.measure.dto.FacetDTO;
 import cms.gov.madie.measure.dto.LibraryUsage;
 import cms.gov.madie.measure.dto.MeasureListDTO;
 import gov.cms.madie.models.access.RoleEnum;
-import gov.cms.madie.models.library.CqlLibrary;
 import gov.cms.madie.models.measure.Measure;
 
 import org.apache.commons.lang3.StringUtils;
