@@ -19,8 +19,7 @@ public interface MeasureAclRepository {
   Page<MeasureListDTO> findMyActiveMeasures(String userId, Pageable pageable, String searchTerm);
 
   /**
-   * Get all the libraries(name, version and owner) if they include library with given library name,
-   * version doesn't matter
+   * Get all the measures(name, version and owner) if they include any version og given library name
    *
    * @param name -> library name for which usage needs to be determined
    * @return List<LibraryUsage> -> LibraryUsage: name, version and owner of including library
