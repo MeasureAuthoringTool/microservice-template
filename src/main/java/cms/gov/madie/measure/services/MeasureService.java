@@ -189,6 +189,7 @@ public class MeasureService {
     if (StringUtils.isBlank(existingMeasure.getMeasureSetId())) {
       existingMeasure.setMeasureSetId(UUID.randomUUID().toString());
     }
+    // update the included libraries on cql change
     if (!StringUtils.equals(updatingMeasure.getCql(), existingMeasure.getCql())) {
       updatingMeasure.setIncludedLibraries(MeasureUtil.getIncludedLibraries(updatingMeasure.getCql()));
     }
