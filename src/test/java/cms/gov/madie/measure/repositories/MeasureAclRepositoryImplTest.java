@@ -1,8 +1,8 @@
 package cms.gov.madie.measure.repositories;
 
 import cms.gov.madie.measure.dto.FacetDTO;
-import cms.gov.madie.measure.dto.LibraryUsage;
 import cms.gov.madie.measure.dto.MeasureListDTO;
+import gov.cms.madie.models.dto.LibraryUsage;
 import org.bson.Document;
 
 import org.junit.jupiter.api.BeforeEach;

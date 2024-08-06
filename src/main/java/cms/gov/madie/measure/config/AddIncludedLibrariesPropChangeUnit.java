@@ -26,11 +26,11 @@ public class AddIncludedLibrariesPropChangeUnit {
     List<Measure> measures = measureRepository.findAll();
     if (CollectionUtils.isNotEmpty(measures)) {
       List<Measure> updatedMeasures =
-        measures.stream()
+          measures.stream()
               .map(
                   measure -> {
                     List<IncludedLibrary> includedLibraries =
-                      MeasureUtil.getIncludedLibraries(measure.getCql());
+                        MeasureUtil.getIncludedLibraries(measure.getCql());
                     measure.setIncludedLibraries(includedLibraries);
                     return measure;
                   })

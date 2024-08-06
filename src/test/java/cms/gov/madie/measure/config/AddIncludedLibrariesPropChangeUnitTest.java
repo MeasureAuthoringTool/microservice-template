@@ -24,8 +24,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class AddIncludedLibrariesPropChangeUnitTest {
-  @Mock
-  MeasureRepository repository;
+  @Mock MeasureRepository repository;
   @Mock private MongoTemplate mongoTemplate;
 
   @InjectMocks AddIncludedLibrariesPropChangeUnit changeUnit;
