@@ -772,23 +772,22 @@ public class TestCaseService {
     }
   }
 
-  public List<TestCase> shiftMultiQiCoreTestCaseDates(List<TestCase> testCases, int shifted, String accessToken){
+  public List<TestCase> shiftMultiQiCoreTestCaseDates(
+      List<TestCase> testCases, int shifted, String accessToken) {
     if (CollectionUtils.isEmpty(testCases)) {
       return Collections.emptyList();
     }
-    return fhirServicesClient.shiftTestCaseDates(
-        testCases, shifted, accessToken).getBody();
+    return fhirServicesClient.shiftTestCaseDates(testCases, shifted, accessToken).getBody();
   }
 
-  public TestCase shiftQiCoreTestCaseDates(TestCase testCase, int shifted, String accessToken){
-    if(testCase == null) {
+  public TestCase shiftQiCoreTestCaseDates(TestCase testCase, int shifted, String accessToken) {
+    if (testCase == null) {
       return null;
     }
-    List<TestCase> shiftedTestCases = fhirServicesClient
-        .shiftTestCaseDates(List.of(testCase), shifted, accessToken)
-        .getBody();
+    List<TestCase> shiftedTestCases =
+        fhirServicesClient.shiftTestCaseDates(List.of(testCase), shifted, accessToken).getBody();
 
-    if(CollectionUtils.isNotEmpty(shiftedTestCases)) {
+    if (CollectionUtils.isNotEmpty(shiftedTestCases)) {
       return shiftedTestCases.get(0);
     }
     return null;

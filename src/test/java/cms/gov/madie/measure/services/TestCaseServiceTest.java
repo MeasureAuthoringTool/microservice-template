@@ -44,7 +44,6 @@ import gov.cms.madie.models.measure.Stratification;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.TestCaseImportRequest;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.bson.types.ObjectId;
@@ -2879,7 +2878,9 @@ public class TestCaseServiceTest implements ResourceUtil {
   @Test
   void testQiCoreTestCaseDateShift() {
     ResponseEntity<List<TestCase>> mockClientResponse = ResponseEntity.ok(List.of(testCase));
-    doReturn(mockClientResponse).when(fhirServicesClient).shiftTestCaseDates(anyList(), anyInt(), anyString());
+    doReturn(mockClientResponse)
+        .when(fhirServicesClient)
+        .shiftTestCaseDates(anyList(), anyInt(), anyString());
     String accessToken = "Bearer Token";
 
     TestCase shiftedTestCase = testCaseService.shiftQiCoreTestCaseDates(testCase, 1, accessToken);
@@ -2889,7 +2890,9 @@ public class TestCaseServiceTest implements ResourceUtil {
   @Test
   void testQiCoreTestCaseDateShiftFailed() {
     ResponseEntity<List<TestCase>> mockClientResponse = ResponseEntity.ok(Collections.emptyList());
-    doReturn(mockClientResponse).when(fhirServicesClient).shiftTestCaseDates(anyList(), anyInt(), anyString());
+    doReturn(mockClientResponse)
+        .when(fhirServicesClient)
+        .shiftTestCaseDates(anyList(), anyInt(), anyString());
     String accessToken = "Bearer Token";
 
     TestCase shiftedTestCase = testCaseService.shiftQiCoreTestCaseDates(testCase, 1, accessToken);
@@ -2899,9 +2902,12 @@ public class TestCaseServiceTest implements ResourceUtil {
   @Test
   void testQiCoreMultiTestCaseDateShift() {
     ResponseEntity<List<TestCase>> mockClientResponse = ResponseEntity.ok(List.of(testCase));
-    doReturn(mockClientResponse).when(fhirServicesClient).shiftTestCaseDates(anyList(), anyInt(), anyString());
+    doReturn(mockClientResponse)
+        .when(fhirServicesClient)
+        .shiftTestCaseDates(anyList(), anyInt(), anyString());
 
-    List<TestCase> shiftedTestCases = testCaseService.shiftMultiQiCoreTestCaseDates(List.of(testCase), 1, "TOKEN");
+    List<TestCase> shiftedTestCases =
+        testCaseService.shiftMultiQiCoreTestCaseDates(List.of(testCase), 1, "TOKEN");
     assertThat(shiftedTestCases.size(), equalTo(1));
     assertTrue(shiftedTestCases.contains(testCase));
   }

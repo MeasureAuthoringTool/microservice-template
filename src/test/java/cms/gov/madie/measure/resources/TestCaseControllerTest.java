@@ -455,19 +455,22 @@ public class TestCaseControllerTest {
             .build();
     fhirMeasure.setTestCases(List.of(testCase));
     doReturn(fhirMeasure).when(measureService).findMeasureById(fhirMeasure.getId());
-    doReturn(fhirMeasure.getTestCases()).when(testCaseService).findTestCasesByMeasureId(anyString());
+    doReturn(fhirMeasure.getTestCases())
+        .when(testCaseService)
+        .findTestCasesByMeasureId(anyString());
 
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
-    doReturn(testCase).when(testCaseService).updateTestCase(any(), anyString(), anyString(), anyString());
+    doReturn(testCase)
+        .when(testCaseService)
+        .updateTestCase(any(), anyString(), anyString(), anyString());
     doReturn(fhirMeasure.getTestCases())
         .when(testCaseService)
         .shiftMultiQiCoreTestCaseDates(any(), anyInt(), anyString());
 
     ResponseEntity<List<String>> response =
-        controller.shiftMultiQiCoreTestCaseDates(
-            fhirMeasure.getId(), 1, principal, "TOKEN");
+        controller.shiftMultiQiCoreTestCaseDates(fhirMeasure.getId(), 1, principal, "TOKEN");
     assertThat(response.getStatusCode(), equalTo(HttpStatusCode.valueOf(200)));
     assertTrue(CollectionUtils.isEmpty(response.getBody()));
   }
@@ -484,19 +487,22 @@ public class TestCaseControllerTest {
             .build();
     fhirMeasure.setTestCases(List.of(testCase, TestCase.builder().id("7890").json("").build()));
     doReturn(fhirMeasure).when(measureService).findMeasureById(fhirMeasure.getId());
-    doReturn(fhirMeasure.getTestCases()).when(testCaseService).findTestCasesByMeasureId(anyString());
+    doReturn(fhirMeasure.getTestCases())
+        .when(testCaseService)
+        .findTestCasesByMeasureId(anyString());
 
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
-    doReturn(testCase).when(testCaseService).updateTestCase(any(), anyString(), anyString(), anyString());
+    doReturn(testCase)
+        .when(testCaseService)
+        .updateTestCase(any(), anyString(), anyString(), anyString());
     doReturn(List.of(testCase))
         .when(testCaseService)
         .shiftMultiQiCoreTestCaseDates(anyList(), anyInt(), anyString());
 
     ResponseEntity<List<String>> response =
-        controller.shiftMultiQiCoreTestCaseDates(
-            fhirMeasure.getId(), 1, principal, "TOKEN");
+        controller.shiftMultiQiCoreTestCaseDates(fhirMeasure.getId(), 1, principal, "TOKEN");
     assertThat(response.getStatusCode(), equalTo(HttpStatusCode.valueOf(200)));
     assertTrue(CollectionUtils.isNotEmpty(response.getBody()));
     assertThat(response.getBody().size(), equalTo(1));
@@ -521,7 +527,9 @@ public class TestCaseControllerTest {
 
     doReturn(testCase).when(testCaseService).shiftQiCoreTestCaseDates(any(), anyInt(), anyString());
 
-    ResponseEntity<Void> response = controller.shiftQiCoreTestCaseDates(fhirMeasure.getId(), testCase.getId(), 1, "TOKEN", principal);
+    ResponseEntity<Void> response =
+        controller.shiftQiCoreTestCaseDates(
+            fhirMeasure.getId(), testCase.getId(), 1, "TOKEN", principal);
     assertThat(response.getStatusCode(), equalTo(HttpStatusCode.valueOf(204)));
   }
 

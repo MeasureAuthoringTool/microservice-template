@@ -237,21 +237,21 @@ public class TestCaseController {
             .findFirst();
 
     if (targetTestCase.isPresent()) {
-      TestCase shiftedTestCase = testCaseService.shiftQiCoreTestCaseDates(targetTestCase.get(), shifted, accessToken);
+      TestCase shiftedTestCase =
+          testCaseService.shiftQiCoreTestCaseDates(targetTestCase.get(), shifted, accessToken);
       if (shiftedTestCase != null) {
-        testCaseService.updateTestCase(shiftedTestCase, measureId, principal.getName(), accessToken);
+        testCaseService.updateTestCase(
+            shiftedTestCase, measureId, principal.getName(), accessToken);
         return ResponseEntity.noContent().build(); // 204
       }
-      throw new InvalidRequestException(
-          "Unable to shift dates for test case [" + testCaseId + "]");
+      throw new InvalidRequestException("Unable to shift dates for test case [" + testCaseId + "]");
     }
     throw new ResourceNotFoundException("Test Case", testCaseId);
   }
 
   /**
-   * Adds/subtracts years from all date/dateTime values across all
-   * Test Cases associated with the provided measure, saving the
-   * modified Test Cases, and returning the Test Case IDs for
+   * Adds/subtracts years from all date/dateTime values across all Test Cases associated with the
+   * provided measure, saving the modified Test Cases, and returning the Test Case IDs for
    * unprocessable Test Cases.
    *
    * @param measureId ID for target measure
@@ -272,10 +272,16 @@ public class TestCaseController {
       throw new ResourceNotFoundException("QICore Measure", measureId);
     }
     List<TestCase> testCases = testCaseService.findTestCasesByMeasureId(measureId);
-    List<TestCase> shiftedTestCases = testCaseService.shiftMultiQiCoreTestCaseDates(testCases, shifted, accessToken);
-    List<String> shiftedIds = shiftedTestCases.stream()
-        .map(testCase -> testCaseService.updateTestCase(testCase, measureId, principal.getName(), accessToken))
-        .map(TestCase::getId).toList();
+    List<TestCase> shiftedTestCases =
+        testCaseService.shiftMultiQiCoreTestCaseDates(testCases, shifted, accessToken);
+    List<String> shiftedIds =
+        shiftedTestCases.stream()
+            .map(
+                testCase ->
+                    testCaseService.updateTestCase(
+                        testCase, measureId, principal.getName(), accessToken))
+            .map(TestCase::getId)
+            .toList();
     List<String> originalIds = new ArrayList<>(testCases.stream().map((TestCase::getId)).toList());
     originalIds.removeAll(shiftedIds);
     return ResponseEntity.ok(originalIds);
