@@ -402,7 +402,7 @@ public class TestCaseControllerTest {
   }
 
   @Test
-  void shiftTestCaseDates() {
+  void shiftQdmTestCaseDates() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
@@ -416,7 +416,7 @@ public class TestCaseControllerTest {
             any(String.class),
             anyString());
     ResponseEntity<TestCase> response =
-        controller.shiftTestCaseDates(measure.getId(), testCase.getId(), 1, "TOKEN", principal);
+        controller.shiftQdmTestCaseDates(measure.getId(), testCase.getId(), 1, "TOKEN", principal);
 
     assertNotNull(response.getBody());
 
@@ -424,7 +424,7 @@ public class TestCaseControllerTest {
   }
 
   @Test
-  void shiftDatesForAllTestCases() {
+  void shiftDatesForAllTestCasesOnQdmMeasure() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
@@ -435,7 +435,7 @@ public class TestCaseControllerTest {
         .shiftAllTestCaseDates(
             any(String.class), any(Integer.class), any(String.class), anyString());
     ResponseEntity<List<TestCase>> response =
-        controller.shiftAllTestCaseDates(measure.getId(), 1, "TOKEN", principal);
+        controller.shiftAllQdmTestCaseDates(measure.getId(), 1, "TOKEN", principal);
 
     assertNotNull(response.getBody());
     assertEquals(response.getBody().size(), 2);

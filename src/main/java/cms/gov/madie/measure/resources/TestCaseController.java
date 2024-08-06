@@ -191,7 +191,7 @@ public class TestCaseController {
   }
 
   @PutMapping(ControllerUtil.TEST_CASES + "/{testCaseId}/qdm/shiftDates")
-  public ResponseEntity<TestCase> shiftTestCaseDates(
+  public ResponseEntity<TestCase> shiftQdmTestCaseDates(
       @PathVariable String measureId,
       @PathVariable String testCaseId,
       @RequestParam(name = "shifted", defaultValue = "0") int shifted,
@@ -203,7 +203,7 @@ public class TestCaseController {
   }
 
   @GetMapping(ControllerUtil.TEST_CASES + "/qdm/shiftAllDates")
-  public ResponseEntity<List<TestCase>> shiftAllTestCaseDates(
+  public ResponseEntity<List<TestCase>> shiftAllQdmTestCaseDates(
       @PathVariable String measureId,
       @RequestParam(name = "shifted", defaultValue = "0") int shifted,
       @RequestHeader("Authorization") String accessToken,
