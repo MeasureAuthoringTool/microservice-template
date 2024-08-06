@@ -256,12 +256,12 @@ public class MeasureUtil {
     CqlTextParser cqlTextParser = new CqlTextParser(cql);
     List<IncludeProperties> includeProperties = cqlTextParser.getIncludes();
     return includeProperties.stream()
-      .map(
-        include ->
-          IncludedLibrary.builder()
-            .name(StringUtils.trim(include.getName()))
-            .version(include.getVersion())
-            .build())
-      .toList();
+        .map(
+            include ->
+                IncludedLibrary.builder()
+                    .name(StringUtils.trim(include.getName()))
+                    .version(include.getVersion())
+                    .build())
+        .toList();
   }
 }

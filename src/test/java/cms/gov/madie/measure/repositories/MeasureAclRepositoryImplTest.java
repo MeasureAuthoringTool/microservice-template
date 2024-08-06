@@ -108,10 +108,11 @@ public class MeasureAclRepositoryImplTest {
     AggregationResults result = new AggregationResults<>(List.of(usage), new Document());
 
     when(mongoTemplate.aggregate(any(Aggregation.class), (Class<?>) any(), any()))
-      .thenReturn(result);
-    List<LibraryUsage> libraryUsages = measureAclRepository.findLibraryUsageByLibraryName(libraryName);
+        .thenReturn(result);
+    List<LibraryUsage> libraryUsages =
+        measureAclRepository.findLibraryUsageByLibraryName(libraryName);
     assertEquals(libraryUsages.size(), 1);
-    assertEquals(libraryUsages.get(0).getName(),  libraryName);
+    assertEquals(libraryUsages.get(0).getName(), libraryName);
     assertEquals(libraryUsages.get(0).getOwner(), owner);
   }
 }

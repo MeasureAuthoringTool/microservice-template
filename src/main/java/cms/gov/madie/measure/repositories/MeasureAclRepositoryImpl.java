@@ -30,10 +30,10 @@ public class MeasureAclRepositoryImpl implements MeasureAclRepository {
 
   private LookupOperation getLookupOperation() {
     return LookupOperation.newLookup()
-      .from("measureSet")
-      .localField("measureSetId")
-      .foreignField("measureSetId")
-      .as("measureSet");
+        .from("measureSet")
+        .localField("measureSetId")
+        .foreignField("measureSetId")
+        .as("measureSet");
   }
 
   @Override
@@ -89,23 +89,23 @@ public class MeasureAclRepositoryImpl implements MeasureAclRepository {
   public List<LibraryUsage> findLibraryUsageByLibraryName(String name) {
     LookupOperation lookupOperation = getLookupOperation();
     MatchOperation matchOperation =
-      match(
-        new Criteria()
-          .andOperator(
-            Criteria.where("includedLibraries.name").is(name),
-            Criteria.where("active").is(true)));
+        match(
+            new Criteria()
+                .andOperator(
+                    Criteria.where("includedLibraries.name").is(name),
+                    Criteria.where("active").is(true)));
     ProjectionOperation projectionOperation =
-      project("version")
-        .and("measureName")
-        .as("name")
-        .and("measureSet.owner")
-        .as("owner")
-        .andExclude("_id");
+        project("version")
+            .and("measureName")
+            .as("name")
+            .and("measureSet.owner")
+            .as("owner")
+            .andExclude("_id");
     UnwindOperation unwindOperation = unwind("owner");
     Aggregation aggregation =
-      newAggregation(matchOperation, lookupOperation, projectionOperation, unwindOperation);
+        newAggregation(matchOperation, lookupOperation, projectionOperation, unwindOperation);
     return mongoTemplate
-      .aggregate(aggregation, Measure.class, LibraryUsage.class)
-      .getMappedResults();
+        .aggregate(aggregation, Measure.class, LibraryUsage.class)
+        .getMappedResults();
   }
 }

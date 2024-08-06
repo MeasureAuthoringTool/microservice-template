@@ -2101,8 +2101,7 @@ public class MeasureServiceTest implements ResourceUtil {
     String libraryName = "test";
     String owner = "john";
     LibraryUsage usage = LibraryUsage.builder().name(libraryName).owner(owner).build();
-    when(measureRepository.findLibraryUsageByLibraryName(anyString()))
-      .thenReturn(List.of(usage));
+    when(measureRepository.findLibraryUsageByLibraryName(anyString())).thenReturn(List.of(usage));
     List<LibraryUsage> libraryUsages = measureService.findLibraryUsage(libraryName);
     assertThat(libraryUsages.size(), is(equalTo(1)));
     assertThat(libraryUsages.get(0).getName(), is(equalTo(libraryName)));
@@ -2112,8 +2111,7 @@ public class MeasureServiceTest implements ResourceUtil {
   @Test
   void testFindLibraryUsageWhenLibraryNameBlank() {
     Exception ex =
-      assertThrows(
-        InvalidRequestException.class, () -> measureService.findLibraryUsage(null));
+        assertThrows(InvalidRequestException.class, () -> measureService.findLibraryUsage(null));
     assertThat(ex.getMessage(), is(equalTo("Please provide library name.")));
   }
 }

@@ -191,7 +191,8 @@ public class MeasureService {
     }
     // update the included libraries on cql change
     if (!StringUtils.equals(updatingMeasure.getCql(), existingMeasure.getCql())) {
-      updatingMeasure.setIncludedLibraries(MeasureUtil.getIncludedLibraries(updatingMeasure.getCql()));
+      updatingMeasure.setIncludedLibraries(
+          MeasureUtil.getIncludedLibraries(updatingMeasure.getCql()));
     }
     if (measureUtil.isTestCaseConfigurationChanged(updatingMeasure, existingMeasure)) {
       log.info(
@@ -771,6 +772,7 @@ public class MeasureService {
 
   /**
    * Find out all the measures that includes any version of given library name
+   *
    * @param libraryName - library name for which usage needs to be determined
    * @return List of LibraryUsage
    */

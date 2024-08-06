@@ -1498,7 +1498,7 @@ public class MeasureControllerMvcTest {
             .perform(
                 get("/measures/search")
                     .with(user(TEST_USER_ID))
-                        .queryParam("query", "measure")
+                    .queryParam("query", "measure")
                     .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andReturn();
@@ -1530,7 +1530,7 @@ public class MeasureControllerMvcTest {
             .perform(
                 get("/measures/search")
                     .with(user(TEST_USER_ID))
-                        .queryParam("query", "ecqm")
+                    .queryParam("query", "ecqm")
                     .queryParam("currentUser", "false")
                     .queryParam("limit", "8")
                     .queryParam("page", "1")
@@ -1564,7 +1564,7 @@ public class MeasureControllerMvcTest {
             .perform(
                 get("/measures/search")
                     .with(user(TEST_USER_ID))
-                        .queryParam("query", "measure")
+                    .queryParam("query", "measure")
                     .queryParam("currentUser", "true")
                     .queryParam("limit", "8")
                     .queryParam("page", "1")
@@ -1683,13 +1683,15 @@ public class MeasureControllerMvcTest {
     LibraryUsage libraryUsage = LibraryUsage.builder().name(libraryName).owner(owner).build();
     when(measureService.findLibraryUsage(anyString())).thenReturn(List.of(libraryUsage));
     MvcResult result =
-      mockMvc
-        .perform(
-          get("/measures/library/usage?libraryName=Test").with(user(TEST_USER_ID)).with(csrf()))
-        .andReturn();
+        mockMvc
+            .perform(
+                get("/measures/library/usage?libraryName=Test")
+                    .with(user(TEST_USER_ID))
+                    .with(csrf()))
+            .andReturn();
     assertEquals(result.getResponse().getStatus(), HttpStatus.OK.value());
     assertEquals(
-      result.getResponse().getContentAsString(),
-      "[{\"name\":\"Helper\",\"version\":null,\"owner\":\"john\"}]");
+        result.getResponse().getContentAsString(),
+        "[{\"name\":\"Helper\",\"version\":null,\"owner\":\"john\"}]");
   }
 }

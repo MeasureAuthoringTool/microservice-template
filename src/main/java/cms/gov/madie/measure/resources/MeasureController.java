@@ -289,27 +289,31 @@ public class MeasureController {
 
   @GetMapping("/measures/search")
   public ResponseEntity<Page<MeasureListDTO>> findAllByMeasureNameOrEcqmTitle(
-          Principal principal,
-          @RequestParam(required = false, defaultValue = "false", name = "currentUser") boolean filterByCurrentUser,
-          @RequestParam(required = false, name = "query") String query,
-          @RequestParam(required = false, defaultValue = "10", name = "limit") int limit,
-          @RequestParam(required = false, defaultValue = "0", name = "page") int page) {
+      Principal principal,
+      @RequestParam(required = false, defaultValue = "false", name = "currentUser")
+          boolean filterByCurrentUser,
+      @RequestParam(required = false, name = "query") String query,
+      @RequestParam(required = false, defaultValue = "10", name = "limit") int limit,
+      @RequestParam(required = false, defaultValue = "0", name = "page") int page) {
 
     final String username = principal.getName();
     final Pageable pageReq = PageRequest.of(page, limit, Sort.by("lastModifiedAt").descending());
 
     // We need to decode the encoded strings we send over or we can't find stuff
     String decodedQuery = URLDecoder.decode(query, StandardCharsets.UTF_8);
-    Page<MeasureListDTO> measures = measureService.getMeasuresByCriteria(filterByCurrentUser, pageReq, username, decodedQuery);
+    Page<MeasureListDTO> measures =
+        measureService.getMeasuresByCriteria(filterByCurrentUser, pageReq, username, decodedQuery);
     measures.map(
-            measure -> {
-              MeasureSet measureSet = measureSetRepository.findByMeasureSetId(measure.getMeasureSetId()).orElse(null);
-              measure.setMeasureSet(measureSet);
-              return measure;
-            });
+        measure -> {
+          MeasureSet measureSet =
+              measureSetRepository.findByMeasureSetId(measure.getMeasureSetId()).orElse(null);
+          measure.setMeasureSet(measureSet);
+          return measure;
+        });
 
     return ResponseEntity.ok(measures);
   }
+
   @PutMapping("/measures/{measureSetId}/create-cms-id")
   public ResponseEntity<MeasureSet> createCmsId(
       @PathVariable String measureSetId, Principal principal) {
@@ -330,10 +334,9 @@ public class MeasureController {
   }
 
   @GetMapping(
-    value = "/measures/library/usage",
-    produces = {MediaType.APPLICATION_JSON_VALUE})
-  public ResponseEntity<List<LibraryUsage>> getLibraryUsage(
-    @RequestParam("libraryName") String libraryName) {
+      value = "/measures/library/usage",
+      produces = {MediaType.APPLICATION_JSON_VALUE})
+  public ResponseEntity<List<LibraryUsage>> getLibraryUsage(@RequestParam String libraryName) {
     return ResponseEntity.ok().body(measureService.findLibraryUsage(libraryName));
   }
 }
