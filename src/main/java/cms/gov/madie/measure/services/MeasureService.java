@@ -15,6 +15,7 @@ import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.common.Organization;
 import gov.cms.madie.models.common.Version;
+import gov.cms.madie.models.dto.LibraryUsage;
 import gov.cms.madie.models.measure.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -187,6 +188,11 @@ public class MeasureService {
     }
     if (StringUtils.isBlank(existingMeasure.getMeasureSetId())) {
       existingMeasure.setMeasureSetId(UUID.randomUUID().toString());
+    }
+    // update the included libraries on cql change
+    if (!StringUtils.equals(updatingMeasure.getCql(), existingMeasure.getCql())) {
+      updatingMeasure.setIncludedLibraries(
+          MeasureUtil.getIncludedLibraries(updatingMeasure.getCql()));
     }
     if (measureUtil.isTestCaseConfigurationChanged(updatingMeasure, existingMeasure)) {
       log.info(
@@ -762,5 +768,18 @@ public class MeasureService {
       throw new InvalidResourceStateException(
           "CMS ID could not be associated. A QI-Core measure already utilizes that CMS ID.");
     }
+  }
+
+  /**
+   * Find out all the measures that includes any version of given library name
+   *
+   * @param libraryName - library name for which usage needs to be determined
+   * @return List of LibraryUsage
+   */
+  public List<LibraryUsage> findLibraryUsage(String libraryName) {
+    if (StringUtils.isBlank(libraryName)) {
+      throw new InvalidRequestException("Please provide library name.");
+    }
+    return measureRepository.findLibraryUsageByLibraryName(libraryName);
   }
 }
