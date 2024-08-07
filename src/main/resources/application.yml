@@ -2,7 +2,7 @@ spring:
   data:
     mongodb:
       database: ${MONGO_DATABASE:madie}
-      uri: ${MONGO_URI:mongodb://${DBUSER}:${DBPASS}@localhost:27017/madie}?authSource=admin&maxPoolSize=50&connectTimeoutMS=2000&serverSelectionTimeoutMS=2000
+      uri: ${MONGO_URI:mongodb://localhost:27017/madie}?authSource=admin&maxPoolSize=50&connectTimeoutMS=2000&serverSelectionTimeoutMS=2000
       auto-index-creation: true
   servlet:
     multipart:
@@ -10,6 +10,7 @@ spring:
       max-request-size: 10MB
 
 server:
+  port: 8086
   servlet:
     context-path: /api
 
@@ -44,11 +45,11 @@ madie:
       api-key: ${VIRUS_SCAN_SERVICE_APIKEY:1234567}
   terminology:
     service:
-      base-url: ${TERMINOLOGY_SERVICE_URL:http://localhost:8082/api/vsac}
+      base-url: ${TERMINOLOGY_SERVICE_URL:http://localhost:8081/api/vsac}
       fetch-value-sets: /value-sets/searches
       validate-codes: /validations/codes
   qdm-service:
-    base-url: ${QDM_SERVICE_URL:http://localhost:8086/api}
+    base-url: ${QDM_SERVICE_URL:http://localhost:8083/api}
     create-package-urn: /qdm/measures/package
     create-qrda-urn: /qdm/measures/package/qrda
     retrieve-cqmmeasure-urn: /qdm/measures/cqm
