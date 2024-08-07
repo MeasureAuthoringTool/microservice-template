@@ -5,6 +5,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import gov.cms.madie.models.common.IncludedLibrary;
+import gov.cms.mat.cql.CqlTextParser;
+import gov.cms.mat.cql.elements.IncludeProperties;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -243,5 +247,21 @@ public class MeasureUtil {
       return false;
     }
     return true;
+  }
+
+  public static List<IncludedLibrary> getIncludedLibraries(String cql) {
+    if (StringUtils.isBlank(cql)) {
+      return List.of();
+    }
+    CqlTextParser cqlTextParser = new CqlTextParser(cql);
+    List<IncludeProperties> includeProperties = cqlTextParser.getIncludes();
+    return includeProperties.stream()
+        .map(
+            include ->
+                IncludedLibrary.builder()
+                    .name(StringUtils.trim(include.getName()))
+                    .version(include.getVersion())
+                    .build())
+        .toList();
   }
 }

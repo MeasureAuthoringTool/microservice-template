@@ -2,8 +2,11 @@ package cms.gov.madie.measure.repositories;
 
 import cms.gov.madie.measure.dto.MeasureListDTO;
 
+import gov.cms.madie.models.dto.LibraryUsage;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 
 public interface MeasureAclRepository {
   /**
@@ -15,4 +18,12 @@ public interface MeasureAclRepository {
    * @return Pageable List of measures
    */
   Page<MeasureListDTO> findMyActiveMeasures(String userId, Pageable pageable, String searchTerm);
+
+  /**
+   * Get all the measures(name, version and owner) if they include any version of given library name
+   *
+   * @param name -> library name for which usage needs to be determined
+   * @return List<LibraryUsage> -> LibraryUsage: name, version and owner of including library
+   */
+  List<LibraryUsage> findLibraryUsageByLibraryName(String name);
 }
