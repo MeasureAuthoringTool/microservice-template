@@ -113,10 +113,7 @@ public class TestCaseService {
     verifyUniqueTestCaseName(testCase, measure);
 
     defaultTestCaseJsonForQdmMeasure(testCase, measure);
-
-    if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(measure.getModel())) {
-      checkTestCaseSpecialCharacters(testCase);
-    }
+    checkTestCaseSpecialCharacters(testCase);
 
     TestCase enrichedTestCase = enrichNewTestCase(testCase, username);
     enrichedTestCase =
@@ -154,9 +151,7 @@ public class TestCaseService {
 
     List<TestCase> enrichedTestCases = new ArrayList<>(newTestCases.size());
     for (TestCase testCase : newTestCases) {
-      if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(measure.getModel())) {
-        checkTestCaseSpecialCharacters(testCase);
-      }
+      checkTestCaseSpecialCharacters(testCase);
       TestCase enriched = enrichNewTestCase(testCase, username);
       enriched =
           validateTestCaseAsResource(
@@ -282,11 +277,7 @@ public class TestCaseService {
     if (!measure.getMeasureMetaData().isDraft()) {
       throw new InvalidDraftStatusException(measure.getId());
     }
-
-    if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(measure.getModel())) {
-      checkTestCaseSpecialCharacters(testCase);
-    }
-
+    checkTestCaseSpecialCharacters(testCase);
     if (measure.getTestCases() == null) {
       measure.setTestCases(new ArrayList<>());
     }
