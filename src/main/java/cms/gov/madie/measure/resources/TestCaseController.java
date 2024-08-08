@@ -220,7 +220,8 @@ public class TestCaseController {
       @RequestHeader("Authorization") String accessToken,
       Principal principal) {
     log.info(
-        "User [{}] requested date shift for test case [{}] associated with measure [{}] of [{}] years",
+        "User [{}] requested date shift for test case "
+            + "[{}] associated with measure [{}] of [{}] years",
         principal.getName(),
         testCaseId,
         measureId,
