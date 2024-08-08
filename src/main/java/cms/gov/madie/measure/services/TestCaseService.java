@@ -24,7 +24,6 @@ import gov.cms.madie.models.measure.TestCaseImportRequest;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
@@ -33,12 +32,21 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
 @Slf4j
 @Service
@@ -774,7 +782,7 @@ public class TestCaseService {
 
   public List<TestCase> shiftMultiQiCoreTestCaseDates(
       List<TestCase> testCases, int shifted, String accessToken) {
-    if (CollectionUtils.isEmpty(testCases)) {
+    if (isEmpty(testCases)) {
       return Collections.emptyList();
     }
     return fhirServicesClient.shiftTestCaseDates(testCases, shifted, accessToken).getBody();
@@ -787,7 +795,7 @@ public class TestCaseService {
     List<TestCase> shiftedTestCases =
         fhirServicesClient.shiftTestCaseDates(List.of(testCase), shifted, accessToken).getBody();
 
-    if (CollectionUtils.isNotEmpty(shiftedTestCases)) {
+    if (isNotEmpty(shiftedTestCases)) {
       return shiftedTestCases.get(0);
     }
     return null;

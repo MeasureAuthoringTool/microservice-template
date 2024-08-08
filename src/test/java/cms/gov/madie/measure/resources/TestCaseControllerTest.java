@@ -476,7 +476,7 @@ public class TestCaseControllerTest {
   }
 
   @Test
-  void shiftTestCaseDatesForQiCoreMeasure_someFail() {
+  void shiftTestCaseDatesForQiCoreMeasurePartialFailure() {
     FhirMeasure fhirMeasure =
         FhirMeasure.builder()
             .id(measure.getId())
@@ -534,7 +534,7 @@ public class TestCaseControllerTest {
   }
 
   @Test
-  void shiftQiCoreTestCaseDates_InvalidModelType() {
+  void shiftQiCoreTestCaseDatesInvalidModelType() {
     QdmMeasure qdmMeasure =
         QdmMeasure.builder()
             .id(measure.getId())
@@ -557,7 +557,7 @@ public class TestCaseControllerTest {
   }
 
   @Test
-  void shiftQiCoreTestCaseDates_NoTestCaseFound() {
+  void shiftQiCoreTestCaseDatesNoTestCaseFound() {
     QdmMeasure qdmMeasure =
         QdmMeasure.builder()
             .id(measure.getId())
