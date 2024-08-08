@@ -283,14 +283,16 @@ public class TestCaseController {
                         testCase, measureId, principal.getName(), accessToken))
             .map(TestCase::getId)
             .toList();
-    List<String> failedTestCases = testCases.stream()
-        .filter(testCase ->
-            savedTestCaseIds.stream()
-                .noneMatch(testCase.getId()::equalsIgnoreCase))
-        .map(testCase ->
-            StringUtils.isBlank(testCase.getSeries()) ?
-                testCase.getTitle() :
-                testCase.getSeries() + " " + testCase.getTitle()).toList();
+    List<String> failedTestCases =
+        testCases.stream()
+            .filter(
+                testCase -> savedTestCaseIds.stream().noneMatch(testCase.getId()::equalsIgnoreCase))
+            .map(
+                testCase ->
+                    StringUtils.isBlank(testCase.getSeries())
+                        ? testCase.getTitle()
+                        : testCase.getSeries() + " " + testCase.getTitle())
+            .toList();
     return ResponseEntity.ok(failedTestCases);
   }
 }
