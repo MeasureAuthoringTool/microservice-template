@@ -14,28 +14,29 @@ import org.bson.Document;
 @Slf4j
 @ChangeUnit(id = "qdm_base_configuration_types_update", order = "1", author = "madie_dev")
 public class UpdateBaseConfigurationMeasureTypesQDMChangeUnit {
-    @Execution
-    public void updateMeasureTypes(MongoDatabase mongoDatabase) {
+  @Execution
+  public void updateMeasureTypes(MongoDatabase mongoDatabase) {
 
     MongoCollection<Document> collection = mongoDatabase.getCollection("measure");
 
     // Filter all documents that are model QDM
-    Document filter = new Document("model", ModelType.QDM_5_6.getValue())
-            .append("measureMetaData.draft", true);
+    Document filter =
+        new Document("model", ModelType.QDM_5_6.getValue()).append("measureMetaData.draft", true);
 
     // PATIENT_REPORTED_OUTCOME_PERFORMANCE -> PATIENT_REPORTED_OUTCOME
     collection.updateMany(
-            Filters.and(filter, Filters.in("baseConfigurationTypes", "PATIENT_REPORTED_OUTCOME_PERFORMANCE")),
-            Updates.set("baseConfigurationTypes.$", "PATIENT_REPORTED_OUTCOME"));
+        Filters.and(
+            filter, Filters.in("baseConfigurationTypes", "PATIENT_REPORTED_OUTCOME_PERFORMANCE")),
+        Updates.set("baseConfigurationTypes.$", "PATIENT_REPORTED_OUTCOME"));
 
     // INTERMEDIATE_CLINICAL_OUTCOME -> INTERMEDIATE_OUTCOME
     collection.updateMany(
-            Filters.and(filter, Filters.in("baseConfigurationTypes", "INTERMEDIATE_CLINICAL_OUTCOME")),
-            Updates.set("baseConfigurationTypes.$", "INTERMEDIATE_OUTCOME"));
-}
+        Filters.and(filter, Filters.in("baseConfigurationTypes", "INTERMEDIATE_CLINICAL_OUTCOME")),
+        Updates.set("baseConfigurationTypes.$", "INTERMEDIATE_OUTCOME"));
+  }
 
-    @RollbackExecution
-    public void rollbackExecution() {
-        log.debug("Something went wrong while updating measure types.");
-    }
+  @RollbackExecution
+  public void rollbackExecution() {
+    log.debug("Something went wrong while updating measure types.");
+  }
 }
