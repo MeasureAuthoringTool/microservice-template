@@ -5,7 +5,6 @@ import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
-import cms.gov.madie.measure.services.FhirServicesClient;
 import cms.gov.madie.measure.services.MeasureService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import gov.cms.madie.models.measure.*;
@@ -44,7 +43,6 @@ public class TestCaseControllerTest {
   @Mock private MeasureRepository repository;
   @Mock private MeasureService measureService;
   @Mock private QdmTestCaseShiftDatesService qdmTestCaseShiftDatesService;
-  @Mock private FhirServicesClient fhirServicesClient;
 
   @InjectMocks private TestCaseController controller;
 

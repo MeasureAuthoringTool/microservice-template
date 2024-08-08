@@ -4,7 +4,6 @@ import cms.gov.madie.measure.dto.ValidList;
 import cms.gov.madie.measure.exceptions.InvalidRequestException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
-import cms.gov.madie.measure.services.FhirServicesClient;
 import cms.gov.madie.measure.services.MeasureService;
 import cms.gov.madie.measure.services.QdmTestCaseShiftDatesService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -38,7 +37,6 @@ public class TestCaseController {
   private final MeasureRepository measureRepository;
   private final MeasureService measureService;
   private final QdmTestCaseShiftDatesService qdmTestCaseShiftDatesService;
-  private final FhirServicesClient fhirServicesClient;
 
   @PostMapping(ControllerUtil.TEST_CASES)
   public ResponseEntity<TestCase> addTestCase(
