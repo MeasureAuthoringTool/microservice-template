@@ -251,14 +251,14 @@ public class TestCaseController {
 
   /**
    * Adds/subtracts years from all date/dateTime values across all Test Cases associated with the
-   * provided measure, saving the modified Test Cases, and returning the Test Case IDs for
+   * provided measure, saving the modified Test Cases, and returning the Test Case names for
    * unprocessable Test Cases.
    *
    * @param measureId ID for target measure
    * @param shifted Positive or negative integer indicating number of years to add/sub.
    * @param principal User making the request.
    * @param accessToken Requesting user's access token.
-   * @return List of Test Case IDs that could not be processed.
+   * @return List of Test Case names that could not be processed.
    */
   @PutMapping(ControllerUtil.TEST_CASES + "/shift-dates")
   public ResponseEntity<List<String>> shiftMultiQiCoreTestCaseDates(
