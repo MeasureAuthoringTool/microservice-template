@@ -483,7 +483,10 @@ public class TestCaseControllerTest {
             .version(new Version(0, 0, 1))
             .createdBy("test.user")
             .build();
-    fhirMeasure.setTestCases(List.of(testCase, TestCase.builder().id("7890").json("").build()));
+    fhirMeasure.setTestCases(
+        List.of(
+            testCase,
+            TestCase.builder().id("7890").title("bad").series("testCase").json("").build()));
     doReturn(fhirMeasure).when(measureService).findMeasureById(fhirMeasure.getId());
     doReturn(fhirMeasure.getTestCases())
         .when(testCaseService)
@@ -504,7 +507,7 @@ public class TestCaseControllerTest {
     assertThat(response.getStatusCode(), equalTo(HttpStatusCode.valueOf(200)));
     assertTrue(CollectionUtils.isNotEmpty(response.getBody()));
     assertThat(response.getBody().size(), equalTo(1));
-    assertThat(response.getBody().get(0), equalTo("7890"));
+    assertThat(response.getBody().get(0), equalTo("testCase bad"));
   }
 
   @Test
