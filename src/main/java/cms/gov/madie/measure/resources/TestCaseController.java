@@ -20,6 +20,7 @@ import gov.cms.madie.models.measure.TestCaseImportRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -274,7 +275,7 @@ public class TestCaseController {
     List<TestCase> testCases = testCaseService.findTestCasesByMeasureId(measureId);
     List<TestCase> shiftedTestCases =
         testCaseService.shiftMultiQiCoreTestCaseDates(testCases, shifted, accessToken);
-    List<String> shiftedIds =
+    List<String> savedTestCaseIds =
         shiftedTestCases.stream()
             .map(
                 testCase ->
@@ -282,8 +283,14 @@ public class TestCaseController {
                         testCase, measureId, principal.getName(), accessToken))
             .map(TestCase::getId)
             .toList();
-    List<String> originalIds = new ArrayList<>(testCases.stream().map((TestCase::getId)).toList());
-    originalIds.removeAll(shiftedIds);
-    return ResponseEntity.ok(originalIds);
+    List<String> failedTestCases = testCases.stream()
+        .filter(testCase ->
+            savedTestCaseIds.stream()
+                .noneMatch(testCase.getId()::equalsIgnoreCase))
+        .map(testCase ->
+            StringUtils.isBlank(testCase.getSeries()) ?
+                testCase.getTitle() :
+                testCase.getSeries() + " " + testCase.getTitle()).toList();
+    return ResponseEntity.ok(failedTestCases);
   }
 }
