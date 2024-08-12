@@ -32,12 +32,21 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
 @Slf4j
 @Service
@@ -769,6 +778,27 @@ public class TestCaseService {
           .message("An unknown exception occurred while validating the test case JSON.")
           .build();
     }
+  }
+
+  public List<TestCase> shiftMultiQiCoreTestCaseDates(
+      List<TestCase> testCases, int shifted, String accessToken) {
+    if (isEmpty(testCases)) {
+      return Collections.emptyList();
+    }
+    return fhirServicesClient.shiftTestCaseDates(testCases, shifted, accessToken).getBody();
+  }
+
+  public TestCase shiftQiCoreTestCaseDates(TestCase testCase, int shifted, String accessToken) {
+    if (testCase == null) {
+      return null;
+    }
+    List<TestCase> shiftedTestCases =
+        fhirServicesClient.shiftTestCaseDates(List.of(testCase), shifted, accessToken).getBody();
+
+    if (isNotEmpty(shiftedTestCases)) {
+      return shiftedTestCases.get(0);
+    }
+    return null;
   }
 
   private HapiOperationOutcome handleJsonProcessingException() {

@@ -7,13 +7,11 @@ import cms.gov.madie.measure.exceptions.UnauthorizedException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.MeasureService;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.TestCase;
+import gov.cms.madie.models.measure.*;
 import gov.cms.madie.models.common.Version;
 import cms.gov.madie.measure.services.TestCaseService;
-import cms.gov.madie.measure.services.TestCaseShiftDatesService;
-import gov.cms.madie.models.measure.TestCaseImportOutcome;
-import gov.cms.madie.models.measure.TestCaseImportRequest;
+import cms.gov.madie.measure.services.QdmTestCaseShiftDatesService;
+import org.apache.commons.collections4.CollectionUtils;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,13 +21,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 
 import java.security.Principal;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -46,7 +42,7 @@ public class TestCaseControllerTest {
   @Mock private TestCaseService testCaseService;
   @Mock private MeasureRepository repository;
   @Mock private MeasureService measureService;
-  @Mock private TestCaseShiftDatesService testCaseShiftDatesService;
+  @Mock private QdmTestCaseShiftDatesService qdmTestCaseShiftDatesService;
 
   @InjectMocks private TestCaseController controller;
 
@@ -404,13 +400,13 @@ public class TestCaseControllerTest {
   }
 
   @Test
-  void shiftTestCaseDates() {
+  void shiftQdmTestCaseDates() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
     testCase.setJson("Date2");
     doReturn(testCase)
-        .when(testCaseShiftDatesService)
+        .when(qdmTestCaseShiftDatesService)
         .shiftTestCaseDates(
             any(String.class),
             any(String.class),
@@ -418,7 +414,7 @@ public class TestCaseControllerTest {
             any(String.class),
             anyString());
     ResponseEntity<TestCase> response =
-        controller.shiftTestCaseDates(measure.getId(), testCase.getId(), 1, "TOKEN", principal);
+        controller.shiftQdmTestCaseDates(measure.getId(), testCase.getId(), 1, "TOKEN", principal);
 
     assertNotNull(response.getBody());
 
@@ -426,22 +422,160 @@ public class TestCaseControllerTest {
   }
 
   @Test
-  void shiftDatesForAllTestCases() {
+  void shiftDatesForAllTestCasesOnQdmMeasure() {
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
     testCase.setJson("Date2");
     TestCase testCase2 = TestCase.builder().json("Date3").build();
     doReturn(List.of(testCase, testCase2))
-        .when(testCaseShiftDatesService)
+        .when(qdmTestCaseShiftDatesService)
         .shiftAllTestCaseDates(
             any(String.class), any(Integer.class), any(String.class), anyString());
     ResponseEntity<List<TestCase>> response =
-        controller.shiftAllTestCaseDates(measure.getId(), 1, "TOKEN", principal);
+        controller.shiftAllQdmTestCaseDates(measure.getId(), 1, "TOKEN", principal);
 
     assertNotNull(response.getBody());
     assertEquals(response.getBody().size(), 2);
     assertEquals("Date2", response.getBody().get(0).getJson());
     assertEquals("Date3", response.getBody().get(1).getJson());
+  }
+
+  @Test
+  void shiftTestCaseDatesForQiCoreMeasure() {
+    FhirMeasure fhirMeasure =
+        FhirMeasure.builder()
+            .id(measure.getId())
+            .measureSetId("IDIDID")
+            .measureName("MSR01")
+            .version(new Version(0, 0, 1))
+            .createdBy("test.user")
+            .build();
+    fhirMeasure.setTestCases(List.of(testCase));
+    doReturn(fhirMeasure).when(measureService).findMeasureById(fhirMeasure.getId());
+    doReturn(fhirMeasure.getTestCases())
+        .when(testCaseService)
+        .findTestCasesByMeasureId(anyString());
+
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    doReturn(testCase)
+        .when(testCaseService)
+        .updateTestCase(any(), anyString(), anyString(), anyString());
+    doReturn(fhirMeasure.getTestCases())
+        .when(testCaseService)
+        .shiftMultiQiCoreTestCaseDates(any(), anyInt(), anyString());
+
+    ResponseEntity<List<String>> response =
+        controller.shiftMultiQiCoreTestCaseDates(fhirMeasure.getId(), 1, principal, "TOKEN");
+    assertThat(response.getStatusCode(), equalTo(HttpStatusCode.valueOf(200)));
+    assertTrue(CollectionUtils.isEmpty(response.getBody()));
+  }
+
+  @Test
+  void shiftTestCaseDatesForQiCoreMeasurePartialFailure() {
+    FhirMeasure fhirMeasure =
+        FhirMeasure.builder()
+            .id(measure.getId())
+            .measureSetId("IDIDID")
+            .measureName("MSR01")
+            .version(new Version(0, 0, 1))
+            .createdBy("test.user")
+            .build();
+    fhirMeasure.setTestCases(
+        List.of(
+            testCase,
+            TestCase.builder().id("7890").title("bad").series("testCase").json("").build()));
+    doReturn(fhirMeasure).when(measureService).findMeasureById(fhirMeasure.getId());
+    doReturn(fhirMeasure.getTestCases())
+        .when(testCaseService)
+        .findTestCasesByMeasureId(anyString());
+
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    doReturn(testCase)
+        .when(testCaseService)
+        .updateTestCase(any(), anyString(), anyString(), anyString());
+    doReturn(List.of(testCase))
+        .when(testCaseService)
+        .shiftMultiQiCoreTestCaseDates(anyList(), anyInt(), anyString());
+
+    ResponseEntity<List<String>> response =
+        controller.shiftMultiQiCoreTestCaseDates(fhirMeasure.getId(), 1, principal, "TOKEN");
+    assertThat(response.getStatusCode(), equalTo(HttpStatusCode.valueOf(200)));
+    assertTrue(CollectionUtils.isNotEmpty(response.getBody()));
+    assertThat(response.getBody().size(), equalTo(1));
+    assertThat(response.getBody().get(0), equalTo("testCase bad"));
+  }
+
+  @Test
+  void shiftTestCaseDatesForSingleQiCoreTestCase() {
+    FhirMeasure fhirMeasure =
+        FhirMeasure.builder()
+            .id(measure.getId())
+            .measureSetId("IDIDID")
+            .measureName("MSR01")
+            .version(new Version(0, 0, 1))
+            .createdBy("test.user")
+            .build();
+    fhirMeasure.setTestCases(List.of(testCase));
+    doReturn(fhirMeasure).when(measureService).findMeasureById(fhirMeasure.getId());
+
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    doReturn(testCase).when(testCaseService).shiftQiCoreTestCaseDates(any(), anyInt(), anyString());
+
+    ResponseEntity<Void> response =
+        controller.shiftQiCoreTestCaseDates(
+            fhirMeasure.getId(), testCase.getId(), 1, "TOKEN", principal);
+    assertThat(response.getStatusCode(), equalTo(HttpStatusCode.valueOf(204)));
+  }
+
+  @Test
+  void shiftQiCoreTestCaseDatesInvalidModelType() {
+    QdmMeasure qdmMeasure =
+        QdmMeasure.builder()
+            .id(measure.getId())
+            .measureSetId("IDIDID")
+            .measureName("MSR01")
+            .version(new Version(0, 0, 1))
+            .createdBy("test.user")
+            .build();
+    qdmMeasure.setTestCases(List.of(testCase));
+    doReturn(qdmMeasure).when(measureService).findMeasureById(qdmMeasure.getId());
+
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    assertThrows(
+        ResourceNotFoundException.class,
+        () ->
+            controller.shiftQiCoreTestCaseDates(
+                qdmMeasure.getId(), testCase.getId(), 1, "TOKEN", principal));
+  }
+
+  @Test
+  void shiftQiCoreTestCaseDatesNoTestCaseFound() {
+    QdmMeasure qdmMeasure =
+        QdmMeasure.builder()
+            .id(measure.getId())
+            .measureSetId("IDIDID")
+            .measureName("MSR01")
+            .version(new Version(0, 0, 1))
+            .createdBy("test.user")
+            .build();
+    doReturn(qdmMeasure).when(measureService).findMeasureById(qdmMeasure.getId());
+
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    assertThrows(
+        ResourceNotFoundException.class,
+        () ->
+            controller.shiftQiCoreTestCaseDates(
+                qdmMeasure.getId(), testCase.getId(), 1, "TOKEN", principal));
   }
 }
