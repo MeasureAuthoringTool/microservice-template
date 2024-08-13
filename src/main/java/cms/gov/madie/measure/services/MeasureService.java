@@ -1,26 +1,22 @@
 package cms.gov.madie.measure.services;
 
-import cms.gov.madie.measure.dto.MadieFeatureFlag;
 import cms.gov.madie.measure.dto.MeasureListDTO;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.repositories.OrganizationRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
-import cms.gov.madie.measure.utils.GroupPopulationUtil;
 import cms.gov.madie.measure.utils.MeasureUtil;
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
-import gov.cms.madie.models.common.Organization;
 import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.dto.LibraryUsage;
 import gov.cms.madie.models.measure.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.bson.types.ObjectId;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -44,8 +40,6 @@ public class MeasureService {
   private final MeasureUtil measureUtil;
   private final ActionLogService actionLogService;
   private final MeasureSetService measureSetService;
-  private final AppConfigService appConfigService;
-  private final MeasureTransferService measureTransferService;
 
   private final TerminologyValidationService terminologyValidationService;
 
@@ -446,158 +440,6 @@ public class MeasureService {
       log.info("Versioned Measure IDs [{}] are deleted.", deletedMeasureIds);
     }
   }
-
-  public Measure importMatMeasure(Measure measure, String cmsId, String apiKey, String harpId) {
-    List<Measure> measuresWithSameSetId = this.findAllByMeasureSetId(measure.getMeasureSetId());
-    if (!appConfigService.isFlagEnabled(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER)
-        || ModelType.QI_CORE.getValue().equals(measure.getModel())) {
-
-      if (!CollectionUtils.isEmpty(measuresWithSameSetId)) {
-        throw new DuplicateMeasureException();
-      }
-      this.checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
-
-    } else if (appConfigService.isFlagEnabled(MadieFeatureFlag.ENABLE_QDM_REPEAT_TRANSFER)
-        && ModelType.QDM_5_6.getValue().equals(measure.getModel())) {
-      // throws an error if there is a duplicate anywhere
-      this.checkDuplicateCqlLibraryName(measure.getCqlLibraryName(), measure.getMeasureSetId());
-    }
-
-    this.setMeasureElmJsonAndErrors(measure, apiKey, harpId);
-
-    // TODO: decide on audit records
-    Instant now = Instant.now();
-    measure.setCreatedAt(now);
-    measure.setLastModifiedAt(now);
-
-    if (measure.getMeasureMetaData() != null) {
-      measure.getMeasureMetaData().setDraft(true);
-      updateStewardAndDevelopers(measure);
-    } else {
-      MeasureMetaData metaData = new MeasureMetaData();
-      metaData.setDraft(true);
-      measure.setMeasureMetaData(metaData);
-      updateStewardAndDevelopers(measure);
-    }
-    // set ids for groups
-    measure.getGroups().forEach(group -> group.setId(ObjectId.get().toString()));
-    GroupPopulationUtil.reorderGroupPopulations(measure.getGroups());
-
-    Measure savedMeasure = null;
-    if (!CollectionUtils.isEmpty(measuresWithSameSetId)
-        && ModelType.QDM_5_6.getValue().equalsIgnoreCase(measure.getModel())) {
-      // 1. deleting any versioned measures
-      this.deleteVersionedMeasures(measuresWithSameSetId);
-
-      // 2. overwrite the most recent one with the draft measure
-      savedMeasure =
-          measureTransferService.overwriteExistingMeasure(measuresWithSameSetId, measure);
-      savedMeasure = measureRepository.save(savedMeasure);
-    } else {
-      savedMeasure = measureRepository.save(measure);
-      measureSetService.createMeasureSet(
-          harpId, savedMeasure.getId(), savedMeasure.getMeasureSetId(), cmsId);
-    }
-    return savedMeasure;
-  }
-
-  private void setMeasureElmJsonAndErrors(Measure measure, String apiKey, String harpId) {
-
-    try {
-      final ElmJson elmJson =
-          elmTranslatorClient.getElmJsonForMatMeasure(
-              measure.getCql(), measure.getModel(), apiKey, harpId);
-      if (elmTranslatorClient.hasErrors(elmJson)) {
-        measure.setCqlErrors(true);
-      }
-      measure.setElmJson(elmJson.getJson());
-      measure.setElmXml(elmJson.getXml());
-    } catch (CqlElmTranslationServiceException | CqlElmTranslationErrorException e) {
-      log.error(
-          "CqlElmTranslationServiceException for transferred measure {} ",
-          measure.getMeasureName(),
-          e);
-      measure.setCqlErrors(true);
-    } catch (Exception ex) {
-      log.error(
-          "An error occurred while getting ELM Json for transferred measure {}",
-          measure.getMeasureName(),
-          ex);
-      measure.setCqlErrors(true);
-    }
-  }
-
-  private void updateStewardAndDevelopers(Measure measure) {
-    List<Organization> organizationList = organizationRepository.findAll();
-    if (CollectionUtils.isEmpty(organizationList)) {
-      log.debug(
-          "No organizations are available while transferring MAT measure : [{}]",
-          measure.getMeasureName());
-      throw new MissingOrgException(measure.getMeasureName());
-    }
-    updateOrganizationName(measure);
-    Organization steward = measure.getMeasureMetaData().getSteward();
-    if (steward != null) {
-      Optional<Organization> stewardOrg =
-          organizationList.stream()
-              .filter(org -> org.getName().equalsIgnoreCase(steward.getName()))
-              .findFirst();
-      measure.getMeasureMetaData().setSteward(stewardOrg.orElse(null));
-    }
-
-    List<Organization> developersList = measure.getMeasureMetaData().getDevelopers();
-    if (developersList != null && !developersList.isEmpty()) {
-      List<Organization> developersOrgs =
-          organizationList.stream()
-              .filter(
-                  org ->
-                      developersList.stream()
-                          .anyMatch(
-                              developer -> developer.getName().equalsIgnoreCase(org.getName())))
-              .toList();
-      measure.getMeasureMetaData().setDevelopers(developersOrgs);
-    }
-  }
-
-  /**
-   * @param measure mat measure There has been few updates to org names in MADiE when compared to
-   *     orgs in MAT. updateOrganizationName will update the steward & developers names, so that
-   *     they can match with updated org names in MADiE
-   */
-  private void updateOrganizationName(Measure measure) {
-    Map<String, String> modifiedOrganizations = new HashMap<>();
-    modifiedOrganizations.put(
-        "American College of Cardiology - ACCF/AHA Task Force on Performance Measures",
-        "American College of Cardiology - ACC/AHA Task Force on Performance Measures");
-    modifiedOrganizations.put(
-        "Arizona State University - Dept of Biomedical Infomatics",
-        "Arizona State University - Dept of Biomedical Informatics");
-    modifiedOrganizations.put("CancerLin Q", "CancerLinQ");
-    modifiedOrganizations.put("Innovaccer Anylytics", "Innovaccer");
-    modifiedOrganizations.put("Intermoutain Healthcare", "Intermountain Healthcare");
-
-    Organization steward = measure.getMeasureMetaData().getSteward();
-    if (steward != null && modifiedOrganizations.containsKey(steward.getName())) {
-      measure
-          .getMeasureMetaData()
-          .getSteward()
-          .setName(modifiedOrganizations.get(steward.getName()));
-    }
-
-    List<Organization> developersList = measure.getMeasureMetaData().getDevelopers();
-    if (developersList != null && !developersList.isEmpty()) {
-      measure
-          .getMeasureMetaData()
-          .getDevelopers()
-          .forEach(
-              d -> {
-                if (modifiedOrganizations.containsKey(d.getName())) {
-                  d.setName(modifiedOrganizations.get(d.getName()));
-                }
-              });
-    }
-  }
-
   public void copyQdmMetaData(Measure qiCoreMeasure, Measure qdmMeasure) {
     MeasureMetaData qiCoreMeasureMetaData = qiCoreMeasure.getMeasureMetaData();
     MeasureMetaData qdmMeasureMetaData = qdmMeasure.getMeasureMetaData();
