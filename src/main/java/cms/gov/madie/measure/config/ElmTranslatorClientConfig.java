@@ -19,9 +19,6 @@ public class ElmTranslatorClientConfig {
   @Value("${madie.cql-elm.service.elm-json-uri}")
   private String cqlElmServiceElmJsonUri;
 
-  @Value("${madie.cql-elm.service.elm-json-uri-for-mat-transferred-measure}")
-  private String cqlElmServiceUriForMatTransferredMeasure;
-
   @Bean
   public RestTemplate elmTranslatorRestTemplate() {
     return new RestTemplate();
