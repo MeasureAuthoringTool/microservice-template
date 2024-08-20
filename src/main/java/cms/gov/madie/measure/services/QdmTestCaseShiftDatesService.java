@@ -1,10 +1,11 @@
 package cms.gov.madie.measure.services;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -79,6 +80,8 @@ public class QdmTestCaseShiftDatesService {
 
   private ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
+  private static final String SEPARATOR = " |\n";
+
   @Autowired
   public QdmTestCaseShiftDatesService(TestCaseService testCaseService) {
     this.testCaseService = testCaseService;
@@ -119,15 +122,19 @@ public class QdmTestCaseShiftDatesService {
       String newJson = mapper.writeValueAsString(testCaseJson);
       testCase.setJson(newJson);
     } catch (JsonProcessingException e) {
-      log.error("JsonProcessingException -> " + e.getMessage());
-      throw new CqmConversionException(
-          "An issue occurred while shifting the test case dates for the test case id : "
-              + testCase.getId());
+      log.error(
+          "An issue occurred while shifting the test case dates for the test case id: "
+              + testCase.getId()
+              + " JsonProcessingException -> "
+              + e.getMessage());
+      throw new CqmConversionException(testCase.getTitle() + "/" + testCase.getId() + SEPARATOR);
     } catch (Exception e) {
-      log.error("Exception -> " + e.getMessage());
-      throw new CqmConversionException(
-          "An issue occurred while shifting the test case dates for the test case id : "
-              + testCase.getId());
+      log.error(
+          "An issue occurred while shifting the test case dates for the test case id: "
+              + testCase.getId()
+              + " Exception -> "
+              + e.getMessage());
+      throw new CqmConversionException(testCase.getTitle() + "/" + testCase.getId() + SEPARATOR);
     }
     return testCase;
   }
@@ -288,7 +295,9 @@ public class QdmTestCaseShiftDatesService {
         || dataElement instanceof RelatedPerson) {
       // no dates to shift
     } else {
-      throw new CqmConversionException("Unsupported data type: " + dataElement.toString());
+      log.error("Unsupported data type: " + dataElement.toString());
+      throw new CqmConversionException(
+          "Unsupported data type: " + dataElement.toString() + SEPARATOR);
     }
   }
 
@@ -298,13 +307,24 @@ public class QdmTestCaseShiftDatesService {
     if (CollectionUtils.isEmpty(testCases)) {
       throw new ResourceNotFoundException("TestCases", measureId);
     }
+    StringBuffer testCaseFailures = new StringBuffer();
 
-    List<TestCase> modifiedTestCases =
-        testCases.stream()
-            .map(testCase -> shiftDatesForTestCase(testCase, shifted))
-            .collect(Collectors.toList());
-    return modifiedTestCases.stream()
-        .map(testCase -> testCaseService.updateTestCase(testCase, measureId, username, accessToken))
-        .collect(Collectors.toList());
+    List<TestCase> allTestCases = new ArrayList<>();
+    for (TestCase testCase : testCases) {
+      try {
+        TestCase shiftedTC = shiftDatesForTestCase(testCase, shifted);
+        allTestCases.add(shiftedTC);
+        testCaseService.updateTestCase(shiftedTC, measureId, username, accessToken);
+      } catch (CqmConversionException ex) {
+        testCaseFailures.append(ex.getMessage());
+        allTestCases.add(testCase);
+      }
+    }
+    if (StringUtils.isNotBlank(testCaseFailures.toString())) {
+      String errMsg =
+          "The following test cases have issues shifting dates:\n" + testCaseFailures.toString();
+      throw new CqmConversionException(StringUtils.removeEndIgnoreCase(errMsg, SEPARATOR));
+    }
+    return allTestCases;
   }
 }

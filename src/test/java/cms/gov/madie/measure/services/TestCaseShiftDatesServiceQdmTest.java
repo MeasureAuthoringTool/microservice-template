@@ -1,11 +1,11 @@
 package cms.gov.madie.measure.services;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -59,8 +59,11 @@ import gov.cms.madie.models.cqm.datacriteria.PatientCareExperience;
 import gov.cms.madie.models.cqm.datacriteria.PatientCharacteristic;
 import gov.cms.madie.models.cqm.datacriteria.PatientCharacteristicBirthdate;
 import gov.cms.madie.models.cqm.datacriteria.PatientCharacteristicClinicalTrialParticipant;
+import gov.cms.madie.models.cqm.datacriteria.PatientCharacteristicEthnicity;
 import gov.cms.madie.models.cqm.datacriteria.PatientCharacteristicExpired;
 import gov.cms.madie.models.cqm.datacriteria.PatientCharacteristicPayer;
+import gov.cms.madie.models.cqm.datacriteria.PatientCharacteristicRace;
+import gov.cms.madie.models.cqm.datacriteria.PatientCharacteristicSex;
 import gov.cms.madie.models.cqm.datacriteria.PhysicalExamOrder;
 import gov.cms.madie.models.cqm.datacriteria.PhysicalExamPerformed;
 import gov.cms.madie.models.cqm.datacriteria.PhysicalExamRecommended;
@@ -68,6 +71,7 @@ import gov.cms.madie.models.cqm.datacriteria.ProcedureOrder;
 import gov.cms.madie.models.cqm.datacriteria.ProcedurePerformed;
 import gov.cms.madie.models.cqm.datacriteria.ProcedureRecommended;
 import gov.cms.madie.models.cqm.datacriteria.ProviderCareExperience;
+import gov.cms.madie.models.cqm.datacriteria.RelatedPerson;
 import gov.cms.madie.models.cqm.datacriteria.SubstanceAdministered;
 import gov.cms.madie.models.cqm.datacriteria.SubstanceOrder;
 import gov.cms.madie.models.cqm.datacriteria.SubstanceRecommended;
@@ -82,15 +86,18 @@ public class TestCaseShiftDatesServiceQdmTest {
   @InjectMocks private QdmTestCaseShiftDatesService qdmTestCaseShiftDatesService;
 
   private TestCase testCase;
-  private static final String json =
+  private static final String JSON =
       "{\"qdmVersion\":\"5.6\",\"dataElements\":[{\"dataElementCodes\":[{\"code\":\"14463-4\",\"system\":\"2.16.840.1.113883.6.1\",\"version\":null,\"display\":\"Chlamydia trachomatis [Presence] in Cervix by Organism specific culture\"}],\"_id\":\"666b3dda1d026b000017e20b\",\"performer\":[],\"relatedTo\":[],\"qdmTitle\":\"Laboratory Test, Performed\",\"hqmfOid\":\"2.16.840.1.113883.10.20.28.4.42\",\"qdmCategory\":\"laboratory_test\",\"qdmStatus\":\"performed\",\"qdmVersion\":\"5.6\",\"_type\":\"QDM::LaboratoryTestPerformed\",\"description\":\"Laboratory Test, Performed: Chlamydia Screening\",\"codeListId\":\"2.16.840.1.113883.3.464.1003.110.12.1052\",\"id\":\"666b3dda1d026b000017e20a\",\"components\":[{\"qdmVersion\":\"5.6\",\"_type\":\"QDM::Component\",\"_id\":\"666b3e2e1d026b000017e28d\",\"code\":{\"code\":\"105604006\",\"system\":\"2.16.840.1.113883.6.96\",\"version\":null,\"display\":\"Deficiency of naturally occurring coagulation factor inhibitor (disorder)\"}}],\"relevantPeriod\":{\"low\":\"2024-02-29T00:00:00.000+00:00\",\"high\":\"2024-06-28T00:00:00.000+00:00\",\"lowClosed\":true,\"highClosed\":true},\"relevantDatetime\":\"2024-06-29T00:00:00.000+00:00\",\"authorDatetime\":\"2024-02-29T00:00:00.000+00:00\",\"resultDatetime\":\"2024-02-29T00:00:00.000+00:00\"}],\"_id\":\"66698bcec3b50c0000acc383\"}";
+  private static final String JSON2 =
+      "\"qdmVersion\":\"5.6\",\"dataElements\":[{\"dataElementCodes\":[{\"code\":\"14463-4\",\"system\":\"2.16.840.1.113883.6.1\",\"version\":null,\"display\":\"Chlamydia trachomatis [Presence] in Cervix by Organism specific culture\"}],\"_id\":\"666b3dda1d026b000017e20b\",\"performer\":[],\"relatedTo\":[],\"qdmTitle\":\"Laboratory Test, Performed\",\"hqmfOid\":\"2.16.840.1.113883.10.20.28.4.42\",\"qdmCategory\":\"laboratory_test\",\"qdmStatus\":\"performed\",\"qdmVersion\":\"5.6\",\"_type\":\"QDM::LaboratoryTestPerformed\",\"description\":\"Laboratory Test, Performed: Chlamydia Screening\",\"codeListId\":\"2.16.840.1.113883.3.464.1003.110.12.1052\",\"id\":\"666b3dda1d026b000017e20a\",\"components\":[{\"qdmVersion\":\"5.6\",\"_type\":\"QDM::Component\",\"_id\":\"666b3e2e1d026b000017e28d\",\"code\":{\"code\":\"105604006\",\"system\":\"2.16.840.1.113883.6.96\",\"version\":null,\"display\":\"Deficiency of naturally occurring coagulation factor inhibitor (disorder)\"}}],\"relevantPeriod\":{\"low\":\"2024-02-29T00:00:00.000+00:00\",\"high\":\"2024-06-28T00:00:00.000+00:00\",\"lowClosed\":true,\"highClosed\":true},\"relevantDatetime\":\"2024-06-29T00:00:00.000+00:00\",\"authorDatetime\":\"2024-02-29T00:00:00.000+00:00\",\"resultDatetime\":\"2024-02-29T00:00:00.000+00:00\"}],\"_id\":\"66698bcec3b50c0000acc383\"}";
+
   private static final String dateTimeString = "2024-02-29T00:00:00.000Z";
 
   @BeforeEach
   public void setUp() {
     testCase = new TestCase();
     testCase.setId("TESTID");
-    testCase.setJson(json);
+    testCase.setJson(JSON);
   }
 
   @Test
@@ -800,6 +807,29 @@ public class TestCaseShiftDatesServiceQdmTest {
   }
 
   @Test
+  public void shiftDatesPatientCharacteristicEthnicity() {
+    assertDoesNotThrow(
+        () -> qdmTestCaseShiftDatesService.shiftDates(new PatientCharacteristicEthnicity(), 1));
+  }
+
+  @Test
+  public void shiftDatesPatientCharacteristicSex() {
+    assertDoesNotThrow(
+        () -> qdmTestCaseShiftDatesService.shiftDates(new PatientCharacteristicSex(), 1));
+  }
+
+  @Test
+  public void shiftDatesPatientCharacteristicRace() {
+    assertDoesNotThrow(
+        () -> qdmTestCaseShiftDatesService.shiftDates(new PatientCharacteristicRace(), 1));
+  }
+
+  @Test
+  public void shiftDatesRelatedPerson() {
+    assertDoesNotThrow(() -> qdmTestCaseShiftDatesService.shiftDates(new RelatedPerson(), 1));
+  }
+
+  @Test
   public void shiftDatesUnsupportedDataType() {
     assertThrows(
         CqmConversionException.class,
@@ -814,8 +844,6 @@ public class TestCaseShiftDatesServiceQdmTest {
   @Test
   public void shiftAllTestCaseDates() {
     when(testCaseService.findTestCasesByMeasureId(anyString())).thenReturn(List.of(testCase));
-    when(testCaseService.updateTestCase(any(TestCase.class), anyString(), anyString(), anyString()))
-        .thenReturn(testCase);
 
     List<TestCase> modified =
         qdmTestCaseShiftDatesService.shiftAllTestCaseDates(
@@ -844,5 +872,18 @@ public class TestCaseShiftDatesServiceQdmTest {
         () ->
             qdmTestCaseShiftDatesService.shiftDatesForTestCase(
                 TestCase.builder().id("testCaseId").build(), 1));
+  }
+
+  @Test
+  public void shiftAllTestCaseDatesWithError() {
+    TestCase testCase2 = TestCase.builder().id("TESTID2").json(JSON2).build();
+    when(testCaseService.findTestCasesByMeasureId(anyString()))
+        .thenReturn(List.of(testCase, testCase2));
+
+    assertThrows(
+        CqmConversionException.class,
+        () ->
+            qdmTestCaseShiftDatesService.shiftAllTestCaseDates(
+                "TestMeasureId", 1, "test.user", "TOKEN"));
   }
 }
