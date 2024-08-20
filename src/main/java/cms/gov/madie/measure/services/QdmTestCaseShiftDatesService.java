@@ -307,7 +307,7 @@ public class QdmTestCaseShiftDatesService {
     if (CollectionUtils.isEmpty(testCases)) {
       throw new ResourceNotFoundException("TestCases", measureId);
     }
-    StringBuffer testCaseFailures = new StringBuffer();
+    StringBuilder testCaseFailures = new StringBuilder();
 
     List<TestCase> allTestCases = new ArrayList<>();
     for (TestCase testCase : testCases) {
