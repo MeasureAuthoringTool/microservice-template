@@ -440,6 +440,7 @@ public class MeasureService {
       log.info("Versioned Measure IDs [{}] are deleted.", deletedMeasureIds);
     }
   }
+
   public void copyQdmMetaData(Measure qiCoreMeasure, Measure qdmMeasure) {
     MeasureMetaData qiCoreMeasureMetaData = qiCoreMeasure.getMeasureMetaData();
     MeasureMetaData qdmMeasureMetaData = qdmMeasure.getMeasureMetaData();
