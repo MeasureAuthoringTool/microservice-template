@@ -150,11 +150,7 @@ public class TestCaseShiftDatesServiceQdmTest {
   @Test
   public void shiftTestCaseDatesNoDataElement() {
     String jsonInvalid =
-        "{\n"
-            + "  \"_id\" : \"66698bcec3b50c0000acc383\",\n"
-            + "  \"qdmVersion\" : \"5.6\",\n"
-            + "  \"dataElements\" : [ ]\n"
-            + "}";
+        "{\"_id\":\"66698bcec3b50c0000acc383\",\"qdmVersion\":\"5.6\",\"dataElements\":[]}";
     testCase.setJson(jsonInvalid);
     when(testCaseService.findTestCasesByMeasureId(anyString())).thenReturn(List.of(testCase));
 
@@ -164,6 +160,7 @@ public class TestCaseShiftDatesServiceQdmTest {
 
     assertNotNull(modified);
     assertFalse(modified.getJson().contains("2025"));
+    assertEquals(jsonInvalid, modified.getJson());
   }
 
   @Test
