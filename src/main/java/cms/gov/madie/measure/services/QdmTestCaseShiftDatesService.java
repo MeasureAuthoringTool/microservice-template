@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,7 +79,10 @@ public class QdmTestCaseShiftDatesService {
 
   private final TestCaseService testCaseService;
 
-  private ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
+  private ObjectMapper mapper =
+      new ObjectMapper()
+          .registerModule(new JavaTimeModule())
+          .setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
   private static final String SEPARATOR = " |\n";
 
@@ -90,7 +94,7 @@ public class QdmTestCaseShiftDatesService {
   public TestCase shiftTestCaseDates(
       String measureId, String testCaseId, int shifted, String username, String accessToken) {
 
-    TestCase testCase = null;
+    TestCase testCase;
     List<TestCase> testCases = testCaseService.findTestCasesByMeasureId(measureId);
     if (CollectionUtils.isEmpty(testCases)) {
       throw new ResourceNotFoundException("TestCase", measureId);
