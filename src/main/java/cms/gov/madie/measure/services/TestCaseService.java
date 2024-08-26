@@ -318,7 +318,8 @@ public class TestCaseService {
     TestCase validatedTestCase =
         validateTestCaseAsResource(
             testCase, ModelType.valueOfName(measure.getModel()), accessToken);
-    if (ModelType.QI_CORE.getValue().equalsIgnoreCase(measure.getModel())) {
+    if (ModelType.QI_CORE.getValue().equalsIgnoreCase(measure.getModel())
+        && StringUtils.isNotBlank(testCase.getJson())) {
       validatedTestCase.setJson(
           JsonUtil.enforcePatientId(validatedTestCase, madieJsonResourcesBaseUri));
       validatedTestCase.setJson(
