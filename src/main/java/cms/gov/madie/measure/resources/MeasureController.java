@@ -166,7 +166,7 @@ public class MeasureController {
       HttpServletRequest request,
       @PathVariable("id") String id,
       @RequestParam(required = true, name = "userid") String userid,
-      @Value("${lambda-api-key}") String apiKey) {
+      @Value("${admin-api-key}") String apiKey) {
     ResponseEntity<String> response = ResponseEntity.badRequest().body("Measure does not exist.");
 
     log.info("getMeasureId [{}] using apiKey ", id, "apikey");
@@ -187,7 +187,7 @@ public class MeasureController {
       HttpServletRequest request,
       @PathVariable("id") String id,
       @RequestParam(required = true, name = "userid") String userid,
-      @Value("${lambda-api-key}") String apiKey) {
+      @Value("${admin-api-key}") String apiKey) {
     ResponseEntity<String> response = ResponseEntity.badRequest().body("Measure does not exist.");
 
     log.info("getMeasureId [{}] using apiKey ", id, "apikey");
