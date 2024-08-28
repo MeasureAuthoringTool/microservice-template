@@ -40,6 +40,7 @@ public class MeasureService {
   private final MeasureUtil measureUtil;
   private final ActionLogService actionLogService;
   private final MeasureSetService measureSetService;
+  private final CqlTemplateConfigService cqlTemplateConfigService;
 
   private final TerminologyValidationService terminologyValidationService;
 
@@ -156,6 +157,22 @@ public class MeasureService {
       MeasureMetaData metaData = new MeasureMetaData();
       metaData.setDraft(true);
       measureCopy.setMeasureMetaData(metaData);
+    }
+
+    if (ModelType.QI_CORE.getValue().equalsIgnoreCase(measure.getModel())) {
+      measureCopy.setCql(
+          cqlTemplateConfigService.getQiCore411CqlTemplate() != null
+              ? cqlTemplateConfigService
+                  .getQiCore411CqlTemplate()
+                  .replace("CYBTest3", measureCopy.getCqlLibraryName())
+              : "");
+    } else if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(measure.getModel())) {
+      measureCopy.setCql(
+          cqlTemplateConfigService.getQdm56CqlTemplate() != null
+              ? cqlTemplateConfigService
+                  .getQdm56CqlTemplate()
+                  .replace("CYBTestQDMMeasure3", measureCopy.getCqlLibraryName())
+              : "");
     }
 
     Measure savedMeasure = measureRepository.save(measureCopy);

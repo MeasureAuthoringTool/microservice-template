@@ -39,6 +39,7 @@ import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import gov.cms.madie.models.dto.LibraryUsage;
 import gov.cms.madie.models.measure.*;
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -71,6 +72,7 @@ public class MeasureServiceTest implements ResourceUtil {
   @Mock private MeasureUtil measureUtil;
   @Mock private ActionLogService actionLogService;
   @Mock private MeasureSetService measureSetService;
+  @Mock private CqlTemplateConfigService cqlTemplateConfigService;
   @Mock private TerminologyValidationService terminologyValidationService;
   @InjectMocks private MeasureService measureService;
   @Captor private ArgumentCaptor<Measure> measureArgumentCaptor;
@@ -408,7 +410,9 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
-  public void testCreateMeasureSuccessfullyWithNoCql() {
+  public void testCreateMeasureSuccessfullyWithNoCql() throws Exception {
+    String cqlTemplate =
+        IOUtils.toString(this.getClass().getResourceAsStream("/QDM56_CQLTemplate.txt"), "UTF-8");
     String usr = "john rao";
     Measure measureToSave =
         measure1.toBuilder()
@@ -418,15 +422,22 @@ public class MeasureServiceTest implements ResourceUtil {
             .cqlLibraryName("VTE")
             .cql("")
             .elmJson(null)
-            .measureMetaData(new MeasureMetaData())
+            .measureMetaData(null)
+            .cql(cqlTemplate)
             .createdBy(usr)
+            .model(ModelType.QDM_5_6.getValue())
             .build();
     doNothing()
         .when(measureSetService)
         .createMeasureSet(anyString(), anyString(), anyString(), any());
     when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString()))
+        .thenReturn(ElmJson.builder().json("{\"library\": {}}").xml("<library></library>").build());
+    when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(false);
+
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
     when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
+    when(cqlTemplateConfigService.getQdm56CqlTemplate()).thenReturn(cqlTemplate);
 
     Measure savedMeasure = measureService.createMeasure(measureToSave, usr, "token");
     assertThat(savedMeasure.getMeasureName(), is(equalTo(measureToSave.getMeasureName())));
@@ -434,7 +445,7 @@ public class MeasureServiceTest implements ResourceUtil {
     assertThat(savedMeasure.getCreatedBy(), is(equalTo(usr)));
     assertThat(savedMeasure.isCqlErrors(), is(equalTo(false)));
     assertThat(savedMeasure.getErrors(), is(emptySet()));
-    assertThat(savedMeasure.getMeasureMetaData().isDraft(), is(equalTo(true)));
+    assertThat(savedMeasure.getCql(), is(equalTo(cqlTemplate)));
   }
 
   @Test
