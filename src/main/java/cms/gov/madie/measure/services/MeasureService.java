@@ -160,9 +160,19 @@ public class MeasureService {
     }
 
     if (ModelType.QI_CORE.getValue().equalsIgnoreCase(measure.getModel())) {
-      measureCopy.setCql(cqlTemplateConfigService.getQiCore411CqlTemplate());
+      measureCopy.setCql(
+          cqlTemplateConfigService.getQiCore411CqlTemplate() != null
+              ? cqlTemplateConfigService
+                  .getQiCore411CqlTemplate()
+                  .replace("CYBTest3", measureCopy.getCqlLibraryName())
+              : "");
     } else if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(measure.getModel())) {
-      measureCopy.setCql(cqlTemplateConfigService.getQdm56CqlTemplate());
+      measureCopy.setCql(
+          cqlTemplateConfigService.getQdm56CqlTemplate() != null
+              ? cqlTemplateConfigService
+                  .getQdm56CqlTemplate()
+                  .replace("CYBTestQDMMeasure3", measureCopy.getCqlLibraryName())
+              : "");
     }
 
     Measure savedMeasure = measureRepository.save(measureCopy);
