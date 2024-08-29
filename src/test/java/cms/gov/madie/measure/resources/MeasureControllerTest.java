@@ -91,12 +91,12 @@ class MeasureControllerTest {
     measure1.setId("testId");
     doReturn(measure1)
         .when(measureService)
-        .createMeasure(any(Measure.class), anyString(), anyString());
+        .createMeasure(any(Measure.class), anyString(), anyString(), any(Boolean.class));
     Measure measures = new Measure();
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
-    ResponseEntity<Measure> response = controller.addMeasure(measures, principal, "");
+    ResponseEntity<Measure> response = controller.addMeasure(measures, false, principal, "");
     assertNotNull(response.getBody());
     assertEquals("IDIDID", response.getBody().getMeasureSetId());
 
