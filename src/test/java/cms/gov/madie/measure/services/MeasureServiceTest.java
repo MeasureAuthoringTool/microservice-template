@@ -543,7 +543,7 @@ public class MeasureServiceTest implements ResourceUtil {
 
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
     when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
-    when(cqlTemplateConfigService.getQiCore411CqlTemplate()).thenReturn("");
+    when(cqlTemplateConfigService.getQiCore411CqlTemplate()).thenReturn(null);
 
     Measure savedMeasure = measureService.createMeasure(measureToSave, usr, "token", true);
     assertThat(savedMeasure.getMeasureName(), is(equalTo(measureToSave.getMeasureName())));
