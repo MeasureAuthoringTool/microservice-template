@@ -100,10 +100,13 @@ public class MeasureController {
   @PostMapping("/measure")
   public ResponseEntity<Measure> addMeasure(
       @RequestBody @Validated(Measure.ValidationSequence.class) Measure measure,
+      @RequestParam(required = false, defaultValue = "true", name = "addDefaultCQL")
+          boolean addDefaultCQL,
       Principal principal,
       @RequestHeader("Authorization") String accessToken) {
     final String username = principal.getName();
-    Measure savedMeasure = measureService.createMeasure(measure, username, accessToken);
+    Measure savedMeasure =
+        measureService.createMeasure(measure, username, accessToken, addDefaultCQL);
     return ResponseEntity.status(HttpStatus.CREATED).body(savedMeasure);
   }
 

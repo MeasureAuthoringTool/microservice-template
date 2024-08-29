@@ -119,7 +119,8 @@ public class MeasureService {
         .orElse(null);
   }
 
-  public Measure createMeasure(Measure measure, final String username, String accessToken) {
+  public Measure createMeasure(
+      Measure measure, final String username, String accessToken, boolean addDefaultCQL) {
     log.info("User [{}] is attempting to create a new measure", username);
     checkDuplicateCqlLibraryName(measure.getCqlLibraryName());
     validateMeasurementPeriod(
@@ -159,20 +160,22 @@ public class MeasureService {
       measureCopy.setMeasureMetaData(metaData);
     }
 
-    if (ModelType.QI_CORE.getValue().equalsIgnoreCase(measure.getModel())) {
-      measureCopy.setCql(
-          cqlTemplateConfigService.getQiCore411CqlTemplate() != null
-              ? cqlTemplateConfigService
-                  .getQiCore411CqlTemplate()
-                  .replace("CYBTest3", measureCopy.getCqlLibraryName())
-              : "");
-    } else if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(measure.getModel())) {
-      measureCopy.setCql(
-          cqlTemplateConfigService.getQdm56CqlTemplate() != null
-              ? cqlTemplateConfigService
-                  .getQdm56CqlTemplate()
-                  .replace("CYBTestQDMMeasure3", measureCopy.getCqlLibraryName())
-              : "");
+    if (addDefaultCQL) {
+      if (ModelType.QI_CORE.getValue().equalsIgnoreCase(measure.getModel())) {
+        measureCopy.setCql(
+            cqlTemplateConfigService.getQiCore411CqlTemplate() != null
+                ? cqlTemplateConfigService
+                    .getQiCore411CqlTemplate()
+                    .replace("CYBTest3", measureCopy.getCqlLibraryName())
+                : "");
+      } else if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(measure.getModel())) {
+        measureCopy.setCql(
+            cqlTemplateConfigService.getQdm56CqlTemplate() != null
+                ? cqlTemplateConfigService
+                    .getQdm56CqlTemplate()
+                    .replace("CYBTestQDMMeasure3", measureCopy.getCqlLibraryName())
+                : "");
+      }
     }
 
     Measure savedMeasure = measureRepository.save(measureCopy);

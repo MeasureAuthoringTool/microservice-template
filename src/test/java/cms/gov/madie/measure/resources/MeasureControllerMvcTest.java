@@ -520,7 +520,8 @@ public class MeasureControllerMvcTest {
     saved.setModel(MODEL);
     saved.setEcqmTitle(ecqmTitle);
     saved.setVersionId(measureId);
-    when(measureService.createMeasure(any(Measure.class), anyString(), anyString()))
+    when(measureService.createMeasure(
+            any(Measure.class), anyString(), anyString(), any(Boolean.class)))
         .thenReturn(saved);
 
     final String measureAsJson =
@@ -545,7 +546,8 @@ public class MeasureControllerMvcTest {
         .andExpect(jsonPath("$.versionId").value(measureId));
 
     verify(measureService, times(1))
-        .createMeasure(measureArgumentCaptor.capture(), anyString(), anyString());
+        .createMeasure(
+            measureArgumentCaptor.capture(), anyString(), anyString(), any(Boolean.class));
     verifyNoMoreInteractions(measureRepository);
     Measure savedMeasure = measureArgumentCaptor.getValue();
     assertEquals(measureName, savedMeasure.getMeasureName());
@@ -569,7 +571,8 @@ public class MeasureControllerMvcTest {
     saved.setModel(ModelType.QDM_5_6.toString());
     saved.setEcqmTitle(ecqmTitle);
     saved.setVersionId(measureId);
-    when(measureService.createMeasure(any(Measure.class), anyString(), anyString()))
+    when(measureService.createMeasure(
+            any(Measure.class), anyString(), anyString(), any(Boolean.class)))
         .thenReturn(saved);
 
     final String measureAsJson =
@@ -604,7 +607,8 @@ public class MeasureControllerMvcTest {
     saved.setModel(ModelType.QDM_5_6.toString());
     saved.setEcqmTitle(ecqmTitle);
     saved.setVersionId(measureId);
-    when(measureService.createMeasure(any(Measure.class), anyString(), anyString()))
+    when(measureService.createMeasure(
+            any(Measure.class), anyString(), anyString(), any(Boolean.class)))
         .thenReturn(saved);
 
     final String measureAsJson =
@@ -635,7 +639,8 @@ public class MeasureControllerMvcTest {
         .andExpect(jsonPath("$.versionId").value(measureId));
 
     verify(measureService, times(1))
-        .createMeasure(measureArgumentCaptor.capture(), anyString(), anyString());
+        .createMeasure(
+            measureArgumentCaptor.capture(), anyString(), anyString(), any(Boolean.class));
     verifyNoMoreInteractions(measureRepository);
     Measure savedMeasure = measureArgumentCaptor.getValue();
     assertEquals(measureName, savedMeasure.getMeasureName());
