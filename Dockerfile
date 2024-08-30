@@ -18,7 +18,7 @@ ENTRYPOINT ["java","-jar","-Dspring.profiles.active=it", "app.jar"]
 
 
 FROM cgr.dev/chainguard/jdk:latest AS prod
-
+USER java
 ARG JAR_FILE=target/*.jar
 COPY --chown=java:java ${JAR_FILE} app.jar
 
