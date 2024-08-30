@@ -1,15 +1,17 @@
 ## Use AWS AL2 + Corretto base image
-FROM amazoncorretto:17-al2-jdk
+FROM cgr.dev/chainguard/jdk:latest-dev
 
 ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} app.jar
+
+USER root
+RUN apk add coreutils curl
 
 #Update Packages
 #RUN yum update -y --security
 
 ## Add the wait script to the image
-ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.7.3/wait /wait
-RUN chmod +x /wait
+COPY --from=ghcr.io/ufoscout/docker-compose-wait:latest /wait /wait
 
 ## Download new relic java agent
 RUN curl -O https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic.jar \
