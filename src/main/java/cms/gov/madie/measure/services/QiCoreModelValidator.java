@@ -13,17 +13,9 @@ import org.springframework.util.CollectionUtils;
 @Service(ServiceConstants.QICORE_VALIDATOR)
 public class QiCoreModelValidator extends ModelValidator {
 
+  // Groups no longer get validated based on association. Can have 0 to many
   @Override
   public void validateGroupAssociations(Group group) {
-    boolean isNotAssociated;
-
-    isNotAssociated =
-        group.getStratifications().stream().anyMatch(map -> map.getAssociation() == null);
-
-    if (isNotAssociated) {
-      throw new InvalidGroupException(
-          "QI-Core group stratifications should be associated to a valid population type.");
-    }
   }
 
   @Override
