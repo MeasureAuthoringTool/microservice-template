@@ -5,7 +5,6 @@ import gov.cms.madie.models.measure.Measure;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import cms.gov.madie.measure.exceptions.InvalidGroupException;
 import gov.cms.madie.models.measure.Group;
 import org.springframework.util.CollectionUtils;
 
@@ -15,8 +14,7 @@ public class QiCoreModelValidator extends ModelValidator {
 
   // Groups no longer get validated based on association. Can have 0 to many
   @Override
-  public void validateGroupAssociations(Group group) {
-  }
+  public void validateGroupAssociations(Group group) {}
 
   @Override
   public void validateGroups(Measure measure) {
