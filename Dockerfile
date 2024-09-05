@@ -1,5 +1,5 @@
 ## Use chainguard dev base image can be used for local devs
-FROM cgr.dev/chainguard/jdk:latest-dev AS build_dev
+FROM cgr.dev/cms-cpt-gdit/jdk:openjdk-17-dev AS build_dev_env
 ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} app.jar
 
@@ -13,7 +13,7 @@ COPY --from=ghcr.io/ufoscout/docker-compose-wait:latest /wait /wait
 RUN curl -O https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic.jar \
     && curl -O https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic.yml
     
-
+USER java
 ENTRYPOINT ["java","-jar","-Dspring.profiles.active=it", "app.jar"]
 
 
