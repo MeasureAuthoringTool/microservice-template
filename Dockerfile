@@ -17,14 +17,14 @@ USER java
 ENTRYPOINT ["java","-jar","-Dspring.profiles.active=it", "app.jar"]
 
 
-FROM cgr.dev/chainguard/jdk:latest AS prod
+FROM cgr.dev/cms-cpt-gdit/jdk:openjdk-17 AS prod
 USER java
 ARG JAR_FILE=target/*.jar
 COPY --chown=java:java ${JAR_FILE} app.jar
 
 COPY --from=ghcr.io/ufoscout/docker-compose-wait:latest --chown=java:java /wait /wait
-COPY --from=build_dev --chown=java:java /home/build/newrelic.jar ./newrelic.jar
-COPY --from=build_dev --chown=java:java /home/build/newrelic.yml ./newrelic.yml
+COPY --from=build_dev_env --chown=java:java /home/build/newrelic.jar ./newrelic.jar
+COPY --from=build_dev_env --chown=java:java /home/build/newrelic.yml ./newrelic.yml
 
 ## Launch the wait tool and then your application
 ENTRYPOINT ["java","-jar","-Dspring.profiles.active=it", "app.jar"]
