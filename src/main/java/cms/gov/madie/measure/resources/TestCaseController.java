@@ -240,9 +240,16 @@ public class TestCaseController {
       TestCase shiftedTestCase =
           testCaseService.shiftQiCoreTestCaseDates(targetTestCase.get(), shifted, accessToken);
       if (shiftedTestCase != null) {
-        testCaseService.updateTestCase(
-            shiftedTestCase, measureId, principal.getName(), accessToken);
-        return ResponseEntity.noContent().build(); // 204
+        try {
+          testCaseService.updateTestCase(
+              shiftedTestCase, measureId, principal.getName(), accessToken);
+          return ResponseEntity.noContent().build(); // 204
+        } catch (Exception e) {
+          log.error(
+              "Unable to save Test Case [{}] after successfully shifting dates:",
+              shiftedTestCase.getId(),
+              e);
+        }
       }
       throw new InvalidRequestException("Unable to shift dates for test case [" + testCaseId + "]");
     }
@@ -274,14 +281,20 @@ public class TestCaseController {
     List<TestCase> testCases = testCaseService.findTestCasesByMeasureId(measureId);
     List<TestCase> shiftedTestCases =
         testCaseService.shiftMultiQiCoreTestCaseDates(testCases, shifted, accessToken);
-    List<String> savedTestCaseIds =
-        shiftedTestCases.stream()
-            .map(
-                testCase ->
-                    testCaseService.updateTestCase(
-                        testCase, measureId, principal.getName(), accessToken))
-            .map(TestCase::getId)
-            .toList();
+    List<String> savedTestCaseIds = new ArrayList<>();
+    for (TestCase shiftedTestCase : shiftedTestCases) {
+      try {
+        TestCase updatedTestCase =
+            testCaseService.updateTestCase(
+                shiftedTestCase, measureId, principal.getName(), accessToken);
+        savedTestCaseIds.add(updatedTestCase.getId());
+      } catch (Exception e) {
+        log.error(
+            "Unable to save Test Case [{}] after successfully shifting dates:",
+            shiftedTestCase.getId(),
+            e);
+      }
+    }
     List<String> failedTestCases =
         testCases.stream()
             .filter(
