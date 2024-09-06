@@ -33,17 +33,17 @@ public class MeasureMongoConfig {
   public MongoConverter mongoConverter() throws Exception {
     DbRefResolver dbRefResolver = new DefaultDbRefResolver(mongoDatabaseFactory());
 
-    MappingMongoConverter mongoConverter = new MappingMongoConverter(dbRefResolver, mongoMappingContext);
+    MappingMongoConverter mongoConverter =
+        new MappingMongoConverter(dbRefResolver, mongoMappingContext);
 
     // Allow for dots in Mongo field names.
     // This knowingly affects only the cqlMeataData.codeSystemMap used by the Saved Codes UI.
     mongoConverter.preserveMapKeys(true);
 
     // customized converter
-    mongoConverter
-        .setCustomConversions(
-            new MongoCustomConversions(
-                Arrays.asList(new VersionConverter(), new StringOrganizationConverter())));
+    mongoConverter.setCustomConversions(
+        new MongoCustomConversions(
+            Arrays.asList(new VersionConverter(), new StringOrganizationConverter())));
 
     return mongoConverter;
   }
