@@ -129,32 +129,4 @@ class ElmTranslatorClientTest {
     boolean output = elmTranslatorClient.hasErrors(elmJson);
     assertThat(output, is(false));
   }
-
-  @Test
-  void testRestTemplateReturnsElmJsonForMatMeasure() {
-    ElmJson elmJson = ElmJson.builder().json("{}").xml("<></>").build();
-    when(restTemplate.exchange(
-            any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
-        .thenReturn(ResponseEntity.ok(elmJson));
-    ElmJson output =
-        elmTranslatorClient.getElmJsonForMatMeasure(
-            "TEST_CQL", "QDM v5.6", "ABCDE", "TEST_HARP_ID");
-    assertThat(output, is(equalTo(elmJson)));
-  }
-
-  @Test
-  public void testRestTemplateException() {
-    CqlElmTranslationServiceException exception =
-        assertThrows(
-            CqlElmTranslationServiceException.class,
-            () ->
-                elmTranslatorClient.getElmJsonForMatMeasure(
-                    "TEST_CQL", "QDM v5.6", "ABCDE", "TEST_HARP_ID"));
-
-    assertThat(
-        exception.getMessage(),
-        is(
-            equalTo(
-                "There was an error calling CQL-ELM translation service for MAT transferred measure")));
-  }
 }

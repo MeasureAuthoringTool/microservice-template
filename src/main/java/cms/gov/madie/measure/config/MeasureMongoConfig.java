@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
-import org.springframework.data.mongodb.core.convert.AbstractMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
@@ -34,13 +33,17 @@ public class MeasureMongoConfig {
   public MongoConverter mongoConverter() throws Exception {
     DbRefResolver dbRefResolver = new DefaultDbRefResolver(mongoDatabaseFactory());
 
-    MongoConverter mongoConverter = new MappingMongoConverter(dbRefResolver, mongoMappingContext);
+    MappingMongoConverter mongoConverter =
+        new MappingMongoConverter(dbRefResolver, mongoMappingContext);
+
+    // Allow for dots in Mongo field names.
+    // This knowingly affects only the cqlMeataData.codeSystemMap used by the Saved Codes UI.
+    mongoConverter.preserveMapKeys(true);
 
     // customized converter
-    ((AbstractMongoConverter) mongoConverter)
-        .setCustomConversions(
-            new MongoCustomConversions(
-                Arrays.asList(new VersionConverter(), new StringOrganizationConverter())));
+    mongoConverter.setCustomConversions(
+        new MongoCustomConversions(
+            Arrays.asList(new VersionConverter(), new StringOrganizationConverter())));
 
     return mongoConverter;
   }

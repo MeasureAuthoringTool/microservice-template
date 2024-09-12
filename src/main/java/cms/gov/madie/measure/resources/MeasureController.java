@@ -9,6 +9,7 @@ import cms.gov.madie.measure.services.GroupService;
 import cms.gov.madie.measure.services.MeasureService;
 import cms.gov.madie.measure.services.MeasureSetService;
 import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.dto.LibraryUsage;
 import gov.cms.madie.models.measure.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -32,6 +34,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
+
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
@@ -95,10 +100,13 @@ public class MeasureController {
   @PostMapping("/measure")
   public ResponseEntity<Measure> addMeasure(
       @RequestBody @Validated(Measure.ValidationSequence.class) Measure measure,
+      @RequestParam(required = false, defaultValue = "true", name = "addDefaultCQL")
+          boolean addDefaultCQL,
       Principal principal,
       @RequestHeader("Authorization") String accessToken) {
     final String username = principal.getName();
-    Measure savedMeasure = measureService.createMeasure(measure, username, accessToken);
+    Measure savedMeasure =
+        measureService.createMeasure(measure, username, accessToken, addDefaultCQL);
     return ResponseEntity.status(HttpStatus.CREATED).body(savedMeasure);
   }
 
@@ -161,7 +169,7 @@ public class MeasureController {
       HttpServletRequest request,
       @PathVariable("id") String id,
       @RequestParam(required = true, name = "userid") String userid,
-      @Value("${lambda-api-key}") String apiKey) {
+      @Value("${admin-api-key}") String apiKey) {
     ResponseEntity<String> response = ResponseEntity.badRequest().body("Measure does not exist.");
 
     log.info("getMeasureId [{}] using apiKey ", id, "apikey");
@@ -182,7 +190,7 @@ public class MeasureController {
       HttpServletRequest request,
       @PathVariable("id") String id,
       @RequestParam(required = true, name = "userid") String userid,
-      @Value("${lambda-api-key}") String apiKey) {
+      @Value("${admin-api-key}") String apiKey) {
     ResponseEntity<String> response = ResponseEntity.badRequest().body("Measure does not exist.");
 
     log.info("getMeasureId [{}] using apiKey ", id, "apikey");
@@ -282,20 +290,22 @@ public class MeasureController {
             measureId, groupId, stratificationId, principal.getName()));
   }
 
-  @GetMapping("/measures/search/{criteria}")
+  @GetMapping("/measures/search")
   public ResponseEntity<Page<MeasureListDTO>> findAllByMeasureNameOrEcqmTitle(
       Principal principal,
       @RequestParam(required = false, defaultValue = "false", name = "currentUser")
           boolean filterByCurrentUser,
-      @PathVariable("criteria") String criteria,
+      @RequestParam(required = false, name = "query") String query,
       @RequestParam(required = false, defaultValue = "10", name = "limit") int limit,
       @RequestParam(required = false, defaultValue = "0", name = "page") int page) {
 
     final String username = principal.getName();
     final Pageable pageReq = PageRequest.of(page, limit, Sort.by("lastModifiedAt").descending());
 
+    // We need to decode the encoded strings we send over or we can't find stuff
+    String decodedQuery = URLDecoder.decode(query, StandardCharsets.UTF_8);
     Page<MeasureListDTO> measures =
-        measureService.getMeasuresByCriteria(filterByCurrentUser, pageReq, username, criteria);
+        measureService.getMeasuresByCriteria(filterByCurrentUser, pageReq, username, decodedQuery);
     measures.map(
         measure -> {
           MeasureSet measureSet =
@@ -324,5 +334,12 @@ public class MeasureController {
     return ResponseEntity.ok(
         measureService.associateCmsId(
             principal.getName(), qiCoreMeasureId, qdmMeasureId, copyMetaData));
+  }
+
+  @GetMapping(
+      value = "/measures/library/usage",
+      produces = {MediaType.APPLICATION_JSON_VALUE})
+  public ResponseEntity<List<LibraryUsage>> getLibraryUsage(@RequestParam String libraryName) {
+    return ResponseEntity.ok().body(measureService.findLibraryUsage(libraryName));
   }
 }

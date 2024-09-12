@@ -9,6 +9,8 @@ import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.MeasureService;
 import cms.gov.madie.measure.services.MeasureSetService;
 import cms.gov.madie.measure.services.TestCaseService;
+import gov.cms.madie.models.access.AclSpecification;
+import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureSet;
 import org.junit.jupiter.api.Test;
@@ -315,6 +317,79 @@ public class AdminControllerMvcTest {
                 .header("Authorization", "test-okta"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id", equalTo("12345")));
+  }
+
+  @Test
+  public void testAdminMultipleMeasuresGetSharedWith() throws Exception {
+    Measure msr1 = Measure.builder().id("12345").build();
+    AclSpecification acl1 = new AclSpecification();
+    acl1.setUserId("raoulduke");
+    acl1.setRoles(List.of(RoleEnum.SHARED_WITH));
+
+    Measure msr2 = Measure.builder().id("6789").build();
+
+    List<AclSpecification> acls = List.of(acl1);
+    MeasureSet measureSet = MeasureSet.builder().acls(acls).build();
+    msr1.setMeasureSet(measureSet);
+    msr2.setMeasureSet(measureSet);
+    when(measureService.findMeasureById(eq("12345"))).thenReturn(msr1);
+    when(measureService.findMeasureById(eq("6789"))).thenReturn(msr2);
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get("/admin/measures/sharedWith?measureids=12345,6789")
+                .with(csrf())
+                .with(user(TEST_USER_ID))
+                .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
+                .header("Authorization", "test-okta"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].measureId", equalTo("12345")))
+        .andExpect(jsonPath("$[1].measureId", equalTo("6789")))
+        .andExpect(jsonPath("$[0].sharedWith.[0]userId", equalTo("raoulduke")));
+  }
+
+  @Test
+  public void testAdminMeasureGetSharedWith() throws Exception {
+    Measure testMsr = Measure.builder().id("12345").build();
+    AclSpecification acl1 = new AclSpecification();
+    acl1.setUserId("raoulduke");
+    acl1.setRoles(List.of(RoleEnum.SHARED_WITH));
+
+    List<AclSpecification> acls = List.of(acl1);
+    MeasureSet measureSet = MeasureSet.builder().acls(acls).build();
+    testMsr.setMeasureSet(measureSet);
+    when(measureService.findMeasureById(anyString())).thenReturn(testMsr);
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get("/admin/measures/sharedWith?measureids=12345")
+                .with(csrf())
+                .with(user(TEST_USER_ID))
+                .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
+                .header("Authorization", "test-okta"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].measureId", equalTo("12345")))
+        .andExpect(jsonPath("$[0].sharedWith.[0]userId", equalTo("raoulduke")));
+  }
+
+  @Test
+  public void testAdminMeasureGetSharedWithNoone() throws Exception {
+    Measure testMsr = Measure.builder().id("12345").build();
+
+    MeasureSet measureSet = MeasureSet.builder().acls(null).build();
+    testMsr.setMeasureSet(measureSet);
+    when(measureService.findMeasureById(anyString())).thenReturn(testMsr);
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get("/admin/measures/sharedWith?measureids=12345")
+                .with(csrf())
+                .with(user(TEST_USER_ID))
+                .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
+                .header("Authorization", "test-okta"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].measureId", equalTo("12345")))
+        .andExpect(jsonPath("$[0].sharedWith", equalTo(null)));
   }
 
   @Test

@@ -55,32 +55,13 @@ public class ElmTranslatorClient {
     }
   }
 
-  public ElmJson getElmJsonForMatMeasure(
-      final String cql, String measureModel, String apiKey, String harpId) {
-    try {
-      URI uri = getElmJsonURI(measureModel, true);
-      HttpEntity<String> cqlEntity = getCqlHttpEntity(cql, null, apiKey, harpId);
-
-      return elmTranslatorRestTemplate
-          .exchange(uri, HttpMethod.PUT, cqlEntity, ElmJson.class)
-          .getBody();
-    } catch (Exception ex) {
-      throw new CqlElmTranslationServiceException(
-          "There was an error calling CQL-ELM translation service for MAT transferred measure", ex);
-    }
-  }
-
   protected URI getElmJsonURI(String measureModel, boolean isForMatTransferred) {
     var isQdm = StringUtils.equals(measureModel, ModelType.QDM_5_6.getValue());
     String baseUrl =
         isQdm
             ? elmTranslatorClientConfig.getQdmCqlElmServiceBaseUrl()
             : elmTranslatorClientConfig.getFhirCqlElmServiceBaseUrl();
-    return URI.create(
-        baseUrl
-            + (isForMatTransferred
-                ? elmTranslatorClientConfig.getCqlElmServiceUriForMatTransferredMeasure()
-                : elmTranslatorClientConfig.getCqlElmServiceElmJsonUri()));
+    return URI.create(baseUrl + elmTranslatorClientConfig.getCqlElmServiceElmJsonUri());
   }
 
   protected HttpEntity<String> getCqlHttpEntity(

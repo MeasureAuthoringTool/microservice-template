@@ -15,6 +15,7 @@ import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.Version;
+import gov.cms.madie.models.dto.LibraryUsage;
 import gov.cms.madie.models.measure.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -90,12 +91,12 @@ class MeasureControllerTest {
     measure1.setId("testId");
     doReturn(measure1)
         .when(measureService)
-        .createMeasure(any(Measure.class), anyString(), anyString());
+        .createMeasure(any(Measure.class), anyString(), anyString(), any(Boolean.class));
     Measure measures = new Measure();
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
-    ResponseEntity<Measure> response = controller.addMeasure(measures, principal, "");
+    ResponseEntity<Measure> response = controller.addMeasure(measures, false, principal, "");
     assertNotNull(response.getBody());
     assertEquals("IDIDID", response.getBody().getMeasureSetId());
 
@@ -750,5 +751,18 @@ class MeasureControllerTest {
     ResponseEntity<MeasureSet> result =
         controller.associateCmsId(principal, "qiCoreMeasureId", "qdmMeasureId", false);
     assertThat(result.getStatusCode(), is(equalTo(HttpStatus.OK)));
+  }
+
+  @Test
+  void testGetLibraryUsage() {
+    String libraryName = "Helper";
+    String owner = "john";
+    LibraryUsage libraryUsage = LibraryUsage.builder().name(libraryName).owner(owner).build();
+    when(measureService.findLibraryUsage(anyString())).thenReturn(List.of(libraryUsage));
+    ResponseEntity<List<LibraryUsage>> response = controller.getLibraryUsage(libraryName);
+    List<LibraryUsage> usage = response.getBody();
+    assertThat(usage.size(), is(equalTo(1)));
+    assertThat(usage.get(0).getName(), is(equalTo(libraryName)));
+    assertThat(usage.get(0).getOwner(), is(equalTo(owner)));
   }
 }

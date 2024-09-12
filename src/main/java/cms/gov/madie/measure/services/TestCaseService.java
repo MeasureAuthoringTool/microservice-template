@@ -32,12 +32,21 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
 @Slf4j
 @Service
@@ -113,10 +122,7 @@ public class TestCaseService {
     verifyUniqueTestCaseName(testCase, measure);
 
     defaultTestCaseJsonForQdmMeasure(testCase, measure);
-
-    if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(measure.getModel())) {
-      checkTestCaseSpecialCharacters(testCase);
-    }
+    checkTestCaseSpecialCharacters(testCase);
 
     TestCase enrichedTestCase = enrichNewTestCase(testCase, username);
     enrichedTestCase =
@@ -154,9 +160,7 @@ public class TestCaseService {
 
     List<TestCase> enrichedTestCases = new ArrayList<>(newTestCases.size());
     for (TestCase testCase : newTestCases) {
-      if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(measure.getModel())) {
-        checkTestCaseSpecialCharacters(testCase);
-      }
+      checkTestCaseSpecialCharacters(testCase);
       TestCase enriched = enrichNewTestCase(testCase, username);
       enriched =
           validateTestCaseAsResource(
@@ -282,11 +286,7 @@ public class TestCaseService {
     if (!measure.getMeasureMetaData().isDraft()) {
       throw new InvalidDraftStatusException(measure.getId());
     }
-
-    if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(measure.getModel())) {
-      checkTestCaseSpecialCharacters(testCase);
-    }
-
+    checkTestCaseSpecialCharacters(testCase);
     if (measure.getTestCases() == null) {
       measure.setTestCases(new ArrayList<>());
     }
@@ -318,7 +318,8 @@ public class TestCaseService {
     TestCase validatedTestCase =
         validateTestCaseAsResource(
             testCase, ModelType.valueOfName(measure.getModel()), accessToken);
-    if (ModelType.QI_CORE.getValue().equalsIgnoreCase(measure.getModel())) {
+    if (ModelType.QI_CORE.getValue().equalsIgnoreCase(measure.getModel())
+        && StringUtils.isNotBlank(testCase.getJson())) {
       validatedTestCase.setJson(
           JsonUtil.enforcePatientId(validatedTestCase, madieJsonResourcesBaseUri));
       validatedTestCase.setJson(
@@ -778,6 +779,27 @@ public class TestCaseService {
           .message("An unknown exception occurred while validating the test case JSON.")
           .build();
     }
+  }
+
+  public List<TestCase> shiftMultiQiCoreTestCaseDates(
+      List<TestCase> testCases, int shifted, String accessToken) {
+    if (isEmpty(testCases)) {
+      return Collections.emptyList();
+    }
+    return fhirServicesClient.shiftTestCaseDates(testCases, shifted, accessToken).getBody();
+  }
+
+  public TestCase shiftQiCoreTestCaseDates(TestCase testCase, int shifted, String accessToken) {
+    if (testCase == null) {
+      return null;
+    }
+    List<TestCase> shiftedTestCases =
+        fhirServicesClient.shiftTestCaseDates(List.of(testCase), shifted, accessToken).getBody();
+
+    if (isNotEmpty(shiftedTestCases)) {
+      return shiftedTestCases.get(0);
+    }
+    return null;
   }
 
   private HapiOperationOutcome handleJsonProcessingException() {

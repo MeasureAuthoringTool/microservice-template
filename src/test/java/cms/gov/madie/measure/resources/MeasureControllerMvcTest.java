@@ -32,6 +32,7 @@ import java.util.Optional;
 
 import cms.gov.madie.measure.dto.MeasureListDTO;
 import cms.gov.madie.measure.services.MeasureSetService;
+import gov.cms.madie.models.dto.LibraryUsage;
 import gov.cms.madie.models.measure.*;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -44,6 +45,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -84,7 +86,7 @@ public class MeasureControllerMvcTest {
   private static final String TEST_USER_ID = "test-okta-user-id-123";
 
   private static final String TEST_API_KEY_HEADER = "api-key";
-  private static final String TEST_API_KEY_HEADER_VALUE = "9202c9fa";
+  private static final String TEST_API_KEY_HEADER_VALUE = "0a51991c";
 
   @Captor ArgumentCaptor<Group> groupCaptor;
   @Captor ArgumentCaptor<String> groupIdCaptor;
@@ -518,7 +520,8 @@ public class MeasureControllerMvcTest {
     saved.setModel(MODEL);
     saved.setEcqmTitle(ecqmTitle);
     saved.setVersionId(measureId);
-    when(measureService.createMeasure(any(Measure.class), anyString(), anyString()))
+    when(measureService.createMeasure(
+            any(Measure.class), anyString(), anyString(), any(Boolean.class)))
         .thenReturn(saved);
 
     final String measureAsJson =
@@ -543,7 +546,8 @@ public class MeasureControllerMvcTest {
         .andExpect(jsonPath("$.versionId").value(measureId));
 
     verify(measureService, times(1))
-        .createMeasure(measureArgumentCaptor.capture(), anyString(), anyString());
+        .createMeasure(
+            measureArgumentCaptor.capture(), anyString(), anyString(), any(Boolean.class));
     verifyNoMoreInteractions(measureRepository);
     Measure savedMeasure = measureArgumentCaptor.getValue();
     assertEquals(measureName, savedMeasure.getMeasureName());
@@ -567,7 +571,8 @@ public class MeasureControllerMvcTest {
     saved.setModel(ModelType.QDM_5_6.toString());
     saved.setEcqmTitle(ecqmTitle);
     saved.setVersionId(measureId);
-    when(measureService.createMeasure(any(Measure.class), anyString(), anyString()))
+    when(measureService.createMeasure(
+            any(Measure.class), anyString(), anyString(), any(Boolean.class)))
         .thenReturn(saved);
 
     final String measureAsJson =
@@ -602,7 +607,8 @@ public class MeasureControllerMvcTest {
     saved.setModel(ModelType.QDM_5_6.toString());
     saved.setEcqmTitle(ecqmTitle);
     saved.setVersionId(measureId);
-    when(measureService.createMeasure(any(Measure.class), anyString(), anyString()))
+    when(measureService.createMeasure(
+            any(Measure.class), anyString(), anyString(), any(Boolean.class)))
         .thenReturn(saved);
 
     final String measureAsJson =
@@ -633,7 +639,8 @@ public class MeasureControllerMvcTest {
         .andExpect(jsonPath("$.versionId").value(measureId));
 
     verify(measureService, times(1))
-        .createMeasure(measureArgumentCaptor.capture(), anyString(), anyString());
+        .createMeasure(
+            measureArgumentCaptor.capture(), anyString(), anyString(), any(Boolean.class));
     verifyNoMoreInteractions(measureRepository);
     Measure savedMeasure = measureArgumentCaptor.getValue();
     assertEquals(measureName, savedMeasure.getMeasureName());
@@ -1494,8 +1501,9 @@ public class MeasureControllerMvcTest {
     MvcResult result =
         mockMvc
             .perform(
-                get("/measures/search/measure")
+                get("/measures/search")
                     .with(user(TEST_USER_ID))
+                    .queryParam("query", "measure")
                     .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andReturn();
@@ -1525,8 +1533,9 @@ public class MeasureControllerMvcTest {
     MvcResult result =
         mockMvc
             .perform(
-                get("/measures/search/ecqm")
+                get("/measures/search")
                     .with(user(TEST_USER_ID))
+                    .queryParam("query", "ecqm")
                     .queryParam("currentUser", "false")
                     .queryParam("limit", "8")
                     .queryParam("page", "1")
@@ -1558,8 +1567,9 @@ public class MeasureControllerMvcTest {
     MvcResult result =
         mockMvc
             .perform(
-                get("/measures/search/measure")
+                get("/measures/search")
                     .with(user(TEST_USER_ID))
+                    .queryParam("query", "measure")
                     .queryParam("currentUser", "true")
                     .queryParam("limit", "8")
                     .queryParam("page", "1")
@@ -1669,5 +1679,24 @@ public class MeasureControllerMvcTest {
     assertEquals(2, persistedStratification.getAssociations().size());
     assertTrue(
         persistedStratification.getAssociations().contains(PopulationType.INITIAL_POPULATION));
+  }
+
+  @Test
+  void testGetLibraryUsage() throws Exception {
+    String libraryName = "Helper";
+    String owner = "john";
+    LibraryUsage libraryUsage = LibraryUsage.builder().name(libraryName).owner(owner).build();
+    when(measureService.findLibraryUsage(anyString())).thenReturn(List.of(libraryUsage));
+    MvcResult result =
+        mockMvc
+            .perform(
+                get("/measures/library/usage?libraryName=Test")
+                    .with(user(TEST_USER_ID))
+                    .with(csrf()))
+            .andReturn();
+    assertEquals(result.getResponse().getStatus(), HttpStatus.OK.value());
+    assertEquals(
+        result.getResponse().getContentAsString(),
+        "[{\"name\":\"Helper\",\"version\":null,\"owner\":\"john\"}]");
   }
 }
