@@ -244,6 +244,27 @@ public class MeasureService {
     return measureRepository.save(outputMeasure);
   }
 
+  public Measure deactivateMeasure(
+      final String measureId,
+      final String username,
+      final String accessToken) {
+    
+    final Measure existingMeasure = findMeasureById(measureId);
+
+    Measure outputMeasure = existingMeasure;
+    outputMeasure.setActive(false);
+    outputMeasure.setLastModifiedBy(username);
+    outputMeasure.setLastModifiedAt(Instant.now());
+    // prevent users from overwriting the createdAt/By
+    outputMeasure.setCreatedAt(existingMeasure.getCreatedAt());
+    outputMeasure.setCreatedBy(existingMeasure.getCreatedBy());
+    // prevent users from overwriting versionId and measureSetId
+    outputMeasure.setVersionId(existingMeasure.getVersionId());
+    outputMeasure.setMeasureSetId(existingMeasure.getMeasureSetId());
+    
+    return measureRepository.save(outputMeasure);
+  }
+
   private void updateMeasurementPeriods(Measure measure) {
     Date startDate = measure.getMeasurementPeriodStart();
     Instant startInstant =
