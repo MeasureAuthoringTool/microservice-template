@@ -163,6 +163,48 @@ public class MeasureController {
     return response;
   }
 
+  @PutMapping("/measures/{id}/delete")
+  public ResponseEntity<Measure> deactivateMeasure(
+      @PathVariable("id") String id,
+      @RequestBody Measure measure,
+      Principal principal,
+      @RequestHeader("Authorization") String accessToken) {
+    ResponseEntity<Measure> response;
+    final String username = principal.getName();
+    if (id == null || id.isEmpty() || !id.equals(measure.getId())) {
+      log.info("got invalid id [{}] vs measureId: [{}]", id, measure.getId());
+      throw new InvalidIdException("Measure", "Update (PUT)", "(PUT [base]/[resource]/[id])");
+    }
+
+    log.info("getMeasureId [{}]", id);
+
+    final Measure existingMeasure = measureService.findMeasureById(id);
+
+    if (existingMeasure != null) {
+      if (username != null && existingMeasure.getCreatedBy() != null) {
+        log.info("got username [{}] vs createdBy: [{}]", username, existingMeasure.getCreatedBy());
+        // shared user should be able to edit Measure but won’t have delete access, only owner can
+        // delete
+        if (!measure.isActive()) {
+          measureService.verifyAuthorization(username, measure, null);
+        }
+      }
+
+      response =
+          ResponseEntity.ok()
+              .body(measureService.deactivateMeasure(existingMeasure, username, accessToken));
+      if (!measure.isActive()) {
+        actionLogService.logAction(id, Measure.class, ActionType.DELETED, username);
+      } else {
+        actionLogService.logAction(id, Measure.class, ActionType.UPDATED, username);
+      }
+    } else {
+      throw new ResourceNotFoundException("Measure", id);
+    }
+
+    return response;
+  }
+
   @PutMapping("/measures/{id}/grant")
   @PreAuthorize("#request.getHeader('api-key') == #apiKey")
   public ResponseEntity<String> grantAccess(

@@ -265,13 +265,10 @@ public class MeasureService {
   }
 
   public Measure deactivateMeasure(
-      final String measureId,
-      final String username,
-      final String accessToken) {
-    
-    final Measure existingMeasure = findMeasureById(measureId);
+      final Measure existingMeasure, final String username, final String accessToken) {
 
-    Measure outputMeasure = existingMeasure;
+    final Measure outputMeasure = findMeasureById(existingMeasure.getId());
+
     outputMeasure.setActive(false);
     outputMeasure.setLastModifiedBy(username);
     outputMeasure.setLastModifiedAt(Instant.now());
@@ -281,7 +278,7 @@ public class MeasureService {
     // prevent users from overwriting versionId and measureSetId
     outputMeasure.setVersionId(existingMeasure.getVersionId());
     outputMeasure.setMeasureSetId(existingMeasure.getMeasureSetId());
-    
+
     return measureRepository.save(outputMeasure);
   }
 
