@@ -147,11 +147,9 @@ class ModelValidatorTest {
     assertTrue(validator instanceof QiCoreModelValidator);
     try {
       validator.validateGroupAssociations(group);
-      fail("Should fail because QICore strat association can't be null");
+      // Should no longer throw error
     } catch (InvalidGroupException e) {
-      assertEquals(
-          "QI-Core group stratifications should be associated to a valid population type.",
-          e.getMessage());
+      fail("Should not fail because QICore strat association can be null");
     }
   }
 
