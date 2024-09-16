@@ -83,7 +83,7 @@ public class RemoveQICoreMeasureGroupStratificationsChangeUnitTest {
   }
 
   @Test
-  public void testRemoveQICoreMeasureGroupStratifications_NoChange() throws Exception {
+  public void testRemoveQICoreMeasureGroupStratificationsNoChange() throws Exception {
     Measure measureWithoutGroups =
         Measure.builder()
             .id(UUID.randomUUID().toString())

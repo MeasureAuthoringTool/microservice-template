@@ -14,7 +14,9 @@ public class QiCoreModelValidator extends ModelValidator {
 
   // Groups no longer get validated based on association. Can have 0 to many
   @Override
-  public void validateGroupAssociations(Group group) {}
+  public void validateGroupAssociations(Group group) {
+    log.info("do nothing");
+  }
 
   @Override
   public void validateGroups(Measure measure) {
