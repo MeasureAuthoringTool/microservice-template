@@ -8,7 +8,9 @@ import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.*;
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
+import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureMetaData;
 import gov.cms.madie.models.measure.MeasureSet;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,11 +28,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -413,5 +411,137 @@ public class AdminControllerMvcTest {
                 .with(user(TEST_USER_ID))
                 .header("Authorization", "test-okta"))
         .andExpect(status().isForbidden());
+  }
+
+  @Test
+  public void testAdminMeasureChangeVersionThrowsWhenMeasureNotFound() throws Exception {
+    when(measureService.findMeasureById(anyString())).thenReturn(null);
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.put("/admin/measures/{id}", "12345")
+                .with(csrf())
+                .with(user(TEST_USER_ID))
+                .queryParam("correctVersion", "2.0.000")
+                .queryParam("draftVersion", "1.0.000")
+                .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
+                .header("Authorization", "test-okta"))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  public void testAdminMeasureChangeVersionThrowsIfAssociatedMeasureSetAlreadyHasDraft()
+      throws Exception {
+    Measure testMsr = Measure.builder().id("12345").measureSetId("ms-123").build();
+    when(measureService.findMeasureById(anyString()))
+        .thenReturn(Measure.builder().id("123456").measureSetId("ms-123").build());
+    doReturn(List.of(testMsr))
+        .when(measureRepository)
+        .findAllByMeasureSetIdInAndActiveAndMeasureMetaDataDraft(List.of("ms-123"), true, true);
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.put("/admin/measures/{id}", "12345")
+                .with(csrf())
+                .with(user(TEST_USER_ID))
+                .queryParam("correctVersion", "2.0.000")
+                .queryParam("draftVersion", "1.0.000")
+                .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
+                .header("Authorization", "test-okta"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  public void testAdminMeasureChangeVersionThrowsWhenDraftVersionIsGreaterThanCorrectVersion()
+      throws Exception {
+    when(measureService.findMeasureById(anyString()))
+        .thenReturn(Measure.builder().id("123456").measureSetId("ms-123").build());
+    doReturn(null)
+        .when(measureRepository)
+        .findAllByMeasureSetIdInAndActiveAndMeasureMetaDataDraft(List.of("ms-123"), true, true);
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.put("/admin/measures/{id}", "12345")
+                .with(csrf())
+                .with(user(TEST_USER_ID))
+                .queryParam("correctVersion", "2.0.000")
+                .queryParam("draftVersion", "3.0.000")
+                .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
+                .header("Authorization", "test-okta"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  public void testAdminMeasureChangeVersionThrowsWhenGivenVersionIsAlreadyAssociated()
+      throws Exception {
+    Version version = Version.builder().major(2).minor(0).revisionNumber(0).build();
+    Measure testMsr = Measure.builder().id("12345").measureSetId("ms-123").version(version).build();
+    when(measureService.findMeasureById(anyString()))
+        .thenReturn(Measure.builder().id("123456").measureSetId("ms-123").build());
+    doReturn(null)
+        .when(measureRepository)
+        .findAllByMeasureSetIdInAndActiveAndMeasureMetaDataDraft(List.of("ms-123"), true, true);
+    doReturn(List.of(testMsr))
+        .when(measureRepository)
+        .findAllByMeasureSetIdAndActive("ms-123", true);
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.put("/admin/measures/{id}", "12345")
+                .with(csrf())
+                .with(user(TEST_USER_ID))
+                .queryParam("correctVersion", "2.0.000")
+                .queryParam("draftVersion", "1.0.000")
+                .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
+                .header("Authorization", "test-okta"))
+        .andExpect(status().isConflict());
+  }
+
+  @Test
+  public void testAdminMeasureChangeVersionSuccessfully() throws Exception {
+    Version version = Version.builder().major(4).minor(2).revisionNumber(0).build();
+    Version version1 = Version.builder().major(3).minor(0).revisionNumber(0).build();
+    Measure testMsr =
+        Measure.builder()
+            .id("12345")
+            .measureSetId("ms-123")
+            .cql("library Test version '3.0.000'")
+            .cqlLibraryName("Test")
+            .version(version)
+            .build();
+    when(measureService.findMeasureById(anyString()))
+        .thenReturn(
+            Measure.builder()
+                .id("123456")
+                .measureSetId("ms-123")
+                .cql("library Test version '3.0.000'")
+                .cqlLibraryName("Test")
+                .version(version1)
+                .measureMetaData(MeasureMetaData.builder().draft(false).build())
+                .build());
+    doReturn(null)
+        .when(measureRepository)
+        .findAllByMeasureSetIdInAndActiveAndMeasureMetaDataDraft(List.of("ms-123"), true, true);
+    doReturn(List.of(testMsr))
+        .when(measureRepository)
+        .findAllByMeasureSetIdAndActive("ms-123", true);
+    when(versionService.generateLibraryContentLine(
+            "Test", Version.builder().major(3).minor(0).revisionNumber(0).build()))
+        .thenReturn("library Test version '3.0.000'");
+    when(versionService.generateLibraryContentLine(
+            "Test", Version.builder().major(1).minor(0).revisionNumber(0).build()))
+        .thenReturn("library Test version '1.0.000'");
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.put("/admin/measures/{id}", "12345")
+                .with(csrf())
+                .with(user(TEST_USER_ID))
+                .queryParam("correctVersion", "2.0.000")
+                .queryParam("draftVersion", "1.0.000")
+                .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
+                .header("Authorization", "test-okta"))
+        .andExpect(status().isOk());
   }
 }
