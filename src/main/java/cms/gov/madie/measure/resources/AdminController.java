@@ -178,11 +178,13 @@ public class AdminController {
       @Value("${admin-api-key}") String apiKey,
       Principal principal,
       @PathVariable String id,
+      @RequestParam String inCorrectVersion,
       @RequestParam String correctVersion,
       @RequestParam String draftVersion) {
 
     Measure measureToCorrectVersion = measureService.findMeasureById(id);
-    if (measureToCorrectVersion == null) {
+    if (measureToCorrectVersion == null
+        || !measureToCorrectVersion.getVersion().toString().equals(inCorrectVersion)) {
       throw new ResourceNotFoundException("Measure", id);
     }
 

@@ -424,9 +424,11 @@ public class AdminControllerMvcTest {
                 .with(user(TEST_USER_ID))
                 .queryParam("correctVersion", "2.0.000")
                 .queryParam("draftVersion", "1.0.000")
+                .queryParam("inCorrectVersion", "3.0.000")
                 .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
                 .header("Authorization", "test-okta"))
         .andExpect(status().isNotFound());
+    verify(measureService, times(1)).findMeasureById(anyString());
   }
 
   @Test
@@ -434,7 +436,12 @@ public class AdminControllerMvcTest {
       throws Exception {
     Measure testMsr = Measure.builder().id("12345").measureSetId("ms-123").build();
     when(measureService.findMeasureById(anyString()))
-        .thenReturn(Measure.builder().id("123456").measureSetId("ms-123").build());
+        .thenReturn(
+            Measure.builder()
+                .id("123456")
+                .measureSetId("ms-123")
+                .version(Version.builder().major(3).minor(0).revisionNumber(0).build())
+                .build());
     doReturn(List.of(testMsr))
         .when(measureRepository)
         .findAllByMeasureSetIdInAndActiveAndMeasureMetaDataDraft(List.of("ms-123"), true, true);
@@ -446,16 +453,23 @@ public class AdminControllerMvcTest {
                 .with(user(TEST_USER_ID))
                 .queryParam("correctVersion", "2.0.000")
                 .queryParam("draftVersion", "1.0.000")
+                .queryParam("inCorrectVersion", "3.0.000")
                 .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
                 .header("Authorization", "test-okta"))
         .andExpect(status().isBadRequest());
+    verify(measureService, times(1)).findMeasureById(anyString());
   }
 
   @Test
   public void testAdminMeasureChangeVersionThrowsWhenDraftVersionIsGreaterThanCorrectVersion()
       throws Exception {
     when(measureService.findMeasureById(anyString()))
-        .thenReturn(Measure.builder().id("123456").measureSetId("ms-123").build());
+        .thenReturn(
+            Measure.builder()
+                .id("123456")
+                .measureSetId("ms-123")
+                .version(Version.builder().major(3).minor(0).revisionNumber(0).build())
+                .build());
     doReturn(null)
         .when(measureRepository)
         .findAllByMeasureSetIdInAndActiveAndMeasureMetaDataDraft(List.of("ms-123"), true, true);
@@ -467,9 +481,12 @@ public class AdminControllerMvcTest {
                 .with(user(TEST_USER_ID))
                 .queryParam("correctVersion", "2.0.000")
                 .queryParam("draftVersion", "3.0.000")
+                .queryParam("inCorrectVersion", "3.0.000")
                 .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
                 .header("Authorization", "test-okta"))
         .andExpect(status().isBadRequest());
+
+    verify(measureService, times(1)).findMeasureById(anyString());
   }
 
   @Test
@@ -478,7 +495,12 @@ public class AdminControllerMvcTest {
     Version version = Version.builder().major(2).minor(0).revisionNumber(0).build();
     Measure testMsr = Measure.builder().id("12345").measureSetId("ms-123").version(version).build();
     when(measureService.findMeasureById(anyString()))
-        .thenReturn(Measure.builder().id("123456").measureSetId("ms-123").build());
+        .thenReturn(
+            Measure.builder()
+                .id("123456")
+                .measureSetId("ms-123")
+                .version(Version.builder().major(3).minor(0).revisionNumber(0).build())
+                .build());
     doReturn(null)
         .when(measureRepository)
         .findAllByMeasureSetIdInAndActiveAndMeasureMetaDataDraft(List.of("ms-123"), true, true);
@@ -493,9 +515,12 @@ public class AdminControllerMvcTest {
                 .with(user(TEST_USER_ID))
                 .queryParam("correctVersion", "2.0.000")
                 .queryParam("draftVersion", "1.0.000")
+                .queryParam("inCorrectVersion", "3.0.000")
                 .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
                 .header("Authorization", "test-okta"))
         .andExpect(status().isConflict());
+    verify(measureRepository, times(1))
+        .findAllByMeasureSetIdInAndActiveAndMeasureMetaDataDraft(List.of("ms-123"), true, true);
   }
 
   @Test
@@ -540,8 +565,13 @@ public class AdminControllerMvcTest {
                 .with(user(TEST_USER_ID))
                 .queryParam("correctVersion", "2.0.000")
                 .queryParam("draftVersion", "1.0.000")
+                .queryParam("inCorrectVersion", "3.0.000")
                 .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
                 .header("Authorization", "test-okta"))
         .andExpect(status().isOk());
+
+    verify(measureRepository, times(1))
+        .findAllByMeasureSetIdInAndActiveAndMeasureMetaDataDraft(List.of("ms-123"), true, true);
+    verify(measureRepository, times(1)).findAllByMeasureSetIdAndActive("ms-123", true);
   }
 }
