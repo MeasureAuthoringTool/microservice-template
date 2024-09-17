@@ -4,10 +4,13 @@ import cms.gov.madie.measure.SecurityConfig;
 import cms.gov.madie.measure.dto.JobStatus;
 import cms.gov.madie.measure.dto.MeasureTestCaseValidationReport;
 import cms.gov.madie.measure.dto.TestCaseValidationReport;
+import cms.gov.madie.measure.repositories.CqmMeasureRepository;
+import cms.gov.madie.measure.repositories.ExportRepository;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.services.*;
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
+import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureMetaData;
@@ -49,6 +52,8 @@ public class AdminControllerMvcTest {
   @MockBean private VersionService versionService;
 
   @MockBean private MeasureRepository measureRepository;
+  @MockBean private ExportRepository exportRepository;
+  @MockBean private CqmMeasureRepository cqmMeasureRepository;
 
   @Autowired private MockMvc mockMvc;
 
@@ -533,6 +538,7 @@ public class AdminControllerMvcTest {
             .measureSetId("ms-123")
             .cql("library Test version '3.0.000'")
             .cqlLibraryName("Test")
+            .model(ModelType.QDM_5_6.getValue())
             .version(version)
             .build();
     when(measureService.findMeasureById(anyString()))
@@ -544,6 +550,7 @@ public class AdminControllerMvcTest {
                 .cqlLibraryName("Test")
                 .version(version1)
                 .measureMetaData(MeasureMetaData.builder().draft(false).build())
+                .model(ModelType.QDM_5_6.getValue())
                 .build());
     doReturn(null)
         .when(measureRepository)

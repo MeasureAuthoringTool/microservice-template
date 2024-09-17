@@ -11,8 +11,13 @@ import java.util.concurrent.Future;
 import cms.gov.madie.measure.exceptions.InvalidRequestException;
 import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
 import cms.gov.madie.measure.exceptions.MeasureNotDraftableException;
+import cms.gov.madie.measure.repositories.CqmMeasureRepository;
+import cms.gov.madie.measure.repositories.ExportRepository;
 import cms.gov.madie.measure.services.*;
+import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.common.Version;
+import gov.cms.madie.models.cqm.CqmMeasure;
+import gov.cms.madie.models.measure.Export;
 import org.apache.commons.collections4.CollectionUtils;
 import org.codehaus.plexus.util.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,6 +58,8 @@ public class AdminController {
   private final VersionService versionService;
 
   private final MeasureRepository measureRepository;
+  private final ExportRepository exportRepository;
+  private final CqmMeasureRepository cqmMeasureRepository;
 
   @Value("${madie.admin.concurrency-limit}")
   private int concurrencyLimit;
@@ -182,6 +189,10 @@ public class AdminController {
       @RequestParam String correctVersion,
       @RequestParam String draftVersion) {
 
+    // can version number be anything : eg: 430.0.001 or does it have to follow rules (like it
+    // should be draft of measureSetId)
+    // clear: for qdm: cqmMeasure, export, for qiCore: export
+
     Measure measureToCorrectVersion = measureService.findMeasureById(id);
     if (measureToCorrectVersion == null
         || !measureToCorrectVersion.getVersion().toString().equals(inCorrectVersion)) {
@@ -200,7 +211,7 @@ public class AdminController {
 
     // check if the draftVersion is less that correctVersion
     if (!isLessThan(correctVersion, draftVersion)) {
-      throw new InvalidRequestException("Draft version cannot be less than correct version");
+      throw new InvalidRequestException("Draft version should be always less than correct version");
     }
 
     // check if the given version is already associated
@@ -221,9 +232,26 @@ public class AdminController {
                     measureToCorrectVersion.getVersion()),
                 versionService.generateLibraryContentLine(
                     measureToCorrectVersion.getCqlLibraryName(), newDraftVersion));
+
     measureToCorrectVersion.setCql(newCql);
     measureToCorrectVersion.setVersion(newDraftVersion);
     measureToCorrectVersion.getMeasureMetaData().setDraft(true);
+
+    // QI-Core measure: delete the export
+    // QDM Measures: delete the export and cqmMeasure
+    Export export = exportRepository.findByMeasureId(id).orElse(null);
+    if (export != null) {
+      exportRepository.delete(export);
+    }
+
+    if (ModelType.QDM_5_6.getValue().equals(measureToCorrectVersion.getModel())) {
+      CqmMeasure cqmMeasure =
+          cqmMeasureRepository.findByHqmfSetIdAndHqmfVersionNumber(
+              measureToCorrectVersion.getMeasureSetId(), measureToCorrectVersion.getVersionId());
+      if (cqmMeasure != null) {
+        cqmMeasureRepository.delete(cqmMeasure);
+      }
+    }
 
     Measure correctedVersionMeasure = measureRepository.save(measureToCorrectVersion);
     actionLogService.logAction(id, Measure.class, ActionType.UPDATED, principal.getName());
