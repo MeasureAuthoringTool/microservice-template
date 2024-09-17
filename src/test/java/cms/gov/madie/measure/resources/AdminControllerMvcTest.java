@@ -5,10 +5,7 @@ import cms.gov.madie.measure.dto.JobStatus;
 import cms.gov.madie.measure.dto.MeasureTestCaseValidationReport;
 import cms.gov.madie.measure.dto.TestCaseValidationReport;
 import cms.gov.madie.measure.repositories.MeasureRepository;
-import cms.gov.madie.measure.services.ActionLogService;
-import cms.gov.madie.measure.services.MeasureService;
-import cms.gov.madie.measure.services.MeasureSetService;
-import cms.gov.madie.measure.services.TestCaseService;
+import cms.gov.madie.measure.services.*;
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.measure.Measure;
@@ -51,6 +48,7 @@ public class AdminControllerMvcTest {
   @MockBean private MeasureSetService measureSetService;
   @MockBean private TestCaseService testCaseService;
   @MockBean private ActionLogService actionLogService;
+  @MockBean private VersionService versionService;
 
   @MockBean private MeasureRepository measureRepository;
 
