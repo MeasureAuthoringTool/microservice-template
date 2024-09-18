@@ -151,7 +151,9 @@ public class MeasureVersionControllerTest {
   public void testCreateDraftSuccessfully() {
     when(principal.getName()).thenReturn("testUser");
     measure.setMeasureName("Test");
-    when(versionService.createDraft(anyString(), anyString(), anyString())).thenReturn(measure);
+    measure.setModel("QI-Core v4.1.1");
+    when(versionService.createDraft(anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(measure);
 
     ResponseEntity<Measure> entity = measureVersionController.createDraft("12", measure, principal);
     assertThat(entity.getStatusCode(), is(HttpStatus.CREATED));

@@ -626,7 +626,8 @@ public class VersionServiceTest {
     when(measureRepository.save(any(Measure.class))).thenReturn(versionedCopy);
     when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
 
-    Measure draft = versionService.createDraft(versionedMeasure.getId(), "Test", "test-user");
+    Measure draft =
+        versionService.createDraft(versionedMeasure.getId(), "Test", "QI-Core v4.1.1", "test-user");
 
     assertThat(draft.getMeasureName(), is(equalTo("Test")));
     // draft flag to true
@@ -678,7 +679,8 @@ public class VersionServiceTest {
     when(measureRepository.save(any(Measure.class))).thenReturn(versionedCopy);
     when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
 
-    Measure draft = versionService.createDraft(versionedMeasure.getId(), "Test", "test-user");
+    Measure draft =
+        versionService.createDraft(versionedMeasure.getId(), "Test", "QI-Core v4.1.1", "test-user");
 
     assertThat(draft.getMeasureName(), is(equalTo("Test")));
     // draft flag to true
@@ -698,7 +700,7 @@ public class VersionServiceTest {
     Exception ex =
         assertThrows(
             ResourceNotFoundException.class,
-            () -> versionService.createDraft(measureId, "Test", "test-user"));
+            () -> versionService.createDraft(measureId, "Test", "QI-Core v4.1.1", "test-user"));
     assertThat(ex.getMessage(), is(equalTo("Could not find Measure with id: " + measureId)));
   }
 
@@ -714,7 +716,7 @@ public class VersionServiceTest {
     Exception ex =
         assertThrows(
             UnauthorizedException.class,
-            () -> versionService.createDraft(measure.getId(), "Test", user));
+            () -> versionService.createDraft(measure.getId(), "Test", "QI-Core v4.1.1", user));
     assertThat(
         ex.getMessage(), is(equalTo("User " + user + " is not authorized for Measure with ID 1")));
   }
@@ -730,7 +732,8 @@ public class VersionServiceTest {
     Exception ex =
         assertThrows(
             MeasureNotDraftableException.class,
-            () -> versionService.createDraft(measure.getId(), "Test", "test-user"));
+            () ->
+                versionService.createDraft(measure.getId(), "Test", "QI-Core v4.1.1", "test-user"));
     assertThat(
         ex.getMessage(),
         is(
