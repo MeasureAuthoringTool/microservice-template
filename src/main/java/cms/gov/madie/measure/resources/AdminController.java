@@ -237,6 +237,14 @@ public class AdminController {
     measureToCorrectVersion.setVersion(newDraftVersion);
     measureToCorrectVersion.getMeasureMetaData().setDraft(true);
 
+    deleteRelevantPackageData(id, measureToCorrectVersion);
+
+    Measure correctedVersionMeasure = measureRepository.save(measureToCorrectVersion);
+    actionLogService.logAction(id, Measure.class, ActionType.UPDATED, principal.getName());
+    return ResponseEntity.ok(correctedVersionMeasure);
+  }
+
+  private void deleteRelevantPackageData(String id, Measure measureToCorrectVersion) {
     // QI-Core measure: delete the export
     // QDM Measures: delete the export and cqmMeasure
     Export export = exportRepository.findByMeasureId(id).orElse(null);
@@ -252,10 +260,6 @@ public class AdminController {
         cqmMeasureRepository.delete(cqmMeasure);
       }
     }
-
-    Measure correctedVersionMeasure = measureRepository.save(measureToCorrectVersion);
-    actionLogService.logAction(id, Measure.class, ActionType.UPDATED, principal.getName());
-    return ResponseEntity.ok(correctedVersionMeasure);
   }
 
   private boolean checkIfVersionIsAlreadyAssociated(
