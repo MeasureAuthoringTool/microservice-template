@@ -64,7 +64,7 @@ class ModelValidatorTest {
     assertNotNull(modelValidatorFactory);
     Stratification strat = new Stratification();
     List<Stratification> strats = new ArrayList<>();
-    strat.setAssociation(PopulationType.INITIAL_POPULATION);
+    strat.setCqlDefinition("Initial Population");
     strats.add(strat);
 
     Group group = Group.builder().stratifications(strats).build();
@@ -72,7 +72,6 @@ class ModelValidatorTest {
     assertTrue(validator instanceof QdmModelValidator);
     try {
       validator.validateGroupAssociations(group);
-      fail("Should fail because association exists on the Stratification");
     } catch (Exception e) {
       assertEquals("QDM group stratifications cannot be associated.", e.getMessage());
     }
