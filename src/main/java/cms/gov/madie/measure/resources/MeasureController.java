@@ -167,29 +167,14 @@ public class MeasureController {
   @DeleteMapping("/measures/{id}/delete")
   public ResponseEntity<Measure> deactivateMeasure(
       @PathVariable("id") String id, Principal principal) {
-    ResponseEntity<Measure> response;
-    final Measure measure = measureService.findMeasureById(id);
-    final String username = principal.getName();
     if (!StringUtils.hasLength(id)) {
       log.info("Invalid measure id: " + id);
       throw new InvalidIdException("Measure", "Update (PUT)", "(PUT [base]/[resource]/[id])");
     }
-    log.info("getMeasureId [{}]", id);
-    if (measure != null && measure.getMeasureMetaData().isDraft()) {
-      if (measure.isActive()) {
-        measureService.verifyAuthorization(username, measure);
-      } else {
-        throw new InvalidDraftStatusException(id);
-      }
-
-      response = ResponseEntity.ok().body(measureService.deactivateMeasure(measure, username));
-      actionLogService.logAction(id, Measure.class, ActionType.DELETED, username);
-
-    } else {
-      throw new ResourceNotFoundException("Measure", id);
-    }
-
-    return response;
+    return ResponseEntity.ok()
+        .body(
+            measureService.deactivateMeasure(
+                measureService.findMeasureById(id), principal.getName()));
   }
 
   @PutMapping("/measures/{id}/grant")
