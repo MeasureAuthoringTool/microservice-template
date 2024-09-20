@@ -85,7 +85,6 @@ public class MeasureService {
       throw new InvalidMeasureStateException(
           "No measure set exists for measure with ID " + measure.getId());
     }
-
     verifyMeasureSetAuthorization(username, "Measure", measure.getId(), roles, measureSet);
   }
 
@@ -264,22 +263,19 @@ public class MeasureService {
     return measureRepository.save(outputMeasure);
   }
 
-  public Measure deactivateMeasure(
-      final Measure existingMeasure, final String username, final String accessToken) {
+  public Measure deactivateMeasure(final Measure existingMeasure, final String username) {
 
-    final Measure outputMeasure = findMeasureById(existingMeasure.getId());
-
-    outputMeasure.setActive(false);
-    outputMeasure.setLastModifiedBy(username);
-    outputMeasure.setLastModifiedAt(Instant.now());
+    existingMeasure.setActive(false);
+    existingMeasure.setLastModifiedBy(username);
+    existingMeasure.setLastModifiedAt(Instant.now());
     // prevent users from overwriting the createdAt/By
-    outputMeasure.setCreatedAt(existingMeasure.getCreatedAt());
-    outputMeasure.setCreatedBy(existingMeasure.getCreatedBy());
+    existingMeasure.setCreatedAt(existingMeasure.getCreatedAt());
+    existingMeasure.setCreatedBy(existingMeasure.getCreatedBy());
     // prevent users from overwriting versionId and measureSetId
-    outputMeasure.setVersionId(existingMeasure.getVersionId());
-    outputMeasure.setMeasureSetId(existingMeasure.getMeasureSetId());
+    existingMeasure.setVersionId(existingMeasure.getVersionId());
+    existingMeasure.setMeasureSetId(existingMeasure.getMeasureSetId());
 
-    return measureRepository.save(outputMeasure);
+    return measureRepository.save(existingMeasure);
   }
 
   private void updateMeasurementPeriods(Measure measure) {

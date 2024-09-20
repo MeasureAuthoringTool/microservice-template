@@ -22,6 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -163,41 +164,27 @@ public class MeasureController {
     return response;
   }
 
-  @PutMapping("/measures/{id}/delete")
+  @DeleteMapping("/measures/{id}/delete")
   public ResponseEntity<Measure> deactivateMeasure(
-      @PathVariable("id") String id,
-      @RequestBody Measure measure,
-      Principal principal,
-      @RequestHeader("Authorization") String accessToken) {
+      @PathVariable("id") String id, Principal principal) {
     ResponseEntity<Measure> response;
+    final Measure measure = measureService.findMeasureById(id);
     final String username = principal.getName();
-    if (id == null || id.isEmpty() || !id.equals(measure.getId())) {
-      log.info("got invalid id [{}] vs measureId: [{}]", id, measure.getId());
+    if (!StringUtils.hasLength(id)) {
+      log.info("Invalid measure id: " + id);
       throw new InvalidIdException("Measure", "Update (PUT)", "(PUT [base]/[resource]/[id])");
     }
-
     log.info("getMeasureId [{}]", id);
-
-    final Measure existingMeasure = measureService.findMeasureById(id);
-
-    if (existingMeasure != null) {
-      if (username != null && existingMeasure.getCreatedBy() != null) {
-        log.info("got username [{}] vs createdBy: [{}]", username, existingMeasure.getCreatedBy());
-        // shared user should be able to edit Measure but won’t have delete access, only owner can
-        // delete
-        if (!measure.isActive()) {
-          measureService.verifyAuthorization(username, measure, null);
-        }
-      }
-
-      response =
-          ResponseEntity.ok()
-              .body(measureService.deactivateMeasure(existingMeasure, username, accessToken));
-      if (!measure.isActive()) {
-        actionLogService.logAction(id, Measure.class, ActionType.DELETED, username);
+    if (measure != null && measure.getMeasureMetaData().isDraft()) {
+      if (measure.isActive()) {
+        measureService.verifyAuthorization(username, measure);
       } else {
-        actionLogService.logAction(id, Measure.class, ActionType.UPDATED, username);
+        throw new InvalidDraftStatusException(id);
       }
+
+      response = ResponseEntity.ok().body(measureService.deactivateMeasure(measure, username));
+      actionLogService.logAction(id, Measure.class, ActionType.DELETED, username);
+
     } else {
       throw new ResourceNotFoundException("Measure", id);
     }
