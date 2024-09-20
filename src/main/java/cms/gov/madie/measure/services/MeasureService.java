@@ -265,7 +265,6 @@ public class MeasureService {
 
   public Measure deactivateMeasure(final Measure existingMeasure, final String username) {
     final String id = existingMeasure.getId();
-    log.info("getMeasureId [{}]", id);
     if (existingMeasure != null && existingMeasure.getMeasureMetaData().isDraft()) {
       if (existingMeasure.isActive()) {
         verifyAuthorization(username, existingMeasure);
