@@ -264,6 +264,20 @@ public class MeasureService {
   }
 
   public Measure deactivateMeasure(final Measure existingMeasure, final String username) {
+    final String id = existingMeasure.getId();
+    log.info("getMeasureId [{}]", id);
+    if (existingMeasure != null && existingMeasure.getMeasureMetaData().isDraft()) {
+      if (existingMeasure.isActive()) {
+        verifyAuthorization(username, existingMeasure);
+      } else {
+        throw new InvalidDraftStatusException(id);
+      }
+
+      actionLogService.logAction(id, Measure.class, ActionType.DELETED, username);
+
+    } else {
+      throw new ResourceNotFoundException("Measure", id);
+    }
 
     existingMeasure.setActive(false);
     existingMeasure.setLastModifiedBy(username);
