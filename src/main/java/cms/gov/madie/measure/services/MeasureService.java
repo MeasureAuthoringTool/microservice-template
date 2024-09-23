@@ -265,8 +265,9 @@ public class MeasureService {
 
   public Measure deactivateMeasure(final String id, final String username) {
     if (StringUtils.isBlank(id)) {
-      log.info("Invalid measure id: " + id);
-      throw new InvalidIdException("Measure", "Delete (DELETE)", "(DELETE [base]/[resource]/[id])");
+      String message = "Invalid measure id: " + id;
+      log.error(message);
+      throw new InvalidIdException(message);
     }
     final Measure existingMeasure = findMeasureById(id);
     if (existingMeasure != null && existingMeasure.getMeasureMetaData().isDraft()) {
