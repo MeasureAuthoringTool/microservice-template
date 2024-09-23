@@ -13,6 +13,7 @@ import gov.cms.madie.models.dto.LibraryUsage;
 import gov.cms.madie.models.measure.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -161,6 +162,13 @@ public class MeasureController {
     }
 
     return response;
+  }
+
+  @DeleteMapping("/measures/{id}/delete")
+  public ResponseEntity<Measure> deactivateMeasure(
+      @PathVariable("id") String id, Principal principal) {
+
+    return ResponseEntity.ok().body(measureService.deactivateMeasure(id, principal.getName()));
   }
 
   @PutMapping("/measures/{id}/grant")
