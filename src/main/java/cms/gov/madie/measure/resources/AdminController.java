@@ -188,11 +188,6 @@ public class AdminController {
       @RequestParam String inCorrectVersion,
       @RequestParam String correctVersion,
       @RequestParam String draftVersion) {
-
-    // can version number be anything : eg: 430.0.001 or does it have to follow rules (like it
-    // should be draft of measureSetId)
-    // clear: for qdm: cqmMeasure, export, for qiCore: export
-
     Measure measureToCorrectVersion = measureService.findMeasureById(id);
     if (measureToCorrectVersion == null
         || !measureToCorrectVersion.getVersion().toString().equals(inCorrectVersion)) {
@@ -209,7 +204,7 @@ public class AdminController {
       throw new MeasureNotDraftableException(measureToCorrectVersion.getId());
     }
 
-    // check if the draftVersion is less that correctVersion
+    // check if the draftVersion is less than correctVersion
     if (!isLessThan(correctVersion, draftVersion)) {
       throw new InvalidRequestException("Draft version should be always less than correct version");
     }
