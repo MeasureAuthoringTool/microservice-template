@@ -175,7 +175,7 @@ public class VersionService {
     return measure;
   }
 
-  public Measure createDraft(String id, String measureName, String username) {
+  public Measure createDraft(String id, String measureName, String model, String username) {
     Measure measure =
         measureRepository
             .findById(id)
@@ -189,6 +189,7 @@ public class VersionService {
     measureDraft.setId(null);
     measureDraft.setVersionId(UUID.randomUUID().toString());
     measureDraft.setMeasureName(measureName);
+    measureDraft.setModel(model);
     measureDraft.getMeasureMetaData().setDraft(true);
     measureDraft.setGroups(cloneMeasureGroups(measure.getGroups()));
     measureDraft.setTestCases(cloneTestCases(measure.getTestCases(), measureDraft.getGroups()));

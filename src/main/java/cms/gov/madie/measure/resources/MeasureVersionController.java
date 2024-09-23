@@ -62,7 +62,9 @@ public class MeasureVersionController {
     if (StringUtils.isBlank(measure.getMeasureName())) {
       throw new InvalidIdException("Measure name is required.");
     }
-    var output = versionService.createDraft(id, measure.getMeasureName(), principal.getName());
+    var output =
+        versionService.createDraft(
+            id, measure.getMeasureName(), measure.getModel(), principal.getName());
     return ResponseEntity.status(HttpStatus.CREATED).body(output);
   }
 }

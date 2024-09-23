@@ -143,7 +143,8 @@ public class MeasureVersionControllerMvcTest {
     Measure measure =
         Measure.builder().id("testMeasureId").createdBy("testUser").model("QI-Core v4.1.1").build();
     measure.setMeasureName("Test");
-    when(versionService.createDraft(anyString(), anyString(), anyString())).thenReturn(measure);
+    when(versionService.createDraft(anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(measure);
 
     mockMvc
         .perform(
@@ -156,7 +157,8 @@ public class MeasureVersionControllerMvcTest {
         .andExpect(status().isCreated())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE));
 
-    verify(versionService, times(1)).createDraft(eq("testMeasureId"), eq("Test"), eq(TEST_USER_ID));
+    verify(versionService, times(1))
+        .createDraft(eq("testMeasureId"), eq("Test"), eq("QI-Core v4.1.1"), eq(TEST_USER_ID));
   }
 
   @Test
@@ -179,7 +181,7 @@ public class MeasureVersionControllerMvcTest {
 
   @Test
   public void testCreateDraftWhenMeasureNotDraftable() throws Exception {
-    when(versionService.createDraft(anyString(), anyString(), anyString()))
+    when(versionService.createDraft(anyString(), anyString(), anyString(), anyString()))
         .thenThrow(new MeasureNotDraftableException("Test"));
     MvcResult result =
         mockMvc
