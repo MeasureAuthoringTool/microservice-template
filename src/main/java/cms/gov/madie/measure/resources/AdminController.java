@@ -191,7 +191,11 @@ public class AdminController {
     Measure measureToCorrectVersion = measureService.findMeasureById(id);
     if (measureToCorrectVersion == null
         || !measureToCorrectVersion.getVersion().toString().equals(inCorrectVersion)) {
-      throw new ResourceNotFoundException("Measure", id);
+      String error =
+          String.format(
+              "Could not find Measure with id of %s and / or a version of %s",
+              id, inCorrectVersion);
+      throw new ResourceNotFoundException(error);
     }
 
     // check if the associated measure set already has a draft
