@@ -2,12 +2,16 @@ package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.exceptions.InvalidGroupException;
 import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
+import org.apache.commons.lang3.StringUtils;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.QdmMeasure;
+import gov.cms.madie.models.measure.Stratification;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+
+import java.util.List;
 
 @Slf4j
 @Service(ServiceConstants.QDM_VALIDATOR)
@@ -15,13 +19,17 @@ public class QdmModelValidator extends ModelValidator {
 
   @Override
   public void validateGroupAssociations(Group group) {
-    boolean isAssociated;
-
-    isAssociated =
-        group.getStratifications().stream().anyMatch(map -> map.getAssociation() != null);
-
-    if (isAssociated) {
-      throw new InvalidGroupException("QDM group stratifications cannot be associated.");
+    if (group.getStratifications() != null) {
+      List<Stratification> list =
+          group.getStratifications().stream()
+              .filter(
+                  test ->
+                      (StringUtils.isBlank(test.getCqlDefinition()))
+                          && (!StringUtils.isBlank(test.getDescription())))
+              .toList();
+      if (!CollectionUtils.isEmpty(list)) {
+        throw new InvalidGroupException("QDM group stratifications cannot be associated.");
+      }
     }
   }
 
