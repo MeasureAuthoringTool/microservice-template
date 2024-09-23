@@ -14,7 +14,6 @@ import gov.cms.madie.models.measure.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -168,14 +167,8 @@ public class MeasureController {
   @DeleteMapping("/measures/{id}/delete")
   public ResponseEntity<Measure> deactivateMeasure(
       @PathVariable("id") String id, Principal principal) {
-    if (StringUtils.isBlank(id)) {
-      log.info("Invalid measure id: " + id);
-      throw new InvalidIdException("Measure", "Delete (DELETE)", "(DELETE [base]/[resource]/[id])");
-    }
-    return ResponseEntity.ok()
-        .body(
-            measureService.deactivateMeasure(
-                measureService.findMeasureById(id), principal.getName()));
+
+    return ResponseEntity.ok().body(measureService.deactivateMeasure(id, principal.getName()));
   }
 
   @PutMapping("/measures/{id}/grant")
