@@ -85,7 +85,6 @@ public class MeasureService {
       throw new InvalidMeasureStateException(
           "No measure set exists for measure with ID " + measure.getId());
     }
-
     verifyMeasureSetAuthorization(username, "Measure", measure.getId(), roles, measureSet);
   }
 
@@ -262,6 +261,38 @@ public class MeasureService {
     outputMeasure.setVersionId(existingMeasure.getVersionId());
     outputMeasure.setMeasureSetId(existingMeasure.getMeasureSetId());
     return measureRepository.save(outputMeasure);
+  }
+
+  public Measure deactivateMeasure(final String id, final String username) {
+    if (StringUtils.isBlank(id)) {
+      String message = "Invalid measure id: " + id;
+      log.error(message);
+      throw new InvalidIdException(message);
+    }
+    final Measure existingMeasure = findMeasureById(id);
+    if (existingMeasure != null && existingMeasure.getMeasureMetaData().isDraft()) {
+      if (existingMeasure.isActive()) {
+        verifyAuthorization(username, existingMeasure);
+      } else {
+        throw new InvalidDraftStatusException(id);
+      }
+
+    } else {
+      throw new ResourceNotFoundException("Measure not found during delete action.");
+    }
+
+    existingMeasure.setActive(false);
+    existingMeasure.setLastModifiedBy(username);
+    existingMeasure.setLastModifiedAt(Instant.now());
+    // prevent users from overwriting the createdAt/By
+    existingMeasure.setCreatedAt(existingMeasure.getCreatedAt());
+    existingMeasure.setCreatedBy(existingMeasure.getCreatedBy());
+    // prevent users from overwriting versionId and measureSetId
+    existingMeasure.setVersionId(existingMeasure.getVersionId());
+    existingMeasure.setMeasureSetId(existingMeasure.getMeasureSetId());
+    Measure saveMeasure = measureRepository.save(existingMeasure);
+    actionLogService.logAction(id, Measure.class, ActionType.DELETED, username);
+    return saveMeasure;
   }
 
   private void updateMeasurementPeriods(Measure measure) {
