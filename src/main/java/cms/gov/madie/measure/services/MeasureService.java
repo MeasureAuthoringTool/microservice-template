@@ -264,8 +264,8 @@ public class MeasureService {
   }
 
   public Measure deactivateMeasure(final Measure existingMeasure, final String username) {
-    final String id = existingMeasure.getId();
     if (existingMeasure != null && existingMeasure.getMeasureMetaData().isDraft()) {
+      final String id = existingMeasure.getId();
       if (existingMeasure.isActive()) {
         verifyAuthorization(username, existingMeasure);
       } else {
@@ -275,7 +275,7 @@ public class MeasureService {
       actionLogService.logAction(id, Measure.class, ActionType.DELETED, username);
 
     } else {
-      throw new ResourceNotFoundException("Measure", id);
+      throw new ResourceNotFoundException("Measure not found during delete action.");
     }
 
     existingMeasure.setActive(false);
