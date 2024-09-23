@@ -170,12 +170,13 @@ public class MeasureControllerMvcTest {
     String measureId = "f225481c-921e-4015-9e14-e5046bfac9ff";
     String measureName = "TestMeasure";
     Organization steward =
-        Organization.builder().name("d0cc18ce-63fd-4b94-b713-c1d9fd6b2329").build();
+        Organization.builder().id("d0cc18ce-63fd-4b94-b713-c1d9fd6b2329").name("ICF").build();
     String description = "TestDescription";
     String copyright = "TestCopyright";
     String disclaimer = "TestDisclaimer";
     String rationale = "TestRationale";
-    List<Organization> developers = List.of(Organization.builder().name("TestDeveloper").build());
+    List<Organization> developers =
+        List.of(Organization.builder().id("12-34-45").name("TestDeveloper").build());
     String guidance = "TestGuidance";
     String libName = "TestLib";
     String ecqmTitle = "ecqmTitle";
@@ -254,12 +255,13 @@ public class MeasureControllerMvcTest {
     String measureId = "f225481c-921e-4015-9e14-e5046bfac9ff";
     String measureName = "TestMeasure";
     Organization steward =
-        Organization.builder().name("d0cc18ce-63fd-4b94-b713-c1d9fd6b2329").build();
+        Organization.builder().id("d0cc18ce-63fd-4b94-b713-c1d9fd6b2329").name("ICF").build();
     String description = "TestDescription";
     String copyright = "TestCopyright";
     String disclaimer = "TestDisclaimer";
     String rationale = "TestRationale";
-    List<Organization> developers = List.of(Organization.builder().name("TestDeveloper").build());
+    List<Organization> developers =
+        List.of(Organization.builder().id("12-34-45").name("TestDeveloper").build());
     String guidance = "TestGuidance";
     String libName = "TestLib";
     String ecqmTitle = "ecqmTitle";
