@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.dto.JobStatus;
+import cms.gov.madie.measure.dto.MadieFeatureFlag;
 import cms.gov.madie.measure.dto.MeasureTestCaseValidationReport;
 import cms.gov.madie.measure.dto.TestCaseValidationReport;
 import gov.cms.madie.models.common.ActionType;
@@ -57,6 +58,8 @@ public class TestCaseService {
   private FhirServicesClient fhirServicesClient;
   private ObjectMapper mapper;
   private MeasureService measureService;
+  private TestCaseSequenceService sequenceService;
+  private AppConfigService appConfigService;
 
   @Value("${madie.json.resources.base-uri}")
   @Getter
@@ -71,15 +74,19 @@ public class TestCaseService {
       ActionLogService actionLogService,
       FhirServicesClient fhirServicesClient,
       ObjectMapper mapper,
-      MeasureService measureService) {
+      MeasureService measureService,
+      TestCaseSequenceService sequenceService,
+      AppConfigService appConfigService) {
     this.measureRepository = measureRepository;
     this.actionLogService = actionLogService;
     this.fhirServicesClient = fhirServicesClient;
     this.mapper = mapper;
     this.measureService = measureService;
+    this.sequenceService = sequenceService;
+    this.appConfigService = appConfigService;
   }
 
-  protected TestCase enrichNewTestCase(TestCase testCase, String username) {
+  protected TestCase enrichNewTestCase(TestCase testCase, String username, String measureId) {
     final TestCase enrichedTestCase = testCase.toBuilder().build();
     Instant now = Instant.now();
     enrichedTestCase.setId(ObjectId.get().toString());
@@ -91,6 +98,9 @@ public class TestCaseService {
     enrichedTestCase.setHapiOperationOutcome(null);
     enrichedTestCase.setValidResource(false);
     enrichedTestCase.setPatientId(UUID.randomUUID());
+    if (appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)) {
+      enrichedTestCase.setCaseNumber(sequenceService.generateSequence(measureId));
+    }
     return enrichedTestCase;
   }
 
@@ -124,7 +134,7 @@ public class TestCaseService {
     defaultTestCaseJsonForQdmMeasure(testCase, measure);
     checkTestCaseSpecialCharacters(testCase);
 
-    TestCase enrichedTestCase = enrichNewTestCase(testCase, username);
+    TestCase enrichedTestCase = enrichNewTestCase(testCase, username, measureId);
     enrichedTestCase =
         validateTestCaseAsResource(
             enrichedTestCase, ModelType.valueOfName(measure.getModel()), accessToken);
@@ -161,7 +171,7 @@ public class TestCaseService {
     List<TestCase> enrichedTestCases = new ArrayList<>(newTestCases.size());
     for (TestCase testCase : newTestCases) {
       checkTestCaseSpecialCharacters(testCase);
-      TestCase enriched = enrichNewTestCase(testCase, username);
+      TestCase enriched = enrichNewTestCase(testCase, username, measureId);
       enriched =
           validateTestCaseAsResource(
               enriched, ModelType.valueOfName(measure.getModel()), accessToken);
