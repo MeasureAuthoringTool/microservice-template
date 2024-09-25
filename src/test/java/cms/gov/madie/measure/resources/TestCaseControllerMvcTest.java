@@ -240,7 +240,7 @@ public class TestCaseControllerMvcTest {
         .andExpect(
             content()
                 .string(
-                    "[{\"id\":\"TESTID\",\"name\":\"TestName\",\"title\":\"TestTitle\",\"series\":null,"
+                    "[{\"id\":\"TESTID\",\"caseNumber\":null,\"name\":\"TestName\",\"title\":\"TestTitle\",\"series\":null,"
                         + "\"description\":\"Test Description\",\"createdAt\":null,"
                         + "\"createdBy\":\"TestUser\",\"lastModifiedAt\":null,"
                         + "\"lastModifiedBy\":\"TestUser2\","
@@ -286,7 +286,7 @@ public class TestCaseControllerMvcTest {
         .andExpect(
             content()
                 .string(
-                    "{\"id\":\"TESTID\",\"name\":\"TestName\",\"title\":\"TestTitle\",\"series\":null,"
+                    "{\"id\":\"TESTID\",\"caseNumber\":null,\"name\":\"TestName\",\"title\":\"TestTitle\",\"series\":null,"
                         + "\"description\":\"Test Description\",\"createdAt\":null,"
                         + "\"createdBy\":\"TestUser\",\"lastModifiedAt\":null,"
                         + "\"lastModifiedBy\":\"TestUser2\","
@@ -328,7 +328,7 @@ public class TestCaseControllerMvcTest {
         .andExpect(
             content()
                 .string(
-                    "{\"id\":\"TESTID\",\"name\":\"TestName\",\"title\":\"TestTitle\",\"series\":null,"
+                    "{\"id\":\"TESTID\",\"caseNumber\":null,\"name\":\"TestName\",\"title\":\"TestTitle\",\"series\":null,"
                         + "\"description\":\""
                         + modifiedDescription
                         + "\",\"createdAt\":null,"
