@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.dto.JobStatus;
+import cms.gov.madie.measure.dto.MadieFeatureFlag;
 import cms.gov.madie.measure.dto.MeasureTestCaseValidationReport;
 import cms.gov.madie.measure.exceptions.DuplicateTestCaseNameException;
 import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
@@ -87,6 +88,8 @@ public class TestCaseServiceTest implements ResourceUtil {
 
   @Mock private FhirServicesClient fhirServicesClient;
   @Mock private MeasureService measureService;
+  @Mock private AppConfigService appConfigService;
+  @Mock private TestCaseSequenceService testCaseSequenceService;
 
   @Spy @InjectMocks private TestCaseService testCaseService;
 
@@ -217,7 +220,7 @@ public class TestCaseServiceTest implements ResourceUtil {
   public void testEnrichNewTestCase() {
     TestCase testCase = new TestCase();
     final String username = "user01";
-    TestCase output = testCaseService.enrichNewTestCase(testCase, username);
+    TestCase output = testCaseService.enrichNewTestCase(testCase, username, "measureId");
     assertThat(output, is(not(equalTo(testCase))));
     assertThat(output.getId(), is(notNullValue()));
     assertThat(output.getCreatedAt(), is(notNullValue()));
@@ -228,6 +231,27 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertThat(output.getResourceUri(), is(nullValue()));
     assertThat(output.getHapiOperationOutcome(), is(nullValue()));
     assertThat(output.isValidResource(), is(false));
+    assertThat(output.getCaseNumber(), is(nullValue()));
+  }
+
+  @Test
+  public void testEnrichNewTestCaseWithTestCaseSequence() {
+    when(appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)).thenReturn(true);
+    when(testCaseSequenceService.generateSequence(anyString())).thenReturn(1);
+    TestCase testCase = new TestCase();
+    final String username = "user01";
+    TestCase output = testCaseService.enrichNewTestCase(testCase, username, "measureId");
+    assertThat(output, is(not(equalTo(testCase))));
+    assertThat(output.getId(), is(notNullValue()));
+    assertThat(output.getCreatedAt(), is(notNullValue()));
+    assertThat(output.getCreatedBy(), is(equalTo(username)));
+    assertThat(output.getLastModifiedAt(), is(notNullValue()));
+    assertThat(output.getLastModifiedAt(), is(equalTo(output.getCreatedAt())));
+    assertThat(output.getLastModifiedBy(), is(equalTo(username)));
+    assertThat(output.getResourceUri(), is(nullValue()));
+    assertThat(output.getHapiOperationOutcome(), is(nullValue()));
+    assertThat(output.isValidResource(), is(false));
+    assertThat(output.getCaseNumber(), is(equalTo(1)));
   }
 
   @Test

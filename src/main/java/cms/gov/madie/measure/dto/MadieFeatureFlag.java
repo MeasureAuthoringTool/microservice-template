@@ -4,7 +4,8 @@ package cms.gov.madie.measure.dto;
 public enum MadieFeatureFlag {
   QDM_EXPORT("qdmExport"),
   QDM_TEST_CASES("qdmTestCases"),
-  IMPORT_TEST_CASES("importTestCases");
+  IMPORT_TEST_CASES("importTestCases"),
+  TEST_CASE_ID("TestCaseID");
 
   private final String flag;
 
