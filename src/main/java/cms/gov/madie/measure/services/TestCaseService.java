@@ -6,13 +6,7 @@ import cms.gov.madie.measure.dto.MeasureTestCaseValidationReport;
 import cms.gov.madie.measure.dto.TestCaseValidationReport;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.common.ModelType;
-import gov.cms.madie.models.measure.HapiOperationOutcome;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.MeasureScoring;
-import gov.cms.madie.models.measure.QdmMeasure;
-import gov.cms.madie.models.measure.TestCase;
-import gov.cms.madie.models.measure.TestCaseGroupPopulation;
-import gov.cms.madie.models.measure.Group;
+import gov.cms.madie.models.measure.*;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.utils.JsonUtil;
@@ -20,8 +14,6 @@ import cms.gov.madie.measure.utils.TestCaseServiceUtil;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import gov.cms.madie.models.measure.TestCaseImportOutcome;
-import gov.cms.madie.models.measure.TestCaseImportRequest;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,14 +25,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -545,6 +530,9 @@ public class TestCaseService {
               .series(getSeries(testCaseImportRequest, familyName))
               .patientId(testCaseImportRequest.getPatientId())
               .build();
+      if (appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)) {
+        newTestCase.setCaseNumber(sequenceService.generateSequence(measure.getId()));
+      }
       List<TestCaseGroupPopulation> testCaseGroupPopulations =
           getTestCaseGroupPopulationsFromImportRequest(
               model, testCaseImportRequest.getJson(), measure);
