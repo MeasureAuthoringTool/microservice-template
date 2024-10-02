@@ -315,10 +315,6 @@ public class MeasureService {
   }
 
   public void checkDuplicateCqlLibraryName(String cqlLibraryName) {
-    log.info("cqlLibraryName: [{}]", cqlLibraryName);
-    log.info("findBy: [{}]", measureRepository.findAllByCqlLibraryName(cqlLibraryName));
-    log.info("isNotEmpty [{}]", StringUtils.isNotEmpty(cqlLibraryName));
-
     if (StringUtils.isNotEmpty(cqlLibraryName)
         && !measureRepository.findAllByCqlLibraryName(cqlLibraryName).isEmpty()) {
       throw new DuplicateKeyException(
@@ -332,7 +328,6 @@ public class MeasureService {
       Optional<Measure> anyMatchingMeasure = measureRepository.findByCqlLibraryName(cqlLibraryName);
       Optional<Measure> matchingMeasureInMeasureSet =
           anyMatchingMeasure.filter(measure -> measure.getMeasureSetId().equals((measureSetId)));
-      System.out.println("AAAA");
       if (anyMatchingMeasure.isPresent() && matchingMeasureInMeasureSet.isEmpty()) {
         throw new DuplicateKeyException(
             "cqlLibraryName", "CQL library with given name already exists.");
