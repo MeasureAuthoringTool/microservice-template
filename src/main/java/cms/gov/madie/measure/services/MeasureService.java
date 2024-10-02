@@ -315,18 +315,24 @@ public class MeasureService {
   }
 
   public void checkDuplicateCqlLibraryName(String cqlLibraryName) {
+    log.info("cqlLibraryName: [{}]", cqlLibraryName);
+    log.info("findBy: [{}]", measureRepository.findAllByCqlLibraryName(cqlLibraryName));
+    log.info("isNotEmpty [{}]", StringUtils.isNotEmpty(cqlLibraryName));
+
     if (StringUtils.isNotEmpty(cqlLibraryName)
-        && measureRepository.findByCqlLibraryName(cqlLibraryName).isPresent()) {
+        && !measureRepository.findAllByCqlLibraryName(cqlLibraryName).isEmpty()) {
       throw new DuplicateKeyException(
           "cqlLibraryName", "CQL library with given name already exists.");
     }
   }
 
   public void checkDuplicateCqlLibraryName(String cqlLibraryName, String measureSetId) {
+    // This overload of the function is never used anywhere?
     if (StringUtils.isNotEmpty(cqlLibraryName)) {
       Optional<Measure> anyMatchingMeasure = measureRepository.findByCqlLibraryName(cqlLibraryName);
       Optional<Measure> matchingMeasureInMeasureSet =
           anyMatchingMeasure.filter(measure -> measure.getMeasureSetId().equals((measureSetId)));
+      System.out.println("AAAA");
       if (anyMatchingMeasure.isPresent() && matchingMeasureInMeasureSet.isEmpty()) {
         throw new DuplicateKeyException(
             "cqlLibraryName", "CQL library with given name already exists.");

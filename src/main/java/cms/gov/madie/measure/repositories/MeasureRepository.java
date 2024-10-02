@@ -19,6 +19,8 @@ public interface MeasureRepository
   @Query("{cqlLibraryName : ?0, active : true}")
   Optional<Measure> findByCqlLibraryName(String cqlLibraryName);
 
+  List<Measure> findAllByCqlLibraryName(String cqlLibraryName);
+
   Optional<Measure> findByIdAndActive(String id, Boolean active);
 
   Page<MeasureListDTO> findAllByActive(Boolean active, Pageable page);

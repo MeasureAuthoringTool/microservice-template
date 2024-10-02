@@ -430,7 +430,7 @@ public class MeasureServiceTest implements ResourceUtil {
     doNothing()
         .when(measureSetService)
         .createMeasureSet(anyString(), anyString(), anyString(), any());
-    when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
+    when(measureRepository.findAllByCqlLibraryName(anyString())).thenReturn(new ArrayList<>());
     when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString()))
         .thenReturn(ElmJson.builder().json("{\"library\": {}}").xml("<library></library>").build());
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(false);
@@ -466,7 +466,7 @@ public class MeasureServiceTest implements ResourceUtil {
     doNothing()
         .when(measureSetService)
         .createMeasureSet(anyString(), anyString(), anyString(), any());
-    when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
+    when(measureRepository.findAllByCqlLibraryName(anyString())).thenReturn(new ArrayList<>());
 
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
     when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
@@ -503,7 +503,7 @@ public class MeasureServiceTest implements ResourceUtil {
     doNothing()
         .when(measureSetService)
         .createMeasureSet(anyString(), anyString(), anyString(), any());
-    when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
+    when(measureRepository.findAllByCqlLibraryName(anyString())).thenReturn(new ArrayList<>());
     when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString()))
         .thenReturn(ElmJson.builder().json("{\"library\": {}}").xml("<library></library>").build());
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(false);
@@ -539,7 +539,7 @@ public class MeasureServiceTest implements ResourceUtil {
     doNothing()
         .when(measureSetService)
         .createMeasureSet(anyString(), anyString(), anyString(), any());
-    when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
+    when(measureRepository.findAllByCqlLibraryName(anyString())).thenReturn(new ArrayList<>());
 
     when(measureRepository.save(any(Measure.class))).thenReturn(measureToSave);
     when(actionLogService.logAction(any(), any(), any(), any())).thenReturn(true);
@@ -564,7 +564,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .cqlLibraryName("VTE")
             .build();
 
-    when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
+    when(measureRepository.findAllByCqlLibraryName(anyString())).thenReturn(new ArrayList<>());
     when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString()))
         .thenReturn(ElmJson.builder().json(elmJson).build());
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(false);
@@ -598,7 +598,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .createdBy(usr)
             .build();
 
-    when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
+    when(measureRepository.findAllByCqlLibraryName(anyString())).thenReturn(new ArrayList<>());
     when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString()))
         .thenReturn(ElmJson.builder().json(elmJson).build());
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(true);
@@ -631,7 +631,8 @@ public class MeasureServiceTest implements ResourceUtil {
             .cql("")
             .elmJson(null)
             .build();
-    when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.of(measure1));
+    List<Measure> measureList = Collections.singletonList(measure1);
+    when(measureRepository.findAllByCqlLibraryName(anyString())).thenReturn(measureList);
 
     assertThrows(
         DuplicateKeyException.class,
@@ -650,7 +651,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .cqlLibraryName("VTE")
             .build();
 
-    when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
+    when(measureRepository.findAllByCqlLibraryName(anyString())).thenReturn(new ArrayList<>());
     when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString()))
         .thenReturn(ElmJson.builder().json(elmJson).build());
     when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(false);
@@ -680,10 +681,11 @@ public class MeasureServiceTest implements ResourceUtil {
 
     Measure updated = original.toBuilder().cqlLibraryName("Changed_Name").build();
 
+    List<Measure> measureList = Collections.singletonList(Measure.builder().build());
+
     when(measureUtil.isCqlLibraryNameChanged(any(Measure.class), any(Measure.class)))
         .thenReturn(true);
-    when(measureRepository.findByCqlLibraryName(anyString()))
-        .thenReturn(Optional.of(Measure.builder().build()));
+    when(measureRepository.findAllByCqlLibraryName(anyString())).thenReturn(measureList);
 
     assertThrows(
         DuplicateKeyException.class,
@@ -752,7 +754,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .build();
     when(measureUtil.isCqlLibraryNameChanged(any(Measure.class), any(Measure.class)))
         .thenReturn(true);
-    when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(Optional.empty());
+    when(measureRepository.findAllByCqlLibraryName(anyString())).thenReturn(new ArrayList<>());
     when(measureUtil.isMeasurementPeriodChanged(any(Measure.class), any(Measure.class)))
         .thenReturn(true);
     when(measureUtil.isMeasureCqlChanged(any(Measure.class), any(Measure.class))).thenReturn(false);
@@ -1158,17 +1160,18 @@ public class MeasureServiceTest implements ResourceUtil {
 
   @Test
   public void testCheckDuplicateCqlLibraryNameDoesNotThrowException() {
-    Optional<Measure> measureOpt = Optional.empty();
-    when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(measureOpt);
+    List<Measure> measureOpt = new ArrayList<>();
+    when(measureRepository.findAllByCqlLibraryName(anyString())).thenReturn(measureOpt);
     measureService.checkDuplicateCqlLibraryName("testCQLLibraryName");
-    verify(measureRepository, times(1)).findByCqlLibraryName(eq("testCQLLibraryName"));
+    verify(measureRepository, times(2)).findAllByCqlLibraryName(eq("testCQLLibraryName"));
   }
 
   @Test
   public void testCheckDuplicateCqlLibraryNameThrowsExceptionForExistingName() {
     final Measure measure = Measure.builder().cqlLibraryName("testCQLLibraryName").build();
-    Optional<Measure> measureOpt = Optional.of(measure);
-    when(measureRepository.findByCqlLibraryName(anyString())).thenReturn(measureOpt);
+    final List<Measure> measureOpt = Collections.singletonList(measure);
+    // Optional<Measure> measureOpt = Optional.of(measure);
+    when(measureRepository.findAllByCqlLibraryName(anyString())).thenReturn(measureOpt);
     assertThrows(
         DuplicateKeyException.class,
         () -> measureService.checkDuplicateCqlLibraryName("testCQLLibraryName"));
