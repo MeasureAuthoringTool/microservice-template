@@ -30,6 +30,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -189,7 +191,11 @@ public class VersionService {
     measureDraft.setId(null);
     measureDraft.setVersionId(UUID.randomUUID().toString());
     measureDraft.setMeasureName(measureName);
-    measureDraft.setModel(model);
+    if (!model.equals(measure.getModel())) {
+      measureDraft.setModel(model);
+      measureDraft.setCql(updateUsingStatement(model, measure.getCql()));
+    }
+
     measureDraft.getMeasureMetaData().setDraft(true);
     measureDraft.setGroups(cloneMeasureGroups(measure.getGroups()));
     measureDraft.setTestCases(cloneTestCases(measure.getTestCases(), measureDraft.getGroups()));
@@ -205,6 +211,17 @@ public class VersionService {
         savedDraft.getId());
     actionLogService.logAction(savedDraft.getId(), Measure.class, ActionType.DRAFTED, username);
     return savedDraft;
+  }
+
+  private String updateUsingStatement(String model, String cql) {
+    Pattern qicorePattern = Pattern.compile("using QICore .*version '[0-9]\\.[0-9](\\.[0-9])?'");
+    Matcher matcher = qicorePattern.matcher(cql);
+    if (matcher.find()) {
+      cql =
+          matcher.replaceAll(
+              "using QICore version '" + model.substring(model.lastIndexOf("v") + 1) + "'");
+    }
+    return cql;
   }
 
   private List<Group> cloneMeasureGroups(List<Group> groups) {
