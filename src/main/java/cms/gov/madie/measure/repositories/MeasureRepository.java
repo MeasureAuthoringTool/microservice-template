@@ -17,8 +17,6 @@ public interface MeasureRepository
         MeasureAclRepository,
         MeasureCmsIdRepository {
   @Query("{cqlLibraryName : ?0, active : true}")
-  Optional<Measure> findByCqlLibraryName(String cqlLibraryName);
-
   List<Measure> findAllByCqlLibraryName(String cqlLibraryName);
 
   Optional<Measure> findByIdAndActive(String id, Boolean active);
