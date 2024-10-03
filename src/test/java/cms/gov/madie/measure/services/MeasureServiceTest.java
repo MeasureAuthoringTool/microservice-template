@@ -627,6 +627,7 @@ public class MeasureServiceTest implements ResourceUtil {
         measure1.toBuilder()
             .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
             .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
+            .active(true)
             .cqlLibraryName("VTE")
             .cql("")
             .elmJson(null)
@@ -677,9 +678,13 @@ public class MeasureServiceTest implements ResourceUtil {
   @Test
   public void testUpdateMeasureThrowsExceptionForDuplicateLibraryName() {
     Measure original =
-        Measure.builder().cqlLibraryName("OriginalLibName").measureName("Measure1").build();
+        Measure.builder()
+            .cqlLibraryName("OriginalLibName")
+            .measureName("Measure1")
+            .active(true)
+            .build();
 
-    Measure updated = original.toBuilder().cqlLibraryName("Changed_Name").build();
+    Measure updated = original.toBuilder().cqlLibraryName("Changed_Name").active(true).build();
 
     List<Measure> measureList = Collections.singletonList(Measure.builder().build());
 
@@ -1163,12 +1168,13 @@ public class MeasureServiceTest implements ResourceUtil {
     List<Measure> measureOpt = new ArrayList<>();
     when(measureRepository.findAllByCqlLibraryName(anyString())).thenReturn(measureOpt);
     measureService.checkDuplicateCqlLibraryName("testCQLLibraryName");
-    verify(measureRepository, times(2)).findAllByCqlLibraryName(eq("testCQLLibraryName"));
+    verify(measureRepository, times(1)).findAllByCqlLibraryName(eq("testCQLLibraryName"));
   }
 
   @Test
   public void testCheckDuplicateCqlLibraryNameThrowsExceptionForExistingName() {
-    final Measure measure = Measure.builder().cqlLibraryName("testCQLLibraryName").build();
+    final Measure measure =
+        Measure.builder().cqlLibraryName("testCQLLibraryName").active(true).build();
     final List<Measure> measureOpt = Collections.singletonList(measure);
     // Optional<Measure> measureOpt = Optional.of(measure);
     when(measureRepository.findAllByCqlLibraryName(anyString())).thenReturn(measureOpt);
