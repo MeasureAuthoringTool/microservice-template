@@ -290,8 +290,6 @@ public class VersionService {
                   } else {
                     testCase.setCaseNumber(sequenceService.generateSequence(measureId));
                   }
-                } else {
-                  testCase.setCaseNumber(null);
                 }
                 return testCase;
               })
