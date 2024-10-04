@@ -209,7 +209,7 @@ public class VersionService {
             measureDraft.getGroups(),
             id,
             appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID),
-            checkCaseNumberExists(measure.getTestCases(), id)));
+            checkCaseNumberExists(measure.getTestCases())));
     var now = Instant.now();
     measureDraft.setCreatedAt(now);
     measureDraft.setLastModifiedAt(now);
@@ -393,7 +393,7 @@ public class VersionService {
         savedExport.getId());
   }
 
-  private boolean checkCaseNumberExists(List<TestCase> testCases, String measureId) {
+  private boolean checkCaseNumberExists(List<TestCase> testCases) {
     if (!CollectionUtils.isEmpty(testCases)) {
       for (TestCase testCase : testCases) {
         if (testCase.getCaseNumber() == null || testCase.getCaseNumber() == 0) {
