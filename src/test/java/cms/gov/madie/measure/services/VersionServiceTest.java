@@ -81,9 +81,6 @@ public class VersionServiceTest {
       "{\n" + "\"errorExceptions\" : \n" + "[ {\"error\":\"error translating cql\" } ]\n" + "}";
   private final String ELMJON_NO_ERROR = "{\n" + "\"errorExceptions\" : \n" + "[]\n" + "}";
 
-  //  private Instant instant =
-  //      new
-  // SimpleDateFormat("yyyy-MM-ddTHH:mm:ss.SSS").parse("2024-10-02T13:16:18.000").toInstant();
   private final Instant today = Instant.now();
 
   TestCaseGroupPopulation testCaseGroupPopulation =
