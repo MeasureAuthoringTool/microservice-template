@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.dto.MadieFeatureFlag;
 import cms.gov.madie.measure.exceptions.BadVersionRequestException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.MeasureNotDraftableException;
@@ -33,6 +34,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.Comparator;
+import java.util.Collections;
 
 @Slf4j
 @AllArgsConstructor
@@ -48,6 +51,8 @@ public class VersionService {
   private final MeasureService measureService;
   private final QdmPackageService qdmPackageService;
   private final ExportService exportService;
+  private final TestCaseSequenceService sequenceService;
+  private final AppConfigService appConfigService;
 
   public enum VersionValidationResult {
     VALID,
@@ -198,7 +203,13 @@ public class VersionService {
 
     measureDraft.getMeasureMetaData().setDraft(true);
     measureDraft.setGroups(cloneMeasureGroups(measure.getGroups()));
-    measureDraft.setTestCases(cloneTestCases(measure.getTestCases(), measureDraft.getGroups()));
+    measureDraft.setTestCases(
+        cloneTestCases(
+            measure.getTestCases(),
+            measureDraft.getGroups(),
+            id,
+            appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID),
+            checkCaseNumberExists(measure.getTestCases(), id)));
     var now = Instant.now();
     measureDraft.setCreatedAt(now);
     measureDraft.setLastModifiedAt(now);
@@ -233,9 +244,25 @@ public class VersionService {
     return List.of();
   }
 
-  private List<TestCase> cloneTestCases(List<TestCase> testCases, List<Group> draftGroups) {
+  private List<TestCase> cloneTestCases(
+      List<TestCase> testCases,
+      List<Group> draftGroups,
+      String measureId,
+      boolean isFlagEnabled,
+      boolean caseNumberExists) {
     if (!CollectionUtils.isEmpty(testCases)) {
-      return testCases.stream()
+      List<TestCase> testCasesCopy = new ArrayList<>(testCases);
+      Collections.sort(
+          testCasesCopy,
+          new Comparator<TestCase>() {
+            public int compare(TestCase o1, TestCase o2) {
+              if (o1.getCreatedAt() == null || o2.getCreatedAt() == null) {
+                return 0;
+              }
+              return o1.getCreatedAt().compareTo(o2.getCreatedAt());
+            }
+          });
+      return testCasesCopy.stream()
           .map(
               testCase -> {
                 List<TestCaseGroupPopulation> updatedTestCaseGroupPopulations = new ArrayList<>();
@@ -252,10 +279,21 @@ public class VersionService {
                                       .build())
                           .toList());
                 }
-                return testCase.toBuilder()
-                    .id(ObjectId.get().toString())
-                    .groupPopulations(updatedTestCaseGroupPopulations)
-                    .build();
+                testCase =
+                    testCase.toBuilder()
+                        .id(ObjectId.get().toString())
+                        .groupPopulations(updatedTestCaseGroupPopulations)
+                        .build();
+                if (isFlagEnabled) {
+                  if (caseNumberExists) {
+                    testCase.setCaseNumber(testCase.getCaseNumber());
+                  } else {
+                    testCase.setCaseNumber(sequenceService.generateSequence(measureId));
+                  }
+                } else {
+                  testCase.setCaseNumber(null);
+                }
+                return testCase;
               })
           .collect(Collectors.toList());
     }
@@ -355,5 +393,18 @@ public class VersionService {
         "User [{}] successfully saved versioned measure's export data with ID [{}]",
         username,
         savedExport.getId());
+  }
+
+  private boolean checkCaseNumberExists(List<TestCase> testCases, String measureId) {
+    if (!CollectionUtils.isEmpty(testCases)) {
+      for (TestCase testCase : testCases) {
+        if (testCase.getCaseNumber() == null || testCase.getCaseNumber() == 0) {
+          return false;
+        }
+      }
+    } else {
+      return false;
+    }
+    return true;
   }
 }
