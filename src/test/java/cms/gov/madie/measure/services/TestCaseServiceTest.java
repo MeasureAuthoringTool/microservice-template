@@ -32,18 +32,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
 import gov.cms.madie.models.dto.TestCaseExportMetaData;
-import gov.cms.madie.models.measure.Group;
-import gov.cms.madie.models.measure.HapiOperationOutcome;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.MeasureMetaData;
-import gov.cms.madie.models.measure.MeasureObservation;
-import gov.cms.madie.models.measure.MeasureScoring;
-import gov.cms.madie.models.measure.Population;
-import gov.cms.madie.models.measure.PopulationType;
-import gov.cms.madie.models.measure.QdmMeasure;
-import gov.cms.madie.models.measure.Stratification;
-import gov.cms.madie.models.measure.TestCase;
-import gov.cms.madie.models.measure.TestCaseImportRequest;
+import gov.cms.madie.models.measure.*;
 
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
@@ -82,10 +71,10 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class TestCaseServiceTest implements ResourceUtil {
   @Mock private MeasureRepository measureRepository;
-  @Mock private ActionLogService actionLogService;
 
   @Spy private ObjectMapper mapper;
 
+  @Mock private ActionLogService actionLogService;
   @Mock private FhirServicesClient fhirServicesClient;
   @Mock private MeasureService measureService;
   @Mock private AppConfigService appConfigService;
@@ -252,6 +241,28 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertThat(output.getHapiOperationOutcome(), is(nullValue()));
     assertThat(output.isValidResource(), is(false));
     assertThat(output.getCaseNumber(), is(equalTo(1)));
+  }
+
+  @Test
+  void resetCaseNumberSequenceWhenLastTestCaseIsDeleted() {
+    when(appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)).thenReturn(true);
+    List<TestCase> testCases =
+        List.of(TestCase.builder().caseNumber(1).id("TC2_ID").title("TC2").build());
+
+    Measure existingMeasure =
+        Measure.builder()
+            .id("measure-id")
+            .createdBy("test.user")
+            .testCases(testCases)
+            .measureMetaData(MeasureMetaData.builder().draft(true).build())
+            .build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(existingMeasure));
+
+    doReturn(existingMeasure).when(measureRepository).save(any(Measure.class));
+
+    String output = testCaseService.deleteTestCase("measure-id", "TC2_ID", "test.user");
+    assertThat(output, is(equalTo("Test case deleted successfully: TC2_ID")));
+    verify(testCaseSequenceService, times(1)).resetSequence("measure-id");
   }
 
   @Test
@@ -1472,7 +1483,7 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     String output =
         testCaseService.deleteTestCases(measure.getId(), List.of("TC1_ID", "TC2_ID"), "test.user");
-    assertThat(output, is(equalTo("Succesfully deleted provided test cases")));
+    assertThat(output, is(equalTo("Successfully deleted provided test cases")));
   }
 
   @Test
@@ -1492,7 +1503,14 @@ public class TestCaseServiceTest implements ResourceUtil {
         testCaseService.deleteTestCases(
             measure.getId(), List.of("TC1_ID", "TC2_ID", "TC5_ID", "TC6_ID"), "test.user");
     assertThat(
-        output, is(equalTo("Succesfully deleted provided test cases except [ TC5_ID, TC6_ID ]")));
+        output, is(equalTo("Successfully deleted provided test cases except [ TC5_ID, TC6_ID ]")));
+  }
+
+  @Test
+  void resetCaseNumberSequenceWhenDeleteAllTestCases() {
+    when(appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)).thenReturn(true);
+    testDeleteTestCases();
+    verify(testCaseSequenceService, times(1)).resetSequence(anyString());
   }
 
   @Test
