@@ -384,6 +384,10 @@ public class TestCaseService {
         testCaseId,
         measureId);
     measureRepository.save(measure);
+    if (isEmpty(remainingTestCases)
+        && appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)) {
+      sequenceService.resetSequence(measureId);
+    }
     return "Test case deleted successfully: " + testCaseId;
   }
 
@@ -409,6 +413,10 @@ public class TestCaseService {
     measure.setTestCases(remainingTestCases);
     measureRepository.save(measure);
 
+    if (appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)) {
+      sequenceService.resetSequence(measureId);
+    }
+
     List<String> notDeletedTestCases =
         testCaseIds.stream()
             .filter(
@@ -420,7 +428,7 @@ public class TestCaseService {
           username,
           String.join(", ", notDeletedTestCases),
           measureId);
-      return "Succesfully deleted provided test cases except [ "
+      return "Successfully deleted provided test cases except [ "
           + String.join(", ", notDeletedTestCases)
           + " ]";
     }
@@ -429,7 +437,7 @@ public class TestCaseService {
         username,
         String.join(", ", testCaseIds),
         measureId);
-    return "Succesfully deleted provided test cases";
+    return "Successfully deleted provided test cases";
   }
 
   /**

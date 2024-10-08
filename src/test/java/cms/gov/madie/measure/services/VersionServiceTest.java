@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.dto.MadieFeatureFlag;
 import cms.gov.madie.measure.dto.PackageDto;
 import cms.gov.madie.measure.exceptions.BadVersionRequestException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
@@ -18,6 +19,7 @@ import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureMetaData;
 import gov.cms.madie.models.measure.TestCase;
 import gov.cms.madie.models.measure.*;
+
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,13 +30,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
 import static cms.gov.madie.measure.services.VersionService.VersionValidationResult.TEST_CASE_ERROR;
 import static cms.gov.madie.measure.services.VersionService.VersionValidationResult.VALID;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -65,6 +67,9 @@ public class VersionServiceTest {
 
   @Mock ExportService exportService;
 
+  @Mock TestCaseSequenceService sequenceService;
+  @Mock AppConfigService appConfigService;
+
   @InjectMocks VersionService versionService;
 
   @Captor private ArgumentCaptor<Measure> measureCaptor;
@@ -76,6 +81,8 @@ public class VersionServiceTest {
       "{\n" + "\"errorExceptions\" : \n" + "[ {\"error\":\"error translating cql\" } ]\n" + "}";
   private final String ELMJON_NO_ERROR = "{\n" + "\"errorExceptions\" : \n" + "[]\n" + "}";
 
+  private final Instant today = Instant.now();
+
   TestCaseGroupPopulation testCaseGroupPopulation =
       TestCaseGroupPopulation.builder()
           .groupId("groupId1")
@@ -86,12 +93,27 @@ public class VersionServiceTest {
   TestCase testCase =
       TestCase.builder()
           .id("testId1")
+          .caseNumber(2)
           .name("IPPPass")
           .series("BloodPressure>124")
+          .createdAt(today)
           .createdBy("TestUser")
           .lastModifiedBy("TestUser2")
           .json("{\"resourceType\":\"Patient\"}")
           .title("Test1")
+          .groupPopulations(List.of(testCaseGroupPopulation))
+          .build();
+  TestCase testCase2 =
+      TestCase.builder()
+          .id("testId2")
+          .caseNumber(1)
+          .name("IPPPass")
+          .series("BloodPressure>124")
+          .createdAt(today.minus(300, ChronoUnit.SECONDS))
+          .createdBy("TestUser")
+          .lastModifiedBy("TestUser2")
+          .json("{\"resourceType\":\"Patient\"}")
+          .title("Test2")
           .groupPopulations(List.of(testCaseGroupPopulation))
           .build();
   Group cvGroup =
@@ -119,8 +141,6 @@ public class VersionServiceTest {
           .build();
 
   MeasureSet measureSet = MeasureSet.builder().measureSetId("MS123").cmsId(144).build();
-
-  private final Instant today = Instant.now();
 
   @Test
   public void testCheckValidVersioningThrowsResourceNotFoundException() {
@@ -625,6 +645,7 @@ public class VersionServiceTest {
         .thenReturn(false);
     when(measureRepository.save(any(Measure.class))).thenReturn(versionedCopy);
     when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
+    when(appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)).thenReturn(false);
 
     Measure draft =
         versionService.createDraft(versionedMeasure.getId(), "Test", "QI-Core v4.1.1", "test-user");
@@ -643,6 +664,65 @@ public class VersionServiceTest {
     assertThat(
         draft.getTestCases().get(0).getGroupPopulations().get(0).getGroupId(),
         is(equalTo("clonedGroupId1")));
+  }
+
+  @Test
+  public void testCreateDraftWithUpdatedModelSuccessfully() {
+    ArgumentCaptor<Measure> measureArgumentCaptor = ArgumentCaptor.forClass(Measure.class);
+
+    TestCaseGroupPopulation clonedTestCaseGroupPopulation =
+        TestCaseGroupPopulation.builder()
+            .groupId("clonedGroupId1")
+            .scoring("Cohort")
+            .populationBasis("boolean")
+            .build();
+    Measure versionedMeasure = buildBasicMeasure();
+    MeasureMetaData metaData = new MeasureMetaData();
+    metaData.setDraft(true);
+    Measure versionedCopy =
+        versionedMeasure.toBuilder()
+            .id("2")
+            .versionId("13-13-13-13")
+            .measureName("Test")
+            .measureMetaData(metaData)
+            .model(ModelType.QI_CORE_6_0_0.getValue())
+            .cql("library TestCQLLib version '2.3.001'\nusing QICore version '6.0.0'\n")
+            .groups(List.of(cvGroup.toBuilder().id(ObjectId.get().toString()).build()))
+            .testCases(
+                List.of(
+                    testCase.toBuilder()
+                        .id(ObjectId.get().toString())
+                        .groupPopulations(List.of(clonedTestCaseGroupPopulation))
+                        .build()))
+            .build();
+
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(versionedMeasure));
+    when(measureRepository.existsByMeasureSetIdAndActiveAndMeasureMetaDataDraft(
+            anyString(), anyBoolean(), anyBoolean()))
+        .thenReturn(false);
+    when(measureRepository.save(any(Measure.class))).thenReturn(versionedCopy);
+    when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
+    when(appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)).thenReturn(false);
+
+    versionService.createDraft(versionedMeasure.getId(), "Test", "QI-Core v6.0.0", "test-user");
+    verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
+    Measure draft = measureArgumentCaptor.getValue();
+
+    assertThat(draft.getMeasureName(), is(equalTo("Test")));
+    // draft flag to true
+    assertThat(draft.getMeasureMetaData().isDraft(), is(equalTo(true)));
+    // version remains same
+    assertThat(draft.getVersion().getMajor(), is(equalTo(2)));
+    assertThat(draft.getVersion().getMinor(), is(equalTo(3)));
+    assertThat(draft.getVersion().getRevisionNumber(), is(equalTo(1)));
+    assertThat(draft.getGroups().size(), is(equalTo(1)));
+    assertFalse(draft.getGroups().stream().anyMatch(item -> "xyz-p12r-12ert".equals(item.getId())));
+    assertThat(draft.getTestCases().size(), is(equalTo(1)));
+    assertFalse(draft.getGroups().stream().anyMatch(item -> "testId1".equals(item.getId())));
+    assertThat(
+        draft.getTestCases().get(0).getGroupPopulations().get(0).getGroupId(), notNullValue());
+    assertThat(draft.getModel(), is(equalTo(ModelType.QI_CORE_6_0_0.getValue())));
+    assertThat(draft.getCql(), containsStringIgnoringCase("using QICore version '6.0.0'"));
   }
 
   @Test
@@ -746,13 +826,142 @@ public class VersionServiceTest {
         .id("1")
         .measureSetId("1-1-1-1")
         .measureName("Test")
+        .model(ModelType.QI_CORE.getValue())
         .createdBy("test-user")
-        .cql("library TestCQLLib version '2.3.001'")
+        .cql("library TestCQLLib version '2.3.001'\nusing QICore version '4.1.1'\n")
         .versionId("12-12-12-12")
         .version(Version.builder().major(2).minor(3).revisionNumber(1).build())
         .measureMetaData(new MeasureMetaData())
         .groups(List.of(cvGroup))
         .testCases(List.of(testCase))
         .build();
+  }
+
+  @Test
+  public void testCreateDraftCopyCaseNumberFromExistingTestCase() {
+    TestCaseGroupPopulation clonedTestCaseGroupPopulation =
+        TestCaseGroupPopulation.builder()
+            .groupId("clonedGroupId1")
+            .scoring("Cohort")
+            .populationBasis("boolean")
+            .build();
+    Measure versionedMeasure = buildBasicMeasure();
+    versionedMeasure.setTestCases(List.of(testCase, testCase2));
+
+    MeasureMetaData metaData = new MeasureMetaData();
+    metaData.setDraft(true);
+    Measure versionedCopy =
+        versionedMeasure.toBuilder()
+            .id("2")
+            .versionId("13-13-13-13")
+            .measureName("Test")
+            .measureMetaData(metaData)
+            .groups(List.of(cvGroup.toBuilder().id(ObjectId.get().toString()).build()))
+            .testCases(
+                List.of(
+                    testCase.toBuilder()
+                        .id(ObjectId.get().toString())
+                        .groupPopulations(List.of(clonedTestCaseGroupPopulation))
+                        .build(),
+                    testCase2.toBuilder()
+                        .id(ObjectId.get().toString())
+                        .groupPopulations(List.of(clonedTestCaseGroupPopulation))
+                        .build()))
+            .build();
+
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(versionedMeasure));
+    when(measureRepository.existsByMeasureSetIdAndActiveAndMeasureMetaDataDraft(
+            anyString(), anyBoolean(), anyBoolean()))
+        .thenReturn(false);
+    when(measureRepository.save(any(Measure.class))).thenReturn(versionedCopy);
+    when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
+    when(appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)).thenReturn(true);
+
+    Measure draft =
+        versionService.createDraft(versionedMeasure.getId(), "Test", "QI-Core v4.1.1", "test-user");
+
+    assertThat(draft.getMeasureName(), is(equalTo("Test")));
+    // draft flag to true
+    assertThat(draft.getMeasureMetaData().isDraft(), is(equalTo(true)));
+    // version remains same
+    assertThat(draft.getVersion().getMajor(), is(equalTo(2)));
+    assertThat(draft.getVersion().getMinor(), is(equalTo(3)));
+    assertThat(draft.getVersion().getRevisionNumber(), is(equalTo(1)));
+    assertThat(draft.getGroups().size(), is(equalTo(1)));
+    assertFalse(draft.getGroups().stream().anyMatch(item -> "xyz-p12r-12ert".equals(item.getId())));
+    assertThat(draft.getTestCases().size(), is(equalTo(2)));
+    assertFalse(draft.getGroups().stream().anyMatch(item -> "testId1".equals(item.getId())));
+    assertThat(
+        draft.getTestCases().get(0).getGroupPopulations().get(0).getGroupId(),
+        is(equalTo("clonedGroupId1")));
+    assertThat(draft.getTestCases().get(0).getCaseNumber(), is(equalTo(2)));
+    assertThat(draft.getTestCases().get(1).getCaseNumber(), is(equalTo(1)));
+  }
+
+  @Test
+  public void testCreateDraftCopyCaseNumberFromSequenceGenerator() {
+    TestCaseGroupPopulation clonedTestCaseGroupPopulation =
+        TestCaseGroupPopulation.builder()
+            .groupId("clonedGroupId1")
+            .scoring("Cohort")
+            .populationBasis("boolean")
+            .build();
+    Measure versionedMeasure = buildBasicMeasure();
+    testCase.setCaseNumber(null);
+    testCase.setCreatedAt(null);
+    testCase2.setCaseNumber(0);
+    versionedMeasure.setTestCases(List.of(testCase, testCase2));
+
+    MeasureMetaData metaData = new MeasureMetaData();
+    metaData.setDraft(true);
+    Measure versionedCopy =
+        versionedMeasure.toBuilder()
+            .id("2")
+            .versionId("13-13-13-13")
+            .measureName("Test")
+            .measureMetaData(metaData)
+            .groups(List.of(cvGroup.toBuilder().id(ObjectId.get().toString()).build()))
+            .testCases(
+                List.of(
+                    testCase.toBuilder()
+                        .id(ObjectId.get().toString())
+                        .groupPopulations(List.of(clonedTestCaseGroupPopulation))
+                        .caseNumber(1)
+                        .build(),
+                    testCase2.toBuilder()
+                        .id(ObjectId.get().toString())
+                        .groupPopulations(List.of(clonedTestCaseGroupPopulation))
+                        .caseNumber(2)
+                        .build()))
+            .build();
+
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(versionedMeasure));
+    when(measureRepository.existsByMeasureSetIdAndActiveAndMeasureMetaDataDraft(
+            anyString(), anyBoolean(), anyBoolean()))
+        .thenReturn(false);
+    when(measureRepository.save(any(Measure.class))).thenReturn(versionedCopy);
+    when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
+    when(appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)).thenReturn(true);
+    when(sequenceService.generateSequence("1")).thenReturn(1);
+
+    Measure draft =
+        versionService.createDraft(versionedMeasure.getId(), "Test", "QI-Core v4.1.1", "test-user");
+
+    assertThat(draft.getMeasureName(), is(equalTo("Test")));
+    // draft flag to true
+    assertThat(draft.getMeasureMetaData().isDraft(), is(equalTo(true)));
+    // version remains same
+    assertThat(draft.getVersion().getMajor(), is(equalTo(2)));
+    assertThat(draft.getVersion().getMinor(), is(equalTo(3)));
+    assertThat(draft.getVersion().getRevisionNumber(), is(equalTo(1)));
+    assertThat(draft.getGroups().size(), is(equalTo(1)));
+    assertFalse(draft.getGroups().stream().anyMatch(item -> "xyz-p12r-12ert".equals(item.getId())));
+    assertThat(draft.getTestCases().size(), is(equalTo(2)));
+    assertFalse(draft.getGroups().stream().anyMatch(item -> "testId1".equals(item.getId())));
+    assertThat(
+        draft.getTestCases().get(0).getGroupPopulations().get(0).getGroupId(),
+        is(equalTo("clonedGroupId1")));
+    assertThat(draft.getTestCases().get(0).getCaseNumber(), is(equalTo(1)));
+    assertThat(draft.getTestCases().get(1).getCaseNumber(), is(equalTo(2)));
   }
 }
