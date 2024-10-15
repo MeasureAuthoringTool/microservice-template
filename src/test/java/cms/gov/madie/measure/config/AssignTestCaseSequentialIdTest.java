@@ -3,8 +3,8 @@ package cms.gov.madie.measure.config;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureMetaData;
 import gov.cms.madie.models.measure.TestCase;
-import org.hl7.elm.r1.In;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +31,7 @@ class AssignTestCaseSequentialIdTest {
   @InjectMocks AssignTestCaseSequentialId assignTestCaseSequentialId;
 
   Measure measure1;
+  Measure measure2;
   TestCase tc1;
   TestCase tc2;
   TestCase tc3;
@@ -53,9 +54,19 @@ class AssignTestCaseSequentialIdTest {
         Measure.builder()
             .id("Measure1")
             .measureName("Measure1")
+                .measureMetaData(new MeasureMetaData().toBuilder().draft(true).build())
             .model(ModelType.QI_CORE.getValue())
             .testCases(List.of(tc1, tc2, tc3, tc4, tc5, tc6))
             .build();
+
+    measure2 =
+            Measure.builder()
+                    .id("Measure2")
+                    .measureName("Measure2")
+                    .measureMetaData(new MeasureMetaData().toBuilder().draft(false).build())
+                    .model(ModelType.QDM_5_6.getValue())
+                    .testCases(List.of(tc1, tc2, tc3, tc4, tc5, tc6))
+                    .build();
   }
 
   @Test
@@ -66,10 +77,11 @@ class AssignTestCaseSequentialIdTest {
   }
 
   @Test
-  void assignTestCaseSequentialIdForAllMeasures() {
-    when(measureRepository.findAll()).thenReturn(List.of(measure1));
+  void assignTestCaseSequentialIdForDraftMeasures() {
+    when(measureRepository.findAll()).thenReturn(List.of(measure1, measure2));
 
     assignTestCaseSequentialId.updateTestCaseWithSequentialCaseNumber(measureRepository);
+    // Versioned measure are not modified
     verify(measureRepository, times(1)).save(measureArgumentCaptor1.capture());
     Measure measure = measureArgumentCaptor1.getValue();
     assertThat(measure.getTestCases(), is(notNullValue()));
@@ -78,6 +90,7 @@ class AssignTestCaseSequentialIdTest {
         measure.getTestCases().stream()
             .sorted(Comparator.comparing(TestCase::getCreatedAt))
             .toList();
+    // Testcases are inserted and updated based on createdAt field
     assertEquals("TC5", sortedTestCases.get(0).getId());
     assertEquals(1, sortedTestCases.get(0).getCaseNumber());
     assertEquals("TC1", sortedTestCases.get(1).getId());

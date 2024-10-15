@@ -22,27 +22,29 @@ public class AssignTestCaseSequentialId {
     log.info("Starting - assign_testcase_sequential_id");
     List<Measure> measures = measureRepository.findAll();
     if (CollectionUtils.isNotEmpty(measures)) {
-      measures.forEach(
-          measure -> {
-            List<TestCase> testCases = measure.getTestCases();
-            if (CollectionUtils.isNotEmpty(testCases)) {
-              List<TestCase> sortedTestCases =
-                  measure.getTestCases().stream()
-                      .sorted(Comparator.comparing(TestCase::getCreatedAt))
-                      .toList();
-              List<TestCase> updatedTestCases =
-                  IntStream.range(0, sortedTestCases.size())
-                      .mapToObj(
-                          i -> {
-                            TestCase testCase = sortedTestCases.get(i);
-                            testCase.setCaseNumber(i + 1);
-                            return testCase;
-                          })
-                      .toList();
-              measure.setTestCases(updatedTestCases);
-              measureRepository.save(measure);
-            }
-          });
+      measures.stream()
+          .filter(measure -> measure.getMeasureMetaData().isDraft())
+          .forEach(
+              measure -> {
+                List<TestCase> testCases = measure.getTestCases();
+                if (CollectionUtils.isNotEmpty(testCases)) {
+                  List<TestCase> sortedTestCases =
+                      measure.getTestCases().stream()
+                          .sorted(Comparator.comparing(TestCase::getCreatedAt))
+                          .toList();
+                  List<TestCase> updatedTestCases =
+                      IntStream.range(0, sortedTestCases.size())
+                          .mapToObj(
+                              i -> {
+                                TestCase testCase = sortedTestCases.get(i);
+                                testCase.setCaseNumber(i + 1);
+                                return testCase;
+                              })
+                          .toList();
+                  measure.setTestCases(updatedTestCases);
+                  measureRepository.save(measure);
+                }
+              });
     }
     log.info("COMPLETED - assign_testcase_sequential_id");
   }
