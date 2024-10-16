@@ -54,19 +54,19 @@ class AssignTestCaseSequentialIdTest {
         Measure.builder()
             .id("Measure1")
             .measureName("Measure1")
-                .measureMetaData(new MeasureMetaData().toBuilder().draft(true).build())
+            .measureMetaData(new MeasureMetaData().toBuilder().draft(true).build())
             .model(ModelType.QI_CORE.getValue())
             .testCases(List.of(tc1, tc2, tc3, tc4, tc5, tc6))
             .build();
 
     measure2 =
-            Measure.builder()
-                    .id("Measure2")
-                    .measureName("Measure2")
-                    .measureMetaData(new MeasureMetaData().toBuilder().draft(false).build())
-                    .model(ModelType.QDM_5_6.getValue())
-                    .testCases(List.of(tc1, tc2, tc3, tc4, tc5, tc6))
-                    .build();
+        Measure.builder()
+            .id("Measure2")
+            .measureName("Measure2")
+            .measureMetaData(new MeasureMetaData().toBuilder().draft(false).build())
+            .model(ModelType.QDM_5_6.getValue())
+            .testCases(List.of(tc1, tc2, tc3, tc4, tc5, tc6))
+            .build();
   }
 
   @Test

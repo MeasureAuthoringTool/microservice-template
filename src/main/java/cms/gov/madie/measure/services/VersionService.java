@@ -35,7 +35,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.Comparator;
-import java.util.Collections;
 
 @Slf4j
 @AllArgsConstructor
@@ -206,9 +205,7 @@ public class VersionService {
 
     boolean isFlagEnabled = appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID);
     boolean caseNumberExists = checkCaseNumberExists(measure.getTestCases());
-    measureDraft.setTestCases(
-        cloneTestCases(
-            measure.getTestCases(), measureDraft.getGroups(), id, isFlagEnabled, caseNumberExists));
+    measureDraft.setTestCases(cloneTestCases(measure.getTestCases(), measureDraft.getGroups()));
     var now = Instant.now();
     measureDraft.setCreatedAt(now);
     measureDraft.setLastModifiedAt(now);
@@ -255,12 +252,7 @@ public class VersionService {
     return List.of();
   }
 
-  private List<TestCase> cloneTestCases(
-      List<TestCase> testCases,
-      List<Group> draftGroups,
-      String measureId,
-      boolean isFlagEnabled,
-      boolean caseNumberExists) {
+  private List<TestCase> cloneTestCases(List<TestCase> testCases, List<Group> draftGroups) {
     if (!CollectionUtils.isEmpty(testCases)) {
       return testCases.stream()
           .map(
@@ -279,15 +271,10 @@ public class VersionService {
                                       .build())
                           .toList());
                 }
-                testCase =
-                    testCase.toBuilder()
-                        .id(ObjectId.get().toString())
-                        .groupPopulations(updatedTestCaseGroupPopulations)
-                        .build();
-                if (isFlagEnabled && caseNumberExists) {
-                  testCase.setCaseNumber(testCase.getCaseNumber());
-                }
-                return testCase;
+                return testCase.toBuilder()
+                    .id(ObjectId.get().toString())
+                    .groupPopulations(updatedTestCaseGroupPopulations)
+                    .build();
               })
           .collect(Collectors.toList());
     }
@@ -404,18 +391,10 @@ public class VersionService {
 
   List<TestCase> assignCaseNumbers(
       List<TestCase> testCases, String measureId, boolean isFlagEnabled, boolean caseNumberExists) {
-    List<TestCase> testCasesCopy = new ArrayList<>(testCases);
-    Collections.sort(
-        testCasesCopy,
-        new Comparator<TestCase>() {
-          public int compare(TestCase o1, TestCase o2) {
-            if (o1.getCreatedAt() == null || o2.getCreatedAt() == null) {
-              return 0;
-            }
-            return o1.getCreatedAt().compareTo(o2.getCreatedAt());
-          }
-        });
-    return testCasesCopy.stream()
+    return testCases.stream()
+        .sorted(
+            Comparator.comparing(
+                TestCase::getCreatedAt, Comparator.nullsFirst(Comparator.naturalOrder())))
         .map(
             testCase -> {
               if (isFlagEnabled) {
