@@ -1,8 +1,10 @@
 package cms.gov.madie.measure.config;
 
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.repositories.TestCaseSequenceRepository;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.TestCase;
+import gov.cms.madie.models.measure.TestCaseSequence;
 import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
@@ -18,7 +20,8 @@ import java.util.stream.IntStream;
 public class AssignTestCaseSequentialId {
 
   @Execution
-  public void updateTestCaseWithSequentialCaseNumber(MeasureRepository measureRepository) {
+  public void updateTestCaseWithSequentialCaseNumber(
+      MeasureRepository measureRepository, TestCaseSequenceRepository testCaseSequenceRepository) {
     log.info("Starting - assign_testcase_sequential_id");
     List<Measure> measures = measureRepository.findAll();
     if (CollectionUtils.isNotEmpty(measures)) {
@@ -43,6 +46,16 @@ public class AssignTestCaseSequentialId {
                           .toList();
                   measure.setTestCases(updatedTestCases);
                   measureRepository.save(measure);
+
+                  // Find the highest case number
+                  int highestCaseNumber =
+                      updatedTestCases.stream().mapToInt(TestCase::getCaseNumber).max().orElse(0);
+
+                  // Save the highest case number to TestCaseSequenceRepository
+                  TestCaseSequence testCaseSequence =
+                      new TestCaseSequence()
+                          .toBuilder().id(measure.getId()).sequence(highestCaseNumber).build();
+                  testCaseSequenceRepository.save(testCaseSequence);
                 }
               });
     }
