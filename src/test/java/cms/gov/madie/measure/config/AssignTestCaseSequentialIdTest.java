@@ -1,10 +1,12 @@
 package cms.gov.madie.measure.config;
 
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.repositories.TestCaseSequenceRepository;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureMetaData;
 import gov.cms.madie.models.measure.TestCase;
+import gov.cms.madie.models.measure.TestCaseSequence;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +29,7 @@ import static org.mockito.Mockito.*;
 class AssignTestCaseSequentialIdTest {
 
   @Mock MeasureRepository measureRepository;
+  @Mock TestCaseSequenceRepository testCaseSequenceRepository;
 
   @InjectMocks AssignTestCaseSequentialId assignTestCaseSequentialId;
 
@@ -40,6 +43,7 @@ class AssignTestCaseSequentialIdTest {
   TestCase tc6;
 
   @Captor private ArgumentCaptor<Measure> measureArgumentCaptor1;
+  @Captor private ArgumentCaptor<TestCaseSequence> testCaseSequenceArgumentCaptor;
 
   @BeforeEach
   public void setup() {
@@ -54,25 +58,26 @@ class AssignTestCaseSequentialIdTest {
         Measure.builder()
             .id("Measure1")
             .measureName("Measure1")
-                .measureMetaData(new MeasureMetaData().toBuilder().draft(true).build())
+            .measureMetaData(new MeasureMetaData().toBuilder().draft(true).build())
             .model(ModelType.QI_CORE.getValue())
             .testCases(List.of(tc1, tc2, tc3, tc4, tc5, tc6))
             .build();
 
     measure2 =
-            Measure.builder()
-                    .id("Measure2")
-                    .measureName("Measure2")
-                    .measureMetaData(new MeasureMetaData().toBuilder().draft(false).build())
-                    .model(ModelType.QDM_5_6.getValue())
-                    .testCases(List.of(tc1, tc2, tc3, tc4, tc5, tc6))
-                    .build();
+        Measure.builder()
+            .id("Measure2")
+            .measureName("Measure2")
+            .measureMetaData(new MeasureMetaData().toBuilder().draft(false).build())
+            .model(ModelType.QDM_5_6.getValue())
+            .testCases(List.of(tc1, tc2, tc3, tc4, tc5, tc6))
+            .build();
   }
 
   @Test
   void testChangeUnitExecutionEmptyRepository() {
     when(measureRepository.findAll()).thenReturn(List.of());
-    assignTestCaseSequentialId.updateTestCaseWithSequentialCaseNumber(measureRepository);
+    assignTestCaseSequentialId.updateTestCaseWithSequentialCaseNumber(
+        measureRepository, testCaseSequenceRepository);
     verifyNoMoreInteractions(measureRepository);
   }
 
@@ -80,7 +85,8 @@ class AssignTestCaseSequentialIdTest {
   void assignTestCaseSequentialIdForDraftMeasures() {
     when(measureRepository.findAll()).thenReturn(List.of(measure1, measure2));
 
-    assignTestCaseSequentialId.updateTestCaseWithSequentialCaseNumber(measureRepository);
+    assignTestCaseSequentialId.updateTestCaseWithSequentialCaseNumber(
+        measureRepository, testCaseSequenceRepository);
     // Versioned measure are not modified
     verify(measureRepository, times(1)).save(measureArgumentCaptor1.capture());
     Measure measure = measureArgumentCaptor1.getValue();
@@ -103,5 +109,9 @@ class AssignTestCaseSequentialIdTest {
     assertEquals(5, sortedTestCases.get(4).getCaseNumber());
     assertEquals("TC2", sortedTestCases.get(5).getId());
     assertEquals(6, sortedTestCases.get(5).getCaseNumber());
+
+    verify(testCaseSequenceRepository, times(1)).save(testCaseSequenceArgumentCaptor.capture());
+    TestCaseSequence testCaseSequence = testCaseSequenceArgumentCaptor.getValue();
+    assertEquals(6, testCaseSequence.getSequence());
   }
 }
