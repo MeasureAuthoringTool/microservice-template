@@ -894,8 +894,8 @@ public class VersionServiceTest {
     assertThat(
         draft.getTestCases().get(0).getGroupPopulations().get(0).getGroupId(),
         is(equalTo("clonedGroupId1")));
-    assertThat(draft.getTestCases().get(0).getCaseNumber(), is(equalTo(1)));
-    assertThat(draft.getTestCases().get(1).getCaseNumber(), is(equalTo(2)));
+    assertThat(draft.getTestCases().get(0).getCaseNumber(), is(equalTo(2)));
+    assertThat(draft.getTestCases().get(1).getCaseNumber(), is(equalTo(1)));
   }
 
   @Test

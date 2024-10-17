@@ -203,8 +203,6 @@ public class VersionService {
     measureDraft.getMeasureMetaData().setDraft(true);
     measureDraft.setGroups(cloneMeasureGroups(measure.getGroups()));
 
-    boolean isFlagEnabled = appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID);
-    boolean caseNumberExists = checkCaseNumberExists(measure.getTestCases());
     measureDraft.setTestCases(cloneTestCases(measure.getTestCases(), measureDraft.getGroups()));
     var now = Instant.now();
     measureDraft.setCreatedAt(now);
@@ -218,12 +216,17 @@ public class VersionService {
         savedDraft.getId());
 
     // need to generate sequence AFTER measure is created with the new measure id
-    if (!CollectionUtils.isEmpty(savedDraft.getTestCases())) {
-      savedDraft.setTestCases(
-          assignCaseNumbers(
-              savedDraft.getTestCases(), savedDraft.getId(), isFlagEnabled, caseNumberExists));
-      if (isFlagEnabled && !caseNumberExists) {
+    if (!CollectionUtils.isEmpty(savedDraft.getTestCases())
+        && appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)) {
+      if (!checkCaseNumberExists(measure.getTestCases())) {
+        savedDraft.setTestCases(
+            assignCaseNumbersWhenCaseNumbersNotExist(
+                savedDraft.getTestCases(), savedDraft.getId()));
         savedDraft = measureRepository.save(savedDraft);
+      } else {
+        sequenceService.setSequence(
+            savedDraft.getId(),
+            findHighestCaseNumberWhenCaseNumbersExist(savedDraft.getTestCases()));
       }
     }
 
@@ -389,23 +392,29 @@ public class VersionService {
     return true;
   }
 
-  List<TestCase> assignCaseNumbers(
-      List<TestCase> testCases, String measureId, boolean isFlagEnabled, boolean caseNumberExists) {
-    return testCases.stream()
+  List<TestCase> assignCaseNumbersWhenCaseNumbersNotExist(
+      List<TestCase> testCases, String measureId) {
+    List<TestCase> sortedTestCases = new ArrayList<>(testCases);
+    return sortedTestCases.stream()
         .sorted(
             Comparator.comparing(
                 TestCase::getCreatedAt, Comparator.nullsFirst(Comparator.naturalOrder())))
         .map(
             testCase -> {
-              if (isFlagEnabled) {
-                if (caseNumberExists) {
-                  sequenceService.generateSequence(measureId);
-                } else {
-                  testCase.setCaseNumber(sequenceService.generateSequence(measureId));
-                }
-              }
+              testCase.setCaseNumber(sequenceService.generateSequence(measureId));
               return testCase;
             })
         .collect(Collectors.toList());
+  }
+
+  int findHighestCaseNumberWhenCaseNumbersExist(List<TestCase> testCases) {
+    List<TestCase> sortedTestCases = new ArrayList<>(testCases);
+    return sortedTestCases.stream()
+        .sorted(
+            Comparator.comparing(
+                TestCase::getCaseNumber, Comparator.nullsFirst(Comparator.reverseOrder())))
+        .collect(Collectors.toList())
+        .get(0)
+        .getCaseNumber();
   }
 }
