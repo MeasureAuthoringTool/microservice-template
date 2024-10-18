@@ -48,7 +48,8 @@ public class QdmPackageService implements PackageService {
     HttpEntity<Measure> entity = new HttpEntity<>(measure, headers);
     try {
       log.info("Requesting measure package for measure [{}] from QDM service", measure.getId());
-      byte[] exportPackage = qdmServiceRestTemplate.exchange(uri, HttpMethod.PUT, entity, byte[].class).getBody();
+      byte[] exportPackage =
+          qdmServiceRestTemplate.exchange(uri, HttpMethod.PUT, entity, byte[].class).getBody();
 
       return PackageDto.builder().exportPackage(exportPackage).fromStorage(false).build();
 
@@ -56,17 +57,19 @@ public class QdmPackageService implements PackageService {
       String errorMessage = ex.getResponseBodyAsString();
 
       log.error("Error from QDM service for measure [{}]: {}", measure.getId(), errorMessage);
-      if (ex.getMessage().contains("HQMF")){
+      if (ex.getMessage().contains("HQMF")) {
         throw new HQMFServiceException();
       }
       throw new InternalServerException("QDM service error: " + errorMessage);
 
     } catch (RestClientException ex) {
       log.error(
-              "An error occurred while creating package for QDM measure: {}. Please check QDM service logs for more information.",
-              measure.getId(), ex);
+          "An error occurred while creating package for QDM measure: {}. Please check QDM service logs for more information.",
+          measure.getId(),
+          ex);
 
-      throw new InternalServerException("An unexpected error occurred while creating a measure package." + ex.getMessage());
+      throw new InternalServerException(
+          "An unexpected error occurred while creating a measure package." + ex.getMessage());
     }
   }
 
