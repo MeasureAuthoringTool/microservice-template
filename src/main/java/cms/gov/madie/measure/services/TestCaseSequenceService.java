@@ -40,4 +40,22 @@ public class TestCaseSequenceService {
           log.info("Reset sequence for test cases for measure [{}]", measureId);
         });
   }
+
+  public void setSequence(String measureId, int sequenceNumber) {
+    Optional<TestCaseSequence> sequence = sequenceRepository.findById(measureId);
+    sequence.ifPresent(
+        testCaseSequence -> {
+          testCaseSequence.setSequence(sequenceNumber);
+          sequenceRepository.save(testCaseSequence);
+          log.info(
+              "Update sequence for test cases for measure [{}], new sequence number is [{}]",
+              measureId,
+              sequenceNumber);
+        });
+    if (sequence.isEmpty()) {
+      TestCaseSequence testCaseSequence =
+          TestCaseSequence.builder().id(measureId).sequence(sequenceNumber).build();
+      sequenceRepository.save(testCaseSequence);
+    }
+  }
 }

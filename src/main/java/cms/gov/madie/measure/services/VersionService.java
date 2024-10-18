@@ -35,7 +35,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.Comparator;
-import java.util.Collections;
 
 @Slf4j
 @AllArgsConstructor
@@ -203,13 +202,8 @@ public class VersionService {
 
     measureDraft.getMeasureMetaData().setDraft(true);
     measureDraft.setGroups(cloneMeasureGroups(measure.getGroups()));
-    measureDraft.setTestCases(
-        cloneTestCases(
-            measure.getTestCases(),
-            measureDraft.getGroups(),
-            id,
-            appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID),
-            checkCaseNumberExists(measure.getTestCases())));
+
+    measureDraft.setTestCases(cloneTestCases(measure.getTestCases(), measureDraft.getGroups()));
     var now = Instant.now();
     measureDraft.setCreatedAt(now);
     measureDraft.setLastModifiedAt(now);
@@ -220,7 +214,24 @@ public class VersionService {
         username,
         measure.getId(),
         savedDraft.getId());
+
+    // need to generate sequence AFTER measure is created with the new measure id
+    if (!CollectionUtils.isEmpty(savedDraft.getTestCases())
+        && appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)) {
+      if (!checkCaseNumberExists(measure.getTestCases())) {
+        savedDraft.setTestCases(
+            assignCaseNumbersWhenCaseNumbersNotExist(
+                savedDraft.getTestCases(), savedDraft.getId()));
+        savedDraft = measureRepository.save(savedDraft);
+      } else {
+        sequenceService.setSequence(
+            savedDraft.getId(),
+            findHighestCaseNumberWhenCaseNumbersExist(savedDraft.getTestCases()));
+      }
+    }
+
     actionLogService.logAction(savedDraft.getId(), Measure.class, ActionType.DRAFTED, username);
+
     return savedDraft;
   }
 
@@ -244,25 +255,9 @@ public class VersionService {
     return List.of();
   }
 
-  private List<TestCase> cloneTestCases(
-      List<TestCase> testCases,
-      List<Group> draftGroups,
-      String measureId,
-      boolean isFlagEnabled,
-      boolean caseNumberExists) {
+  private List<TestCase> cloneTestCases(List<TestCase> testCases, List<Group> draftGroups) {
     if (!CollectionUtils.isEmpty(testCases)) {
-      List<TestCase> testCasesCopy = new ArrayList<>(testCases);
-      Collections.sort(
-          testCasesCopy,
-          new Comparator<TestCase>() {
-            public int compare(TestCase o1, TestCase o2) {
-              if (o1.getCreatedAt() == null || o2.getCreatedAt() == null) {
-                return 0;
-              }
-              return o1.getCreatedAt().compareTo(o2.getCreatedAt());
-            }
-          });
-      return testCasesCopy.stream()
+      return testCases.stream()
           .map(
               testCase -> {
                 List<TestCaseGroupPopulation> updatedTestCaseGroupPopulations = new ArrayList<>();
@@ -279,19 +274,10 @@ public class VersionService {
                                       .build())
                           .toList());
                 }
-                testCase =
-                    testCase.toBuilder()
-                        .id(ObjectId.get().toString())
-                        .groupPopulations(updatedTestCaseGroupPopulations)
-                        .build();
-                if (isFlagEnabled) {
-                  if (caseNumberExists) {
-                    testCase.setCaseNumber(testCase.getCaseNumber());
-                  } else {
-                    testCase.setCaseNumber(sequenceService.generateSequence(measureId));
-                  }
-                }
-                return testCase;
+                return testCase.toBuilder()
+                    .id(ObjectId.get().toString())
+                    .groupPopulations(updatedTestCaseGroupPopulations)
+                    .build();
               })
           .collect(Collectors.toList());
     }
@@ -404,5 +390,31 @@ public class VersionService {
       return false;
     }
     return true;
+  }
+
+  List<TestCase> assignCaseNumbersWhenCaseNumbersNotExist(
+      List<TestCase> testCases, String measureId) {
+    List<TestCase> sortedTestCases = new ArrayList<>(testCases);
+    return sortedTestCases.stream()
+        .sorted(
+            Comparator.comparing(
+                TestCase::getCreatedAt, Comparator.nullsFirst(Comparator.naturalOrder())))
+        .map(
+            testCase -> {
+              testCase.setCaseNumber(sequenceService.generateSequence(measureId));
+              return testCase;
+            })
+        .collect(Collectors.toList());
+  }
+
+  int findHighestCaseNumberWhenCaseNumbersExist(List<TestCase> testCases) {
+    List<TestCase> sortedTestCases = new ArrayList<>(testCases);
+    return sortedTestCases.stream()
+        .sorted(
+            Comparator.comparing(
+                TestCase::getCaseNumber, Comparator.nullsFirst(Comparator.reverseOrder())))
+        .collect(Collectors.toList())
+        .get(0)
+        .getCaseNumber();
   }
 }

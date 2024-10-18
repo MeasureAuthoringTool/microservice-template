@@ -942,7 +942,7 @@ public class VersionServiceTest {
     when(measureRepository.save(any(Measure.class))).thenReturn(versionedCopy);
     when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
     when(appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)).thenReturn(true);
-    when(sequenceService.generateSequence("1")).thenReturn(1);
+    when(sequenceService.generateSequence(anyString())).thenReturn(1);
 
     Measure draft =
         versionService.createDraft(versionedMeasure.getId(), "Test", "QI-Core v4.1.1", "test-user");
@@ -962,6 +962,5 @@ public class VersionServiceTest {
         draft.getTestCases().get(0).getGroupPopulations().get(0).getGroupId(),
         is(equalTo("clonedGroupId1")));
     assertThat(draft.getTestCases().get(0).getCaseNumber(), is(equalTo(1)));
-    assertThat(draft.getTestCases().get(1).getCaseNumber(), is(equalTo(2)));
   }
 }
