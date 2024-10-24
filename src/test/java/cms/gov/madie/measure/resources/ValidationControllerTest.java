@@ -48,7 +48,7 @@ class ValidationControllerTest {
   @InjectMocks private ValidationController validationController;
 
   @Captor ArgumentCaptor<String> testCaseJsonCaptor;
-
+  @Captor ArgumentCaptor<String> testCaseModelCaptor;
   @Captor ArgumentCaptor<String> accessTokenCaptor;
 
   @Test
@@ -59,7 +59,7 @@ class ValidationControllerTest {
     final String goodOutcomeJson = "{ \"code\": 200, \"successful\": true }";
     HttpEntity<String> request = new HttpEntity<>(testCaseJson, headers);
 
-    when(fhirServicesClient.validateBundle(anyString(), anyString()))
+    when(fhirServicesClient.validateBundle(anyString(), anyString(), anyString()))
         .thenReturn(
             ResponseEntity.ok(HapiOperationOutcome.builder().code(200).successful(true).build()));
 
@@ -71,7 +71,10 @@ class ValidationControllerTest {
     assertThat(output.getBody(), is(notNullValue()));
     assertThat(output.getBody(), is(equalTo(goodOutcomeJson)));
     verify(fhirServicesClient, times(1))
-        .validateBundle(testCaseJsonCaptor.capture(), accessTokenCaptor.capture());
+        .validateBundle(
+            testCaseJsonCaptor.capture(),
+            testCaseModelCaptor.capture(),
+            accessTokenCaptor.capture());
     assertThat(testCaseJsonCaptor.getValue(), is(equalTo(testCaseJson)));
     assertThat(accessTokenCaptor.getValue(), is(equalTo(accessToken)));
   }
@@ -83,7 +86,7 @@ class ValidationControllerTest {
     HttpHeaders headers = new HttpHeaders();
     HttpEntity<String> request = new HttpEntity<>(testCaseJson, headers);
 
-    when(fhirServicesClient.validateBundle(anyString(), anyString()))
+    when(fhirServicesClient.validateBundle(anyString(), anyString(), anyString()))
         .thenReturn(
             ResponseEntity.ok(HapiOperationOutcome.builder().code(200).successful(true).build()));
 
@@ -101,7 +104,10 @@ class ValidationControllerTest {
                 "Unable to validate test case JSON due to errors,"
                     + " but outcome not able to be interpreted!")));
     verify(fhirServicesClient, times(1))
-        .validateBundle(testCaseJsonCaptor.capture(), accessTokenCaptor.capture());
+        .validateBundle(
+            testCaseJsonCaptor.capture(),
+            testCaseModelCaptor.capture(),
+            accessTokenCaptor.capture());
   }
 
   @Test

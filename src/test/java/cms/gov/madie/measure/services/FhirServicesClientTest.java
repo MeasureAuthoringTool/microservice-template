@@ -118,7 +118,7 @@ class FhirServicesClientTest {
         .thenThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN));
     assertThrows(
         HttpClientErrorException.class,
-        () -> fhirServicesClient.validateBundle(testCaseJson, accessToken));
+        () -> fhirServicesClient.validateBundle(testCaseJson, "4-1-1", accessToken));
     verify(fhirServicesConfig.fhirServicesRestTemplate(), times(1))
         .exchange(
             any(URI.class), eq(HttpMethod.POST), httpEntityCaptor.capture(), any(Class.class));
@@ -141,7 +141,7 @@ class FhirServicesClientTest {
             .exchange(any(URI.class), eq(HttpMethod.POST), any(HttpEntity.class), any(Class.class)))
         .thenReturn(ResponseEntity.ok(goodOutcome));
     ResponseEntity<HapiOperationOutcome> output =
-        fhirServicesClient.validateBundle(testCaseJson, accessToken);
+        fhirServicesClient.validateBundle(testCaseJson, "4-1-1", accessToken);
     assertThat(output, is(notNullValue()));
     assertThat(output.getBody(), is(notNullValue()));
     assertThat(output.getBody(), is(equalTo(goodOutcome)));

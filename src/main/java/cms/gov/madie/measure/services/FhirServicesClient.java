@@ -61,11 +61,13 @@ public class FhirServicesClient {
   }
 
   public ResponseEntity<HapiOperationOutcome> validateBundle(
-      String testCaseJson, String accessToken) {
+      String testCaseJson, String modelVersion, String accessToken) {
     URI uri =
         URI.create(
             fhirServicesConfig.getMadieFhirServiceBaseUrl()
-                + fhirServicesConfig.getMadieFhirServiceValidateBundleUri());
+                + fhirServicesConfig
+                    .getMadieFhirServiceValidateBundleUri()
+                    .replace("$model", modelVersion));
     HttpHeaders headers = new HttpHeaders();
     headers.set(HttpHeaders.AUTHORIZATION, accessToken);
     headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);

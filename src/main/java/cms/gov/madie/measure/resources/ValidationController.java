@@ -41,7 +41,7 @@ public class ValidationController {
       HttpEntity<String> request, @RequestHeader("Authorization") String accessToken) {
     try {
       ResponseEntity<HapiOperationOutcome> output =
-          fhirServicesClient.validateBundle(request.getBody(), accessToken);
+          fhirServicesClient.validateBundle(request.getBody(), "", accessToken);
       return ResponseEntity.ok(mapper.writeValueAsString(output.getBody()));
 
     } catch (JsonProcessingException ex) {
