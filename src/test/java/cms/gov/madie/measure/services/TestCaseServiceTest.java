@@ -131,7 +131,7 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     Mockito.doReturn(measure).when(measureRepository).save(any(Measure.class));
 
-    when(fhirServicesClient.validateBundle(anyString(), anyString(), anyString()))
+    when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
         .thenReturn(
             ResponseEntity.ok(HapiOperationOutcome.builder().code(200).successful(true).build()));
 
@@ -181,7 +181,7 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     Mockito.doReturn(measure).when(measureRepository).save(any(Measure.class));
 
-    when(fhirServicesClient.validateBundle(anyString(), anyString(), anyString()))
+    when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
         .thenReturn(
             ResponseEntity.ok(HapiOperationOutcome.builder().code(200).successful(true).build()));
 
@@ -490,7 +490,7 @@ public class TestCaseServiceTest implements ResourceUtil {
             .build();
     final String accessToken = "Bearer Token";
 
-    when(fhirServicesClient.validateBundle(anyString(), anyString(), anyString()))
+    when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
         .thenReturn(
             ResponseEntity.ok(HapiOperationOutcome.builder().code(200).successful(true).build()));
     final ModelType model = ModelType.QI_CORE;
@@ -514,7 +514,7 @@ public class TestCaseServiceTest implements ResourceUtil {
             .build();
     final String accessToken = "Bearer Token";
 
-    when(fhirServicesClient.validateBundle(anyString(), anyString(), anyString()))
+    when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
         .thenReturn(
             ResponseEntity.ok(HapiOperationOutcome.builder().code(200).successful(true).build()));
 
@@ -709,7 +709,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     String username = "user01";
     String accessToken = "Bearer Token";
     when(measureRepository.findById(eq(measureId))).thenReturn(Optional.of(measure));
-    when(fhirServicesClient.validateBundle(anyString(), anyString(), anyString()))
+    when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
         .thenReturn(
             ResponseEntity.ok(HapiOperationOutcome.builder().code(200).successful(true).build()))
         .thenReturn(
@@ -738,7 +738,8 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertThat(output.get(1).getHapiOperationOutcome().getCode(), is(equalTo(400)));
     assertThat(output.get(1).isValidResource(), is(false));
 
-    verify(fhirServicesClient, times(2)).validateBundle(anyString(), anyString(), anyString());
+    verify(fhirServicesClient, times(2))
+        .validateBundle(anyString(), any(ModelType.class), anyString());
   }
 
   @Test
@@ -914,7 +915,7 @@ public class TestCaseServiceTest implements ResourceUtil {
             .build();
     when(measureService.findMeasureById(anyString())).thenReturn(originalMeasure);
 
-    when(fhirServicesClient.validateBundle(anyString(), anyString(), anyString()))
+    when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
         .thenReturn(
             ResponseEntity.ok(
                 HapiOperationOutcome.builder()
@@ -984,7 +985,7 @@ public class TestCaseServiceTest implements ResourceUtil {
             .build();
     when(measureService.findMeasureById(anyString())).thenReturn(originalMeasure);
 
-    when(fhirServicesClient.validateBundle(anyString(), anyString(), anyString()))
+    when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
         .thenReturn(
             ResponseEntity.ok(
                 HapiOperationOutcome.builder()
@@ -1106,7 +1107,7 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     doThrow(new RuntimeException())
         .when(fhirServicesClient)
-        .validateBundle(anyString(), anyString(), anyString());
+        .validateBundle(anyString(), any(ModelType.class), anyString());
     TestCase upsertingTestCase =
         testCase.toBuilder()
             .createdBy("Nobody")
@@ -1250,7 +1251,7 @@ public class TestCaseServiceTest implements ResourceUtil {
 
   @Test
   public void testGetTestCaseReturnsTestCaseByIdValidatesByUpsert() {
-    when(fhirServicesClient.validateBundle(anyString(), anyString(), anyString()))
+    when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
         .thenReturn(
             ResponseEntity.ok(HapiOperationOutcome.builder().code(200).successful(true).build()));
 
@@ -1551,7 +1552,7 @@ public class TestCaseServiceTest implements ResourceUtil {
 
   @Test
   public void testValidateTestCaseJsonHandlesGenericException() {
-    when(fhirServicesClient.validateBundle(anyString(), anyString(), anyString()))
+    when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
         .thenThrow(new RuntimeException("something bad happened!"));
 
     HapiOperationOutcome output =
@@ -1563,7 +1564,7 @@ public class TestCaseServiceTest implements ResourceUtil {
 
   @Test
   public void testValidateTestCaseJsonHandlesNotFound() {
-    when(fhirServicesClient.validateBundle(anyString(), anyString(), anyString()))
+    when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
         .thenThrow(
             new HttpClientErrorException(
                 HttpStatus.NOT_FOUND, "path not found", "{}".getBytes(), Charset.defaultCharset()));
@@ -1577,7 +1578,7 @@ public class TestCaseServiceTest implements ResourceUtil {
 
   @Test
   public void testValidateTestCaseJsonHandlesUnsupportedMediaType() {
-    when(fhirServicesClient.validateBundle(anyString(), anyString(), anyString()))
+    when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
         .thenThrow(
             new HttpClientErrorException(
                 HttpStatus.UNSUPPORTED_MEDIA_TYPE,
@@ -1594,7 +1595,7 @@ public class TestCaseServiceTest implements ResourceUtil {
 
   @Test
   public void testValidateTestCaseJsonHandlesInternalServerError() {
-    when(fhirServicesClient.validateBundle(anyString(), anyString(), anyString()))
+    when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
         .thenThrow(
             new HttpClientErrorException(
                 HttpStatus.INTERNAL_SERVER_ERROR, "Unsupported Media Type"));
@@ -1609,7 +1610,7 @@ public class TestCaseServiceTest implements ResourceUtil {
   @Test
   public void testValidateTestCaseJsonHandlesProcessingErrorDuringHttpClientException()
       throws JsonProcessingException {
-    when(fhirServicesClient.validateBundle(anyString(), anyString(), anyString()))
+    when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
         .thenThrow(
             new HttpClientErrorException(
                 HttpStatus.INTERNAL_SERVER_ERROR, "Unsupported Media Type"));
@@ -1633,7 +1634,7 @@ public class TestCaseServiceTest implements ResourceUtil {
 
   @Test
   public void testValidateTestCaseJsonHandlesGoodResponse() {
-    when(fhirServicesClient.validateBundle(anyString(), anyString(), anyString()))
+    when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
         .thenReturn(
             ResponseEntity.ok(
                 HapiOperationOutcome.builder()
@@ -2007,7 +2008,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     measure.setTestCases(testCases);
     when(measureRepository.findById(anyString())).thenReturn(Optional.ofNullable(measure));
     when(measureService.findMeasureById(anyString())).thenReturn(measure);
-    when(fhirServicesClient.validateBundle(anyString(), anyString(), anyString()))
+    when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
         .thenReturn(
             ResponseEntity.ok(HapiOperationOutcome.builder().code(200).successful(true).build()));
 

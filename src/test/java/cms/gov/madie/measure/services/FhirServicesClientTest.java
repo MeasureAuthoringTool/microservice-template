@@ -17,6 +17,7 @@ import static org.mockito.Mockito.when;
 import java.net.URI;
 import java.util.List;
 
+import gov.cms.madie.models.common.ModelType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -118,7 +119,7 @@ class FhirServicesClientTest {
         .thenThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN));
     assertThrows(
         HttpClientErrorException.class,
-        () -> fhirServicesClient.validateBundle(testCaseJson, "4-1-1", accessToken));
+        () -> fhirServicesClient.validateBundle(testCaseJson, ModelType.QI_CORE, accessToken));
     verify(fhirServicesConfig.fhirServicesRestTemplate(), times(1))
         .exchange(
             any(URI.class), eq(HttpMethod.POST), httpEntityCaptor.capture(), any(Class.class));
@@ -141,7 +142,7 @@ class FhirServicesClientTest {
             .exchange(any(URI.class), eq(HttpMethod.POST), any(HttpEntity.class), any(Class.class)))
         .thenReturn(ResponseEntity.ok(goodOutcome));
     ResponseEntity<HapiOperationOutcome> output =
-        fhirServicesClient.validateBundle(testCaseJson, "4-1-1", accessToken);
+        fhirServicesClient.validateBundle(testCaseJson, ModelType.QI_CORE, accessToken);
     assertThat(output, is(notNullValue()));
     assertThat(output.getBody(), is(notNullValue()));
     assertThat(output.getBody(), is(equalTo(goodOutcome)));

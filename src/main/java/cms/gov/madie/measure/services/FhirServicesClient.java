@@ -1,7 +1,9 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.config.FhirServicesConfig;
+import cms.gov.madie.measure.exceptions.UnsupportedTypeException;
 import gov.cms.madie.models.common.BundleType;
+import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.dto.ExportDTO;
 import gov.cms.madie.models.measure.HapiOperationOutcome;
 import gov.cms.madie.models.measure.Measure;
@@ -61,7 +63,12 @@ public class FhirServicesClient {
   }
 
   public ResponseEntity<HapiOperationOutcome> validateBundle(
-      String testCaseJson, String modelVersion, String accessToken) {
+      String testCaseJson, ModelType modelType, String accessToken) {
+    if (modelType == null) {
+      throw new UnsupportedTypeException("Please provide model type.");
+    }
+
+    String modelVersion = modelType.getVersionNumber().replace(".", "-");
     URI uri =
         URI.create(
             fhirServicesConfig.getMadieFhirServiceBaseUrl()

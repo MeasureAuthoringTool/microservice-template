@@ -770,8 +770,9 @@ public class TestCaseService {
     }
 
     try {
-      String model = modelType.getVersionNumber().replace(".", "-");
-      return fhirServicesClient.validateBundle(testCase.getJson(), model, accessToken).getBody();
+      return fhirServicesClient
+          .validateBundle(testCase.getJson(), modelType, accessToken)
+          .getBody();
     } catch (HttpClientErrorException ex) {
       log.warn("HAPI FHIR returned response code [{}]", ex.getRawStatusCode(), ex);
       try {
