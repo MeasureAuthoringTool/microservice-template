@@ -70,11 +70,10 @@ public class FhirServicesClient {
 
     String modelVersion = modelType.getVersionNumber().replace(".", "-");
     URI uri =
-        URI.create(
-            fhirServicesConfig.getMadieFhirServiceBaseUrl()
-                + fhirServicesConfig
-                    .getMadieFhirServiceValidateBundleUri()
-                    .replace("$model", modelVersion));
+        UriComponentsBuilder.fromUriString(
+                fhirServicesConfig.getMadieFhirServiceBaseUrl()
+                    + fhirServicesConfig.getMadieFhirServiceValidateBundleUri())
+            .build(modelVersion);
     HttpHeaders headers = new HttpHeaders();
     headers.set(HttpHeaders.AUTHORIZATION, accessToken);
     headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
