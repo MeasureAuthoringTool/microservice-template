@@ -775,7 +775,6 @@ public class TestCaseService {
     } catch (HttpClientErrorException ex) {
       log.warn("HAPI FHIR returned response code [{}]", ex.getRawStatusCode(), ex);
       try {
-        log.info("we get this far");
         return HapiOperationOutcome.builder()
             .code(ex.getRawStatusCode())
             .message("Unable to validate test case JSON due to errors")
