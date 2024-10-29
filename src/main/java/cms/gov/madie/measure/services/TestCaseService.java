@@ -311,19 +311,21 @@ public class TestCaseService {
         testCase.setPatientId(UUID.randomUUID());
       }
     }
-    TestCase validatedTestCase =
-        validateTestCaseAsResource(
-            testCase, ModelType.valueOfName(measure.getModel()), accessToken);
+    // this transformation logic needs to be run before hapiFhirValidations or they will fail.
     if (ModelType.QI_CORE.getValue().equalsIgnoreCase(measure.getModel())
         && StringUtils.isNotBlank(testCase.getJson())) {
-      validatedTestCase.setJson(
-          JsonUtil.enforcePatientId(validatedTestCase, madieJsonResourcesBaseUri));
-      validatedTestCase.setJson(
-          JsonUtil.updateResourceFullUrls(validatedTestCase, madieJsonResourcesBaseUri));
-      validatedTestCase.setJson(
+      testCase.setJson(
+          JsonUtil.enforcePatientId(testCase, madieJsonResourcesBaseUri));
+      testCase.setJson(
+          JsonUtil.updateResourceFullUrls(testCase, madieJsonResourcesBaseUri));
+      testCase.setJson(
           JsonUtil.replacePatientRefs(
-              validatedTestCase.getJson(), validatedTestCase.getPatientId().toString()));
+                  testCase.getJson(), testCase.getPatientId().toString()));
     }
+
+    TestCase validatedTestCase =
+            validateTestCaseAsResource(
+                    testCase, ModelType.valueOfName(measure.getModel()), accessToken);
     measure.getTestCases().add(validatedTestCase);
 
     measureRepository.save(measure);
@@ -776,6 +778,7 @@ public class TestCaseService {
     } catch (HttpClientErrorException ex) {
       log.warn("HAPI FHIR returned response code [{}]", ex.getRawStatusCode(), ex);
       try {
+        log.info("we get this far");
         return HapiOperationOutcome.builder()
             .code(ex.getRawStatusCode())
             .message("Unable to validate test case JSON due to errors")
