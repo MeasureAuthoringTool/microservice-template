@@ -311,19 +311,18 @@ public class TestCaseService {
         testCase.setPatientId(UUID.randomUUID());
       }
     }
+    // this transformation logic needs to be run before hapiFhirValidations or they will fail.
+    if (ModelType.QI_CORE.getValue().equalsIgnoreCase(measure.getModel())
+        && StringUtils.isNotBlank(testCase.getJson())) {
+      testCase.setJson(JsonUtil.enforcePatientId(testCase, madieJsonResourcesBaseUri));
+      testCase.setJson(JsonUtil.updateResourceFullUrls(testCase, madieJsonResourcesBaseUri));
+      testCase.setJson(
+          JsonUtil.replacePatientRefs(testCase.getJson(), testCase.getPatientId().toString()));
+    }
+
     TestCase validatedTestCase =
         validateTestCaseAsResource(
             testCase, ModelType.valueOfName(measure.getModel()), accessToken);
-    if (ModelType.QI_CORE.getValue().equalsIgnoreCase(measure.getModel())
-        && StringUtils.isNotBlank(testCase.getJson())) {
-      validatedTestCase.setJson(
-          JsonUtil.enforcePatientId(validatedTestCase, madieJsonResourcesBaseUri));
-      validatedTestCase.setJson(
-          JsonUtil.updateResourceFullUrls(validatedTestCase, madieJsonResourcesBaseUri));
-      validatedTestCase.setJson(
-          JsonUtil.replacePatientRefs(
-              validatedTestCase.getJson(), validatedTestCase.getPatientId().toString()));
-    }
     measure.getTestCases().add(validatedTestCase);
 
     measureRepository.save(measure);
