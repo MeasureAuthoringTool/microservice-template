@@ -42,7 +42,13 @@ public class QdmImprovementNotationStandardizationChangeUnit {
                     measure.getId(),
                     ((QdmMeasure) measure).getImprovementNotation());
                 counter.incrementAndGet();
-                qdmMeasure.setImprovementNotationDescription(qdmMeasure.getImprovementNotation());
+                final String newDescription =
+                    StringUtils.isNotBlank(qdmMeasure.getImprovementNotationDescription())
+                        ? qdmMeasure.getImprovementNotation()
+                            + " - "
+                            + qdmMeasure.getImprovementNotationDescription()
+                        : qdmMeasure.getImprovementNotation();
+                qdmMeasure.setImprovementNotationDescription(newDescription);
                 qdmMeasure.setImprovementNotation("Other");
                 measureRepository.save(measure);
               });
@@ -56,6 +62,7 @@ public class QdmImprovementNotationStandardizationChangeUnit {
     // Not able to rollback - not able to differentiate between update
     // measures and measures that already had Other + description
     // Also, rolling back means these measures will be broken again
-    log.error("Error detected, but cannot roll back QdmImprovementNotationStandardizationChangeUnit!");
+    log.error(
+        "Error detected, but cannot roll back QdmImprovementNotationStandardizationChangeUnit!");
   }
 }

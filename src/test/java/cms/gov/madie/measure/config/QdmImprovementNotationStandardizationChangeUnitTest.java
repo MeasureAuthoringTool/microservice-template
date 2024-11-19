@@ -40,6 +40,7 @@ class QdmImprovementNotationStandardizationChangeUnitTest {
   private QdmMeasure qdmDraftMeasureWithNoImprovementNotation;
   private QdmMeasure qdmDraftMeasureWithBlankImprovementNotation;
   private QdmMeasure qdmDraftMeasureWithInvalidImprovementNotation;
+  private QdmMeasure qdmDraftMeasureWithInvalidImprovementNotationAndDescription;
   private QdmMeasure qdmDraftMeasureWithOtherImprovementNotation;
   private QdmMeasure qdmDraftMeasureWithValidIncreaseImprovementNotation;
   private QdmMeasure qdmDraftMeasureWithValidDecreaseImprovementNotation;
@@ -70,6 +71,14 @@ class QdmImprovementNotationStandardizationChangeUnitTest {
             .active(true)
             .measureMetaData(MeasureMetaData.builder().draft(true).build())
             .improvementNotation("This is definitely an invalid improvement notation!")
+            .build();
+    qdmDraftMeasureWithInvalidImprovementNotationAndDescription =
+        QdmMeasure.builder()
+            .model(ModelType.QDM_5_6.getValue())
+            .active(true)
+            .measureMetaData(MeasureMetaData.builder().draft(true).build())
+            .improvementNotation("Invalid ImprovementNotation")
+            .improvementNotationDescription("With a description")
             .build();
     qdmDraftMeasureWithOtherImprovementNotation =
         QdmMeasure.builder()
@@ -153,6 +162,7 @@ class QdmImprovementNotationStandardizationChangeUnitTest {
                 qdmDraftMeasureWithBlankImprovementNotation,
                 qdmDraftMeasureWithOtherImprovementNotation,
                 qdmDraftMeasureWithInvalidImprovementNotation,
+                qdmDraftMeasureWithInvalidImprovementNotationAndDescription,
                 qdmDraftMeasureWithValidIncreaseImprovementNotation,
                 qdmDraftMeasureWithValidDecreaseImprovementNotation,
                 qdmVersionedMeasureWithInvalidImprovementNotation,
@@ -162,14 +172,25 @@ class QdmImprovementNotationStandardizationChangeUnitTest {
     changeUnit.standardizeQdmImprovementNotationField(measureRepository);
 
     // then
-    verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
-    Measure updatedMeasure = measureArgumentCaptor.getValue();
-    assertThat(updatedMeasure, is(notNullValue()));
-    assertThat(updatedMeasure.getModel(), is(equalTo(ModelType.QDM_5_6.getValue())));
-    QdmMeasure qdmMeasure = (QdmMeasure) updatedMeasure;
-    assertThat(qdmMeasure.getImprovementNotation(), is(equalTo("Other")));
+    verify(measureRepository, times(2)).save(measureArgumentCaptor.capture());
+    List<Measure> allSavedMeasures = measureArgumentCaptor.getAllValues();
+
+    Measure updatedMeasureNoDesc = allSavedMeasures.get(0);
+    assertThat(updatedMeasureNoDesc, is(notNullValue()));
+    assertThat(updatedMeasureNoDesc.getModel(), is(equalTo(ModelType.QDM_5_6.getValue())));
+    QdmMeasure qdmMeasureNoDesc = (QdmMeasure) updatedMeasureNoDesc;
+    assertThat(qdmMeasureNoDesc.getImprovementNotation(), is(equalTo("Other")));
     assertThat(
-        qdmMeasure.getImprovementNotationDescription(),
+        qdmMeasureNoDesc.getImprovementNotationDescription(),
         is(equalTo("This is definitely an invalid improvement notation!")));
+
+    Measure updatedMeasureWithDesc = allSavedMeasures.get(1);
+    assertThat(updatedMeasureWithDesc, is(notNullValue()));
+    assertThat(updatedMeasureWithDesc.getModel(), is(equalTo(ModelType.QDM_5_6.getValue())));
+    QdmMeasure qdmMeasureWithDesc = (QdmMeasure) updatedMeasureWithDesc;
+    assertThat(qdmMeasureWithDesc.getImprovementNotation(), is(equalTo("Other")));
+    assertThat(
+        qdmMeasureWithDesc.getImprovementNotationDescription(),
+        is(equalTo("Invalid ImprovementNotation - With a description")));
   }
 }
