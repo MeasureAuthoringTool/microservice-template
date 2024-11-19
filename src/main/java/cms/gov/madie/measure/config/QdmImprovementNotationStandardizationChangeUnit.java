@@ -56,6 +56,6 @@ public class QdmImprovementNotationStandardizationChangeUnit {
     // Not able to rollback - not able to differentiate between update
     // measures and measures that already had Other + description
     // Also, rolling back means these measures will be broken again
-    log.info("Rolling back QdmImprovementNotationStandardizationChangeUnit!");
+    log.error("Error detected, but cannot roll back QdmImprovementNotationStandardizationChangeUnit!");
   }
 }
