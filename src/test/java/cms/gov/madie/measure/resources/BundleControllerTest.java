@@ -21,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -57,7 +58,7 @@ class BundleControllerTest {
     final String json = "{\"message\": \"GOOD JSON\"}";
     var acl = new AclSpecification();
     acl.setUserId("test.user2");
-    acl.setRoles(List.of(RoleEnum.SHARED_WITH));
+    acl.setRoles(Set.of(RoleEnum.SHARED_WITH));
     final Measure measure = Measure.builder().createdBy("test.user").build();
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
     when(bundleService.bundleMeasure(any(Measure.class), anyString(), anyString()))

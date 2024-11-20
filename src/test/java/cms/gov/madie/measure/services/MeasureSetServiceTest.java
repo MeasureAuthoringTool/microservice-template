@@ -4,6 +4,7 @@ import cms.gov.madie.measure.exceptions.InvalidRequestException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.GeneratorRepository;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
+import gov.cms.madie.models.access.AclOperation;
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.common.ActionType;
@@ -16,9 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -38,17 +37,36 @@ public class MeasureSetServiceTest {
 
   @BeforeEach
   public void setUp() {
-    measureSet = MeasureSet.builder().measureSetId("msid-2").owner("user-1").build();
+    AclSpecification aclSpec = new AclSpecification();
+    aclSpec.setUserId("john");
+    aclSpec.setRoles(
+        new HashSet<>() {
+          {
+            add(RoleEnum.SHARED_WITH);
+          }
+        });
+
+    measureSet =
+        MeasureSet.builder()
+            .measureSetId("msid-2")
+            .owner("user-1")
+            .acls(
+                new ArrayList<>() {
+                  {
+                    add(aclSpec);
+                  }
+                })
+            .build();
   }
 
   @Test
   public void testCreateMeasureSet() {
     when(measureSetRepository.existsByMeasureSetId("msid-2")).thenReturn(false);
-    when(measureSetRepository.save(measureSet)).thenReturn(measureSet);
+    when(measureSetRepository.save(any(MeasureSet.class))).thenReturn(measureSet);
     measureSetService.createMeasureSet("user-1", "msid-xyz-p12r-12ert", "msid-2", null);
 
     verify(measureSetRepository, times(1)).existsByMeasureSetId("msid-2");
-    verify(measureSetRepository, times(1)).save(measureSet);
+    verify(measureSetRepository, times(1)).save(any(MeasureSet.class));
     verify(actionLogService, times(1))
         .logAction(measureSet.getId(), Measure.class, ActionType.CREATED, "user-1");
   }
@@ -62,46 +80,93 @@ public class MeasureSetServiceTest {
   }
 
   @Test
-  public void testUpdateMeasureSetAcls() {
+  public void testGrantOperationAsFirstNewAcl() {
     AclSpecification aclSpec = new AclSpecification();
     aclSpec.setUserId("john_1");
-    aclSpec.setRoles(List.of(RoleEnum.SHARED_WITH));
+    aclSpec.setRoles(Set.of(RoleEnum.SHARED_WITH));
+    AclOperation aclOperation =
+        AclOperation.builder().acls(List.of(aclSpec)).action(AclOperation.AclAction.GRANT).build();
     MeasureSet updatedMeasureSet =
         MeasureSet.builder().measureSetId("1").owner("john_1").acls(List.of(aclSpec)).build();
     when(measureSetRepository.findByMeasureSetId(anyString())).thenReturn(Optional.of(measureSet));
     when(measureSetRepository.save(any(MeasureSet.class))).thenReturn(updatedMeasureSet);
 
-    MeasureSet measureSet = measureSetService.updateMeasureSetAcls("1", aclSpec);
+    MeasureSet measureSet = measureSetService.updateMeasureSetAcls("1", aclOperation);
     assertThat(measureSet.getId(), is(equalTo(updatedMeasureSet.getId())));
     assertThat(measureSet.getOwner(), is(equalTo(updatedMeasureSet.getOwner())));
     assertThat(measureSet.getAcls().size(), is(equalTo(1)));
   }
 
   @Test
-  public void testUpdateMeasureSetToAddSecondAcl() {
+  public void testGrantOperationAsSecondNewAcl() {
     AclSpecification aclSpec1 = new AclSpecification();
-    measureSet.setAcls(
-        new ArrayList<>() {
-          {
-            add(aclSpec1);
-          }
-        });
+    aclSpec1.setUserId("john");
     AclSpecification aclSpec2 = new AclSpecification();
-    aclSpec2.setUserId("john_1");
-    aclSpec2.setRoles(List.of(RoleEnum.SHARED_WITH));
+    aclSpec2.setUserId("jane");
+    aclSpec2.setRoles(Set.of(RoleEnum.SHARED_WITH));
+    AclOperation aclOperation =
+        AclOperation.builder().acls(List.of(aclSpec2)).action(AclOperation.AclAction.GRANT).build();
     MeasureSet updatedMeasureSet =
         MeasureSet.builder()
             .measureSetId("1")
-            .owner("john_1")
+            .owner("john")
             .acls(List.of(aclSpec1, aclSpec2))
             .build();
     when(measureSetRepository.findByMeasureSetId(anyString())).thenReturn(Optional.of(measureSet));
     when(measureSetRepository.save(any(MeasureSet.class))).thenReturn(updatedMeasureSet);
 
-    MeasureSet measureSet = measureSetService.updateMeasureSetAcls("1", aclSpec2);
+    MeasureSet measureSet = measureSetService.updateMeasureSetAcls("1", aclOperation);
     assertThat(measureSet.getId(), is(equalTo(updatedMeasureSet.getId())));
     assertThat(measureSet.getOwner(), is(equalTo(updatedMeasureSet.getOwner())));
     assertThat(measureSet.getAcls().size(), is(equalTo(2)));
+  }
+
+  @Test
+  public void testGrantOperationUpdateAcl() {
+    AclSpecification aclSpec1 = new AclSpecification();
+    aclSpec1.setUserId("john");
+    aclSpec1.setRoles(
+        new HashSet<>() {
+          {
+            add(RoleEnum.SHARED_WITH);
+          }
+        });
+    AclSpecification aclSpec2 = new AclSpecification();
+    aclSpec2.setUserId("john");
+    aclSpec2.setRoles(Set.of(RoleEnum.SHARED_WITH));
+    AclOperation aclOperation =
+        AclOperation.builder().acls(List.of(aclSpec2)).action(AclOperation.AclAction.GRANT).build();
+    MeasureSet updatedMeasureSet =
+        MeasureSet.builder().measureSetId("1").owner("john").acls(List.of(aclSpec1)).build();
+    when(measureSetRepository.findByMeasureSetId(anyString())).thenReturn(Optional.of(measureSet));
+    when(measureSetRepository.save(any(MeasureSet.class))).thenReturn(updatedMeasureSet);
+
+    MeasureSet measureSet = measureSetService.updateMeasureSetAcls("1", aclOperation);
+    assertThat(measureSet.getId(), is(equalTo(updatedMeasureSet.getId())));
+    assertThat(measureSet.getOwner(), is(equalTo(updatedMeasureSet.getOwner())));
+    assertThat(measureSet.getAcls().size(), is(equalTo(1)));
+    assertThat(measureSet.getAcls().get(0).getUserId(), is(equalTo(aclSpec2.getUserId())));
+  }
+
+  @Test
+  public void testRevokeOperation() {
+    AclSpecification aclSpec = new AclSpecification();
+    aclSpec.setUserId("john");
+    aclSpec.setRoles(
+        new HashSet<>() {
+          {
+            add(RoleEnum.SHARED_WITH);
+          }
+        });
+    AclOperation aclOperation =
+        AclOperation.builder().acls(List.of(aclSpec)).action(AclOperation.AclAction.REVOKE).build();
+    when(measureSetRepository.findByMeasureSetId(anyString())).thenReturn(Optional.of(measureSet));
+    when(measureSetRepository.save(any(MeasureSet.class))).thenReturn(measureSet);
+
+    MeasureSet updatedMeasureSet = measureSetService.updateMeasureSetAcls("1", aclOperation);
+    assertThat(updatedMeasureSet.getId(), is(equalTo(measureSet.getId())));
+    assertThat(updatedMeasureSet.getOwner(), is(equalTo(measureSet.getOwner())));
+    assertThat(updatedMeasureSet.getAcls().size(), is(equalTo(0)));
   }
 
   @Test
@@ -111,7 +176,7 @@ public class MeasureSetServiceTest {
     Exception ex =
         assertThrows(
             ResourceNotFoundException.class,
-            () -> measureSetService.updateMeasureSetAcls("1", new AclSpecification()));
+            () -> measureSetService.updateMeasureSetAcls("1", new AclOperation()));
     assertTrue(ex.getMessage().contains("measure set may not exists."));
     verify(measureSetRepository, times(1)).findByMeasureSetId(anyString());
     verify(measureSetRepository, times(0)).save(any(MeasureSet.class));

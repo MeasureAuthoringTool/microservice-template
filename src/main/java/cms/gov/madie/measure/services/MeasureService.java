@@ -7,6 +7,7 @@ import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import cms.gov.madie.measure.repositories.OrganizationRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
 import cms.gov.madie.measure.utils.MeasureUtil;
+import gov.cms.madie.models.access.AclOperation;
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.common.ActionType;
@@ -376,23 +377,19 @@ public class MeasureService {
     }
   }
 
-  public boolean grantAccess(String measureId, String userid) {
-    boolean result = false;
+  public List<AclSpecification> updateAccessControlList(
+      String measureId, AclOperation aclOperation) {
     Optional<Measure> persistedMeasure = measureRepository.findById(measureId);
-    if (persistedMeasure.isPresent()) {
-      Measure measure = persistedMeasure.get();
-      AclSpecification spec = new AclSpecification();
-      spec.setUserId(userid);
-      spec.setRoles(
-          new ArrayList<>() {
-            {
-              add(RoleEnum.SHARED_WITH);
-            }
-          });
-      measureSetService.updateMeasureSetAcls(measure.getMeasureSetId(), spec);
-      result = true;
+    if (persistedMeasure.isEmpty()) {
+      throw new ResourceNotFoundException("Measure does not exist: " + measureId);
     }
-    return result;
+
+    Measure measure = persistedMeasure.get();
+    MeasureSet measureSet =
+        measureSetService.updateMeasureSetAcls(measure.getMeasureSetId(), aclOperation);
+    actionLogService.logAction(
+        measureId, Measure.class, ActionType.UPDATED, "admin", "ACL updated successfully");
+    return measureSet.getAcls();
   }
 
   public boolean changeOwnership(String measureId, String userid) {

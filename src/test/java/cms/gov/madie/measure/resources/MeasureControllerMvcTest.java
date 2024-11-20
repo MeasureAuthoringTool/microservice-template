@@ -29,9 +29,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import cms.gov.madie.measure.dto.MeasureListDTO;
 import cms.gov.madie.measure.services.MeasureSetService;
+import gov.cms.madie.models.access.AclOperation;
+import gov.cms.madie.models.access.AclSpecification;
+import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.dto.LibraryUsage;
 import gov.cms.madie.models.measure.*;
 import org.junit.jupiter.api.Test;
@@ -113,29 +117,59 @@ public class MeasureControllerMvcTest {
   }
 
   @Test
-  public void testGrantAccess() throws Exception {
+  public void testUpdateAccessControl() throws Exception {
     String measureId = "f225481c-921e-4015-9e14-e5046bfac9ff";
+    AclSpecification aclSpecification = new AclSpecification();
+    aclSpecification.setUserId("test");
+    aclSpecification.setRoles(Set.of(RoleEnum.SHARED_WITH));
 
-    doReturn(true).when(measureService).grantAccess(eq(measureId), eq("akinsgre"));
+    doReturn(List.of(aclSpecification))
+        .when(measureService)
+        .updateAccessControlList(anyString(), any(AclOperation.class));
 
-    mockMvc
-        .perform(
-            put("/measures/" + measureId + "/grant?userid=akinsgre")
-                .header(TEST_API_KEY_HEADER, TEST_API_KEY_HEADER_VALUE))
-        .andExpect(status().isOk())
-        .andExpect(content().string("akinsgre granted access to Measure successfully."));
+    MvcResult result =
+        mockMvc
+            .perform(
+                put("/measures/" + measureId + "/acls")
+                    .with(user(TEST_USER_ID))
+                    .with(csrf())
+                    .content(
+                        "{\"acls\": [{\"userId\": \"john.doe@abc.com\",\"roles\": [\"SHARED_WITH\"]}],\"action\": \"GRANT\"}")
+                    .header(TEST_API_KEY_HEADER, TEST_API_KEY_HEADER_VALUE)
+                    .contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().isOk())
+            .andReturn();
+    verify(measureService, times(1)).updateAccessControlList(anyString(), any(AclOperation.class));
+    assertEquals(
+        result.getResponse().getContentAsString(),
+        "[{\"userId\":\"test\",\"roles\":[\"SHARED_WITH\"]}]");
+  }
 
-    verify(measureService, times(1)).grantAccess(eq(measureId), eq("akinsgre"));
+  @Test
+  public void testUpdateAccessControlIfAclAndOperationMissing() throws Exception {
+    String measureId = "f225481c-921e-4015-9e14-e5046bfac9ff";
+    AclSpecification aclSpecification = new AclSpecification();
+    aclSpecification.setUserId("test");
+    aclSpecification.setRoles(Set.of(RoleEnum.SHARED_WITH));
 
-    verify(actionLogService, times(1))
-        .logAction(
-            targetIdArgumentCaptor.capture(),
-            targetClassArgumentCaptor.capture(),
-            actionTypeArgumentCaptor.capture(),
-            performedByArgumentCaptor.capture());
-    assertNotNull(targetIdArgumentCaptor.getValue());
-    assertThat(actionTypeArgumentCaptor.getValue(), is(equalTo(ActionType.UPDATED)));
-    assertThat(performedByArgumentCaptor.getValue(), is(equalTo("apiKey")));
+    MvcResult result =
+        mockMvc
+            .perform(
+                put("/measures/" + measureId + "/acls")
+                    .with(user(TEST_USER_ID))
+                    .with(csrf())
+                    .content("{\"acls\": [], \"operation\": null}")
+                    .header(TEST_API_KEY_HEADER, TEST_API_KEY_HEADER_VALUE)
+                    .contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+    verify(measureService, times(0)).updateAccessControlList(anyString(), any(AclOperation.class));
+    assertThat(
+        result
+            .getResponse()
+            .getContentAsString()
+            .contains("{\"acls\":\"must not be empty\",\"action\":\"must not be null\"}"),
+        is(true));
   }
 
   @Test

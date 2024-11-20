@@ -8,6 +8,8 @@ import cms.gov.madie.measure.services.ActionLogService;
 import cms.gov.madie.measure.services.GroupService;
 import cms.gov.madie.measure.services.MeasureService;
 import cms.gov.madie.measure.services.MeasureSetService;
+import gov.cms.madie.models.access.AclOperation;
+import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.dto.LibraryUsage;
 import gov.cms.madie.models.measure.*;
@@ -171,25 +173,16 @@ public class MeasureController {
     return ResponseEntity.ok().body(measureService.deactivateMeasure(id, principal.getName()));
   }
 
-  @PutMapping("/measures/{id}/grant")
+  @PutMapping("/measures/{id}/acls")
   @PreAuthorize("#request.getHeader('api-key') == #apiKey")
-  public ResponseEntity<String> grantAccess(
+  public ResponseEntity<List<AclSpecification>> updateAccessControl(
       HttpServletRequest request,
-      @PathVariable("id") String id,
-      @RequestParam(required = true, name = "userid") String userid,
+      @PathVariable String id,
+      @RequestBody @Validated AclOperation aclOperation,
       @Value("${admin-api-key}") String apiKey) {
-    ResponseEntity<String> response = ResponseEntity.badRequest().body("Measure does not exist.");
-
-    log.info("getMeasureId [{}] using apiKey ", id, "apikey");
-
-    if (measureService.grantAccess(id, userid)) {
-      response =
-          ResponseEntity.ok()
-              .body(String.format("%s granted access to Measure successfully.", userid));
-      actionLogService.logAction(id, Measure.class, ActionType.UPDATED, "apiKey");
-    }
-
-    return response;
+    List<AclSpecification> aclSpecifications =
+        measureService.updateAccessControlList(id, aclOperation);
+    return ResponseEntity.ok().body(aclSpecifications);
   }
 
   @PutMapping("/measures/{id}/ownership")
