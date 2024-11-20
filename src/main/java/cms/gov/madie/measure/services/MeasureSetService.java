@@ -56,7 +56,7 @@ public class MeasureSetService {
   public MeasureSet updateMeasureSetAcls(String measureSetId, AclOperation aclOperation) {
     Optional<MeasureSet> optionalMeasureSet = measureSetRepository.findByMeasureSetId(measureSetId);
     if (optionalMeasureSet.isPresent()) {
-      MeasureSet measureSet = optionalMeasureSet.get();
+      MeasureSet measureSet = optionalMeasureSet.get().toBuilder().build();
       if (AclOperation.AclAction.GRANT == aclOperation.getAction()) {
         if (CollectionUtils.isEmpty(measureSet.getAcls())) {
           // if no acl present, add it
@@ -96,7 +96,6 @@ public class MeasureSetService {
                   }
                 });
       }
-
       MeasureSet updatedMeasureSet = measureSetRepository.save(measureSet);
       log.info("ACL updated for Measure set [{}]", updatedMeasureSet.getId());
       return updatedMeasureSet;
@@ -153,6 +152,9 @@ public class MeasureSetService {
   }
 
   private AclSpecification findAclSpecificationByUserId(MeasureSet measureSet, String userId) {
+    if (CollectionUtils.isEmpty(measureSet.getAcls())) {
+      return null;
+    }
     return measureSet.getAcls().stream()
         .filter(existingAcl -> Objects.equals(existingAcl.getUserId(), userId))
         .findFirst()
