@@ -213,7 +213,7 @@ class BundleServiceTest implements ResourceUtil {
     ZipInputStream z = new ZipInputStream(new ByteArrayInputStream(output.getExportPackage()));
     ZipEntry entry = z.getNextEntry();
     String fileName = entry.getName();
-    assertEquals(fileName, "resources/TestCreateNewLibrary-1.0.000.xml");
+    assertEquals("resources/measure-TestCreateNewLibrary-1.0.000.json", fileName);
   }
 
   @Test
