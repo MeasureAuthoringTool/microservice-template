@@ -241,7 +241,7 @@ public class MeasureServiceTest implements ResourceUtil {
   @Test
   public void testVerifyAuthorizationByMeasureSetIdDoesNothingForAclsAndSharedWith() {
     AclSpecification acl1 = new AclSpecification();
-    acl1.setRoles(List.of(RoleEnum.SHARED_WITH));
+    acl1.setRoles(Set.of(RoleEnum.SHARED_WITH));
     acl1.setUserId("THEUSER");
     MeasureSet measureSet = MeasureSet.builder().owner("OWNER").acls(List.of(acl1)).build();
     when(measureSetService.findByMeasureSetId(anyString())).thenReturn(measureSet);
@@ -252,7 +252,7 @@ public class MeasureServiceTest implements ResourceUtil {
   @Test
   public void testVerifyAuthorizationByMeasureSetIdDoesNothingForAclsAndSharedWithButOwnerOnly() {
     AclSpecification acl1 = new AclSpecification();
-    acl1.setRoles(List.of(RoleEnum.SHARED_WITH));
+    acl1.setRoles(Set.of(RoleEnum.SHARED_WITH));
     acl1.setUserId("THEUSER");
     MeasureSet measureSet = MeasureSet.builder().owner("OWNER").acls(List.of(acl1)).build();
     when(measureSetService.findByMeasureSetId(anyString())).thenReturn(measureSet);
@@ -280,10 +280,10 @@ public class MeasureServiceTest implements ResourceUtil {
   public void testVerifyAuthorizationThrowsExceptionForNotInAclsAndNonOwner() {
     AclSpecification acl1 = new AclSpecification();
     acl1.setUserId("User1");
-    acl1.setRoles(List.of(RoleEnum.SHARED_WITH));
+    acl1.setRoles(Set.of(RoleEnum.SHARED_WITH));
     AclSpecification acl2 = new AclSpecification();
     acl2.setUserId("User2");
-    acl2.setRoles(List.of(RoleEnum.SHARED_WITH));
+    acl2.setRoles(Set.of(RoleEnum.SHARED_WITH));
     MeasureSet measureSet = MeasureSet.builder().owner("OWNER").acls(List.of(acl1, acl2)).build();
     Measure measure = Measure.builder().measureSet(measureSet).build();
     assertThrows(
@@ -294,10 +294,10 @@ public class MeasureServiceTest implements ResourceUtil {
   public void testVerifyAuthorizationDoesNothingForNotInAclsAndOwner() {
     AclSpecification acl1 = new AclSpecification();
     acl1.setUserId("User1");
-    acl1.setRoles(List.of(RoleEnum.SHARED_WITH));
+    acl1.setRoles(Set.of(RoleEnum.SHARED_WITH));
     AclSpecification acl2 = new AclSpecification();
     acl2.setUserId("User2");
-    acl2.setRoles(List.of(RoleEnum.SHARED_WITH));
+    acl2.setRoles(Set.of(RoleEnum.SHARED_WITH));
     MeasureSet measureSet = MeasureSet.builder().owner("THEUSER").acls(List.of(acl1, acl2)).build();
     Measure measure = Measure.builder().measureSetId("MsID").build();
     when(measureSetService.findByMeasureSetId(anyString())).thenReturn(measureSet);
@@ -309,10 +309,10 @@ public class MeasureServiceTest implements ResourceUtil {
   public void testVerifyAuthorizationDoesNothingForInAclsAndNonOwner() {
     AclSpecification acl1 = new AclSpecification();
     acl1.setUserId("User1");
-    acl1.setRoles(List.of(RoleEnum.SHARED_WITH));
+    acl1.setRoles(Set.of(RoleEnum.SHARED_WITH));
     AclSpecification acl2 = new AclSpecification();
     acl2.setUserId("THEUSER");
-    acl2.setRoles(List.of(RoleEnum.SHARED_WITH));
+    acl2.setRoles(Set.of(RoleEnum.SHARED_WITH));
     MeasureSet measureSet = MeasureSet.builder().owner("OWNER").acls(List.of(acl1, acl2)).build();
     Measure measure = Measure.builder().measureSetId("MsID").build();
     when(measureSetService.findByMeasureSetId(anyString())).thenReturn(measureSet);
@@ -1235,15 +1235,6 @@ public class MeasureServiceTest implements ResourceUtil {
 
     boolean result = measureService.changeOwnership(measure.getId(), "user123");
     assertTrue(result);
-  }
-
-  @Test
-  public void testGrantAccessNoMeasure() {
-    Optional<Measure> persistedMeasure = Optional.empty();
-    when(measureRepository.findById(eq("123"))).thenReturn(persistedMeasure);
-    boolean result = measureService.grantAccess("123", "user123");
-
-    assertFalse(result);
   }
 
   @Test

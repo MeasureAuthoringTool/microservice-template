@@ -427,7 +427,7 @@ class MeasureControllerTest {
     measure1.setMeasureMetaData(MeasureMetaData.builder().draft(true).build());
     AclSpecification acl = new AclSpecification();
     acl.setUserId("sharedUser@gmail.com");
-    acl.setRoles(List.of(RoleEnum.SHARED_WITH));
+    acl.setRoles(Set.of(RoleEnum.SHARED_WITH));
     when(measureService.findMeasureById(anyString()))
         .thenReturn(
             measure1.toBuilder()
@@ -459,7 +459,7 @@ class MeasureControllerTest {
     measure1.setMeasureMetaData(MeasureMetaData.builder().draft(false).build());
     AclSpecification acl = new AclSpecification();
     acl.setUserId("sharedUser@gmail.com");
-    acl.setRoles(List.of(RoleEnum.SHARED_WITH));
+    acl.setRoles(Set.of(RoleEnum.SHARED_WITH));
     when(measureService.findMeasureById(anyString()))
         .thenReturn(
             measure1.toBuilder()

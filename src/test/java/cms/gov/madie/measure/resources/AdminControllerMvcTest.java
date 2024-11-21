@@ -25,6 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
@@ -325,7 +326,7 @@ public class AdminControllerMvcTest {
     Measure msr1 = Measure.builder().id("12345").build();
     AclSpecification acl1 = new AclSpecification();
     acl1.setUserId("raoulduke");
-    acl1.setRoles(List.of(RoleEnum.SHARED_WITH));
+    acl1.setRoles(Set.of(RoleEnum.SHARED_WITH));
 
     Measure msr2 = Measure.builder().id("6789").build();
 
@@ -354,7 +355,7 @@ public class AdminControllerMvcTest {
     Measure testMsr = Measure.builder().id("12345").build();
     AclSpecification acl1 = new AclSpecification();
     acl1.setUserId("raoulduke");
-    acl1.setRoles(List.of(RoleEnum.SHARED_WITH));
+    acl1.setRoles(Set.of(RoleEnum.SHARED_WITH));
 
     List<AclSpecification> acls = List.of(acl1);
     MeasureSet measureSet = MeasureSet.builder().acls(acls).build();
