@@ -36,6 +36,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -230,11 +231,11 @@ public class GroupService {
           measureGroup.getStratifications().stream()
               .map(
                   measureStrata -> {
-                    if (null != measureStrata.getAssociation()) {
+                    if (null != measureStrata.getAssociations()) {
                       String strataName =
                           String.format(
-                              "Strata-%d %s",
-                              count.getAndIncrement(), measureStrata.getAssociation().getDisplay());
+                              "Strata-%d",
+                              count.getAndIncrement());
                       return updateTestCaseStratification(measureStrata, testCaseGroup, strataName);
                     } else {
                       String strataName = String.format("Strata-%d", count.getAndIncrement());
@@ -307,13 +308,13 @@ public class GroupService {
               .build();
     }
     testCaseStrata.setName(strataName);
-    handlePopulationChange(testCaseStrata, testCaseGroup);
+    handlePopulationChange(testCaseStrata, testCaseGroup, stratification);
 
     return testCaseStrata;
   }
 
   private void handlePopulationChange(
-      TestCaseStratificationValue testCaseStrata, TestCaseGroupPopulation testCaseGroup) {
+      TestCaseStratificationValue testCaseStrata, TestCaseGroupPopulation testCaseGroup, Stratification stratification) {
     List<TestCasePopulationValue> testCasePopulationValues = testCaseStrata.getPopulationValues();
     List<TestCasePopulationValue> testCasePopulationValuesFromGroup =
         testCaseGroup.getPopulationValues();
@@ -330,8 +331,8 @@ public class GroupService {
           // delete any that is not in testCasePopulationValuesFromGroup
           List<TestCasePopulationValue> tempTestCasePopulationValues = new ArrayList<>();
           for (TestCasePopulationValue tempTestCasePopulationValue : testCasePopulationValues) {
-            if (findExistsTestCasePopulationValue(
-                tempTestCasePopulationValue.getId(), testCasePopulationValuesFromGroup)) {
+
+            if (test(tempTestCasePopulationValue,stratification)) {
               tempTestCasePopulationValues.add(tempTestCasePopulationValue);
             }
           }
@@ -342,6 +343,20 @@ public class GroupService {
         testCaseStrata.setPopulationValues(testCasePopulationValuesFromGroup);
       }
     }
+  }
+
+  private boolean test(TestCasePopulationValue tempTestCasePopulationValue,Stratification stratification){
+    PopulationType populationType = stratification.getAssociations().stream().filter(association -> {
+              System.out.println(association);
+              return association.getDisplay().equalsIgnoreCase(tempTestCasePopulationValue.getName().getDisplay());
+            }
+
+    ).findFirst().orElse(null);
+
+    if(populationType!=null){
+      return true;
+    }
+    return false;
   }
 
   private boolean findExistsTestCasePopulationValue(
