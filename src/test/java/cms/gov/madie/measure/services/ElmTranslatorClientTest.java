@@ -145,9 +145,9 @@ class ElmTranslatorClientTest {
   @Test
   void testGetCqlHttpEntity() {
     HttpEntity<String> httpEntity =
-        elmTranslatorClient.getCqlHttpEntity("test cql", null, "testApiKey", "testHarpId");
+        elmTranslatorClient.getCqlHttpEntity("test cql", null, "TEST_API_KEY", "TEST_HARP_ID");
     HttpHeaders headers = httpEntity.getHeaders();
-    assertEquals(headers.get("api-key").get(0), "testApiKey");
-    assertEquals(headers.get("harp-id").get(0), "testHarpId");
+    assertEquals(headers.get("api-key").get(0), "TEST_API_KEY");
+    assertEquals(headers.get("harp-id").get(0), "TEST_HARP_ID");
   }
 }
