@@ -52,7 +52,7 @@ class ElmTranslatorClientTest {
         .thenReturn("/cql/translator/cql");
   }
 
-  private final String HEADER_APIKEY = "api-key";
+  private final String HEADER_1 = "api-key";
 
   @Test
   void testRestTemplateHandlesClientErrorException() {
@@ -147,9 +147,9 @@ class ElmTranslatorClientTest {
   @Test
   void testGetCqlHttpEntity() {
     HttpEntity<String> httpEntity =
-        elmTranslatorClient.getCqlHttpEntity("test cql", null, HEADER_APIKEY + "1", "HARP_ID1");
+        elmTranslatorClient.getCqlHttpEntity("test cql", null, HEADER_1 + "1", "HARP_ID1");
     HttpHeaders headers = httpEntity.getHeaders();
-    assertEquals(headers.get(HEADER_APIKEY).get(0), HEADER_APIKEY + "1");
+    assertEquals(headers.get(HEADER_1).get(0), HEADER_1 + "1");
     assertEquals(headers.get("harp-id").get(0), "HARP_ID1");
   }
 }
