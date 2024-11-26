@@ -2,6 +2,7 @@ package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.config.ElmTranslatorClientConfig;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationServiceException;
+import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.ElmJson;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,7 @@ import java.net.URI;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -38,6 +41,9 @@ class ElmTranslatorClientTest {
 
   @BeforeEach
   void beforeEach() {
+    lenient()
+        .when(elmTranslatorClientConfig.getFhirCqlElmServiceBaseUrl())
+        .thenReturn("http://test");
     lenient()
         .when(elmTranslatorClientConfig.getQdmCqlElmServiceBaseUrl())
         .thenReturn("http://test");
@@ -128,5 +134,20 @@ class ElmTranslatorClientTest {
     ElmJson elmJson = ElmJson.builder().json(json).build();
     boolean output = elmTranslatorClient.hasErrors(elmJson);
     assertThat(output, is(false));
+  }
+
+  @Test
+  void testQiCoreGetElmJsonURI() {
+    URI uri = elmTranslatorClient.getElmJsonURI(ModelType.QI_CORE.getValue());
+    assertEquals("http://test/cql/translator/cql?checkContext=true", uri.toString());
+  }
+
+  @Test
+  void testGetCqlHttpEntity() {
+    HttpEntity<String> httpEntity =
+        elmTranslatorClient.getCqlHttpEntity("test cql", null, "testApiKey", "testHarpId");
+    HttpHeaders headers = httpEntity.getHeaders();
+    assertEquals(headers.get("api-key").get(0), "testApiKey");
+    assertEquals(headers.get("harp-id").get(0), "testHarpId");
   }
 }
