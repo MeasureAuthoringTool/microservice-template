@@ -31,7 +31,9 @@ public class UpdateQICoreTestCaseStratificationsChangeUnit {
 
     measureList.forEach(
         measure -> {
-          if (!measure.isActive() || CollectionUtils.isEmpty(measure.getGroups())) {
+          if (!measure.isActive()
+              || CollectionUtils.isEmpty(measure.getGroups())
+              || CollectionUtils.isEmpty(measure.getTestCases())) {
             return;
           }
           for (var testCase : measure.getTestCases()) {
