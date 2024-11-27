@@ -49,23 +49,21 @@ public class UpdateQICoreTestCaseStratificationsChangeUnit {
                         .filter(strat -> strat.getId().equals(stratificationValue.getId()))
                         .findFirst();
 
-                if (matchingGroupStratification.isPresent()) {
-                  if (stratificationValue.getPopulationValues() != null) {
-                    List<TestCasePopulationValue> filteredPopulationValues =
-                        stratificationValue.getPopulationValues().stream()
-                            .filter(
-                                populationValue ->
-                                    matchingGroupStratification.get().getAssociations().stream()
-                                        .anyMatch(
-                                            validAssociation ->
-                                                validAssociation
-                                                    .getDisplay()
-                                                    .equalsIgnoreCase(
-                                                        populationValue.getName().getDisplay())))
-                            .collect(Collectors.toList());
-
-                    stratificationValue.setPopulationValues(filteredPopulationValues);
-                  }
+                if (matchingGroupStratification.isPresent()
+                    && stratificationValue.getPopulationValues() != null) {
+                  List<TestCasePopulationValue> filteredPopulationValues =
+                      stratificationValue.getPopulationValues().stream()
+                          .filter(
+                              populationValue ->
+                                  matchingGroupStratification.get().getAssociations().stream()
+                                      .anyMatch(
+                                          validAssociation ->
+                                              validAssociation
+                                                  .getDisplay()
+                                                  .equalsIgnoreCase(
+                                                      populationValue.getName().getDisplay())))
+                          .collect(Collectors.toList());
+                  stratificationValue.setPopulationValues(filteredPopulationValues);
                 }
               }
             }
