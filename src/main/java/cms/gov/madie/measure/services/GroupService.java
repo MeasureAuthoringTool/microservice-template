@@ -94,7 +94,7 @@ public class GroupService {
         measure.getGroups().add(group);
       }
     }
-    updateGroupForTestCases(group, measure.getTestCases());
+    updateGroupForTestCases(group, measure.getTestCases(), measure.getModel());
 
     Measure errors = measureUtil.validateAllMeasureDependencies(measure);
     measure.setErrors(errors.getErrors());
@@ -117,7 +117,7 @@ public class GroupService {
    * @param group Group being changed
    * @param testCases TestCases to iterate over and update
    */
-  public void updateGroupForTestCases(Group group, List<TestCase> testCases) {
+  public void updateGroupForTestCases(Group group, List<TestCase> testCases, String measureModel) {
     if (group != null && !CollectionUtils.isEmpty(testCases)) {
       testCases.forEach(
           testCase -> {
@@ -137,7 +137,7 @@ public class GroupService {
                 if (StringUtils.equals(testCaseGroupPopulation.getScoring(), group.getScoring())
                     && StringUtils.equals(
                         testCaseGroupPopulation.getPopulationBasis(), group.getPopulationBasis())) {
-                  updateTestCaseGroupWithMeasureGroup(testCaseGroupPopulation, group);
+                  updateTestCaseGroupWithMeasureGroup(testCaseGroupPopulation, group, measureModel);
                 } else {
                   removeGroupFromTestCase(group.getId(), testCase);
                 }
@@ -188,7 +188,7 @@ public class GroupService {
   }
 
   public void updateTestCaseGroupWithMeasureGroup(
-      TestCaseGroupPopulation testCaseGroup, Group measureGroup) {
+      TestCaseGroupPopulation testCaseGroup, Group measureGroup, String measureModel) {
     // update test case populations based on measure group population
     List<TestCasePopulationValue> populations =
         measureGroup.getPopulations().stream()
@@ -235,10 +235,12 @@ public class GroupService {
                           String.format(
                               "Strata-%d %s",
                               count.getAndIncrement(), measureStrata.getAssociation().getDisplay());
-                      return updateTestCaseStratification(measureStrata, testCaseGroup, strataName);
+                      return updateTestCaseStratification(
+                          measureStrata, testCaseGroup, strataName, measureModel);
                     } else {
                       String strataName = String.format("Strata-%d", count.getAndIncrement());
-                      return updateTestCaseStratification(measureStrata, testCaseGroup, strataName);
+                      return updateTestCaseStratification(
+                          measureStrata, testCaseGroup, strataName, measureModel);
                     }
                   })
               .filter(Objects::nonNull)
@@ -282,7 +284,10 @@ public class GroupService {
   }
 
   protected TestCaseStratificationValue updateTestCaseStratification(
-      Stratification stratification, TestCaseGroupPopulation testCaseGroup, String strataName) {
+      Stratification stratification,
+      TestCaseGroupPopulation testCaseGroup,
+      String strataName,
+      String measureModel) {
     // if no cql definition(optional), no need to consider stratification
     if (StringUtils.isEmpty(stratification.getCqlDefinition())) {
       return null;
@@ -307,13 +312,16 @@ public class GroupService {
               .build();
     }
     testCaseStrata.setName(strataName);
-    handlePopulationChange(testCaseStrata, testCaseGroup);
+    handlePopulationChange(testCaseStrata, testCaseGroup, measureModel, stratification);
 
     return testCaseStrata;
   }
 
   private void handlePopulationChange(
-      TestCaseStratificationValue testCaseStrata, TestCaseGroupPopulation testCaseGroup) {
+      TestCaseStratificationValue testCaseStrata,
+      TestCaseGroupPopulation testCaseGroup,
+      String measureModel,
+      Stratification stratification) {
     List<TestCasePopulationValue> testCasePopulationValues = testCaseStrata.getPopulationValues();
     List<TestCasePopulationValue> testCasePopulationValuesFromGroup =
         testCaseGroup.getPopulationValues();
@@ -330,9 +338,18 @@ public class GroupService {
           // delete any that is not in testCasePopulationValuesFromGroup
           List<TestCasePopulationValue> tempTestCasePopulationValues = new ArrayList<>();
           for (TestCasePopulationValue tempTestCasePopulationValue : testCasePopulationValues) {
-            if (findExistsTestCasePopulationValue(
-                tempTestCasePopulationValue.getId(), testCasePopulationValuesFromGroup)) {
-              tempTestCasePopulationValues.add(tempTestCasePopulationValue);
+            if (StringUtils.equals(measureModel, ModelType.QDM_5_6.getValue())) {
+              if (findExistsTestCasePopulationValue(
+                  tempTestCasePopulationValue.getId(), testCasePopulationValuesFromGroup)) {
+                tempTestCasePopulationValues.add(tempTestCasePopulationValue);
+              }
+            } else {
+              // remove association from testcases when stratifications are changed in measure
+              // groups
+              if (handleStratificationAssociationChange(
+                  tempTestCasePopulationValue, stratification)) {
+                tempTestCasePopulationValues.add(tempTestCasePopulationValue);
+              }
             }
           }
           testCaseStrata.setPopulationValues(tempTestCasePopulationValues);
@@ -342,6 +359,27 @@ public class GroupService {
         testCaseStrata.setPopulationValues(testCasePopulationValuesFromGroup);
       }
     }
+  }
+
+  private boolean handleStratificationAssociationChange(
+      TestCasePopulationValue tempTestCasePopulationValue, Stratification stratification) {
+    if (stratification.getAssociations() != null) {
+      PopulationType populationAsocciation =
+          stratification.getAssociations().stream()
+              .filter(
+                  association -> {
+                    return association
+                        .getDisplay()
+                        .equalsIgnoreCase(tempTestCasePopulationValue.getName().getDisplay());
+                  })
+              .findFirst()
+              .orElse(null);
+
+      if (populationAsocciation != null) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private boolean findExistsTestCasePopulationValue(

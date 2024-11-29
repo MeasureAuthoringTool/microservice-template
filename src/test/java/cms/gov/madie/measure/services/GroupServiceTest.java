@@ -660,7 +660,7 @@ public class GroupServiceTest implements ResourceUtil {
     final List<TestCase> testCases =
         List.of(TestCase.builder().groupPopulations(List.of(testPopulation)).build());
 
-    groupService.updateGroupForTestCases(null, testCases);
+    groupService.updateGroupForTestCases(null, testCases, ModelType.QI_CORE.getValue());
     // unchanged test case populations
     assertEquals(testCases.get(0).getGroupPopulations(), List.of(testPopulation));
   }
@@ -682,7 +682,7 @@ public class GroupServiceTest implements ResourceUtil {
                 .build());
     // before updates
     assertEquals(1, testCases.get(0).getGroupPopulations().size());
-    groupService.updateGroupForTestCases(group, testCases);
+    groupService.updateGroupForTestCases(group, testCases, ModelType.QI_CORE.getValue());
     // group should be removed from test case as measure group scoring was changed
     assertEquals(0, testCases.get(0).getGroupPopulations().size());
   }
@@ -722,7 +722,7 @@ public class GroupServiceTest implements ResourceUtil {
                 .build());
     // before updates
     assertEquals(1, testCases.get(0).getGroupPopulations().size());
-    groupService.updateGroupForTestCases(group, testCases);
+    groupService.updateGroupForTestCases(group, testCases, ModelType.QI_CORE.getValue());
     // group should not be removed from test case as measure group scoring was not
     // changed
     assertEquals(1, testCases.get(0).getGroupPopulations().size());
@@ -745,7 +745,7 @@ public class GroupServiceTest implements ResourceUtil {
                 .build());
     // before updates
     assertEquals(1, testCases.get(0).getGroupPopulations().size());
-    groupService.updateGroupForTestCases(group, testCases);
+    groupService.updateGroupForTestCases(group, testCases, ModelType.QI_CORE.getValue());
     // group should be removed from test case as populationBasis for measure group
     // was changed
     assertEquals(0, testCases.get(0).getGroupPopulations().size());
@@ -757,7 +757,7 @@ public class GroupServiceTest implements ResourceUtil {
     final List<TestCase> testCases = List.of();
     // before updates
     assertEquals(0, testCases.size());
-    groupService.updateGroupForTestCases(group, testCases);
+    groupService.updateGroupForTestCases(group, testCases, ModelType.QI_CORE.getValue());
     // after updates, no change to the test case list
     assertEquals(0, testCases.size());
   }
@@ -768,7 +768,7 @@ public class GroupServiceTest implements ResourceUtil {
     final List<TestCase> testCases = List.of(TestCase.builder().groupPopulations(null).build());
     // before updates
     assertNull(testCases.get(0).getGroupPopulations());
-    groupService.updateGroupForTestCases(group, testCases);
+    groupService.updateGroupForTestCases(group, testCases, ModelType.QI_CORE.getValue());
     // after updates, no population added to the group
     assertNull(testCases.get(0).getGroupPopulations());
   }
@@ -795,7 +795,7 @@ public class GroupServiceTest implements ResourceUtil {
                 .build());
     // before updates
     assertEquals(1, testCases.get(0).getGroupPopulations().size());
-    groupService.updateGroupForTestCases(group, testCases);
+    groupService.updateGroupForTestCases(group, testCases, ModelType.QI_CORE.getValue());
     // after update call, do nothing for new group
     assertEquals(1, testCases.get(0).getGroupPopulations().size());
   }
@@ -956,7 +956,8 @@ public class GroupServiceTest implements ResourceUtil {
     // before updates
     assertEquals(5, testCaseGroup.getPopulationValues().size());
     assertNull(testCaseGroup.getStratificationValues());
-    groupService.updateTestCaseGroupWithMeasureGroup(testCaseGroup, measureGroup);
+    groupService.updateTestCaseGroupWithMeasureGroup(
+        testCaseGroup, measureGroup, ModelType.QI_CORE.getValue());
     // after updates
     assertEquals(6, testCaseGroup.getPopulationValues().size());
     assertEquals(2, testCaseGroup.getStratificationValues().size());
@@ -985,7 +986,8 @@ public class GroupServiceTest implements ResourceUtil {
     // before updates
     assertEquals(5, testCaseGroup.getPopulationValues().size());
     assertNull(testCaseGroup.getStratificationValues());
-    groupService.updateTestCaseGroupWithMeasureGroup(testCaseGroup, measureGroup);
+    groupService.updateTestCaseGroupWithMeasureGroup(
+        testCaseGroup, measureGroup, ModelType.QI_CORE.getValue());
     // after updates
     assertEquals(6, testCaseGroup.getPopulationValues().size());
     assertEquals(2, testCaseGroup.getStratificationValues().size());
@@ -1010,7 +1012,8 @@ public class GroupServiceTest implements ResourceUtil {
     // unselect 1 population and 1 stratification from measure group
     measureGroup.getPopulations().get(2).setDefinition(null);
     measureGroup.getStratifications().get(1).setCqlDefinition(null);
-    groupService.updateTestCaseGroupWithMeasureGroup(testCaseGroup, measureGroup);
+    groupService.updateTestCaseGroupWithMeasureGroup(
+        testCaseGroup, measureGroup, ModelType.QI_CORE.getValue());
     // after updates
     assertEquals(5, testCaseGroup.getPopulationValues().size());
     assertEquals(1, testCaseGroup.getStratificationValues().size());
@@ -1087,7 +1090,8 @@ public class GroupServiceTest implements ResourceUtil {
     // unselect 1 population and 1 stratification from measure group
     measureGroup.getPopulations().get(2).setDefinition(null);
     measureGroup.getStratifications().get(0).setCqlDefinition(null);
-    groupService.updateTestCaseGroupWithMeasureGroup(testCaseGroup, measureGroup);
+    groupService.updateTestCaseGroupWithMeasureGroup(
+        testCaseGroup, measureGroup, ModelType.QI_CORE.getValue());
     // after updates
     assertEquals(5, testCaseGroup.getPopulationValues().size());
     assertEquals(0, testCaseGroup.getStratificationValues().size());
@@ -1123,7 +1127,8 @@ public class GroupServiceTest implements ResourceUtil {
     // update measure group to remove stratification and observations
     measureGroup.setStratifications(null);
     measureGroup.setMeasureObservations(null);
-    groupService.updateTestCaseGroupWithMeasureGroup(testCaseGroup, measureGroup);
+    groupService.updateTestCaseGroupWithMeasureGroup(
+        testCaseGroup, measureGroup, ModelType.QI_CORE.getValue());
     // after updates
     assertEquals(4, testCaseGroup.getPopulationValues().size());
     assertEquals(0, testCaseGroup.getStratificationValues().size());
@@ -1138,7 +1143,8 @@ public class GroupServiceTest implements ResourceUtil {
     assertEquals(5, testCaseGroup.getPopulationValues().size());
     // remove denominator observation from measure group
     measureGroup.getMeasureObservations().remove(0);
-    groupService.updateTestCaseGroupWithMeasureGroup(testCaseGroup, measureGroup);
+    groupService.updateTestCaseGroupWithMeasureGroup(
+        testCaseGroup, measureGroup, ModelType.QI_CORE.getValue());
     // after updates
     assertEquals(5, testCaseGroup.getPopulationValues().size());
   }
@@ -1152,7 +1158,8 @@ public class GroupServiceTest implements ResourceUtil {
     assertEquals(5, testCaseGroup.getPopulationValues().size());
     // remove denominator observation from measure group
     measureGroup.getMeasureObservations().remove(1);
-    groupService.updateTestCaseGroupWithMeasureGroup(testCaseGroup, measureGroup);
+    groupService.updateTestCaseGroupWithMeasureGroup(
+        testCaseGroup, measureGroup, ModelType.QI_CORE.getValue());
     // after updates
     assertEquals(5, testCaseGroup.getPopulationValues().size());
   }
@@ -1163,7 +1170,8 @@ public class GroupServiceTest implements ResourceUtil {
     TestCaseGroupPopulation testCaseGroup = buildTestCaseCVGroup();
     // before updates
     assertEquals(4, testCaseGroup.getPopulationValues().size());
-    groupService.updateTestCaseGroupWithMeasureGroup(testCaseGroup, group2);
+    groupService.updateTestCaseGroupWithMeasureGroup(
+        testCaseGroup, group2, ModelType.QI_CORE.getValue());
     // after updates
     assertEquals(4, testCaseGroup.getPopulationValues().size());
   }
@@ -1386,7 +1394,7 @@ public class GroupServiceTest implements ResourceUtil {
 
     TestCaseStratificationValue testCaseStratificationValue =
         groupService.updateTestCaseStratification(
-            stratification, testCaseGroupPopulation, "Strata-1");
+            stratification, testCaseGroupPopulation, "Strata-1", ModelType.QDM_5_6.getValue());
     assertTrue(testCaseStratificationValue != null);
     assertEquals(testCaseStratificationValue.getPopulationValues().size(), 3);
   }
@@ -1428,7 +1436,7 @@ public class GroupServiceTest implements ResourceUtil {
 
     TestCaseStratificationValue testCaseStratificationValue =
         groupService.updateTestCaseStratification(
-            stratification, testCaseGroupPopulation, "Strata-1");
+            stratification, testCaseGroupPopulation, "Strata-1", ModelType.QDM_5_6.getValue());
     assertTrue(testCaseStratificationValue != null);
     assertEquals(testCaseStratificationValue.getPopulationValues().size(), 3);
   }
@@ -1467,7 +1475,7 @@ public class GroupServiceTest implements ResourceUtil {
 
     TestCaseStratificationValue testCaseStratificationValue =
         groupService.updateTestCaseStratification(
-            stratification, testCaseGroupPopulation, "Strata-1");
+            stratification, testCaseGroupPopulation, "Strata-1", ModelType.QDM_5_6.getValue());
     assertTrue(testCaseStratificationValue != null);
     assertEquals(testCaseStratificationValue.getPopulationValues().size(), 2);
     assertNotEquals(
@@ -1482,7 +1490,10 @@ public class GroupServiceTest implements ResourceUtil {
   public void testUpdateTestCaseStratificationForNonTestCasePopulationValuesFromGroup() {
     TestCaseStratificationValue testCaseStratificationValue =
         groupService.updateTestCaseStratification(
-            stratification, new TestCaseGroupPopulation(), "Strata-1");
+            stratification,
+            new TestCaseGroupPopulation(),
+            "Strata-1",
+            ModelType.QI_CORE.getValue());
     assertNull(testCaseStratificationValue.getPopulationValues());
   }
 
