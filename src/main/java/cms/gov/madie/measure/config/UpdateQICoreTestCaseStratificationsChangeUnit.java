@@ -53,7 +53,7 @@ public class UpdateQICoreTestCaseStratificationsChangeUnit {
 
                 if (matchingGroupStratification.isPresent()
                     && stratificationValue.getPopulationValues() != null) {
-                  List<TestCasePopulationValue> filteredPopulationValues =
+                  List<TestCasePopulationValue> filteredStratifiedPopulationValues =
                       stratificationValue.getPopulationValues().stream()
                           .filter(
                               populationValue ->
@@ -65,7 +65,7 @@ public class UpdateQICoreTestCaseStratificationsChangeUnit {
                                                   .equalsIgnoreCase(
                                                       populationValue.getName().getDisplay())))
                           .collect(Collectors.toList());
-                  stratificationValue.setPopulationValues(filteredPopulationValues);
+                  stratificationValue.setPopulationValues(filteredStratifiedPopulationValues);
                 }
               }
             }
