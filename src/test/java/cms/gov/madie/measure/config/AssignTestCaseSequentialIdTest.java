@@ -47,12 +47,13 @@ class AssignTestCaseSequentialIdTest {
 
   @BeforeEach
   public void setup() {
-    tc5 = TestCase.builder().id("TC5").name("TC%").createdAt(Instant.now()).build();
-    tc1 = TestCase.builder().id("TC1").name("TC1").createdAt(Instant.now()).build();
-    tc4 = TestCase.builder().id("TC4").name("TC4").createdAt(Instant.now()).build();
-    tc3 = TestCase.builder().id("TC3").name("TC3").createdAt(Instant.now()).build();
-    tc6 = TestCase.builder().id("TC6").name("TC6").createdAt(Instant.now()).build();
-    tc2 = TestCase.builder().id("TC2").name("TC2").createdAt(Instant.now()).build();
+    Instant now = Instant.now();
+    tc5 = TestCase.builder().id("TC5").name("TC%").createdAt(now.plusSeconds(1)).build();
+    tc1 = TestCase.builder().id("TC1").name("TC1").createdAt(now.plusSeconds(2)).build();
+    tc4 = TestCase.builder().id("TC4").name("TC4").createdAt(now.plusSeconds(3)).build();
+    tc3 = TestCase.builder().id("TC3").name("TC3").createdAt(now.plusSeconds(4)).build();
+    tc6 = TestCase.builder().id("TC6").name("TC6").createdAt(now.plusSeconds(5)).build();
+    tc2 = TestCase.builder().id("TC2").name("TC2").createdAt(now.plusSeconds(6)).build();
 
     measure1 =
         Measure.builder()
