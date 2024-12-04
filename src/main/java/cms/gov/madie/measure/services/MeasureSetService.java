@@ -158,30 +158,35 @@ public class MeasureSetService {
       Optional<MeasureSet> optionalMeasureSet = measureSetRepository.findByMeasureSetId(measureSetId);
 
       if (optionalMeasureSet.isEmpty()) {
-        throw new ResourceNotFoundException("No measure set exists for measure with measure set id of " + measureSetId);
+        throw new ResourceNotFoundException("No measure set exists for measure with measure set id of "
+            + measureSetId);
       }
 
       MeasureSet measureSet = optionalMeasureSet.get();
 
       if (measureSet.getCmsId() == null) {
-        throw new ResourceNotFoundException(String.format("No CMS id of %s exists to be deleted within measure set with measure set id of %s", cmsId, measureSetId));
+        throw new ResourceNotFoundException(String.format("No CMS id of %s exists to be deleted " +
+            "within measure set with measure set id of %s", cmsId, measureSetId));
       }
 
       if (!measureSet.getCmsId().equals(cmsId)) {
         throw new InvalidIdException(
-            String.format("CMS id of %s passed in does not match CMS id of %s within measure set with measure set id of %s", cmsId,measureSet.getCmsId(), measureSetId));
+            String.format("CMS id of %s passed in does not match CMS id of %s within " +
+                "measure set with measure set id of %s", cmsId,measureSet.getCmsId(), measureSetId));
       }
 
       List<Measure> measures = measureRepository.findAllByMeasureSetIdAndActive(measureSetId, true);
 
       if (measures.size() > 1) {
-        throw new InvalidRequestException(String.format("Measure set with measure set id of %s contains more than 1 measure. Cannot delete CMS id when measure set has more than 1 version of measure.", measureSetId));
+        throw new InvalidRequestException(String.format("Measure set with measure set id of %s contains more than 1 measure. " +
+            "Cannot delete CMS id when measure set has more than 1 version of measure.", measureSetId));
       }
 
       measureSet.setCmsId(null);
       measureSetRepository.save(measureSet);
 
-      return String.format("CMS id of %s was deleted successfully from measure set with measure set id of %s", cmsId, measureSetId);
+      return String.format("CMS id of %s was deleted successfully from " +
+          "measure set with measure set id of %s", cmsId, measureSetId);
     } else {
       throw new ResourceNotFoundException(
           "No measure exists with measure id of " + measureId);
