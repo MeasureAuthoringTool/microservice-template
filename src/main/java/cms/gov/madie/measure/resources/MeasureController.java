@@ -326,6 +326,13 @@ public class MeasureController {
         .body(measureSetService.createAndUpdateCmsId(measureSetId, principal.getName()));
   }
 
+  @DeleteMapping("/measures/{measureId}/delete-cms-id")
+  public ResponseEntity<String> deleteCmsId(
+      @PathVariable String measureId, @RequestParam(name = "cmsId") Integer cmsId) {
+    return ResponseEntity.status(HttpStatus.OK)
+        .body(measureSetService.deleteCmsId(measureId, cmsId));
+  }
+
   @PutMapping("/measures/cms-id-association")
   public ResponseEntity<MeasureSet> associateCmsId(
       Principal principal,

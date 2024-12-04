@@ -263,6 +263,30 @@ class MeasureControllerTest {
   }
 
   @Test
+  void deleteCmsId() {
+    String measureId = "measureId";
+
+    final MeasureSet measureSet =
+        MeasureSet.builder()
+            .id("f225481c-921e-4015-9e14-e5046bfac9ff")
+            .cmsId(6)
+            .measureSetId("measureSetId")
+            .owner("owner")
+            .acls(null)
+            .build();
+
+    String expectedBody = String.format("CMS Id of %s was deleted successfully from measure set with measure set id of %s", measureSet.getCmsId(), measureSet.getMeasureSetId());
+
+    when(measureSetService.deleteCmsId(anyString(), anyInt())).thenReturn(expectedBody);
+
+    ResponseEntity<String> response = controller.deleteCmsId(measureId, measureSet.getCmsId());
+
+    assertThat(response.getBody(), is(notNullValue()));
+    assertEquals(expectedBody, response.getBody());
+    verify(measureSetService, times(1)).deleteCmsId(anyString(), anyInt());
+  }
+
+  @Test
   void updateMeasureSuccessfullyLogDeleted() {
     ArgumentCaptor<Measure> saveMeasureArgCaptor = ArgumentCaptor.forClass(Measure.class);
     Principal principal = mock(Principal.class);
