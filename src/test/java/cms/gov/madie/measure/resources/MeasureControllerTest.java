@@ -279,7 +279,7 @@ class MeasureControllerTest {
 
     when(measureSetService.deleteCmsId(anyString(), anyInt())).thenReturn(expectedBody);
 
-    ResponseEntity<String> response = controller.deleteCmsId(measureId, measureSet.getCmsId());
+    ResponseEntity<String> response = controller.deleteCmsId(null, measureId, measureSet.getCmsId(), "apiKey");
 
     assertThat(response.getBody(), is(notNullValue()));
     assertEquals(expectedBody, response.getBody());
