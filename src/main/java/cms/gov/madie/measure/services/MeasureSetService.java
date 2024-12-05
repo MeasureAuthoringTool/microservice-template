@@ -185,6 +185,10 @@ public class MeasureSetService {
       measureSet.setCmsId(null);
       measureSetRepository.save(measureSet);
 
+      log.info("With the measure id of [{}], successfully queried " +
+          "for its measure set with measure set id of [{}] and deleted CMS id " +
+          "of [{}] from the measure set", measureId, measureSetId, cmsId);
+
       return String.format("CMS id of %s was deleted successfully from " +
           "measure set with measure set id of %s", cmsId, measureSetId);
     } else {

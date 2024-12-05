@@ -27,6 +27,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
 
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
@@ -264,6 +265,9 @@ class MeasureControllerTest {
 
   @Test
   void deleteCmsId() {
+    Principal principal = mock(Principal.class);
+    MockHttpServletRequest mockHttpServletRequest = new MockHttpServletRequest();
+
     String measureId = "measureId";
 
     final MeasureSet measureSet =
@@ -279,7 +283,7 @@ class MeasureControllerTest {
 
     when(measureSetService.deleteCmsId(anyString(), anyInt())).thenReturn(expectedBody);
 
-    ResponseEntity<String> response = controller.deleteCmsId(null, measureId, measureSet.getCmsId(), "apiKey");
+    ResponseEntity<String> response = controller.deleteCmsId(mockHttpServletRequest, measureId, measureSet.getCmsId(), "apiKey", principal);
 
     assertThat(response.getBody(), is(notNullValue()));
     assertEquals(expectedBody, response.getBody());

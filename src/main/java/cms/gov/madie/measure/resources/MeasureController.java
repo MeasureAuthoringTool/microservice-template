@@ -332,7 +332,10 @@ public class MeasureController {
       HttpServletRequest request,
       @PathVariable String measureId,
       @RequestParam(name = "cmsId") Integer cmsId,
-      @Value("${admin-api-key}") String apiKey) {
+      @Value("${admin-api-key}") String apiKey,
+      Principal principal) {
+    log.info("User [{}] - Started admin task [deleteCmsId] and is attempting to delete " +
+        "CMS id [{}] from measure with measure id [{}]", principal.getName(), cmsId, measureId);
     return ResponseEntity.status(HttpStatus.OK)
         .body(measureSetService.deleteCmsId(measureId, cmsId));
   }
