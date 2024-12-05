@@ -327,8 +327,12 @@ public class MeasureController {
   }
 
   @DeleteMapping("/measures/{measureId}/delete-cms-id")
+  @PreAuthorize("#request.getHeader('api-key') == #apiKey")
   public ResponseEntity<String> deleteCmsId(
-      @PathVariable String measureId, @RequestParam(name = "cmsId") Integer cmsId) {
+      HttpServletRequest request,
+      @PathVariable String measureId,
+      @RequestParam(name = "cmsId") Integer cmsId,
+      @Value("${admin-api-key}") String apiKey) {
     return ResponseEntity.status(HttpStatus.OK)
         .body(measureSetService.deleteCmsId(measureId, cmsId));
   }
