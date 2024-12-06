@@ -316,13 +316,15 @@ public class TestCaseServiceUtil {
 
     // Mismatch between target and import Stratification, don't set any expected values
     boolean measureHasStrats =
-        measureGroups.stream().allMatch(group -> isNotEmpty(group.getStratifications()));
+        measureGroups != null
+            ? measureGroups.stream().allMatch(group -> isNotEmpty(group.getStratifications()))
+            : false;
     if ((measureHasStrats && isEmpty(stratification))
         || (!measureHasStrats && isNotEmpty(stratification))) {
       return null;
     }
 
-    if (measureGroups.size() > 1 && isNotEmpty(stratification)) {
+    if (measureGroups != null && measureGroups.size() > 1 && isNotEmpty(stratification)) {
       Deque<TestCaseStratificationValue> stratificationQueue = new ArrayDeque<>(stratification);
       try {
         do {
