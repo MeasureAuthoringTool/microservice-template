@@ -39,6 +39,8 @@ class ElmTranslatorClientTest {
 
   @InjectMocks private ElmTranslatorClient elmTranslatorClient;
 
+  private final String HEADER_1 = "api-key";
+
   @BeforeEach
   void beforeEach() {
     lenient()
@@ -51,8 +53,6 @@ class ElmTranslatorClientTest {
         .when(elmTranslatorClientConfig.getCqlElmServiceElmJsonUri())
         .thenReturn("/cql/translator/cql");
   }
-
-  private final String HEADER_1 = "api-key";
 
   @Test
   void testRestTemplateHandlesClientErrorException() {
