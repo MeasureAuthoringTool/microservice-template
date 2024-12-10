@@ -84,6 +84,7 @@ public class GroupService {
         existingGroup.setMeasureObservations(group.getMeasureObservations());
         existingGroup.setGroupDescription(group.getGroupDescription());
         existingGroup.setImprovementNotation(group.getImprovementNotation());
+        existingGroup.setImprovementNotationDescription(group.getImprovementNotationDescription());
         existingGroup.setRateAggregation(group.getRateAggregation());
         existingGroup.setMeasureGroupTypes(group.getMeasureGroupTypes());
         existingGroup.setScoringUnit(group.getScoringUnit());

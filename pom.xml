@@ -133,12 +133,12 @@
     <dependency>
       <groupId>gov.cms.madie</groupId>
       <artifactId>madie-java-models</artifactId>
-      <version>0.6.71-SNAPSHOT</version>
+      <version>0.6.72-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>gov.cms.madie</groupId>
       <artifactId>madie-rest-commons</artifactId>
-      <version>0.0.6-SNAPSHOT</version>
+      <version>0.0.8-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>ca.uhn.hapi.fhir</groupId>

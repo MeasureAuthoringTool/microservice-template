@@ -15,6 +15,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 
@@ -28,7 +29,7 @@ public class ElmTranslatorClient {
 
   public ElmJson getElmJson(final String cql, String measureModel, String accessToken) {
     try {
-      URI uri = getElmJsonURI(measureModel, false);
+      URI uri = getElmJsonURI(measureModel);
       HttpEntity<String> cqlEntity = getCqlHttpEntity(cql, accessToken, null, null);
       return elmTranslatorRestTemplate
           .exchange(uri, HttpMethod.PUT, cqlEntity, ElmJson.class)
@@ -55,13 +56,25 @@ public class ElmTranslatorClient {
     }
   }
 
-  protected URI getElmJsonURI(String measureModel, boolean isForMatTransferred) {
+  protected URI getElmJsonURI(String measureModel) {
     var isQdm = StringUtils.equals(measureModel, ModelType.QDM_5_6.getValue());
     String baseUrl =
         isQdm
             ? elmTranslatorClientConfig.getQdmCqlElmServiceBaseUrl()
             : elmTranslatorClientConfig.getFhirCqlElmServiceBaseUrl();
-    return URI.create(baseUrl + elmTranslatorClientConfig.getCqlElmServiceElmJsonUri());
+    URI uri = null;
+    if (!isQdm) {
+      uri =
+          UriComponentsBuilder.fromHttpUrl(
+                  baseUrl + elmTranslatorClientConfig.getCqlElmServiceElmJsonUri())
+              .queryParam("checkContext", true)
+              .build()
+              .encode()
+              .toUri();
+    } else {
+      uri = URI.create(baseUrl + elmTranslatorClientConfig.getCqlElmServiceElmJsonUri());
+    }
+    return uri;
   }
 
   protected HttpEntity<String> getCqlHttpEntity(
