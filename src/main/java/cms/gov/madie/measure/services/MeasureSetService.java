@@ -2,6 +2,7 @@ package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.GeneratorRepository;
+import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import gov.cms.madie.models.access.AclOperation;
 import gov.cms.madie.models.access.AclSpecification;
@@ -13,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -21,6 +23,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class MeasureSetService {
 
+  private final MeasureRepository measureRepository;
   private final MeasureSetRepository measureSetRepository;
   private final GeneratorRepository generatorRepository;
   private final ActionLogService actionLogService;
@@ -145,6 +148,53 @@ public class MeasureSetService {
     actionLogService.logAction(
         updatedMeasureSet.getId(), Measure.class, ActionType.CREATED, username);
     return updatedMeasureSet;
+  }
+
+  public String deleteCmsId(String measureId, Integer cmsId) {
+    Optional<Measure> measure = measureRepository.findById(measureId);
+
+    if (measure.isPresent()) {
+      String measureSetId = measure.get().getMeasureSetId();
+      Optional<MeasureSet> optionalMeasureSet = measureSetRepository.findByMeasureSetId(measureSetId);
+
+      if (optionalMeasureSet.isEmpty()) {
+        throw new ResourceNotFoundException("No measure set exists for measure with measure set id of "
+            + measureSetId);
+      }
+
+      MeasureSet measureSet = optionalMeasureSet.get();
+
+      if (measureSet.getCmsId() == null) {
+        throw new ResourceNotFoundException(String.format("No CMS id of %s exists to be deleted " +
+            "within measure set with measure set id of %s", cmsId, measureSetId));
+      }
+
+      if (!measureSet.getCmsId().equals(cmsId)) {
+        throw new InvalidIdException(
+            String.format("CMS id of %s passed in does not match CMS id of %s within " +
+                "measure set with measure set id of %s", cmsId,measureSet.getCmsId(), measureSetId));
+      }
+
+      List<Measure> measures = measureRepository.findAllByMeasureSetIdAndActive(measureSetId, true);
+
+      if (measures.size() > 1) {
+        throw new InvalidRequestException(String.format("Measure set with measure set id of %s contains more than 1 measure. " +
+            "Cannot delete CMS id when measure set has more than 1 version of measure.", measureSetId));
+      }
+
+      measureSet.setCmsId(null);
+      measureSetRepository.save(measureSet);
+
+      log.info("With the measure id of [{}], successfully queried " +
+          "for its measure set with measure set id of [{}] and deleted CMS id " +
+          "of [{}] from the measure set", measureId, measureSetId, cmsId);
+
+      return String.format("CMS id of %s was deleted successfully from " +
+          "measure set with measure set id of %s", cmsId, measureSetId);
+    } else {
+      throw new ResourceNotFoundException(
+          "No measure exists with measure id of " + measureId);
+    }
   }
 
   public MeasureSet findByMeasureSetId(final String measureSetId) {

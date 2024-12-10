@@ -1,13 +1,16 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.InvalidRequestException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.GeneratorRepository;
+import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import gov.cms.madie.models.access.AclOperation;
 import gov.cms.madie.models.access.AclSpecification;
 import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureSet;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,14 +25,14 @@ import java.util.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class MeasureSetServiceTest {
 
   @InjectMocks private MeasureSetService measureSetService;
+  @Mock MeasureRepository measureRepository;
   @Mock MeasureSetRepository measureSetRepository;
   @Mock GeneratorRepository generatorRepository;
   @Mock private ActionLogService actionLogService;
@@ -254,6 +257,170 @@ public class MeasureSetServiceTest {
             .contains(
                 "CMS ID already exists. Once a CMS Identifier has been generated it may not be modified or removed for any draft or version of a measure."));
     verify(measureSetRepository, times(1)).findByMeasureSetId(anyString());
+    verify(measureSetRepository, times(0)).save(any(MeasureSet.class));
+  }
+
+  @Test
+  public void testDeleteCmsId() {
+    Integer cmsId = 1;
+    Measure measure =
+        Measure.builder()
+            .model(ModelType.QI_CORE.getValue())
+            .measureSetId("measureSetId1")
+            .build();
+
+    List<Measure> measures = Collections.singletonList(measure);
+    MeasureSet measureSet = MeasureSet.builder().measureSetId("1").cmsId(1).build();
+    String measureId = "measureId";
+
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of( measure));
+    when(measureSetRepository.findByMeasureSetId(anyString())).thenReturn(Optional.of(measureSet));
+    when(measureRepository.findAllByMeasureSetIdAndActive(anyString(), anyBoolean())).thenReturn(measures);
+    when(measureSetRepository.save(any(MeasureSet.class))).thenReturn(measureSet);
+
+    String responseBody = measureSetService.deleteCmsId(measureId, cmsId);
+
+    assertEquals(responseBody, String.format("CMS id of %s was deleted successfully from measure set with measure set id of %s", cmsId, measure.getMeasureSetId()));
+    verify(measureRepository, times(1)).findById(anyString());
+    verify(measureSetRepository, times(1)).findByMeasureSetId(anyString());
+    verify(measureRepository, times(1)).findAllByMeasureSetIdAndActive(anyString(), anyBoolean());
+    verify(measureSetRepository, times(1)).save(any(MeasureSet.class));
+  }
+
+  @Test
+  public void testDeleteCmsIdWhenMeasureWithMeasureIdIsNotFound() {
+    String measureId = "measureId";
+
+    when(measureRepository.findById(anyString())).thenReturn(Optional.empty());
+
+    Exception ex =
+        assertThrows(
+            ResourceNotFoundException.class,
+            () -> measureSetService.deleteCmsId(measureId, 1));
+
+    assertTrue(
+        ex.getMessage()
+            .contains(String.format("No measure exists with measure id of %s", measureId)));
+    verify(measureRepository, times(1)).findById(anyString());
+    verify(measureSetRepository, times(0)).save(any(MeasureSet.class));
+    verify(measureSetRepository, times(0)).save(any(MeasureSet.class));
+  }
+
+  @Test
+  public void testDeleteCmsIdWhenMeasureSetIsNotFound() {
+    Measure measure =
+        Measure.builder()
+            .model(ModelType.QI_CORE.getValue())
+            .measureSetId("measureSetId")
+            .build();
+
+    String measureId = "measureId";
+
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of( measure));
+    when(measureSetRepository.findByMeasureSetId(anyString())).thenReturn(Optional.empty());
+
+    Exception ex =
+        assertThrows(
+            ResourceNotFoundException.class,
+            () -> measureSetService.deleteCmsId(measureId, 1));
+
+    assertTrue(
+        ex.getMessage()
+            .contains(String.format("No measure set exists for measure with measure set id of %s", measure.getMeasureSetId())));
+    verify(measureRepository, times(1)).findById(anyString());
+    verify(measureSetRepository, times(1)).findByMeasureSetId(anyString());
+    verify(measureSetRepository, times(0)).save(any(MeasureSet.class));
+  }
+
+  @Test
+  public void testDeleteCmsIdWhenCmsIdIsNotFoundInMeasureSet() {
+    Integer cmsId = 1;
+    Measure measure =
+        Measure.builder()
+            .model(ModelType.QI_CORE.getValue())
+            .measureSetId("measureSetId")
+            .build();
+
+    MeasureSet measureSet = MeasureSet.builder().measureSetId("1").build();
+    String measureId = "measureId";
+
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of( measure));
+    when(measureSetRepository.findByMeasureSetId(anyString())).thenReturn(Optional.of(measureSet));
+
+    Exception ex =
+        assertThrows(
+            ResourceNotFoundException.class,
+            () -> measureSetService.deleteCmsId(measureId, cmsId));
+
+    assertTrue(
+        ex.getMessage()
+            .contains(String.format("No CMS id of %s exists to be deleted within measure set with measure set id of %s", cmsId, measure.getMeasureSetId())));
+    verify(measureRepository, times(1)).findById(anyString());
+    verify(measureSetRepository, times(1)).findByMeasureSetId(anyString());
+    verify(measureSetRepository, times(0)).save(any(MeasureSet.class));
+  }
+
+  @Test
+  public void testDeleteCmsIdWhenCmsIdToDeleteDoesNotMatchCmsIdInMeasureSet() {
+    Integer cmsId = 1;
+    Measure measure =
+        Measure.builder()
+            .model(ModelType.QI_CORE.getValue())
+            .measureSetId("measureSetId")
+            .build();
+
+    MeasureSet measureSet = MeasureSet.builder().measureSetId("1").cmsId(2).build();
+    String measureId = "measureId";
+
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of( measure));
+    when(measureSetRepository.findByMeasureSetId(anyString())).thenReturn(Optional.of(measureSet));
+
+    Exception ex =
+        assertThrows(
+            InvalidIdException.class,
+            () -> measureSetService.deleteCmsId(measureId, cmsId));
+
+    assertTrue(
+        ex.getMessage()
+            .contains(String.format("CMS id of %s passed in does not match CMS id of %s within measure set with measure set id of %s", cmsId, measureSet.getCmsId(), measure.getMeasureSetId())));
+    verify(measureRepository, times(1)).findById(anyString());
+    verify(measureSetRepository, times(1)).findByMeasureSetId(anyString());
+    verify(measureSetRepository, times(0)).save(any(MeasureSet.class));
+  }
+  @Test
+  public void testDeleteCmsIdWhenMeasureHasMultipleVersions() {
+    Integer cmsId = 1;
+    Measure measure1 =
+        Measure.builder()
+            .model(ModelType.QI_CORE.getValue())
+            .measureSetId("measureSetId1")
+            .build();
+
+    Measure measure2 =
+        Measure.builder()
+            .model(ModelType.QI_CORE.getValue())
+            .measureSetId("measureSetId2")
+            .build();
+
+    List<Measure> measures = Arrays.asList(measure1, measure2);
+    MeasureSet measureSet = MeasureSet.builder().measureSetId("1").cmsId(1).build();
+    String measureId = "measureId";
+
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of( measure1));
+    when(measureSetRepository.findByMeasureSetId(anyString())).thenReturn(Optional.of(measureSet));
+    when(measureRepository.findAllByMeasureSetIdAndActive(anyString(), anyBoolean())).thenReturn(measures);
+
+    Exception ex =
+        assertThrows(
+            InvalidRequestException.class,
+            () -> measureSetService.deleteCmsId(measureId, cmsId));
+
+    assertTrue(
+        ex.getMessage()
+            .contains(String.format(String.format("Measure set with measure set id of %s contains more than 1 measure. Cannot delete CMS id when measure set has more than 1 version of measure.", measure1.getMeasureSetId()))));
+    verify(measureRepository, times(1)).findById(anyString());
+    verify(measureSetRepository, times(1)).findByMeasureSetId(anyString());
+    verify(measureRepository, times(1)).findAllByMeasureSetIdAndActive(anyString(), anyBoolean());
     verify(measureSetRepository, times(0)).save(any(MeasureSet.class));
   }
 }

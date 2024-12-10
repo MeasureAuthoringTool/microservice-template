@@ -326,6 +326,20 @@ public class MeasureController {
         .body(measureSetService.createAndUpdateCmsId(measureSetId, principal.getName()));
   }
 
+  @DeleteMapping("/measures/{measureId}/delete-cms-id")
+  @PreAuthorize("#request.getHeader('api-key') == #apiKey")
+  public ResponseEntity<String> deleteCmsId(
+      HttpServletRequest request,
+      @PathVariable String measureId,
+      @RequestParam(name = "cmsId") Integer cmsId,
+      @Value("${admin-api-key}") String apiKey,
+      Principal principal) {
+    log.info("User [{}] - Started admin task [deleteCmsId] and is attempting to delete " +
+        "CMS id [{}] from measure with measure id [{}]", principal.getName(), cmsId, measureId);
+    return ResponseEntity.status(HttpStatus.OK)
+        .body(measureSetService.deleteCmsId(measureId, cmsId));
+  }
+
   @PutMapping("/measures/cms-id-association")
   public ResponseEntity<MeasureSet> associateCmsId(
       Principal principal,
