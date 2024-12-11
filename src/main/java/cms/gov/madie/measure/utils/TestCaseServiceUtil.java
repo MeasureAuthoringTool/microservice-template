@@ -448,8 +448,7 @@ public class TestCaseServiceUtil {
   }
 
   // exported test cases doesn't have criteria references
-  // this method will filter the populations and gets the relevant criteria reference id for
-  // observation
+  // filtering populations to get relevant criteria reference id for observations
   private static String getCriteriaReferenceFromPopulations(
       List<Population> populations, String observationName) {
     String relevantPopulation =
