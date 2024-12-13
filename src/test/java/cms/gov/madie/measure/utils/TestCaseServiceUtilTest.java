@@ -1283,6 +1283,7 @@ public class TestCaseServiceUtilTest {
         Group.builder()
             .id("group1")
             .scoring(MeasureScoring.RATIO.toString())
+            .populations(List.of(population1, population2, population3, population4, population5))
             .measureObservations(List.of(measureObservation1, measureObservation2))
             .build();
 
@@ -1317,12 +1318,12 @@ public class TestCaseServiceUtilTest {
         is(equalTo("denominatorObservation0")));
     assertThat(
         results.get(0).getPopulationValues().get(2).getCriteriaReference(),
-        is(equalTo("criteriaReference1")));
+        is(equalTo("Population2Id")));
     assertThat(
         results.get(0).getPopulationValues().get(4).getId(), is(equalTo("numeratorObservation1")));
     assertThat(
         results.get(0).getPopulationValues().get(4).getCriteriaReference(),
-        is(equalTo("criteriaReference2")));
+        is(equalTo("Population4Id")));
   }
 
   @Test
