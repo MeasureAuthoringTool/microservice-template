@@ -266,6 +266,12 @@ public class VersionService {
                                   .build())
                       .toList();
 
+              if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(currentMeasure.getModel())) {
+                return testCase.toBuilder()
+                    .id(ObjectId.get().toString())
+                    .groupPopulations(updatedTestCaseGroupPopulations)
+                    .build();
+              }
               HapiOperationOutcome hapiOperationOutcome =
                   fhirServicesClient
                       .validateBundle(
