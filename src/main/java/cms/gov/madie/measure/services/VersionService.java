@@ -255,33 +255,47 @@ public class VersionService {
     return List.of();
   }
 
-  private List<TestCase> cloneTestCases(List<TestCase> testCases, List<Group> draftGroups) {
-    if (!CollectionUtils.isEmpty(testCases)) {
-      return testCases.stream()
-          .map(
-              testCase -> {
-                List<TestCaseGroupPopulation> updatedTestCaseGroupPopulations = new ArrayList<>();
-                List<TestCaseGroupPopulation> testCaseGroups = testCase.getGroupPopulations();
-                if (!CollectionUtils.isEmpty(testCaseGroups)) {
-                  AtomicInteger indexHolder = new AtomicInteger();
-                  updatedTestCaseGroupPopulations.addAll(
-                      testCaseGroups.stream()
-                          .map(
-                              testCaseGroupPopulation ->
-                                  testCaseGroupPopulation.toBuilder()
-                                      .groupId(
-                                          draftGroups.get(indexHolder.getAndIncrement()).getId())
-                                      .build())
-                          .toList());
-                }
+  private List<TestCase> cloneTestCases(
+      Measure currentMeasure, List<Group> draftGroups, String accessToken) {
+    List<TestCase> testCases = currentMeasure.getTestCases();
+    if (CollectionUtils.isEmpty(testCases)) {
+      return List.of();
+    }
+    return testCases.stream()
+        .map(
+            testCase -> {
+              AtomicInteger indexHolder = new AtomicInteger();
+              List<TestCaseGroupPopulation> updatedTestCaseGroupPopulations =
+                  Optional.ofNullable(testCase.getGroupPopulations()).orElse(List.of()).stream()
+                      .map(
+                          testCaseGroupPopulation ->
+                              testCaseGroupPopulation.toBuilder()
+                                  .groupId(draftGroups.get(indexHolder.getAndIncrement()).getId())
+                                  .build())
+                      .toList();
+
+              if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(currentMeasure.getModel())) {
                 return testCase.toBuilder()
                     .id(ObjectId.get().toString())
                     .groupPopulations(updatedTestCaseGroupPopulations)
                     .build();
-              })
-          .collect(Collectors.toList());
-    }
-    return List.of();
+              }
+              HapiOperationOutcome hapiOperationOutcome =
+                  fhirServicesClient
+                      .validateBundle(
+                          testCase.getJson(),
+                          ModelType.valueOfName(currentMeasure.getModel()),
+                          accessToken)
+                      .getBody();
+
+              return testCase.toBuilder()
+                  .id(ObjectId.get().toString())
+                  .hapiOperationOutcome(hapiOperationOutcome)
+                  .validResource(hapiOperationOutcome.isSuccessful())
+                  .groupPopulations(updatedTestCaseGroupPopulations)
+                  .build();
+            })
+        .collect(Collectors.toList());
   }
 
   /** Returns false if there is already a draft for the measure family. */
