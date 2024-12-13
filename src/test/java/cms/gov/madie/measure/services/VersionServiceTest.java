@@ -28,6 +28,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.ResponseEntity;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -38,9 +39,7 @@ import static cms.gov.madie.measure.services.VersionService.VersionValidationRes
 import static cms.gov.madie.measure.services.VersionService.VersionValidationResult.VALID;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -82,6 +81,13 @@ public class VersionServiceTest {
   private final String ELMJON_NO_ERROR = "{\n" + "\"errorExceptions\" : \n" + "[]\n" + "}";
 
   private final Instant today = Instant.now();
+
+  private static final String TEST_ACCESS_TOKEN = "test-user-access-token";
+
+  private final HapiOperationOutcome validTestCaseHapiOperationOutcome =
+      HapiOperationOutcome.builder().code(2).message("No issues").successful(true).build();
+  private final HapiOperationOutcome invalidTestCaseHapiOperationOutcome =
+      HapiOperationOutcome.builder().code(42).message("invalid json").successful(false).build();
 
   TestCaseGroupPopulation testCaseGroupPopulation =
       TestCaseGroupPopulation.builder()
@@ -636,6 +642,7 @@ public class VersionServiceTest {
                     testCase.toBuilder()
                         .id(ObjectId.get().toString())
                         .groupPopulations(List.of(clonedTestCaseGroupPopulation))
+                        .hapiOperationOutcome(validTestCaseHapiOperationOutcome)
                         .build()))
             .build();
 
@@ -646,9 +653,12 @@ public class VersionServiceTest {
     when(measureRepository.save(any(Measure.class))).thenReturn(versionedCopy);
     when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
     when(appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)).thenReturn(false);
+    when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
+        .thenReturn(ResponseEntity.ok(validTestCaseHapiOperationOutcome));
 
     Measure draft =
-        versionService.createDraft(versionedMeasure.getId(), "Test", "QI-Core v4.1.1", "test-user");
+        versionService.createDraft(
+            versionedMeasure.getId(), "Test", "QI-Core v4.1.1", "test-user", TEST_ACCESS_TOKEN);
 
     assertThat(draft.getMeasureName(), is(equalTo("Test")));
     // draft flag to true
@@ -664,6 +674,7 @@ public class VersionServiceTest {
     assertThat(
         draft.getTestCases().get(0).getGroupPopulations().get(0).getGroupId(),
         is(equalTo("clonedGroupId1")));
+    assertTrue(draft.getTestCases().get(0).getHapiOperationOutcome().isSuccessful());
   }
 
   @Test
@@ -758,8 +769,11 @@ public class VersionServiceTest {
     when(measureRepository.save(any(Measure.class))).thenReturn(versionedCopy);
     when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
     when(appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)).thenReturn(false);
+    when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
+        .thenReturn(ResponseEntity.ok(validTestCaseHapiOperationOutcome));
 
-    versionService.createDraft(versionedMeasure.getId(), "Test", "QI-Core v6.0.0", "test-user");
+    versionService.createDraft(
+        versionedMeasure.getId(), "Test", "QI-Core v6.0.0", "test-user", TEST_ACCESS_TOKEN);
     verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
     Measure draft = measureArgumentCaptor.getValue();
 
@@ -815,7 +829,8 @@ public class VersionServiceTest {
     when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
 
     Measure draft =
-        versionService.createDraft(versionedMeasure.getId(), "Test", "QI-Core v4.1.1", "test-user");
+        versionService.createDraft(
+            versionedMeasure.getId(), "Test", "QI-Core v4.1.1", "test-user", TEST_ACCESS_TOKEN);
 
     assertThat(draft.getMeasureName(), is(equalTo("Test")));
     // draft flag to true
@@ -835,7 +850,9 @@ public class VersionServiceTest {
     Exception ex =
         assertThrows(
             ResourceNotFoundException.class,
-            () -> versionService.createDraft(measureId, "Test", "QI-Core v4.1.1", "test-user"));
+            () ->
+                versionService.createDraft(
+                    measureId, "Test", "QI-Core v4.1.1", "test-user", TEST_ACCESS_TOKEN));
     assertThat(ex.getMessage(), is(equalTo("Could not find Measure with id: " + measureId)));
   }
 
@@ -851,7 +868,9 @@ public class VersionServiceTest {
     Exception ex =
         assertThrows(
             UnauthorizedException.class,
-            () -> versionService.createDraft(measure.getId(), "Test", "QI-Core v4.1.1", user));
+            () ->
+                versionService.createDraft(
+                    measure.getId(), "Test", "QI-Core v4.1.1", user, TEST_ACCESS_TOKEN));
     assertThat(
         ex.getMessage(), is(equalTo("User " + user + " is not authorized for Measure with ID 1")));
   }
@@ -868,7 +887,8 @@ public class VersionServiceTest {
         assertThrows(
             MeasureNotDraftableException.class,
             () ->
-                versionService.createDraft(measure.getId(), "Test", "QI-Core v4.1.1", "test-user"));
+                versionService.createDraft(
+                    measure.getId(), "Test", "QI-Core v4.1.1", "test-user", TEST_ACCESS_TOKEN));
     assertThat(
         ex.getMessage(),
         is(
@@ -917,10 +937,12 @@ public class VersionServiceTest {
                     testCase.toBuilder()
                         .id(ObjectId.get().toString())
                         .groupPopulations(List.of(clonedTestCaseGroupPopulation))
+                        .hapiOperationOutcome(invalidTestCaseHapiOperationOutcome)
                         .build(),
                     testCase2.toBuilder()
                         .id(ObjectId.get().toString())
                         .groupPopulations(List.of(clonedTestCaseGroupPopulation))
+                        .hapiOperationOutcome(invalidTestCaseHapiOperationOutcome)
                         .build()))
             .build();
 
@@ -931,9 +953,11 @@ public class VersionServiceTest {
     when(measureRepository.save(any(Measure.class))).thenReturn(versionedCopy);
     when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
     when(appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)).thenReturn(true);
-
+    when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
+        .thenReturn(ResponseEntity.ok(invalidTestCaseHapiOperationOutcome));
     Measure draft =
-        versionService.createDraft(versionedMeasure.getId(), "Test", "QI-Core v4.1.1", "test-user");
+        versionService.createDraft(
+            versionedMeasure.getId(), "Test", "QI-Core v4.1.1", "test-user", TEST_ACCESS_TOKEN);
 
     assertThat(draft.getMeasureName(), is(equalTo("Test")));
     // draft flag to true
@@ -951,6 +975,10 @@ public class VersionServiceTest {
         is(equalTo("clonedGroupId1")));
     assertThat(draft.getTestCases().get(0).getCaseNumber(), is(equalTo(2)));
     assertThat(draft.getTestCases().get(1).getCaseNumber(), is(equalTo(1)));
+    assertFalse(draft.getTestCases().get(0).getHapiOperationOutcome().isSuccessful());
+    assertEquals(
+        "invalid json", draft.getTestCases().get(0).getHapiOperationOutcome().getMessage());
+    ;
   }
 
   @Test
@@ -998,9 +1026,11 @@ public class VersionServiceTest {
     when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
     when(appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)).thenReturn(true);
     when(sequenceService.generateSequence(anyString())).thenReturn(1);
-
+    when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
+        .thenReturn(ResponseEntity.ok(validTestCaseHapiOperationOutcome));
     Measure draft =
-        versionService.createDraft(versionedMeasure.getId(), "Test", "QI-Core v4.1.1", "test-user");
+        versionService.createDraft(
+            versionedMeasure.getId(), "Test", "QI-Core v4.1.1", "test-user", TEST_ACCESS_TOKEN);
 
     assertThat(draft.getMeasureName(), is(equalTo("Test")));
     // draft flag to true

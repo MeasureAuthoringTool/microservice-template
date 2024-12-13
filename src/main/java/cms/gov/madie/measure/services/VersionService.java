@@ -9,16 +9,10 @@ import cms.gov.madie.measure.repositories.CqmMeasureRepository;
 import cms.gov.madie.measure.repositories.ExportRepository;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import gov.cms.madie.models.common.ActionType;
+import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.cqm.CqmMeasure;
-import gov.cms.madie.models.measure.ElmJson;
-import gov.cms.madie.models.measure.Export;
-import gov.cms.madie.models.measure.FhirMeasure;
-import gov.cms.madie.models.measure.Group;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.QdmMeasure;
-import gov.cms.madie.models.measure.TestCase;
-import gov.cms.madie.models.measure.TestCaseGroupPopulation;
+import gov.cms.madie.models.measure.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -27,14 +21,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.Comparator;
 
 @Slf4j
 @AllArgsConstructor
@@ -181,7 +172,8 @@ public class VersionService {
     return measure;
   }
 
-  public Measure createDraft(String id, String measureName, String model, String username) {
+  public Measure createDraft(
+      String id, String measureName, String model, String username, String accessToken) {
     Measure measure =
         measureRepository
             .findById(id)
@@ -203,7 +195,7 @@ public class VersionService {
     measureDraft.getMeasureMetaData().setDraft(true);
     measureDraft.setGroups(cloneMeasureGroups(measure.getGroups()));
 
-    measureDraft.setTestCases(cloneTestCases(measure.getTestCases(), measureDraft.getGroups()));
+    measureDraft.setTestCases(cloneTestCases(measure, measureDraft.getGroups(), accessToken));
     var now = Instant.now();
     measureDraft.setCreatedAt(now);
     measureDraft.setLastModifiedAt(now);
