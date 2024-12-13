@@ -279,11 +279,16 @@ class MeasureControllerTest {
             .acls(null)
             .build();
 
-    String expectedBody = String.format("CMS Id of %s was deleted successfully from measure set with measure set id of %s", measureSet.getCmsId(), measureSet.getMeasureSetId());
+    String expectedBody =
+        String.format(
+            "CMS Id of %s was deleted successfully from measure set with measure set id of %s",
+            measureSet.getCmsId(), measureSet.getMeasureSetId());
 
     when(measureSetService.deleteCmsId(anyString(), anyInt())).thenReturn(expectedBody);
 
-    ResponseEntity<String> response = controller.deleteCmsId(mockHttpServletRequest, measureId, measureSet.getCmsId(), "apiKey", principal);
+    ResponseEntity<String> response =
+        controller.deleteCmsId(
+            mockHttpServletRequest, measureId, measureSet.getCmsId(), "apiKey", principal);
 
     assertThat(response.getBody(), is(notNullValue()));
     assertEquals(expectedBody, response.getBody());

@@ -447,6 +447,23 @@ public class TestCaseServiceUtil {
     return null;
   }
 
+  // exported test cases doesn't have criteria references
+  // filtering populations to get relevant criteria reference id for observations
+  private static String getCriteriaReferenceFromPopulations(
+      List<Population> populations, String observationName) {
+    String relevantPopulation =
+        PopulationType.DENOMINATOR_OBSERVATION.name().equalsIgnoreCase(observationName)
+            ? "DENOMINATOR"
+            : "NUMERATOR";
+    Optional<String> matchedCriteriaReference =
+        populations.stream()
+            .filter(
+                (population) -> population.getName().name().equalsIgnoreCase(relevantPopulation))
+            .map(population -> population.getId())
+            .findFirst();
+    return matchedCriteriaReference.orElse(null);
+  }
+
   public static List<TestCaseGroupPopulation> assignObservationIdAndCriteriaReferenceCVAndRatio(
       List<TestCaseGroupPopulation> testCaseGroupPopulations, List<Group> measureGroups) {
     if (isNotEmpty(measureGroups)
@@ -495,10 +512,16 @@ public class TestCaseServiceUtil {
                 int number = 0;
                 for (TestCasePopulationValue value : denomAndNumerObservations) {
                   value.setId(
-                      (number == 0 ? "denominator" : "numerator")
+                      (PopulationType.DENOMINATOR_OBSERVATION
+                                  .name()
+                                  .equalsIgnoreCase(value.getName().name())
+                              ? "denominator"
+                              : "numerator")
                           + "Observation"
                           + String.valueOf(number));
-                  value.setCriteriaReference(observations.get(number).getCriteriaReference());
+                  value.setCriteriaReference(
+                      getCriteriaReferenceFromPopulations(
+                          group.getPopulations(), value.getName().name()));
                   number++;
                 }
               }
