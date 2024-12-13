@@ -48,6 +48,7 @@ public class MeasureVersionControllerMvcTest {
   @Autowired private MockMvc mockMvc;
 
   private static final String TEST_USER_ID = "test-user-id";
+  private static final String TEST_ACCESS_TOKEN = "test-user-access-token";
 
   @Test
   public void testCreateVersionReturnsResourceNotFoundException() throws Exception {
@@ -143,7 +144,8 @@ public class MeasureVersionControllerMvcTest {
     Measure measure =
         Measure.builder().id("testMeasureId").createdBy("testUser").model("QI-Core v4.1.1").build();
     measure.setMeasureName("Test");
-    when(versionService.createDraft(anyString(), anyString(), anyString(), anyString()))
+    when(versionService.createDraft(
+            anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(measure);
 
     mockMvc
@@ -152,13 +154,18 @@ public class MeasureVersionControllerMvcTest {
                 .content("{\"measureName\": \"Test\", \"model\":\"QI-Core v4.1.1\"}")
                 .with(user(TEST_USER_ID))
                 .with(csrf())
-                .header("Authorization", "test-okta-token")
+                .header("Authorization", TEST_ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
         .andExpect(status().isCreated())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE));
 
     verify(versionService, times(1))
-        .createDraft(eq("testMeasureId"), eq("Test"), eq("QI-Core v4.1.1"), eq(TEST_USER_ID));
+        .createDraft(
+            eq("testMeasureId"),
+            eq("Test"),
+            eq("QI-Core v4.1.1"),
+            eq(TEST_USER_ID),
+            eq(TEST_ACCESS_TOKEN));
   }
 
   @Test
@@ -170,7 +177,7 @@ public class MeasureVersionControllerMvcTest {
                     .content("{\"measureName\": \"\", \"model\":\"QDM v5.6\"}")
                     .with(user(TEST_USER_ID))
                     .with(csrf())
-                    .header("Authorization", "test-okta-token")
+                    .header("Authorization", TEST_ACCESS_TOKEN)
                     .contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(status().isBadRequest())
             .andReturn();
@@ -181,7 +188,8 @@ public class MeasureVersionControllerMvcTest {
 
   @Test
   public void testCreateDraftWhenMeasureNotDraftable() throws Exception {
-    when(versionService.createDraft(anyString(), anyString(), anyString(), anyString()))
+    when(versionService.createDraft(
+            anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenThrow(new MeasureNotDraftableException("Test"));
     MvcResult result =
         mockMvc
@@ -190,7 +198,7 @@ public class MeasureVersionControllerMvcTest {
                     .content("{\"measureName\": \"Test\", \"model\":\"QI-Core v4.1.1\"}")
                     .with(user(TEST_USER_ID))
                     .with(csrf())
-                    .header("Authorization", "test-okta-token")
+                    .header("Authorization", TEST_ACCESS_TOKEN)
                     .contentType(MediaType.APPLICATION_JSON_VALUE))
             .andExpect(status().isBadRequest())
             .andReturn();
