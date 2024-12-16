@@ -58,13 +58,16 @@ public class MeasureVersionController {
 
   @PostMapping("/{id}/draft")
   public ResponseEntity<Measure> createDraft(
-      @PathVariable("id") String id, @RequestBody final Measure measure, Principal principal) {
+      @RequestHeader("Authorization") String accessToken,
+      @PathVariable("id") String id,
+      @RequestBody final Measure measure,
+      Principal principal) {
     if (StringUtils.isBlank(measure.getMeasureName())) {
       throw new InvalidIdException("Measure name is required.");
     }
     var output =
         versionService.createDraft(
-            id, measure.getMeasureName(), measure.getModel(), principal.getName());
+            id, measure.getMeasureName(), measure.getModel(), principal.getName(), accessToken);
     return ResponseEntity.status(HttpStatus.CREATED).body(output);
   }
 }
