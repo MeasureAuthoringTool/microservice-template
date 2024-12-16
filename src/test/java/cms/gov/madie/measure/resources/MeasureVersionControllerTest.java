@@ -40,6 +40,8 @@ public class MeasureVersionControllerTest {
 
   private Measure measure;
 
+  private static final String TEST_ACCESS_TOKEN = "test-user-access-token";
+
   @BeforeEach
   public void setUp() {
     measure = new Measure();
@@ -152,10 +154,12 @@ public class MeasureVersionControllerTest {
     when(principal.getName()).thenReturn("testUser");
     measure.setMeasureName("Test");
     measure.setModel("QI-Core v4.1.1");
-    when(versionService.createDraft(anyString(), anyString(), anyString(), anyString()))
+    when(versionService.createDraft(
+            anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(measure);
 
-    ResponseEntity<Measure> entity = measureVersionController.createDraft("12", measure, principal);
+    ResponseEntity<Measure> entity =
+        measureVersionController.createDraft(TEST_ACCESS_TOKEN, "12", measure, principal);
     assertThat(entity.getStatusCode(), is(HttpStatus.CREATED));
     assertThat(entity.getBody(), is(equalTo(measure)));
   }
@@ -165,7 +169,8 @@ public class MeasureVersionControllerTest {
     Exception ex =
         assertThrows(
             InvalidIdException.class,
-            () -> measureVersionController.createDraft("12", measure, principal));
+            () ->
+                measureVersionController.createDraft(TEST_ACCESS_TOKEN, "12", measure, principal));
 
     assertThat(ex.getMessage(), is(equalTo("Measure name is required.")));
   }
