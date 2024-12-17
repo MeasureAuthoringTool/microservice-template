@@ -48,5 +48,16 @@ public class QiCoreModelValidator extends ModelValidator {
           measure.getId(),
           "since there is at least one Population Criteria with no type.");
     }
+
+    if (measure.getMeasureMetaData().isDraft()) {
+      measure.getGroups().forEach(
+          group -> {
+            if (StringUtils.isBlank(group.getImprovementNotation())) {
+              throw new InvalidResourceStateException(
+                  "Measure", measure.getId(), "since there is at least one Population Criteria with no improvement notation.");
+            }
+          }
+      );
+    }
   }
 }

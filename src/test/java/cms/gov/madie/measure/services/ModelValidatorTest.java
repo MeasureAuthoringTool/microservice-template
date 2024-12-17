@@ -8,9 +8,7 @@ import java.util.List;
 
 import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
 import cms.gov.madie.measure.factories.ModelValidatorFactory;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.MeasureErrorType;
-import gov.cms.madie.models.measure.MeasureGroupTypes;
+import gov.cms.madie.models.measure.*;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,11 +19,6 @@ import org.springframework.test.context.ActiveProfiles;
 
 import cms.gov.madie.measure.exceptions.InvalidGroupException;
 import gov.cms.madie.models.common.ModelType;
-import gov.cms.madie.models.measure.BaseConfigurationTypes;
-import gov.cms.madie.models.measure.Group;
-import gov.cms.madie.models.measure.PopulationType;
-import gov.cms.madie.models.measure.QdmMeasure;
-import gov.cms.madie.models.measure.Stratification;
 
 @ExtendWith(MockitoExtension.class)
 @SpringBootTest
@@ -279,6 +272,49 @@ class ModelValidatorTest {
             .build();
     ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QDM_5_6);
     assertTrue(validator instanceof QdmModelValidator);
+    assertDoesNotThrow(() -> validator.validateGroups(measure));
+  }
+
+  @Test
+  void useQicoreModelValidatorTestDraftMeasureHasNoImprovementNotationInAtLeastOnePopulationCriteria() {
+    assertNotNull(modelValidatorFactory);
+    Group group1 = Group.builder().measureGroupTypes(List.of(MeasureGroupTypes.OUTCOME)).improvementNotation("Decreased score indicates improvement").build();
+    Group group2 = Group.builder().measureGroupTypes(List.of(MeasureGroupTypes.OUTCOME)).build();
+
+    Measure measure =
+        Measure.builder()
+            .id("1")
+            .groups(List.of(group1, group2))
+            .measureMetaData(MeasureMetaData.builder().draft(true).build())
+            .build();
+
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
+    assertTrue(validator instanceof QiCoreModelValidator);
+    try {
+      validator.validateGroups(measure);
+      fail("Should fail because, since there is at least one Population Criteria with no improvement notation");
+    } catch (InvalidResourceStateException e) {
+      assertEquals(
+          "Response could not be completed for Measure with ID 1, since there is at least one Population Criteria with no improvement notation.",
+          e.getMessage());
+    }
+  }
+
+  @Test
+  void useQicoreModelValidatorTestVersionedMeasureHasNoImprovementNotationInAtLeastOnePopulationCriteria() {
+    assertNotNull(modelValidatorFactory);
+    Group group1 = Group.builder().measureGroupTypes(List.of(MeasureGroupTypes.OUTCOME)).improvementNotation("Decreased score indicates improvement").build();
+    Group group2 = Group.builder().measureGroupTypes(List.of(MeasureGroupTypes.OUTCOME)).build();
+
+    Measure measure =
+        Measure.builder()
+            .id("1")
+            .groups(List.of(group1, group2))
+            .measureMetaData(MeasureMetaData.builder().draft(false).build())
+            .build();
+
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
+    assertTrue(validator instanceof QiCoreModelValidator);
     assertDoesNotThrow(() -> validator.validateGroups(measure));
   }
 }
