@@ -1,6 +1,5 @@
 package cms.gov.madie.measure.services;
 
-import cms.gov.madie.measure.dto.MadieFeatureFlag;
 import cms.gov.madie.measure.exceptions.BadVersionRequestException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.MeasureNotDraftableException;
@@ -208,8 +207,7 @@ public class VersionService {
         savedDraft.getId());
 
     // need to generate sequence AFTER measure is created with the new measure id
-    if (!CollectionUtils.isEmpty(savedDraft.getTestCases())
-        && appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)) {
+    if (!CollectionUtils.isEmpty(savedDraft.getTestCases())) {
       if (!checkCaseNumberExists(measure.getTestCases())) {
         savedDraft.setTestCases(
             assignCaseNumbersWhenCaseNumbersNotExist(
