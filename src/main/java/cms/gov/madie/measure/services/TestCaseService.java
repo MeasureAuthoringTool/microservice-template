@@ -1,7 +1,6 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.dto.JobStatus;
-import cms.gov.madie.measure.dto.MadieFeatureFlag;
 import cms.gov.madie.measure.dto.MeasureTestCaseValidationReport;
 import cms.gov.madie.measure.dto.TestCaseValidationReport;
 import gov.cms.madie.models.common.ActionType;
@@ -83,9 +82,8 @@ public class TestCaseService {
     enrichedTestCase.setHapiOperationOutcome(null);
     enrichedTestCase.setValidResource(false);
     enrichedTestCase.setPatientId(UUID.randomUUID());
-    if (appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)) {
-      enrichedTestCase.setCaseNumber(sequenceService.generateSequence(measureId));
-    }
+    enrichedTestCase.setCaseNumber(sequenceService.generateSequence(measureId));
+
     return enrichedTestCase;
   }
 
@@ -386,8 +384,7 @@ public class TestCaseService {
         testCaseId,
         measureId);
     measureRepository.save(measure);
-    if (isEmpty(remainingTestCases)
-        && appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)) {
+    if (isEmpty(remainingTestCases)) {
       sequenceService.resetSequence(measureId);
     }
     return "Test case deleted successfully: " + testCaseId;
@@ -415,9 +412,7 @@ public class TestCaseService {
     measure.setTestCases(remainingTestCases);
     measureRepository.save(measure);
 
-    if (appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)) {
-      sequenceService.resetSequence(measureId);
-    }
+    sequenceService.resetSequence(measureId);
 
     List<String> notDeletedTestCases =
         testCaseIds.stream()
@@ -540,9 +535,9 @@ public class TestCaseService {
               .series(getSeries(testCaseImportRequest, familyName))
               .patientId(testCaseImportRequest.getPatientId())
               .build();
-      if (appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)) {
-        newTestCase.setCaseNumber(sequenceService.generateSequence(measure.getId()));
-      }
+
+      newTestCase.setCaseNumber(sequenceService.generateSequence(measure.getId()));
+
       List<TestCaseGroupPopulation> testCaseGroupPopulations =
           getTestCaseGroupPopulationsFromImportRequest(
               model, testCaseImportRequest.getJson(), measure);
