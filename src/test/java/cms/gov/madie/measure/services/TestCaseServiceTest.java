@@ -1,7 +1,6 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.dto.JobStatus;
-import cms.gov.madie.measure.dto.MadieFeatureFlag;
 import cms.gov.madie.measure.dto.MeasureTestCaseValidationReport;
 import cms.gov.madie.measure.exceptions.DuplicateTestCaseNameException;
 import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
@@ -221,12 +220,11 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertThat(output.getResourceUri(), is(nullValue()));
     assertThat(output.getHapiOperationOutcome(), is(nullValue()));
     assertThat(output.isValidResource(), is(false));
-    assertThat(output.getCaseNumber(), is(nullValue()));
+    assertNotNull(output.getCaseNumber());
   }
 
   @Test
   public void testEnrichNewTestCaseWithTestCaseSequence() {
-    when(appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)).thenReturn(true);
     when(testCaseSequenceService.generateSequence(anyString())).thenReturn(1);
     TestCase testCase = new TestCase();
     final String username = "user01";
@@ -246,7 +244,6 @@ public class TestCaseServiceTest implements ResourceUtil {
 
   @Test
   void resetCaseNumberSequenceWhenLastTestCaseIsDeleted() {
-    when(appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)).thenReturn(true);
     List<TestCase> testCases =
         List.of(TestCase.builder().caseNumber(1).id("TC2_ID").title("TC2").build());
 
@@ -1513,7 +1510,6 @@ public class TestCaseServiceTest implements ResourceUtil {
 
   @Test
   void resetCaseNumberSequenceWhenDeleteAllTestCases() {
-    when(appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)).thenReturn(true);
     testDeleteTestCases();
     verify(testCaseSequenceService, times(1)).resetSequence(anyString());
   }

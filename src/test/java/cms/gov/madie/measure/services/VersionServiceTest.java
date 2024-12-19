@@ -1,6 +1,5 @@
 package cms.gov.madie.measure.services;
 
-import cms.gov.madie.measure.dto.MadieFeatureFlag;
 import cms.gov.madie.measure.dto.PackageDto;
 import cms.gov.madie.measure.exceptions.BadVersionRequestException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
@@ -652,7 +651,6 @@ public class VersionServiceTest {
         .thenReturn(false);
     when(measureRepository.save(any(Measure.class))).thenReturn(versionedCopy);
     when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
-    when(appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)).thenReturn(false);
     when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
         .thenReturn(ResponseEntity.ok(validTestCaseHapiOperationOutcome));
 
@@ -710,7 +708,6 @@ public class VersionServiceTest {
         .thenReturn(false);
     when(measureRepository.save(any(Measure.class))).thenReturn(versionedCopy);
     when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
-    when(appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)).thenReturn(false);
 
     Measure draft =
         versionService.createDraft(
@@ -768,7 +765,6 @@ public class VersionServiceTest {
         .thenReturn(false);
     when(measureRepository.save(any(Measure.class))).thenReturn(versionedCopy);
     when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
-    when(appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)).thenReturn(false);
     when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
         .thenReturn(ResponseEntity.ok(validTestCaseHapiOperationOutcome));
 
@@ -952,7 +948,6 @@ public class VersionServiceTest {
         .thenReturn(false);
     when(measureRepository.save(any(Measure.class))).thenReturn(versionedCopy);
     when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
-    when(appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)).thenReturn(true);
     when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
         .thenReturn(ResponseEntity.ok(invalidTestCaseHapiOperationOutcome));
     Measure draft =
@@ -1024,7 +1019,6 @@ public class VersionServiceTest {
         .thenReturn(false);
     when(measureRepository.save(any(Measure.class))).thenReturn(versionedCopy);
     when(actionLogService.logAction(anyString(), any(), any(), anyString())).thenReturn(true);
-    when(appConfigService.isFlagEnabled(MadieFeatureFlag.TEST_CASE_ID)).thenReturn(true);
     when(sequenceService.generateSequence(anyString())).thenReturn(1);
     when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
         .thenReturn(ResponseEntity.ok(validTestCaseHapiOperationOutcome));
