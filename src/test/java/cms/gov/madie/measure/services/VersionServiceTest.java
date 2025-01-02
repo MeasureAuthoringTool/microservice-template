@@ -68,6 +68,8 @@ public class VersionServiceTest {
   @Mock TestCaseSequenceService sequenceService;
   @Mock AppConfigService appConfigService;
 
+  @Mock ElmToJsonService elmToJsonService;
+
   @InjectMocks VersionService versionService;
 
   @Captor private ArgumentCaptor<Measure> measureCaptor;

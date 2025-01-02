@@ -276,9 +276,14 @@ class ModelValidatorTest {
   }
 
   @Test
-  void useQicoreModelValidatorTestDraftMeasureHasNoImprovementNotationInAtLeastOnePopulationCriteria() {
+  void
+      useQicoreModelValidatorTestDraftMeasureHasNoImprovementNotationInAtLeastOnePopulationCriteria() {
     assertNotNull(modelValidatorFactory);
-    Group group1 = Group.builder().measureGroupTypes(List.of(MeasureGroupTypes.OUTCOME)).improvementNotation("Decreased score indicates improvement").build();
+    Group group1 =
+        Group.builder()
+            .measureGroupTypes(List.of(MeasureGroupTypes.OUTCOME))
+            .improvementNotation("Decreased score indicates improvement")
+            .build();
     Group group2 = Group.builder().measureGroupTypes(List.of(MeasureGroupTypes.OUTCOME)).build();
 
     Measure measure =
@@ -292,7 +297,8 @@ class ModelValidatorTest {
     assertTrue(validator instanceof QiCoreModelValidator);
     try {
       validator.validateGroups(measure);
-      fail("Should fail because, since there is at least one Population Criteria with no improvement notation");
+      fail(
+          "Should fail because, since there is at least one Population Criteria with no improvement notation");
     } catch (InvalidResourceStateException e) {
       assertEquals(
           "Response could not be completed for Measure with ID 1, since there is at least one Population Criteria with no improvement notation.",
@@ -301,9 +307,14 @@ class ModelValidatorTest {
   }
 
   @Test
-  void useQicoreModelValidatorTestVersionedMeasureHasNoImprovementNotationInAtLeastOnePopulationCriteria() {
+  void
+      useQicoreModelValidatorTestVersionedMeasureHasNoImprovementNotationInAtLeastOnePopulationCriteria() {
     assertNotNull(modelValidatorFactory);
-    Group group1 = Group.builder().measureGroupTypes(List.of(MeasureGroupTypes.OUTCOME)).improvementNotation("Decreased score indicates improvement").build();
+    Group group1 =
+        Group.builder()
+            .measureGroupTypes(List.of(MeasureGroupTypes.OUTCOME))
+            .improvementNotation("Decreased score indicates improvement")
+            .build();
     Group group2 = Group.builder().measureGroupTypes(List.of(MeasureGroupTypes.OUTCOME)).build();
 
     Measure measure =
