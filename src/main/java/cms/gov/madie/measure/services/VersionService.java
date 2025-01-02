@@ -41,7 +41,7 @@ public class VersionService {
   private final QdmPackageService qdmPackageService;
   private final ExportService exportService;
   private final TestCaseSequenceService sequenceService;
-  private final AppConfigService appConfigService;
+  private final ElmToJsonService elmToJsonService;
 
   public enum VersionValidationResult {
     VALID,
@@ -111,10 +111,12 @@ public class VersionService {
    */
   private Measure versionFhirMeasure(
       String versionType, String username, String accessToken, Measure measure) throws Exception {
+    elmToJsonService.retrieveElmJson(measure, accessToken);
     Measure upversionedMeasure = version(versionType, username, measure);
     var measureBundle =
         fhirServicesClient.getMeasureBundle(upversionedMeasure, accessToken, "export");
     saveMeasureBundle(upversionedMeasure, measureBundle, username);
+
     return applyMeasureVersion(versionType, username, upversionedMeasure);
   }
 
