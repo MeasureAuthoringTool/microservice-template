@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.dto.MeasureListDTO;
+import cms.gov.madie.measure.dto.MeasureSearchCriteria;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
@@ -23,6 +24,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalTime;
@@ -310,9 +313,7 @@ public class MeasureService {
 
   public Page<MeasureListDTO> getMeasures(
       boolean filterByCurrentUser, Pageable pageReq, String username) {
-    return filterByCurrentUser
-        ? measureRepository.findMyActiveMeasures(username, pageReq, null)
-        : measureRepository.findAllByActive(true, pageReq);
+    return measureRepository.findActiveMeasures(username, pageReq, null, filterByCurrentUser);
   }
 
   public void checkDuplicateCqlLibraryName(String cqlLibraryName) {
@@ -431,10 +432,16 @@ public class MeasureService {
   }
 
   public Page<MeasureListDTO> getMeasuresByCriteria(
-      boolean filterByCurrentUser, Pageable pageReq, String username, String criteria) {
-    return filterByCurrentUser
-        ? measureRepository.findMyActiveMeasures(username, pageReq, criteria)
-        : measureRepository.findAllByMeasureNameOrEcqmTitle(criteria, pageReq);
+      MeasureSearchCriteria searchCriteria,
+      boolean filterByCurrentUser,
+      Pageable pageReq,
+      String username) {
+    // We need to decode the encoded strings we send over or we can't find stuff
+    if (StringUtils.isNotBlank(searchCriteria.getQuery())) {
+      searchCriteria.setQuery(URLDecoder.decode(searchCriteria.getQuery(), StandardCharsets.UTF_8));
+    }
+    return measureRepository.findActiveMeasures(
+        username, pageReq, searchCriteria, filterByCurrentUser);
   }
 
   protected void updateReferenceId(MeasureMetaData metaData) {

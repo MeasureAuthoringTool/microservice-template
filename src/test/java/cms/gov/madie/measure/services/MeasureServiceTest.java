@@ -35,6 +35,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import cms.gov.madie.measure.dto.MeasureListDTO;
+import cms.gov.madie.measure.dto.MeasureSearchCriteria;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import gov.cms.madie.models.dto.LibraryUsage;
@@ -358,11 +359,14 @@ public class MeasureServiceTest implements ResourceUtil {
 
     Page<Measure> activeMeasures = new PageImpl<>(List.of(measure1));
 
+    MeasureSearchCriteria measureSearchCriteria =
+        MeasureSearchCriteria.builder().query("test criteria").build();
     doReturn(activeMeasures)
         .when(measureRepository)
-        .findMyActiveMeasures(eq("test.user"), any(PageRequest.class), eq("test criteria"));
+        .findActiveMeasures(
+            eq("test.user"), any(PageRequest.class), any(MeasureSearchCriteria.class), eq(true));
     Object measures =
-        measureService.getMeasuresByCriteria(true, initialPage, "test.user", "test criteria");
+        measureService.getMeasuresByCriteria(measureSearchCriteria, true, initialPage, "test.user");
     assertNotNull(measures);
   }
 
@@ -372,11 +376,15 @@ public class MeasureServiceTest implements ResourceUtil {
 
     Page<Measure> activeMeasures = new PageImpl<>(List.of(measure1));
 
+    MeasureSearchCriteria measureSearchCriteria =
+        MeasureSearchCriteria.builder().query("test criteria").build();
     doReturn(activeMeasures)
         .when(measureRepository)
-        .findAllByMeasureNameOrEcqmTitle(eq("test criteria"), any(PageRequest.class));
+        .findActiveMeasures(
+            eq("test.user"), any(PageRequest.class), any(MeasureSearchCriteria.class), eq(false));
     Object measures =
-        measureService.getMeasuresByCriteria(false, initialPage, "test.user", "test criteria");
+        measureService.getMeasuresByCriteria(
+            measureSearchCriteria, false, initialPage, "test.user");
     assertNotNull(measures);
   }
 
@@ -388,8 +396,8 @@ public class MeasureServiceTest implements ResourceUtil {
 
     doReturn(activeMeasures)
         .when(measureRepository)
-        .findAllByActive(eq(true), any(PageRequest.class));
-    Object measures = measureService.getMeasures(false, initialPage, null);
+        .findActiveMeasures(eq("test.user"), eq(initialPage), eq(null), eq(false));
+    Object measures = measureService.getMeasures(false, initialPage, "test.user");
     assertNotNull(measures);
   }
 

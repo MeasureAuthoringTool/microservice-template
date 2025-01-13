@@ -2,6 +2,7 @@ package cms.gov.madie.measure.repositories;
 
 import cms.gov.madie.measure.dto.FacetDTO;
 import cms.gov.madie.measure.dto.MeasureListDTO;
+import cms.gov.madie.measure.dto.MeasureSearchCriteria;
 import gov.cms.madie.models.dto.LibraryUsage;
 import org.bson.Document;
 
@@ -69,7 +70,7 @@ public class MeasureAclRepositoryImplTest {
         .thenReturn(pagedResults);
 
     Page<MeasureListDTO> page =
-        measureAclRepository.findMyActiveMeasures("john", pageRequest, null);
+        measureAclRepository.findActiveMeasures("john", pageRequest, null, true);
     assertEquals(page.getTotalElements(), 5);
     assertEquals(page.getTotalPages(), 2);
     assertEquals(page.getContent().size(), 3);
@@ -90,8 +91,10 @@ public class MeasureAclRepositoryImplTest {
     when(mongoTemplate.aggregate(any(Aggregation.class), (Class<?>) any(), any()))
         .thenReturn(pagedResults);
 
+    MeasureSearchCriteria measureSearchCriteria =
+        MeasureSearchCriteria.builder().query("test measure").build();
     Page<MeasureListDTO> page =
-        measureAclRepository.findMyActiveMeasures("john", pageRequest, "test measure");
+        measureAclRepository.findActiveMeasures("john", pageRequest, measureSearchCriteria, true);
     assertEquals(page.getTotalElements(), 2);
     assertEquals(page.getTotalPages(), 1);
     assertEquals(page.getContent().size(), 2);
