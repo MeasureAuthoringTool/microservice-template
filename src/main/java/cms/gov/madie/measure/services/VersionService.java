@@ -1,9 +1,6 @@
 package cms.gov.madie.measure.services;
 
-import cms.gov.madie.measure.exceptions.BadVersionRequestException;
-import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
-import cms.gov.madie.measure.exceptions.MeasureNotDraftableException;
-import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
+import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.CqmMeasureRepository;
 import cms.gov.madie.measure.repositories.ExportRepository;
 import cms.gov.madie.measure.repositories.MeasureRepository;
@@ -12,6 +9,8 @@ import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.cqm.CqmMeasure;
 import gov.cms.madie.models.measure.*;
+import gov.cms.madie.packaging.utils.PackagingUtility;
+import gov.cms.madie.packaging.utils.PackagingUtilityFactory;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -19,6 +18,7 @@ import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.lang.reflect.InvocationTargetException;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -366,8 +366,23 @@ public class VersionService {
   }
 
   private void saveMeasureBundle(Measure savedMeasure, String measureBundle, String username) {
+    String humanReadableWithCss;
+    try {
+      PackagingUtility utility = PackagingUtilityFactory.getInstance(savedMeasure.getModel());
+      humanReadableWithCss = utility.getHumanReadableWithCSS(measureBundle);
+    } catch (InstantiationException
+        | IllegalAccessException
+        | InvocationTargetException
+        | NoSuchMethodException
+        | ClassNotFoundException e) {
+      throw new BundleOperationException("Measure", savedMeasure.getId(), e);
+    }
     Export export =
-        Export.builder().measureId(savedMeasure.getId()).measureBundleJson(measureBundle).build();
+        Export.builder()
+            .measureId(savedMeasure.getId())
+            .measureBundleJson(measureBundle)
+            .humanReadable(humanReadableWithCss)
+            .build();
     Export savedExport = exportRepository.save(export);
     log.info(
         "User [{}] successfully saved versioned measure's export data with ID [{}]",
