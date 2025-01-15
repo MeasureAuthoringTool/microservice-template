@@ -309,9 +309,72 @@ public class TestCaseServiceUtil {
 
     List<TestCaseStratificationValue> stratification =
         testCaseGroupPopulations.stream()
-            .filter(group -> isNotEmpty(group.getStratificationValues()))
+            .filter(
+                group -> {
+                  return isNotEmpty(group.getStratificationValues());
+                })
             // Assumes there cannot be more than 1 strat in each incoming expected value obj
             .map(group -> group.getStratificationValues().get(0))
+            .toList();
+
+    // Mismatch between target and import Stratification, don't set any expected values
+    boolean measureHasStrats =
+        measureGroups != null
+            ? measureGroups.stream().allMatch(group -> isNotEmpty(group.getStratifications()))
+            : false;
+    if ((measureHasStrats && isEmpty(stratification))
+        || (!measureHasStrats && isNotEmpty(stratification))) {
+      return null;
+    }
+
+    if (measureGroups != null && measureGroups.size() > 1 && isNotEmpty(stratification)) {
+      Deque<TestCaseStratificationValue> stratificationQueue = new ArrayDeque<>(stratification);
+      try {
+        do {
+          // Assumes MADiE's Measure Group order matches incoming Group order
+          // i.e. MADiE's PopCriteria 1 aligns with incoming TestCaseGroupPopulation 1
+          for (int i = 0; i < measureGroups.size(); i++) {
+            for (int j = 0; j < measureGroups.get(i).getStratifications().size(); j++) {
+              addStrat(populationCriteria.get(i), stratificationQueue.pop());
+            }
+          }
+        } while (!stratificationQueue.isEmpty());
+      } catch (NoSuchElementException e) {
+        // Import Strat count doesn't align with measure group Strat count, don't set any expected
+        // values.
+        return null;
+      }
+    } else {
+      // Single group, go ahead and assign all strats.
+      populationCriteria.get(0).setStratificationValues(stratification);
+    }
+    return new ArrayList<>(populationCriteria);
+  }
+
+  public static List<TestCaseGroupPopulation> assignStratificationValuesQiCore(
+      List<TestCaseGroupPopulation> testCaseGroupPopulations, List<Group> measureGroups) {
+
+    // Break up single list of pop values and strats into separate lists
+    List<TestCaseGroupPopulation> populationCriteria =
+        testCaseGroupPopulations.stream()
+            .filter(
+                group -> {
+                  return isNotEmpty(group.getPopulationValues());
+                  // && isEmpty(group.getStratificationValues());
+                })
+            .toList();
+
+    List<TestCaseStratificationValue> stratification =
+        testCaseGroupPopulations.stream()
+            .filter(
+                group -> {
+                  return isNotEmpty(group.getStratificationValues());
+                })
+            // Assumes there cannot be more than 1 strat in each incoming expected value obj
+            // .map(group -> group.getStratificationValues().get(0))
+            // (GAK MAT-8064 Why???  The QICore Test case can have a single population with multiple
+            // stratification results)
+            .flatMap(group -> group.getStratificationValues().stream())
             .toList();
 
     // Mismatch between target and import Stratification, don't set any expected values

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureScoring;
 import gov.cms.madie.models.measure.PopulationType;
@@ -23,8 +24,11 @@ import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Slf4j
 public final class JsonUtil {
@@ -187,13 +191,14 @@ public final class JsonUtil {
   }
 
   public static List<TestCaseGroupPopulation> getTestCaseGroupPopulationsFromMeasureReport(
-      String json) throws JsonProcessingException {
+      String json, Measure measure) throws JsonProcessingException {
     List<TestCaseGroupPopulation> groupPopulations = new ArrayList<>();
     JsonNode resourceNode = getResourceNode(json, "MeasureReport");
     if (resourceNode != null) {
       JsonNode groups = resourceNode.get("group");
       TestCaseGroupPopulation groupPopulation = null;
       if (groups != null) {
+        int stratCount = 1;
         for (JsonNode group : groups) {
           JsonNode populations = group.get("population");
           List<TestCasePopulationValue> populationValues = new ArrayList<>();
@@ -223,6 +228,57 @@ public final class JsonUtil {
                 && !CollectionUtils.isEmpty(groupPopulation.getPopulationValues())) {
               groupPopulations.add(groupPopulation);
             }
+          }
+          // get Stratifications
+          JsonNode stratifications = group.get("stratifier");
+          if (stratifications != null) {
+            List<TestCaseStratificationValue> stratificationValues = new ArrayList<>();
+            for (JsonNode stratification : stratifications) {
+              log.debug("This is a stratification {}", stratification);
+              String groupId = group.get("id").toString().replace("\"", "");
+              String stratId = stratification.get("id").toString().replace("\"", "");
+
+              Optional<Group> popGroup =
+                  measure.getGroups().stream()
+                      .filter(grp -> grp.getId().equals(groupId))
+                      .findFirst();
+
+              // So I think we need to match up the stratifications to the groups and group
+              // population...
+              String stratName =
+                  ((ArrayNode) stratification.get("code")).get(0).get("text").toString();
+              ArrayNode stratums = (ArrayNode) stratification.get("stratum");
+              ArrayNode expectedValuesArray =
+                  StreamSupport.stream(stratums.spliterator(), false)
+                      .filter(stratum -> stratum.findPath("value").findValue("text").asBoolean())
+                      .collect(Collectors.toList())
+                      .get(0)
+                      .withArrayProperty("population");
+              // from expectedValuesStrat, I can get all the expected Pop values
+              List<TestCasePopulationValue> expectedStratValues = new ArrayList<>();
+              expectedValuesArray.forEach(
+                  (expVal) -> {
+                    String code = expVal.get("code").get("coding").get(0).get("code").asText();
+
+                    TestCasePopulationValue value =
+                        TestCasePopulationValue.builder()
+                            .name(PopulationType.fromCode(code))
+                            .expected(
+                                popGroup.get().getPopulationBasis().equals("Boolean")
+                                    ? Integer.parseInt(expVal.get("count").asText()) == 1
+                                    : Integer.parseInt(expVal.get("count").asText()))
+                            .build();
+                    expectedStratValues.add(value);
+                  });
+              TestCaseStratificationValue stratValue =
+                  TestCaseStratificationValue.builder()
+                      .id(stratId) // UUID.randomUUID().toString())
+                      .name(stratName)
+                      .build();
+              stratValue.setPopulationValues(expectedStratValues);
+              stratificationValues.add(stratValue);
+            }
+            groupPopulation.setStratificationValues(stratificationValues);
           }
         }
       }
