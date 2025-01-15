@@ -5,7 +5,6 @@ import cms.gov.madie.measure.dto.MeasureSearchCriteria;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
-import cms.gov.madie.measure.repositories.OrganizationRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
 import cms.gov.madie.measure.utils.MeasureUtil;
 import gov.cms.madie.models.access.AclOperation;
@@ -38,7 +37,6 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class MeasureService {
   private final MeasureRepository measureRepository;
-  private final OrganizationRepository organizationRepository;
   private final MeasureSetRepository measureSetRepository;
   private final ElmTranslatorClient elmTranslatorClient;
   private final MeasureUtil measureUtil;

@@ -44,13 +44,6 @@ public interface MeasureRepository
   @Query(value = "{'groups._id': ?0}")
   Optional<Measure> findGroupById(String groupId);
 
-  //  @Query(
-  //      " {$and: [{active : true} ,  "
-  //          + "{$or: [{'measureName' : { $regex : /\\Q?0\\E/, $options: 'i' } },"
-  //          + "{'ecqmTitle' : { $regex : /\\Q?0\\E/, $options: 'i' }}]} "
-  //          + "]}")
-  //  Page<MeasureListDTO> findAllByMeasureNameOrEcqmTitle(String criteria, Pageable page);
-
   boolean existsByMeasureSetIdAndActiveAndMeasureMetaDataDraft(
       String setId, boolean active, boolean draft);
 

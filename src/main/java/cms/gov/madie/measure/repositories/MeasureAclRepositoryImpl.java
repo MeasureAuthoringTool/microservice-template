@@ -7,6 +7,7 @@ import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.dto.LibraryUsage;
 import gov.cms.madie.models.measure.Measure;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import org.springframework.data.domain.Page;
@@ -72,6 +73,11 @@ public class MeasureAclRepositoryImpl implements MeasureAclRepository {
       // If draft is provided, filter measures based on MeasureMetaData.draft
       if (measureSearchCriteria.getDraft() != null) {
         measureCriteria.and("measureMetaData.draft").is(measureSearchCriteria.getDraft());
+      }
+
+      // If excludeMeasures is not empty, exclude those measures by their IDs
+      if (CollectionUtils.isNotEmpty(measureSearchCriteria.getExcludeMeasures())) {
+        measureCriteria.and("_id").nin(measureSearchCriteria.getExcludeMeasures());
       }
     }
 
