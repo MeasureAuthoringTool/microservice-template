@@ -318,12 +318,8 @@ public class TestCaseServiceUtil {
             .toList();
 
     // Mismatch between target and import Stratification, don't set any expected values
-    boolean measureHasStrats =
-        measureGroups != null
-            ? measureGroups.stream().allMatch(group -> isNotEmpty(group.getStratifications()))
-            : false;
-    if ((measureHasStrats && isEmpty(stratification))
-        || (!measureHasStrats && isNotEmpty(stratification))) {
+    // Mismatch between target and import Stratification, don't set any expected values
+    if (hasEmptyStratifications(measureGroups, stratification)) {
       return null;
     }
 
@@ -378,14 +374,10 @@ public class TestCaseServiceUtil {
             .toList();
 
     // Mismatch between target and import Stratification, don't set any expected values
-    boolean measureHasStrats =
-        measureGroups != null
-            ? measureGroups.stream().allMatch(group -> isNotEmpty(group.getStratifications()))
-            : false;
-    if ((measureHasStrats && isEmpty(stratification))
-        || (!measureHasStrats && isNotEmpty(stratification))) {
+    if (hasEmptyStratifications(measureGroups, stratification)) {
       return null;
     }
+    ;
 
     if (measureGroups != null && measureGroups.size() > 1 && isNotEmpty(stratification)) {
       Deque<TestCaseStratificationValue> stratificationQueue = new ArrayDeque<>(stratification);
@@ -409,6 +401,18 @@ public class TestCaseServiceUtil {
       populationCriteria.get(0).setStratificationValues(stratification);
     }
     return new ArrayList<>(populationCriteria);
+  }
+
+  private static boolean hasEmptyStratifications(
+      List<Group> measureGroups, List<TestCaseStratificationValue> stratification) {
+    boolean measureHasStrats =
+        measureGroups != null
+            && measureGroups.stream().allMatch(group -> isNotEmpty(group.getStratifications()));
+    if ((measureHasStrats && isEmpty(stratification))
+        || (!measureHasStrats && isNotEmpty(stratification))) {
+      return true;
+    }
+    return false;
   }
 
   private static void addStrat(
