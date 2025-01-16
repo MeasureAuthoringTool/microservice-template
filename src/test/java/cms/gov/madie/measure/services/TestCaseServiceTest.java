@@ -1484,7 +1484,8 @@ public class TestCaseServiceTest implements ResourceUtil {
     doReturn(measure).when(measureRepository).save(any(Measure.class));
 
     String output =
-        testCaseService.deleteTestCases(measure.getId(), List.of("TC1_ID", "TC2_ID"), "test.user");
+        testCaseService.deleteTestCases(
+            measure.getId(), List.of("TC1_ID", "TC2_ID", "TC3_ID", "TC4_ID"), "test.user");
     assertThat(output, is(equalTo("Successfully deleted provided test cases")));
   }
 
