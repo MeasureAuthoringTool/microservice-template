@@ -5,7 +5,9 @@ ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} app.jar
 
 #Update Packages
+
 #RUN yum update -y --security
+
 
 ## Add the wait script to the image
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.7.3/wait /wait

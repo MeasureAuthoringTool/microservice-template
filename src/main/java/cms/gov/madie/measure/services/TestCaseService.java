@@ -555,6 +555,9 @@ public class TestCaseService {
               "observation values were not imported. MADiE cannot import expected "
                   + "values for Continuous Variable measures with multiple population criteria.";
         }
+      } else {
+        testCaseGroupPopulations =
+            TestCaseServiceUtil.assignStratificationValuesQiCore(testCaseGroupPopulations, groups);
       }
       // Compare main populations from the measure pop criteria against incoming test case.
       // Check includes Stratification and excludes Observations.
@@ -615,7 +618,11 @@ public class TestCaseService {
       String model, String json, Measure measure) throws JsonProcessingException {
     List<TestCaseGroupPopulation> testCaseGroupPopulations = null;
     if (ModelType.QI_CORE.getValue().equalsIgnoreCase(model)) {
-      testCaseGroupPopulations = JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json);
+      testCaseGroupPopulations =
+          JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(
+              json,
+              "boolean"
+                  .equals(StringUtils.lowerCase(measure.getGroups().get(0).getPopulationBasis())));
     } else if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(model)) {
       testCaseGroupPopulations = JsonUtil.getTestCaseGroupPopulationsQdm(json, measure);
     }
