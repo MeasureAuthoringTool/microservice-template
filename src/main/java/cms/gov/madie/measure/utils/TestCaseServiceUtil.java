@@ -315,7 +315,6 @@ public class TestCaseServiceUtil {
             .toList();
 
     // Mismatch between target and import Stratification, don't set any expected values
-    // Mismatch between target and import Stratification, don't set any expected values
     if (hasEmptyStratifications(measureGroups, stratification)) {
       return null;
     }
