@@ -24,7 +24,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Slf4j
 public final class JsonUtil {
@@ -186,14 +189,24 @@ public final class JsonUtil {
     return null;
   }
 
+  /**
+   * Process the incoming test cases during import. QICore import only respects the measure
+   * Population basis from the first population
+   *
+   * @param json
+   * @param measurePopulationBasis (whether it's a boolean basis or not )
+   * @return
+   * @throws JsonProcessingException
+   */
   public static List<TestCaseGroupPopulation> getTestCaseGroupPopulationsFromMeasureReport(
-      String json) throws JsonProcessingException {
+      String json, boolean measurePopulationBasis) throws JsonProcessingException {
+
     List<TestCaseGroupPopulation> groupPopulations = new ArrayList<>();
     JsonNode resourceNode = getResourceNode(json, "MeasureReport");
     if (resourceNode != null) {
       JsonNode groups = resourceNode.get("group");
-      TestCaseGroupPopulation groupPopulation = null;
       if (groups != null) {
+        TestCaseGroupPopulation groupPopulation = null;
         for (JsonNode group : groups) {
           JsonNode populations = group.get("population");
           List<TestCasePopulationValue> populationValues = new ArrayList<>();
@@ -207,12 +220,7 @@ public final class JsonUtil {
                 if (codings != null) {
                   for (JsonNode coding : codings) {
                     String code = coding.get("code").asText();
-                    TestCasePopulationValue populationValue =
-                        TestCasePopulationValue.builder()
-                            .name(PopulationType.fromCode(code))
-                            .expected(count)
-                            .build();
-                    populationValues.add(populationValue);
+                    appendPopulationValues(populationValues, count, code);
                   }
                 }
                 groupPopulation =
@@ -224,10 +232,71 @@ public final class JsonUtil {
               groupPopulations.add(groupPopulation);
             }
           }
+          // get Stratifications
+          JsonNode stratifications = group.get("stratifier");
+          if (stratifications != null) {
+            List<TestCaseStratificationValue> stratificationValues = new ArrayList<>();
+            AtomicInteger stratCount = new AtomicInteger(0);
+            stratifications.forEach(
+                (stratification) ->
+                    buildStratificationPopValues(
+                        stratificationValues,
+                        stratification,
+                        stratCount.getAndIncrement(),
+                        measurePopulationBasis));
+            groupPopulation.setStratificationValues(stratificationValues);
+          }
         }
       }
     }
     return groupPopulations;
+  }
+
+  private static void buildStratificationPopValues(
+      List<TestCaseStratificationValue> stratificationValues,
+      JsonNode stratification,
+      int stratCount,
+      boolean measurePopulationBasis) {
+    String stratId = stratification.get("id").toString().replace("\"", "");
+    // We need to match up the stratifications to the groups and group
+    // population...
+    String stratName = "Strata-" + stratCount;
+    ArrayNode stratums = (ArrayNode) stratification.get("stratum");
+
+    List<JsonNode> stratumsList =
+        StreamSupport.stream(stratums.spliterator(), false)
+            .filter(stratum -> stratum.findPath("value").findValue("text").asBoolean())
+            .collect(Collectors.toList());
+    if (stratumsList.isEmpty()) {
+      stratumsList.add(StreamSupport.stream(stratums.spliterator(), false).findFirst().get());
+    }
+    ArrayNode expectedValuesArray = stratumsList.get(0).withArrayProperty("population");
+
+    // from expectedValuesStrat, I can get all the expected Pop values
+    List<TestCasePopulationValue> expectedStratValues = new ArrayList<>();
+    expectedValuesArray.forEach(
+        (expVal) -> {
+          String code = expVal.get("code").get("coding").get(0).get("code").asText();
+          Object count =
+              measurePopulationBasis
+                  ? (Integer.parseInt(expVal.get("count").asText()) == 1)
+                  : Integer.parseInt(expVal.get("count").asText());
+          appendPopulationValues(expectedStratValues, count, code);
+        });
+    TestCaseStratificationValue stratValue =
+        TestCaseStratificationValue.builder().id(stratId).name(stratName).build();
+    stratValue.setPopulationValues(expectedStratValues);
+    stratificationValues.add(stratValue);
+  }
+
+  private static void appendPopulationValues(
+      List<TestCasePopulationValue> populationValues, Object count, String code) {
+    TestCasePopulationValue populationValue =
+        TestCasePopulationValue.builder()
+            .name(PopulationType.fromCode(code))
+            .expected(count)
+            .build();
+    populationValues.add(populationValue);
   }
 
   public static String removeMeasureReportFromJson(String testCaseJson)
