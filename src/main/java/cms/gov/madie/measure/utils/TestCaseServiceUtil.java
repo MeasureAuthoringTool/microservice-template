@@ -372,7 +372,6 @@ public class TestCaseServiceUtil {
     if (hasEmptyStratifications(measureGroups, stratification)) {
       return null;
     }
-    ;
 
     if (measureGroups != null && measureGroups.size() > 1 && isNotEmpty(stratification)) {
       Deque<TestCaseStratificationValue> stratificationQueue = new ArrayDeque<>(stratification);
