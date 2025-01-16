@@ -12,8 +12,8 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MeasureSearchCriteria {
-  private String query;
+  private String searchField;
   private String model;
   private Boolean draft;
-  private List<String> excludeMeasures;
+  private List<String> excludeByMeasureIds;
 }

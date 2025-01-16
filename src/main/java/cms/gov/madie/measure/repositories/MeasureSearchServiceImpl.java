@@ -23,10 +23,10 @@ import java.util.List;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 @Repository
-public class MeasureAclRepositoryImpl implements MeasureAclRepository {
+public class MeasureSearchServiceImpl implements MeasureSearchService {
   private final MongoTemplate mongoTemplate;
 
-  public MeasureAclRepositoryImpl(MongoTemplate mongoTemplate) {
+  public MeasureSearchServiceImpl(MongoTemplate mongoTemplate) {
     this.mongoTemplate = mongoTemplate;
   }
 
@@ -39,12 +39,13 @@ public class MeasureAclRepositoryImpl implements MeasureAclRepository {
   }
 
   // First get All Active measures
-  // if query string is given then search for the query string in measureName and eCQM title
+  // if searchField string is given then search for the searchField string in measureName or eCQM
+  // title
   // If model is provided filter out those measures based on Model
   // if draft status is provided then filter out them based on draft value
   // if filterByCurrentUser = true then filter measures owned by user or shared with
   @Override
-  public Page<MeasureListDTO> findActiveMeasures(
+  public Page<MeasureListDTO> searchMeasuresByCriteria(
       String userId,
       Pageable pageable,
       MeasureSearchCriteria measureSearchCriteria,
@@ -57,12 +58,14 @@ public class MeasureAclRepositoryImpl implements MeasureAclRepository {
 
     if (measureSearchCriteria != null) {
       // If query is given, search for the query string in measureName and ecqmTitle
-      if (StringUtils.isNotBlank(measureSearchCriteria.getQuery())) {
+      if (StringUtils.isNotBlank(measureSearchCriteria.getSearchField())) {
         measureCriteria.andOperator(
             new Criteria()
                 .orOperator(
-                    Criteria.where("measureName").regex(measureSearchCriteria.getQuery(), "i"),
-                    Criteria.where("ecqmTitle").regex(measureSearchCriteria.getQuery(), "i")));
+                    Criteria.where("measureName")
+                        .regex(measureSearchCriteria.getSearchField(), "i"),
+                    Criteria.where("ecqmTitle")
+                        .regex(measureSearchCriteria.getSearchField(), "i")));
       }
 
       // If model is provided, filter out those measures with that model
@@ -76,8 +79,8 @@ public class MeasureAclRepositoryImpl implements MeasureAclRepository {
       }
 
       // If excludeMeasures is not empty, exclude those measures by their IDs
-      if (CollectionUtils.isNotEmpty(measureSearchCriteria.getExcludeMeasures())) {
-        measureCriteria.and("_id").nin(measureSearchCriteria.getExcludeMeasures());
+      if (CollectionUtils.isNotEmpty(measureSearchCriteria.getExcludeByMeasureIds())) {
+        measureCriteria.and("_id").nin(measureSearchCriteria.getExcludeByMeasureIds());
       }
     }
 

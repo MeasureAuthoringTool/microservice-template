@@ -360,10 +360,10 @@ public class MeasureServiceTest implements ResourceUtil {
     Page<Measure> activeMeasures = new PageImpl<>(List.of(measure1));
 
     MeasureSearchCriteria measureSearchCriteria =
-        MeasureSearchCriteria.builder().query("test criteria").build();
+        MeasureSearchCriteria.builder().searchField("test criteria").build();
     doReturn(activeMeasures)
         .when(measureRepository)
-        .findActiveMeasures(
+        .searchMeasuresByCriteria(
             eq("test.user"), any(PageRequest.class), any(MeasureSearchCriteria.class), eq(true));
     Object measures =
         measureService.getMeasuresByCriteria(measureSearchCriteria, true, initialPage, "test.user");
@@ -377,27 +377,14 @@ public class MeasureServiceTest implements ResourceUtil {
     Page<Measure> activeMeasures = new PageImpl<>(List.of(measure1));
 
     MeasureSearchCriteria measureSearchCriteria =
-        MeasureSearchCriteria.builder().query("test criteria").build();
+        MeasureSearchCriteria.builder().searchField("test criteria").build();
     doReturn(activeMeasures)
         .when(measureRepository)
-        .findActiveMeasures(
+        .searchMeasuresByCriteria(
             eq("test.user"), any(PageRequest.class), any(MeasureSearchCriteria.class), eq(false));
     Object measures =
         measureService.getMeasuresByCriteria(
             measureSearchCriteria, false, initialPage, "test.user");
-    assertNotNull(measures);
-  }
-
-  @Test
-  public void testGetMeasures() {
-    PageRequest initialPage = PageRequest.of(0, 10);
-
-    Page<Measure> activeMeasures = new PageImpl<>(List.of(measure1));
-
-    doReturn(activeMeasures)
-        .when(measureRepository)
-        .findActiveMeasures(eq("test.user"), eq(initialPage), eq(null), eq(false));
-    Object measures = measureService.getMeasures(false, initialPage, "test.user");
     assertNotNull(measures);
   }
 

@@ -29,11 +29,11 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @EnableMongoRepositories(basePackages = "com.gov.madie.measure.repository")
-public class MeasureAclRepositoryImplTest {
+public class MeasureSearchServiceImplTest {
 
   @Mock MongoTemplate mongoTemplate;
 
-  @InjectMocks MeasureAclRepositoryImpl measureAclRepository;
+  @InjectMocks MeasureSearchServiceImpl measureAclRepository;
 
   private MeasureListDTO measure1;
   private MeasureListDTO measure2;
@@ -70,7 +70,7 @@ public class MeasureAclRepositoryImplTest {
         .thenReturn(pagedResults);
 
     Page<MeasureListDTO> page =
-        measureAclRepository.findActiveMeasures("john", pageRequest, null, true);
+        measureAclRepository.searchMeasuresByCriteria("john", pageRequest, null, true);
     assertEquals(page.getTotalElements(), 5);
     assertEquals(page.getTotalPages(), 2);
     assertEquals(page.getContent().size(), 3);
@@ -92,9 +92,10 @@ public class MeasureAclRepositoryImplTest {
         .thenReturn(pagedResults);
 
     MeasureSearchCriteria measureSearchCriteria =
-        MeasureSearchCriteria.builder().query("test measure").build();
+        MeasureSearchCriteria.builder().searchField("test measure").build();
     Page<MeasureListDTO> page =
-        measureAclRepository.findActiveMeasures("john", pageRequest, measureSearchCriteria, true);
+        measureAclRepository.searchMeasuresByCriteria(
+            "john", pageRequest, measureSearchCriteria, true);
     assertEquals(page.getTotalElements(), 2);
     assertEquals(page.getTotalPages(), 1);
     assertEquals(page.getContent().size(), 2);

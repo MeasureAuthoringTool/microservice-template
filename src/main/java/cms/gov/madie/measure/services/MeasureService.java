@@ -23,8 +23,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalTime;
@@ -309,11 +307,6 @@ public class MeasureService {
     measure.setMeasurementPeriodEnd(Date.from(endInstant));
   }
 
-  public Page<MeasureListDTO> getMeasures(
-      boolean filterByCurrentUser, Pageable pageReq, String username) {
-    return measureRepository.findActiveMeasures(username, pageReq, null, filterByCurrentUser);
-  }
-
   public void checkDuplicateCqlLibraryName(String cqlLibraryName) {
     if (StringUtils.isNotEmpty(cqlLibraryName)) {
       List<Measure> measureList = measureRepository.findAllByCqlLibraryName(cqlLibraryName);
@@ -434,11 +427,7 @@ public class MeasureService {
       boolean filterByCurrentUser,
       Pageable pageReq,
       String username) {
-    // We need to decode the encoded strings we send over or we can't find stuff
-    if (StringUtils.isNotBlank(searchCriteria.getQuery())) {
-      searchCriteria.setQuery(URLDecoder.decode(searchCriteria.getQuery(), StandardCharsets.UTF_8));
-    }
-    return measureRepository.findActiveMeasures(
+    return measureRepository.searchMeasuresByCriteria(
         username, pageReq, searchCriteria, filterByCurrentUser);
   }
 

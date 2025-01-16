@@ -9,16 +9,13 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
-public interface MeasureAclRepository {
+public interface MeasureSearchService {
   /**
-   * Measure is considered to be my measure if provided user is the owner of this measure or is
-   * shared with provided user and measure is active(measure.active = true)
-   *
    * @param userId- current user
    * @param pageable- instance of Pageable
-   * @return Pageable List of measures
+   * @return Pageable List of measures that are active based on searchCriteria
    */
-  Page<MeasureListDTO> findActiveMeasures(
+  Page<MeasureListDTO> searchMeasuresByCriteria(
       String userId,
       Pageable pageable,
       MeasureSearchCriteria searchCriteria,

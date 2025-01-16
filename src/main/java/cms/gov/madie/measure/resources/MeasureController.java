@@ -72,7 +72,7 @@ public class MeasureController {
     final String username = principal.getName();
     Page<MeasureListDTO> measures;
     final Pageable pageReq = PageRequest.of(page, limit, Sort.by("lastModifiedAt").descending());
-    measures = measureService.getMeasures(filterByCurrentUser, pageReq, username);
+    measures = measureService.getMeasuresByCriteria(null, filterByCurrentUser, pageReq, username);
     measures.map(
         measure -> {
           MeasureSet measureSet =
@@ -287,7 +287,7 @@ public class MeasureController {
             measureId, groupId, stratificationId, principal.getName()));
   }
 
-  @PutMapping("/measures/search")
+  @PutMapping("/measures/searches")
   public ResponseEntity<Page<MeasureListDTO>> measureSearchByCriteria(
       Principal principal,
       @RequestParam(required = false, defaultValue = "false", name = "currentUser")
@@ -298,10 +298,6 @@ public class MeasureController {
     final String username = principal.getName();
     final Pageable pageReq = PageRequest.of(page, limit, Sort.by("lastModifiedAt").descending());
 
-    // searchCriteria is an optional body, so initializing the obj to avoid any potential NPE
-    if (searchCriteria == null) {
-      searchCriteria = MeasureSearchCriteria.builder().build();
-    }
     Page<MeasureListDTO> measures =
         measureService.getMeasuresByCriteria(
             searchCriteria, filterByCurrentUser, pageReq, username);

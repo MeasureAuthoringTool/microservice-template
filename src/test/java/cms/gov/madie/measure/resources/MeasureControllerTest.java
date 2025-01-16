@@ -111,10 +111,12 @@ class MeasureControllerTest {
 
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
-    when(measureService.getMeasures(eq(false), any(Pageable.class), eq("test.user")))
+    when(measureService.getMeasuresByCriteria(
+            eq(null), eq(false), any(Pageable.class), eq("test.user")))
         .thenReturn(measures);
     ResponseEntity<Page<MeasureListDTO>> response = controller.getMeasures(principal, false, 10, 0);
-    verify(measureService, times(1)).getMeasures(eq(false), any(Pageable.class), eq("test.user"));
+    verify(measureService, times(1))
+        .getMeasuresByCriteria(eq(null), eq(false), any(Pageable.class), eq("test.user"));
     verifyNoMoreInteractions(repository);
     assertNotNull(response.getBody());
     assertNotNull(response.getBody().getContent());
@@ -125,13 +127,15 @@ class MeasureControllerTest {
   @Test
   void getMeasuresWithCurrentUserFilter() {
     Page<MeasureListDTO> measures = new PageImpl<>(List.of(measureList));
-    when(measureService.getMeasures(eq(true), any(Pageable.class), eq("test.user")))
+    when(measureService.getMeasuresByCriteria(
+            eq(null), eq(true), any(Pageable.class), eq("test.user")))
         .thenReturn(measures);
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
     ResponseEntity<Page<MeasureListDTO>> response = controller.getMeasures(principal, true, 10, 0);
-    verify(measureService, times(1)).getMeasures(eq(true), any(Pageable.class), eq("test.user"));
+    verify(measureService, times(1))
+        .getMeasuresByCriteria(eq(null), eq(true), any(Pageable.class), eq("test.user"));
 
     verifyNoMoreInteractions(repository);
     assertNotNull(response.getBody().getContent());
@@ -666,7 +670,7 @@ class MeasureControllerTest {
             any(MeasureSearchCriteria.class), eq(false), any(Pageable.class), eq("test.user"));
 
     MeasureSearchCriteria measureSearchCriteria =
-        MeasureSearchCriteria.builder().query("test criteria").build();
+        MeasureSearchCriteria.builder().searchField("test criteria").build();
     ResponseEntity<Page<MeasureListDTO>> response =
         controller.measureSearchByCriteria(principal, false, measureSearchCriteria, 10, 0);
     verify(measureService, times(1))
@@ -693,7 +697,7 @@ class MeasureControllerTest {
             any(MeasureSearchCriteria.class), eq(true), any(Pageable.class), eq("test.user"));
 
     MeasureSearchCriteria measureSearchCriteria =
-        MeasureSearchCriteria.builder().query("test criteria").build();
+        MeasureSearchCriteria.builder().searchField("test criteria").build();
     ResponseEntity<Page<MeasureListDTO>> response =
         controller.measureSearchByCriteria(principal, true, measureSearchCriteria, 10, 0);
     verify(measureService, times(1))

@@ -14,7 +14,7 @@ import gov.cms.madie.models.measure.Measure;
 public interface MeasureRepository
     extends MongoRepository<Measure, String>,
         MeasureVersionRepository,
-        MeasureAclRepository,
+        MeasureSearchService,
         MeasureCmsIdRepository {
   @Query("{cqlLibraryName : ?0, active : true}")
   List<Measure> findAllByCqlLibraryName(String cqlLibraryName);
