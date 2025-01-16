@@ -617,7 +617,8 @@ public class TestCaseService {
     List<TestCaseGroupPopulation> testCaseGroupPopulations = null;
     if (ModelType.QI_CORE.getValue().equalsIgnoreCase(model)) {
       testCaseGroupPopulations =
-          JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json, measure);
+          JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(
+              json, "Boolean".equals(measure.getGroups().get(0).getPopulationBasis()));
     } else if (ModelType.QDM_5_6.getValue().equalsIgnoreCase(model)) {
       testCaseGroupPopulations = JsonUtil.getTestCaseGroupPopulationsQdm(json, measure);
     }

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import gov.cms.madie.models.measure.Group;
-import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureScoring;
 import gov.cms.madie.models.measure.QdmMeasure;
 import gov.cms.madie.models.measure.TestCase;
@@ -17,7 +16,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.hamcrest.CoreMatchers.*;
@@ -28,9 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.doReturn;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -147,7 +143,6 @@ public class JsonUtilTest implements ResourceUtil {
   final String qdmImportedJson = getData("/test_case_exported_qdm_json.json");
   final String testCasePopulationValueJsonNode =
       "{\n" + "\"population_index\":0,\n" + "\"IPP\":1\n" + "}";
-  @Mock Measure mockMeasure;
 
   @Test
   public void testIsValidJsonSuccess() {
@@ -340,7 +335,7 @@ public class JsonUtilTest implements ResourceUtil {
   public void testGetTestCaseGroupPopulationsFromMeasureReport() throws JsonProcessingException {
 
     List<TestCaseGroupPopulation> testCaseGroupPopulations =
-        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(measureReportJson, mockMeasure);
+        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(measureReportJson, true);
     assertThat(testCaseGroupPopulations.size(), is(equalTo(2)));
     log.debug("testCaseGroupPopulations size  = " + testCaseGroupPopulations.size());
 
@@ -369,7 +364,7 @@ public class JsonUtilTest implements ResourceUtil {
   public void testGetTestCaseGroupPopulationsFromMeasureReportNoEntries()
       throws JsonProcessingException {
     List<TestCaseGroupPopulation> testCaseGroupPopulations =
-        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noEntries, mockMeasure);
+        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noEntries, true);
     assertThat(testCaseGroupPopulations.size(), is(equalTo(0)));
   }
 
@@ -377,7 +372,7 @@ public class JsonUtilTest implements ResourceUtil {
   public void testGetTestCaseGroupPopulationsFromMeasureReportNoResource()
       throws JsonProcessingException {
     List<TestCaseGroupPopulation> testCaseGroupPopulations =
-        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noResource, mockMeasure);
+        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noResource, true);
     assertThat(testCaseGroupPopulations.size(), is(equalTo(0)));
   }
 
@@ -385,7 +380,7 @@ public class JsonUtilTest implements ResourceUtil {
   public void testGetTestCaseGroupPopulationsFromMeasureReportNoResourceType()
       throws JsonProcessingException {
     List<TestCaseGroupPopulation> testCaseGroupPopulations =
-        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noResourceType, mockMeasure);
+        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noResourceType, true);
     assertThat(testCaseGroupPopulations.size(), is(equalTo(0)));
   }
 
@@ -393,7 +388,7 @@ public class JsonUtilTest implements ResourceUtil {
   public void testGetTestCaseGroupPopulationsFromMeasureReportNoGroup()
       throws JsonProcessingException {
     List<TestCaseGroupPopulation> testCaseGroupPopulations =
-        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noGroup, mockMeasure);
+        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noGroup, true);
     assertThat(testCaseGroupPopulations.size(), is(equalTo(0)));
   }
 
@@ -401,7 +396,7 @@ public class JsonUtilTest implements ResourceUtil {
   public void testGetTestCaseGroupPopulationsFromMeasureReportNoPopulation()
       throws JsonProcessingException {
     List<TestCaseGroupPopulation> testCaseGroupPopulations =
-        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noPopulation, mockMeasure);
+        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noPopulation, true);
     assertThat(testCaseGroupPopulations.size(), is(equalTo(0)));
   }
 
@@ -409,7 +404,7 @@ public class JsonUtilTest implements ResourceUtil {
   public void testGetTestCaseGroupPopulationsFromMeasureReportNoCode()
       throws JsonProcessingException {
     List<TestCaseGroupPopulation> testCaseGroupPopulations =
-        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noCode, mockMeasure);
+        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noCode, true);
     assertThat(testCaseGroupPopulations.size(), is(equalTo(0)));
   }
 
@@ -417,37 +412,27 @@ public class JsonUtilTest implements ResourceUtil {
   public void testGetTestCaseGroupPopulationsFromMeasureReportNoCount()
       throws JsonProcessingException {
     List<TestCaseGroupPopulation> testCaseGroupPopulations =
-        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noCount, mockMeasure);
+        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(json_noCount, true);
     assertThat(testCaseGroupPopulations.size(), is(equalTo(0)));
   }
 
   @Test
   public void testGetTestCaseGroupPopulationsFromMeasureReportStratifications()
       throws JsonProcessingException {
-    List<Group> groups = new ArrayList<>();
-
-    groups.add(Group.builder().id("6786be1eeabe3146573942d9").populationBasis("Boolean").build());
-
-    doReturn(groups).when(mockMeasure).getGroups();
 
     String jsonWithStrat = getData("/test_case_export_w_stratification.json");
     List<TestCaseGroupPopulation> testCaseGroupPopulations =
-        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(jsonWithStrat, mockMeasure);
+        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(jsonWithStrat, true);
     assertThat(testCaseGroupPopulations.size(), is(equalTo(1)));
   }
 
   @Test
   public void testGetTestCaseGroupPopulationsFromMeasureReportStratificationsNonBoolean()
       throws JsonProcessingException {
-    List<Group> groups = new ArrayList<>();
-
-    groups.add(Group.builder().id("6786be1eeabe3146573942d9").populationBasis("Encounter").build());
-
-    doReturn(groups).when(mockMeasure).getGroups();
 
     String jsonWithStrat = getData("/test_case_export_w_stratification.json");
     List<TestCaseGroupPopulation> testCaseGroupPopulations =
-        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(jsonWithStrat, mockMeasure);
+        JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(jsonWithStrat, true);
     assertThat(testCaseGroupPopulations.size(), is(equalTo(1)));
   }
 
