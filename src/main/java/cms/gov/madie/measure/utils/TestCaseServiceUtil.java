@@ -309,10 +309,7 @@ public class TestCaseServiceUtil {
 
     List<TestCaseStratificationValue> stratification =
         testCaseGroupPopulations.stream()
-            .filter(
-                group -> {
-                  return isNotEmpty(group.getStratificationValues());
-                })
+            .filter(group -> isNotEmpty(group.getStratificationValues()))
             // Assumes there cannot be more than 1 strat in each incoming expected value obj
             .map(group -> group.getStratificationValues().get(0))
             .toList();
