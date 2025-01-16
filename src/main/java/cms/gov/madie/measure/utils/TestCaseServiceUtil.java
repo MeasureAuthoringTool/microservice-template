@@ -352,7 +352,6 @@ public class TestCaseServiceUtil {
             .filter(
                 group -> {
                   return isNotEmpty(group.getPopulationValues());
-                  // && isEmpty(group.getStratificationValues());
                 })
             .toList();
 
