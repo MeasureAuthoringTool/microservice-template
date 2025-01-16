@@ -50,32 +50,24 @@ public class VersionServiceTest {
 
   @Mock private MeasureRepository measureRepository;
   @Mock private CqmMeasureRepository cqmMeasureRepository;
+  @Mock private ExportRepository exportRepository;
 
   @Mock ActionLogService actionLogService;
-
-  @Mock ElmTranslatorClient elmTranslatorClient;
-
-  @Mock FhirServicesClient fhirServicesClient;
-
-  @Mock ExportRepository exportRepository;
-
   @Mock MeasureService measureService;
-
-  @Mock QdmPackageService qdmPackageService;
-
   @Mock ExportService exportService;
-
   @Mock TestCaseSequenceService sequenceService;
+  @Mock QdmPackageService qdmPackageService;
   @Mock AppConfigService appConfigService;
-
   @Mock ElmToJsonService elmToJsonService;
 
-  @InjectMocks VersionService versionService;
+  @Mock ElmTranslatorClient elmTranslatorClient;
+  @Mock FhirServicesClient fhirServicesClient;
 
   @Captor private ArgumentCaptor<Measure> measureCaptor;
   @Captor private ArgumentCaptor<CqmMeasure> cqmMeasureCaptor;
-
   @Captor private ArgumentCaptor<Export> exportArgumentCaptor;
+
+  @InjectMocks VersionService versionService;
 
   private final String ELMJON_ERROR =
       "{\n" + "\"errorExceptions\" : \n" + "[ {\"error\":\"error translating cql\" } ]\n" + "}";
@@ -443,7 +435,7 @@ public class VersionServiceTest {
             .measureSetId("testMeasureSetId")
             .createdBy("testUser")
             .cql("library Test1CQLLib version '2.3.001'")
-            .model(ModelType.QDM_5_6.getValue())
+            .model(ModelType.QI_CORE.getValue())
             .measureSet(measureSet)
             .build();
     MeasureMetaData metaData = new MeasureMetaData();
@@ -470,16 +462,20 @@ public class VersionServiceTest {
     updatedMeasure.setMeasureMetaData(updatedMetaData);
     when(measureRepository.save(any(Measure.class))).thenReturn(updatedMeasure);
 
+    String measureBundleJson =
+        """
+            {"resourceType": "Bundle","entry": [ {
+                "resource": {
+                  "resourceType": "Measure","text":{"div":"humanReadable"}}}]}""";
     Export measureExport =
         Export.builder()
             .id("testId")
             .measureId("testMeasureId")
-            .measureBundleJson("test measure json")
+            .measureBundleJson(measureBundleJson)
             .build();
     when(exportRepository.save(any(Export.class))).thenReturn(measureExport);
     when(fhirServicesClient.getMeasureBundle(any(), anyString(), anyString()))
-        .thenReturn("test measure json");
-
+        .thenReturn(measureBundleJson);
     versionService.createVersion("testMeasureId", "MAJOR", "testUser", "accesstoken");
 
     verify(measureRepository, times(1)).save(measureCaptor.capture());
@@ -564,7 +560,7 @@ public class VersionServiceTest {
         FhirMeasure.builder()
             .id("testMeasureId")
             .measureSetId("testMeasureSetId")
-            .model(ModelType.QDM_5_6.getValue())
+            .model(ModelType.QI_CORE_6_0_0.getValue())
             .createdBy("testUser")
             .cql("library Test1CQLLib version '2.3.001'")
             .measureSet(measureSet)
@@ -595,15 +591,20 @@ public class VersionServiceTest {
     updatedMeasure.setMeasureMetaData(updatedMetaData);
     when(measureRepository.save(any(Measure.class))).thenReturn(updatedMeasure);
 
+    String measureBundleJson =
+        """
+            {"resourceType": "Bundle","entry": [ {
+                "resource": {
+                  "resourceType": "Measure","text":{"div":"humanReadable"}}}]}""";
     Export measureExport =
         Export.builder()
             .id("testId")
             .measureId("testMeasureId")
-            .measureBundleJson("test measure json")
+            .measureBundleJson(measureBundleJson)
             .build();
     when(exportRepository.save(any(Export.class))).thenReturn(measureExport);
     when(fhirServicesClient.getMeasureBundle(any(), anyString(), anyString()))
-        .thenReturn("test measure json");
+        .thenReturn(measureBundleJson);
 
     versionService.createVersion("testMeasureId", "PATCH", "testUser", "accesstoken");
 
