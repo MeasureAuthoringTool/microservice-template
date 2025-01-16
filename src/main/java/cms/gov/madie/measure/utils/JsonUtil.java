@@ -240,7 +240,6 @@ public final class JsonUtil {
             stratifications.forEach(
                 (stratification) ->
                     buildStratificationPopValues(
-                        group,
                         stratificationValues,
                         stratification,
                         stratCount.getAndIncrement(),
@@ -254,7 +253,6 @@ public final class JsonUtil {
   }
 
   private static void buildStratificationPopValues(
-      JsonNode group,
       List<TestCaseStratificationValue> stratificationValues,
       JsonNode stratification,
       int stratCount,
@@ -267,10 +265,7 @@ public final class JsonUtil {
 
     List<JsonNode> stratumsList =
         StreamSupport.stream(stratums.spliterator(), false)
-            .filter(
-                stratum -> {
-                  return stratum.findPath("value").findValue("text").asBoolean();
-                })
+            .filter(stratum -> stratum.findPath("value").findValue("text").asBoolean())
             .collect(Collectors.toList());
     if (stratumsList.isEmpty()) {
       stratumsList.add(StreamSupport.stream(stratums.spliterator(), false).findFirst().get());
