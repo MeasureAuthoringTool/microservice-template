@@ -240,7 +240,11 @@ public final class JsonUtil {
             stratifications.forEach(
                 (stratification) ->
                     buildStratificationPopValues(
-                        group, stratificationValues, stratification, stratCount.getAndIncrement()));
+                        group,
+                        stratificationValues,
+                        stratification,
+                        stratCount.getAndIncrement(),
+                        measurePopulationBasis));
             groupPopulation.setStratificationValues(stratificationValues);
           }
         }
@@ -253,14 +257,9 @@ public final class JsonUtil {
       JsonNode group,
       List<TestCaseStratificationValue> stratificationValues,
       JsonNode stratification,
-      int stratCount) {
-    String groupId = group.get("id").toString().replace("\"", "");
+      int stratCount,
+      boolean measurePopulationBasis) {
     String stratId = stratification.get("id").toString().replace("\"", "");
-
-    // because we need the measure.populationBasis
-    //    Optional<Group> popGroup =
-    //        measure.getGroups().stream().filter(grp -> grp.getId().equals(groupId)).findFirst();
-
     // We need to match up the stratifications to the groups and group
     // population...
     String stratName = "Strata-" + stratCount;
@@ -283,23 +282,20 @@ public final class JsonUtil {
     expectedValuesArray.forEach(
         (expVal) -> {
           String code = expVal.get("code").get("coding").get(0).get("code").asText();
-          String count = "" + (Integer.parseInt(expVal.get("count").asText()) == 1);
-          //              popGroup.get().getPopulationBasis().equals("Boolean")
-          //                  ? "" + (Integer.parseInt(expVal.get("count").asText()) == 1)
-          //                  : "" + Integer.parseInt(expVal.get("count").asText());
+          Object count =
+              measurePopulationBasis
+                  ? (Integer.parseInt(expVal.get("count").asText()) == 1)
+                  : Integer.parseInt(expVal.get("count").asText());
           appendPopulationValues(expectedStratValues, count, code);
         });
     TestCaseStratificationValue stratValue =
-        TestCaseStratificationValue.builder()
-            .id(stratId) // UUID.randomUUID().toString())
-            .name(stratName)
-            .build();
+        TestCaseStratificationValue.builder().id(stratId).name(stratName).build();
     stratValue.setPopulationValues(expectedStratValues);
     stratificationValues.add(stratValue);
   }
 
   private static void appendPopulationValues(
-      List<TestCasePopulationValue> populationValues, String count, String code) {
+      List<TestCasePopulationValue> populationValues, Object count, String code) {
     TestCasePopulationValue populationValue =
         TestCasePopulationValue.builder()
             .name(PopulationType.fromCode(code))
