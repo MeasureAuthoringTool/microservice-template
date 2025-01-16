@@ -253,9 +253,9 @@ public class MeasureService {
       outputMeasure.setErrors(existingMeasure.getErrors());
     }
 
-    // clear testcase data for qdm when scoring or patient basis is changed
-    // for QDM scoring and patient basis are present outside the group
-    // therefor we need to clear testcases while updating measure
+    // clear testcase groups for qdm when scoring or patient basis is changed.
+    // for QDM, scoring and patient basis are present outside the group
+    // therefor we need to clear testcase groups while updating measure
     if (outputMeasure.getModel().equalsIgnoreCase(ModelType.QDM_5_6.getValue())) {
       QdmMeasure qdmExistingMeasure = (QdmMeasure) existingMeasure;
       QdmMeasure qdmUpdatingMeasure = (QdmMeasure) updatingMeasure;
