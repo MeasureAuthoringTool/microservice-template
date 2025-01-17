@@ -2,6 +2,7 @@ package cms.gov.madie.measure.repositories;
 
 import cms.gov.madie.measure.dto.FacetDTO;
 import cms.gov.madie.measure.dto.MeasureListDTO;
+import cms.gov.madie.measure.dto.MeasureSearchCriteria;
 import gov.cms.madie.models.dto.LibraryUsage;
 import org.bson.Document;
 
@@ -28,11 +29,11 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @EnableMongoRepositories(basePackages = "com.gov.madie.measure.repository")
-public class MeasureAclRepositoryImplTest {
+public class MeasureSearchServiceImplTest {
 
   @Mock MongoTemplate mongoTemplate;
 
-  @InjectMocks MeasureAclRepositoryImpl measureAclRepository;
+  @InjectMocks MeasureSearchServiceImpl measureAclRepository;
 
   private MeasureListDTO measure1;
   private MeasureListDTO measure2;
@@ -69,7 +70,7 @@ public class MeasureAclRepositoryImplTest {
         .thenReturn(pagedResults);
 
     Page<MeasureListDTO> page =
-        measureAclRepository.findMyActiveMeasures("john", pageRequest, null);
+        measureAclRepository.searchMeasuresByCriteria("john", pageRequest, null, true);
     assertEquals(page.getTotalElements(), 5);
     assertEquals(page.getTotalPages(), 2);
     assertEquals(page.getContent().size(), 3);
@@ -90,8 +91,11 @@ public class MeasureAclRepositoryImplTest {
     when(mongoTemplate.aggregate(any(Aggregation.class), (Class<?>) any(), any()))
         .thenReturn(pagedResults);
 
+    MeasureSearchCriteria measureSearchCriteria =
+        MeasureSearchCriteria.builder().searchField("test measure").build();
     Page<MeasureListDTO> page =
-        measureAclRepository.findMyActiveMeasures("john", pageRequest, "test measure");
+        measureAclRepository.searchMeasuresByCriteria(
+            "john", pageRequest, measureSearchCriteria, true);
     assertEquals(page.getTotalElements(), 2);
     assertEquals(page.getTotalPages(), 1);
     assertEquals(page.getContent().size(), 2);

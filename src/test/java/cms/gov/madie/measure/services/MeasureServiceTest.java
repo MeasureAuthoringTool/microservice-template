@@ -35,6 +35,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import cms.gov.madie.measure.dto.MeasureListDTO;
+import cms.gov.madie.measure.dto.MeasureSearchCriteria;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
 import gov.cms.madie.models.dto.LibraryUsage;
@@ -358,11 +359,14 @@ public class MeasureServiceTest implements ResourceUtil {
 
     Page<Measure> activeMeasures = new PageImpl<>(List.of(measure1));
 
+    MeasureSearchCriteria measureSearchCriteria =
+        MeasureSearchCriteria.builder().searchField("test criteria").build();
     doReturn(activeMeasures)
         .when(measureRepository)
-        .findMyActiveMeasures(eq("test.user"), any(PageRequest.class), eq("test criteria"));
+        .searchMeasuresByCriteria(
+            eq("test.user"), any(PageRequest.class), any(MeasureSearchCriteria.class), eq(true));
     Object measures =
-        measureService.getMeasuresByCriteria(true, initialPage, "test.user", "test criteria");
+        measureService.getMeasuresByCriteria(measureSearchCriteria, true, initialPage, "test.user");
     assertNotNull(measures);
   }
 
@@ -372,24 +376,15 @@ public class MeasureServiceTest implements ResourceUtil {
 
     Page<Measure> activeMeasures = new PageImpl<>(List.of(measure1));
 
+    MeasureSearchCriteria measureSearchCriteria =
+        MeasureSearchCriteria.builder().searchField("test criteria").build();
     doReturn(activeMeasures)
         .when(measureRepository)
-        .findAllByMeasureNameOrEcqmTitle(eq("test criteria"), any(PageRequest.class));
+        .searchMeasuresByCriteria(
+            eq("test.user"), any(PageRequest.class), any(MeasureSearchCriteria.class), eq(false));
     Object measures =
-        measureService.getMeasuresByCriteria(false, initialPage, "test.user", "test criteria");
-    assertNotNull(measures);
-  }
-
-  @Test
-  public void testGetMeasures() {
-    PageRequest initialPage = PageRequest.of(0, 10);
-
-    Page<Measure> activeMeasures = new PageImpl<>(List.of(measure1));
-
-    doReturn(activeMeasures)
-        .when(measureRepository)
-        .findAllByActive(eq(true), any(PageRequest.class));
-    Object measures = measureService.getMeasures(false, initialPage, null);
+        measureService.getMeasuresByCriteria(
+            measureSearchCriteria, false, initialPage, "test.user");
     assertNotNull(measures);
   }
 

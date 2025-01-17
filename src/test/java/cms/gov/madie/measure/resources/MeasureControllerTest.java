@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.dto.MeasureListDTO;
+import cms.gov.madie.measure.dto.MeasureSearchCriteria;
 import cms.gov.madie.measure.exceptions.InvalidDraftStatusException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
@@ -28,8 +29,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
-
-import java.io.UnsupportedEncodingException;
 import java.security.Principal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -112,10 +111,12 @@ class MeasureControllerTest {
 
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
-    when(measureService.getMeasures(eq(false), any(Pageable.class), eq("test.user")))
+    when(measureService.getMeasuresByCriteria(
+            eq(null), eq(false), any(Pageable.class), eq("test.user")))
         .thenReturn(measures);
     ResponseEntity<Page<MeasureListDTO>> response = controller.getMeasures(principal, false, 10, 0);
-    verify(measureService, times(1)).getMeasures(eq(false), any(Pageable.class), eq("test.user"));
+    verify(measureService, times(1))
+        .getMeasuresByCriteria(eq(null), eq(false), any(Pageable.class), eq("test.user"));
     verifyNoMoreInteractions(repository);
     assertNotNull(response.getBody());
     assertNotNull(response.getBody().getContent());
@@ -126,13 +127,15 @@ class MeasureControllerTest {
   @Test
   void getMeasuresWithCurrentUserFilter() {
     Page<MeasureListDTO> measures = new PageImpl<>(List.of(measureList));
-    when(measureService.getMeasures(eq(true), any(Pageable.class), eq("test.user")))
+    when(measureService.getMeasuresByCriteria(
+            eq(null), eq(true), any(Pageable.class), eq("test.user")))
         .thenReturn(measures);
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
     ResponseEntity<Page<MeasureListDTO>> response = controller.getMeasures(principal, true, 10, 0);
-    verify(measureService, times(1)).getMeasures(eq(true), any(Pageable.class), eq("test.user"));
+    verify(measureService, times(1))
+        .getMeasuresByCriteria(eq(null), eq(true), any(Pageable.class), eq("test.user"));
 
     verifyNoMoreInteractions(repository);
     assertNotNull(response.getBody().getContent());
@@ -655,22 +658,24 @@ class MeasureControllerTest {
   }
 
   @Test
-  void searchMeasuresByNameOrEcqmTitleWithoutCurrentUserFilter()
-      throws UnsupportedEncodingException {
+  void searchAllMeasuresByNameOrEcqmTitle() {
     Page<MeasureListDTO> measures = new PageImpl<>(List.of(measureList));
-    doReturn(measures)
-        .when(measureService)
-        .getMeasuresByCriteria(
-            eq(false), any(Pageable.class), eq("test.user"), eq("test criteria"));
 
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
+    doReturn(measures)
+        .when(measureService)
+        .getMeasuresByCriteria(
+            any(MeasureSearchCriteria.class), eq(false), any(Pageable.class), eq("test.user"));
+
+    MeasureSearchCriteria measureSearchCriteria =
+        MeasureSearchCriteria.builder().searchField("test criteria").build();
     ResponseEntity<Page<MeasureListDTO>> response =
-        controller.findAllByMeasureNameOrEcqmTitle(principal, false, "test criteria", 10, 0);
+        controller.measureSearchByCriteria(principal, false, measureSearchCriteria, 10, 0);
     verify(measureService, times(1))
         .getMeasuresByCriteria(
-            eq(false), any(Pageable.class), eq("test.user"), eq("test criteria"));
+            any(MeasureSearchCriteria.class), eq(false), any(Pageable.class), eq("test.user"));
 
     verifyNoMoreInteractions(repository);
     assertNotNull(response.getBody());
@@ -680,19 +685,25 @@ class MeasureControllerTest {
   }
 
   @Test
-  void searchMeasuresByNameOrEcqmTitleWithCurrentUserFilter() {
+  void searchCurrentUsersMeasuresByNameOrEcqmTitle() {
     Page<MeasureListDTO> measures = new PageImpl<>(List.of(measureList));
 
-    doReturn(measures)
-        .when(measureService)
-        .getMeasuresByCriteria(eq(true), any(Pageable.class), eq("test.user"), eq("test criteria"));
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
 
+    doReturn(measures)
+        .when(measureService)
+        .getMeasuresByCriteria(
+            any(MeasureSearchCriteria.class), eq(true), any(Pageable.class), eq("test.user"));
+
+    MeasureSearchCriteria measureSearchCriteria =
+        MeasureSearchCriteria.builder().searchField("test criteria").build();
     ResponseEntity<Page<MeasureListDTO>> response =
-        controller.findAllByMeasureNameOrEcqmTitle(principal, true, "test criteria", 10, 0);
+        controller.measureSearchByCriteria(principal, true, measureSearchCriteria, 10, 0);
     verify(measureService, times(1))
-        .getMeasuresByCriteria(eq(true), any(Pageable.class), eq("test.user"), eq("test criteria"));
+        .getMeasuresByCriteria(
+            any(MeasureSearchCriteria.class), eq(true), any(Pageable.class), eq("test.user"));
+
     verifyNoMoreInteractions(repository);
     assertNotNull(response.getBody().getContent());
     assertNotNull(response.getBody().getContent().get(0));

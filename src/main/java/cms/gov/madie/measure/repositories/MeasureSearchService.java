@@ -2,22 +2,24 @@ package cms.gov.madie.measure.repositories;
 
 import cms.gov.madie.measure.dto.MeasureListDTO;
 
+import cms.gov.madie.measure.dto.MeasureSearchCriteria;
 import gov.cms.madie.models.dto.LibraryUsage;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
-public interface MeasureAclRepository {
+public interface MeasureSearchService {
   /**
-   * Measure is considered to be my measure if provided user is the owner of this measure or is
-   * shared with provided user and measure is active(measure.active = true)
-   *
    * @param userId- current user
    * @param pageable- instance of Pageable
-   * @return Pageable List of measures
+   * @return Pageable List of measures that are active based on searchCriteria
    */
-  Page<MeasureListDTO> findMyActiveMeasures(String userId, Pageable pageable, String searchTerm);
+  Page<MeasureListDTO> searchMeasuresByCriteria(
+      String userId,
+      Pageable pageable,
+      MeasureSearchCriteria searchCriteria,
+      boolean filterByCurrentUser);
 
   /**
    * Get all the measures(name, version and owner) if they include any version of given library name

@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.resources;
 
 import cms.gov.madie.measure.dto.MeasureListDTO;
+import cms.gov.madie.measure.dto.MeasureSearchCriteria;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
@@ -37,11 +38,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
-
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.security.Principal;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -60,9 +57,8 @@ public class MeasureController {
 
   @GetMapping("/measures/draftstatus")
   public ResponseEntity<Map<String, Boolean>> getDraftStatuses(
-      @RequestParam(required = true, name = "measureSetIds") List<String> measureSetIds) {
-    Map<String, Boolean> results = new HashMap<>();
-    results = measureService.getMeasureDrafts(measureSetIds);
+      @RequestParam(name = "measureSetIds") List<String> measureSetIds) {
+    Map<String, Boolean> results = measureService.getMeasureDrafts(measureSetIds);
     return ResponseEntity.status(HttpStatus.CREATED).body(results);
   }
 
@@ -76,7 +72,7 @@ public class MeasureController {
     final String username = principal.getName();
     Page<MeasureListDTO> measures;
     final Pageable pageReq = PageRequest.of(page, limit, Sort.by("lastModifiedAt").descending());
-    measures = measureService.getMeasures(filterByCurrentUser, pageReq, username);
+    measures = measureService.getMeasuresByCriteria(null, filterByCurrentUser, pageReq, username);
     measures.map(
         measure -> {
           MeasureSet measureSet =
@@ -291,22 +287,20 @@ public class MeasureController {
             measureId, groupId, stratificationId, principal.getName()));
   }
 
-  @GetMapping("/measures/search")
-  public ResponseEntity<Page<MeasureListDTO>> findAllByMeasureNameOrEcqmTitle(
+  @PutMapping("/measures/searches")
+  public ResponseEntity<Page<MeasureListDTO>> measureSearchByCriteria(
       Principal principal,
       @RequestParam(required = false, defaultValue = "false", name = "currentUser")
           boolean filterByCurrentUser,
-      @RequestParam(required = false, name = "query") String query,
+      @RequestBody(required = false) MeasureSearchCriteria searchCriteria,
       @RequestParam(required = false, defaultValue = "10", name = "limit") int limit,
       @RequestParam(required = false, defaultValue = "0", name = "page") int page) {
-
     final String username = principal.getName();
     final Pageable pageReq = PageRequest.of(page, limit, Sort.by("lastModifiedAt").descending());
 
-    // We need to decode the encoded strings we send over or we can't find stuff
-    String decodedQuery = URLDecoder.decode(query, StandardCharsets.UTF_8);
     Page<MeasureListDTO> measures =
-        measureService.getMeasuresByCriteria(filterByCurrentUser, pageReq, username, decodedQuery);
+        measureService.getMeasuresByCriteria(
+            searchCriteria, filterByCurrentUser, pageReq, username);
     measures.map(
         measure -> {
           MeasureSet measureSet =
