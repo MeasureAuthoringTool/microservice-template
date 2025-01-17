@@ -1,10 +1,10 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.dto.MeasureListDTO;
+import cms.gov.madie.measure.dto.MeasureSearchCriteria;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
-import cms.gov.madie.measure.repositories.OrganizationRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
 import cms.gov.madie.measure.utils.MeasureUtil;
 import gov.cms.madie.models.access.AclOperation;
@@ -35,7 +35,6 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class MeasureService {
   private final MeasureRepository measureRepository;
-  private final OrganizationRepository organizationRepository;
   private final MeasureSetRepository measureSetRepository;
   private final ElmTranslatorClient elmTranslatorClient;
   private final MeasureUtil measureUtil;
@@ -330,13 +329,6 @@ public class MeasureService {
     measure.setMeasurementPeriodEnd(Date.from(endInstant));
   }
 
-  public Page<MeasureListDTO> getMeasures(
-      boolean filterByCurrentUser, Pageable pageReq, String username) {
-    return filterByCurrentUser
-        ? measureRepository.findMyActiveMeasures(username, pageReq, null)
-        : measureRepository.findAllByActive(true, pageReq);
-  }
-
   public void checkDuplicateCqlLibraryName(String cqlLibraryName) {
     if (StringUtils.isNotEmpty(cqlLibraryName)) {
       List<Measure> measureList = measureRepository.findAllByCqlLibraryName(cqlLibraryName);
@@ -453,10 +445,12 @@ public class MeasureService {
   }
 
   public Page<MeasureListDTO> getMeasuresByCriteria(
-      boolean filterByCurrentUser, Pageable pageReq, String username, String criteria) {
-    return filterByCurrentUser
-        ? measureRepository.findMyActiveMeasures(username, pageReq, criteria)
-        : measureRepository.findAllByMeasureNameOrEcqmTitle(criteria, pageReq);
+      MeasureSearchCriteria searchCriteria,
+      boolean filterByCurrentUser,
+      Pageable pageReq,
+      String username) {
+    return measureRepository.searchMeasuresByCriteria(
+        username, pageReq, searchCriteria, filterByCurrentUser);
   }
 
   protected void updateReferenceId(MeasureMetaData metaData) {
