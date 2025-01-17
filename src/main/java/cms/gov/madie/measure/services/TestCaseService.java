@@ -412,7 +412,9 @@ public class TestCaseService {
     measure.setTestCases(remainingTestCases);
     measureRepository.save(measure);
 
-    sequenceService.resetSequence(measureId);
+    if (isEmpty(measure.getTestCases())) {
+      sequenceService.resetSequence(measureId);
+    }
 
     List<String> notDeletedTestCases =
         testCaseIds.stream()
