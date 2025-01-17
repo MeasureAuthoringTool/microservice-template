@@ -251,6 +251,28 @@ public class MeasureService {
       // prevent users from manually clearing errors!
       outputMeasure.setErrors(existingMeasure.getErrors());
     }
+
+    // clear testcase groups for qdm when scoring or patient basis is changed.
+    // for QDM, scoring and patient basis are present outside the group
+    // therefor we need to clear testcase groups while updating measure
+    if (outputMeasure.getModel().equalsIgnoreCase(ModelType.QDM_5_6.getValue())) {
+      QdmMeasure qdmExistingMeasure = (QdmMeasure) existingMeasure;
+      QdmMeasure qdmUpdatingMeasure = (QdmMeasure) updatingMeasure;
+
+      if ((qdmExistingMeasure.getScoring() != qdmUpdatingMeasure.getScoring())
+          || (qdmExistingMeasure.isPatientBasis() != qdmUpdatingMeasure.isPatientBasis())) {
+        List<TestCase> updatedTestCases =
+            existingMeasure.getTestCases().stream()
+                .map(
+                    testcase -> {
+                      testcase.setGroupPopulations(new ArrayList<>());
+                      return testcase;
+                    })
+                .collect(Collectors.toList());
+        outputMeasure.setTestCases(updatedTestCases);
+      }
+    }
+
     outputMeasure.getMeasureMetaData().setDraft(existingMeasure.getMeasureMetaData().isDraft());
     outputMeasure.setLastModifiedBy(username);
     outputMeasure.setLastModifiedAt(Instant.now());

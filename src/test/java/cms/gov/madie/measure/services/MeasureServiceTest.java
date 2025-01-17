@@ -724,6 +724,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .cqlLibraryName("OriginalLibName")
             .measureName("Measure1")
             .measureSetId("MeasureSetId")
+            .model(ModelType.QI_CORE.getValue())
             .cqlLibraryName("CqlLibraryName")
             .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
             .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
@@ -786,7 +787,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .measureName("Measure1")
             .versionId("VersionId")
             .cql("original cql here")
-            .model(ModelType.QDM_5_6.getValue())
+            .model(ModelType.QI_CORE.getValue())
             .measureMetaData(draftMeasureMetaData)
             .errors(List.of(MeasureErrorType.ERRORS_ELM_JSON))
             .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
@@ -825,7 +826,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .measureName("Measure1")
             .versionId("VersionId")
             .cql("original cql here")
-            .model(ModelType.QDM_5_6.getValue())
+            .model(ModelType.QI_CORE.getValue())
             .measureMetaData(draftMeasureMetaData)
             .errors(List.of(MeasureErrorType.ERRORS_ELM_JSON))
             .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
@@ -866,7 +867,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .cqlLibraryName("OriginalLibName")
             .measureName("Measure1")
             .versionId("VersionId")
-            .model(ModelType.QDM_5_6.getValue())
+            .model(ModelType.QI_CORE.getValue())
             .cql("original cql here")
             .measureMetaData(draftMeasureMetaData)
             .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
@@ -1496,5 +1497,71 @@ public class MeasureServiceTest implements ResourceUtil {
     Exception ex =
         assertThrows(InvalidRequestException.class, () -> measureService.findLibraryUsage(null));
     assertThat(ex.getMessage(), is(equalTo("Please provide library name.")));
+  }
+
+  @Test
+  public void testClearingTestCaseGroupPopulationValuesWhenScoringIsChangedForQDMMeasures() {
+    TestCaseGroupPopulation testCaseGroupPopulation =
+            TestCaseGroupPopulation.builder()
+                    .groupId("groupId1")
+                    .scoring("Cohort")
+                    .populationBasis("boolean")
+                    .build();
+
+    TestCase testCase =
+            TestCase.builder()
+                    .id("testId1")
+                    .caseNumber(2)
+                    .name("IPPPass")
+                    .series("BloodPressure>124")
+                    .createdBy("TestUser")
+                    .lastModifiedBy("TestUser2")
+                    .json("{\"resourceType\":\"Patient\"}")
+                    .title("Test1")
+                    .groupPopulations(List.of(testCaseGroupPopulation))
+                    .build();
+
+    QdmMeasure original =
+            QdmMeasure.builder()
+                    .cqlLibraryName("OriginalLibName")
+                    .measureName("Measure1")
+                    .versionId("VersionId")
+                    .cql("original cql here")
+                    .model(ModelType.QDM_5_6.getValue())
+                    .measureMetaData(draftMeasureMetaData)
+                    .errors(List.of(MeasureErrorType.ERRORS_ELM_JSON))
+                    .measurementPeriodStart(Date.from(Instant.now().minus(38, ChronoUnit.DAYS)))
+                    .measurementPeriodEnd(Date.from(Instant.now().minus(11, ChronoUnit.DAYS)))
+                    .id("testId")
+                    .scoring(MeasureScoring.COHORT.toString())
+                    .groups(null)
+                    .testCases(List.of(testCase))
+                   .patientBasis(false)
+                   .elmJson(elmJson)
+                    .build();
+
+    QdmMeasure updated = original.toBuilder().cql("changed cql here").scoring(MeasureScoring.PROPORTION.toString()).build();
+    when(measureUtil.isCqlLibraryNameChanged(any(Measure.class), any(Measure.class)))
+            .thenReturn(false);
+    when(measureUtil.isMeasurementPeriodChanged(any(Measure.class), any(Measure.class)))
+            .thenReturn(false);
+    when(measureUtil.isMeasureCqlChanged(any(Measure.class), any(Measure.class))).thenReturn(true);
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString()))
+            .thenReturn(ElmJson.builder().json("{\"library\": {}}").xml("<library></library>").build());
+    when(elmTranslatorClient.hasErrors(any(ElmJson.class))).thenReturn(false);
+
+    Measure expected =
+            updated.toBuilder().error(MeasureErrorType.MISMATCH_CQL_POPULATION_RETURN_TYPES).build();
+    when(measureUtil.validateAllMeasureDependencies(any(Measure.class))).thenReturn(expected);
+    when(measureRepository.save(any(Measure.class))).thenReturn(expected);
+
+    Measure output = measureService.updateMeasure(original, "User1", updated, "Access Token");
+    assertThat(output, is(notNullValue()));
+    assertThat(output, is(equalTo(expected)));
+    assertThat(output.getTestCases().get(0).getGroupPopulations(),is(equalTo(new ArrayList<>())));
+
+    verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
+    Measure persisted = measureArgumentCaptor.getValue();
+    assertThat(persisted, is(equalTo(expected)));
   }
 }
