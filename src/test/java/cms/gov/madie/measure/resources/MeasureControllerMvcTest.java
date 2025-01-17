@@ -32,6 +32,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import cms.gov.madie.measure.dto.MeasureListDTO;
+import cms.gov.madie.measure.dto.MeasureSearchCriteria;
 import cms.gov.madie.measure.services.MeasureSetService;
 import gov.cms.madie.models.access.AclOperation;
 import gov.cms.madie.models.access.AclSpecification;
@@ -104,6 +105,7 @@ public class MeasureControllerMvcTest {
   @Captor private ArgumentCaptor<String> targetIdArgumentCaptor;
   @Captor private ArgumentCaptor<String> performedByArgumentCaptor;
 
+  ObjectMapper objectMapper = new ObjectMapper();
   private static final String MODEL = ModelType.QI_CORE.toString();
 
   private static final String LIBRARY_NAME_VALIDATION_ERROR =
@@ -1377,7 +1379,8 @@ public class MeasureControllerMvcTest {
 
     Page<MeasureListDTO> allMeasures = new PageImpl<>(List.of(m1, m2, m3));
 
-    when(measureService.getMeasures(any(Boolean.class), any(Pageable.class), eq(TEST_USER_ID)))
+    when(measureService.getMeasuresByCriteria(
+            eq(null), any(Boolean.class), any(Pageable.class), eq(TEST_USER_ID)))
         .thenReturn(allMeasures);
 
     MvcResult result =
@@ -1390,7 +1393,7 @@ public class MeasureControllerMvcTest {
     assertTrue(resultStr.length() > 0);
 
     verify(measureService, times(1))
-        .getMeasures(any(Boolean.class), any(Pageable.class), eq(TEST_USER_ID));
+        .getMeasuresByCriteria(eq(null), any(Boolean.class), any(Pageable.class), eq(TEST_USER_ID));
     verifyNoMoreInteractions(measureService);
   }
 
@@ -1404,7 +1407,8 @@ public class MeasureControllerMvcTest {
         MeasureListDTO.builder().active(true).measureName("Measure3").model(MODEL).build();
 
     Page<MeasureListDTO> allMeasures = new PageImpl<>(List.of(m1, m2, m3));
-    when(measureService.getMeasures(eq(false), any(Pageable.class), eq(TEST_USER_ID)))
+    when(measureService.getMeasuresByCriteria(
+            eq(null), eq(false), any(Pageable.class), eq(TEST_USER_ID)))
         .thenReturn(allMeasures);
 
     MvcResult result =
@@ -1420,7 +1424,8 @@ public class MeasureControllerMvcTest {
 
     assertTrue(resultStr.length() > 0);
 
-    verify(measureService, times(1)).getMeasures(eq(false), any(Pageable.class), eq(TEST_USER_ID));
+    verify(measureService, times(1))
+        .getMeasuresByCriteria(eq(null), eq(false), any(Pageable.class), eq(TEST_USER_ID));
 
     verifyNoMoreInteractions(measureService);
   }
@@ -1435,7 +1440,8 @@ public class MeasureControllerMvcTest {
         MeasureListDTO.builder().active(true).measureName("Measure3").model(MODEL).build();
 
     Page<MeasureListDTO> allMeasures = new PageImpl<>(List.of(m1, m2, m3));
-    when(measureService.getMeasures(eq(false), any(Pageable.class), eq(TEST_USER_ID)))
+    when(measureService.getMeasuresByCriteria(
+            eq(null), eq(false), any(Pageable.class), eq(TEST_USER_ID)))
         .thenReturn(allMeasures);
 
     MvcResult result =
@@ -1454,7 +1460,8 @@ public class MeasureControllerMvcTest {
     assertTrue(resultStr.length() > 0);
 
     verify(measureService, times(1))
-        .getMeasures(activeCaptor.capture(), pageRequestCaptor.capture(), eq(TEST_USER_ID));
+        .getMeasuresByCriteria(
+            eq(null), activeCaptor.capture(), pageRequestCaptor.capture(), eq(TEST_USER_ID));
 
     PageRequest pageRequestValue = pageRequestCaptor.getValue();
     assertEquals(25, pageRequestValue.getPageSize());
@@ -1477,7 +1484,8 @@ public class MeasureControllerMvcTest {
 
     final Page<MeasureListDTO> measures = new PageImpl<>(List.of(m1, m2));
 
-    when(measureService.getMeasures(eq(true), any(Pageable.class), eq(TEST_USER_ID)))
+    when(measureService.getMeasuresByCriteria(
+            eq(null), eq(true), any(Pageable.class), eq(TEST_USER_ID)))
         .thenReturn(measures);
 
     MvcResult result =
@@ -1493,7 +1501,8 @@ public class MeasureControllerMvcTest {
 
     assertTrue(resultStr.length() > 0);
 
-    verify(measureService, times(1)).getMeasures(eq(true), any(Pageable.class), eq(TEST_USER_ID));
+    verify(measureService, times(1))
+        .getMeasuresByCriteria(eq(null), eq(true), any(Pageable.class), eq(TEST_USER_ID));
     verifyNoMoreInteractions(measureService);
   }
 
@@ -1715,13 +1724,18 @@ public class MeasureControllerMvcTest {
 
     doReturn(allMeasures)
         .when(measureService)
-        .getMeasuresByCriteria(eq(false), any(Pageable.class), eq(TEST_USER_ID), eq("measure"));
+        .getMeasuresByCriteria(
+            any(MeasureSearchCriteria.class), eq(false), any(Pageable.class), eq(TEST_USER_ID));
     MvcResult result =
         mockMvc
             .perform(
-                get("/measures/search")
+                put("/measures/searches")
                     .with(user(TEST_USER_ID))
-                    .queryParam("query", "measure")
+                    .with(csrf())
+                    .content(
+                        objectMapper.writeValueAsString(
+                            MeasureSearchCriteria.builder().searchField("measure").build()))
+                    .contentType(MediaType.APPLICATION_JSON)
                     .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andReturn();
@@ -1730,7 +1744,8 @@ public class MeasureControllerMvcTest {
     assertTrue(resultStr.length() > 0);
 
     verify(measureService, times(1))
-        .getMeasuresByCriteria(eq(false), any(Pageable.class), eq(TEST_USER_ID), eq("measure"));
+        .getMeasuresByCriteria(
+            any(MeasureSearchCriteria.class), eq(false), any(Pageable.class), eq(TEST_USER_ID));
     verifyNoMoreInteractions(measureRepository);
   }
 
@@ -1747,16 +1762,21 @@ public class MeasureControllerMvcTest {
 
     doReturn(allMeasures)
         .when(measureService)
-        .getMeasuresByCriteria(eq(false), any(Pageable.class), eq(TEST_USER_ID), eq("ecqm"));
+        .getMeasuresByCriteria(
+            any(MeasureSearchCriteria.class), eq(false), any(Pageable.class), eq(TEST_USER_ID));
     MvcResult result =
         mockMvc
             .perform(
-                get("/measures/search")
+                put("/measures/searches")
                     .with(user(TEST_USER_ID))
-                    .queryParam("query", "ecqm")
+                    .with(csrf())
                     .queryParam("currentUser", "false")
                     .queryParam("limit", "8")
                     .queryParam("page", "1")
+                    .content(
+                        objectMapper.writeValueAsString(
+                            MeasureSearchCriteria.builder().searchField("ecqm").build()))
+                    .contentType(MediaType.APPLICATION_JSON)
                     .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andReturn();
@@ -1764,7 +1784,8 @@ public class MeasureControllerMvcTest {
 
     assertTrue(resultStr.length() > 0);
     verify(measureService, times(1))
-        .getMeasuresByCriteria(eq(false), any(Pageable.class), eq(TEST_USER_ID), eq("ecqm"));
+        .getMeasuresByCriteria(
+            any(MeasureSearchCriteria.class), eq(false), any(Pageable.class), eq(TEST_USER_ID));
     verifyNoMoreInteractions(measureRepository);
   }
 
@@ -1781,16 +1802,21 @@ public class MeasureControllerMvcTest {
 
     doReturn(measures)
         .when(measureService)
-        .getMeasuresByCriteria(eq(true), any(Pageable.class), eq(TEST_USER_ID), eq("measure"));
+        .getMeasuresByCriteria(
+            any(MeasureSearchCriteria.class), eq(true), any(Pageable.class), eq(TEST_USER_ID));
     MvcResult result =
         mockMvc
             .perform(
-                get("/measures/search")
+                put("/measures/searches")
                     .with(user(TEST_USER_ID))
-                    .queryParam("query", "measure")
+                    .with(csrf())
                     .queryParam("currentUser", "true")
                     .queryParam("limit", "8")
                     .queryParam("page", "1")
+                    .content(
+                        objectMapper.writeValueAsString(
+                            MeasureSearchCriteria.builder().searchField("measure").build()))
+                    .contentType(MediaType.APPLICATION_JSON)
                     .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andReturn();
@@ -1798,7 +1824,8 @@ public class MeasureControllerMvcTest {
 
     assertTrue(resultStr.length() > 0);
     verify(measureService, times(1))
-        .getMeasuresByCriteria(eq(true), any(Pageable.class), eq(TEST_USER_ID), eq("measure"));
+        .getMeasuresByCriteria(
+            any(MeasureSearchCriteria.class), eq(true), any(Pageable.class), eq(TEST_USER_ID));
 
     verifyNoMoreInteractions(measureRepository);
   }
