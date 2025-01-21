@@ -2,10 +2,12 @@ package cms.gov.madie.measure.repositories;
 
 import cms.gov.madie.measure.dto.FacetDTO;
 import cms.gov.madie.measure.dto.MeasureListDTO;
+import cms.gov.madie.measure.dto.MeasureSearchCriteria;
 import gov.cms.madie.models.access.RoleEnum;
 import gov.cms.madie.models.dto.LibraryUsage;
 import gov.cms.madie.models.measure.Measure;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import org.springframework.data.domain.Page;
@@ -21,10 +23,10 @@ import java.util.List;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 @Repository
-public class MeasureAclRepositoryImpl implements MeasureAclRepository {
+public class MeasureSearchServiceImpl implements MeasureSearchService {
   private final MongoTemplate mongoTemplate;
 
-  public MeasureAclRepositoryImpl(MongoTemplate mongoTemplate) {
+  public MeasureSearchServiceImpl(MongoTemplate mongoTemplate) {
     this.mongoTemplate = mongoTemplate;
   }
 
@@ -36,31 +38,64 @@ public class MeasureAclRepositoryImpl implements MeasureAclRepository {
         .as("measureSet");
   }
 
+  // First get All Active measures
+  // if searchField string is given then search for the searchField string in measureName or eCQM
+  // title
+  // If model is provided filter out those measures based on Model
+  // if draft status is provided then filter out them based on draft value
+  // if filterByCurrentUser = true then filter measures owned by user or shared with
   @Override
-  public Page<MeasureListDTO> findMyActiveMeasures(
-      String userId, Pageable pageable, String searchTerm) {
+  public Page<MeasureListDTO> searchMeasuresByCriteria(
+      String userId,
+      Pageable pageable,
+      MeasureSearchCriteria measureSearchCriteria,
+      boolean filterByCurrentUser) {
     // join measure and measure_set to lookup owner and ACL info
     LookupOperation lookupOperation = getLookupOperation();
 
     // prepare measure search criteria
     Criteria measureCriteria = Criteria.where("active").is(true);
-    if (StringUtils.isNotBlank(searchTerm)) {
-      measureCriteria.andOperator(
-          new Criteria()
-              .orOperator(
-                  Criteria.where("measureName").regex(searchTerm, "i"),
-                  Criteria.where("ecqmTitle").regex(searchTerm, "i")));
+
+    if (measureSearchCriteria != null) {
+      // If query is given, search for the query string in measureName and ecqmTitle
+      if (StringUtils.isNotBlank(measureSearchCriteria.getSearchField())) {
+        measureCriteria.andOperator(
+            new Criteria()
+                .orOperator(
+                    Criteria.where("measureName")
+                        .regex(measureSearchCriteria.getSearchField(), "i"),
+                    Criteria.where("ecqmTitle")
+                        .regex(measureSearchCriteria.getSearchField(), "i")));
+      }
+
+      // If model is provided, filter out those measures with that model
+      if (StringUtils.isNotBlank(measureSearchCriteria.getModel())) {
+        measureCriteria.and("model").is(measureSearchCriteria.getModel());
+      }
+
+      // If draft is provided, filter measures based on MeasureMetaData.draft
+      if (measureSearchCriteria.getDraft() != null) {
+        measureCriteria.and("measureMetaData.draft").is(measureSearchCriteria.getDraft());
+      }
+
+      // If excludeMeasures is not empty, exclude those measures by their IDs
+      if (CollectionUtils.isNotEmpty(measureSearchCriteria.getExcludeByMeasureIds())) {
+        measureCriteria.and("_id").nin(measureSearchCriteria.getExcludeByMeasureIds());
+      }
     }
 
     // prepare measure set search criteria(user is either owner or shared with)
-    Criteria measureSetCriteria =
-        new Criteria()
-            .orOperator(
-                Criteria.where("measureSet.owner").regex("^\\Q" + userId + "\\E$", "i"),
-                Criteria.where("measureSet.acls.userId")
-                    .regex("^\\Q" + userId + "\\E$", "i")
-                    .and("measureSet.acls.roles")
-                    .in(RoleEnum.SHARED_WITH));
+    Criteria measureSetCriteria = new Criteria();
+    if (filterByCurrentUser) {
+      measureSetCriteria =
+          new Criteria()
+              .orOperator(
+                  Criteria.where("measureSet.owner").regex("^\\Q" + userId + "\\E$", "i"),
+                  Criteria.where("measureSet.acls.userId")
+                      .regex("^\\Q" + userId + "\\E$", "i")
+                      .and("measureSet.acls.roles")
+                      .in(RoleEnum.SHARED_WITH));
+    }
 
     // combine measure and measure set criteria
     MatchOperation matchOperation =

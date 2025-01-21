@@ -1,10 +1,10 @@
 package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.dto.MeasureListDTO;
+import cms.gov.madie.measure.dto.MeasureSearchCriteria;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import cms.gov.madie.measure.repositories.MeasureSetRepository;
-import cms.gov.madie.measure.repositories.OrganizationRepository;
 import cms.gov.madie.measure.resources.DuplicateKeyException;
 import cms.gov.madie.measure.utils.MeasureUtil;
 import gov.cms.madie.models.access.AclOperation;
@@ -35,7 +35,6 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class MeasureService {
   private final MeasureRepository measureRepository;
-  private final OrganizationRepository organizationRepository;
   private final MeasureSetRepository measureSetRepository;
   private final ElmTranslatorClient elmTranslatorClient;
   private final MeasureUtil measureUtil;
@@ -252,6 +251,28 @@ public class MeasureService {
       // prevent users from manually clearing errors!
       outputMeasure.setErrors(existingMeasure.getErrors());
     }
+
+    // clear testcase groups for qdm when scoring or patient basis is changed.
+    // for QDM, scoring and patient basis are present outside the group
+    // therefor we need to clear testcase groups while updating measure
+    if (outputMeasure.getModel().equalsIgnoreCase(ModelType.QDM_5_6.getValue())) {
+      QdmMeasure qdmExistingMeasure = (QdmMeasure) existingMeasure;
+      QdmMeasure qdmUpdatingMeasure = (QdmMeasure) updatingMeasure;
+
+      if ((qdmExistingMeasure.getScoring() != qdmUpdatingMeasure.getScoring())
+          || (qdmExistingMeasure.isPatientBasis() != qdmUpdatingMeasure.isPatientBasis())) {
+        List<TestCase> updatedTestCases =
+            existingMeasure.getTestCases().stream()
+                .map(
+                    testcase -> {
+                      testcase.setGroupPopulations(new ArrayList<>());
+                      return testcase;
+                    })
+                .collect(Collectors.toList());
+        outputMeasure.setTestCases(updatedTestCases);
+      }
+    }
+
     outputMeasure.getMeasureMetaData().setDraft(existingMeasure.getMeasureMetaData().isDraft());
     outputMeasure.setLastModifiedBy(username);
     outputMeasure.setLastModifiedAt(Instant.now());
@@ -306,13 +327,6 @@ public class MeasureService {
     Instant endInstant =
         endDate.toInstant().atOffset(ZoneOffset.UTC).with(LocalTime.MAX).toInstant();
     measure.setMeasurementPeriodEnd(Date.from(endInstant));
-  }
-
-  public Page<MeasureListDTO> getMeasures(
-      boolean filterByCurrentUser, Pageable pageReq, String username) {
-    return filterByCurrentUser
-        ? measureRepository.findMyActiveMeasures(username, pageReq, null)
-        : measureRepository.findAllByActive(true, pageReq);
   }
 
   public void checkDuplicateCqlLibraryName(String cqlLibraryName) {
@@ -431,10 +445,12 @@ public class MeasureService {
   }
 
   public Page<MeasureListDTO> getMeasuresByCriteria(
-      boolean filterByCurrentUser, Pageable pageReq, String username, String criteria) {
-    return filterByCurrentUser
-        ? measureRepository.findMyActiveMeasures(username, pageReq, criteria)
-        : measureRepository.findAllByMeasureNameOrEcqmTitle(criteria, pageReq);
+      MeasureSearchCriteria searchCriteria,
+      boolean filterByCurrentUser,
+      Pageable pageReq,
+      String username) {
+    return measureRepository.searchMeasuresByCriteria(
+        username, pageReq, searchCriteria, filterByCurrentUser);
   }
 
   protected void updateReferenceId(MeasureMetaData metaData) {
