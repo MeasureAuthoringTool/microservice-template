@@ -267,9 +267,9 @@ public class HumanReadableServiceTest {
     factory.when(() -> PackagingUtilityFactory.getInstance(MODEL_QI_CORE)).thenReturn(utility);
     when(utility.getHumanReadableWithCSS(anyString())).thenReturn(TEST_HUMAN_READABLE);
 
-    Export export =
-        Export.builder().id(TEST_ACCESS_TOKEN).humanReadable(TEST_HUMAN_READABLE).build();
-    when(exportRepository.save(any(Export.class))).thenReturn(export);
+    Export savedExport =
+        Export.builder().id(TEST_MEASURE_ID).humanReadable(TEST_HUMAN_READABLE).build();
+    when(exportRepository.save(any(Export.class))).thenReturn(savedExport);
 
     String result =
         humanReadableService.getHumanReadableWithCSS(TEST_MEASURE_ID, TEST_USER, TEST_ACCESS_TOKEN);

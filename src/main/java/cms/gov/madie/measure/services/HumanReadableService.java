@@ -56,8 +56,8 @@ public class HumanReadableService {
         if (!StringUtils.isBlank(humanReadableWithCss)) {
           return humanReadableWithCss;
         }
-        saveHR = true;
       }
+      saveHR = true;
     }
 
     Measure existingMeasure = validateMeasure(measure);

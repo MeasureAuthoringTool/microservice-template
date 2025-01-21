@@ -13,7 +13,6 @@ import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
 import cms.gov.madie.measure.factories.ModelValidatorFactory;
 import gov.cms.madie.models.measure.*;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -352,7 +351,7 @@ class ModelValidatorTest {
     ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
 
     Exception ex =
-        Assertions.assertThrows(
+        assertThrows(
             InvalidResourceStateException.class, () -> validator.validateMetadata(measure));
     assertThat(
         ex.getMessage(),
@@ -373,7 +372,7 @@ class ModelValidatorTest {
             .build();
     ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
     Exception ex =
-        Assertions.assertThrows(
+        assertThrows(
             InvalidResourceStateException.class, () -> validator.validateMetadata(measure));
     assertThat(
         ex.getMessage(),
@@ -395,7 +394,7 @@ class ModelValidatorTest {
             .build();
     ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
     Exception ex =
-        Assertions.assertThrows(
+        assertThrows(
             InvalidResourceStateException.class, () -> validator.validateMetadata(measure));
     assertThat(
         ex.getMessage(),
