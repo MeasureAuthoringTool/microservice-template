@@ -106,8 +106,10 @@ public class HumanReadableServiceTest {
   public void testGetHumanReadableThrowsInvalidResourceStateException() {
     Measure existingMeasure = Measure.builder().id(TEST_MEASURE_ID).model(MODEL_QI_CORE).build();
     when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
+
+    when(modelValidatorFactory.getModelValidator(any())).thenReturn(qicoreModelValidator);
     doThrow(InvalidResourceStateException.class)
-        .when(measureUtil)
+        .when(qicoreModelValidator)
         .validateMetadata(any(Measure.class));
     assertThrows(
         InvalidResourceStateException.class,
@@ -121,7 +123,7 @@ public class HumanReadableServiceTest {
     Measure existingMeasure = Measure.builder().id(TEST_MEASURE_ID).model(MODEL_QI_CORE).build();
     when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
     when(modelValidatorFactory.getModelValidator(any())).thenReturn(qicoreModelValidator);
-    doNothing().when(measureUtil).validateMetadata(any(Measure.class));
+    doNothing().when(qicoreModelValidator).validateMetadata(any(Measure.class));
     when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
     doNothing().when(qicoreModelValidator).validateGroups(any(Measure.class));
@@ -149,7 +151,7 @@ public class HumanReadableServiceTest {
     Measure existingMeasure = Measure.builder().id(TEST_MEASURE_ID).model(MODEL_QI_CORE).build();
     when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
     when(modelValidatorFactory.getModelValidator(any())).thenReturn(qicoreModelValidator);
-    doNothing().when(measureUtil).validateMetadata(any(Measure.class));
+    doNothing().when(qicoreModelValidator).validateMetadata(any(Measure.class));
     when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
     doNothing().when(qicoreModelValidator).validateGroups(any(Measure.class));
@@ -177,7 +179,7 @@ public class HumanReadableServiceTest {
     Measure existingMeasure = Measure.builder().id(TEST_MEASURE_ID).model(MODEL_QI_CORE).build();
     when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
     when(modelValidatorFactory.getModelValidator(any())).thenReturn(qicoreModelValidator);
-    doNothing().when(measureUtil).validateMetadata(any(Measure.class));
+    doNothing().when(qicoreModelValidator).validateMetadata(any(Measure.class));
     when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
     doNothing().when(qicoreModelValidator).validateGroups(any(Measure.class));
@@ -208,7 +210,7 @@ public class HumanReadableServiceTest {
         Measure.builder().id(TEST_MEASURE_ID).model(MODEL_QI_CORE).measureMetaData(meta).build();
     when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
     when(modelValidatorFactory.getModelValidator(any())).thenReturn(qicoreModelValidator);
-    doNothing().when(measureUtil).validateMetadata(any(Measure.class));
+    doNothing().when(qicoreModelValidator).validateMetadata(any(Measure.class));
     when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
     doNothing().when(qicoreModelValidator).validateGroups(any(Measure.class));
@@ -252,7 +254,7 @@ public class HumanReadableServiceTest {
     when(exportRepository.findByMeasureId(anyString())).thenReturn(Optional.empty());
 
     when(modelValidatorFactory.getModelValidator(any())).thenReturn(qicoreModelValidator);
-    doNothing().when(measureUtil).validateMetadata(any(Measure.class));
+    doNothing().when(qicoreModelValidator).validateMetadata(any(Measure.class));
     when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
     doNothing().when(qicoreModelValidator).validateGroups(any(Measure.class));
@@ -286,7 +288,7 @@ public class HumanReadableServiceTest {
     when(exportRepository.findByMeasureId(anyString())).thenReturn(Optional.of(export));
 
     when(modelValidatorFactory.getModelValidator(any())).thenReturn(qicoreModelValidator);
-    doNothing().when(measureUtil).validateMetadata(any(Measure.class));
+    doNothing().when(qicoreModelValidator).validateMetadata(any(Measure.class));
     when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
         .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
     doNothing().when(qicoreModelValidator).validateGroups(any(Measure.class));

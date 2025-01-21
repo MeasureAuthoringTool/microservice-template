@@ -87,12 +87,11 @@ public class HumanReadableService {
   }
 
   protected Measure validateMeasure(Measure measure) {
-    measureUtil.validateMetadata(measure);
+    Measure validatedMeasure = measureUtil.validateAllMeasureDependencies(measure);
 
     ModelValidator modelValidator =
         modelValidatorFactory.getModelValidator(ModelType.valueOfName(measure.getModel()));
-
-    Measure validatedMeasure = measureUtil.validateAllMeasureDependencies(measure);
+    modelValidator.validateMetadata(measure);
     modelValidator.validateGroups(validatedMeasure);
     modelValidator.validateCqlErrors(validatedMeasure);
     return validatedMeasure;

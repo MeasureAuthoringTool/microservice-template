@@ -2,6 +2,7 @@ package cms.gov.madie.measure.services;
 
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 
 import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
@@ -24,6 +25,21 @@ public abstract class ModelValidator {
     if (measure.isCqlErrors()) {
       throw new InvalidResourceStateException(
           "Measure", measure.getId(), "since there is CQL error");
+    }
+  }
+
+  public void validateMetadata(Measure measure) {
+    if (measure.getMeasureMetaData() != null) {
+      if (CollectionUtils.isEmpty(measure.getMeasureMetaData().getDevelopers())) {
+        throw new InvalidResourceStateException(
+            "Measure", measure.getId(), "since there are no associated developers in metadata.");
+      } else if (measure.getMeasureMetaData().getSteward() == null) {
+        throw new InvalidResourceStateException(
+            "Measure", measure.getId(), "since there is no associated steward in metadata.");
+      } else if (StringUtils.isBlank(measure.getMeasureMetaData().getDescription())) {
+        throw new InvalidResourceStateException(
+            "Measure", measure.getId(), "since there is no description in metadata.");
+      }
     }
   }
 }

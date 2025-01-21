@@ -20,11 +20,10 @@ public class ExportService {
   private final MeasureUtil measureUtil;
 
   public PackageDto getMeasureExport(Measure measure, String accessToken) {
-    measureUtil.validateMetadata(measure);
-
     ModelValidator modelValidator =
         modelValidatorFactory.getModelValidator(ModelType.valueOfName(measure.getModel()));
     measure = measureUtil.validateAllMeasureDependencies(measure);
+    modelValidator.validateMetadata(measure);
     modelValidator.validateGroups(measure);
     modelValidator.validateCqlErrors(measure);
     PackageService packageService =
