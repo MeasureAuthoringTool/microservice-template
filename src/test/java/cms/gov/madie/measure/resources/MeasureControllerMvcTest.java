@@ -1187,6 +1187,188 @@ public class MeasureControllerMvcTest {
   }
 
   @Test
+  public void testNewFhirMeasurePassesWithValidIntendedVenueOfEh() throws Exception {
+    CodeConcept eh =
+        CodeConcept.builder()
+            .code("eh")
+            .codeSystem("http://hl7.org/fhir/us/cqfmeasures/CodeSystem/intended-venue-codes")
+            .display("EH")
+            .definition(
+                "An eligible hospital is an acute care facility that is eligible to participate in a quality measurement initiative.")
+            .build();
+
+    FhirMeasure measure =
+        FhirMeasure.builder()
+            .id("testId")
+            .model(String.valueOf(ModelType.QI_CORE))
+            .measureSetId("testMeasureSetId")
+            .cqlLibraryName("TestCqlLibraryName")
+            .ecqmTitle("testECqm")
+            .measureName("testMeasureName")
+            .versionId("0.0.000")
+            .build();
+
+    measure.setIntendedVenue(eh);
+
+    final String measureAsJson = toJsonString(measure);
+
+    when(measureService.createMeasure(
+        any(Measure.class), anyString(), anyString(), any(Boolean.class)))
+        .thenReturn(measure);
+
+    mockMvc
+        .perform(
+            post("/measure")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .header("Authorization", TEST_USER_ID)
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isCreated());
+
+    verify(measureService, times(1))
+        .createMeasure(
+            measureArgumentCaptor.capture(), anyString(), anyString(), any(Boolean.class));
+    verifyNoMoreInteractions(measureRepository);
+  }
+
+  @Test
+  public void testNewFhirMeasurePassesWithValidIntendedVenueOfEc() throws Exception {
+    CodeConcept ec =
+        CodeConcept.builder()
+            .code("ec")
+            .codeSystem("http://hl7.org/fhir/us/cqfmeasures/CodeSystem/intended-venue-codes")
+            .display("EC")
+            .definition(
+                "An eligible clinician is a clinician who is eligible to participate in a quality measurement initiative.")
+            .build();
+
+    FhirMeasure measure =
+        FhirMeasure.builder()
+            .id("testId")
+            .model(String.valueOf(ModelType.QI_CORE))
+            .measureSetId("testMeasureSetId")
+            .cqlLibraryName("TestCqlLibraryName")
+            .ecqmTitle("testECqm")
+            .measureName("testMeasureName")
+            .versionId("0.0.000")
+            .build();
+
+    measure.setIntendedVenue(ec);
+
+    final String measureAsJson = toJsonString(measure);
+
+    when(measureService.createMeasure(
+        any(Measure.class), anyString(), anyString(), any(Boolean.class)))
+        .thenReturn(measure);
+
+    mockMvc
+        .perform(
+            post("/measure")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .header("Authorization", TEST_USER_ID)
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isCreated());
+
+    verify(measureService, times(1))
+        .createMeasure(
+            measureArgumentCaptor.capture(), anyString(), anyString(), any(Boolean.class));
+    verifyNoMoreInteractions(measureRepository);
+  }
+
+  @Test
+  public void testNewFhirMeasurePassesWithInvalidIntendedVenueOfEh() throws Exception {
+    CodeConcept invalidEh =
+        CodeConcept.builder()
+            .code("invalidEh")
+            .codeSystem("http://hl7.org/fhir/us/cqfmeasures/CodeSystem/intended-venue-codes")
+            .display("EH")
+            .definition(
+                "An eligible hospital is an acute care facility that is eligible to participate in a quality measurement initiative.")
+            .build();
+
+    FhirMeasure measure =
+        FhirMeasure.builder()
+            .id("testId")
+            .model(String.valueOf(ModelType.QI_CORE))
+            .measureSetId("testMeasureSetId")
+            .cqlLibraryName("TestCqlLibraryName")
+            .ecqmTitle("testECqm")
+            .measureName("testMeasureName")
+            .versionId("0.0.000")
+            .build();
+
+    measure.setIntendedVenue(invalidEh);
+
+    final String measureAsJson = toJsonString(measure);
+
+    when(measureService.createMeasure(
+        any(Measure.class), anyString(), anyString(), any(Boolean.class)))
+        .thenReturn(measure);
+
+    mockMvc
+        .perform(
+            post("/measure")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .header("Authorization", TEST_USER_ID)
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.validationErrors.measure").value("Intended Venue is invalid"));
+    verifyNoInteractions(measureRepository);
+  }
+
+  @Test
+  public void testNewFhirMeasurePassesWithInvalidIntendedVenueOfEc() throws Exception {
+    CodeConcept invalidEc =
+        CodeConcept.builder()
+            .code("invalidEc")
+            .codeSystem("http://hl7.org/fhir/us/cqfmeasures/CodeSystem/intended-venue-codes")
+            .display("EH")
+            .definition(
+                "An eligible hospital is an acute care facility that is eligible to participate in a quality measurement initiative.")
+            .build();
+
+    FhirMeasure measure =
+        FhirMeasure.builder()
+            .id("testId")
+            .model(String.valueOf(ModelType.QI_CORE))
+            .measureSetId("testMeasureSetId")
+            .cqlLibraryName("TestCqlLibraryName")
+            .ecqmTitle("testECqm")
+            .measureName("testMeasureName")
+            .versionId("0.0.000")
+            .build();
+
+    measure.setIntendedVenue(invalidEc);
+
+    final String measureAsJson = toJsonString(measure);
+
+    when(measureService.createMeasure(
+        any(Measure.class), anyString(), anyString(), any(Boolean.class)))
+        .thenReturn(measure);
+
+    mockMvc
+        .perform(
+            post("/measure")
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .header("Authorization", TEST_USER_ID)
+                .content(measureAsJson)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.validationErrors.measure").value("Intended Venue is invalid"));
+    verifyNoInteractions(measureRepository);
+  }
+
+  @Test
   public void testGetMeasuresNoQueryParams() throws Exception {
     MeasureListDTO m1 =
         MeasureListDTO.builder().active(true).measureName("Measure1").model(MODEL).build();
