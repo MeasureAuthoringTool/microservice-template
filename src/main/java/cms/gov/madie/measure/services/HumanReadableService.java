@@ -63,15 +63,16 @@ public class HumanReadableService {
       }
     }
 
-    measure = validateMeasure(measure);
+    Measure existingMeasure = validateMeasure(measure);
 
-    String measureBundle = fhirServicesClient.getMeasureBundle(measure, accessToken, "export");
+    String measureBundle =
+        fhirServicesClient.getMeasureBundle(existingMeasure, accessToken, "export");
 
-    humanReadableWithCss = getHRWithCSS(measure, measureBundle);
+    humanReadableWithCss = getHRWithCSS(existingMeasure, measureBundle);
     if (saveHR) {
       Export export =
           Export.builder()
-              .measureId(measure.getId())
+              .measureId(existingMeasure.getId())
               .measureBundleJson(measureBundle)
               .humanReadable(humanReadableWithCss)
               .build();
@@ -91,10 +92,10 @@ public class HumanReadableService {
     ModelValidator modelValidator =
         modelValidatorFactory.getModelValidator(ModelType.valueOfName(measure.getModel()));
 
-    measure = measureUtil.validateAllMeasureDependencies(measure);
-    modelValidator.validateGroups(measure);
-    modelValidator.validateCqlErrors(measure);
-    return measure;
+    Measure validatedMeasure = measureUtil.validateAllMeasureDependencies(measure);
+    modelValidator.validateGroups(validatedMeasure);
+    modelValidator.validateCqlErrors(validatedMeasure);
+    return validatedMeasure;
   }
 
   protected String getHRWithCSS(Measure measure, String measureBundle) {
