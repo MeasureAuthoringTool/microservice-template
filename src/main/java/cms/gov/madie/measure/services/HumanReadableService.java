@@ -55,10 +55,7 @@ public class HumanReadableService {
         humanReadableWithCss = savedExport.get().getHumanReadable();
         if (!StringUtils.isBlank(humanReadableWithCss)) {
           return humanReadableWithCss;
-        } else {
-          saveHR = true;
         }
-      } else {
         saveHR = true;
       }
     }
