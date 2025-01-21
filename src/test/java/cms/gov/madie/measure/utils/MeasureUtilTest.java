@@ -1,14 +1,18 @@
 package cms.gov.madie.measure.utils;
 
 import cms.gov.madie.measure.exceptions.InvalidMeasureObservationException;
+import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
 import cms.gov.madie.measure.exceptions.InvalidReturnTypeException;
 import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeService;
 import cms.gov.madie.measure.validations.CqlObservationFunctionService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import gov.cms.madie.models.measure.*;
+import gov.cms.madie.models.common.Organization;
 import gov.cms.madie.models.validators.ValidLibraryNameValidator;
+import gov.cms.madie.models.common.IncludedLibrary;
 import gov.cms.madie.models.common.ModelType;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,6 +33,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -1089,5 +1094,95 @@ class MeasureUtilTest {
     assertThat(output.getErrors(), is(notNullValue()));
     assertThat(output.getErrors().isEmpty(), is(false));
     assertThat(output.getErrors().contains(MeasureErrorType.INVALID_LIBRARY_NAME), is(true));
+  }
+
+  @Test
+  public void testGetIncludedLibrariesBlankCql() {
+    List<IncludedLibrary> result = MeasureUtil.getIncludedLibraries(null);
+    assertThat(result.size(), is(0));
+  }
+
+  @Test
+  public void testValidateMetadataNoMetadata() {
+    Measure measure = Measure.builder().build();
+    measureUtil.validateMetadata(measure);
+    assertDoesNotThrow(() -> measureUtil.validateMetadata(measure));
+  }
+
+  @Test
+  public void testValidateMetadataNoDevelopers() {
+    Measure measure =
+        Measure.builder()
+            .id("measureId")
+            .measureMetaData(MeasureMetaData.builder().build())
+            .build();
+
+    Exception ex =
+        Assertions.assertThrows(
+            InvalidResourceStateException.class, () -> measureUtil.validateMetadata(measure));
+    assertThat(
+        ex.getMessage(),
+        is(
+            equalTo(
+                "Response could not be completed for Measure with ID measureId, since there are no associated developers in metadata.")));
+  }
+
+  @Test
+  public void testValidateMetadataNoSteward() {
+    Measure measure =
+        Measure.builder()
+            .id("measureId")
+            .measureMetaData(
+                MeasureMetaData.builder()
+                    .developers(List.of(Organization.builder().id("OrgId").build()))
+                    .build())
+            .build();
+
+    Exception ex =
+        Assertions.assertThrows(
+            InvalidResourceStateException.class, () -> measureUtil.validateMetadata(measure));
+    assertThat(
+        ex.getMessage(),
+        is(
+            equalTo(
+                "Response could not be completed for Measure with ID measureId, since there is no associated steward in metadata.")));
+  }
+
+  @Test
+  public void testValidateMetadataNoDescription() {
+    Measure measure =
+        Measure.builder()
+            .id("measureId")
+            .measureMetaData(
+                MeasureMetaData.builder()
+                    .developers(List.of(Organization.builder().id("OrgId").build()))
+                    .steward(Organization.builder().id("OrgId").build())
+                    .build())
+            .build();
+
+    Exception ex =
+        Assertions.assertThrows(
+            InvalidResourceStateException.class, () -> measureUtil.validateMetadata(measure));
+    assertThat(
+        ex.getMessage(),
+        is(
+            equalTo(
+                "Response could not be completed for Measure with ID measureId, since there is no description in metadata.")));
+  }
+
+  @Test
+  public void testValidateMetadataValid() {
+    Measure measure =
+        Measure.builder()
+            .id("measureId")
+            .measureMetaData(
+                MeasureMetaData.builder()
+                    .developers(List.of(Organization.builder().id("OrgId").build()))
+                    .steward(Organization.builder().id("OrgId").build())
+                    .description("test description")
+                    .build())
+            .build();
+
+    assertDoesNotThrow(() -> measureUtil.validateMetadata(measure));
   }
 }

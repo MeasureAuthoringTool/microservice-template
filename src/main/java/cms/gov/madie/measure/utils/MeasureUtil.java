@@ -12,6 +12,8 @@ import gov.cms.mat.cql.elements.IncludeProperties;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+
+import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
 import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeService;
 import cms.gov.madie.measure.validations.CqlObservationFunctionService;
 import gov.cms.madie.models.common.ModelType;
@@ -263,5 +265,20 @@ public class MeasureUtil {
                     .version(include.getVersion())
                     .build())
         .toList();
+  }
+
+  public void validateMetadata(Measure measure) {
+    if (measure.getMeasureMetaData() != null) {
+      if (CollectionUtils.isEmpty(measure.getMeasureMetaData().getDevelopers())) {
+        throw new InvalidResourceStateException(
+            "Measure", measure.getId(), "since there are no associated developers in metadata.");
+      } else if (measure.getMeasureMetaData().getSteward() == null) {
+        throw new InvalidResourceStateException(
+            "Measure", measure.getId(), "since there is no associated steward in metadata.");
+      } else if (StringUtils.isBlank(measure.getMeasureMetaData().getDescription())) {
+        throw new InvalidResourceStateException(
+            "Measure", measure.getId(), "since there is no description in metadata.");
+      }
+    }
   }
 }
