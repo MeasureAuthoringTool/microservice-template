@@ -9,7 +9,6 @@ import cms.gov.madie.measure.utils.MeasureUtil;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.Measure;
 import lombok.AllArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -21,33 +20,15 @@ public class ExportService {
   private final MeasureUtil measureUtil;
 
   public PackageDto getMeasureExport(Measure measure, String accessToken) {
-    validateMetadata(measure);
-
     ModelValidator modelValidator =
         modelValidatorFactory.getModelValidator(ModelType.valueOfName(measure.getModel()));
     measure = measureUtil.validateAllMeasureDependencies(measure);
+    modelValidator.validateMetadata(measure);
     modelValidator.validateGroups(measure);
     modelValidator.validateCqlErrors(measure);
     PackageService packageService =
         packageServiceFactory.getPackageService(ModelType.valueOfName(measure.getModel()));
     return packageService.getMeasurePackage(measure, accessToken);
-  }
-
-  // TODO: if there are significant diffs between QDM & QICore validations, move this to respective
-  // model validators
-  private void validateMetadata(Measure measure) {
-    if (measure.getMeasureMetaData() != null) {
-      if (CollectionUtils.isEmpty(measure.getMeasureMetaData().getDevelopers())) {
-        throw new InvalidResourceStateException(
-            "Measure", measure.getId(), "since there are no associated developers in metadata.");
-      } else if (measure.getMeasureMetaData().getSteward() == null) {
-        throw new InvalidResourceStateException(
-            "Measure", measure.getId(), "since there is no associated steward in metadata.");
-      } else if (StringUtils.isBlank(measure.getMeasureMetaData().getDescription())) {
-        throw new InvalidResourceStateException(
-            "Measure", measure.getId(), "since there is no description in metadata.");
-      }
-    }
   }
 
   public byte[] getQRDA(QrdaRequestDTO qrdaRequestDTO, String accessToken) {

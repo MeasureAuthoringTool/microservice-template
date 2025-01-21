@@ -7,6 +7,7 @@ import cms.gov.madie.measure.validations.CqlObservationFunctionService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import gov.cms.madie.models.measure.*;
 import gov.cms.madie.models.validators.ValidLibraryNameValidator;
+import gov.cms.madie.models.common.IncludedLibrary;
 import gov.cms.madie.models.common.ModelType;
 
 import org.junit.jupiter.api.Test;
@@ -1089,5 +1090,11 @@ class MeasureUtilTest {
     assertThat(output.getErrors(), is(notNullValue()));
     assertThat(output.getErrors().isEmpty(), is(false));
     assertThat(output.getErrors().contains(MeasureErrorType.INVALID_LIBRARY_NAME), is(true));
+  }
+
+  @Test
+  public void testGetIncludedLibrariesBlankCql() {
+    List<IncludedLibrary> result = MeasureUtil.getIncludedLibraries(null);
+    assertThat(result.size(), is(0));
   }
 }

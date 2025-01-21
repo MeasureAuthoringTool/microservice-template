@@ -1,5 +1,8 @@
 package cms.gov.madie.measure.services;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
@@ -19,6 +22,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import cms.gov.madie.measure.exceptions.InvalidGroupException;
 import gov.cms.madie.models.common.ModelType;
+import gov.cms.madie.models.common.Organization;
 
 @ExtendWith(MockitoExtension.class)
 @SpringBootTest
@@ -327,5 +331,91 @@ class ModelValidatorTest {
     ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
     assertTrue(validator instanceof QiCoreModelValidator);
     assertDoesNotThrow(() -> validator.validateGroups(measure));
+  }
+
+  @Test
+  public void testValidateMetadataNoMetadata() {
+    Measure measure = Measure.builder().build();
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
+    //    measureUtil.validateMetadata(measure);
+    assertDoesNotThrow(() -> validator.validateMetadata(measure));
+  }
+
+  @Test
+  public void testValidateMetadataNoDevelopers() {
+    Measure measure =
+        Measure.builder()
+            .id("measureId")
+            .measureMetaData(MeasureMetaData.builder().build())
+            .build();
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
+
+    Exception ex =
+        assertThrows(
+            InvalidResourceStateException.class, () -> validator.validateMetadata(measure));
+    assertThat(
+        ex.getMessage(),
+        is(
+            equalTo(
+                "Response could not be completed for Measure with ID measureId, since there are no associated developers in metadata.")));
+  }
+
+  @Test
+  public void testValidateMetadataNoSteward() {
+    Measure measure =
+        Measure.builder()
+            .id("measureId")
+            .measureMetaData(
+                MeasureMetaData.builder()
+                    .developers(List.of(Organization.builder().id("OrgId").build()))
+                    .build())
+            .build();
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
+    Exception ex =
+        assertThrows(
+            InvalidResourceStateException.class, () -> validator.validateMetadata(measure));
+    assertThat(
+        ex.getMessage(),
+        is(
+            equalTo(
+                "Response could not be completed for Measure with ID measureId, since there is no associated steward in metadata.")));
+  }
+
+  @Test
+  public void testValidateMetadataNoDescription() {
+    Measure measure =
+        Measure.builder()
+            .id("measureId")
+            .measureMetaData(
+                MeasureMetaData.builder()
+                    .developers(List.of(Organization.builder().id("OrgId").build()))
+                    .steward(Organization.builder().id("OrgId").build())
+                    .build())
+            .build();
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
+    Exception ex =
+        assertThrows(
+            InvalidResourceStateException.class, () -> validator.validateMetadata(measure));
+    assertThat(
+        ex.getMessage(),
+        is(
+            equalTo(
+                "Response could not be completed for Measure with ID measureId, since there is no description in metadata.")));
+  }
+
+  @Test
+  public void testValidateMetadataValid() {
+    Measure measure =
+        Measure.builder()
+            .id("measureId")
+            .measureMetaData(
+                MeasureMetaData.builder()
+                    .developers(List.of(Organization.builder().id("OrgId").build()))
+                    .steward(Organization.builder().id("OrgId").build())
+                    .description("test description")
+                    .build())
+            .build();
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
+    assertDoesNotThrow(() -> validator.validateMetadata(measure));
   }
 }

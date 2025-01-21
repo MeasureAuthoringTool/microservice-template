@@ -1213,7 +1213,7 @@ public class MeasureControllerMvcTest {
     final String measureAsJson = toJsonString(measure);
 
     when(measureService.createMeasure(
-        any(Measure.class), anyString(), anyString(), any(Boolean.class)))
+            any(Measure.class), anyString(), anyString(), any(Boolean.class)))
         .thenReturn(measure);
 
     mockMvc
@@ -1260,7 +1260,7 @@ public class MeasureControllerMvcTest {
     final String measureAsJson = toJsonString(measure);
 
     when(measureService.createMeasure(
-        any(Measure.class), anyString(), anyString(), any(Boolean.class)))
+            any(Measure.class), anyString(), anyString(), any(Boolean.class)))
         .thenReturn(measure);
 
     mockMvc
@@ -1307,7 +1307,7 @@ public class MeasureControllerMvcTest {
     final String measureAsJson = toJsonString(measure);
 
     when(measureService.createMeasure(
-        any(Measure.class), anyString(), anyString(), any(Boolean.class)))
+            any(Measure.class), anyString(), anyString(), any(Boolean.class)))
         .thenReturn(measure);
 
     mockMvc
@@ -1351,7 +1351,7 @@ public class MeasureControllerMvcTest {
     final String measureAsJson = toJsonString(measure);
 
     when(measureService.createMeasure(
-        any(Measure.class), anyString(), anyString(), any(Boolean.class)))
+            any(Measure.class), anyString(), anyString(), any(Boolean.class)))
         .thenReturn(measure);
 
     mockMvc
