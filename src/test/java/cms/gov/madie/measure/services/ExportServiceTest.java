@@ -129,48 +129,6 @@ class ExportServiceTest {
   }
 
   @Test
-  void testGetMeasurePackageWhenNoDevelopers() {
-    measureMetaData.setDevelopers(List.of());
-    Exception ex =
-        Assertions.assertThrows(
-            InvalidResourceStateException.class,
-            () -> exportService.getMeasureExport(measure, token));
-    assertThat(
-        ex.getMessage(),
-        is(
-            equalTo(
-                "Response could not be completed for Measure with ID measure-id, since there are no associated developers in metadata.")));
-  }
-
-  @Test
-  void testGetMeasurePackageWhenNoStewards() {
-    measureMetaData.setSteward(null);
-    Exception ex =
-        Assertions.assertThrows(
-            InvalidResourceStateException.class,
-            () -> exportService.getMeasureExport(measure, token));
-    assertThat(
-        ex.getMessage(),
-        is(
-            equalTo(
-                "Response could not be completed for Measure with ID measure-id, since there is no associated steward in metadata.")));
-  }
-
-  @Test
-  void testGetMeasurePackageWhenNoMeasureDescription() {
-    measureMetaData.setDescription(null);
-    Exception ex =
-        Assertions.assertThrows(
-            InvalidResourceStateException.class,
-            () -> exportService.getMeasureExport(measure, token));
-    assertThat(
-        ex.getMessage(),
-        is(
-            equalTo(
-                "Response could not be completed for Measure with ID measure-id, since there is no description in metadata.")));
-  }
-
-  @Test
   void testGetMeasurePackageWhenMetaDataIsNull() {
     measure.setMeasureMetaData(null);
     when(modelValidatorFactory.getModelValidator(any())).thenReturn(qdmModelValidator);

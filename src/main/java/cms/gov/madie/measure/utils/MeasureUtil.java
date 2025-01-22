@@ -12,6 +12,7 @@ import gov.cms.mat.cql.elements.IncludeProperties;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+
 import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeService;
 import cms.gov.madie.measure.validations.CqlObservationFunctionService;
 import gov.cms.madie.models.common.ModelType;

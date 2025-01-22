@@ -136,7 +136,8 @@ public class ErrorHandlingControllerAdvice {
     InvalidDraftStatusException.class,
     InvalidMeasureObservationException.class,
     InvalidMeasureStateException.class,
-    DuplicateMeasureException.class
+    DuplicateMeasureException.class,
+    UnsupportedTypeException.class,
   })
   @ResponseStatus(HttpStatus.CONFLICT)
   @ResponseBody
