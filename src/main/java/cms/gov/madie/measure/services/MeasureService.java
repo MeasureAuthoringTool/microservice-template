@@ -450,6 +450,7 @@ public class MeasureService {
       boolean filterByCurrentUser,
       Pageable pageReq,
       String username) {
+    log.info("[{}]", searchCriteria);
     return measureRepository.searchMeasuresByCriteria(
         username, pageReq, searchCriteria, filterByCurrentUser);
   }
