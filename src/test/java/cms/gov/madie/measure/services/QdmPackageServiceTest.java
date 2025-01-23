@@ -21,7 +21,9 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -176,5 +178,47 @@ class QdmPackageServiceTest {
                 qdmPackageService.getQRDA(QrdaRequestDTO.builder().measure(measure).build(), token),
             errorMessage);
     assertThat(ex.getMessage(), is(equalTo("An error occurred while creating a QRDA.")));
+  }
+
+  @Test
+  void testGetHumanReadable() {
+    when(qdmServiceConfig.getHumanReadableUrn()).thenReturn("/human-readable");
+    String humanReadable = "Test Human Readable";
+    when(qdmServiceRestTemplate.exchange(
+            any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+        .thenReturn(ResponseEntity.ok(humanReadable.getBytes()));
+    String result = qdmPackageService.getHumanReadable(measure, "userID", token);
+    assertThat(result, is(notNullValue()));
+    assertThat(result, is(equalTo(humanReadable)));
+  }
+
+  @Test
+  void testGetHumanReadableHttpError() {
+    when(qdmServiceConfig.getHumanReadableUrn()).thenReturn("/human-readable");
+    when(qdmServiceRestTemplate.exchange(
+            any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+        .thenThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST));
+    Exception ex =
+        assertThrows(
+            InternalServerException.class,
+            () -> qdmPackageService.getHumanReadable(measure, "userID", token));
+    assertThat(ex.getMessage(), is(equalTo("QDM service error: ")));
+  }
+
+  @Test
+  void testGetHumanReadableClientError() {
+    when(qdmServiceConfig.getHumanReadableUrn()).thenReturn("/human-readable");
+    when(qdmServiceRestTemplate.exchange(
+            any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+        .thenThrow(new RestClientException("Failed Client Exception"));
+    Exception ex =
+        assertThrows(
+            InternalServerException.class,
+            () -> qdmPackageService.getHumanReadable(measure, "userID", token));
+    assertThat(
+        ex.getMessage(),
+        is(
+            equalTo(
+                "An unexpected error occurred while creating a measure package.Failed Client Exception")));
   }
 }
