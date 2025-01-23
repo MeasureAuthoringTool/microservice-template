@@ -260,7 +260,8 @@ public final class JsonUtil {
     String stratId = stratification.get("id").toString().replace("\"", "");
     // We need to match up the stratifications to the groups and group
     // population...
-    String stratName = "Strata-" + stratCount;
+    int stratDisplayCounter = stratCount + 1;
+    String stratName = "Strata " + stratDisplayCounter;
     ArrayNode stratums = (ArrayNode) stratification.get("stratum");
 
     List<JsonNode> stratumsList =
