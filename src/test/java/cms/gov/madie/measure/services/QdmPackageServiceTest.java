@@ -219,6 +219,6 @@ class QdmPackageServiceTest {
         ex.getMessage(),
         is(
             equalTo(
-                "An unexpected error occurred while creating a measure package.Failed Client Exception")));
+                "An unexpected error occurred while creating a human readable. Failed Client Exception")));
   }
 }
