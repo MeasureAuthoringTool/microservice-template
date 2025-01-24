@@ -105,7 +105,7 @@ public class QdmPackageService implements PackageService {
     headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
     HttpEntity<Measure> entity = new HttpEntity<>(measure, headers);
     try {
-      log.info("Requesting measure package for measure [{}] from QDM service", measure.getId());
+      log.info("Requesting human readable for measure [{}] from QDM service", measure.getId());
       byte[] exportPackage =
           qdmServiceRestTemplate.exchange(uri, HttpMethod.PUT, entity, byte[].class).getBody();
 
