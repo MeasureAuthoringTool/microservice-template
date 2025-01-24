@@ -125,7 +125,7 @@ public class QdmPackageService implements PackageService {
           ex);
 
       throw new InternalServerException(
-          "An unexpected error occurred while creating a measure package." + ex.getMessage());
+          "An unexpected error occurred while creating a human readable. " + ex.getMessage());
     }
   }
 
