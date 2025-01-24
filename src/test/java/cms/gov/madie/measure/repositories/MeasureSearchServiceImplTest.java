@@ -103,6 +103,74 @@ public class MeasureSearchServiceImplTest {
     assertEquals(page1Measures.get(0).getEcqmTitle(), measure1.getEcqmTitle());
     assertEquals(page1Measures.get(1).getEcqmTitle(), measure2.getEcqmTitle());
   }
+  @Test
+  public void testFindMyActiveMeasuresWithSearchTermAndOneOptional() {
+    PageRequest pageRequest = PageRequest.of(0, 3);
+    FacetDTO facetDTO =
+            FacetDTO.builder().queryResults(List.of(measure1, measure2)).count(List.of(1, 2)).build();
+    AggregationResults pagedResults = new AggregationResults<>(List.of(facetDTO), new Document());
+    when(mongoTemplate.aggregate(any(Aggregation.class), (Class<?>) any(), any()))
+            .thenReturn(pagedResults);
+    MeasureSearchCriteria measureSearchCriteria =
+            MeasureSearchCriteria.builder().searchField("test")
+                    .optionalSearchProperties(List.of("version"))
+                    .build();
+    Page<MeasureListDTO> page =
+            measureAclRepository.searchMeasuresByCriteria(
+                    "john", pageRequest, measureSearchCriteria, true);
+    assertEquals(page.getTotalElements(), 2);
+    assertEquals(page.getTotalPages(), 1);
+    assertEquals(page.getContent().size(), 2);
+    List<MeasureListDTO> page1Measures = page.getContent();
+    assertEquals(page1Measures.get(0).getEcqmTitle(), measure1.getEcqmTitle());
+    assertEquals(page1Measures.get(1).getEcqmTitle(), measure2.getEcqmTitle());
+  }
+  @Test
+  public void testFindMyActiveMeasuresWithSearchTermAndMultipleOptional() {
+    PageRequest pageRequest = PageRequest.of(0, 3);
+    FacetDTO facetDTO =
+            FacetDTO.builder().queryResults(List.of(measure1, measure2)).count(List.of(1, 2)).build();
+    AggregationResults pagedResults = new AggregationResults<>(List.of(facetDTO), new Document());
+    when(mongoTemplate.aggregate(any(Aggregation.class), (Class<?>) any(), any()))
+            .thenReturn(pagedResults);
+    MeasureSearchCriteria measureSearchCriteria =
+            MeasureSearchCriteria.builder().searchField("test")
+                    .optionalSearchProperties(Arrays.asList("measureName", "cmsId", "version"))
+                    .build();
+    Page<MeasureListDTO> page =
+            measureAclRepository.searchMeasuresByCriteria(
+                    "john", pageRequest, measureSearchCriteria, true);
+    assertEquals(page.getTotalElements(), 2);
+    assertEquals(page.getTotalPages(), 1);
+    assertEquals(page.getContent().size(), 2);
+    List<MeasureListDTO> page1Measures = page.getContent();
+    assertEquals(page1Measures.get(0).getEcqmTitle(), measure1.getEcqmTitle());
+    assertEquals(page1Measures.get(1).getEcqmTitle(), measure2.getEcqmTitle());
+  }
+
+  @Test
+  public void testFindMyActiveMeasuresWithSearchTermAndOnlyCmsId() {
+    PageRequest pageRequest = PageRequest.of(0, 3);
+    FacetDTO facetDTO =
+            FacetDTO.builder().queryResults(List.of(measure1, measure2)).count(List.of(1, 2)).build();
+    AggregationResults pagedResults = new AggregationResults<>(List.of(facetDTO), new Document());
+    when(mongoTemplate.aggregate(any(Aggregation.class), (Class<?>) any(), any()))
+            .thenReturn(pagedResults);
+    MeasureSearchCriteria measureSearchCriteria =
+            MeasureSearchCriteria.builder().searchField("test")
+                    .optionalSearchProperties(List.of("cmsId"))
+                    .build();
+    Page<MeasureListDTO> page =
+            measureAclRepository.searchMeasuresByCriteria(
+                    "john", pageRequest, measureSearchCriteria, true);
+    assertEquals(page.getTotalElements(), 2);
+    assertEquals(page.getTotalPages(), 1);
+    assertEquals(page.getContent().size(), 2);
+    List<MeasureListDTO> page1Measures = page.getContent();
+    assertEquals(page1Measures.get(0).getEcqmTitle(), measure1.getEcqmTitle());
+    assertEquals(page1Measures.get(1).getEcqmTitle(), measure2.getEcqmTitle());
+  }
+
 
   @Test
   void testFindLibraryUsageByLibraryName() {

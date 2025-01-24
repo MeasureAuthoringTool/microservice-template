@@ -20,8 +20,8 @@ import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
+import static org.codehaus.plexus.util.StringUtils.isNumeric;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 @Repository
@@ -40,35 +40,39 @@ public class MeasureSearchServiceImpl implements MeasureSearchService {
         .as("measureSet");
   }
 
-  private void appendMeasureNameAndEcqmTitleCriteria(Criteria measureCriteria, MeasureSearchCriteria measureSearchCriteria) {
+  private void appendMeasureNameAndEcqmTitleCriteria(
+      Criteria measureCriteria, MeasureSearchCriteria measureSearchCriteria) {
     measureCriteria.andOperator(
-            new Criteria()
-                    .orOperator(
-                            Criteria.where("measureName")
-                                    .regex(measureSearchCriteria.getSearchField(), "i"),
-                            Criteria.where("ecqmTitle")
-                                    .regex(measureSearchCriteria.getSearchField(), "i")));
+        new Criteria()
+            .orOperator(
+                Criteria.where("measureName").regex(measureSearchCriteria.getSearchField(), "i"),
+                Criteria.where("ecqmTitle").regex(measureSearchCriteria.getSearchField(), "i")));
   }
 
-  private void appendAdditionalSearchCriteriaOmittiingcmsId (Criteria measureCriteria, MeasureSearchCriteria measureSearchCriteria) {
+  private void appendAdditionalSearchCriteriaOmittingcmsId(
+      Criteria measureCriteria, MeasureSearchCriteria measureSearchCriteria) {
     // Ensure optionalSearchProperties exists and isn’t empty
-    if (measureSearchCriteria.getOptionalSearchProperties() != null &&
-            !measureSearchCriteria.getOptionalSearchProperties().isEmpty()) {
-
+    if (CollectionUtils.isNotEmpty(measureSearchCriteria.getOptionalSearchProperties())) {
       // Filter out "cmsId" if it exists
-      List<String> filteredProperties = measureSearchCriteria.getOptionalSearchProperties()
-              .stream()
+      List<String> filteredProperties =
+          measureSearchCriteria.getOptionalSearchProperties().stream()
               .filter(property -> !"cmsId".equalsIgnoreCase(property))
               .toList();
 
       // Build the orOperator for the remaining properties
       List<Criteria> orConditions = new ArrayList<>();
       for (String property : filteredProperties) {
-        orConditions.add(Criteria.where(property).regex(measureSearchCriteria.getSearchField(), "i"));
+        orConditions.add(
+            Criteria.where(property).regex(measureSearchCriteria.getSearchField(), "i"));
       }
-      // Add the orOperator to the existing criteria
       if (!orConditions.isEmpty()) {
-        measureCriteria.orOperator(orConditions.toArray(new Criteria[0]));
+        // if it's a single and condition, we only want that criteria
+        if (measureSearchCriteria.getOptionalSearchProperties().size() == 1) {
+          measureCriteria.andOperator(orConditions.toArray(new Criteria[0]));
+        } else {
+          // if it's multiple conditions we want any of the conditions to be a match
+          measureCriteria.orOperator(orConditions.toArray(new Criteria[0]));
+        }
       }
     }
   }
@@ -91,13 +95,16 @@ public class MeasureSearchServiceImpl implements MeasureSearchService {
     // prepare measure search criteria
     Criteria measureCriteria = Criteria.where("active").is(true);
     if (measureSearchCriteria != null) {
-      // If query is given, search for the query string in measureName and ecqmTitle (or if optionalFilter.includes(measureName)
-      if (StringUtils.isNotBlank(measureSearchCriteria.getSearchField()) && measureSearchCriteria.getOptionalSearchProperties() == null || measureSearchCriteria.getOptionalSearchProperties().isEmpty()) {
+      // If query is given, search for the query string in measureName and ecqmTitle (or if
+      // optionalFilter.includes(measureName)
+      if (StringUtils.isNotBlank(measureSearchCriteria.getSearchField())
+          && CollectionUtils.isEmpty(measureSearchCriteria.getOptionalSearchProperties())) {
         appendMeasureNameAndEcqmTitleCriteria(measureCriteria, measureSearchCriteria);
       }
-
-      if (StringUtils.isNotBlank(measureSearchCriteria.getSearchField())  && measureSearchCriteria.getOptionalSearchProperties() == null || !measureSearchCriteria.getOptionalSearchProperties().isEmpty()){
-        appendAdditionalSearchCriteriaOmittiingcmsId(measureCriteria, measureSearchCriteria);
+      // optional query provided
+      if (StringUtils.isNotBlank(measureSearchCriteria.getSearchField())
+          && CollectionUtils.isNotEmpty(measureSearchCriteria.getOptionalSearchProperties())) {
+        appendAdditionalSearchCriteriaOmittingcmsId(measureCriteria, measureSearchCriteria);
       }
 
       // If model is provided, filter out those measures with that model
@@ -119,23 +126,41 @@ public class MeasureSearchServiceImpl implements MeasureSearchService {
     // prepare measure set search criteria(user is either owner or shared with)
     Criteria measureSetCriteria = new Criteria();
     if (filterByCurrentUser) {
-      measureSetCriteria =
-          new Criteria()
-              .orOperator(
-                  Criteria.where("measureSet.owner").regex("^\\Q" + userId + "\\E$", "i"),
-                  Criteria.where("measureSet.acls.userId")
-                      .regex("^\\Q" + userId + "\\E$", "i")
-                      .and("measureSet.acls.roles")
-                      .in(RoleEnum.SHARED_WITH));
-        if (measureSearchCriteria != null){
-          if (measureSearchCriteria.getOptionalSearchProperties() != null &&
-                  !measureSearchCriteria.getOptionalSearchProperties().isEmpty() && measureSearchCriteria.getOptionalSearchProperties().contains("cmsId")){
-            int number = Integer.parseInt(measureSearchCriteria.getSearchField());
-            measureSetCriteria = measureSetCriteria.andOperator(
-                    Criteria.where("measureSet.cmsId").is(number)
-            );
+      List<Criteria> measureSetOrCriteriaList = new ArrayList<>();
+      List<Criteria> measureSetAndCriteriaList = new ArrayList<>();
+      measureSetOrCriteriaList.add(
+          Criteria.where("measureSet.owner").regex("^\\Q" + userId + "\\E$", "i"));
+      measureSetOrCriteriaList.add(
+          Criteria.where("measureSet.acls.userId")
+              .regex("^\\Q" + userId + "\\E$", "i")
+              .and("measureSet.acls.roles")
+              .in(RoleEnum.SHARED_WITH));
+      if (measureSearchCriteria != null) {
+        if (measureSearchCriteria.getOptionalSearchProperties() != null
+            && !measureSearchCriteria.getOptionalSearchProperties().isEmpty()
+            && measureSearchCriteria.getOptionalSearchProperties().contains("cmsId")) {
+          // When cmsId is provided, we want to either do an and or an OR conditional.
+          // If we have more than one condition, we want to do an OR condition.
+          // If it is provided as the only condition, it should be an AND condition
+          String searchField = measureSearchCriteria.getSearchField();
+          if (isNumeric(searchField)) {
+            int number = Integer.parseInt(searchField);
+            if (measureSearchCriteria.getOptionalSearchProperties().size() > 1) {
+              measureSetOrCriteriaList.add(Criteria.where("measureSet.cmsId").is(number));
+            } else {
+              measureSetAndCriteriaList.add(Criteria.where("measureSet.cmsId").is(number));
+            }
           }
         }
+      }
+      // generate the query now that we know weverything we need
+      measureSetCriteria =
+          measureSetCriteria.orOperator(measureSetOrCriteriaList.toArray(new Criteria[0]));
+      // Apply AND conditions if there are any
+      if (!measureSetAndCriteriaList.isEmpty()) {
+        measureSetCriteria =
+            measureSetCriteria.andOperator(measureSetAndCriteriaList.toArray(new Criteria[0]));
+      }
     }
 
     // combine measure and measure set criteria
