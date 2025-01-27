@@ -88,6 +88,7 @@ public class GroupService {
         existingGroup.setRateAggregation(group.getRateAggregation());
         existingGroup.setMeasureGroupTypes(group.getMeasureGroupTypes());
         existingGroup.setScoringUnit(group.getScoringUnit());
+        existingGroup.setScoringPrecision(group.getScoringPrecision());
         existingGroup.setStratifications(group.getStratifications());
         existingGroup.setPopulationBasis(group.getPopulationBasis());
       } else { // if not present, add into groups collection

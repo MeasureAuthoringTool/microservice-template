@@ -21,6 +21,9 @@ public class QdmServiceConfig {
   @Value("${madie.qdm-service.retrieve-cqmmeasure-urn}")
   private String retrieveCqmMeasureUrn;
 
+  @Value("${madie.qdm-service.human-readable}")
+  private String humanReadableUrn;
+
   @Bean
   public RestTemplate qdmServiceRestTemplate() {
     return new RestTemplate();

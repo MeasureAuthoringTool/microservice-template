@@ -350,20 +350,12 @@ public class TestCaseServiceUtil {
     // Break up single list of pop values and strats into separate lists
     List<TestCaseGroupPopulation> populationCriteria =
         testCaseGroupPopulations.stream()
-            .filter(
-                group -> {
-                  return isNotEmpty(group.getPopulationValues());
-                })
+            .filter(group -> isNotEmpty(group.getPopulationValues()))
             .toList();
 
     List<TestCaseStratificationValue> stratification =
         testCaseGroupPopulations.stream()
-            .filter(
-                group -> {
-                  return isNotEmpty(group.getStratificationValues());
-                })
-            // Assumes there cannot be more than 1 strat in each incoming expected value obj
-            // .map(group -> group.getStratificationValues().get(0))
+            .filter(group -> isNotEmpty(group.getStratificationValues()))
             // (GAK MAT-8064 Why???  The QICore Test case can have a single population with multiple
             // stratification results)
             .flatMap(group -> group.getStratificationValues().stream())

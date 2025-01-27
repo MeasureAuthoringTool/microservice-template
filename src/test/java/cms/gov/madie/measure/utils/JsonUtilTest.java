@@ -424,6 +424,13 @@ public class JsonUtilTest implements ResourceUtil {
     List<TestCaseGroupPopulation> testCaseGroupPopulations =
         JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(jsonWithStrat, true);
     assertThat(testCaseGroupPopulations.size(), is(equalTo(1)));
+    assertThat(testCaseGroupPopulations.get(0).getStratificationValues().size(), is(equalTo(2)));
+    assertThat(
+        testCaseGroupPopulations.get(0).getStratificationValues().get(0).getName(),
+        is(equalTo("Strata 1")));
+    assertThat(
+        testCaseGroupPopulations.get(0).getStratificationValues().get(1).getName(),
+        is(equalTo("Strata 2")));
   }
 
   @Test
@@ -434,6 +441,13 @@ public class JsonUtilTest implements ResourceUtil {
     List<TestCaseGroupPopulation> testCaseGroupPopulations =
         JsonUtil.getTestCaseGroupPopulationsFromMeasureReport(jsonWithStrat, true);
     assertThat(testCaseGroupPopulations.size(), is(equalTo(1)));
+    assertThat(testCaseGroupPopulations.get(0).getStratificationValues().size(), is(equalTo(2)));
+    assertThat(
+        testCaseGroupPopulations.get(0).getStratificationValues().get(0).getName(),
+        is(equalTo("Strata 1")));
+    assertThat(
+        testCaseGroupPopulations.get(0).getStratificationValues().get(1).getName(),
+        is(equalTo("Strata 2")));
   }
 
   @Test
