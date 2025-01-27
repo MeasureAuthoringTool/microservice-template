@@ -327,6 +327,7 @@ public class MeasureController {
       @PathVariable String measureId,
       @RequestParam(name = "cmsId") Integer cmsId,
       @Value("${admin-api-key}") String apiKey,
+      @RequestHeader(name = "harpId") String harpId,
       Principal principal) {
     log.info(
         "User [{}] - Started admin task [deleteCmsId] and is attempting to delete "
@@ -335,7 +336,7 @@ public class MeasureController {
         cmsId,
         measureId);
     return ResponseEntity.status(HttpStatus.OK)
-        .body(measureSetService.deleteCmsId(measureId, cmsId));
+        .body(measureSetService.deleteCmsId(measureId, cmsId, harpId));
   }
 
   @PutMapping("/measures/cms-id-association")

@@ -131,6 +131,7 @@ public class ErrorHandlingControllerAdvice {
   }
 
   @ExceptionHandler({
+    HarpIdMismatchException.class,
     InvalidResourceStateException.class,
     CqlElmTranslationErrorException.class,
     InvalidDraftStatusException.class,

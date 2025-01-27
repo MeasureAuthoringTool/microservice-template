@@ -8,6 +8,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import cms.gov.madie.measure.exceptions.HarpIdMismatchException;
+import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.InvalidRequestException;
 import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
 import cms.gov.madie.measure.exceptions.MeasureNotDraftableException;
@@ -37,7 +39,6 @@ import cms.gov.madie.measure.dto.ImpactedMeasureValidationReport;
 import cms.gov.madie.measure.dto.MeasureTestCaseValidationReport;
 import cms.gov.madie.measure.dto.MeasureTestCaseValidationReportSummary;
 import cms.gov.madie.measure.dto.TestCaseValidationReport;
-import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.Measure;
@@ -137,10 +138,17 @@ public class AdminController {
       @Value("${admin-api-key}") String apiKey,
       Principal principal,
       @RequestHeader("Authorization") String accessToken,
+      @RequestHeader(name = "harpId") String harpId,
       @PathVariable String id) {
 
     Measure measureToDelete = measureService.findMeasureById(id);
+
     if (measureToDelete != null) {
+      if (!measureToDelete.getMeasureSet().getOwner().equals(harpId)) {
+        throw new HarpIdMismatchException(
+            harpId, measureToDelete.getMeasureSet().getOwner(), measureToDelete.getId());
+      }
+
       measureRepository.delete(measureToDelete);
       actionLogService.logAction(id, Measure.class, ActionType.DELETED, principal.getName());
       return ResponseEntity.ok(measureToDelete);
@@ -155,6 +163,7 @@ public class AdminController {
       @Value("${admin-api-key}") String apiKey,
       Principal principal,
       @RequestHeader("Authorization") String accessToken,
+      @RequestHeader(name = "harpId") String harpId,
       @RequestParam(required = true, name = "measureids") String measureids) {
 
     List<Map<String, Object>> results = new ArrayList<Map<String, Object>>();
@@ -162,6 +171,10 @@ public class AdminController {
     for (String id : ids) {
       Measure measureToGet = measureService.findMeasureById(id);
       if (measureToGet != null) {
+        if (!measureToGet.getMeasureSet().getOwner().equals(harpId)) {
+          throw new HarpIdMismatchException(
+              harpId, measureToGet.getMeasureSet().getOwner(), measureToGet.getId());
+        }
 
         Map<String, Object> result = new LinkedHashMap<>();
 
@@ -183,6 +196,7 @@ public class AdminController {
   public ResponseEntity<Measure> correctMeasureVersion(
       HttpServletRequest request,
       @Value("${admin-api-key}") String apiKey,
+      @RequestHeader(name = "harpId") String harpId,
       Principal principal,
       @PathVariable String id,
       @RequestParam String inCorrectVersion,
@@ -196,6 +210,13 @@ public class AdminController {
               "Could not find Measure with id of %s and / or a version of %s",
               id, inCorrectVersion);
       throw new ResourceNotFoundException(error);
+    }
+
+    if (!measureToCorrectVersion.getMeasureSet().getOwner().equals(harpId)) {
+      throw new HarpIdMismatchException(
+          harpId,
+          measureToCorrectVersion.getMeasureSet().getOwner(),
+          measureToCorrectVersion.getId());
     }
 
     // check if the associated measure set already has a draft
