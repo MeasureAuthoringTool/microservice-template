@@ -96,6 +96,39 @@ public class QdmPackageService implements PackageService {
     }
   }
 
+  @Override
+  public String getHumanReadable(Measure measure, String username, String accessToken) {
+    URI uri = URI.create(qdmServiceConfig.getBaseUrl() + qdmServiceConfig.getHumanReadableUrn());
+    HttpHeaders headers = new HttpHeaders();
+    headers.set(HttpHeaders.AUTHORIZATION, accessToken);
+    headers.set(HttpHeaders.ACCEPT, MediaType.ALL_VALUE);
+    headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+    HttpEntity<Measure> entity = new HttpEntity<>(measure, headers);
+    try {
+      log.info("Requesting human readable for measure [{}] from QDM service", measure.getId());
+      byte[] exportPackage =
+          qdmServiceRestTemplate.exchange(uri, HttpMethod.PUT, entity, byte[].class).getBody();
+
+      return new String(exportPackage);
+
+    } catch (HttpClientErrorException ex) {
+      String errorMessage = ex.getResponseBodyAsString();
+
+      log.error("Error from QDM service for measure [{}]: {}", measure.getId(), errorMessage);
+      throw new InternalServerException("QDM service error: " + errorMessage);
+
+    } catch (RestClientException ex) {
+      log.error(
+          "An error occurred while creating Human Readable package for QDM measure: {}. "
+              + "Please check QDM service logs for more information.",
+          measure.getId(),
+          ex);
+
+      throw new InternalServerException(
+          "An unexpected error occurred while creating a human readable. " + ex.getMessage());
+    }
+  }
+
   public CqmMeasure convertCqm(Measure measure, String accessToken) {
     URI uri =
         URI.create(qdmServiceConfig.getBaseUrl() + qdmServiceConfig.getRetrieveCqmMeasureUrn());
