@@ -64,7 +64,7 @@ public class QicorePackageServiceTest {
 
   @BeforeAll
   public static void staticSetup() {
-    factory = Mockito.mockStatic(PackagingUtilityFactory.class);
+    factory = mockStatic(PackagingUtilityFactory.class);
   }
 
   @BeforeEach
@@ -203,7 +203,7 @@ public class QicorePackageServiceTest {
     when(fhirServicesClient.getMeasureBundle(any(), anyString(), anyString()))
         .thenReturn(MEASURE_BUNDLE_JSON);
 
-    PackagingUtilityImpl utility = Mockito.mock(PackagingUtilityImpl.class);
+    PackagingUtilityImpl utility = mock(PackagingUtilityImpl.class);
     factory.when(() -> PackagingUtilityFactory.getInstance(MODEL_QI_CORE)).thenReturn(utility);
     when(utility.getHumanReadableWithCSS(anyString())).thenReturn(TEST_HUMAN_READABLE);
 
@@ -243,7 +243,7 @@ public class QicorePackageServiceTest {
     when(fhirServicesClient.getMeasureBundle(any(), anyString(), anyString()))
         .thenReturn(MEASURE_BUNDLE_JSON);
 
-    PackagingUtilityImpl utility = Mockito.mock(PackagingUtilityImpl.class);
+    PackagingUtilityImpl utility = mock(PackagingUtilityImpl.class);
     factory.when(() -> PackagingUtilityFactory.getInstance(MODEL_QI_CORE)).thenReturn(utility);
     when(utility.getHumanReadableWithCSS(anyString())).thenReturn(TEST_HUMAN_READABLE);
 
@@ -275,7 +275,7 @@ public class QicorePackageServiceTest {
     when(fhirServicesClient.getMeasureBundle(any(), anyString(), anyString()))
         .thenReturn(MEASURE_BUNDLE_JSON);
 
-    PackagingUtilityImpl utility = Mockito.mock(PackagingUtilityImpl.class);
+    PackagingUtilityImpl utility = mock(PackagingUtilityImpl.class);
     factory.when(() -> PackagingUtilityFactory.getInstance(MODEL_QI_CORE)).thenReturn(utility);
     when(utility.getHumanReadableWithCSS(anyString())).thenReturn(TEST_HUMAN_READABLE);
 
