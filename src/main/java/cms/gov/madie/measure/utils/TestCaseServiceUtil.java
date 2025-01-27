@@ -24,6 +24,7 @@ import gov.cms.madie.models.measure.TestCaseGroupPopulation;
 import gov.cms.madie.models.measure.TestCasePopulationValue;
 import gov.cms.madie.models.measure.TestCaseStratificationValue;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import lombok.AllArgsConstructor;
@@ -392,7 +393,9 @@ public class TestCaseServiceUtil {
       }
     } else {
       // Single group, go ahead and assign all strats.
-      populationCriteria.get(0).setStratificationValues(stratification);
+      if (!CollectionUtils.isEmpty(populationCriteria)) {
+        populationCriteria.get(0).setStratificationValues(stratification);
+      }
     }
     return new ArrayList<>(populationCriteria);
   }
