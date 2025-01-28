@@ -5,6 +5,8 @@ import cms.gov.madie.measure.dto.PackageDto;
 import cms.gov.madie.measure.dto.qrda.QrdaRequestDTO;
 import cms.gov.madie.measure.exceptions.HQMFServiceException;
 import cms.gov.madie.measure.exceptions.InternalServerException;
+import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
+import cms.gov.madie.measure.factories.ModelValidatorFactory;
 import cms.gov.madie.measure.repositories.ExportRepository;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.cqm.CqmMeasure;
@@ -40,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @Slf4j
 @ExtendWith(MockitoExtension.class)
@@ -48,8 +50,9 @@ class QdmPackageServiceTest {
   @Mock private QdmServiceConfig qdmServiceConfig;
   @Mock private RestTemplate qdmServiceRestTemplate;
   @Mock private ExportRepository exportRepository;
+  @Mock private ModelValidatorFactory modelValidatorFactory;
+  @Mock private QdmModelValidator qdmModelValidator;
   @InjectMocks private QdmPackageService qdmPackageService;
-
   private final String token = "token";
   private Measure measure;
 
@@ -272,6 +275,8 @@ class QdmPackageServiceTest {
 
   @Test
   void testGetHumanReadable() {
+    when(modelValidatorFactory.getModelValidator(any())).thenReturn(qdmModelValidator);
+    doNothing().when(qdmModelValidator).validateGroups(any(Measure.class));
     when(qdmServiceConfig.getHumanReadableUrn()).thenReturn("/human-readable");
     String humanReadable = "Test Human Readable";
     when(qdmServiceRestTemplate.exchange(
@@ -284,6 +289,8 @@ class QdmPackageServiceTest {
 
   @Test
   void testGetHumanReadableHttpError() {
+    when(modelValidatorFactory.getModelValidator(any())).thenReturn(qdmModelValidator);
+    doNothing().when(qdmModelValidator).validateGroups(any(Measure.class));
     when(qdmServiceConfig.getHumanReadableUrn()).thenReturn("/human-readable");
     when(qdmServiceRestTemplate.exchange(
             any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
@@ -297,6 +304,8 @@ class QdmPackageServiceTest {
 
   @Test
   void testGetHumanReadableClientError() {
+    when(modelValidatorFactory.getModelValidator(any())).thenReturn(qdmModelValidator);
+    doNothing().when(qdmModelValidator).validateGroups(any(Measure.class));
     when(qdmServiceConfig.getHumanReadableUrn()).thenReturn("/human-readable");
     when(qdmServiceRestTemplate.exchange(
             any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
@@ -310,5 +319,16 @@ class QdmPackageServiceTest {
         is(
             equalTo(
                 "An unexpected error occurred while creating a human readable. Failed Client Exception")));
+  }
+
+  @Test
+  public void testGetHumanReadableThrowsInvalidResourceStateException() {
+    when(modelValidatorFactory.getModelValidator(any())).thenReturn(qdmModelValidator);
+    doThrow(InvalidResourceStateException.class)
+        .when(qdmModelValidator)
+        .validateGroups(any(Measure.class));
+    assertThrows(
+        InvalidResourceStateException.class,
+        () -> qdmPackageService.getHumanReadable(measure, "TEST_USER", token));
   }
 }
