@@ -38,17 +38,17 @@ public class QicorePackageService implements PackageService {
   @Override
   public String getHumanReadable(Measure measure, String username, String accessToken) {
     String humanReadableWithCss = null;
-    boolean saveHR = false;
+    Export export = null;
     // versioned QI-Core measures will have human readable saved in Export
     if (measure.getMeasureMetaData() != null && !measure.getMeasureMetaData().isDraft()) {
       Optional<Export> savedExport = exportRepository.findByMeasureId(measure.getId());
       if (savedExport.isPresent()) {
-        humanReadableWithCss = savedExport.get().getHumanReadable();
-        if (!StringUtils.isBlank(humanReadableWithCss)) {
-          return humanReadableWithCss;
+        if (!StringUtils.isBlank(savedExport.get().getHumanReadable())) {
+          return savedExport.get().getHumanReadable();
+        } else {
+          export = savedExport.get();
         }
       }
-      saveHR = true;
     }
 
     Measure existingMeasure = validateMeasure(measure);
@@ -57,13 +57,9 @@ public class QicorePackageService implements PackageService {
         fhirServicesClient.getMeasureBundle(existingMeasure, accessToken, "export");
 
     humanReadableWithCss = getHRWithCSS(existingMeasure, measureBundle);
-    if (saveHR) {
-      Export export =
-          Export.builder()
-              .measureId(existingMeasure.getId())
-              .measureBundleJson(measureBundle)
-              .humanReadable(humanReadableWithCss)
-              .build();
+    // to prevent duplicate save
+    if (export != null) {
+      export.setHumanReadable(humanReadableWithCss);
       Export savedExport = exportRepository.save(export);
       log.info(
           "User [{}] saved human readable with CSS in Export with ID [{}]",
