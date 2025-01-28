@@ -247,10 +247,14 @@ public class QicorePackageServiceTest {
     factory.when(() -> PackagingUtilityFactory.getInstance(MODEL_QI_CORE)).thenReturn(utility);
     when(utility.getHumanReadableWithCSS(anyString())).thenReturn(TEST_HUMAN_READABLE);
 
+    Export savedExport =
+        Export.builder().id(TEST_MEASURE_ID).humanReadable(TEST_HUMAN_READABLE).build();
+    when(exportRepository.save(any(Export.class))).thenReturn(savedExport);
+
     String result =
         qicorePackageService.getHumanReadable(existingMeasure, TEST_USER, TEST_ACCESS_TOKEN);
     assertEquals(result, TEST_HUMAN_READABLE);
-    verify(exportRepository, times(0)).save(exportArgumentCaptor.capture());
+    verify(exportRepository, times(1)).save(exportArgumentCaptor.capture());
   }
 
   @Test

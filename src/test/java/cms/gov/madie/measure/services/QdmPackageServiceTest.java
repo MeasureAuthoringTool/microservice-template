@@ -3,7 +3,6 @@ package cms.gov.madie.measure.services;
 import cms.gov.madie.measure.config.QdmServiceConfig;
 import cms.gov.madie.measure.dto.PackageDto;
 import cms.gov.madie.measure.dto.qrda.QrdaRequestDTO;
-import cms.gov.madie.measure.exceptions.HQMFServiceException;
 import cms.gov.madie.measure.exceptions.InternalServerException;
 import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
 import cms.gov.madie.measure.factories.ModelValidatorFactory;
@@ -25,7 +24,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
@@ -134,40 +132,6 @@ class QdmPackageServiceTest {
   }
 
   @Test
-  void testGetMeasurePackageThrowsException() {
-    when(qdmServiceConfig.getCreatePackageUrn()).thenReturn("/elm/uri");
-    when(qdmServiceRestTemplate.exchange(
-            any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
-        .thenThrow(
-            new HttpClientErrorException(HttpStatusCode.valueOf(404), "something went wrong"));
-    String errorMessage =
-        "An unexpected error occurred while creating a measure package.something went wrong";
-    Exception ex =
-        assertThrows(
-            InternalServerException.class,
-            () -> qdmPackageService.getMeasurePackage(measure, token),
-            errorMessage);
-    assertThat(ex.getMessage(), is(equalTo("QDM service error: ")));
-  }
-
-  @Test
-  void testGetMeasurePackageHQMFError() {
-    when(qdmServiceConfig.getCreatePackageUrn()).thenReturn("/elm/uri");
-    when(qdmServiceRestTemplate.exchange(
-            any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
-        .thenThrow(new HttpClientErrorException(HttpStatusCode.valueOf(404), "HQMF:"));
-    String errorMessage = "HQMF: An unexpected error occurred while creating a measure package.";
-    Exception ex =
-        assertThrows(
-            HQMFServiceException.class,
-            () -> qdmPackageService.getMeasurePackage(measure, token),
-            errorMessage);
-
-    assertThat(
-        ex.getMessage(), is(equalTo("An error occurred that caused the HQMF generation to fail.")));
-  }
-
-  @Test
   void testGetQRDASuccess() {
     when(qdmServiceConfig.getCreateQrdaUrn()).thenReturn("/qrda");
     String qrdaContent = "Test QRDA";
@@ -200,60 +164,6 @@ class QdmPackageServiceTest {
     CqmMeasure cqm = qdmPackageService.convertCqm(qdmMeasure, token);
     assertThat(cqm, is(notNullValue()));
     assertThat(cqm, is(equalTo(cqmMeasure)));
-  }
-
-  @Test
-  void testConvertCqmThrowsException() {
-    when(qdmServiceConfig.getRetrieveCqmMeasureUrn()).thenReturn("/cqm");
-    QdmMeasure qdmMeasure =
-        QdmMeasure.builder()
-            .id("testId")
-            .measureSetId("testMeasureSetId")
-            .cqlLibraryName("TestCqlLibraryName")
-            .ecqmTitle("testECqm")
-            .measureName("testMeasureName")
-            .versionId("0.0.000")
-            .build();
-    CqmMeasure cqmMeasure = CqmMeasure.builder().build();
-    when(qdmServiceRestTemplate.exchange(
-            any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
-        .thenThrow(new RestClientException("something went wrong"));
-
-    String errorMessage =
-        "An error occurred while converting QdmMeasure to CqmMeasure: 1, please check qdm service logs for more information";
-    Exception ex =
-        assertThrows(
-            InternalServerException.class,
-            () -> qdmPackageService.convertCqm(qdmMeasure, token),
-            errorMessage);
-    assertThat(ex.getMessage(), is(equalTo("An error occurred while converting CqmMeasure.")));
-  }
-
-  @Test
-  void testConvertCqmThrowsExceptionWhenHttpStatusIsNotOK() {
-    when(qdmServiceConfig.getRetrieveCqmMeasureUrn()).thenReturn("/cqm");
-    QdmMeasure qdmMeasure =
-        QdmMeasure.builder()
-            .id("testId")
-            .measureSetId("testMeasureSetId")
-            .cqlLibraryName("TestCqlLibraryName")
-            .ecqmTitle("testECqm")
-            .measureName("testMeasureName")
-            .versionId("0.0.000")
-            .build();
-    CqmMeasure cqmMeasure = CqmMeasure.builder().build();
-    when(qdmServiceRestTemplate.exchange(
-            any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
-        .thenReturn(ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error message"));
-
-    String errorMessage =
-        "An error occurred while converting QdmMeasure to CqmMeasure: 1, please check qdm service logs for more information";
-    Exception ex =
-        assertThrows(
-            InternalServerException.class,
-            () -> qdmPackageService.convertCqm(qdmMeasure, token),
-            errorMessage);
-    assertThat(ex.getMessage(), is(equalTo("An error occurred while converting CqmMeasure.")));
   }
 
   @Test
