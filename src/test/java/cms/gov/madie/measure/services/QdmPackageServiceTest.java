@@ -4,6 +4,7 @@ import cms.gov.madie.measure.config.QdmServiceConfig;
 import cms.gov.madie.measure.dto.PackageDto;
 import cms.gov.madie.measure.dto.qrda.QrdaRequestDTO;
 import cms.gov.madie.measure.exceptions.InternalServerException;
+import cms.gov.madie.measure.exceptions.InvalidRequestException;
 import cms.gov.madie.measure.repositories.ExportRepository;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.cqm.CqmMeasure;
@@ -49,7 +50,9 @@ class QdmPackageServiceTest {
   @InjectMocks private QdmPackageService qdmPackageService;
 
   private final String token = "token";
+  private final String userID = "userID";
   private Measure measure;
+  private final String humanReadable = "Test Human Readable";
 
   @BeforeEach
   void setUp() {
@@ -183,11 +186,11 @@ class QdmPackageServiceTest {
   @Test
   void testGetHumanReadable() {
     when(qdmServiceConfig.getHumanReadableUrn()).thenReturn("/human-readable");
-    String humanReadable = "Test Human Readable";
+
     when(qdmServiceRestTemplate.exchange(
             any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
         .thenReturn(ResponseEntity.ok(humanReadable.getBytes()));
-    String result = qdmPackageService.getHumanReadable(measure, "userID", token);
+    String result = qdmPackageService.getHumanReadable(measure, userID, token);
     assertThat(result, is(notNullValue()));
     assertThat(result, is(equalTo(humanReadable)));
   }
@@ -201,7 +204,7 @@ class QdmPackageServiceTest {
     Exception ex =
         assertThrows(
             InternalServerException.class,
-            () -> qdmPackageService.getHumanReadable(measure, "userID", token));
+            () -> qdmPackageService.getHumanReadable(measure, userID, token));
     assertThat(ex.getMessage(), is(equalTo("QDM service error: ")));
   }
 
@@ -214,11 +217,58 @@ class QdmPackageServiceTest {
     Exception ex =
         assertThrows(
             InternalServerException.class,
-            () -> qdmPackageService.getHumanReadable(measure, "userID", token));
+            () -> qdmPackageService.getHumanReadable(measure, userID, token));
     assertThat(
         ex.getMessage(),
         is(
             equalTo(
                 "An unexpected error occurred while creating a human readable. Failed Client Exception")));
+  }
+
+  @Test
+  void testGetHumanReadableForVersionedMeasure() {
+    measure.setMeasureMetaData(MeasureMetaData.builder().draft(false).build());
+    when(exportRepository.findByMeasureId(anyString()))
+        .thenReturn(Optional.of(Export.builder().humanReadable(humanReadable).build()));
+    String result = qdmPackageService.getHumanReadableForVersionedMeasure(measure, token, token);
+    assertThat(result, is(equalTo(humanReadable)));
+  }
+
+  @Test
+  void testGetHumanReadableForVersionedMeasureThrowsExceptionForDraft() {
+    Exception ex =
+        assertThrows(
+            InvalidRequestException.class,
+            () -> qdmPackageService.getHumanReadableForVersionedMeasure(measure, userID, token));
+    assertThat(
+        ex.getMessage(),
+        is(equalTo("Error getting human readable for QDM measure: " + measure.getId())));
+  }
+
+  @Test
+  void testGetHumanReadableForVersionedMeasureThrowsExceptionNoExport() {
+    measure.setMeasureMetaData(MeasureMetaData.builder().draft(false).build());
+    when(exportRepository.findByMeasureId(anyString())).thenReturn(Optional.empty());
+    Exception ex =
+        assertThrows(
+            InvalidRequestException.class,
+            () -> qdmPackageService.getHumanReadableForVersionedMeasure(measure, userID, token));
+    assertThat(
+        ex.getMessage(),
+        is(equalTo("Error getting human readable for QDM measure: " + measure.getId())));
+  }
+
+  @Test
+  void testGetHumanReadableForVersionedMeasureThrowsExceptionNoHR() {
+    measure.setMeasureMetaData(MeasureMetaData.builder().draft(false).build());
+    when(exportRepository.findByMeasureId(anyString()))
+        .thenReturn(Optional.of(Export.builder().build()));
+    Exception ex =
+        assertThrows(
+            InvalidRequestException.class,
+            () -> qdmPackageService.getHumanReadableForVersionedMeasure(measure, userID, token));
+    assertThat(
+        ex.getMessage(),
+        is(equalTo("Error getting human readable for QDM measure: " + measure.getId())));
   }
 }

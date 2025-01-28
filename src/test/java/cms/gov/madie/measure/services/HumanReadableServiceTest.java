@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.exceptions.UnsupportedTypeException;
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureMetaData;
 
 @ExtendWith(MockitoExtension.class)
 public class HumanReadableServiceTest {
@@ -57,7 +58,12 @@ public class HumanReadableServiceTest {
 
   @Test
   void testGetQdmMeasurePackage() {
-    Measure existingMeasure = Measure.builder().id(TEST_MEASURE_ID).model("QDM v5.6").build();
+    Measure existingMeasure =
+        Measure.builder()
+            .id(TEST_MEASURE_ID)
+            .model("QDM v5.6")
+            .measureMetaData(MeasureMetaData.builder().draft(true).build())
+            .build();
     when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
     when(packageServiceFactory.getPackageService(any())).thenReturn(qdmPackageService);
     when(qdmPackageService.getHumanReadable(any(Measure.class), anyString(), anyString()))
@@ -77,5 +83,23 @@ public class HumanReadableServiceTest {
     String output =
         humanReadableService.getHumanReadableWithCSS(TEST_MEASURE_ID, TEST_USER, TEST_ACCESS_TOKEN);
     assertThat(output, is(equalTo("valid QICore Human Readable")));
+  }
+
+  @Test
+  void testGetQdmMeasurePackageForVersioned() {
+    Measure existingMeasure =
+        Measure.builder()
+            .id(TEST_MEASURE_ID)
+            .model("QDM v5.6")
+            .measureMetaData(MeasureMetaData.builder().draft(false).build())
+            .build();
+    when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
+    when(packageServiceFactory.getPackageService(any())).thenReturn(qdmPackageService);
+    when(qdmPackageService.getHumanReadableForVersionedMeasure(
+            any(Measure.class), anyString(), anyString()))
+        .thenReturn("valid QDM Human Readable");
+    String output =
+        humanReadableService.getHumanReadableWithCSS(TEST_MEASURE_ID, TEST_USER, TEST_ACCESS_TOKEN);
+    assertThat(output, is(equalTo("valid QDM Human Readable")));
   }
 }

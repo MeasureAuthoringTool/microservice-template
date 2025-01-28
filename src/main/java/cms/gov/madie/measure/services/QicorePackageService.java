@@ -37,39 +37,14 @@ public class QicorePackageService implements PackageService {
 
   @Override
   public String getHumanReadable(Measure measure, String username, String accessToken) {
-    String humanReadableWithCss = null;
-    boolean saveHR = false;
-    // versioned QI-Core measures will have human readable saved in Export
-    if (measure.getMeasureMetaData() != null && !measure.getMeasureMetaData().isDraft()) {
-      Optional<Export> savedExport = exportRepository.findByMeasureId(measure.getId());
-      if (savedExport.isPresent()) {
-        humanReadableWithCss = savedExport.get().getHumanReadable();
-        if (!StringUtils.isBlank(humanReadableWithCss)) {
-          return humanReadableWithCss;
-        }
-      }
-      saveHR = true;
-    }
 
     Measure existingMeasure = validateMeasure(measure);
 
     String measureBundle =
         fhirServicesClient.getMeasureBundle(existingMeasure, accessToken, "export");
 
-    humanReadableWithCss = getHRWithCSS(existingMeasure, measureBundle);
-    if (saveHR) {
-      Export export =
-          Export.builder()
-              .measureId(existingMeasure.getId())
-              .measureBundleJson(measureBundle)
-              .humanReadable(humanReadableWithCss)
-              .build();
-      Export savedExport = exportRepository.save(export);
-      log.info(
-          "User [{}] saved human readable with CSS in Export with ID [{}]",
-          username,
-          savedExport.getId());
-    }
+    String humanReadableWithCss = getHRWithCSS(existingMeasure, measureBundle);
+
     log.info("User [{}] get human readable with ID [{}]", username, measure.getId());
     return humanReadableWithCss;
   }
@@ -102,6 +77,32 @@ public class QicorePackageService implements PackageService {
         | NoSuchMethodException
         | ClassNotFoundException e) {
       throw new BundleOperationException("Measure", measure.getId(), e);
+    }
+    return humanReadableWithCss;
+  }
+
+  @Override
+  public String getHumanReadableForVersionedMeasure(
+      Measure measure, String username, String accessToken) {
+    String humanReadableWithCss = null;
+    Export export = null;
+    if (measure.getMeasureMetaData() != null && !measure.getMeasureMetaData().isDraft()) {
+      Optional<Export> savedExport = exportRepository.findByMeasureId(measure.getId());
+      if (savedExport.isPresent()) {
+        if (!StringUtils.isBlank(savedExport.get().getHumanReadable())) {
+          humanReadableWithCss = savedExport.get().getHumanReadable();
+        } else {
+          // human readable might not exist in Export due to the change earlier
+          humanReadableWithCss = getHumanReadable(measure, username, accessToken);
+          export = savedExport.get();
+          export.setHumanReadable(humanReadableWithCss);
+          Export updatedExport = exportRepository.save(export);
+          log.info(
+              "User [{}] saved human readable with CSS in Export with ID [{}]",
+              username,
+              updatedExport.getId());
+        }
+      }
     }
     return humanReadableWithCss;
   }
