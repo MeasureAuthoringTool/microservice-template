@@ -4,6 +4,7 @@ import cms.gov.madie.measure.dto.FacetDTO;
 import cms.gov.madie.measure.dto.MeasureListDTO;
 import cms.gov.madie.measure.dto.MeasureSearchCriteria;
 import gov.cms.madie.models.access.RoleEnum;
+import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.dto.LibraryUsage;
 import gov.cms.madie.models.measure.Measure;
 
@@ -40,49 +41,76 @@ public class MeasureSearchServiceImpl implements MeasureSearchService {
         .as("measureSet");
   }
 
-  private void appendMeasureNameAndEcqmTitleCriteria(
-      Criteria measureCriteria, MeasureSearchCriteria measureSearchCriteria) {
-    measureCriteria.andOperator(
-        new Criteria()
-            .orOperator(
-                Criteria.where("measureName").regex(measureSearchCriteria.getSearchField(), "i"),
-                Criteria.where("ecqmTitle").regex(measureSearchCriteria.getSearchField(), "i")));
-  }
-
   private void appendAdditionalSearchCriteriaOmittingcmsId(
       Criteria measureCriteria, MeasureSearchCriteria measureSearchCriteria) {
     // Ensure optionalSearchProperties exists and isn’t empty
     if (CollectionUtils.isNotEmpty(measureSearchCriteria.getOptionalSearchProperties())) {
-      // Filter out "cmsId" if it exists
-      List<String> filteredProperties =
-          measureSearchCriteria.getOptionalSearchProperties().stream()
-              .filter(property -> !"cmsId".equalsIgnoreCase(property))
-              .toList();
-
       // Build the orOperator for the remaining properties
       List<Criteria> orConditions = new ArrayList<>();
-      for (String property : filteredProperties) {
-        orConditions.add(
-            Criteria.where(property).regex(measureSearchCriteria.getSearchField(), "i"));
-      }
-      if (!orConditions.isEmpty()) {
-        // if it's a single and condition, we only want that criteria
-        if (measureSearchCriteria.getOptionalSearchProperties().size() == 1) {
-          measureCriteria.andOperator(orConditions.toArray(new Criteria[0]));
+      for (String property : measureSearchCriteria.getOptionalSearchProperties()) {
+        // this needs to run whenever we have multiple, however we need to force a search even if
+        // the searchField split is less than 3 if the version is the only category that is applied
+        if (property.equals("version")) {
+          String[] versionParts = measureSearchCriteria.getSearchField().split("\\.");
+          if (versionParts.length == 3) {
+            if (isNumeric(versionParts[0])
+                && isNumeric(versionParts[1])
+                && isNumeric(versionParts[2])) {
+              Criteria otherCriteria =
+                  Criteria.where("version")
+                      .is(Version.parse(measureSearchCriteria.getSearchField()));
+              orConditions.add(otherCriteria);
+            }
+          }
+          if (versionParts.length == 2) {
+            if (isNumeric(versionParts[0]) && isNumeric(versionParts[1])) {
+              int major = Integer.parseInt(versionParts[0]);
+              int minor = Integer.parseInt(versionParts[1]);
+              Criteria otherCriteria =
+                  Criteria.where("version.major").is(major).and("version.minor").is(minor);
+              Criteria additionalCriteria =
+                  Criteria.where("version.minor").is(major).and("version.revisionNumber").is(minor);
+              orConditions.add(otherCriteria);
+              orConditions.add(additionalCriteria);
+            }
+          }
+          if (versionParts.length == 1) {
+            if (isNumeric(versionParts[0])) {
+              int anyMatch = Integer.parseInt(versionParts[0]);
+              Criteria majorMatch = Criteria.where("version.major").is(anyMatch);
+              Criteria minorMatch = Criteria.where("version.minor").is(anyMatch);
+              Criteria patchMatch = Criteria.where("version.revisionNumber").is(anyMatch);
+              orConditions.add(majorMatch);
+              orConditions.add(minorMatch);
+              orConditions.add(patchMatch);
+            } else {
+              if (measureSearchCriteria.getOptionalSearchProperties().size() == 1) {
+                Criteria noVersionMatch = Criteria.where("version.major").is(versionParts[0]);
+                orConditions.add(noVersionMatch);
+              }
+            }
+          }
+          //  if its a bad version that's a random string, and there are no other optional params
+          // provided, we need to force this criteria search
+        } else if (property.equals("cmsId")) {
+          String searchField = measureSearchCriteria.getSearchField();
+          if (isNumeric(searchField)) {
+            int number = Integer.parseInt(searchField);
+            orConditions.add(Criteria.where("measureSet.cmsId").is(number));
+          }
         } else {
-          // if it's multiple conditions we want any of the conditions to be a match
-          measureCriteria.orOperator(orConditions.toArray(new Criteria[0]));
+          orConditions.add(
+              Criteria.where(property).regex(measureSearchCriteria.getSearchField(), "i"));
         }
       }
+      Criteria allOrConditions = new Criteria();
+      if (!orConditions.isEmpty()) {
+        allOrConditions.orOperator(orConditions);
+      }
+      measureCriteria.andOperator(allOrConditions);
     }
   }
 
-  // First get All Active measures
-  // if searchField string is given then search for the searchField string in measureName or eCQM
-  // title
-  // If model is provided filter out those measures based on Model
-  // if draft status is provided then filter out them based on draft value
-  // if filterByCurrentUser = true then filter measures owned by user or shared with
   @Override
   public Page<MeasureListDTO> searchMeasuresByCriteria(
       String userId,
@@ -91,22 +119,24 @@ public class MeasureSearchServiceImpl implements MeasureSearchService {
       boolean filterByCurrentUser) {
     // join measure and measure_set to lookup owner and ACL info
     LookupOperation lookupOperation = getLookupOperation();
-
-    // prepare measure search criteria
     Criteria measureCriteria = Criteria.where("active").is(true);
     if (measureSearchCriteria != null) {
-      // If query is given, search for the query string in measureName and ecqmTitle (or if
-      // optionalFilter.includes(measureName)
+      // If query is given, search for the query string in measureName and ecqmTitle
       if (StringUtils.isNotBlank(measureSearchCriteria.getSearchField())
           && CollectionUtils.isEmpty(measureSearchCriteria.getOptionalSearchProperties())) {
-        appendMeasureNameAndEcqmTitleCriteria(measureCriteria, measureSearchCriteria);
+        measureCriteria.andOperator(
+            new Criteria()
+                .orOperator(
+                    Criteria.where("measureName")
+                        .regex(measureSearchCriteria.getSearchField(), "i"),
+                    Criteria.where("ecqmTitle")
+                        .regex(measureSearchCriteria.getSearchField(), "i")));
       }
       // optional query provided
       if (StringUtils.isNotBlank(measureSearchCriteria.getSearchField())
           && CollectionUtils.isNotEmpty(measureSearchCriteria.getOptionalSearchProperties())) {
         appendAdditionalSearchCriteriaOmittingcmsId(measureCriteria, measureSearchCriteria);
       }
-
       // If model is provided, filter out those measures with that model
       if (StringUtils.isNotBlank(measureSearchCriteria.getModel())) {
         measureCriteria.and("model").is(measureSearchCriteria.getModel());
@@ -126,44 +156,16 @@ public class MeasureSearchServiceImpl implements MeasureSearchService {
     // prepare measure set search criteria(user is either owner or shared with)
     Criteria measureSetCriteria = new Criteria();
     if (filterByCurrentUser) {
-      List<Criteria> measureSetOrCriteriaList = new ArrayList<>();
-      List<Criteria> measureSetAndCriteriaList = new ArrayList<>();
-      measureSetOrCriteriaList.add(
-          Criteria.where("measureSet.owner").regex("^\\Q" + userId + "\\E$", "i"));
-      measureSetOrCriteriaList.add(
-          Criteria.where("measureSet.acls.userId")
-              .regex("^\\Q" + userId + "\\E$", "i")
-              .and("measureSet.acls.roles")
-              .in(RoleEnum.SHARED_WITH));
-      if (measureSearchCriteria != null) {
-        if (measureSearchCriteria.getOptionalSearchProperties() != null
-            && !measureSearchCriteria.getOptionalSearchProperties().isEmpty()
-            && measureSearchCriteria.getOptionalSearchProperties().contains("cmsId")) {
-          // When cmsId is provided, we want to either do an and or an OR conditional.
-          // If we have more than one condition, we want to do an OR condition.
-          // If it is provided as the only condition, it should be an AND condition
-          String searchField = measureSearchCriteria.getSearchField();
-          if (isNumeric(searchField)) {
-            int number = Integer.parseInt(searchField);
-            if (measureSearchCriteria.getOptionalSearchProperties().size() > 1) {
-              measureSetOrCriteriaList.add(Criteria.where("measureSet.cmsId").is(number));
-            } else {
-              measureSetAndCriteriaList.add(Criteria.where("measureSet.cmsId").is(number));
-            }
-          }
-        }
-      }
-      // generate the query now that we know weverything we need
       measureSetCriteria =
-          measureSetCriteria.orOperator(measureSetOrCriteriaList.toArray(new Criteria[0]));
-      // Apply AND conditions if there are any
-      if (!measureSetAndCriteriaList.isEmpty()) {
-        measureSetCriteria =
-            measureSetCriteria.andOperator(measureSetAndCriteriaList.toArray(new Criteria[0]));
-      }
+          new Criteria()
+              .orOperator(
+                  Criteria.where("measureSet.owner").regex("^\\Q" + userId + "\\E$", "i"),
+                  Criteria.where("measureSet.acls.userId")
+                      .regex("^\\Q" + userId + "\\E$", "i")
+                      .and("measureSet.acls.roles")
+                      .in(RoleEnum.SHARED_WITH));
     }
 
-    // combine measure and measure set criteria
     MatchOperation matchOperation =
         match(new Criteria().andOperator(measureCriteria, measureSetCriteria));
 
