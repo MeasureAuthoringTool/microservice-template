@@ -6,7 +6,9 @@ import cms.gov.madie.measure.dto.qrda.QrdaRequestDTO;
 import cms.gov.madie.measure.exceptions.HQMFServiceException;
 import cms.gov.madie.measure.exceptions.InternalServerException;
 import cms.gov.madie.measure.exceptions.InvalidRequestException;
+import cms.gov.madie.measure.factories.ModelValidatorFactory;
 import cms.gov.madie.measure.repositories.ExportRepository;
+import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.cqm.CqmMeasure;
 import gov.cms.madie.models.measure.Export;
 import gov.cms.madie.models.measure.Measure;
@@ -30,6 +32,7 @@ public class QdmPackageService implements PackageService {
   private final QdmServiceConfig qdmServiceConfig;
   private final RestTemplate qdmServiceRestTemplate;
   private final ExportRepository repository;
+  private final ModelValidatorFactory modelValidatorFactory;
 
   @Override
   public PackageDto getMeasurePackage(Measure measure, String accessToken) {
@@ -101,6 +104,10 @@ public class QdmPackageService implements PackageService {
 
   @Override
   public String getHumanReadable(Measure measure, String username, String accessToken) {
+    if (measure.getMeasureMetaData() != null && measure.getMeasureMetaData().isDraft()) {
+      validateDraftMeasure(measure);
+    }
+
     URI uri = URI.create(qdmServiceConfig.getBaseUrl() + qdmServiceConfig.getHumanReadableUrn());
     HttpHeaders headers = new HttpHeaders();
     headers.set(HttpHeaders.AUTHORIZATION, accessToken);
@@ -162,6 +169,13 @@ public class QdmPackageService implements PackageService {
           ex);
       throw new InternalServerException("An error occurred while converting CqmMeasure.");
     }
+  }
+
+  protected Measure validateDraftMeasure(Measure measure) {
+    ModelValidator modelValidator =
+        modelValidatorFactory.getModelValidator(ModelType.valueOfName(measure.getModel()));
+    modelValidator.validateGroups(measure);
+    return measure;
   }
 
   @Override
