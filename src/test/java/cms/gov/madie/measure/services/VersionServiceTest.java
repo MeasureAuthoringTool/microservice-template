@@ -2,6 +2,7 @@ package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.dto.PackageDto;
 import cms.gov.madie.measure.exceptions.BadVersionRequestException;
+import cms.gov.madie.measure.exceptions.BundleOperationException;
 import cms.gov.madie.measure.exceptions.CqlElmTranslationErrorException;
 import cms.gov.madie.measure.exceptions.MeasureNotDraftableException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
@@ -17,15 +18,20 @@ import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureMetaData;
 import gov.cms.madie.models.measure.TestCase;
+import gov.cms.madie.packaging.utils.PackagingUtilityFactory;
+import gov.cms.madie.packaging.utils.qicore411.PackagingUtilityImpl;
 import gov.cms.madie.models.measure.*;
 
 import org.bson.types.ObjectId;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 
@@ -140,6 +146,20 @@ public class VersionServiceTest {
           .build();
 
   MeasureSet measureSet = MeasureSet.builder().measureSetId("MS123").cmsId(144).build();
+
+  private static final String MODEL_QI_CORE = "QI-Core v4.1.1";
+  private static MockedStatic<PackagingUtilityFactory> factory;
+  private static PackagingUtilityImpl utility = mock(PackagingUtilityImpl.class);
+
+  @BeforeAll
+  public static void staticSetup() {
+    factory = mockStatic(PackagingUtilityFactory.class);
+  }
+
+  @AfterAll
+  public static void close() {
+    factory.close();
+  }
 
   @Test
   public void testCheckValidVersioningThrowsResourceNotFoundException() {
@@ -428,6 +448,59 @@ public class VersionServiceTest {
   }
 
   @Test
+  public void testCreateVersionThrowsInstantiationExceptionWhenSavingToExport() throws Exception {
+    FhirMeasure existingMeasure =
+        FhirMeasure.builder()
+            .id("testMeasureId")
+            .measureSetId("testMeasureSetId")
+            .createdBy("testUser")
+            .cql("library Test1CQLLib version '2.3.001'")
+            .model(ModelType.QI_CORE.getValue())
+            .measureSet(measureSet)
+            .build();
+    MeasureMetaData metaData = new MeasureMetaData();
+    metaData.setDraft(true);
+    existingMeasure.setMeasureMetaData(metaData);
+    Version version = Version.builder().major(2).minor(3).revisionNumber(1).build();
+    existingMeasure.setVersion(version);
+
+    when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
+
+    ElmJson elmJson = ElmJson.builder().json(ELMJON_NO_ERROR).build();
+    when(elmTranslatorClient.getElmJson(anyString(), anyString(), anyString())).thenReturn(elmJson);
+    when(elmTranslatorClient.hasErrors(any())).thenReturn(false);
+
+    Version newVersion = Version.builder().major(2).minor(2).revisionNumber(2).build();
+    when(measureRepository.findMaxVersionByMeasureSetId(anyString()))
+        .thenReturn(Optional.of(newVersion));
+
+    String measureBundleJson =
+        """
+            {"resourceType": "Bundle","entry": [ {
+                "resource": {
+                  "resourceType": "Measure","text":{"div":"humanReadable"}}}]}""";
+
+    when(fhirServicesClient.getMeasureBundle(any(), anyString(), anyString()))
+        .thenReturn(measureBundleJson);
+
+    factory
+        .when(() -> PackagingUtilityFactory.getInstance(MODEL_QI_CORE))
+        .thenThrow(
+            new InstantiationException("Unexpected error while getting human readable with CSS"));
+
+    Exception ex =
+        assertThrows(
+            BundleOperationException.class,
+            () ->
+                versionService.createVersion("testMeasureId", "MAJOR", "testUser", "accesstoken"));
+    assertThat(
+        ex.getMessage(),
+        is(
+            equalTo(
+                "An error occurred while bundling Measure with ID testMeasureId. Please try again later or contact a System Administrator if this continues to occur.")));
+  }
+
+  @Test
   public void testCreateVersionMajorSuccess() throws Exception {
     FhirMeasure existingMeasure =
         FhirMeasure.builder()
@@ -461,6 +534,8 @@ public class VersionServiceTest {
     updatedMetaData.setDraft(false);
     updatedMeasure.setMeasureMetaData(updatedMetaData);
     when(measureRepository.save(any(Measure.class))).thenReturn(updatedMeasure);
+
+    factory.when(() -> PackagingUtilityFactory.getInstance(MODEL_QI_CORE)).thenReturn(utility);
 
     String measureBundleJson =
         """
@@ -530,6 +605,8 @@ public class VersionServiceTest {
     byte[] exportPackage = "Look, I'm a measure package".getBytes();
     when(exportService.getMeasureExport(any(Measure.class), anyString()))
         .thenReturn(PackageDto.builder().fromStorage(false).exportPackage(exportPackage).build());
+    when(qdmPackageService.getHumanReadable(any(Measure.class), anyString(), anyString()))
+        .thenReturn("test human readable");
 
     when(exportRepository.save(any(Export.class)))
         .thenAnswer(
@@ -552,6 +629,7 @@ public class VersionServiceTest {
     Export export = exportArgumentCaptor.getValue();
     assertThat(export.getMeasureId(), is(equalTo(updatedMeasure.getId())));
     assertThat(export.getPackageData(), is(equalTo(exportPackage)));
+    assertThat(export.getHumanReadable(), is(equalTo("test human readable")));
   }
 
   @Test
@@ -590,6 +668,8 @@ public class VersionServiceTest {
     updatedMetaData.setDraft(false);
     updatedMeasure.setMeasureMetaData(updatedMetaData);
     when(measureRepository.save(any(Measure.class))).thenReturn(updatedMeasure);
+
+    factory.when(() -> PackagingUtilityFactory.getInstance("QI-Core v6.0.0")).thenReturn(utility);
 
     String measureBundleJson =
         """
@@ -659,7 +739,7 @@ public class VersionServiceTest {
 
     Measure draft =
         versionService.createDraft(
-            versionedMeasure.getId(), "Test", "QI-Core v4.1.1", "test-user", TEST_ACCESS_TOKEN);
+            versionedMeasure.getId(), "Test", MODEL_QI_CORE, "test-user", TEST_ACCESS_TOKEN);
 
     assertThat(draft.getMeasureName(), is(equalTo("Test")));
     // draft flag to true
@@ -714,7 +794,7 @@ public class VersionServiceTest {
 
     Measure draft =
         versionService.createDraft(
-            versionedMeasure.getId(), "Test", "QI-Core v4.1.1", "test-user", TEST_ACCESS_TOKEN);
+            versionedMeasure.getId(), "Test", MODEL_QI_CORE, "test-user", TEST_ACCESS_TOKEN);
 
     assertThat(draft.getMeasureName(), is(equalTo("Test")));
     // draft flag to true
@@ -829,7 +909,7 @@ public class VersionServiceTest {
 
     Measure draft =
         versionService.createDraft(
-            versionedMeasure.getId(), "Test", "QI-Core v4.1.1", "test-user", TEST_ACCESS_TOKEN);
+            versionedMeasure.getId(), "Test", MODEL_QI_CORE, "test-user", TEST_ACCESS_TOKEN);
 
     assertThat(draft.getMeasureName(), is(equalTo("Test")));
     // draft flag to true
@@ -851,7 +931,7 @@ public class VersionServiceTest {
             ResourceNotFoundException.class,
             () ->
                 versionService.createDraft(
-                    measureId, "Test", "QI-Core v4.1.1", "test-user", TEST_ACCESS_TOKEN));
+                    measureId, "Test", MODEL_QI_CORE, "test-user", TEST_ACCESS_TOKEN));
     assertThat(ex.getMessage(), is(equalTo("Could not find Measure with id: " + measureId)));
   }
 
@@ -869,7 +949,7 @@ public class VersionServiceTest {
             UnauthorizedException.class,
             () ->
                 versionService.createDraft(
-                    measure.getId(), "Test", "QI-Core v4.1.1", user, TEST_ACCESS_TOKEN));
+                    measure.getId(), "Test", MODEL_QI_CORE, user, TEST_ACCESS_TOKEN));
     assertThat(
         ex.getMessage(), is(equalTo("User " + user + " is not authorized for Measure with ID 1")));
   }
@@ -887,7 +967,7 @@ public class VersionServiceTest {
             MeasureNotDraftableException.class,
             () ->
                 versionService.createDraft(
-                    measure.getId(), "Test", "QI-Core v4.1.1", "test-user", TEST_ACCESS_TOKEN));
+                    measure.getId(), "Test", MODEL_QI_CORE, "test-user", TEST_ACCESS_TOKEN));
     assertThat(
         ex.getMessage(),
         is(
@@ -955,7 +1035,7 @@ public class VersionServiceTest {
         .thenReturn(ResponseEntity.ok(invalidTestCaseHapiOperationOutcome));
     Measure draft =
         versionService.createDraft(
-            versionedMeasure.getId(), "Test", "QI-Core v4.1.1", "test-user", TEST_ACCESS_TOKEN);
+            versionedMeasure.getId(), "Test", MODEL_QI_CORE, "test-user", TEST_ACCESS_TOKEN);
 
     assertThat(draft.getMeasureName(), is(equalTo("Test")));
     // draft flag to true
@@ -1027,7 +1107,7 @@ public class VersionServiceTest {
         .thenReturn(ResponseEntity.ok(validTestCaseHapiOperationOutcome));
     Measure draft =
         versionService.createDraft(
-            versionedMeasure.getId(), "Test", "QI-Core v4.1.1", "test-user", TEST_ACCESS_TOKEN);
+            versionedMeasure.getId(), "Test", MODEL_QI_CORE, "test-user", TEST_ACCESS_TOKEN);
 
     assertThat(draft.getMeasureName(), is(equalTo("Test")));
     // draft flag to true
