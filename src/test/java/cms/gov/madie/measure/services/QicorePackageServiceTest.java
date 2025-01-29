@@ -26,6 +26,7 @@ import java.util.Optional;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -222,39 +223,42 @@ public class QicorePackageServiceTest {
     when(exportRepository.findByMeasureId(anyString())).thenReturn(Optional.of(export));
 
     String result =
-        qicorePackageService.getHumanReadable(existingMeasure, TEST_USER, TEST_ACCESS_TOKEN);
+        qicorePackageService.getHumanReadableForVersionedMeasure(
+            existingMeasure, TEST_USER, TEST_ACCESS_TOKEN);
     assertEquals(result, TEST_HUMAN_READABLE);
   }
 
   @Test
-  public void testSaveHRForQiCoreVersionedMeasureNoExport() {
+  public void testGetHRForVersionedMeasureNoExport() {
     MeasureMetaData meta = MeasureMetaData.builder().draft(false).build();
     existingMeasure.setMeasureMetaData(meta);
 
     when(exportRepository.findByMeasureId(anyString())).thenReturn(Optional.empty());
 
-    when(modelValidatorFactory.getModelValidator(any())).thenReturn(qicoreModelValidator);
-    doNothing().when(qicoreModelValidator).validateMetadata(any(Measure.class));
-    when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
-        .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
-    doNothing().when(qicoreModelValidator).validateGroups(any(Measure.class));
-    doNothing().when(qicoreModelValidator).validateCqlErrors(any(Measure.class));
+    String result =
+        qicorePackageService.getHumanReadableForVersionedMeasure(
+            existingMeasure, TEST_USER, TEST_ACCESS_TOKEN);
+    assertNull(result);
+  }
 
-    when(fhirServicesClient.getMeasureBundle(any(), anyString(), anyString()))
-        .thenReturn(MEASURE_BUNDLE_JSON);
-
-    PackagingUtilityImpl utility = mock(PackagingUtilityImpl.class);
-    factory.when(() -> PackagingUtilityFactory.getInstance(MODEL_QI_CORE)).thenReturn(utility);
-    when(utility.getHumanReadableWithCSS(anyString())).thenReturn(TEST_HUMAN_READABLE);
-
-    Export savedExport =
-        Export.builder().id(TEST_MEASURE_ID).humanReadable(TEST_HUMAN_READABLE).build();
-    when(exportRepository.save(any(Export.class))).thenReturn(savedExport);
+  @Test
+  public void testGetHRForVersionedMeasureNoMetadata() {
+    existingMeasure.setMeasureMetaData(null);
 
     String result =
-        qicorePackageService.getHumanReadable(existingMeasure, TEST_USER, TEST_ACCESS_TOKEN);
-    assertEquals(result, TEST_HUMAN_READABLE);
-    verify(exportRepository, times(1)).save(exportArgumentCaptor.capture());
+        qicorePackageService.getHumanReadableForVersionedMeasure(
+            existingMeasure, TEST_USER, TEST_ACCESS_TOKEN);
+    assertNull(result);
+  }
+
+  @Test
+  public void testGetHRForVersionedMeasureNotDraft() {
+    existingMeasure.setMeasureMetaData(MeasureMetaData.builder().draft(true).build());
+
+    String result =
+        qicorePackageService.getHumanReadableForVersionedMeasure(
+            existingMeasure, TEST_USER, TEST_ACCESS_TOKEN);
+    assertNull(result);
   }
 
   @Test
@@ -284,7 +288,8 @@ public class QicorePackageServiceTest {
     when(exportRepository.save(any(Export.class))).thenReturn(savedExport);
 
     String result =
-        qicorePackageService.getHumanReadable(existingMeasure, TEST_USER, TEST_ACCESS_TOKEN);
+        qicorePackageService.getHumanReadableForVersionedMeasure(
+            existingMeasure, TEST_USER, TEST_ACCESS_TOKEN);
     assertEquals(result, TEST_HUMAN_READABLE);
     verify(exportRepository, times(1)).save(exportArgumentCaptor.capture());
   }

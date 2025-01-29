@@ -9,5 +9,7 @@ public interface PackageService {
 
   String getHumanReadable(Measure measure, String username, String accessToken);
 
+  String getHumanReadableForVersionedMeasure(Measure measure, String username, String accessToken);
+
   byte[] getQRDA(QrdaRequestDTO serviceDTO, String accessToken);
 }
