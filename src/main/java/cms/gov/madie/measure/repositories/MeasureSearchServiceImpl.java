@@ -22,7 +22,7 @@ import org.springframework.stereotype.Repository;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.codehaus.plexus.util.StringUtils.isNumeric;
+import static org.apache.commons.lang3.StringUtils.isNumeric;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 @Repository
