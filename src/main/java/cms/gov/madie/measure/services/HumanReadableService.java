@@ -25,6 +25,9 @@ public class HumanReadableService {
 
     PackageService packageService =
         packageServiceFactory.getPackageService(ModelType.valueOfName(measure.getModel()));
+    if (measure.getMeasureMetaData() != null && !measure.getMeasureMetaData().isDraft()) {
+      return packageService.getHumanReadableForVersionedMeasure(measure, username, accessToken);
+    }
     return packageService.getHumanReadable(measure, username, accessToken);
   }
 }

@@ -3,7 +3,11 @@ package cms.gov.madie.measure.services;
 import cms.gov.madie.measure.config.QdmServiceConfig;
 import cms.gov.madie.measure.dto.PackageDto;
 import cms.gov.madie.measure.dto.qrda.QrdaRequestDTO;
+import cms.gov.madie.measure.exceptions.HQMFServiceException;
 import cms.gov.madie.measure.exceptions.InternalServerException;
+import cms.gov.madie.measure.exceptions.InvalidRequestException;
+import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
+import cms.gov.madie.measure.factories.ModelValidatorFactory;
 import cms.gov.madie.measure.repositories.ExportRepository;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.cqm.CqmMeasure;
@@ -22,6 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
@@ -38,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @Slf4j
 @ExtendWith(MockitoExtension.class)
@@ -46,10 +51,13 @@ class QdmPackageServiceTest {
   @Mock private QdmServiceConfig qdmServiceConfig;
   @Mock private RestTemplate qdmServiceRestTemplate;
   @Mock private ExportRepository exportRepository;
+  @Mock private ModelValidatorFactory modelValidatorFactory;
+  @Mock private QdmModelValidator qdmModelValidator;
   @InjectMocks private QdmPackageService qdmPackageService;
-
   private final String token = "token";
+  private final String userID = "userID";
   private Measure measure;
+  private final String humanReadable = "Test Human Readable";
 
   @BeforeEach
   void setUp() {
@@ -129,6 +137,40 @@ class QdmPackageServiceTest {
   }
 
   @Test
+  void testGetMeasurePackageThrowsException() {
+    when(qdmServiceConfig.getCreatePackageUrn()).thenReturn("/elm/uri");
+    when(qdmServiceRestTemplate.exchange(
+            any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+        .thenThrow(
+            new HttpClientErrorException(HttpStatusCode.valueOf(404), "something went wrong"));
+    String errorMessage =
+        "An unexpected error occurred while creating a measure package.something went wrong";
+    Exception ex =
+        assertThrows(
+            InternalServerException.class,
+            () -> qdmPackageService.getMeasurePackage(measure, token),
+            errorMessage);
+    assertThat(ex.getMessage(), is(equalTo("QDM service error: ")));
+  }
+
+  @Test
+  void testGetMeasurePackageHQMFError() {
+    when(qdmServiceConfig.getCreatePackageUrn()).thenReturn("/elm/uri");
+    when(qdmServiceRestTemplate.exchange(
+            any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+        .thenThrow(new HttpClientErrorException(HttpStatusCode.valueOf(404), "HQMF:"));
+    String errorMessage = "HQMF: An unexpected error occurred while creating a measure package.";
+    Exception ex =
+        assertThrows(
+            HQMFServiceException.class,
+            () -> qdmPackageService.getMeasurePackage(measure, token),
+            errorMessage);
+
+    assertThat(
+        ex.getMessage(), is(equalTo("An error occurred that caused the HQMF generation to fail.")));
+  }
+
+  @Test
   void testGetQRDASuccess() {
     when(qdmServiceConfig.getCreateQrdaUrn()).thenReturn("/qrda");
     String qrdaContent = "Test QRDA";
@@ -164,6 +206,60 @@ class QdmPackageServiceTest {
   }
 
   @Test
+  void testConvertCqmThrowsException() {
+    when(qdmServiceConfig.getRetrieveCqmMeasureUrn()).thenReturn("/cqm");
+    QdmMeasure qdmMeasure =
+        QdmMeasure.builder()
+            .id("testId")
+            .measureSetId("testMeasureSetId")
+            .cqlLibraryName("TestCqlLibraryName")
+            .ecqmTitle("testECqm")
+            .measureName("testMeasureName")
+            .versionId("0.0.000")
+            .build();
+    CqmMeasure cqmMeasure = CqmMeasure.builder().build();
+    when(qdmServiceRestTemplate.exchange(
+            any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+        .thenThrow(new RestClientException("something went wrong"));
+
+    String errorMessage =
+        "An error occurred while converting QdmMeasure to CqmMeasure: 1, please check qdm service logs for more information";
+    Exception ex =
+        assertThrows(
+            InternalServerException.class,
+            () -> qdmPackageService.convertCqm(qdmMeasure, token),
+            errorMessage);
+    assertThat(ex.getMessage(), is(equalTo("An error occurred while converting CqmMeasure.")));
+  }
+
+  @Test
+  void testConvertCqmThrowsExceptionWhenHttpStatusIsNotOK() {
+    when(qdmServiceConfig.getRetrieveCqmMeasureUrn()).thenReturn("/cqm");
+    QdmMeasure qdmMeasure =
+        QdmMeasure.builder()
+            .id("testId")
+            .measureSetId("testMeasureSetId")
+            .cqlLibraryName("TestCqlLibraryName")
+            .ecqmTitle("testECqm")
+            .measureName("testMeasureName")
+            .versionId("0.0.000")
+            .build();
+    CqmMeasure cqmMeasure = CqmMeasure.builder().build();
+    when(qdmServiceRestTemplate.exchange(
+            any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
+        .thenReturn(ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error message"));
+
+    String errorMessage =
+        "An error occurred while converting QdmMeasure to CqmMeasure: 1, please check qdm service logs for more information";
+    Exception ex =
+        assertThrows(
+            InternalServerException.class,
+            () -> qdmPackageService.convertCqm(qdmMeasure, token),
+            errorMessage);
+    assertThat(ex.getMessage(), is(equalTo("An error occurred while converting CqmMeasure.")));
+  }
+
+  @Test
   void testGetQRDAThrowsRestClientException() {
     when(qdmServiceConfig.getCreateQrdaUrn()).thenReturn("/qrda");
     when(qdmServiceRestTemplate.exchange(
@@ -182,18 +278,22 @@ class QdmPackageServiceTest {
 
   @Test
   void testGetHumanReadable() {
+    when(modelValidatorFactory.getModelValidator(any())).thenReturn(qdmModelValidator);
+    doNothing().when(qdmModelValidator).validateGroups(any(Measure.class));
     when(qdmServiceConfig.getHumanReadableUrn()).thenReturn("/human-readable");
-    String humanReadable = "Test Human Readable";
+
     when(qdmServiceRestTemplate.exchange(
             any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
         .thenReturn(ResponseEntity.ok(humanReadable.getBytes()));
-    String result = qdmPackageService.getHumanReadable(measure, "userID", token);
+    String result = qdmPackageService.getHumanReadable(measure, userID, token);
     assertThat(result, is(notNullValue()));
     assertThat(result, is(equalTo(humanReadable)));
   }
 
   @Test
   void testGetHumanReadableHttpError() {
+    when(modelValidatorFactory.getModelValidator(any())).thenReturn(qdmModelValidator);
+    doNothing().when(qdmModelValidator).validateGroups(any(Measure.class));
     when(qdmServiceConfig.getHumanReadableUrn()).thenReturn("/human-readable");
     when(qdmServiceRestTemplate.exchange(
             any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
@@ -201,12 +301,14 @@ class QdmPackageServiceTest {
     Exception ex =
         assertThrows(
             InternalServerException.class,
-            () -> qdmPackageService.getHumanReadable(measure, "userID", token));
+            () -> qdmPackageService.getHumanReadable(measure, userID, token));
     assertThat(ex.getMessage(), is(equalTo("QDM service error: ")));
   }
 
   @Test
   void testGetHumanReadableClientError() {
+    when(modelValidatorFactory.getModelValidator(any())).thenReturn(qdmModelValidator);
+    doNothing().when(qdmModelValidator).validateGroups(any(Measure.class));
     when(qdmServiceConfig.getHumanReadableUrn()).thenReturn("/human-readable");
     when(qdmServiceRestTemplate.exchange(
             any(URI.class), eq(HttpMethod.PUT), any(HttpEntity.class), any(Class.class)))
@@ -214,11 +316,69 @@ class QdmPackageServiceTest {
     Exception ex =
         assertThrows(
             InternalServerException.class,
-            () -> qdmPackageService.getHumanReadable(measure, "userID", token));
+            () -> qdmPackageService.getHumanReadable(measure, userID, token));
     assertThat(
         ex.getMessage(),
         is(
             equalTo(
                 "An unexpected error occurred while creating a human readable. Failed Client Exception")));
+  }
+
+  @Test
+  public void testGetHumanReadableThrowsInvalidResourceStateException() {
+    when(modelValidatorFactory.getModelValidator(any())).thenReturn(qdmModelValidator);
+    doThrow(InvalidResourceStateException.class)
+        .when(qdmModelValidator)
+        .validateGroups(any(Measure.class));
+    assertThrows(
+        InvalidResourceStateException.class,
+        () -> qdmPackageService.getHumanReadable(measure, "TEST_USER", token));
+  }
+
+  @Test
+  void testGetHumanReadableForVersionedMeasure() {
+    measure.setMeasureMetaData(MeasureMetaData.builder().draft(false).build());
+    when(exportRepository.findByMeasureId(anyString()))
+        .thenReturn(Optional.of(Export.builder().humanReadable(humanReadable).build()));
+    String result = qdmPackageService.getHumanReadableForVersionedMeasure(measure, token, token);
+    assertThat(result, is(equalTo(humanReadable)));
+  }
+
+  @Test
+  void testGetHumanReadableForVersionedMeasureThrowsExceptionForDraft() {
+    Exception ex =
+        assertThrows(
+            InvalidRequestException.class,
+            () -> qdmPackageService.getHumanReadableForVersionedMeasure(measure, userID, token));
+    assertThat(
+        ex.getMessage(),
+        is(equalTo("Error getting human readable for QDM measure: " + measure.getId())));
+  }
+
+  @Test
+  void testGetHumanReadableForVersionedMeasureThrowsExceptionNoExport() {
+    measure.setMeasureMetaData(MeasureMetaData.builder().draft(false).build());
+    when(exportRepository.findByMeasureId(anyString())).thenReturn(Optional.empty());
+    Exception ex =
+        assertThrows(
+            InvalidRequestException.class,
+            () -> qdmPackageService.getHumanReadableForVersionedMeasure(measure, userID, token));
+    assertThat(
+        ex.getMessage(),
+        is(equalTo("Error getting human readable for QDM measure: " + measure.getId())));
+  }
+
+  @Test
+  void testGetHumanReadableForVersionedMeasureThrowsExceptionNoHR() {
+    measure.setMeasureMetaData(MeasureMetaData.builder().draft(false).build());
+    when(exportRepository.findByMeasureId(anyString()))
+        .thenReturn(Optional.of(Export.builder().build()));
+    Exception ex =
+        assertThrows(
+            InvalidRequestException.class,
+            () -> qdmPackageService.getHumanReadableForVersionedMeasure(measure, userID, token));
+    assertThat(
+        ex.getMessage(),
+        is(equalTo("Error getting human readable for QDM measure: " + measure.getId())));
   }
 }

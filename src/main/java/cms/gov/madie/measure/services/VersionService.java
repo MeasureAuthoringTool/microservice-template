@@ -89,8 +89,10 @@ public class VersionService {
     CqmMeasure cqmMeasure =
         qdmPackageService.convertCqm((QdmMeasure) upversionedMeasure, accessToken);
 
+    String humanReadable =
+        qdmPackageService.getHumanReadable(upversionedMeasure, username, accessToken);
     // save exports
-    savePackageData(upversionedMeasure, measurePackage.getExportPackage(), username);
+    savePackageData(upversionedMeasure, measurePackage.getExportPackage(), humanReadable, username);
     //	save CqmMeasure
     cqmMeasureRepository.save(cqmMeasure);
 
@@ -390,9 +392,14 @@ public class VersionService {
         savedExport.getId());
   }
 
-  private void savePackageData(Measure savedMeasure, byte[] packageData, String username) {
+  private void savePackageData(
+      Measure savedMeasure, byte[] packageData, String humanReadable, String username) {
     Export export =
-        Export.builder().measureId(savedMeasure.getId()).packageData(packageData).build();
+        Export.builder()
+            .measureId(savedMeasure.getId())
+            .packageData(packageData)
+            .humanReadable(humanReadable)
+            .build();
     Export savedExport = exportRepository.save(export);
     log.info(
         "User [{}] successfully saved versioned measure's export data with ID [{}]",
