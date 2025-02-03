@@ -13,6 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 public class MeasureSearchCriteria {
   private String searchField;
+  private List<String> optionalSearchProperties; // can be ["measureName", "version", "cmsId"] ..etc
   private String model;
   private Boolean draft;
   private List<String> excludeByMeasureIds;
