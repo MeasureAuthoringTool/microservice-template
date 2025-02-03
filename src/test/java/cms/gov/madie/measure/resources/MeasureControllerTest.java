@@ -287,15 +287,16 @@ class MeasureControllerTest {
             "CMS Id of %s was deleted successfully from measure set with measure set id of %s",
             measureSet.getCmsId(), measureSet.getMeasureSetId());
 
-    when(measureSetService.deleteCmsId(anyString(), anyInt())).thenReturn(expectedBody);
+    when(measureSetService.deleteCmsId(anyString(), anyInt(), anyString()))
+        .thenReturn(expectedBody);
 
     ResponseEntity<String> response =
         controller.deleteCmsId(
-            mockHttpServletRequest, measureId, measureSet.getCmsId(), "apiKey", principal);
+            mockHttpServletRequest, measureId, measureSet.getCmsId(), "apiKey", "owner", principal);
 
     assertThat(response.getBody(), is(notNullValue()));
     assertEquals(expectedBody, response.getBody());
-    verify(measureSetService, times(1)).deleteCmsId(anyString(), anyInt());
+    verify(measureSetService, times(1)).deleteCmsId(anyString(), anyInt(), anyString());
   }
 
   @Test

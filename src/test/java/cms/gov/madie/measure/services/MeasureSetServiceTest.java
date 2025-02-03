@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.exceptions.HarpIdMismatchException;
 import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.InvalidRequestException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
@@ -267,7 +268,7 @@ public class MeasureSetServiceTest {
         Measure.builder().model(ModelType.QI_CORE.getValue()).measureSetId("measureSetId1").build();
 
     List<Measure> measures = Collections.singletonList(measure);
-    MeasureSet measureSet = MeasureSet.builder().measureSetId("1").cmsId(1).build();
+    MeasureSet measureSet = MeasureSet.builder().measureSetId("1").cmsId(1).owner("owner1").build();
     String measureId = "measureId";
 
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
@@ -276,7 +277,7 @@ public class MeasureSetServiceTest {
         .thenReturn(measures);
     when(measureSetRepository.save(any(MeasureSet.class))).thenReturn(measureSet);
 
-    String responseBody = measureSetService.deleteCmsId(measureId, cmsId);
+    String responseBody = measureSetService.deleteCmsId(measureId, cmsId, measureSet.getOwner());
 
     assertEquals(
         responseBody,
@@ -297,7 +298,8 @@ public class MeasureSetServiceTest {
 
     Exception ex =
         assertThrows(
-            ResourceNotFoundException.class, () -> measureSetService.deleteCmsId(measureId, 1));
+            ResourceNotFoundException.class,
+            () -> measureSetService.deleteCmsId(measureId, 1, anyString()));
 
     assertTrue(
         ex.getMessage()
@@ -308,9 +310,41 @@ public class MeasureSetServiceTest {
   }
 
   @Test
-  public void testDeleteCmsIdWhenMeasureSetIsNotFound() {
+  public void testDeleteCmsIdHarpIdMismatchException() {
+    String harpId = "owner2";
     Measure measure =
         Measure.builder().model(ModelType.QI_CORE.getValue()).measureSetId("measureSetId").build();
+
+    MeasureSet measureSet = MeasureSet.builder().measureSetId("1").cmsId(2).owner("owner1").build();
+    String measureId = "measureId";
+
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
+    when(measureSetRepository.findByMeasureSetId(anyString())).thenReturn(Optional.of(measureSet));
+
+    Exception ex =
+        assertThrows(
+            HarpIdMismatchException.class,
+            () -> measureSetService.deleteCmsId(measureId, anyInt(), harpId));
+
+    assertTrue(
+        ex.getMessage()
+            .contains(
+                String.format(
+                    "Response could not be completed because the HARP id of %s passed in does not match the owner of the measure with the measure id of %s. The owner of the measure is %s",
+                    harpId, measure.getId(), measureSet.getOwner())));
+    verify(measureRepository, times(1)).findById(anyString());
+    verify(measureSetRepository, times(1)).findByMeasureSetId(anyString());
+    verify(measureSetRepository, times(0)).save(any(MeasureSet.class));
+  }
+
+  @Test
+  public void testDeleteCmsIdWhenMeasureSetIsNotFound() {
+    Measure measure =
+        Measure.builder()
+            .model(ModelType.QI_CORE.getValue())
+            .measureSetId("measureSetId")
+            .measureSet(MeasureSet.builder().owner("owner1").build())
+            .build();
 
     String measureId = "measureId";
 
@@ -319,7 +353,8 @@ public class MeasureSetServiceTest {
 
     Exception ex =
         assertThrows(
-            ResourceNotFoundException.class, () -> measureSetService.deleteCmsId(measureId, 1));
+            ResourceNotFoundException.class,
+            () -> measureSetService.deleteCmsId(measureId, 1, measure.getMeasureSet().getOwner()));
 
     assertTrue(
         ex.getMessage()
@@ -338,7 +373,7 @@ public class MeasureSetServiceTest {
     Measure measure =
         Measure.builder().model(ModelType.QI_CORE.getValue()).measureSetId("measureSetId").build();
 
-    MeasureSet measureSet = MeasureSet.builder().measureSetId("1").build();
+    MeasureSet measureSet = MeasureSet.builder().measureSetId("1").owner("owner1").build();
     String measureId = "measureId";
 
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
@@ -346,7 +381,8 @@ public class MeasureSetServiceTest {
 
     Exception ex =
         assertThrows(
-            ResourceNotFoundException.class, () -> measureSetService.deleteCmsId(measureId, cmsId));
+            ResourceNotFoundException.class,
+            () -> measureSetService.deleteCmsId(measureId, cmsId, measureSet.getOwner()));
 
     assertTrue(
         ex.getMessage()
@@ -365,7 +401,7 @@ public class MeasureSetServiceTest {
     Measure measure =
         Measure.builder().model(ModelType.QI_CORE.getValue()).measureSetId("measureSetId").build();
 
-    MeasureSet measureSet = MeasureSet.builder().measureSetId("1").cmsId(2).build();
+    MeasureSet measureSet = MeasureSet.builder().measureSetId("1").cmsId(2).owner("owner1").build();
     String measureId = "measureId";
 
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure));
@@ -373,7 +409,8 @@ public class MeasureSetServiceTest {
 
     Exception ex =
         assertThrows(
-            InvalidIdException.class, () -> measureSetService.deleteCmsId(measureId, cmsId));
+            InvalidIdException.class,
+            () -> measureSetService.deleteCmsId(measureId, cmsId, measureSet.getOwner()));
 
     assertTrue(
         ex.getMessage()
@@ -396,7 +433,7 @@ public class MeasureSetServiceTest {
         Measure.builder().model(ModelType.QI_CORE.getValue()).measureSetId("measureSetId2").build();
 
     List<Measure> measures = Arrays.asList(measure1, measure2);
-    MeasureSet measureSet = MeasureSet.builder().measureSetId("1").cmsId(1).build();
+    MeasureSet measureSet = MeasureSet.builder().measureSetId("1").cmsId(1).owner("owner1").build();
     String measureId = "measureId";
 
     when(measureRepository.findById(anyString())).thenReturn(Optional.of(measure1));
@@ -406,7 +443,8 @@ public class MeasureSetServiceTest {
 
     Exception ex =
         assertThrows(
-            InvalidRequestException.class, () -> measureSetService.deleteCmsId(measureId, cmsId));
+            InvalidRequestException.class,
+            () -> measureSetService.deleteCmsId(measureId, cmsId, measureSet.getOwner()));
 
     assertTrue(
         ex.getMessage()

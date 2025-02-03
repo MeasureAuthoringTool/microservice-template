@@ -150,11 +150,13 @@ public class MeasureSetService {
     return updatedMeasureSet;
   }
 
-  public String deleteCmsId(String measureId, Integer cmsId) {
-    Optional<Measure> measure = measureRepository.findById(measureId);
+  public String deleteCmsId(String measureId, Integer cmsId, String harpId) {
+    Optional<Measure> optionalMeasure = measureRepository.findById(measureId);
 
-    if (measure.isPresent()) {
-      String measureSetId = measure.get().getMeasureSetId();
+    if (optionalMeasure.isPresent()) {
+      Measure measure = optionalMeasure.get();
+
+      String measureSetId = measure.getMeasureSetId();
       Optional<MeasureSet> optionalMeasureSet =
           measureSetRepository.findByMeasureSetId(measureSetId);
 
@@ -164,6 +166,10 @@ public class MeasureSetService {
       }
 
       MeasureSet measureSet = optionalMeasureSet.get();
+
+      if (!measureSet.getOwner().equals(harpId)) {
+        throw new HarpIdMismatchException(harpId, measureSet.getOwner(), measure.getId());
+      }
 
       if (measureSet.getCmsId() == null) {
         throw new ResourceNotFoundException(

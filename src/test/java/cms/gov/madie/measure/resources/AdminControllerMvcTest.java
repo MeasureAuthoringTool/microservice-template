@@ -305,8 +305,57 @@ public class AdminControllerMvcTest {
   }
 
   @Test
+  public void testAdminMeasurePermaDeleteResourceNotFoundException() throws Exception {
+    when(measureService.findMeasureById(anyString())).thenReturn(null);
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.delete("/admin/measures/{id}", "12345")
+                .with(csrf())
+                .with(user(TEST_USER_ID))
+                .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
+                .header("Authorization", "test-okta")
+                .header("harpId", "owner1"))
+        .andExpect(status().isNotFound());
+
+    verify(measureService, times(1)).findMeasureById(anyString());
+    verifyNoInteractions(measureRepository);
+  }
+
+  @Test
+  public void testAdminMeasurePermaDeleteHarpIdMismatchException() throws Exception {
+    Measure testMsr =
+        Measure.builder()
+            .id("12345")
+            .measureSet(MeasureSet.builder().owner("owner1").build())
+            .build();
+    when(measureService.findMeasureById(anyString())).thenReturn(testMsr);
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.delete("/admin/measures/{id}", "12345")
+                .with(csrf())
+                .with(user(TEST_USER_ID))
+                .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
+                .header("Authorization", "test-okta")
+                .header("harpId", "owner2"))
+        .andExpect(status().isConflict())
+        .andExpect(
+            jsonPath("$.message")
+                .value(
+                    "Response could not be completed because the HARP id of owner2 passed in does not match the owner of the measure with the measure id of 12345. The owner of the measure is owner1"));
+
+    verify(measureService, times(1)).findMeasureById(anyString());
+    verifyNoInteractions(measureRepository);
+  }
+
+  @Test
   public void testAdminMeasurePermaDelete() throws Exception {
-    Measure testMsr = Measure.builder().id("12345").build();
+    Measure testMsr =
+        Measure.builder()
+            .id("12345")
+            .measureSet(MeasureSet.builder().owner("owner1").build())
+            .build();
     when(measureService.findMeasureById(anyString())).thenReturn(testMsr);
     doNothing().when(measureRepository).delete(any(Measure.class));
 
@@ -316,9 +365,54 @@ public class AdminControllerMvcTest {
                 .with(csrf())
                 .with(user(TEST_USER_ID))
                 .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
-                .header("Authorization", "test-okta"))
+                .header("Authorization", "test-okta")
+                .header("harpId", "owner1"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id", equalTo("12345")));
+  }
+
+  @Test
+  public void testAdminMeasureGetSharedWithResourceNotFoundException() throws Exception {
+    when(measureService.findMeasureById(anyString())).thenReturn(null);
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get("/admin/measures/sharedWith?measureids=12345")
+                .with(csrf())
+                .with(user(TEST_USER_ID))
+                .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
+                .header("Authorization", "test-okta")
+                .header("harpId", "owner1"))
+        .andExpect(status().isNotFound());
+
+    verify(measureService, times(1)).findMeasureById(anyString());
+  }
+
+  @Test
+  public void testAdminMeasureGetSharedWithHarpIdMismatchException() throws Exception {
+    Measure testMsr = Measure.builder().id("12345").build();
+    AclSpecification acl1 = new AclSpecification();
+    acl1.setUserId("raoulduke");
+    acl1.setRoles(Set.of(RoleEnum.SHARED_WITH));
+
+    List<AclSpecification> acls = List.of(acl1);
+    MeasureSet measureSet = MeasureSet.builder().acls(acls).owner("owner1").build();
+    testMsr.setMeasureSet(measureSet);
+    when(measureService.findMeasureById(anyString())).thenReturn(testMsr);
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.get("/admin/measures/sharedWith?measureids=12345")
+                .with(csrf())
+                .with(user(TEST_USER_ID))
+                .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
+                .header("Authorization", "test-okta")
+                .header("harpId", "owner2"))
+        .andExpect(status().isConflict())
+        .andExpect(
+            jsonPath("$.message")
+                .value(
+                    "Response could not be completed because the HARP id of owner2 passed in does not match the owner of the measure with the measure id of 12345. The owner of the measure is owner1"));
   }
 
   @Test
@@ -331,7 +425,7 @@ public class AdminControllerMvcTest {
     Measure msr2 = Measure.builder().id("6789").build();
 
     List<AclSpecification> acls = List.of(acl1);
-    MeasureSet measureSet = MeasureSet.builder().acls(acls).build();
+    MeasureSet measureSet = MeasureSet.builder().acls(acls).owner("owner1").build();
     msr1.setMeasureSet(measureSet);
     msr2.setMeasureSet(measureSet);
     when(measureService.findMeasureById(eq("12345"))).thenReturn(msr1);
@@ -343,7 +437,8 @@ public class AdminControllerMvcTest {
                 .with(csrf())
                 .with(user(TEST_USER_ID))
                 .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
-                .header("Authorization", "test-okta"))
+                .header("Authorization", "test-okta")
+                .header("harpId", "owner1"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].measureId", equalTo("12345")))
         .andExpect(jsonPath("$[1].measureId", equalTo("6789")))
@@ -358,7 +453,7 @@ public class AdminControllerMvcTest {
     acl1.setRoles(Set.of(RoleEnum.SHARED_WITH));
 
     List<AclSpecification> acls = List.of(acl1);
-    MeasureSet measureSet = MeasureSet.builder().acls(acls).build();
+    MeasureSet measureSet = MeasureSet.builder().acls(acls).owner("owner1").build();
     testMsr.setMeasureSet(measureSet);
     when(measureService.findMeasureById(anyString())).thenReturn(testMsr);
 
@@ -368,7 +463,8 @@ public class AdminControllerMvcTest {
                 .with(csrf())
                 .with(user(TEST_USER_ID))
                 .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
-                .header("Authorization", "test-okta"))
+                .header("Authorization", "test-okta")
+                .header("harpId", "owner1"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].measureId", equalTo("12345")))
         .andExpect(jsonPath("$[0].sharedWith.[0]userId", equalTo("raoulduke")));
@@ -378,7 +474,7 @@ public class AdminControllerMvcTest {
   public void testAdminMeasureGetSharedWithNoone() throws Exception {
     Measure testMsr = Measure.builder().id("12345").build();
 
-    MeasureSet measureSet = MeasureSet.builder().acls(null).build();
+    MeasureSet measureSet = MeasureSet.builder().acls(null).owner("owner1").build();
     testMsr.setMeasureSet(measureSet);
     when(measureService.findMeasureById(anyString())).thenReturn(testMsr);
 
@@ -388,7 +484,8 @@ public class AdminControllerMvcTest {
                 .with(csrf())
                 .with(user(TEST_USER_ID))
                 .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
-                .header("Authorization", "test-okta"))
+                .header("Authorization", "test-okta")
+                .header("harpId", "owner1"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].measureId", equalTo("12345")))
         .andExpect(jsonPath("$[0].sharedWith", equalTo(null)));
@@ -404,7 +501,8 @@ public class AdminControllerMvcTest {
                 .with(csrf())
                 .with(user(TEST_USER_ID))
                 .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
-                .header("Authorization", "test-okta"))
+                .header("Authorization", "test-okta")
+                .header("harpId", "owner1"))
         .andExpect(status().isNotFound());
   }
 
@@ -415,7 +513,8 @@ public class AdminControllerMvcTest {
             MockMvcRequestBuilders.delete("/admin/measures/{id}", "12345")
                 .with(csrf())
                 .with(user(TEST_USER_ID))
-                .header("Authorization", "test-okta"))
+                .header("Authorization", "test-okta")
+                .header("harpId", "owner1"))
         .andExpect(status().isForbidden());
   }
 
@@ -432,9 +531,42 @@ public class AdminControllerMvcTest {
                 .queryParam("draftVersion", "1.0.000")
                 .queryParam("inCorrectVersion", "3.0.000")
                 .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
-                .header("Authorization", "test-okta"))
+                .header("Authorization", "test-okta")
+                .header("harpId", "owner1"))
         .andExpect(status().isNotFound());
     verify(measureService, times(1)).findMeasureById(anyString());
+  }
+
+  @Test
+  public void testAdminMeasureChangeVersionHarpIdMismatchException() throws Exception {
+    when(measureService.findMeasureById(anyString()))
+        .thenReturn(
+            Measure.builder()
+                .id("123456")
+                .measureSetId("ms-123")
+                .measureSet(MeasureSet.builder().owner("owner1").build())
+                .version(Version.builder().major(3).minor(0).revisionNumber(0).build())
+                .build());
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.put("/admin/measures/{id}", "12345")
+                .with(csrf())
+                .with(user(TEST_USER_ID))
+                .queryParam("correctVersion", "2.0.000")
+                .queryParam("draftVersion", "1.0.000")
+                .queryParam("inCorrectVersion", "3.0.000")
+                .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
+                .header("Authorization", "test-okta")
+                .header("harpId", "owner2"))
+        .andExpect(status().isConflict())
+        .andExpect(
+            jsonPath("$.message")
+                .value(
+                    "Response could not be completed because the HARP id of owner2 passed in does not match the owner of the measure with the measure id of 123456. The owner of the measure is owner1"));
+
+    verify(measureService, times(1)).findMeasureById(anyString());
+    verifyNoInteractions(measureRepository);
   }
 
   @Test
@@ -446,6 +578,7 @@ public class AdminControllerMvcTest {
             Measure.builder()
                 .id("123456")
                 .measureSetId("ms-123")
+                .measureSet(MeasureSet.builder().owner("owner1").build())
                 .version(Version.builder().major(3).minor(0).revisionNumber(0).build())
                 .build());
     doReturn(List.of(testMsr))
@@ -461,7 +594,8 @@ public class AdminControllerMvcTest {
                 .queryParam("draftVersion", "1.0.000")
                 .queryParam("inCorrectVersion", "3.0.000")
                 .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
-                .header("Authorization", "test-okta"))
+                .header("Authorization", "test-okta")
+                .header("harpId", "owner1"))
         .andExpect(status().isBadRequest());
     verify(measureService, times(1)).findMeasureById(anyString());
   }
@@ -474,6 +608,7 @@ public class AdminControllerMvcTest {
             Measure.builder()
                 .id("123456")
                 .measureSetId("ms-123")
+                .measureSet(MeasureSet.builder().owner("owner1").build())
                 .version(Version.builder().major(3).minor(0).revisionNumber(0).build())
                 .build());
     doReturn(null)
@@ -489,7 +624,8 @@ public class AdminControllerMvcTest {
                 .queryParam("draftVersion", "3.0.000")
                 .queryParam("inCorrectVersion", "3.0.000")
                 .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
-                .header("Authorization", "test-okta"))
+                .header("Authorization", "test-okta")
+                .header("harpId", "owner1"))
         .andExpect(status().isBadRequest());
 
     verify(measureService, times(1)).findMeasureById(anyString());
@@ -505,6 +641,7 @@ public class AdminControllerMvcTest {
             Measure.builder()
                 .id("123456")
                 .measureSetId("ms-123")
+                .measureSet(MeasureSet.builder().owner("owner1").build())
                 .version(Version.builder().major(3).minor(0).revisionNumber(0).build())
                 .build());
     doReturn(null)
@@ -523,7 +660,8 @@ public class AdminControllerMvcTest {
                 .queryParam("draftVersion", "1.0.000")
                 .queryParam("inCorrectVersion", "3.0.000")
                 .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
-                .header("Authorization", "test-okta"))
+                .header("Authorization", "test-okta")
+                .header("harpId", "owner1"))
         .andExpect(status().isConflict());
     verify(measureRepository, times(1))
         .findAllByMeasureSetIdInAndActiveAndMeasureMetaDataDraft(List.of("ms-123"), true, true);
@@ -547,6 +685,7 @@ public class AdminControllerMvcTest {
             Measure.builder()
                 .id("123456")
                 .measureSetId("ms-123")
+                .measureSet(MeasureSet.builder().owner("owner1").build())
                 .cql("library Test version '3.0.000'")
                 .cqlLibraryName("Test")
                 .version(version1)
@@ -575,7 +714,8 @@ public class AdminControllerMvcTest {
                 .queryParam("draftVersion", "1.0.000")
                 .queryParam("inCorrectVersion", "3.0.000")
                 .header(ADMIN_TEST_API_KEY_HEADER, ADMIN_TEST_API_KEY_HEADER_VALUE)
-                .header("Authorization", "test-okta"))
+                .header("Authorization", "test-okta")
+                .header("harpId", "owner1"))
         .andExpect(status().isOk());
 
     verify(measureRepository, times(1))
