@@ -2961,7 +2961,7 @@ public class TestCaseServiceTest implements ResourceUtil {
         .shiftTestCaseDates(anyList(), anyInt(), anyString());
 
     List<TestCase> shiftedTestCases =
-        testCaseService.shiftMultiQiCoreTestCaseDates(List.of(testCase), 1, "TOKEN");
+        testCaseService.shiftQiCoreTestCaseDates(List.of(testCase), 1, "TOKEN");
     assertThat(shiftedTestCases.size(), equalTo(1));
     assertTrue(shiftedTestCases.contains(testCase));
   }

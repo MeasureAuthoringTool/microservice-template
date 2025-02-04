@@ -55,6 +55,7 @@ public class TestCaseControllerTest {
     testCase.setId("TESTID");
     testCase.setName("IPPPass");
     testCase.setSeries("BloodPressure>124");
+    testCase.setTitle("title");
     testCase.setCreatedBy("TestUser");
     testCase.setLastModifiedBy("TestUser2");
     testCase.setDescription("TESTCASEDESCRIPTION");
@@ -402,23 +403,17 @@ public class TestCaseControllerTest {
   @Test
   void shiftQdmTestCaseDates() {
     Principal principal = mock(Principal.class);
-    when(principal.getName()).thenReturn("test.user");
 
-    testCase.setJson("Date2");
-    doReturn(testCase)
+    doReturn(List.of(testCase.getId()))
         .when(qdmTestCaseShiftDatesService)
         .shiftTestCaseDates(
-            any(String.class),
-            any(String.class),
-            any(Integer.class),
-            any(String.class),
-            anyString());
-    ResponseEntity<TestCase> response =
-        controller.shiftQdmTestCaseDates(measure.getId(), testCase.getId(), 1, "TOKEN", principal);
+            any(String.class), anyList(), any(Integer.class), any(String.class), any());
+    ResponseEntity<List<String>> response =
+        controller.shiftQdmTestCaseDates(
+            measure.getId(), List.of(testCase.getId()), 1, "TOKEN", principal);
 
     assertNotNull(response.getBody());
-
-    assertEquals("Date2", response.getBody().getJson());
+    assertEquals(testCase.getId(), response.getBody().get(0));
   }
 
   @Test
@@ -453,6 +448,108 @@ public class TestCaseControllerTest {
             .build();
     fhirMeasure.setTestCases(List.of(testCase));
     doReturn(fhirMeasure).when(measureService).findMeasureById(fhirMeasure.getId());
+
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    doReturn(testCase)
+        .when(testCaseService)
+        .updateTestCase(any(), anyString(), anyString(), anyString());
+    doReturn(fhirMeasure.getTestCases())
+        .when(testCaseService)
+        .shiftQiCoreTestCaseDates(anyList(), anyInt(), anyString());
+
+    ResponseEntity<List<String>> response =
+        controller.shiftQiCoreTestCaseDates(
+            fhirMeasure.getId(),
+            List.of(fhirMeasure.getTestCases().get(0).getId()),
+            1,
+            "TOKEN",
+            principal);
+    assertThat(response.getStatusCode(), equalTo(HttpStatusCode.valueOf(200)));
+    assertTrue(CollectionUtils.isEmpty(response.getBody()));
+  }
+
+  @Test
+  void shiftTestCaseDatesForQiCoreMeasurePartialFailure() {
+    FhirMeasure fhirMeasure =
+        FhirMeasure.builder()
+            .id(measure.getId())
+            .measureSetId("IDIDID")
+            .measureName("MSR01")
+            .version(new Version(0, 0, 1))
+            .createdBy("test.user")
+            .build();
+
+    TestCase testCase2 = new TestCase();
+    testCase2.setId("TESTID2");
+    testCase2.setName("IPPPass");
+    testCase2.setTitle("title");
+    testCase2.setCreatedBy("TestUser");
+    testCase2.setLastModifiedBy("TestUser2");
+    testCase2.setDescription("TESTCASEDESCRIPTION");
+    testCase2.setJson("date2");
+
+    fhirMeasure.setTestCases(List.of(testCase, testCase2));
+    doReturn(fhirMeasure).when(measureService).findMeasureById(fhirMeasure.getId());
+
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    doReturn(testCase)
+        .when(testCaseService)
+        .updateTestCase(any(), anyString(), anyString(), anyString());
+    doReturn(List.of(testCase2))
+        .when(testCaseService)
+        .shiftQiCoreTestCaseDates(anyList(), anyInt(), anyString());
+
+    ResponseEntity<List<String>> response =
+        controller.shiftQiCoreTestCaseDates(
+            fhirMeasure.getId(),
+            List.of(
+                fhirMeasure.getTestCases().get(0).getId(),
+                fhirMeasure.getTestCases().get(1).getId()),
+            1,
+            "TOKEN",
+            principal);
+    assertThat(response.getStatusCode(), equalTo(HttpStatusCode.valueOf(200)));
+    assertThat(response.getBody().size(), equalTo(1));
+    assertThat(response.getBody().get(0), equalTo("title"));
+  }
+
+  @Test
+  void shiftAllQiCoreTestCaseDatesInvalidModelType() {
+    QdmMeasure qdmMeasure =
+        QdmMeasure.builder()
+            .id(measure.getId())
+            .measureSetId("IDIDID")
+            .measureName("MSR01")
+            .version(new Version(0, 0, 1))
+            .createdBy("test.user")
+            .build();
+    qdmMeasure.setTestCases(List.of(testCase));
+    doReturn(qdmMeasure).when(measureService).findMeasureById(qdmMeasure.getId());
+
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> controller.shiftAllQiCoreTestCaseDates(qdmMeasure.getId(), 1, principal, "TOKEN"));
+  }
+
+  @Test
+  void shiftAllQiCoreTestCaseDates() {
+    FhirMeasure fhirMeasure =
+        FhirMeasure.builder()
+            .id(measure.getId())
+            .measureSetId("IDIDID")
+            .measureName("MSR01")
+            .version(new Version(0, 0, 1))
+            .createdBy("test.user")
+            .build();
+    fhirMeasure.setTestCases(List.of(testCase));
+    doReturn(fhirMeasure).when(measureService).findMeasureById(fhirMeasure.getId());
     doReturn(fhirMeasure.getTestCases())
         .when(testCaseService)
         .findTestCasesByMeasureId(anyString());
@@ -465,16 +562,16 @@ public class TestCaseControllerTest {
         .updateTestCase(any(), anyString(), anyString(), anyString());
     doReturn(fhirMeasure.getTestCases())
         .when(testCaseService)
-        .shiftMultiQiCoreTestCaseDates(any(), anyInt(), anyString());
+        .shiftQiCoreTestCaseDates(anyList(), anyInt(), anyString());
 
     ResponseEntity<List<String>> response =
-        controller.shiftMultiQiCoreTestCaseDates(fhirMeasure.getId(), 1, principal, "TOKEN");
+        controller.shiftAllQiCoreTestCaseDates(fhirMeasure.getId(), 1, principal, "TOKEN");
     assertThat(response.getStatusCode(), equalTo(HttpStatusCode.valueOf(200)));
     assertTrue(CollectionUtils.isEmpty(response.getBody()));
   }
 
   @Test
-  void shiftTestCaseDatesForQiCoreMeasurePartialFailure() {
+  void shiftAllQiCoreTestCaseDatesPartialFailure() {
     FhirMeasure fhirMeasure =
         FhirMeasure.builder()
             .id(measure.getId())
@@ -500,38 +597,14 @@ public class TestCaseControllerTest {
         .updateTestCase(any(), anyString(), anyString(), anyString());
     doReturn(List.of(testCase))
         .when(testCaseService)
-        .shiftMultiQiCoreTestCaseDates(anyList(), anyInt(), anyString());
+        .shiftQiCoreTestCaseDates(anyList(), anyInt(), anyString());
 
     ResponseEntity<List<String>> response =
-        controller.shiftMultiQiCoreTestCaseDates(fhirMeasure.getId(), 1, principal, "TOKEN");
+        controller.shiftAllQiCoreTestCaseDates(fhirMeasure.getId(), 1, principal, "TOKEN");
     assertThat(response.getStatusCode(), equalTo(HttpStatusCode.valueOf(200)));
     assertTrue(CollectionUtils.isNotEmpty(response.getBody()));
     assertThat(response.getBody().size(), equalTo(1));
     assertThat(response.getBody().get(0), equalTo("testCase bad"));
-  }
-
-  @Test
-  void shiftTestCaseDatesForSingleQiCoreTestCase() {
-    FhirMeasure fhirMeasure =
-        FhirMeasure.builder()
-            .id(measure.getId())
-            .measureSetId("IDIDID")
-            .measureName("MSR01")
-            .version(new Version(0, 0, 1))
-            .createdBy("test.user")
-            .build();
-    fhirMeasure.setTestCases(List.of(testCase));
-    doReturn(fhirMeasure).when(measureService).findMeasureById(fhirMeasure.getId());
-
-    Principal principal = mock(Principal.class);
-    when(principal.getName()).thenReturn("test.user");
-
-    doReturn(testCase).when(testCaseService).shiftQiCoreTestCaseDates(any(), anyInt(), anyString());
-
-    ResponseEntity<Void> response =
-        controller.shiftQiCoreTestCaseDates(
-            fhirMeasure.getId(), testCase.getId(), 1, "TOKEN", principal);
-    assertThat(response.getStatusCode(), equalTo(HttpStatusCode.valueOf(204)));
   }
 
   @Test
@@ -554,7 +627,7 @@ public class TestCaseControllerTest {
         ResourceNotFoundException.class,
         () ->
             controller.shiftQiCoreTestCaseDates(
-                qdmMeasure.getId(), testCase.getId(), 1, "TOKEN", principal));
+                qdmMeasure.getId(), List.of(testCase.getId()), 1, "TOKEN", principal));
   }
 
   @Test
@@ -576,6 +649,6 @@ public class TestCaseControllerTest {
         ResourceNotFoundException.class,
         () ->
             controller.shiftQiCoreTestCaseDates(
-                qdmMeasure.getId(), testCase.getId(), 1, "TOKEN", principal));
+                qdmMeasure.getId(), List.of(testCase.getId()), 1, "TOKEN", principal));
   }
 }

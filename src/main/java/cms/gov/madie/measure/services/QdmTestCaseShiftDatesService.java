@@ -1,10 +1,12 @@
 package cms.gov.madie.measure.services;
 
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import gov.cms.madie.models.measure.FhirMeasure;
+import gov.cms.madie.models.measure.Measure;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,6 +80,7 @@ import lombok.extern.slf4j.Slf4j;
 public class QdmTestCaseShiftDatesService {
 
   private final TestCaseService testCaseService;
+  private final MeasureService measureService;
 
   private ObjectMapper mapper =
       new ObjectMapper()
@@ -87,30 +90,64 @@ public class QdmTestCaseShiftDatesService {
   private static final String SEPARATOR = " |\n";
 
   @Autowired
-  public QdmTestCaseShiftDatesService(TestCaseService testCaseService) {
+  public QdmTestCaseShiftDatesService(
+      TestCaseService testCaseService, MeasureService measureService) {
     this.testCaseService = testCaseService;
+    this.measureService = measureService;
   }
 
-  public TestCase shiftTestCaseDates(
-      String measureId, String testCaseId, int shifted, String username, String accessToken) {
-
-    TestCase testCase;
-    List<TestCase> testCases = testCaseService.findTestCasesByMeasureId(measureId);
-    if (CollectionUtils.isEmpty(testCases)) {
-      throw new ResourceNotFoundException("TestCase", measureId);
-    } else {
-      Optional<TestCase> existingOpt =
-          testCases.stream().filter(tc -> tc.getId().equals(testCaseId)).findFirst();
-      if (existingOpt.isEmpty()) {
-        throw new ResourceNotFoundException("TestCase", measureId);
-      }
-      testCase = existingOpt.get();
+  public List<String> shiftTestCaseDates(
+      String measureId,
+      List<String> testCaseIds,
+      int shifted,
+      String accessToken,
+      Principal principal) {
+    Measure measure = measureService.findMeasureById(measureId);
+    measureService.verifyAuthorization(principal.getName(), measure);
+    if (measure instanceof FhirMeasure) {
+      throw new ResourceNotFoundException("QDM Measure", measureId);
     }
 
-    shiftDatesForTestCase(testCase, shifted);
-    testCaseService.updateTestCase(testCase, measureId, username, accessToken);
+    List<TestCase> testCases =
+        measure.getTestCases().stream()
+            .filter(testCase -> testCaseIds.contains(testCase.getId()))
+            .toList();
 
-    return testCase;
+    List<TestCase> shiftedTestCases = new ArrayList<>();
+
+    for (TestCase testCase : testCases) {
+      try {
+        shiftedTestCases.add(shiftDatesForTestCase(testCase, shifted));
+      } catch (CqmConversionException ex) {
+        log.error(ex.getMessage());
+      }
+    }
+
+    List<String> savedTestCaseIds = new ArrayList<>();
+    for (TestCase shiftedTestCase : shiftedTestCases) {
+      try {
+        TestCase updatedTestCase =
+            testCaseService.updateTestCase(
+                shiftedTestCase, measureId, principal.getName(), accessToken);
+        savedTestCaseIds.add(updatedTestCase.getId());
+      } catch (Exception e) {
+        log.error(
+            "Unable to save Test Case [{}] after successfully shifting dates:",
+            shiftedTestCase.getId(),
+            e);
+      }
+    }
+    List<String> failedTestCases =
+        testCases.stream()
+            .filter(
+                testCase -> savedTestCaseIds.stream().noneMatch(testCase.getId()::equalsIgnoreCase))
+            .map(
+                testCase ->
+                    StringUtils.isBlank(testCase.getSeries())
+                        ? testCase.getTitle()
+                        : testCase.getSeries() + " - " + testCase.getTitle())
+            .toList();
+    return failedTestCases;
   }
 
   protected TestCase shiftDatesForTestCase(TestCase testCase, int shifted) {

@@ -189,19 +189,19 @@ public class TestCaseController {
     return testCase;
   }
 
-  @PutMapping(ControllerUtil.TEST_CASES + "/{testCaseId}/qdm/shiftDates")
-  public ResponseEntity<TestCase> shiftQdmTestCaseDates(
+  @PutMapping(ControllerUtil.TEST_CASES + "/qdm/shift-dates")
+  public ResponseEntity<List<String>> shiftQdmTestCaseDates(
       @PathVariable String measureId,
-      @PathVariable String testCaseId,
+      @RequestBody List<String> testCaseIds,
       @RequestParam(name = "shifted", defaultValue = "0") int shifted,
       @RequestHeader("Authorization") String accessToken,
       Principal principal) {
     return ResponseEntity.ok(
         qdmTestCaseShiftDatesService.shiftTestCaseDates(
-            measureId, testCaseId, shifted, principal.getName(), accessToken));
+            measureId, testCaseIds, shifted, accessToken, principal));
   }
 
-  @GetMapping(ControllerUtil.TEST_CASES + "/qdm/shiftAllDates")
+  @GetMapping(ControllerUtil.TEST_CASES + "/qdm/shift-all-dates")
   public ResponseEntity<List<TestCase>> shiftAllQdmTestCaseDates(
       @PathVariable String measureId,
       @RequestParam(name = "shifted", defaultValue = "0") int shifted,
@@ -212,48 +212,52 @@ public class TestCaseController {
             measureId, shifted, principal.getName(), accessToken));
   }
 
-  @PutMapping(ControllerUtil.TEST_CASES + "/{testCaseId}/shift-dates")
-  public ResponseEntity<Void> shiftQiCoreTestCaseDates(
+  @PutMapping(ControllerUtil.TEST_CASES + "/qicore/shift-dates")
+  public ResponseEntity<List<String>> shiftQiCoreTestCaseDates(
       @PathVariable String measureId,
-      @PathVariable String testCaseId,
+      @RequestBody List<String> testCaseIds,
       @RequestParam(name = "shifted", defaultValue = "0") int shifted,
       @RequestHeader("Authorization") String accessToken,
       Principal principal) {
-    log.info(
-        "User [{}] requested date shift for test case "
-            + "[{}] associated with measure [{}] of [{}] years",
-        principal.getName(),
-        testCaseId,
-        measureId,
-        shifted);
     Measure measure = measureService.findMeasureById(measureId);
     measureService.verifyAuthorization(principal.getName(), measure);
     if (measure instanceof QdmMeasure) {
       throw new ResourceNotFoundException("QICore Measure", measureId);
     }
-    Optional<TestCase> targetTestCase =
-        measure.getTestCases().stream()
-            .filter(tc -> tc.getId().equalsIgnoreCase(testCaseId))
-            .findFirst();
 
-    if (targetTestCase.isPresent()) {
-      TestCase shiftedTestCase =
-          testCaseService.shiftQiCoreTestCaseDates(targetTestCase.get(), shifted, accessToken);
-      if (shiftedTestCase != null) {
-        try {
-          testCaseService.updateTestCase(
-              shiftedTestCase, measureId, principal.getName(), accessToken);
-          return ResponseEntity.noContent().build(); // 204
-        } catch (Exception e) {
-          log.error(
-              "Unable to save Test Case [{}] after successfully shifting dates:",
-              shiftedTestCase.getId(),
-              e);
-        }
+    List<TestCase> testCases =
+        measure.getTestCases().stream()
+            .filter(testCase -> testCaseIds.contains(testCase.getId()))
+            .toList();
+
+    List<TestCase> shiftedTestCases =
+        testCaseService.shiftQiCoreTestCaseDates(testCases, shifted, accessToken);
+    List<String> savedTestCaseIds = new ArrayList<>();
+
+    for (TestCase shiftedTestCase : shiftedTestCases) {
+      try {
+        TestCase updatedTestCase =
+            testCaseService.updateTestCase(
+                shiftedTestCase, measureId, principal.getName(), accessToken);
+        savedTestCaseIds.add(updatedTestCase.getId());
+      } catch (Exception e) {
+        log.error(
+            "Unable to save Test Case [{}] after successfully shifting dates:",
+            shiftedTestCase.getId(),
+            e);
       }
-      throw new InvalidRequestException("Unable to shift dates for test case [" + testCaseId + "]");
     }
-    throw new ResourceNotFoundException("Test Case", testCaseId);
+    List<String> failedTestCases =
+        testCases.stream()
+            .filter(
+                testCase -> savedTestCaseIds.stream().noneMatch(testCase.getId()::equalsIgnoreCase))
+            .map(
+                testCase ->
+                    StringUtils.isBlank(testCase.getSeries())
+                        ? testCase.getTitle()
+                        : testCase.getSeries() + " - " + testCase.getTitle())
+            .toList();
+    return ResponseEntity.ok(failedTestCases);
   }
 
   /**
@@ -267,8 +271,8 @@ public class TestCaseController {
    * @param accessToken Requesting user's access token.
    * @return List of Test Case names that could not be processed.
    */
-  @PutMapping(ControllerUtil.TEST_CASES + "/shift-dates")
-  public ResponseEntity<List<String>> shiftMultiQiCoreTestCaseDates(
+  @PutMapping(ControllerUtil.TEST_CASES + "/qicore/shift-all-dates")
+  public ResponseEntity<List<String>> shiftAllQiCoreTestCaseDates(
       @PathVariable String measureId,
       @RequestParam(name = "shifted", defaultValue = "0") int shifted,
       Principal principal,
@@ -280,7 +284,7 @@ public class TestCaseController {
     }
     List<TestCase> testCases = testCaseService.findTestCasesByMeasureId(measureId);
     List<TestCase> shiftedTestCases =
-        testCaseService.shiftMultiQiCoreTestCaseDates(testCases, shifted, accessToken);
+        testCaseService.shiftQiCoreTestCaseDates(testCases, shifted, accessToken);
     List<String> savedTestCaseIds = new ArrayList<>();
     for (TestCase shiftedTestCase : shiftedTestCases) {
       try {

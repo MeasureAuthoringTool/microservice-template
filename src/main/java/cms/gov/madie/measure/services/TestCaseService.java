@@ -796,7 +796,7 @@ public class TestCaseService {
     }
   }
 
-  public List<TestCase> shiftMultiQiCoreTestCaseDates(
+  public List<TestCase> shiftQiCoreTestCaseDates(
       List<TestCase> testCases, int shifted, String accessToken) {
     if (isEmpty(testCases)) {
       return Collections.emptyList();
