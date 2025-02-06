@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
@@ -23,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+
 import java.time.Instant;
 import java.util.*;
 import java.util.function.Function;
@@ -97,7 +99,7 @@ public class TestCaseService {
     boolean matchesExistingTestCaseName =
         measure.getTestCases().stream()
             // exclude the current test case
-            .filter(tc -> !tc.getId().equals(testCase.getId()))
+            .filter(tc -> !StringUtils.equalsIgnoreCase(tc.getId(), testCase.getId()))
             .map(tc -> StringUtils.deleteWhitespace(tc.getTitle() + tc.getSeries()))
             .anyMatch(existingName -> existingName.equalsIgnoreCase(newName));
     if (matchesExistingTestCaseName) {
@@ -113,6 +115,10 @@ public class TestCaseService {
     }
 
     verifyUniqueTestCaseName(testCase, measure);
+
+    if (StringUtils.deleteWhitespace(testCase.getTitle() + testCase.getSeries()).length() > 255) {
+      throw new TestCaseNameLengthException();
+    }
 
     defaultTestCaseJsonForQdmMeasure(testCase, measure);
     checkTestCaseSpecialCharacters(testCase);
@@ -437,6 +443,54 @@ public class TestCaseService {
         String.join(", ", testCaseIds),
         measureId);
     return "Successfully deleted provided test cases";
+  }
+
+  public List<TestCase> copyTestCasesToMeasure(
+      String targetMeasureId, List<TestCase> sourceTestCases, String username, String accessToken) {
+    List<TestCase> copiedTestCases = new ArrayList<>(sourceTestCases.size());
+
+    Measure targetMeasure = measureService.findMeasureById(targetMeasureId);
+    List<Group> targetGroups =
+        TestCaseServiceUtil.getGroupsWithValidPopulations(targetMeasure.getGroups());
+
+    for (TestCase sourceTestCase : sourceTestCases) {
+      TestCase dupTestCase = sourceTestCase.deepCopy();
+      boolean doesPopCriteriaMatch =
+          TestCaseServiceUtil.matchCriteriaGroups(
+              dupTestCase.getGroupPopulations(), targetGroups, dupTestCase);
+      if (!doesPopCriteriaMatch) {
+        clearExpectedValues(dupTestCase);
+      }
+      Optional<TestCase> copiedTestCase = Optional.empty();
+      try {
+        copiedTestCase =
+            Optional.of(persistTestCase(dupTestCase, targetMeasureId, username, accessToken));
+      } catch (DuplicateTestCaseNameException e) {
+        dupTestCase.setTitle(dupTestCase.getTitle() + "-" + new ObjectId());
+        copiedTestCase =
+            Optional.of(persistTestCase(dupTestCase, targetMeasureId, username, accessToken));
+      } catch (TestCaseNameLengthException e) {
+        throw new InvalidRequestException(
+            "Resulting Test Case Name would be too long. Unable to copy Test Case.");
+      } catch (Exception e) {
+        log.error(
+            "Failed to copy Test Case {} to Measure {}", dupTestCase.getId(), targetMeasureId, e);
+      }
+      copiedTestCase.ifPresent(copiedTestCases::add);
+    }
+    return copiedTestCases;
+  }
+
+  private void clearExpectedValues(TestCase testCase) {
+    if (CollectionUtils.isNotEmpty(testCase.getGroupPopulations())) {
+      for (TestCaseGroupPopulation tcGroupPopulation : testCase.getGroupPopulations()) {
+        if (CollectionUtils.isNotEmpty(tcGroupPopulation.getPopulationValues())) {
+          for (TestCasePopulationValue populationValue : tcGroupPopulation.getPopulationValues()) {
+            populationValue.setExpected(null);
+          }
+        }
+      }
+    }
   }
 
   /**

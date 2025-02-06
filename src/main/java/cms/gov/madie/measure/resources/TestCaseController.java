@@ -11,14 +11,11 @@ import gov.cms.madie.models.common.ModelType;
 import cms.gov.madie.measure.services.TestCaseService;
 import cms.gov.madie.measure.utils.ControllerUtil;
 import cms.gov.madie.measure.utils.UserInputSanitizeUtil;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.QdmMeasure;
-import gov.cms.madie.models.measure.TestCase;
-import gov.cms.madie.models.measure.TestCaseImportOutcome;
-import gov.cms.madie.models.measure.TestCaseImportRequest;
+import gov.cms.madie.models.measure.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -306,5 +303,30 @@ public class TestCaseController {
                         : testCase.getSeries() + " " + testCase.getTitle())
             .toList();
     return ResponseEntity.ok(failedTestCases);
+  }
+
+  @PutMapping(ControllerUtil.TEST_CASES + "/copy-to")
+  public ResponseEntity<List<String>> copyToTestCaseDates(
+      @PathVariable String measureId,
+      @RequestParam(name = "targetMeasureId") String targetMeasureId,
+      @RequestBody List<String> testCaseIds,
+      Principal principal,
+      @RequestHeader("Authorization") String accessToken) {
+
+    Measure targetMeasure = measureService.findMeasureById(targetMeasureId);
+    measureService.verifyAuthorization(principal.getName(), targetMeasure);
+    if (CollectionUtils.isEmpty(testCaseIds)) {
+      throw new InvalidRequestException("Test Case List cannot be empty");
+    }
+
+    List<TestCase> sourceTestCases =
+        testCaseService.findTestCasesByMeasureId(measureId).stream()
+            .filter(stc -> testCaseIds.stream().anyMatch(stc.getId()::equalsIgnoreCase))
+            .toList();
+    List<TestCase> copiedTestCases =
+        testCaseService.copyTestCasesToMeasure(
+            targetMeasureId, sourceTestCases, principal.getName(), accessToken);
+
+    return ResponseEntity.ok(copiedTestCases.stream().map(TestCase::getId).toList());
   }
 }

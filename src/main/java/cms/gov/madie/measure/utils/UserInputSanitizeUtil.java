@@ -1,10 +1,11 @@
 package cms.gov.madie.measure.utils;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Safelist;
 import org.jsoup.nodes.Document;
 
-import io.micrometer.core.instrument.util.StringUtils;
+import java.util.List;
 
 public class UserInputSanitizeUtil {
 
@@ -20,5 +21,10 @@ public class UserInputSanitizeUtil {
       }
     }
     return sanitized;
+  }
+
+  public static List<String> sanitizeUserInput(List<String> input) {
+    input.replaceAll(UserInputSanitizeUtil::sanitizeUserInput);
+    return input;
   }
 }
