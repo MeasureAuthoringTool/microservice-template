@@ -314,9 +314,14 @@ public class TestCaseController {
       @RequestHeader("Authorization") String accessToken) {
 
     Measure targetMeasure = measureService.findMeasureById(targetMeasureId);
+    Measure sourceMeasure = measureService.findMeasureById(measureId);
     measureService.verifyAuthorization(principal.getName(), targetMeasure);
     if (CollectionUtils.isEmpty(testCaseIds)) {
       throw new InvalidRequestException("Test Case List cannot be empty");
+    }
+
+    if (!sameModelFamily(targetMeasure, sourceMeasure)) {
+      throw new InvalidRequestException("Target Measure has different model.");
     }
 
     List<TestCase> sourceTestCases =
@@ -328,5 +333,21 @@ public class TestCaseController {
             targetMeasureId, sourceTestCases, principal.getName(), accessToken);
 
     return ResponseEntity.ok(copiedTestCases.stream().map(TestCase::getId).toList());
+  }
+
+  private boolean sameModelFamily(Measure m1, Measure m2) {
+    if (m1 == null || m2 == null) {
+      return false;
+    }
+    if (StringUtils.isBlank(m1.getModel())) {
+      return StringUtils.isBlank(m2.getModel());
+    }
+    if (StringUtils.equalsIgnoreCase(m1.getModel(), m2.getModel())) {
+      return true;
+    }
+    if (StringUtils.containsIgnoreCase(m1.getModel(), "QI-Core")) {
+      return StringUtils.containsIgnoreCase(m2.getModel(), "QI-Core");
+    }
+    return false;
   }
 }
