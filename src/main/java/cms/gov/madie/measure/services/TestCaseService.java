@@ -482,9 +482,9 @@ public class TestCaseService {
   }
 
   private void clearExpectedValues(TestCase testCase) {
-    if (CollectionUtils.isNotEmpty(testCase.getGroupPopulations())) {
+    if (isNotEmpty(testCase.getGroupPopulations())) {
       for (TestCaseGroupPopulation tcGroupPopulation : testCase.getGroupPopulations()) {
-        if (CollectionUtils.isNotEmpty(tcGroupPopulation.getPopulationValues())) {
+        if (isNotEmpty(tcGroupPopulation.getPopulationValues())) {
           for (TestCasePopulationValue populationValue : tcGroupPopulation.getPopulationValues()) {
             populationValue.setExpected(null);
           }
