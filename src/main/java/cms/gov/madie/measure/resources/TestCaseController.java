@@ -116,7 +116,10 @@ public class TestCaseController {
         testCaseId,
         measureId);
     return ResponseEntity.ok(
-        testCaseService.deleteTestCase(measureId, testCaseId, principal.getName()));
+        testCaseService.deleteTestCase(
+            UserInputSanitizeUtil.sanitizeUserInput(measureId),
+            UserInputSanitizeUtil.sanitizeUserInput(testCaseId),
+            principal.getName()));
   }
 
   @DeleteMapping(ControllerUtil.TEST_CASES)
@@ -128,6 +131,7 @@ public class TestCaseController {
         principal.getName(),
         String.join(", ", testCaseIds),
         measureId);
+
     return ResponseEntity.ok(
         testCaseService.deleteTestCases(measureId, testCaseIds, principal.getName()));
   }
@@ -306,7 +310,7 @@ public class TestCaseController {
   }
 
   @PutMapping(ControllerUtil.TEST_CASES + "/copy-to")
-  public ResponseEntity<List<String>> copyToTestCaseDates(
+  public ResponseEntity<List<String>> copyTestCasesToMeasure(
       @PathVariable String measureId,
       @RequestParam(name = "targetMeasureId") String targetMeasureId,
       @RequestBody List<String> testCaseIds,
@@ -325,7 +329,7 @@ public class TestCaseController {
     }
 
     List<TestCase> sourceTestCases =
-        testCaseService.findTestCasesByMeasureId(measureId).stream()
+        sourceMeasure.getTestCases().stream()
             .filter(stc -> testCaseIds.stream().anyMatch(stc.getId()::equalsIgnoreCase))
             .toList();
     List<TestCase> copiedTestCases =
