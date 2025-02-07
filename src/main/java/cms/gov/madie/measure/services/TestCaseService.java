@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.dto.CopyTestCaseResult;
 import cms.gov.madie.measure.dto.JobStatus;
 import cms.gov.madie.measure.dto.MeasureTestCaseValidationReport;
 import cms.gov.madie.measure.dto.TestCaseValidationReport;
@@ -444,7 +445,7 @@ public class TestCaseService {
     return "Successfully deleted provided test cases";
   }
 
-  public List<TestCase> copyTestCasesToMeasure(
+  public CopyTestCaseResult copyTestCasesToMeasure(
       String targetMeasureId, List<TestCase> sourceTestCases, String username, String accessToken) {
     List<TestCase> copiedTestCases = new ArrayList<>(sourceTestCases.size());
 
@@ -452,12 +453,14 @@ public class TestCaseService {
     List<Group> targetGroups =
         TestCaseServiceUtil.getGroupsWithValidPopulations(targetMeasure.getGroups());
 
+    boolean clearedExpectedValues = false;
     for (TestCase sourceTestCase : sourceTestCases) {
       TestCase dupTestCase = sourceTestCase.deepCopy();
       boolean doesPopCriteriaMatch =
           TestCaseServiceUtil.matchCriteriaGroups(
               dupTestCase.getGroupPopulations(), targetGroups, dupTestCase);
       if (!doesPopCriteriaMatch) {
+        clearedExpectedValues = true;
         clearExpectedValues(dupTestCase);
       }
       Optional<TestCase> copiedTestCase = Optional.empty();
@@ -477,7 +480,10 @@ public class TestCaseService {
       }
       copiedTestCase.ifPresent(copiedTestCases::add);
     }
-    return copiedTestCases;
+    return CopyTestCaseResult.builder()
+        .copiedTestCases(copiedTestCases)
+        .didClearExpectedValues(clearedExpectedValues)
+        .build();
   }
 
   private void clearExpectedValues(TestCase testCase) {

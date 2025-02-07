@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.dto.CopyTestCaseResult;
 import cms.gov.madie.measure.dto.JobStatus;
 import cms.gov.madie.measure.dto.MeasureTestCaseValidationReport;
 import cms.gov.madie.measure.exceptions.DuplicateTestCaseNameException;
@@ -3028,7 +3029,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertTrue(CollectionUtils.isEmpty(targetMeasure.getTestCases()));
 
     // Copy single Test Case to target measure
-    List<TestCase> copiedTestCases =
+    CopyTestCaseResult result =
         testCaseService.copyTestCasesToMeasure(
             targetMeasure.getId(), List.of(source), "user.name", "accessToken");
 
@@ -3037,10 +3038,12 @@ public class TestCaseServiceTest implements ResourceUtil {
         (Boolean) source.getGroupPopulations().get(0).getPopulationValues().get(0).getExpected());
 
     // Matching Population Criteria - verify copied Test Case has source Population Expectations.
-    assertThat(copiedTestCases.size(), equalTo(1));
+    assertThat(result.getCopiedTestCases().size(), equalTo(1));
+    assertFalse(result.getDidClearExpectedValues());
     assertThat(
         (Boolean)
-            copiedTestCases
+            result
+                .getCopiedTestCases()
                 .get(0)
                 .getGroupPopulations()
                 .get(0)
@@ -3116,7 +3119,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertTrue(CollectionUtils.isEmpty(targetMeasure.getTestCases()));
 
     // Copy single Test Case to target measure
-    List<TestCase> copiedTestCases =
+    CopyTestCaseResult result =
         testCaseService.copyTestCasesToMeasure(
             targetMeasure.getId(), List.of(source), "user.name", "accessToken");
 
@@ -3126,10 +3129,12 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     // Mismatched Population Criteria - verify copied Test Case have cleared Population
     // Expectations.
-    assertThat(copiedTestCases.size(), equalTo(1));
+    assertThat(result.getCopiedTestCases().size(), equalTo(1));
+    assertTrue(result.getDidClearExpectedValues());
     assertNull(
         (Boolean)
-            copiedTestCases
+            result
+                .getCopiedTestCases()
                 .get(0)
                 .getGroupPopulations()
                 .get(0)
@@ -3156,11 +3161,11 @@ public class TestCaseServiceTest implements ResourceUtil {
             ResponseEntity.ok(HapiOperationOutcome.builder().code(200).successful(true).build()));
     doReturn(targetMeasure).when(measureRepository).save(any());
 
-    List<TestCase> copiedTestCases =
+    CopyTestCaseResult result =
         testCaseService.copyTestCasesToMeasure(
             targetMeasure.getId(), List.of(source), "user.name", "accessToken");
-    assertThat(copiedTestCases.size(), is(1));
-    assertTrue(copiedTestCases.get(0).getTitle().contains("-"));
+    assertThat(result.getCopiedTestCases().size(), is(1));
+    assertTrue(result.getCopiedTestCases().get(0).getTitle().contains("-"));
 
     assertThat(targetMeasure.getTestCases().size(), is(2));
   }
