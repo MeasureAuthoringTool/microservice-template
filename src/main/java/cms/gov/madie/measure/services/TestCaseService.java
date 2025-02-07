@@ -472,11 +472,17 @@ public class TestCaseService {
         copiedTestCase =
             Optional.of(persistTestCase(dupTestCase, targetMeasureId, username, accessToken));
       } catch (TestCaseNameLengthException e) {
-        throw new InvalidRequestException(
-            "Resulting Test Case Name would be too long. Unable to copy Test Case.");
+        log.error(
+            "Unable to copy Test Case {} to Measure {}. Resulting Test Case Name would be too long.",
+            sourceTestCase.getId(),
+            targetMeasure,
+            e);
       } catch (Exception e) {
         log.error(
-            "Failed to copy Test Case {} to Measure {}", dupTestCase.getId(), targetMeasureId, e);
+            "Failed to copy Test Case {} to Measure {}",
+            sourceTestCase.getId(),
+            targetMeasureId,
+            e);
       }
       copiedTestCase.ifPresent(copiedTestCases::add);
     }
