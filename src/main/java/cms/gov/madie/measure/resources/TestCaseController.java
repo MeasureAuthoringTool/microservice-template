@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.resources;
 
+import cms.gov.madie.measure.dto.CopyTestCaseResult;
 import cms.gov.madie.measure.dto.ValidList;
 import cms.gov.madie.measure.exceptions.InvalidRequestException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
@@ -310,7 +311,7 @@ public class TestCaseController {
   }
 
   @PutMapping(ControllerUtil.TEST_CASES + "/copy-to")
-  public ResponseEntity<List<String>> copyTestCasesToMeasure(
+  public ResponseEntity<CopyTestCaseResult> copyTestCasesToMeasure(
       @PathVariable String measureId,
       @RequestParam(name = "targetMeasureId") String targetMeasureId,
       @RequestBody List<String> testCaseIds,
@@ -332,11 +333,11 @@ public class TestCaseController {
         sourceMeasure.getTestCases().stream()
             .filter(stc -> testCaseIds.stream().anyMatch(stc.getId()::equalsIgnoreCase))
             .toList();
-    List<TestCase> copiedTestCases =
+    CopyTestCaseResult result =
         testCaseService.copyTestCasesToMeasure(
             targetMeasureId, sourceTestCases, principal.getName(), accessToken);
 
-    return ResponseEntity.ok(copiedTestCases.stream().map(TestCase::getId).toList());
+    return ResponseEntity.ok(result);
   }
 
   private boolean sameModelFamily(Measure m1, Measure m2) {
