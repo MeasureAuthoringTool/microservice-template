@@ -473,7 +473,8 @@ public class TestCaseService {
             Optional.of(persistTestCase(dupTestCase, targetMeasureId, username, accessToken));
       } catch (TestCaseNameLengthException e) {
         log.error(
-            "Unable to copy Test Case {} to Measure {}. Resulting Test Case Name would be too long.",
+            "Unable to copy Test Case {} to Measure {}. "
+                + "Resulting Test Case Name would be too long.",
             sourceTestCase.getId(),
             targetMeasure,
             e);
@@ -498,6 +499,12 @@ public class TestCaseService {
         if (isNotEmpty(tcGroupPopulation.getPopulationValues())) {
           for (TestCasePopulationValue populationValue : tcGroupPopulation.getPopulationValues()) {
             populationValue.setExpected(null);
+          }
+        }
+        if (isNotEmpty(tcGroupPopulation.getStratificationValues())) {
+          for (TestCaseStratificationValue stratificationValue :
+              tcGroupPopulation.getStratificationValues()) {
+            stratificationValue.setExpected(null);
           }
         }
       }
