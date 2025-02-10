@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.dto.CopyTestCaseResult;
 import cms.gov.madie.measure.dto.JobStatus;
 import cms.gov.madie.measure.dto.MeasureTestCaseValidationReport;
 import cms.gov.madie.measure.dto.TestCaseValidationReport;
@@ -23,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+
 import java.time.Instant;
 import java.util.*;
 import java.util.function.Function;
@@ -97,7 +99,7 @@ public class TestCaseService {
     boolean matchesExistingTestCaseName =
         measure.getTestCases().stream()
             // exclude the current test case
-            .filter(tc -> !tc.getId().equals(testCase.getId()))
+            .filter(tc -> !StringUtils.equalsIgnoreCase(tc.getId(), testCase.getId()))
             .map(tc -> StringUtils.deleteWhitespace(tc.getTitle() + tc.getSeries()))
             .anyMatch(existingName -> existingName.equalsIgnoreCase(newName));
     if (matchesExistingTestCaseName) {
@@ -113,6 +115,10 @@ public class TestCaseService {
     }
 
     verifyUniqueTestCaseName(testCase, measure);
+
+    if (StringUtils.deleteWhitespace(testCase.getTitle() + testCase.getSeries()).length() > 255) {
+      throw new TestCaseNameLengthException();
+    }
 
     defaultTestCaseJsonForQdmMeasure(testCase, measure);
     checkTestCaseSpecialCharacters(testCase);
@@ -437,6 +443,72 @@ public class TestCaseService {
         String.join(", ", testCaseIds),
         measureId);
     return "Successfully deleted provided test cases";
+  }
+
+  public CopyTestCaseResult copyTestCasesToMeasure(
+      String targetMeasureId, List<TestCase> sourceTestCases, String username, String accessToken) {
+    List<TestCase> copiedTestCases = new ArrayList<>(sourceTestCases.size());
+
+    Measure targetMeasure = measureService.findMeasureById(targetMeasureId);
+    List<Group> targetGroups =
+        TestCaseServiceUtil.getGroupsWithValidPopulations(targetMeasure.getGroups());
+
+    boolean clearedExpectedValues = false;
+    for (TestCase sourceTestCase : sourceTestCases) {
+      TestCase dupTestCase = sourceTestCase.deepCopy();
+      boolean doesPopCriteriaMatch =
+          TestCaseServiceUtil.matchCriteriaGroups(
+              dupTestCase.getGroupPopulations(), targetGroups, dupTestCase);
+      if (!doesPopCriteriaMatch) {
+        clearedExpectedValues = true;
+        clearExpectedValues(dupTestCase);
+      }
+      Optional<TestCase> copiedTestCase = Optional.empty();
+      try {
+        copiedTestCase =
+            Optional.of(persistTestCase(dupTestCase, targetMeasureId, username, accessToken));
+      } catch (DuplicateTestCaseNameException e) {
+        dupTestCase.setTitle(dupTestCase.getTitle() + "-" + new ObjectId());
+        copiedTestCase =
+            Optional.of(persistTestCase(dupTestCase, targetMeasureId, username, accessToken));
+      } catch (TestCaseNameLengthException e) {
+        log.error(
+            "Unable to copy Test Case {} to Measure {}. "
+                + "Resulting Test Case Name would be too long.",
+            sourceTestCase.getId(),
+            targetMeasure,
+            e);
+      } catch (Exception e) {
+        log.error(
+            "Failed to copy Test Case {} to Measure {}",
+            sourceTestCase.getId(),
+            targetMeasureId,
+            e);
+      }
+      copiedTestCase.ifPresent(copiedTestCases::add);
+    }
+    return CopyTestCaseResult.builder()
+        .copiedTestCases(copiedTestCases)
+        .didClearExpectedValues(clearedExpectedValues)
+        .build();
+  }
+
+  private void clearExpectedValues(TestCase testCase) {
+    if (isNotEmpty(testCase.getGroupPopulations())) {
+      for (TestCaseGroupPopulation tcGroupPopulation : testCase.getGroupPopulations()) {
+        if (isNotEmpty(tcGroupPopulation.getPopulationValues())) {
+          for (TestCasePopulationValue populationValue : tcGroupPopulation.getPopulationValues()) {
+            populationValue.setExpected(null);
+          }
+        }
+        if (isNotEmpty(tcGroupPopulation.getStratificationValues())) {
+          for (TestCaseStratificationValue stratificationValue :
+              tcGroupPopulation.getStratificationValues()) {
+            stratificationValue.setExpected(null);
+          }
+        }
+      }
+    }
   }
 
   /**

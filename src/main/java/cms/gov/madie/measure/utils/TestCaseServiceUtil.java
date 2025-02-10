@@ -251,8 +251,8 @@ public class TestCaseServiceUtil {
       populationValue.setId(population.getId());
 
       if (group.getPopulationBasis() != null
-          && group.getPopulationBasis().equalsIgnoreCase("boolean")) {
-        String originalValue = (String) populationValue.getExpected();
+          && group.getPopulationBasis().equalsIgnoreCase("boolean")
+          && populationValue.getExpected() instanceof String originalValue) {
         if (originalValue.equalsIgnoreCase("1")) {
           populationValue.setExpected(Boolean.TRUE);
         } else {

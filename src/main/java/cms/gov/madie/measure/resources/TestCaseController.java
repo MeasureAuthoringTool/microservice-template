@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.resources;
 
+import cms.gov.madie.measure.dto.CopyTestCaseResult;
 import cms.gov.madie.measure.dto.ValidList;
 import cms.gov.madie.measure.exceptions.InvalidRequestException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
@@ -11,14 +12,11 @@ import gov.cms.madie.models.common.ModelType;
 import cms.gov.madie.measure.services.TestCaseService;
 import cms.gov.madie.measure.utils.ControllerUtil;
 import cms.gov.madie.measure.utils.UserInputSanitizeUtil;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.QdmMeasure;
-import gov.cms.madie.models.measure.TestCase;
-import gov.cms.madie.models.measure.TestCaseImportOutcome;
-import gov.cms.madie.models.measure.TestCaseImportRequest;
+import gov.cms.madie.models.measure.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -119,7 +117,10 @@ public class TestCaseController {
         testCaseId,
         measureId);
     return ResponseEntity.ok(
-        testCaseService.deleteTestCase(measureId, testCaseId, principal.getName()));
+        testCaseService.deleteTestCase(
+            UserInputSanitizeUtil.sanitizeUserInput(measureId),
+            UserInputSanitizeUtil.sanitizeUserInput(testCaseId),
+            principal.getName()));
   }
 
   @DeleteMapping(ControllerUtil.TEST_CASES)
@@ -131,6 +132,7 @@ public class TestCaseController {
         principal.getName(),
         String.join(", ", testCaseIds),
         measureId);
+
     return ResponseEntity.ok(
         testCaseService.deleteTestCases(measureId, testCaseIds, principal.getName()));
   }
@@ -306,5 +308,51 @@ public class TestCaseController {
                         : testCase.getSeries() + " " + testCase.getTitle())
             .toList();
     return ResponseEntity.ok(failedTestCases);
+  }
+
+  @PutMapping(ControllerUtil.TEST_CASES + "/copy-to")
+  public ResponseEntity<CopyTestCaseResult> copyTestCasesToMeasure(
+      @PathVariable String measureId,
+      @RequestParam(name = "targetMeasureId") String targetMeasureId,
+      @RequestBody List<String> testCaseIds,
+      Principal principal,
+      @RequestHeader("Authorization") String accessToken) {
+
+    Measure targetMeasure = measureService.findMeasureById(targetMeasureId);
+    Measure sourceMeasure = measureService.findMeasureById(measureId);
+    measureService.verifyAuthorization(principal.getName(), targetMeasure);
+    if (CollectionUtils.isEmpty(testCaseIds)) {
+      throw new InvalidRequestException("Test Case List cannot be empty");
+    }
+
+    if (!sameModelFamily(targetMeasure, sourceMeasure)) {
+      throw new InvalidRequestException("Target Measure has different model.");
+    }
+
+    List<TestCase> sourceTestCases =
+        sourceMeasure.getTestCases().stream()
+            .filter(stc -> testCaseIds.stream().anyMatch(stc.getId()::equalsIgnoreCase))
+            .toList();
+    CopyTestCaseResult result =
+        testCaseService.copyTestCasesToMeasure(
+            targetMeasureId, sourceTestCases, principal.getName(), accessToken);
+
+    return ResponseEntity.ok(result);
+  }
+
+  private boolean sameModelFamily(Measure m1, Measure m2) {
+    if (m1 == null || m2 == null) {
+      return false;
+    }
+    if (StringUtils.isBlank(m1.getModel())) {
+      return StringUtils.isBlank(m2.getModel());
+    }
+    if (StringUtils.equalsIgnoreCase(m1.getModel(), m2.getModel())) {
+      return true;
+    }
+    if (StringUtils.containsIgnoreCase(m1.getModel(), "QI-Core")) {
+      return StringUtils.containsIgnoreCase(m2.getModel(), "QI-Core");
+    }
+    return false;
   }
 }
