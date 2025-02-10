@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.dto.CopyTestCaseResult;
 import cms.gov.madie.measure.dto.JobStatus;
 import cms.gov.madie.measure.dto.MeasureTestCaseValidationReport;
 import cms.gov.madie.measure.exceptions.DuplicateTestCaseNameException;
@@ -33,6 +34,7 @@ import java.time.temporal.ChronoUnit;
 import gov.cms.madie.models.dto.TestCaseExportMetaData;
 import gov.cms.madie.models.measure.*;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.bson.types.ObjectId;
@@ -2964,5 +2966,207 @@ public class TestCaseServiceTest implements ResourceUtil {
         testCaseService.shiftQiCoreTestCaseDates(List.of(testCase), 1, "TOKEN");
     assertThat(shiftedTestCases.size(), equalTo(1));
     assertTrue(shiftedTestCases.contains(testCase));
+  }
+
+  @Test
+  void testCopyToAnotherMeasure() {
+    // Set-up
+    TestCase source =
+        testCase.deepCopy().toBuilder()
+            .groupPopulations(
+                List.of(
+                    TestCaseGroupPopulation.builder()
+                        .scoring(MeasureScoring.PROPORTION.toString())
+                        .populationBasis("boolean")
+                        .populationValues(
+                            List.of(
+                                TestCasePopulationValue.builder()
+                                    .name(PopulationType.INITIAL_POPULATION)
+                                    .expected(true)
+                                    .build(),
+                                TestCasePopulationValue.builder()
+                                    .name(PopulationType.DENOMINATOR)
+                                    .expected(true)
+                                    .build(),
+                                TestCasePopulationValue.builder()
+                                    .name(PopulationType.NUMERATOR)
+                                    .expected(true)
+                                    .build()))
+                        .build()))
+            .build();
+
+    Measure targetMeasure =
+        measure.toBuilder()
+            .groups(
+                List.of(
+                    Group.builder()
+                        .scoring(MeasureScoring.PROPORTION.toString())
+                        .populationBasis("boolean")
+                        .populations(
+                            List.of(
+                                Population.builder()
+                                    .name(PopulationType.INITIAL_POPULATION)
+                                    .definition("def")
+                                    .build(),
+                                Population.builder()
+                                    .name(PopulationType.DENOMINATOR)
+                                    .definition("def")
+                                    .build(),
+                                Population.builder()
+                                    .name(PopulationType.NUMERATOR)
+                                    .definition("def")
+                                    .build()))
+                        .build()))
+            .build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(targetMeasure));
+    when(measureService.findMeasureById(anyString())).thenReturn(targetMeasure);
+    when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
+        .thenReturn(
+            ResponseEntity.ok(HapiOperationOutcome.builder().code(200).successful(true).build()));
+    doReturn(targetMeasure).when(measureRepository).save(any());
+
+    // Start with empty Test Case list on target measure
+    assertTrue(CollectionUtils.isEmpty(targetMeasure.getTestCases()));
+
+    // Copy single Test Case to target measure
+    CopyTestCaseResult result =
+        testCaseService.copyTestCasesToMeasure(
+            targetMeasure.getId(), List.of(source), "user.name", "accessToken");
+
+    // Verify source Test Case wasn't modified
+    assertTrue(
+        (Boolean) source.getGroupPopulations().get(0).getPopulationValues().get(0).getExpected());
+
+    // Matching Population Criteria - verify copied Test Case has source Population Expectations.
+    assertThat(result.getCopiedTestCases().size(), equalTo(1));
+    assertFalse(result.getDidClearExpectedValues());
+    assertThat(
+        (Boolean)
+            result
+                .getCopiedTestCases()
+                .get(0)
+                .getGroupPopulations()
+                .get(0)
+                .getPopulationValues()
+                .get(0)
+                .getExpected(),
+        is(
+            (Boolean)
+                source.getGroupPopulations().get(0).getPopulationValues().get(0).getExpected()));
+
+    // Verify target measure now has a single Test Case
+    assertThat(targetMeasure.getTestCases().size(), is(1));
+  }
+
+  @Test
+  void testCopyToAnotherMeasureWithDifferentPopCriteria() {
+    // Set-up
+    TestCase source =
+        testCase.deepCopy().toBuilder()
+            .groupPopulations(
+                List.of(
+                    TestCaseGroupPopulation.builder()
+                        .scoring(MeasureScoring.CONTINUOUS_VARIABLE.toString())
+                        .populationBasis("boolean")
+                        .populationValues(
+                            List.of(
+                                TestCasePopulationValue.builder()
+                                    .name(PopulationType.INITIAL_POPULATION)
+                                    .expected(true)
+                                    .build(),
+                                TestCasePopulationValue.builder()
+                                    .name(PopulationType.MEASURE_POPULATION)
+                                    .expected(true)
+                                    .build(),
+                                TestCasePopulationValue.builder()
+                                    .name(PopulationType.MEASURE_OBSERVATION)
+                                    .expected(true)
+                                    .build()))
+                        .build()))
+            .build();
+
+    Measure targetMeasure =
+        measure.toBuilder()
+            .groups(
+                List.of(
+                    Group.builder()
+                        .scoring(MeasureScoring.PROPORTION.toString())
+                        .populationBasis("boolean")
+                        .populations(
+                            List.of(
+                                Population.builder()
+                                    .name(PopulationType.INITIAL_POPULATION)
+                                    .definition("def")
+                                    .build(),
+                                Population.builder()
+                                    .name(PopulationType.DENOMINATOR)
+                                    .definition("def")
+                                    .build(),
+                                Population.builder()
+                                    .name(PopulationType.NUMERATOR)
+                                    .definition("def")
+                                    .build()))
+                        .build()))
+            .build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(targetMeasure));
+    when(measureService.findMeasureById(anyString())).thenReturn(targetMeasure);
+    when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
+        .thenReturn(
+            ResponseEntity.ok(HapiOperationOutcome.builder().code(200).successful(true).build()));
+    doReturn(targetMeasure).when(measureRepository).save(any());
+
+    // Start with empty Test Case list on target measure
+    assertTrue(CollectionUtils.isEmpty(targetMeasure.getTestCases()));
+
+    // Copy single Test Case to target measure
+    CopyTestCaseResult result =
+        testCaseService.copyTestCasesToMeasure(
+            targetMeasure.getId(), List.of(source), "user.name", "accessToken");
+
+    // Verify source Test Case wasn't modified
+    assertTrue(
+        (Boolean) source.getGroupPopulations().get(0).getPopulationValues().get(0).getExpected());
+
+    // Mismatched Population Criteria - verify copied Test Case have cleared Population
+    // Expectations.
+    assertThat(result.getCopiedTestCases().size(), equalTo(1));
+    assertTrue(result.getDidClearExpectedValues());
+    assertNull(
+        (Boolean)
+            result
+                .getCopiedTestCases()
+                .get(0)
+                .getGroupPopulations()
+                .get(0)
+                .getPopulationValues()
+                .get(0)
+                .getExpected());
+
+    // Verify target measure now has a single Test Case
+    assertThat(targetMeasure.getTestCases().size(), is(1));
+  }
+
+  @Test
+  void testCopyToAnotherMeasureWithExistingTestCase() {
+    // Set-up
+    Measure targetMeasure =
+        measure.toBuilder().testCases(new ArrayList<>(List.of(testCase))).build();
+    TestCase source = testCase.deepCopy().toBuilder().id(null).build();
+    assertThat(targetMeasure.getTestCases().size(), is(1));
+
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(targetMeasure));
+    when(measureService.findMeasureById(anyString())).thenReturn(targetMeasure);
+    when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
+        .thenReturn(
+            ResponseEntity.ok(HapiOperationOutcome.builder().code(200).successful(true).build()));
+    doReturn(targetMeasure).when(measureRepository).save(any());
+
+    CopyTestCaseResult result =
+        testCaseService.copyTestCasesToMeasure(
+            targetMeasure.getId(), List.of(source), "user.name", "accessToken");
+    assertThat(result.getCopiedTestCases().size(), is(1));
+    assertTrue(result.getCopiedTestCases().get(0).getTitle().contains("-"));
+
+    assertThat(targetMeasure.getTestCases().size(), is(2));
   }
 }

@@ -133,7 +133,7 @@
     <dependency>
       <groupId>gov.cms.madie</groupId>
       <artifactId>madie-java-models</artifactId>
-      <version>0.6.77-SNAPSHOT</version>
+      <version>0.6.79-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>gov.cms.madie</groupId>
@@ -178,6 +178,11 @@
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
       <version>4.5.14</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.17.0</version>
     </dependency>
 
     <dependency>
