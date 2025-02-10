@@ -8,7 +8,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
+import cms.gov.madie.measure.factories.ModelValidatorFactory;
 import cms.gov.madie.measure.factories.PackageServiceFactory;
+import cms.gov.madie.measure.utils.MeasureUtil;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -26,6 +29,10 @@ public class HumanReadableServiceTest {
   @Mock private PackageServiceFactory packageServiceFactory;
   @Mock private QicorePackageService qicorePackageService;
   @Mock private QdmPackageService qdmPackageService;
+  @Mock private ModelValidatorFactory modelValidatorFactory;
+  @Mock private QiCoreModelValidator qicoreModelValidator;
+  @Mock private QdmModelValidator qdmModelValidator;
+  @Mock private MeasureUtil measureUtil;
   @InjectMocks HumanReadableService humanReadableService;
 
   private static final String TEST_USER = "test-user";
@@ -47,7 +54,7 @@ public class HumanReadableServiceTest {
   public void testGetHumanReadableWithCSSThrowsUnsupportedTypeException() {
     Measure existingMeasure = Measure.builder().id(TEST_MEASURE_ID).model("invalid model").build();
     when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
-    when(packageServiceFactory.getPackageService(any())).thenThrow(UnsupportedTypeException.class);
+    when(modelValidatorFactory.getModelValidator(any())).thenThrow(UnsupportedTypeException.class);
 
     assertThrows(
         UnsupportedTypeException.class,
@@ -65,6 +72,10 @@ public class HumanReadableServiceTest {
             .measureMetaData(MeasureMetaData.builder().draft(true).build())
             .build();
     when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
+    when(modelValidatorFactory.getModelValidator(any())).thenReturn(qdmModelValidator);
+    when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
+        .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
+
     when(packageServiceFactory.getPackageService(any())).thenReturn(qdmPackageService);
     when(qdmPackageService.getHumanReadable(any(Measure.class), anyString(), anyString()))
         .thenReturn("valid QDM Human Readable");
@@ -77,6 +88,10 @@ public class HumanReadableServiceTest {
   void testGetQiCoreMeasurePackage() {
     Measure existingMeasure = Measure.builder().id(TEST_MEASURE_ID).model("QI-Core v4.1.1").build();
     when(measureService.findMeasureById(anyString())).thenReturn(existingMeasure);
+    when(modelValidatorFactory.getModelValidator(any())).thenReturn(qicoreModelValidator);
+    when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
+        .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
+
     when(packageServiceFactory.getPackageService(any())).thenReturn(qicorePackageService);
     when(qicorePackageService.getHumanReadable(any(Measure.class), anyString(), anyString()))
         .thenReturn("valid QICore Human Readable");
