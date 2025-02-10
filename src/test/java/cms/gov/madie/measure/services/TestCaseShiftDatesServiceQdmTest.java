@@ -6,15 +6,22 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doReturn;
 
+import java.security.Principal;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 
+import gov.cms.madie.models.common.Version;
+import gov.cms.madie.models.measure.FhirMeasure;
+import gov.cms.madie.models.measure.QdmMeasure;
+import org.apache.commons.collections4.CollectionUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -83,6 +90,7 @@ import gov.cms.madie.models.measure.TestCase;
 @ExtendWith(MockitoExtension.class)
 public class TestCaseShiftDatesServiceQdmTest {
   @Mock private TestCaseService testCaseService;
+  @Mock private MeasureService measureService;
   @InjectMocks private QdmTestCaseShiftDatesService qdmTestCaseShiftDatesService;
 
   private TestCase testCase;
@@ -101,62 +109,87 @@ public class TestCaseShiftDatesServiceQdmTest {
   }
 
   @Test
-  public void shiftTestCaseDates() {
-    when(testCaseService.findTestCasesByMeasureId(anyString())).thenReturn(List.of(testCase));
+  void shiftTestCaseDatesInvalidModelType() {
+    FhirMeasure fhirMeasure =
+        FhirMeasure.builder()
+            .id("ID")
+            .measureSetId("IDIDID")
+            .measureName("MSR01")
+            .version(new Version(0, 0, 1))
+            .createdBy("test.user")
+            .build();
+    fhirMeasure.setTestCases(List.of(testCase));
+    doReturn(fhirMeasure).when(measureService).findMeasureById(fhirMeasure.getId());
 
-    TestCase modified =
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    assertThrows(
+        ResourceNotFoundException.class,
+        () ->
+            qdmTestCaseShiftDatesService.shiftTestCaseDates(
+                fhirMeasure.getId(),
+                List.of(fhirMeasure.getTestCases().get(0).getId()),
+                1,
+                "TOKEN",
+                principal));
+  }
+
+  @Test
+  void shiftTestCaseDates() {
+    QdmMeasure qdmMeasure =
+        QdmMeasure.builder()
+            .id("ID")
+            .measureSetId("IDIDID")
+            .measureName("MSR01")
+            .version(new Version(0, 0, 1))
+            .createdBy("test.user")
+            .build();
+    qdmMeasure.setTestCases(List.of(testCase));
+    doReturn(qdmMeasure).when(measureService).findMeasureById(qdmMeasure.getId());
+
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test.user");
+
+    doReturn(testCase)
+        .when(testCaseService)
+        .updateTestCase(any(), anyString(), anyString(), anyString());
+
+    List<String> failedTestCases =
         qdmTestCaseShiftDatesService.shiftTestCaseDates(
-            "TestMeasureId", "TESTID", 1, "test.user", "TOKEN");
+            qdmMeasure.getId(),
+            List.of(qdmMeasure.getTestCases().get(0).getId()),
+            1,
+            "TOKEN",
+            principal);
+    assertTrue(CollectionUtils.isEmpty(failedTestCases));
+  }
+
+  @Test
+  public void shiftDatesForTestCase() {
+    TestCase modified = qdmTestCaseShiftDatesService.shiftDatesForTestCase(testCase, 1);
 
     assertNotNull(modified);
     assertTrue(modified.getJson().contains("2025"));
   }
 
   @Test
-  public void shiftTestCaseDatesNoResourceFound() {
-    when(testCaseService.findTestCasesByMeasureId(anyString())).thenReturn(Collections.emptyList());
-
-    assertThrows(
-        ResourceNotFoundException.class,
-        () ->
-            qdmTestCaseShiftDatesService.shiftTestCaseDates(
-                "TestMeasureId", "TESTID", 1, "test.user", "TOKEN"));
-  }
-
-  @Test
-  public void shiftTestCaseDatesThrowsExceptionWhenTestCaseNotFound() {
-    when(testCaseService.findTestCasesByMeasureId(anyString())).thenReturn(List.of(testCase));
-
-    assertThrows(
-        ResourceNotFoundException.class,
-        () ->
-            qdmTestCaseShiftDatesService.shiftTestCaseDates(
-                "TestMeasureId", "TestIdNotFound", 1, "test.user", "TOKEN"));
-  }
-
-  @Test
-  public void shiftTestCaseDatesInvalidJson() {
+  public void shiftDatesForTestCaseInvalidJson() {
     String jsonInvalid = "";
     testCase.setJson(jsonInvalid);
-    when(testCaseService.findTestCasesByMeasureId(anyString())).thenReturn(List.of(testCase));
 
     assertThrows(
         CqmConversionException.class,
-        () ->
-            qdmTestCaseShiftDatesService.shiftTestCaseDates(
-                "TestMeasureId", "TESTID", 1, "test.user", "TOKEN"));
+        () -> qdmTestCaseShiftDatesService.shiftDatesForTestCase(testCase, 1));
   }
 
   @Test
-  public void shiftTestCaseDatesNoDataElement() {
+  public void shiftDatesForTestCaseNoDataElement() {
     String jsonInvalid =
         "{\"_id\":\"66698bcec3b50c0000acc383\",\"qdmVersion\":\"5.6\",\"dataElements\":[]}";
     testCase.setJson(jsonInvalid);
-    when(testCaseService.findTestCasesByMeasureId(anyString())).thenReturn(List.of(testCase));
 
-    TestCase modified =
-        qdmTestCaseShiftDatesService.shiftTestCaseDates(
-            "TestMeasureId", "TESTID", 1, "test.user", "TOKEN");
+    TestCase modified = qdmTestCaseShiftDatesService.shiftDatesForTestCase(testCase, 1);
 
     assertNotNull(modified);
     assertFalse(modified.getJson().contains("2025"));
