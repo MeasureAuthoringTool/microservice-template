@@ -164,13 +164,6 @@ public class QdmPackageService implements PackageService {
     }
   }
 
-  //  protected Measure validateDraftMeasure(Measure measure) {
-  //    ModelValidator modelValidator =
-  //        modelValidatorFactory.getModelValidator(ModelType.valueOfName(measure.getModel()));
-  //    modelValidator.validateGroups(measure);
-  //    return measure;
-  //  }
-
   @Override
   public String getHumanReadableForVersionedMeasure(
       Measure measure, String username, String accessToken) {
