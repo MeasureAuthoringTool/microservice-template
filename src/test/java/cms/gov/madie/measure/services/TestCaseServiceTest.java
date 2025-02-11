@@ -3164,4 +3164,126 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     assertThat(targetMeasure.getTestCases().size(), is(2));
   }
+
+  @Test
+  void testCopyToAnotherMeasureWithMatchingStratifications() {
+    // Set-up
+    TestCase source =
+        testCase.deepCopy().toBuilder()
+            .groupPopulations(
+                List.of(
+                    TestCaseGroupPopulation.builder()
+                        .scoring(MeasureScoring.PROPORTION.toString())
+                        .populationBasis("boolean")
+                        .populationValues(
+                            List.of(
+                                TestCasePopulationValue.builder()
+                                    .name(PopulationType.INITIAL_POPULATION)
+                                    .expected(true)
+                                    .build(),
+                                TestCasePopulationValue.builder()
+                                    .name(PopulationType.DENOMINATOR)
+                                    .expected(true)
+                                    .build(),
+                                TestCasePopulationValue.builder()
+                                    .name(PopulationType.NUMERATOR)
+                                    .expected(true)
+                                    .build()))
+                        .stratificationValues(
+                            List.of(
+                                TestCaseStratificationValue.builder()
+                                    .id("source-strat-id")
+                                    .name("Strata 1")
+                                    .expected(true)
+                                    .build()))
+                        .build()))
+            .build();
+
+    Measure targetMeasure =
+        measure.toBuilder()
+            .groups(
+                List.of(
+                    Group.builder()
+                        .scoring(MeasureScoring.PROPORTION.toString())
+                        .populationBasis("boolean")
+                        .populations(
+                            List.of(
+                                Population.builder()
+                                    .name(PopulationType.INITIAL_POPULATION)
+                                    .definition("def")
+                                    .build(),
+                                Population.builder()
+                                    .name(PopulationType.DENOMINATOR)
+                                    .definition("def")
+                                    .build(),
+                                Population.builder()
+                                    .name(PopulationType.NUMERATOR)
+                                    .definition("def")
+                                    .build()))
+                        .stratifications(
+                            List.of(Stratification.builder().id("target-strat-id").build()))
+                        .build()))
+            .build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(targetMeasure));
+    when(measureService.findMeasureById(anyString())).thenReturn(targetMeasure);
+    when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
+        .thenReturn(
+            ResponseEntity.ok(HapiOperationOutcome.builder().code(200).successful(true).build()));
+    doReturn(targetMeasure).when(measureRepository).save(any());
+
+    // Start with empty Test Case list on target measure
+    assertTrue(CollectionUtils.isEmpty(targetMeasure.getTestCases()));
+
+    // Copy single Test Case to target measure
+    CopyTestCaseResult result =
+        testCaseService.copyTestCasesToMeasure(
+            targetMeasure.getId(), List.of(source), "user.name", "accessToken");
+
+    // Verify source Test Case wasn't modified
+    assertTrue(
+        (Boolean) source.getGroupPopulations().get(0).getPopulationValues().get(0).getExpected());
+    assertThat(
+        source.getGroupPopulations().get(0).getStratificationValues().get(0).getId(),
+        is("source-strat-id"));
+
+    // Matching Population Criteria - verify copied Test Case has source Population Expectations.
+    assertThat(result.getCopiedTestCases().size(), equalTo(1));
+    assertFalse(result.getDidClearExpectedValues());
+    assertThat(
+        (Boolean)
+            result
+                .getCopiedTestCases()
+                .get(0)
+                .getGroupPopulations()
+                .get(0)
+                .getPopulationValues()
+                .get(0)
+                .getExpected(),
+        is(
+            (Boolean)
+                source.getGroupPopulations().get(0).getPopulationValues().get(0).getExpected()));
+
+    assertThat(
+        result
+            .getCopiedTestCases()
+            .get(0)
+            .getGroupPopulations()
+            .get(0)
+            .getStratificationValues()
+            .size(),
+        is(1));
+    assertThat(
+        result
+            .getCopiedTestCases()
+            .get(0)
+            .getGroupPopulations()
+            .get(0)
+            .getStratificationValues()
+            .get(0)
+            .getId(),
+        is("target-strat-id"));
+
+    // Verify target measure now has a single Test Case
+    assertThat(targetMeasure.getTestCases().size(), is(1));
+  }
 }
