@@ -269,6 +269,7 @@ public class TestCaseServiceUtil {
         stratValues.stream()
             .forEach(
                 (stratValue) -> {
+                  // Match stratification's population values to target group
                   List<TestCasePopulationValue> popValues = stratValue.getPopulationValues();
                   if (isNotEmpty(popValues)) {
                     popValues.stream()
@@ -283,6 +284,15 @@ public class TestCaseServiceUtil {
                             });
                   }
                 });
+
+        // Assign target group's stratification IDs to incoming Stratification.
+        // Stratification order is assumed to match between Test Case & Measure Groups.
+        if (isNotEmpty(group.getStratifications())
+            && stratValues.size() == group.getStratifications().size()) {
+          for (int i = 0; i < stratValues.size(); i++) {
+            stratValues.get(i).setId(group.getStratifications().get(i).getId());
+          }
+        }
       }
       groupPopulation.setStratificationValues(stratValues);
     }
