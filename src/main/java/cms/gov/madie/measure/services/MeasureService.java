@@ -223,6 +223,10 @@ public class MeasureService {
 
     updateReferenceId(updatingMeasure.getMeasureMetaData());
 
+    if (!ModelType.QDM_5_6.getValue().equalsIgnoreCase(updatingMeasure.getModel())) {
+      updateMeasureDefinitionId(updatingMeasure.getMeasureMetaData());
+    }
+
     Measure outputMeasure = updatingMeasure;
     if (measureUtil.isMeasureCqlChanged(existingMeasure, updatingMeasure)
         || measureUtil.isSupplementalDataChanged(existingMeasure, updatingMeasure)
@@ -463,6 +467,28 @@ public class MeasureService {
                   .toList();
       metaData.setReferences(references);
     }
+  }
+
+  protected void updateMeasureDefinitionId(MeasureMetaData metaData) {
+    if (metaData != null && !CollectionUtils.isEmpty(metaData.getMeasureDefinitions())) {
+      List<MeasureDefinition> definitions =
+          (List<MeasureDefinition>)
+              metaData.getMeasureDefinitions().stream()
+                  .map(definition -> updateMeasureDefinition(definition))
+                  .toList();
+      metaData.setMeasureDefinitions(definitions);
+    }
+  }
+
+  private MeasureDefinition updateMeasureDefinition(MeasureDefinition definition) {
+    return MeasureDefinition.builder()
+        .id(
+            StringUtils.isBlank(definition.getId())
+                ? UUID.randomUUID().toString()
+                : definition.getId())
+        .term(definition.getTerm())
+        .definition(definition.getDefinition())
+        .build();
   }
 
   private Reference updateReference(Reference reference) {
