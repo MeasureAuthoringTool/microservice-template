@@ -112,6 +112,13 @@ public class MeasureServiceTest implements ResourceUtil {
                 .endorser("NQF")
                 .endorsementId("testEndorsementId")
                 .build());
+    List<MeasureDefinition> definitions =
+        List.of(
+            MeasureDefinition.builder()
+                .id("test definition id")
+                .term("test term")
+                .definition("test definition")
+                .build());
 
     List<Organization> developersList = new ArrayList<>();
     developersList.add(Organization.builder().name("SB 2").build());
@@ -128,6 +135,7 @@ public class MeasureServiceTest implements ResourceUtil {
             .definition("test definition")
             .experimental(false)
             .transmissionFormat("test transmission format")
+            .measureDefinitions(definitions)
             .build();
 
     finalMeasureMetaData =
@@ -1567,5 +1575,37 @@ public class MeasureServiceTest implements ResourceUtil {
     verify(measureRepository, times(1)).save(measureArgumentCaptor.capture());
     Measure persisted = measureArgumentCaptor.getValue();
     assertThat(persisted, is(equalTo(expected)));
+  }
+
+  @Test
+  public void testUpdateMeasureDefinitionIdNewDefinition() {
+    MeasureMetaData metaData =
+        MeasureMetaData.builder()
+            .measureDefinitions(
+                List.of(
+                    MeasureDefinition.builder()
+                        .term("test term")
+                        .definition("test definition")
+                        .build()))
+            .build();
+    measureService.updateMeasureDefinitionId(metaData);
+    assertNotNull(metaData);
+    assertNotNull(metaData.getMeasureDefinitions());
+    assertNotNull(metaData.getMeasureDefinitions().get(0).getId());
+  }
+
+  @Test
+  public void testUpdateMeasureDefinitionIdNullDefinitions() {
+    MeasureMetaData metaData = MeasureMetaData.builder().build();
+    measureService.updateMeasureDefinitionId(metaData);
+    assertNotNull(metaData);
+    assertNull(metaData.getMeasureDefinitions());
+  }
+
+  @Test
+  public void testUpdateDefinitionIdNullMetaData() {
+    MeasureMetaData metaData = null;
+    measureService.updateMeasureDefinitionId(metaData);
+    assertNull(metaData);
   }
 }
