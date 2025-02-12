@@ -3,10 +3,7 @@ package cms.gov.madie.measure.services;
 import cms.gov.madie.measure.dto.PackageDto;
 import cms.gov.madie.measure.dto.qrda.QrdaRequestDTO;
 import cms.gov.madie.measure.exceptions.BundleOperationException;
-import cms.gov.madie.measure.factories.ModelValidatorFactory;
 import cms.gov.madie.measure.repositories.ExportRepository;
-import cms.gov.madie.measure.utils.MeasureUtil;
-import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.measure.Export;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.packaging.utils.PackagingUtility;
@@ -26,8 +23,6 @@ public class QicorePackageService implements PackageService {
 
   private final BundleService bundleService;
   private FhirServicesClient fhirServicesClient;
-  private final ModelValidatorFactory modelValidatorFactory;
-  private final MeasureUtil measureUtil;
   private final ExportRepository exportRepository;
 
   @Override
@@ -37,13 +32,9 @@ public class QicorePackageService implements PackageService {
 
   @Override
   public String getHumanReadable(Measure measure, String username, String accessToken) {
+    String measureBundle = fhirServicesClient.getMeasureBundle(measure, accessToken, "export");
 
-    Measure existingMeasure = validateMeasure(measure);
-
-    String measureBundle =
-        fhirServicesClient.getMeasureBundle(existingMeasure, accessToken, "export");
-
-    String humanReadableWithCss = getHRWithCSS(existingMeasure, measureBundle);
+    String humanReadableWithCss = getHRWithCSS(measure, measureBundle);
 
     log.info("User [{}] get human readable with ID [{}]", username, measure.getId());
     return humanReadableWithCss;
@@ -53,17 +44,6 @@ public class QicorePackageService implements PackageService {
   public byte[] getQRDA(QrdaRequestDTO qrdaRequestDTO, String accessToken) {
     // to be implemented
     throw new UnsupportedOperationException("method not yet implemented");
-  }
-
-  protected Measure validateMeasure(Measure measure) {
-    Measure validatedMeasure = measureUtil.validateAllMeasureDependencies(measure);
-
-    ModelValidator modelValidator =
-        modelValidatorFactory.getModelValidator(ModelType.valueOfName(measure.getModel()));
-    modelValidator.validateMetadata(measure);
-    modelValidator.validateGroups(validatedMeasure);
-    modelValidator.validateCqlErrors(validatedMeasure);
-    return validatedMeasure;
   }
 
   protected String getHRWithCSS(Measure measure, String measureBundle) {
