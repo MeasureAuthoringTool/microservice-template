@@ -1,6 +1,7 @@
 package cms.gov.madie.measure.service;
 
 import cms.gov.madie.measure.repositories.MeasureActionLogRepository;
+import gov.cms.madie.models.common.AccessControlAction;
 import gov.cms.madie.models.common.Action;
 import gov.cms.madie.models.common.ActionType;
 import gov.cms.madie.models.measure.Measure;
@@ -18,6 +19,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
@@ -71,5 +73,47 @@ public class ActionLogServiceTest {
     assertThat(value, is(notNullValue()));
     assertThat(value.getActionType(), is(equalTo(ActionType.DELETED)));
     assertThat(value.getPerformedBy(), is(equalTo("testUser")));
+  }
+
+  @Test
+  void testLogAccessControlActionReturnsTrue() {
+    when(actionLogRepository.pushEvent(anyString(), any(AccessControlAction.class), anyString()))
+        .thenReturn(true);
+    boolean output =
+        actionLogService.logAccessControlAction("TARGET_ID", Measure.class, ActionType.SHARED, "testUser", "sharedWith");
+    assertThat(output, is(true));
+    verify(actionLogRepository, times(1))
+        .pushEvent(
+            targetIdArgumentCaptor.capture(),
+            actionArgumentCaptor.capture(),
+            collectionArgumentCaptor.capture());
+    assertThat(targetIdArgumentCaptor.getValue(), is(equalTo("TARGET_ID")));
+    assertThat(actionArgumentCaptor.getValue(), instanceOf(AccessControlAction.class));
+    AccessControlAction value = (AccessControlAction) actionArgumentCaptor.getValue();
+    assertThat(value, is(notNullValue()));
+    assertThat(value.getActionType(), is(equalTo(ActionType.SHARED)));
+    assertThat(value.getPerformedBy(), is(equalTo("testUser")));
+    assertThat(value.getSharedWith(), is(equalTo("sharedWith")));
+  }
+
+  @Test
+  void testLogAccessControlActionReturnsFalse() {
+    when(actionLogRepository.pushEvent(anyString(), any(AccessControlAction.class), anyString()))
+        .thenReturn(false);
+    boolean output =
+        actionLogService.logAccessControlAction("TARGET_ID", Measure.class, ActionType.SHARED, "testUser", "sharedWith");
+    assertThat(output, is(false));
+    verify(actionLogRepository, times(1))
+        .pushEvent(
+            targetIdArgumentCaptor.capture(),
+            actionArgumentCaptor.capture(),
+            collectionArgumentCaptor.capture());
+    assertThat(targetIdArgumentCaptor.getValue(), is(equalTo("TARGET_ID")));
+    assertThat(actionArgumentCaptor.getValue(), instanceOf(AccessControlAction.class));
+    AccessControlAction value = (AccessControlAction) actionArgumentCaptor.getValue();
+    assertThat(value, is(notNullValue()));
+    assertThat(value.getActionType(), is(equalTo(ActionType.SHARED)));
+    assertThat(value.getPerformedBy(), is(equalTo("testUser")));
+    assertThat(value.getSharedWith(), is(equalTo("sharedWith")));
   }
 }
