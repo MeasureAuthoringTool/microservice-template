@@ -3,6 +3,7 @@ package cms.gov.madie.measure.services;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import gov.cms.madie.models.measure.FhirMeasure;
@@ -113,41 +114,41 @@ public class QdmTestCaseShiftDatesService {
             .filter(testCase -> testCaseIds.contains(testCase.getId()))
             .toList();
 
-    List<TestCase> shiftedTestCases = new ArrayList<>();
-
-    for (TestCase testCase : testCases) {
-      try {
-        shiftedTestCases.add(shiftDatesForTestCase(testCase, shifted));
-      } catch (CqmConversionException ex) {
-        log.error(ex.getMessage());
-      }
-    }
-
-    List<String> savedTestCaseIds = new ArrayList<>();
-    for (TestCase shiftedTestCase : shiftedTestCases) {
-      try {
-        TestCase updatedTestCase =
-            testCaseService.updateTestCase(
-                shiftedTestCase, measureId, principal.getName(), accessToken);
-        savedTestCaseIds.add(updatedTestCase.getId());
-      } catch (Exception e) {
-        log.error(
-            "Unable to save Test Case [{}] after successfully shifting dates:",
-            shiftedTestCase.getId(),
-            e);
-      }
-    }
-    List<String> failedTestCases =
+    List<String> savedTestCaseIds =
         testCases.stream()
-            .filter(
-                testCase -> savedTestCaseIds.stream().noneMatch(testCase.getId()::equalsIgnoreCase))
             .map(
-                testCase ->
-                    StringUtils.isBlank(testCase.getSeries())
-                        ? testCase.getTitle()
-                        : testCase.getSeries() + " - " + testCase.getTitle())
+                testCase -> {
+                  try {
+                    TestCase shiftedTestCase = shiftDatesForTestCase(testCase, shifted);
+                    TestCase updatedTestCase =
+                        testCaseService.updateTestCase(
+                            shiftedTestCase, measureId, principal.getName(), accessToken);
+                    return updatedTestCase.getId();
+                  } catch (CqmConversionException e) {
+                    log.error(
+                        "Error shifting dates for test case [{}]: {}",
+                        testCase.getId(),
+                        e.getMessage());
+                    return null;
+                  } catch (Exception e) {
+                    log.error(
+                        "Unable to save Test Case [{}] after successfully shifting dates:",
+                        testCase.getId(),
+                        e);
+                    return null;
+                  }
+                })
+            .filter(Objects::nonNull)
             .toList();
-    return failedTestCases;
+
+    return testCases.stream()
+        .filter(testCase -> !savedTestCaseIds.contains(testCase.getId()))
+        .map(
+            testCase ->
+                StringUtils.isBlank(testCase.getSeries())
+                    ? testCase.getTitle()
+                    : testCase.getSeries() + " - " + testCase.getTitle())
+        .toList();
   }
 
   protected TestCase shiftDatesForTestCase(TestCase testCase, int shifted) {
