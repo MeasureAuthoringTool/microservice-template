@@ -3,8 +3,6 @@ package cms.gov.madie.measure.services;
 import cms.gov.madie.measure.dto.PackageDto;
 import cms.gov.madie.measure.dto.qrda.QrdaRequestDTO;
 import cms.gov.madie.measure.exceptions.BundleOperationException;
-import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
-import cms.gov.madie.measure.factories.ModelValidatorFactory;
 import cms.gov.madie.measure.repositories.ExportRepository;
 import cms.gov.madie.measure.utils.MeasureUtil;
 import gov.cms.madie.models.measure.Export;
@@ -31,7 +29,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.doNothing;
 
 @ExtendWith(MockitoExtension.class)
 public class QicorePackageServiceTest {
@@ -39,8 +36,6 @@ public class QicorePackageServiceTest {
   @Mock MeasureService measureService;
   @Mock FhirServicesClient fhirServicesClient;
   @Mock private ExportRepository exportRepository;
-  @Mock private ModelValidatorFactory modelValidatorFactory;
-  @Mock private QiCoreModelValidator qicoreModelValidator;
   @Mock private MeasureUtil measureUtil;
 
   @Captor private ArgumentCaptor<Export> exportArgumentCaptor;
@@ -101,25 +96,7 @@ public class QicorePackageServiceTest {
   }
 
   @Test
-  public void testGetHumanReadableThrowsInvalidResourceStateException() {
-    when(modelValidatorFactory.getModelValidator(any())).thenReturn(qicoreModelValidator);
-    doThrow(InvalidResourceStateException.class)
-        .when(qicoreModelValidator)
-        .validateMetadata(any(Measure.class));
-    assertThrows(
-        InvalidResourceStateException.class,
-        () -> qicorePackageService.getHumanReadable(existingMeasure, TEST_USER, TEST_ACCESS_TOKEN));
-  }
-
-  @Test
   void testGetHumanReadableThrowsInstantiationException() {
-    when(modelValidatorFactory.getModelValidator(any())).thenReturn(qicoreModelValidator);
-    doNothing().when(qicoreModelValidator).validateMetadata(any(Measure.class));
-    when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
-        .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
-    doNothing().when(qicoreModelValidator).validateGroups(any(Measure.class));
-    doNothing().when(qicoreModelValidator).validateCqlErrors(any(Measure.class));
-
     when(fhirServicesClient.getMeasureBundle(any(), anyString(), anyString()))
         .thenReturn(MEASURE_BUNDLE_JSON);
 
@@ -139,13 +116,6 @@ public class QicorePackageServiceTest {
 
   @Test
   void testGetHumanReadableThrowsIllegalAccessException() {
-    when(modelValidatorFactory.getModelValidator(any())).thenReturn(qicoreModelValidator);
-    doNothing().when(qicoreModelValidator).validateMetadata(any(Measure.class));
-    when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
-        .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
-    doNothing().when(qicoreModelValidator).validateGroups(any(Measure.class));
-    doNothing().when(qicoreModelValidator).validateCqlErrors(any(Measure.class));
-
     when(fhirServicesClient.getMeasureBundle(any(), anyString(), anyString()))
         .thenReturn(MEASURE_BUNDLE_JSON);
 
@@ -165,13 +135,6 @@ public class QicorePackageServiceTest {
 
   @Test
   void testGetHumanReadableThrowsInvocationTargetException() {
-    when(modelValidatorFactory.getModelValidator(any())).thenReturn(qicoreModelValidator);
-    doNothing().when(qicoreModelValidator).validateMetadata(any(Measure.class));
-    when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
-        .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
-    doNothing().when(qicoreModelValidator).validateGroups(any(Measure.class));
-    doNothing().when(qicoreModelValidator).validateCqlErrors(any(Measure.class));
-
     when(fhirServicesClient.getMeasureBundle(any(), anyString(), anyString()))
         .thenReturn(MEASURE_BUNDLE_JSON);
 
@@ -194,12 +157,6 @@ public class QicorePackageServiceTest {
   public void testGetHumanReadableSuccessForQiCoreMeasureDraftStatus() {
     MeasureMetaData meta = MeasureMetaData.builder().draft(true).build();
     existingMeasure.setMeasureMetaData(meta);
-    when(modelValidatorFactory.getModelValidator(any())).thenReturn(qicoreModelValidator);
-    doNothing().when(qicoreModelValidator).validateMetadata(any(Measure.class));
-    when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
-        .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
-    doNothing().when(qicoreModelValidator).validateGroups(any(Measure.class));
-    doNothing().when(qicoreModelValidator).validateCqlErrors(any(Measure.class));
 
     when(fhirServicesClient.getMeasureBundle(any(), anyString(), anyString()))
         .thenReturn(MEASURE_BUNDLE_JSON);
@@ -268,13 +225,6 @@ public class QicorePackageServiceTest {
 
     Export export = Export.builder().id(TEST_MEASURE_ID).build();
     when(exportRepository.findByMeasureId(anyString())).thenReturn(Optional.of(export));
-
-    when(modelValidatorFactory.getModelValidator(any())).thenReturn(qicoreModelValidator);
-    doNothing().when(qicoreModelValidator).validateMetadata(any(Measure.class));
-    when(measureUtil.validateAllMeasureDependencies(any(Measure.class)))
-        .thenAnswer((invocationOnMock) -> invocationOnMock.getArgument(0));
-    doNothing().when(qicoreModelValidator).validateGroups(any(Measure.class));
-    doNothing().when(qicoreModelValidator).validateCqlErrors(any(Measure.class));
 
     when(fhirServicesClient.getMeasureBundle(any(), anyString(), anyString()))
         .thenReturn(MEASURE_BUNDLE_JSON);

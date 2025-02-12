@@ -14,6 +14,6 @@ public class Qicore6PackageService extends QicorePackageService {
       ModelValidatorFactory modelValidatorFactory,
       MeasureUtil measureUtil,
       ExportRepository exportRepository) {
-    super(bundleService, fhirServicesClient, modelValidatorFactory, measureUtil, exportRepository);
+    super(bundleService, fhirServicesClient, exportRepository);
   }
 }
