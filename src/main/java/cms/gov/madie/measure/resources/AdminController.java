@@ -20,20 +20,15 @@ import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.cqm.CqmMeasure;
 import gov.cms.madie.models.measure.Export;
+import gov.cms.madie.models.measure.TestCase;
+import jakarta.validation.Valid;
 import org.apache.commons.collections4.CollectionUtils;
-import org.codehaus.plexus.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.StopWatch;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import cms.gov.madie.measure.dto.ImpactedMeasureValidationReport;
 import cms.gov.madie.measure.dto.MeasureTestCaseValidationReport;
@@ -191,7 +186,7 @@ public class AdminController {
     return ResponseEntity.ok(results);
   }
 
-  @PutMapping("/measures/{id}")
+  @PutMapping("/measures/{id}/version/correct")
   @PreAuthorize("#request.getHeader('api-key') == #apiKey")
   public ResponseEntity<Measure> correctMeasureVersion(
       HttpServletRequest request,
@@ -262,6 +257,44 @@ public class AdminController {
     Measure correctedVersionMeasure = measureRepository.save(measureToCorrectVersion);
     actionLogService.logAction(id, Measure.class, ActionType.UPDATED, principal.getName());
     return ResponseEntity.ok(correctedVersionMeasure);
+  }
+
+  @PutMapping("/measures/{id}")
+  @PreAuthorize("#request.getHeader('api-key') == #apiKey")
+  public ResponseEntity<Measure> correctMeasure(
+      HttpServletRequest request,
+      @Value("${admin-api-key}") String apiKey,
+      Principal principal,
+      @PathVariable String id,
+      @RequestBody @Valid Measure measure,
+      @RequestParam String correctionType) {
+    Measure correctedMeasure;
+    if (StringUtils.equals("expected-values", correctionType)) {
+      List<TestCase> currentTestCases = testCaseService.findTestCasesByMeasureId(id);
+      List<TestCase> previousTestCases = measure.getTestCases();
+
+      for (TestCase currentTestCase : currentTestCases) {
+        for (TestCase previousTestCase : previousTestCases) {
+          if (currentTestCase.getId().equals(previousTestCase.getId())
+              && CollectionUtils.isEmpty(currentTestCase.getGroupPopulations())) {
+            currentTestCase.setGroupPopulations(previousTestCase.getGroupPopulations());
+          }
+        }
+      }
+
+      correctedMeasure = measureService.findMeasureById(measure.getId());
+      correctedMeasure.setTestCases(currentTestCases);
+      measureRepository.save(correctedMeasure);
+      actionLogService.logAction(
+          id,
+          Measure.class,
+          ActionType.UPDATED,
+          principal.getName(),
+          "Admin: Overwrote Expected Values with pre-2.1.3 release snapshot.");
+    } else {
+      throw new InvalidRequestException("Correction Type Unknown");
+    }
+    return ResponseEntity.ok(correctedMeasure);
   }
 
   private void deleteRelevantPackageData(String id, Measure measureToCorrectVersion) {
