@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.dto.CopyTestCaseResult;
 import cms.gov.madie.measure.dto.JobStatus;
 import cms.gov.madie.measure.dto.MeasureTestCaseValidationReport;
 import cms.gov.madie.measure.exceptions.DuplicateTestCaseNameException;
@@ -2962,7 +2963,7 @@ public class TestCaseServiceTest implements ResourceUtil {
         .shiftTestCaseDates(anyList(), anyInt(), anyString());
 
     List<TestCase> shiftedTestCases =
-        testCaseService.shiftMultiQiCoreTestCaseDates(List.of(testCase), 1, "TOKEN");
+        testCaseService.shiftQiCoreTestCaseDates(List.of(testCase), 1, "TOKEN");
     assertThat(shiftedTestCases.size(), equalTo(1));
     assertTrue(shiftedTestCases.contains(testCase));
   }
@@ -3028,7 +3029,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertTrue(CollectionUtils.isEmpty(targetMeasure.getTestCases()));
 
     // Copy single Test Case to target measure
-    List<TestCase> copiedTestCases =
+    CopyTestCaseResult result =
         testCaseService.copyTestCasesToMeasure(
             targetMeasure.getId(), List.of(source), "user.name", "accessToken");
 
@@ -3037,10 +3038,12 @@ public class TestCaseServiceTest implements ResourceUtil {
         (Boolean) source.getGroupPopulations().get(0).getPopulationValues().get(0).getExpected());
 
     // Matching Population Criteria - verify copied Test Case has source Population Expectations.
-    assertThat(copiedTestCases.size(), equalTo(1));
+    assertThat(result.getCopiedTestCases().size(), equalTo(1));
+    assertFalse(result.getDidClearExpectedValues());
     assertThat(
         (Boolean)
-            copiedTestCases
+            result
+                .getCopiedTestCases()
                 .get(0)
                 .getGroupPopulations()
                 .get(0)
@@ -3116,7 +3119,7 @@ public class TestCaseServiceTest implements ResourceUtil {
     assertTrue(CollectionUtils.isEmpty(targetMeasure.getTestCases()));
 
     // Copy single Test Case to target measure
-    List<TestCase> copiedTestCases =
+    CopyTestCaseResult result =
         testCaseService.copyTestCasesToMeasure(
             targetMeasure.getId(), List.of(source), "user.name", "accessToken");
 
@@ -3126,10 +3129,12 @@ public class TestCaseServiceTest implements ResourceUtil {
 
     // Mismatched Population Criteria - verify copied Test Case have cleared Population
     // Expectations.
-    assertThat(copiedTestCases.size(), equalTo(1));
+    assertThat(result.getCopiedTestCases().size(), equalTo(1));
+    assertTrue(result.getDidClearExpectedValues());
     assertNull(
         (Boolean)
-            copiedTestCases
+            result
+                .getCopiedTestCases()
                 .get(0)
                 .getGroupPopulations()
                 .get(0)
@@ -3156,11 +3161,11 @@ public class TestCaseServiceTest implements ResourceUtil {
             ResponseEntity.ok(HapiOperationOutcome.builder().code(200).successful(true).build()));
     doReturn(targetMeasure).when(measureRepository).save(any());
 
-    List<TestCase> copiedTestCases =
+    CopyTestCaseResult result =
         testCaseService.copyTestCasesToMeasure(
             targetMeasure.getId(), List.of(source), "user.name", "accessToken");
-    assertThat(copiedTestCases.size(), is(1));
-    assertTrue(copiedTestCases.get(0).getTitle().contains("-"));
+    assertThat(result.getCopiedTestCases().size(), is(1));
+    assertTrue(result.getCopiedTestCases().get(0).getTitle().contains("-"));
 
     assertThat(targetMeasure.getTestCases().size(), is(2));
   }
@@ -3282,6 +3287,61 @@ public class TestCaseServiceTest implements ResourceUtil {
             .get(0)
             .getId(),
         is("target-strat-id"));
+
+    // Verify target measure now has a single Test Case
+    assertThat(targetMeasure.getTestCases().size(), is(1));
+  }
+
+  @Test
+  void testCopyEmptyTestCaseToAnotherMeasure() {
+    // Set-up
+    TestCase source = testCase.deepCopy().toBuilder().groupPopulations(new ArrayList<>()).build();
+
+    Measure targetMeasure =
+        measure.toBuilder()
+            .groups(
+                List.of(
+                    Group.builder()
+                        .scoring(MeasureScoring.PROPORTION.toString())
+                        .populationBasis("boolean")
+                        .populations(
+                            List.of(
+                                Population.builder()
+                                    .name(PopulationType.INITIAL_POPULATION)
+                                    .definition("def")
+                                    .build(),
+                                Population.builder()
+                                    .name(PopulationType.DENOMINATOR)
+                                    .definition("def")
+                                    .build(),
+                                Population.builder()
+                                    .name(PopulationType.NUMERATOR)
+                                    .definition("def")
+                                    .build()))
+                        .build()))
+            .build();
+    when(measureRepository.findById(anyString())).thenReturn(Optional.of(targetMeasure));
+    when(measureService.findMeasureById(anyString())).thenReturn(targetMeasure);
+    when(fhirServicesClient.validateBundle(anyString(), any(ModelType.class), anyString()))
+        .thenReturn(
+            ResponseEntity.ok(HapiOperationOutcome.builder().code(200).successful(true).build()));
+    doReturn(targetMeasure).when(measureRepository).save(any());
+
+    // Start with empty Test Case list on target measure
+    assertTrue(CollectionUtils.isEmpty(targetMeasure.getTestCases()));
+
+    // Copy single Test Case to target measure
+    CopyTestCaseResult result =
+        testCaseService.copyTestCasesToMeasure(
+            targetMeasure.getId(), List.of(source), "user.name", "accessToken");
+
+    // Verify source Test Case wasn't modified
+    assertTrue(source.getGroupPopulations().isEmpty());
+
+    // Verify expected values weren't "cleared". Technically, there weren't any to clear,
+    // but this helps the UI display a more accurate toast message.
+    assertThat(result.getCopiedTestCases().size(), equalTo(1));
+    assertFalse(result.getDidClearExpectedValues());
 
     // Verify target measure now has a single Test Case
     assertThat(targetMeasure.getTestCases().size(), is(1));
