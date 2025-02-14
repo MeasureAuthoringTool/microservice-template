@@ -260,7 +260,7 @@ public class MeasureService {
       QdmMeasure qdmExistingMeasure = (QdmMeasure) existingMeasure;
       QdmMeasure qdmUpdatingMeasure = (QdmMeasure) updatingMeasure;
 
-      if ((qdmExistingMeasure.getScoring() != qdmUpdatingMeasure.getScoring())
+      if (!StringUtils.equals(qdmExistingMeasure.getScoring(), qdmUpdatingMeasure.getScoring())
           || (qdmExistingMeasure.isPatientBasis() != qdmUpdatingMeasure.isPatientBasis())) {
         List<TestCase> updatedTestCases =
             existingMeasure.getTestCases().stream()
