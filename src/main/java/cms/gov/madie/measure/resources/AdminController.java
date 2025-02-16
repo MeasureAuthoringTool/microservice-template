@@ -19,8 +19,7 @@ import cms.gov.madie.measure.services.*;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.cqm.CqmMeasure;
-import gov.cms.madie.models.measure.Export;
-import gov.cms.madie.models.measure.TestCase;
+import gov.cms.madie.models.measure.*;
 import jakarta.validation.Valid;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -36,8 +35,6 @@ import cms.gov.madie.measure.dto.MeasureTestCaseValidationReportSummary;
 import cms.gov.madie.measure.dto.TestCaseValidationReport;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import gov.cms.madie.models.common.ActionType;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.MeasureSet;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -261,40 +258,71 @@ public class AdminController {
 
   @PutMapping("/measures/{id}")
   @PreAuthorize("#request.getHeader('api-key') == #apiKey")
-  public ResponseEntity<Measure> correctMeasure(
+  public ResponseEntity<Measure> overwriteExpectedValues(
       HttpServletRequest request,
       @Value("${admin-api-key}") String apiKey,
       Principal principal,
       @PathVariable String id,
-      @RequestBody @Valid Measure measure,
-      @RequestParam String correctionType) {
-    Measure correctedMeasure;
-    if (StringUtils.equals("expected-values", correctionType)) {
-      List<TestCase> currentTestCases = testCaseService.findTestCasesByMeasureId(id);
-      List<TestCase> previousTestCases = measure.getTestCases();
+      @RequestBody @Valid Measure sourceMeasure) {
+    Measure targetMeasure = measureService.findMeasureById(id);
+    // Verify source and target are part of the same Measure Set
+    if (!StringUtils.equals(
+        sourceMeasure.getMeasureSet().getMeasureSetId(),
+        targetMeasure.getMeasureSet().getMeasureSetId())) {
+      throw new InvalidRequestException("Source measure from different Measure family/set.");
+    }
 
-      for (TestCase currentTestCase : currentTestCases) {
-        for (TestCase previousTestCase : previousTestCases) {
-          if (currentTestCase.getId().equals(previousTestCase.getId())
-              && CollectionUtils.isEmpty(currentTestCase.getGroupPopulations())) {
-            currentTestCase.setGroupPopulations(previousTestCase.getGroupPopulations());
-          }
+    // Verify matching measure ID if both source and target are drafts or versioned
+    if (((sourceMeasure.getMeasureMetaData().isDraft()
+                && targetMeasure.getMeasureMetaData().isDraft())
+            || (!sourceMeasure.getMeasureMetaData().isDraft()
+                && !targetMeasure.getMeasureMetaData().isDraft()))
+        && !StringUtils.equals((sourceMeasure.getId()), targetMeasure.getId())) {
+      throw new InvalidRequestException("Source and Target both drafts but differing Ids.");
+    }
+
+    // Verify matching versions if one is draft and other versioned
+    if (((sourceMeasure.getMeasureMetaData().isDraft()
+                && !targetMeasure.getMeasureMetaData().isDraft())
+            || (!sourceMeasure.getMeasureMetaData().isDraft()
+                && targetMeasure.getMeasureMetaData().isDraft()))
+        && (targetMeasure.getVersion().getMajor() != sourceMeasure.getVersion().getMajor()
+            || targetMeasure.getVersion().getMinor() != sourceMeasure.getVersion().getMinor()
+            || targetMeasure.getVersion().getRevisionNumber()
+                != sourceMeasure.getVersion().getRevisionNumber())) {
+      throw new InvalidRequestException("Cannot overwrite differing measure versions.");
+    }
+
+    List<TestCase> targetTestCases = testCaseService.findTestCasesByMeasureId(id);
+    List<TestCase> sourceTestCases = sourceMeasure.getTestCases();
+
+    //TODO What do if the target and & source have different expected value types?
+    // See Version 660338fd80319060e1fd8c3b and its draft 67ae31de17040f4ef968a418
+    // Though both are patient basis true, Version has int expected values and draft has boolean.
+    for (TestCase target : targetTestCases) {
+      for (TestCase source : sourceTestCases) {
+        if (target.getId().equals(source.getId())
+            // The bug cleared the target's group populations, verify it is
+            // still empty before proceeding.
+            && CollectionUtils.isEmpty(target.getGroupPopulations())) {
+          target.setGroupPopulations(source.getGroupPopulations());
+        } else if (target.getPatientId().equals(source.getPatientId())
+            && target.getTitle().equals(source.getTitle())
+            && target.getSeries().equals(source.getSeries())
+            && target.getJson().equals(source.getJson())) {
+          target.setGroupPopulations(source.getGroupPopulations());
         }
       }
-
-      correctedMeasure = measureService.findMeasureById(measure.getId());
-      correctedMeasure.setTestCases(currentTestCases);
-      measureRepository.save(correctedMeasure);
-      actionLogService.logAction(
-          id,
-          Measure.class,
-          ActionType.UPDATED,
-          principal.getName(),
-          "Admin: Overwrote Expected Values with pre-2.1.3 release snapshot.");
-    } else {
-      throw new InvalidRequestException("Correction Type Unknown");
     }
-    return ResponseEntity.ok(correctedMeasure);
+
+    measureRepository.save(targetMeasure);
+    actionLogService.logAction(
+        id,
+        Measure.class,
+        ActionType.UPDATED,
+        principal.getName(),
+        "Admin Action: Overwrote Expected Values with pre-2.1.3 release snapshot.");
+    return ResponseEntity.ok(targetMeasure);
   }
 
   private void deleteRelevantPackageData(String id, Measure measureToCorrectVersion) {
