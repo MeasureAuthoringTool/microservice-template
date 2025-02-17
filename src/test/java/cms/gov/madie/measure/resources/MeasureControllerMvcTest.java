@@ -596,6 +596,39 @@ public class MeasureControllerMvcTest {
   }
 
   @Test
+  public void testCreateNewQDMMeasureWithPurpose() throws Exception {
+    Measure measure =
+        Measure.builder()
+            .measureName("M1")
+            .cqlLibraryName("L1")
+            .ecqmTitle("M1Li")
+            .model(ModelType.QDM_5_6.getValue())
+            .measureSetId("S1")
+            .versionId("V1")
+            .measureMetaData(MeasureMetaData.builder().purpose("Test").build())
+            .build();
+    final String measureAsJson = toJsonString(measure);
+    MvcResult result =
+        mockMvc
+            .perform(
+                post("/measure")
+                    .with(user(TEST_USER_ID))
+                    .with(csrf())
+                    .header("Authorization", TEST_USER_ID)
+                    .content(measureAsJson)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+    assertThat(
+        result
+            .getResponse()
+            .getContentAsString()
+            .contains("Purpose is not allowed for a QDM measure"),
+        is(equalTo(true)));
+  }
+
+  @Test
   public void testNewQdmMeasureScoringInValid() throws Exception {
     Measure saved = new Measure();
     String measureId = "id456";
@@ -1295,7 +1328,7 @@ public class MeasureControllerMvcTest {
             .ecqmTitle("testECqm")
             .measureName("testMeasureName")
             .versionId("0.0.000")
-            .measureMetaData(MeasureMetaData.builder().intendedVenue(ec).build())
+            .measureMetaData(MeasureMetaData.builder().intendedVenue(ec).purpose("Test").build())
             .build();
 
     final String measureAsJson = toJsonString(measure);
