@@ -4,6 +4,7 @@ import cms.gov.madie.measure.exceptions.InvalidGroupException;
 import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
 import org.apache.commons.lang3.StringUtils;
 import gov.cms.madie.models.measure.Measure;
+import gov.cms.madie.models.measure.MeasureScoring;
 import gov.cms.madie.models.measure.Stratification;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -54,7 +55,8 @@ public class QiCoreModelValidator extends ModelValidator {
           .getGroups()
           .forEach(
               group -> {
-                if (StringUtils.isBlank(group.getImprovementNotation())) {
+                if (StringUtils.isBlank(group.getImprovementNotation())
+                    && !StringUtils.equals(group.getScoring(), MeasureScoring.COHORT.toString())) {
                   throw new InvalidResourceStateException(
                       "Measure",
                       measure.getId(),

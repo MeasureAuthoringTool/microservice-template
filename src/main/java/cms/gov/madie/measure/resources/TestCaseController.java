@@ -251,8 +251,7 @@ public class TestCaseController {
     }
     List<String> failedTestCases =
         testCases.stream()
-            .filter(
-                testCase -> !savedTestCaseIds.contains(testCase.getId()))
+            .filter(testCase -> !savedTestCaseIds.contains(testCase.getId()))
             .map(
                 testCase ->
                     StringUtils.isBlank(testCase.getSeries())
@@ -303,8 +302,7 @@ public class TestCaseController {
     }
     List<String> failedTestCases =
         testCases.stream()
-            .filter(
-                testCase -> !savedTestCaseIds.contains(testCase.getId()))
+            .filter(testCase -> !savedTestCaseIds.contains(testCase.getId()))
             .map(
                 testCase ->
                     StringUtils.isBlank(testCase.getSeries())
