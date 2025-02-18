@@ -265,6 +265,9 @@ public class AdminController {
       @PathVariable String id,
       @RequestBody @Valid Measure sourceMeasure) {
     Measure targetMeasure = measureService.findMeasureById(id);
+    if (targetMeasure == null) {
+      throw new ResourceNotFoundException("Measure", id);
+    }
 
     if (!StringUtils.equals((sourceMeasure.getId()), targetMeasure.getId())
         && !isDirectAncestor(sourceMeasure, targetMeasure)) {
