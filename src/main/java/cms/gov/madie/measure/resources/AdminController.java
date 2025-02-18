@@ -307,7 +307,7 @@ public class AdminController {
                 // still empty before proceeding.
                 && CollectionUtils.isEmpty(target.getGroupPopulations())) {
           target.setGroupPopulations(source.getGroupPopulations());
-          correctExpectedValueType(target.getGroupPopulations(), targetMeasure);
+          correctGroupIdsAndExpectedValueType(target.getGroupPopulations(), targetMeasure);
         }
       }
     }
@@ -323,10 +323,12 @@ public class AdminController {
     return ResponseEntity.ok(targetMeasure);
   }
 
-  private void correctExpectedValueType(
+  private void correctGroupIdsAndExpectedValueType(
       List<TestCaseGroupPopulation> groupPopulations, Measure msr) {
-    if (msr instanceof FhirMeasure) {
-      for (TestCaseGroupPopulation group : groupPopulations) {
+    if (msr instanceof FhirMeasure fhirMeasure) {
+      for (int i = 0; i < groupPopulations.size(); i++) {
+        TestCaseGroupPopulation group = groupPopulations.get(i);
+        group.setGroupId(fhirMeasure.getGroups().get(i).getId());
         if (group.getPopulationBasis() != null
             && group.getPopulationBasis().equalsIgnoreCase("boolean")) {
           // adjust FHIR data
@@ -344,7 +346,9 @@ public class AdminController {
     } else {
       // adjust QDM data
       if (((QdmMeasure) msr).isPatientBasis()) {
-        for (TestCaseGroupPopulation group : groupPopulations) {
+        for (int i = 0; i < groupPopulations.size(); i++) {
+          TestCaseGroupPopulation group = groupPopulations.get(i);
+          group.setGroupId(msr.getGroups().get(i).getId());
           for (TestCasePopulationValue populationValue : group.getPopulationValues()) {
             if (populationValue.getExpected() instanceof Integer originalValue) {
               if (originalValue == 1) {
