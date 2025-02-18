@@ -19,21 +19,15 @@ import cms.gov.madie.measure.services.*;
 import gov.cms.madie.models.common.ModelType;
 import gov.cms.madie.models.common.Version;
 import gov.cms.madie.models.cqm.CqmMeasure;
-import gov.cms.madie.models.measure.Export;
+import gov.cms.madie.models.measure.*;
+import jakarta.validation.Valid;
 import org.apache.commons.collections4.CollectionUtils;
-import org.codehaus.plexus.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.StopWatch;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import cms.gov.madie.measure.dto.ImpactedMeasureValidationReport;
 import cms.gov.madie.measure.dto.MeasureTestCaseValidationReport;
@@ -41,8 +35,6 @@ import cms.gov.madie.measure.dto.MeasureTestCaseValidationReportSummary;
 import cms.gov.madie.measure.dto.TestCaseValidationReport;
 import cms.gov.madie.measure.repositories.MeasureRepository;
 import gov.cms.madie.models.common.ActionType;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.MeasureSet;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -191,7 +183,7 @@ public class AdminController {
     return ResponseEntity.ok(results);
   }
 
-  @PutMapping("/measures/{id}")
+  @PutMapping("/measures/{id}/correct-version")
   @PreAuthorize("#request.getHeader('api-key') == #apiKey")
   public ResponseEntity<Measure> correctMeasureVersion(
       HttpServletRequest request,
@@ -262,6 +254,103 @@ public class AdminController {
     Measure correctedVersionMeasure = measureRepository.save(measureToCorrectVersion);
     actionLogService.logAction(id, Measure.class, ActionType.UPDATED, principal.getName());
     return ResponseEntity.ok(correctedVersionMeasure);
+  }
+
+  @PutMapping("/measures/{id}")
+  @PreAuthorize("#request.getHeader('api-key') == #apiKey")
+  public ResponseEntity<Measure> overwriteExpectedValues(
+      HttpServletRequest request,
+      @Value("${admin-api-key}") String apiKey,
+      Principal principal,
+      @PathVariable String id,
+      @RequestBody @Valid Measure sourceMeasure) {
+    Measure targetMeasure = measureService.findMeasureById(id);
+    if (targetMeasure == null) {
+      throw new ResourceNotFoundException("Measure", id);
+    }
+
+    if (!StringUtils.equals((sourceMeasure.getId()), targetMeasure.getId())
+        && !isDirectAncestor(sourceMeasure, targetMeasure)) {
+      throw new InvalidRequestException("Cannot overwrite differing measure versions.");
+    }
+
+    List<TestCase> targetTestCases = targetMeasure.getTestCases();
+    List<TestCase> sourceTestCases = sourceMeasure.getTestCases();
+
+    for (TestCase target : targetTestCases) {
+      for (TestCase source : sourceTestCases) {
+        if (target.getId().equals(source.getId())
+            || (target.getPatientId().equals(source.getPatientId())
+                && target.getTitle().equals(source.getTitle())
+                && target.getSeries().equals(source.getSeries()))) {
+          target.setGroupPopulations(source.getGroupPopulations());
+          correctGroupIdsAndExpectedValueType(target.getGroupPopulations(), targetMeasure);
+        }
+      }
+    }
+
+    measureRepository.save(targetMeasure);
+    actionLogService.logAction(
+        id,
+        Measure.class,
+        ActionType.UPDATED,
+        principal.getName(),
+        "Admin Action: Overwrote Expected Values with pre-2.1.3 release snapshot.");
+    return ResponseEntity.ok(targetMeasure);
+  }
+
+  private boolean isDirectAncestor(Measure sourceMeasure, Measure targetMeasure) {
+    // Verify source and target are part of the same Measure Set
+    if (!StringUtils.equals(
+        sourceMeasure.getMeasureSet().getMeasureSetId(),
+        targetMeasure.getMeasureSet().getMeasureSetId())) {
+      throw new InvalidRequestException("Source measure from different Measure family/set.");
+    }
+
+    return targetMeasure.getVersion().getMajor() == sourceMeasure.getVersion().getMajor()
+        && targetMeasure.getVersion().getMinor() == sourceMeasure.getVersion().getMinor()
+        && targetMeasure.getVersion().getRevisionNumber()
+            == sourceMeasure.getVersion().getRevisionNumber();
+  }
+
+  private void correctGroupIdsAndExpectedValueType(
+      List<TestCaseGroupPopulation> groupPopulations, Measure msr) {
+    if (msr instanceof FhirMeasure fhirMeasure) {
+      for (int i = 0; i < groupPopulations.size(); i++) {
+        TestCaseGroupPopulation group = groupPopulations.get(i);
+        group.setGroupId(fhirMeasure.getGroups().get(i).getId());
+        if (group.getPopulationBasis() != null
+            && group.getPopulationBasis().equalsIgnoreCase("boolean")) {
+          // adjust FHIR data
+          for (TestCasePopulationValue populationValue : group.getPopulationValues()) {
+            if (populationValue.getExpected() instanceof String originalValue) {
+              if (originalValue.equalsIgnoreCase("1")) {
+                populationValue.setExpected(Boolean.TRUE);
+              } else {
+                populationValue.setExpected(Boolean.FALSE);
+              }
+            }
+          }
+        }
+      }
+    } else {
+      // adjust QDM data
+      for (int i = 0; i < groupPopulations.size(); i++) {
+        TestCaseGroupPopulation group = groupPopulations.get(i);
+        group.setGroupId(msr.getGroups().get(i).getId());
+        if (((QdmMeasure) msr).isPatientBasis()) {
+          for (TestCasePopulationValue populationValue : group.getPopulationValues()) {
+            if (populationValue.getExpected() instanceof Integer originalValue) {
+              if (originalValue == 1) {
+                populationValue.setExpected(Boolean.TRUE);
+              } else {
+                populationValue.setExpected(Boolean.FALSE);
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
   private void deleteRelevantPackageData(String id, Measure measureToCorrectVersion) {
