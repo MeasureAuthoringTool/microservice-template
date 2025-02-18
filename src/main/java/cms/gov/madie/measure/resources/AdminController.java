@@ -265,31 +265,9 @@ public class AdminController {
       @PathVariable String id,
       @RequestBody @Valid Measure sourceMeasure) {
     Measure targetMeasure = measureService.findMeasureById(id);
-    // Verify source and target are part of the same Measure Set
-    if (!StringUtils.equals(
-        sourceMeasure.getMeasureSet().getMeasureSetId(),
-        targetMeasure.getMeasureSet().getMeasureSetId())) {
-      throw new InvalidRequestException("Source measure from different Measure family/set.");
-    }
 
-    // Verify matching measure ID if both source and target are drafts or versioned
-    if (((sourceMeasure.getMeasureMetaData().isDraft()
-                && targetMeasure.getMeasureMetaData().isDraft())
-            || (!sourceMeasure.getMeasureMetaData().isDraft()
-                && !targetMeasure.getMeasureMetaData().isDraft()))
-        && !StringUtils.equals((sourceMeasure.getId()), targetMeasure.getId())) {
-      throw new InvalidRequestException("Source and Target both drafts but differing Ids.");
-    }
-
-    // Verify matching versions if one is draft and other versioned
-    if (((sourceMeasure.getMeasureMetaData().isDraft()
-                && !targetMeasure.getMeasureMetaData().isDraft())
-            || (!sourceMeasure.getMeasureMetaData().isDraft()
-                && targetMeasure.getMeasureMetaData().isDraft()))
-        && (targetMeasure.getVersion().getMajor() != sourceMeasure.getVersion().getMajor()
-            || targetMeasure.getVersion().getMinor() != sourceMeasure.getVersion().getMinor()
-            || targetMeasure.getVersion().getRevisionNumber()
-                != sourceMeasure.getVersion().getRevisionNumber())) {
+    if (!StringUtils.equals((sourceMeasure.getId()), targetMeasure.getId())
+        && !isDirectAncestor(sourceMeasure, targetMeasure)) {
       throw new InvalidRequestException("Cannot overwrite differing measure versions.");
     }
 
@@ -321,6 +299,20 @@ public class AdminController {
         principal.getName(),
         "Admin Action: Overwrote Expected Values with pre-2.1.3 release snapshot.");
     return ResponseEntity.ok(targetMeasure);
+  }
+
+  private boolean isDirectAncestor(Measure sourceMeasure, Measure targetMeasure) {
+    // Verify source and target are part of the same Measure Set
+    if (!StringUtils.equals(
+        sourceMeasure.getMeasureSet().getMeasureSetId(),
+        targetMeasure.getMeasureSet().getMeasureSetId())) {
+      throw new InvalidRequestException("Source measure from different Measure family/set.");
+    }
+
+    return targetMeasure.getVersion().getMajor() == sourceMeasure.getVersion().getMajor()
+        && targetMeasure.getVersion().getMinor() == sourceMeasure.getVersion().getMinor()
+        && targetMeasure.getVersion().getRevisionNumber()
+            == sourceMeasure.getVersion().getRevisionNumber();
   }
 
   private void correctGroupIdsAndExpectedValueType(
