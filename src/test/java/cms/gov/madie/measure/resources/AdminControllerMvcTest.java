@@ -18,9 +18,9 @@ import gov.cms.madie.models.measure.MeasureSet;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -46,15 +46,15 @@ public class AdminControllerMvcTest {
   private static final String ADMIN_TEST_API_KEY_HEADER_VALUE = "0a51991c";
   private static final String TEST_USER_ID = "test-okta-user-id-123";
 
-  @MockBean private MeasureService measureService;
-  @MockBean private MeasureSetService measureSetService;
-  @MockBean private TestCaseService testCaseService;
-  @MockBean private ActionLogService actionLogService;
-  @MockBean private VersionService versionService;
+  @MockitoBean private MeasureService measureService;
+  @MockitoBean private MeasureSetService measureSetService;
+  @MockitoBean private TestCaseService testCaseService;
+  @MockitoBean private ActionLogService actionLogService;
+  @MockitoBean private VersionService versionService;
 
-  @MockBean private MeasureRepository measureRepository;
-  @MockBean private ExportRepository exportRepository;
-  @MockBean private CqmMeasureRepository cqmMeasureRepository;
+  @MockitoBean private MeasureRepository measureRepository;
+  @MockitoBean private ExportRepository exportRepository;
+  @MockitoBean private CqmMeasureRepository cqmMeasureRepository;
 
   @Autowired private MockMvc mockMvc;
 
@@ -442,7 +442,7 @@ public class AdminControllerMvcTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].measureId", equalTo("12345")))
         .andExpect(jsonPath("$[1].measureId", equalTo("6789")))
-        .andExpect(jsonPath("$[0].sharedWith.[0]userId", equalTo("raoulduke")));
+        .andExpect(jsonPath("$[0].sharedWith.[0].userId", equalTo("raoulduke")));
   }
 
   @Test
@@ -467,7 +467,7 @@ public class AdminControllerMvcTest {
                 .header("harpId", "owner1"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].measureId", equalTo("12345")))
-        .andExpect(jsonPath("$[0].sharedWith.[0]userId", equalTo("raoulduke")));
+        .andExpect(jsonPath("$[0].sharedWith.[0].userId", equalTo("raoulduke")));
   }
 
   @Test
@@ -524,7 +524,7 @@ public class AdminControllerMvcTest {
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders.put("/admin/measures/{id}", "12345")
+            MockMvcRequestBuilders.put("/admin/measures/{id}/correct-version", "12345")
                 .with(csrf())
                 .with(user(TEST_USER_ID))
                 .queryParam("correctVersion", "2.0.000")
@@ -550,7 +550,7 @@ public class AdminControllerMvcTest {
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders.put("/admin/measures/{id}", "12345")
+            MockMvcRequestBuilders.put("/admin/measures/{id}/correct-version", "12345")
                 .with(csrf())
                 .with(user(TEST_USER_ID))
                 .queryParam("correctVersion", "2.0.000")
@@ -587,7 +587,7 @@ public class AdminControllerMvcTest {
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders.put("/admin/measures/{id}", "12345")
+            MockMvcRequestBuilders.put("/admin/measures/{id}/correct-version", "12345")
                 .with(csrf())
                 .with(user(TEST_USER_ID))
                 .queryParam("correctVersion", "2.0.000")
@@ -617,7 +617,7 @@ public class AdminControllerMvcTest {
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders.put("/admin/measures/{id}", "12345")
+            MockMvcRequestBuilders.put("/admin/measures/{id}/correct-version", "12345")
                 .with(csrf())
                 .with(user(TEST_USER_ID))
                 .queryParam("correctVersion", "2.0.000")
@@ -653,7 +653,7 @@ public class AdminControllerMvcTest {
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders.put("/admin/measures/{id}", "12345")
+            MockMvcRequestBuilders.put("/admin/measures/{id}/correct-version", "12345")
                 .with(csrf())
                 .with(user(TEST_USER_ID))
                 .queryParam("correctVersion", "2.0.000")
@@ -707,7 +707,7 @@ public class AdminControllerMvcTest {
 
     mockMvc
         .perform(
-            MockMvcRequestBuilders.put("/admin/measures/{id}", "12345")
+            MockMvcRequestBuilders.put("/admin/measures/{id}/correct-version", "12345")
                 .with(csrf())
                 .with(user(TEST_USER_ID))
                 .queryParam("correctVersion", "2.0.000")

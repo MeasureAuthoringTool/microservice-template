@@ -183,7 +183,7 @@ public class AdminController {
     return ResponseEntity.ok(results);
   }
 
-  @PutMapping("/measures/{id}/version/correct")
+  @PutMapping("/measures/{id}/correct-version")
   @PreAuthorize("#request.getHeader('api-key') == #apiKey")
   public ResponseEntity<Measure> correctMeasureVersion(
       HttpServletRequest request,
