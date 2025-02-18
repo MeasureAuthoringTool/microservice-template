@@ -281,19 +281,14 @@ public class AdminController {
       for (TestCase source : sourceTestCases) {
         if (target.getId().equals(source.getId())
             || (target.getPatientId().equals(source.getPatientId())
-                    && target.getTitle().equals(source.getTitle())
-                    && target.getSeries().equals(source.getSeries())
-                    && target.getJson().equals(source.getJson()))
-                // The bug cleared the target's group populations, verify it is
-                // still empty before proceeding.
-                && CollectionUtils.isEmpty(target.getGroupPopulations())) {
+                && target.getTitle().equals(source.getTitle())
+                && target.getSeries().equals(source.getSeries()))) {
           target.setGroupPopulations(source.getGroupPopulations());
           correctGroupIdsAndExpectedValueType(target.getGroupPopulations(), targetMeasure);
         }
       }
     }
 
-    targetMeasure.setTestCases(targetTestCases);
     measureRepository.save(targetMeasure);
     actionLogService.logAction(
         id,
@@ -340,10 +335,10 @@ public class AdminController {
       }
     } else {
       // adjust QDM data
-      if (((QdmMeasure) msr).isPatientBasis()) {
-        for (int i = 0; i < groupPopulations.size(); i++) {
-          TestCaseGroupPopulation group = groupPopulations.get(i);
-          group.setGroupId(msr.getGroups().get(i).getId());
+      for (int i = 0; i < groupPopulations.size(); i++) {
+        TestCaseGroupPopulation group = groupPopulations.get(i);
+        group.setGroupId(msr.getGroups().get(i).getId());
+        if (((QdmMeasure) msr).isPatientBasis()) {
           for (TestCasePopulationValue populationValue : group.getPopulationValues()) {
             if (populationValue.getExpected() instanceof Integer originalValue) {
               if (originalValue == 1) {
