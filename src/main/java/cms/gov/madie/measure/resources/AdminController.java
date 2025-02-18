@@ -296,25 +296,23 @@ public class AdminController {
     List<TestCase> targetTestCases = testCaseService.findTestCasesByMeasureId(id);
     List<TestCase> sourceTestCases = sourceMeasure.getTestCases();
 
-    //TODO What do if the target and & source have different expected value types?
-    // See Version 660338fd80319060e1fd8c3b and its draft 67ae31de17040f4ef968a418
-    // Though both are patient basis true, Version has int expected values and draft has boolean.
     for (TestCase target : targetTestCases) {
       for (TestCase source : sourceTestCases) {
         if (target.getId().equals(source.getId())
-            // The bug cleared the target's group populations, verify it is
-            // still empty before proceeding.
-            && CollectionUtils.isEmpty(target.getGroupPopulations())) {
+            || (target.getPatientId().equals(source.getPatientId())
+                    && target.getTitle().equals(source.getTitle())
+                    && target.getSeries().equals(source.getSeries())
+                    && target.getJson().equals(source.getJson()))
+                // The bug cleared the target's group populations, verify it is
+                // still empty before proceeding.
+                && CollectionUtils.isEmpty(target.getGroupPopulations())) {
           target.setGroupPopulations(source.getGroupPopulations());
-        } else if (target.getPatientId().equals(source.getPatientId())
-            && target.getTitle().equals(source.getTitle())
-            && target.getSeries().equals(source.getSeries())
-            && target.getJson().equals(source.getJson())) {
-          target.setGroupPopulations(source.getGroupPopulations());
+          correctExpectedValueType(target.getGroupPopulations(), targetMeasure);
         }
       }
     }
 
+    targetMeasure.setTestCases(targetTestCases);
     measureRepository.save(targetMeasure);
     actionLogService.logAction(
         id,
@@ -323,6 +321,42 @@ public class AdminController {
         principal.getName(),
         "Admin Action: Overwrote Expected Values with pre-2.1.3 release snapshot.");
     return ResponseEntity.ok(targetMeasure);
+  }
+
+  private void correctExpectedValueType(
+      List<TestCaseGroupPopulation> groupPopulations, Measure msr) {
+    if (msr instanceof FhirMeasure) {
+      for (TestCaseGroupPopulation group : groupPopulations) {
+        if (group.getPopulationBasis() != null
+            && group.getPopulationBasis().equalsIgnoreCase("boolean")) {
+          // adjust FHIR data
+          for (TestCasePopulationValue populationValue : group.getPopulationValues()) {
+            if (populationValue.getExpected() instanceof String originalValue) {
+              if (originalValue.equalsIgnoreCase("1")) {
+                populationValue.setExpected(Boolean.TRUE);
+              } else {
+                populationValue.setExpected(Boolean.FALSE);
+              }
+            }
+          }
+        }
+      }
+    } else {
+      // adjust QDM data
+      if (((QdmMeasure) msr).isPatientBasis()) {
+        for (TestCaseGroupPopulation group : groupPopulations) {
+          for (TestCasePopulationValue populationValue : group.getPopulationValues()) {
+            if (populationValue.getExpected() instanceof Integer originalValue) {
+              if (originalValue == 1) {
+                populationValue.setExpected(Boolean.TRUE);
+              } else {
+                populationValue.setExpected(Boolean.FALSE);
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
   private void deleteRelevantPackageData(String id, Measure measureToCorrectVersion) {
