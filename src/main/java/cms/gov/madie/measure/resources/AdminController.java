@@ -271,7 +271,7 @@ public class AdminController {
       throw new InvalidRequestException("Cannot overwrite differing measure versions.");
     }
 
-    List<TestCase> targetTestCases = testCaseService.findTestCasesByMeasureId(id);
+    List<TestCase> targetTestCases = targetMeasure.getTestCases();
     List<TestCase> sourceTestCases = sourceMeasure.getTestCases();
 
     for (TestCase target : targetTestCases) {
