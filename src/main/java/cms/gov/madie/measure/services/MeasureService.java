@@ -411,6 +411,29 @@ public class MeasureService {
     return measureSet.getAcls();
   }
 
+  public List<String> getSharedWithUserIds(String measureId) {
+    Measure measure = findMeasureById(measureId);
+
+    if (measure == null) {
+      throw new ResourceNotFoundException("Measure does not exist: " + measureId);
+    }
+
+    if (measure.getMeasureSet() == null) {
+      throw new InvalidMeasureStateException(
+          "No measure set exists for measure with ID: " + measure.getId());
+    }
+
+    if (measure.getMeasureSet().getAcls() == null) {
+      return Collections.emptyList();
+    }
+
+    return measure.getMeasureSet().getAcls().stream()
+        .filter(aclSpecification -> aclSpecification.getRoles().contains(RoleEnum.SHARED_WITH))
+        .map(AclSpecification::getUserId)
+        .sorted()
+        .toList();
+  }
+
   public boolean changeOwnership(String measureId, String userid) {
     boolean result = false;
     Optional<Measure> persistedMeasure = measureRepository.findById(measureId);
