@@ -119,7 +119,11 @@ class ModelValidatorTest {
   @Test
   void useQicoreModelValidatorTestNoStratifications() {
     assertNotNull(modelValidatorFactory);
-    Group group = Group.builder().stratifications(new ArrayList<Stratification>()).build();
+    Group group =
+        Group.builder()
+            .scoring(MeasureScoring.COHORT.toString())
+            .stratifications(new ArrayList<Stratification>())
+            .build();
     ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
     assertTrue(validator instanceof QiCoreModelValidator);
     try {
@@ -133,12 +137,10 @@ class ModelValidatorTest {
   @Test
   void useQicoreModelValidatorTestHasInvalidAssociation() {
     assertNotNull(modelValidatorFactory);
-    Stratification strat = new Stratification();
-    List<Stratification> strats = new ArrayList<>();
+    List<Stratification> strats = List.of(Stratification.builder().cqlDefinition("test").build());
 
-    strats.add(strat);
-
-    Group group = Group.builder().stratifications(strats).build();
+    Group group =
+        Group.builder().scoring(MeasureScoring.COHORT.toString()).stratifications(strats).build();
     ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
     assertTrue(validator instanceof QiCoreModelValidator);
     try {
@@ -157,9 +159,103 @@ class ModelValidatorTest {
     strat.setAssociation(PopulationType.INITIAL_POPULATION);
     strats.add(strat);
 
-    Group group = Group.builder().stratifications(strats).build();
+    Group group =
+        Group.builder().scoring(MeasureScoring.COHORT.toString()).stratifications(strats).build();
     ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
     assertTrue(validator instanceof QiCoreModelValidator);
+    try {
+      validator.validateGroupAssociations(group);
+
+    } catch (Exception e) {
+      fail(e);
+    }
+  }
+
+  @Test
+  void useQicoreModelValidatorTestRatioHasMultipleIpsWithMultipleAssociations() {
+    assertNotNull(modelValidatorFactory);
+    List<Stratification> strats =
+        List.of(
+            Stratification.builder()
+                .cqlDefinition("test")
+                .associations(
+                    List.of(PopulationType.INITIAL_POPULATION, PopulationType.DENOMINATOR))
+                .build());
+
+    List<Population> populations =
+        List.of(
+            Population.builder().name(PopulationType.INITIAL_POPULATION).build(),
+            Population.builder().name(PopulationType.INITIAL_POPULATION).build());
+
+    Group group =
+        Group.builder()
+            .populations(populations)
+            .scoring(MeasureScoring.RATIO.toString())
+            .stratifications(strats)
+            .build();
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
+    assertTrue(validator instanceof QiCoreModelValidator);
+
+    Exception ex =
+        assertThrows(InvalidGroupException.class, () -> validator.validateGroupAssociations(group));
+    assertThat(ex.getMessage(), is(equalTo("QiCore group stratifications cannot be associated.")));
+  }
+
+  @Test
+  void useQicoreModelValidatorTestRatioHasMultipleIpsWithSingleAssociation() {
+    assertNotNull(modelValidatorFactory);
+    List<Stratification> strats =
+        List.of(
+            Stratification.builder()
+                .cqlDefinition("test")
+                .associations(List.of(PopulationType.INITIAL_POPULATION))
+                .build());
+
+    List<Population> populations =
+        List.of(
+            Population.builder().name(PopulationType.INITIAL_POPULATION).build(),
+            Population.builder().name(PopulationType.INITIAL_POPULATION).build());
+
+    Group group =
+        Group.builder()
+            .populations(populations)
+            .scoring(MeasureScoring.RATIO.toString())
+            .stratifications(strats)
+            .build();
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
+    assertTrue(validator instanceof QiCoreModelValidator);
+
+    try {
+      validator.validateGroupAssociations(group);
+
+    } catch (Exception e) {
+      fail(e);
+    }
+  }
+
+  @Test
+  void useQicoreModelValidatorTestRatioHasSingleIpWithMultipleAssociations() {
+    assertNotNull(modelValidatorFactory);
+    List<Stratification> strats =
+        List.of(
+            Stratification.builder()
+                .cqlDefinition("test")
+                .associations(
+                    List.of(PopulationType.INITIAL_POPULATION, PopulationType.DENOMINATOR))
+                .build());
+
+    List<Population> populations =
+        List.of(Population.builder().name(PopulationType.INITIAL_POPULATION).build());
+
+    Group group =
+        Group.builder()
+            .populations(populations)
+            .scoring(MeasureScoring.RATIO.toString())
+            .stratifications(strats)
+            .build();
+    ModelValidator validator = modelValidatorFactory.getModelValidator(ModelType.QI_CORE);
+    assertTrue(validator instanceof QiCoreModelValidator);
+
     try {
       validator.validateGroupAssociations(group);
 

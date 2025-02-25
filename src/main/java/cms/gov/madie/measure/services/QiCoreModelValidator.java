@@ -2,15 +2,14 @@ package cms.gov.madie.measure.services;
 
 import cms.gov.madie.measure.exceptions.InvalidGroupException;
 import cms.gov.madie.measure.exceptions.InvalidResourceStateException;
+import gov.cms.madie.models.measure.*;
 import org.apache.commons.lang3.StringUtils;
-import gov.cms.madie.models.measure.Measure;
-import gov.cms.madie.models.measure.Stratification;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import gov.cms.madie.models.measure.Group;
 import org.springframework.util.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -22,15 +21,28 @@ public class QiCoreModelValidator extends ModelValidator {
   public void validateGroupAssociations(Group group) {
     if (group.getStratifications() != null) {
       List<Stratification> list =
-          group.getStratifications().stream()
-              .filter(
-                  test ->
-                      (StringUtils.isBlank(test.getCqlDefinition()))
-                          && (!StringUtils.isBlank(test.getDescription())
-                              || !CollectionUtils.isEmpty(test.getAssociations())))
-              .toList();
+          new ArrayList<>(
+              group.getStratifications().stream()
+                  .filter(
+                      test ->
+                          (StringUtils.isBlank(test.getCqlDefinition()))
+                              && (!StringUtils.isBlank(test.getDescription())
+                                  || !CollectionUtils.isEmpty(test.getAssociations())))
+                  .toList());
+      if (group.getScoring().equals(MeasureScoring.RATIO.toString())
+          && group.getPopulations().stream()
+                  .filter(
+                      population -> population.getName().equals(PopulationType.INITIAL_POPULATION))
+                  .toList()
+                  .size()
+              > 1) {
+        list.addAll(
+            group.getStratifications().stream()
+                .filter(stratification -> stratification.getAssociations().size() > 1)
+                .toList());
+      }
       if (!CollectionUtils.isEmpty(list)) {
-        throw new InvalidGroupException("QDM group stratifications cannot be associated.");
+        throw new InvalidGroupException("QiCore group stratifications cannot be associated.");
       }
     }
   }
