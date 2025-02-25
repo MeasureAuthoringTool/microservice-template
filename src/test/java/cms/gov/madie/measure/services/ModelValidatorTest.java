@@ -381,10 +381,15 @@ class ModelValidatorTest {
     assertNotNull(modelValidatorFactory);
     Group group1 =
         Group.builder()
+            .scoring(MeasureScoring.CONTINUOUS_VARIABLE.toString())
             .measureGroupTypes(List.of(MeasureGroupTypes.OUTCOME))
             .improvementNotation("Decreased score indicates improvement")
             .build();
-    Group group2 = Group.builder().measureGroupTypes(List.of(MeasureGroupTypes.OUTCOME)).build();
+    Group group2 =
+        Group.builder()
+            .scoring(MeasureScoring.RATIO.toString())
+            .measureGroupTypes(List.of(MeasureGroupTypes.OUTCOME))
+            .build();
 
     Measure measure =
         Measure.builder()
@@ -412,10 +417,15 @@ class ModelValidatorTest {
     assertNotNull(modelValidatorFactory);
     Group group1 =
         Group.builder()
+            .scoring(MeasureScoring.PROPORTION.toString())
             .measureGroupTypes(List.of(MeasureGroupTypes.OUTCOME))
             .improvementNotation("Decreased score indicates improvement")
             .build();
-    Group group2 = Group.builder().measureGroupTypes(List.of(MeasureGroupTypes.OUTCOME)).build();
+    Group group2 =
+        Group.builder()
+            .scoring(MeasureScoring.COHORT.toString())
+            .measureGroupTypes(List.of(MeasureGroupTypes.OUTCOME))
+            .build();
 
     Measure measure =
         Measure.builder()

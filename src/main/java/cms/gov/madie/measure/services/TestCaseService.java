@@ -456,9 +456,13 @@ public class TestCaseService {
     boolean clearedExpectedValues = false;
     for (TestCase sourceTestCase : sourceTestCases) {
       TestCase dupTestCase = sourceTestCase.deepCopy();
+
+      // Empty Test Case Group Populations match any Measure Pop Criteria.
       boolean doesPopCriteriaMatch =
-          TestCaseServiceUtil.matchCriteriaGroups(
-              dupTestCase.getGroupPopulations(), targetGroups, dupTestCase);
+          isEmpty(dupTestCase.getGroupPopulations())
+              || TestCaseServiceUtil.matchCriteriaGroups(
+                  dupTestCase.getGroupPopulations(), targetGroups, dupTestCase);
+
       if (!doesPopCriteriaMatch) {
         clearedExpectedValues = true;
         clearExpectedValues(dupTestCase);
@@ -868,7 +872,7 @@ public class TestCaseService {
     }
   }
 
-  public List<TestCase> shiftMultiQiCoreTestCaseDates(
+  public List<TestCase> shiftQiCoreTestCaseDates(
       List<TestCase> testCases, int shifted, String accessToken) {
     if (isEmpty(testCases)) {
       return Collections.emptyList();

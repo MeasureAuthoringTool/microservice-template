@@ -66,7 +66,8 @@ public class QiCoreModelValidator extends ModelValidator {
           .getGroups()
           .forEach(
               group -> {
-                if (StringUtils.isBlank(group.getImprovementNotation())) {
+                if (StringUtils.isBlank(group.getImprovementNotation())
+                    && !StringUtils.equals(group.getScoring(), MeasureScoring.COHORT.toString())) {
                   throw new InvalidResourceStateException(
                       "Measure",
                       measure.getId(),
