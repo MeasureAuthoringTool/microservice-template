@@ -1,227 +1,69 @@
 package cms.gov.madie.measure.utils;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.bson.types.ObjectId;
 
-import org.apache.commons.lang3.StringUtils;
-
+import cms.gov.madie.measure.exceptions.GroupPopulationDisplayIdException;
 import gov.cms.madie.models.measure.Group;
-import gov.cms.madie.models.measure.MeasureObservation;
-import gov.cms.madie.models.measure.MeasureScoring;
+import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
-import gov.cms.madie.models.measure.Stratification;
 
 public class GroupPopulationUtil {
   private GroupPopulationUtil() {}
 
-  public static boolean areGroupsAndPopulationsMatching(
-      List<Group> originalGroups, List<Group> newGroups) {
-    boolean match = false;
-    if (!CollectionUtils.isEmpty(originalGroups) && !CollectionUtils.isEmpty(newGroups)) {
-      List<Group> matchedGroups =
-          originalGroups.stream()
-              .filter(
-                  originalGroup ->
-                      newGroups.stream()
-                          .allMatch(
-                              newGroup -> isGroupPopulationsMatching(originalGroup, newGroup)))
-              .toList();
-      match = CollectionUtils.isNotEmpty(matchedGroups);
-    }
-    return match;
-  }
+  public static void validatePopulations(Measure measure, Group group) {
+    String existingGroupDisplayId = group.getDisplayId();
+    String newGroupDisplayId = String.valueOf(getGroupNumber(group, measure.getGroups()));
 
-  public static boolean isGroupPopulationsMatching(Group originalGroup, Group newGroup) {
-    if (!StringUtils.equals(originalGroup.getScoring(), newGroup.getScoring())) {
-      return false;
+    if (existingGroupDisplayId != null
+        && !existingGroupDisplayId.equalsIgnoreCase("Group_" + String.valueOf(newGroupDisplayId))) {
+      throw new GroupPopulationDisplayIdException("Invalid group display id.");
     }
 
-    if (!StringUtils.equals(originalGroup.getPopulationBasis(), newGroup.getPopulationBasis())) {
-      return false;
-    }
+    if (!CollectionUtils.isEmpty(group.getPopulations())) {
+      List<Population> ips =
+          group.getPopulations().stream()
+              .filter(pop -> pop.getName().equals(PopulationType.INITIAL_POPULATION))
+              .collect(Collectors.toList());
 
-    List<Population> originalValidPops = getValidPopulations(originalGroup);
-    List<Population> newValidPops = getValidPopulations(newGroup);
-    boolean populationsMatch = isPopulationMatch(originalValidPops, newValidPops);
-    if (!populationsMatch) {
-      return false;
-    }
-
-    List<MeasureObservation> originalValidObs = getValidObservations(originalGroup);
-    List<MeasureObservation> newValidObs = getValidObservations(newGroup);
-    boolean observationsMatch = isMeasureObservationMatch(originalValidObs, newValidObs);
-    if (!observationsMatch) {
-      return false;
-    }
-
-    List<Stratification> originalValidStras = getValidStratifications(originalGroup);
-    List<Stratification> newValidStras = getValidStratifications(newGroup);
-    boolean stratificationMatch = isStratificationMatch(originalValidStras, newValidStras);
-
-    return stratificationMatch;
-  }
-
-  static List<Population> getValidPopulations(Group group) {
-    if (group != null && !CollectionUtils.isEmpty(group.getPopulations())) {
-      return group.getPopulations().stream()
-          .filter(population -> !StringUtils.isBlank(population.getDefinition()))
-          .collect(Collectors.toList());
-    }
-    return Collections.emptyList();
-  }
-
-  static boolean isPopulationMatch(
-      List<Population> originalValidPops, List<Population> newValidPops) {
-    if (CollectionUtils.isEmpty(originalValidPops) && CollectionUtils.isEmpty(newValidPops)) {
-      return true;
-    } else {
-      if (originalValidPops.size() != newValidPops.size()) {
-        return false;
-      }
-      List<Population> nonMatch =
-          originalValidPops.stream()
-              .filter(
-                  originalPop ->
-                      newValidPops.stream()
-                          .noneMatch(
-                              newPop ->
-                                  newPop
-                                      .getDefinition()
-                                      .equalsIgnoreCase(originalPop.getDefinition())))
-              .toList();
-      if (!CollectionUtils.isEmpty(nonMatch)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  static List<MeasureObservation> getValidObservations(Group group) {
-    if (group != null && !CollectionUtils.isEmpty(group.getMeasureObservations())) {
-      return group.getMeasureObservations().stream()
-          .filter(observation -> !StringUtils.isBlank(observation.getDefinition()))
-          .collect(Collectors.toList());
-    }
-    return Collections.emptyList();
-  }
-
-  static boolean isMeasureObservationMatch(
-      List<MeasureObservation> originalValidObs, List<MeasureObservation> newValidObs) {
-    if (CollectionUtils.isEmpty(originalValidObs) && CollectionUtils.isEmpty(newValidObs)) {
-      return true;
-    } else {
-      if (originalValidObs.size() != newValidObs.size()) {
-        return false;
-      }
-      List<MeasureObservation> nonMatch =
-          originalValidObs.stream()
-              .filter(
-                  originalObs ->
-                      newValidObs.stream()
-                          .noneMatch(
-                              newObs ->
-                                  newObs
-                                      .getDefinition()
-                                      .equalsIgnoreCase(originalObs.getDefinition())))
-              .toList();
-      if (!CollectionUtils.isEmpty(nonMatch)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  static List<Stratification> getValidStratifications(Group group) {
-    if (group != null && !CollectionUtils.isEmpty(group.getStratifications())) {
-      return group.getStratifications().stream()
-          .filter(stratification -> !StringUtils.isBlank(stratification.getCqlDefinition()))
-          .collect(Collectors.toList());
-    }
-    return Collections.emptyList();
-  }
-
-  static boolean isStratificationMatch(
-      List<Stratification> originalValidStrats, List<Stratification> newValidStrats) {
-    if (CollectionUtils.isEmpty(originalValidStrats) && CollectionUtils.isEmpty(newValidStrats)) {
-      return true;
-    } else {
-      if (originalValidStrats.size() != newValidStrats.size()) {
-        return false;
-      }
-      List<Stratification> nonMatch =
-          originalValidStrats.stream()
-              .filter(
-                  originalStrats ->
-                      newValidStrats.stream()
-                          .noneMatch(
-                              newStrats ->
-                                  newStrats
-                                      .getCqlDefinition()
-                                      .equalsIgnoreCase(originalStrats.getCqlDefinition())))
-              .toList();
-      if (!CollectionUtils.isEmpty(nonMatch)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  /**
-   * This method is to order the group populations in the order defined as in:
-   * cms.gov.madie.measure.utils.TestCaseServiceUtil. When the test cases are imported, the group
-   * populations are matched one by one in the order. Also, test case execution also needs the group
-   * populations in the right order.
-   *
-   * @param the list of the groups
-   * @return none
-   */
-  public static void reorderGroupPopulations(List<Group> groups) {
-    List<Population> newPopulations;
-    if (!CollectionUtils.isEmpty(groups)) {
-      for (Group group : groups) {
-        newPopulations = new ArrayList<>();
-        List<Population> populations = group.getPopulations();
-        if (!CollectionUtils.isEmpty(populations)) {
-          newPopulations.add(findPopulation(populations, PopulationType.INITIAL_POPULATION));
-          if (StringUtils.equals(
-              group.getScoring(), MeasureScoring.CONTINUOUS_VARIABLE.toString())) {
-            newPopulations.add(findPopulation(populations, PopulationType.MEASURE_POPULATION));
-            newPopulations.add(
-                findPopulation(populations, PopulationType.MEASURE_POPULATION_EXCLUSION));
-          } else {
-            if (!StringUtils.equals(group.getScoring(), MeasureScoring.COHORT.toString())) {
-              newPopulations.add(findPopulation(populations, PopulationType.DENOMINATOR));
-              newPopulations.add(findPopulation(populations, PopulationType.DENOMINATOR_EXCLUSION));
-              newPopulations.add(findPopulation(populations, PopulationType.NUMERATOR));
-              newPopulations.add(findPopulation(populations, PopulationType.NUMERATOR_EXCLUSION));
-              if (!StringUtils.equals(group.getScoring(), MeasureScoring.RATIO.toString())) {
-                newPopulations.add(
-                    findPopulation(populations, PopulationType.DENOMINATOR_EXCEPTION));
-              }
-            }
-          }
-          group.setPopulations(newPopulations);
+      for (int index = 0; index < group.getPopulations().size(); index++) {
+        Population population = group.getPopulations().get(index);
+        if (population.getDisplayId() != null
+            && !population
+                .getDisplayId()
+                .equalsIgnoreCase(
+                    getPopulationDisplayId(
+                        population,
+                        newGroupDisplayId,
+                        (!CollectionUtils.isEmpty(ips) && ips.size() > 1),
+                        index))) {
+          throw new GroupPopulationDisplayIdException("Invalid group population display id.");
         }
       }
     }
   }
 
-  private static Population findPopulation(
-      List<Population> populations, PopulationType populationType) {
-    return populations.stream()
-        .filter(population -> population.getName() == populationType)
-        .findFirst()
-        .orElse(
-            Population.builder()
-                .id(ObjectId.get().toString())
-                .name(populationType)
-                .definition("")
-                .build());
+  static int getGroupNumber(Group group, List<Group> groups) {
+    int groupNumber = 0;
+    for (int i = 0; i < groups.size(); i++) {
+      Group currentGroup = groups.get(i);
+      if (currentGroup.getId().equals(group.getId())) {
+        groupNumber = i + 1;
+      }
+    }
+    return groupNumber;
+  }
+
+  static String getPopulationDisplayId(
+      Population population, String groupNumber, boolean multipleIps, int index) {
+    String newPopDisplayId = null;
+    newPopDisplayId = population.getName().getDisplay().replace(" ", "") + "_" + groupNumber;
+    if (multipleIps && (index == 0 || index == 1)) {
+      newPopDisplayId = newPopDisplayId + "_" + (index + 1);
+    }
+    return newPopDisplayId;
   }
 }

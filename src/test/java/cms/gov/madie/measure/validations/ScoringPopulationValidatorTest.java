@@ -51,7 +51,8 @@ class ScoringPopulationValidatorTest {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "IntialPopulation_1")))
             .groupDescription("Description")
             .build();
     List<Group> groups = new ArrayList<>();

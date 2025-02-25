@@ -5,6 +5,7 @@ import cms.gov.madie.measure.exceptions.InvalidIdException;
 import cms.gov.madie.measure.exceptions.ResourceNotFoundException;
 import cms.gov.madie.measure.factories.ModelValidatorFactory;
 import cms.gov.madie.measure.repositories.MeasureRepository;
+import cms.gov.madie.measure.utils.GroupPopulationUtil;
 import cms.gov.madie.measure.utils.MeasureUtil;
 import cms.gov.madie.measure.validations.CqlDefinitionReturnTypeService;
 import cms.gov.madie.measure.validations.CqlObservationFunctionService;
@@ -97,6 +98,10 @@ public class GroupService {
       }
     }
     updateGroupForTestCases(group, measure.getTestCases(), measure.getModel());
+
+    if (!ModelType.QDM_5_6.getValue().equalsIgnoreCase(measure.getModel())) {
+      GroupPopulationUtil.validatePopulations(measure, group);
+    }
 
     Measure errors = measureUtil.validateAllMeasureDependencies(measure);
     measure.setErrors(errors.getErrors());
