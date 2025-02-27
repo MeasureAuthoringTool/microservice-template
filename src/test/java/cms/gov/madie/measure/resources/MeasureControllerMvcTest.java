@@ -30,6 +30,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.Map;
+import java.util.HashMap;
 
 import cms.gov.madie.measure.dto.MeasureListDTO;
 import cms.gov.madie.measure.dto.MeasureSearchCriteria;
@@ -2019,20 +2021,27 @@ public class MeasureControllerMvcTest {
 
   @Test
   public void testGetSharedWithUserIds() throws Exception {
-    String measureId = "id123";
+    String measureId1 = "measureId1";
+    String measureId2 = "measureId2";
+
+    List<String> measureIds = List.of(measureId1, measureId2);
     List<String> userIds = List.of("userId1", "userId2");
 
-    doReturn(userIds).when(measureService).getSharedWithUserIds(eq(measureId));
+    Map<String, List<String>> userIdsByMeasureId = new HashMap<>();
+    userIdsByMeasureId.put(measureId1, userIds);
+    userIdsByMeasureId.put(measureId2, userIds);
+
+    doReturn(userIdsByMeasureId).when(measureService).getSharedWithUserIds(eq(measureIds));
 
     mockMvc
         .perform(
-            get("/measures/shared?measureId=" + measureId)
+            get(String.format("/measures/shared?measureIds=%s", String.join(",", measureIds)))
                 .with(user(TEST_USER_ID))
                 .with(csrf())
                 .header("Authorization", "test-okta"))
         .andExpect(status().isOk())
-        .andExpect(content().string("[\"userId1\",\"userId2\"]"));
+        .andExpect(content().string("{\"measureId1\":[\"userId1\",\"userId2\"],\"measureId2\":[\"userId1\",\"userId2\"]}"));
 
-    verify(measureService, times(1)).getSharedWithUserIds(eq(measureId));
+    verify(measureService, times(1)).getSharedWithUserIds(eq(measureIds));
   }
 }
