@@ -735,4 +735,11 @@ public class MeasureService {
     }
     return measureRepository.findLibraryUsageByLibraryName(libraryName);
   }
+
+  public List<MeasureListDTO> getMeasuresByMeasureSet(String measureSetId) {
+    if (StringUtils.isBlank(measureSetId)) {
+      throw new InvalidRequestException("Please provide measureSetId.");
+    }
+    return measureRepository.getMeasuresByMeasureSetId(measureSetId);
+  }
 }

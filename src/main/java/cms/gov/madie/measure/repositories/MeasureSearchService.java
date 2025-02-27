@@ -21,6 +21,8 @@ public interface MeasureSearchService {
       MeasureSearchCriteria searchCriteria,
       boolean filterByCurrentUser);
 
+  List<MeasureListDTO> getMeasuresByMeasureSetId(String measureId);
+
   /**
    * Get all the measures(name, version and owner) if they include any version of given library name
    *
