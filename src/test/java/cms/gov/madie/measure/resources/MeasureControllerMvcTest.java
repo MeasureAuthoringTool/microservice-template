@@ -2016,4 +2016,23 @@ public class MeasureControllerMvcTest {
         result.getResponse().getContentAsString(),
         "[{\"name\":\"Helper\",\"version\":null,\"owner\":\"john\"}]");
   }
+
+  @Test
+  public void testGetSharedWithUserIds() throws Exception {
+    String measureId = "id123";
+    List<String> userIds = List.of("userId1", "userId2");
+
+    doReturn(userIds).when(measureService).getSharedWithUserIds(eq(measureId));
+
+    mockMvc
+        .perform(
+            get("/measures/shared?measureId=" + measureId)
+                .with(user(TEST_USER_ID))
+                .with(csrf())
+                .header("Authorization", "test-okta"))
+        .andExpect(status().isOk())
+        .andExpect(content().string("[\"userId1\",\"userId2\"]"));
+
+    verify(measureService, times(1)).getSharedWithUserIds(eq(measureId));
+  }
 }
