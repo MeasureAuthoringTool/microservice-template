@@ -48,6 +48,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -75,7 +76,7 @@ public class MeasureServiceTest implements ResourceUtil {
   @Mock private MeasureSetService measureSetService;
   @Mock private CqlTemplateConfigService cqlTemplateConfigService;
   @Mock private TerminologyValidationService terminologyValidationService;
-  @InjectMocks private MeasureService measureService;
+  @Spy @InjectMocks private MeasureService measureService;
   @Captor private ArgumentCaptor<Measure> measureArgumentCaptor;
 
   private Group group2;
@@ -1612,5 +1613,76 @@ public class MeasureServiceTest implements ResourceUtil {
     MeasureMetaData metaData = null;
     measureService.updateMeasureDefinitionId(metaData);
     assertNull(metaData);
+  }
+
+  @Test
+  public void testGetSharedWithUserIdsNoMeasureFound() {
+    String measureId = "id123";
+
+    when(measureService.findMeasureById(eq(measureId))).thenReturn(null);
+
+    assertThrows(
+        ResourceNotFoundException.class, () -> measureService.getSharedWithUserIds(measureId));
+  }
+
+  @Test
+  public void testGetSharedWithUserIdsNoMeasureSetFound() {
+    String measureId = "id123";
+    Measure measure = Measure.builder().id("measureId1").build();
+
+    when(measureService.findMeasureById(eq(measureId))).thenReturn(measure);
+
+    assertThrows(
+        InvalidMeasureStateException.class, () -> measureService.getSharedWithUserIds(measureId));
+  }
+
+  @Test
+  public void testGetSharedWithUserIdsNoMeasureSetAclsFound() {
+    String measureId = "id123";
+    MeasureSet measureSet =
+        MeasureSet.builder().measureSetId("measureSetId1").owner("testUser").acls(null).build();
+    Measure measure =
+        Measure.builder()
+            .id("measureId1")
+            .measureSetId("measureSetId1")
+            .measureSet(measureSet)
+            .build();
+
+    when(measureService.findMeasureById(eq(measureId))).thenReturn(measure);
+
+    List<String> userIds = measureService.getSharedWithUserIds(measureId);
+
+    assertThat(userIds.size(), is(equalTo(0)));
+  }
+
+  @Test
+  public void testGetSharedWithUserIds() {
+    String measureId = "id123";
+    AclSpecification acl1 = new AclSpecification();
+    acl1.setUserId("userId2");
+    acl1.setRoles(Set.of(RoleEnum.SHARED_WITH));
+    AclSpecification acl2 = new AclSpecification();
+    acl2.setUserId("userId1");
+    acl2.setRoles(Set.of(RoleEnum.SHARED_WITH));
+    MeasureSet measureSet =
+        MeasureSet.builder()
+            .measureSetId("measureSetId1")
+            .owner("testUser")
+            .acls(List.of(acl2, acl1))
+            .build();
+    Measure measure =
+        Measure.builder()
+            .id("measureId1")
+            .measureSetId("measureSetId1")
+            .measureSet(measureSet)
+            .build();
+
+    when(measureService.findMeasureById(eq(measureId))).thenReturn(measure);
+
+    List<String> userIds = measureService.getSharedWithUserIds(measureId);
+
+    assertThat(userIds.size(), is(equalTo(2)));
+    assertThat(userIds.get(0), is(equalTo(acl2.getUserId())));
+    assertThat(userIds.get(1), is(equalTo(acl1.getUserId())));
   }
 }

@@ -181,6 +181,12 @@ public class MeasureController {
     return ResponseEntity.ok().body(aclSpecifications);
   }
 
+  @GetMapping("/measures/shared")
+  public ResponseEntity<List<String>> getSharedWithUserIds(
+      HttpServletRequest request, @RequestParam(name = "measureId") String measureId) {
+    return ResponseEntity.ok().body(measureService.getSharedWithUserIds(measureId));
+  }
+
   @PutMapping("/measures/{id}/ownership")
   @PreAuthorize("#request.getHeader('api-key') == #apiKey")
   public ResponseEntity<String> changeOwnership(
