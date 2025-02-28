@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 
-import cms.gov.madie.measure.exceptions.GroupPopulationDisplayIdException;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.Population;
@@ -14,15 +13,13 @@ import gov.cms.madie.models.measure.PopulationType;
 public class GroupPopulationUtil {
   private GroupPopulationUtil() {}
 
-  public static void validatePopulations(Measure measure, Group group) {
-    String existingGroupDisplayId = group.getDisplayId();
-    String newGroupDisplayId = String.valueOf(getGroupNumber(group, measure.getGroups()));
+  public static void setGroupAndPopulationsDisplayIds(Measure measure, Group group) {
+    String groupNumber = String.valueOf(getGroupNumber(group, measure.getGroups()));
 
-    if (existingGroupDisplayId != null
-        && !existingGroupDisplayId.equalsIgnoreCase("Group_" + String.valueOf(newGroupDisplayId))) {
-      throw new GroupPopulationDisplayIdException("Invalid group display id.");
-    }
+    // set group display id
+    group.setDisplayId("Group_" + groupNumber);
 
+    // set population display id
     if (!CollectionUtils.isEmpty(group.getPopulations())) {
       List<Population> ips =
           group.getPopulations().stream()
@@ -31,17 +28,10 @@ public class GroupPopulationUtil {
 
       for (int index = 0; index < group.getPopulations().size(); index++) {
         Population population = group.getPopulations().get(index);
-        if (population.getDisplayId() != null
-            && !population
-                .getDisplayId()
-                .equalsIgnoreCase(
-                    getPopulationDisplayId(
-                        population,
-                        newGroupDisplayId,
-                        (!CollectionUtils.isEmpty(ips) && ips.size() > 1),
-                        index))) {
-          throw new GroupPopulationDisplayIdException("Invalid group population display id.");
-        }
+        String popDisplayId =
+            getPopulationDisplayId(
+                population, groupNumber, (!CollectionUtils.isEmpty(ips) && ips.size() > 1), index);
+        population.setDisplayId(popDisplayId);
       }
     }
   }
