@@ -48,6 +48,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -75,7 +76,7 @@ public class MeasureServiceTest implements ResourceUtil {
   @Mock private MeasureSetService measureSetService;
   @Mock private CqlTemplateConfigService cqlTemplateConfigService;
   @Mock private TerminologyValidationService terminologyValidationService;
-  @InjectMocks private MeasureService measureService;
+  @Spy @InjectMocks private MeasureService measureService;
   @Captor private ArgumentCaptor<Measure> measureArgumentCaptor;
 
   private Group group2;
@@ -1607,5 +1608,136 @@ public class MeasureServiceTest implements ResourceUtil {
     MeasureMetaData metaData = null;
     measureService.updateMeasureDefinitionId(metaData);
     assertNull(metaData);
+  }
+
+  @Test
+  public void testGetSharedWithUserIdsWithNoMeasureFound() {
+    String measureId1 = "measureId1";
+    List<String> measureIds = List.of(measureId1);
+
+    when(measureService.findMeasureById(eq(measureId1))).thenReturn(null);
+
+    assertThrows(
+        ResourceNotFoundException.class, () -> measureService.getSharedWithUserIds(measureIds));
+  }
+
+  @Test
+  public void testGetSharedWithUserIdsWithNoMeasureSetFound() {
+    AclSpecification acl1 = new AclSpecification();
+    acl1.setUserId("userId2");
+    acl1.setRoles(Set.of(RoleEnum.SHARED_WITH));
+
+    MeasureSet measureSet1 =
+        MeasureSet.builder()
+            .measureSetId("measureSetId1")
+            .owner("testUser")
+            .acls(List.of(acl1))
+            .build();
+
+    String measureId1 = "measureId1";
+    Measure measure1 = Measure.builder().id(measureId1).measureSetId(measureSet1.getMeasureSetId()).measureSet(measureSet1).build();
+
+    String measureId2 = "measureId2";
+    Measure measure2 = Measure.builder().id(measureId2).build();
+
+    List<String> measureIds = List.of(measureId1, measureId2);
+
+    when(measureService.findMeasureById(eq(measureId1))).thenReturn(measure1);
+    when(measureService.findMeasureById(eq(measureId2))).thenReturn(measure2);
+
+    assertThrows(
+        InvalidMeasureStateException.class, () -> measureService.getSharedWithUserIds(measureIds));
+  }
+
+  @Test
+  public void testGetSharedWithUserIdsWithNoMeasureSetAclsFoundForOneMeasure() {
+    AclSpecification acl1 = new AclSpecification();
+    acl1.setUserId("userId1");
+    acl1.setRoles(Set.of(RoleEnum.SHARED_WITH));
+
+    MeasureSet measureSet1 =
+        MeasureSet.builder()
+            .measureSetId("measureSetId1")
+            .owner("testUser")
+            .acls(List.of(acl1))
+            .build();
+
+    String measureId1 = "measureId1";
+    Measure measure1 = Measure.builder().id(measureId1).measureSetId(measureSet1.getMeasureSetId()).measureSet(measureSet1).build();
+
+    MeasureSet measureSet2 =
+        MeasureSet.builder()
+            .measureSetId("measureSetId1")
+            .owner("testUser")
+            .build();
+
+    String measureId2 = "measureId2";
+    Measure measure2 = Measure.builder().id(measureId1).measureSetId(measureSet1.getMeasureSetId()).measureSet(measureSet2).build();
+
+    List<String> measureIds = List.of(measureId1, measureId2);
+
+    when(measureService.findMeasureById(eq(measureId1))).thenReturn(measure1);
+    when(measureService.findMeasureById(eq(measureId2))).thenReturn(measure2);
+
+    Map<String, List<String>> userIdsByMeasureId = measureService.getSharedWithUserIds(measureIds);
+
+    assertThat(userIdsByMeasureId.size(), is(equalTo(2)));
+
+    assertTrue(userIdsByMeasureId.containsKey(measureId1));
+    assertThat(userIdsByMeasureId.get(measureId1).size(), is(equalTo(1)));
+    assertThat(userIdsByMeasureId.get(measureId1).get(0), is(equalTo(measure1.getMeasureSet().getAcls().get(0).getUserId())));
+
+    assertTrue(userIdsByMeasureId.containsKey(measureId2));
+    assertThat(userIdsByMeasureId.get(measureId2).size(), is(equalTo(0)));
+  }
+
+  @Test
+  public void testGetSharedWithUserIds() {
+    AclSpecification acl1 = new AclSpecification();
+    acl1.setUserId("userId1");
+    acl1.setRoles(Set.of(RoleEnum.SHARED_WITH));
+
+    AclSpecification acl2 = new AclSpecification();
+    acl2.setUserId("userId2");
+    acl2.setRoles(Set.of(RoleEnum.SHARED_WITH));
+
+    MeasureSet measureSet1 =
+        MeasureSet.builder()
+            .measureSetId("measureSetId1")
+            .owner("testUser")
+            .acls(List.of(acl2, acl1))
+            .build();
+
+    String measureId1 = "measureId1";
+    Measure measure1 = Measure.builder().id(measureId1).measureSetId(measureSet1.getMeasureSetId()).measureSet(measureSet1).build();
+
+    MeasureSet measureSet2 =
+        MeasureSet.builder()
+            .measureSetId("measureSetId1")
+            .owner("testUser")
+            .acls(List.of(acl1))
+            .build();
+
+    String measureId2 = "measureId2";
+    Measure measure2 = Measure.builder().id(measureId1).measureSetId(measureSet1.getMeasureSetId()).measureSet(measureSet2).build();
+
+    List<String> measureIds = List.of(measureId1, measureId2);
+
+    when(measureService.findMeasureById(eq(measureId1))).thenReturn(measure1);
+    when(measureService.findMeasureById(eq(measureId2))).thenReturn(measure2);
+
+    Map<String, List<String>> userIdsByMeasureId = measureService.getSharedWithUserIds(measureIds);
+
+    assertThat(userIdsByMeasureId.size(), is(equalTo(2)));
+
+    assertTrue(userIdsByMeasureId.containsKey(measureId1));
+    assertThat(userIdsByMeasureId.get(measureId1).size(), is(equalTo(2)));
+    assertThat(userIdsByMeasureId.get(measureId1).get(0), is(equalTo(measure1.getMeasureSet().getAcls().get(1).getUserId())));
+    assertThat(userIdsByMeasureId.get(measureId1).get(1), is(equalTo(measure1.getMeasureSet().getAcls().get(0).getUserId())));
+
+
+    assertTrue(userIdsByMeasureId.containsKey(measureId2));
+    assertThat(userIdsByMeasureId.get(measureId2).size(), is(equalTo(1)));
+    assertThat(userIdsByMeasureId.get(measureId2).get(0), is(equalTo(measure2.getMeasureSet().getAcls().get(0).getUserId())));
   }
 }
