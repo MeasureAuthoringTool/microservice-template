@@ -19,7 +19,7 @@ public class GroupPopulationUtil {
     String newGroupDisplayId = String.valueOf(getGroupNumber(group, measure.getGroups()));
 
     if (existingGroupDisplayId != null
-        && !existingGroupDisplayId.equalsIgnoreCase("Group_" + String.valueOf(newGroupDisplayId))) {
+        && !existingGroupDisplayId.equalsIgnoreCase("Group_" + newGroupDisplayId)) {
       throw new GroupPopulationDisplayIdException("Invalid group display id.");
     }
 
