@@ -164,9 +164,9 @@ class MeasureControllerTest {
   void getMeasuresByMeasureSetId() {
     measure1.setId("testId");
     List<MeasureListDTO> measures = Arrays.asList(measureList);
-    when(measureService.getMeasuresByMeasureSet(anyString())).thenReturn(measures);
+    when(measureSetService.getMeasuresByMeasureSetId(anyString())).thenReturn(measures);
     ResponseEntity<List<MeasureListDTO>> response = controller.getMeasuresByMeasureSetId("test");
-    verify(measureService, times(1)).getMeasuresByMeasureSet(anyString());
+    verify(measureSetService, times(1)).getMeasuresByMeasureSetId(anyString());
     assertNotNull(response.getBody());
   }
 

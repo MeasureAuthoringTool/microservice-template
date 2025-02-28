@@ -641,6 +641,20 @@ public class MeasureServiceTest implements ResourceUtil {
   }
 
   @Test
+  void getMeasuresByMeasureSetSuccess() {
+    String measureSetId = "validMeasureSetId";
+    List<MeasureListDTO> expectedMeasures = List.of(new MeasureListDTO());
+
+    when(measureSetService.getMeasuresByMeasureSetId(measureSetId)).thenReturn(expectedMeasures);
+
+    List<MeasureListDTO> result = measureSetService.getMeasuresByMeasureSetId(measureSetId);
+
+    assertNotNull(result);
+    assertEquals(expectedMeasures.size(), result.size());
+    verify(measureSetService, times(1)).getMeasuresByMeasureSetId(measureSetId);
+  }
+
+  @Test
   public void testCreateMeasureToHaveUpdatedMeasurementPeriods() {
     Instant startInstant = Instant.now();
     Instant endInstant = startInstant.plus(2, ChronoUnit.DAYS);
@@ -1630,7 +1644,12 @@ public class MeasureServiceTest implements ResourceUtil {
             .build();
 
     String measureId1 = "measureId1";
-    Measure measure1 = Measure.builder().id(measureId1).measureSetId(measureSet1.getMeasureSetId()).measureSet(measureSet1).build();
+    Measure measure1 =
+        Measure.builder()
+            .id(measureId1)
+            .measureSetId(measureSet1.getMeasureSetId())
+            .measureSet(measureSet1)
+            .build();
 
     String measureId2 = "measureId2";
     Measure measure2 = Measure.builder().id(measureId2).build();
@@ -1658,16 +1677,23 @@ public class MeasureServiceTest implements ResourceUtil {
             .build();
 
     String measureId1 = "measureId1";
-    Measure measure1 = Measure.builder().id(measureId1).measureSetId(measureSet1.getMeasureSetId()).measureSet(measureSet1).build();
-
-    MeasureSet measureSet2 =
-        MeasureSet.builder()
-            .measureSetId("measureSetId1")
-            .owner("testUser")
+    Measure measure1 =
+        Measure.builder()
+            .id(measureId1)
+            .measureSetId(measureSet1.getMeasureSetId())
+            .measureSet(measureSet1)
             .build();
 
+    MeasureSet measureSet2 =
+        MeasureSet.builder().measureSetId("measureSetId1").owner("testUser").build();
+
     String measureId2 = "measureId2";
-    Measure measure2 = Measure.builder().id(measureId1).measureSetId(measureSet1.getMeasureSetId()).measureSet(measureSet2).build();
+    Measure measure2 =
+        Measure.builder()
+            .id(measureId1)
+            .measureSetId(measureSet1.getMeasureSetId())
+            .measureSet(measureSet2)
+            .build();
 
     List<String> measureIds = List.of(measureId1, measureId2);
 
@@ -1680,7 +1706,9 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertTrue(userIdsByMeasureId.containsKey(measureId1));
     assertThat(userIdsByMeasureId.get(measureId1).size(), is(equalTo(1)));
-    assertThat(userIdsByMeasureId.get(measureId1).get(0), is(equalTo(measure1.getMeasureSet().getAcls().get(0).getUserId())));
+    assertThat(
+        userIdsByMeasureId.get(measureId1).get(0),
+        is(equalTo(measure1.getMeasureSet().getAcls().get(0).getUserId())));
 
     assertTrue(userIdsByMeasureId.containsKey(measureId2));
     assertThat(userIdsByMeasureId.get(measureId2).size(), is(equalTo(0)));
@@ -1697,24 +1725,34 @@ public class MeasureServiceTest implements ResourceUtil {
     acl2.setRoles(Set.of(RoleEnum.SHARED_WITH));
 
     MeasureSet measureSet1 =
-            MeasureSet.builder()
-                    .measureSetId("measureSetId1")
-                    .owner("testUser")
-                    .acls(List.of(acl2, acl1))
-                    .build();
+        MeasureSet.builder()
+            .measureSetId("measureSetId1")
+            .owner("testUser")
+            .acls(List.of(acl2, acl1))
+            .build();
 
     String measureId1 = "measureId1";
-    Measure measure1 = Measure.builder().id(measureId1).measureSetId(measureSet1.getMeasureSetId()).measureSet(measureSet1).build();
+    Measure measure1 =
+        Measure.builder()
+            .id(measureId1)
+            .measureSetId(measureSet1.getMeasureSetId())
+            .measureSet(measureSet1)
+            .build();
 
     MeasureSet measureSet2 =
-            MeasureSet.builder()
-                    .measureSetId("measureSetId1")
-                    .owner("testUser")
-                    .acls(List.of(acl1))
-                    .build();
+        MeasureSet.builder()
+            .measureSetId("measureSetId1")
+            .owner("testUser")
+            .acls(List.of(acl1))
+            .build();
 
     String measureId2 = "measureId2";
-    Measure measure2 = Measure.builder().id(measureId1).measureSetId(measureSet1.getMeasureSetId()).measureSet(measureSet2).build();
+    Measure measure2 =
+        Measure.builder()
+            .id(measureId1)
+            .measureSetId(measureSet1.getMeasureSetId())
+            .measureSet(measureSet2)
+            .build();
 
     List<String> measureIds = List.of(measureId1, measureId2);
 
@@ -1727,37 +1765,17 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertTrue(userIdsByMeasureId.containsKey(measureId1));
     assertThat(userIdsByMeasureId.get(measureId1).size(), is(equalTo(2)));
-    assertThat(userIdsByMeasureId.get(measureId1).get(0), is(equalTo(measure1.getMeasureSet().getAcls().get(1).getUserId())));
-    assertThat(userIdsByMeasureId.get(measureId1).get(1), is(equalTo(measure1.getMeasureSet().getAcls().get(0).getUserId())));
-
+    assertThat(
+        userIdsByMeasureId.get(measureId1).get(0),
+        is(equalTo(measure1.getMeasureSet().getAcls().get(1).getUserId())));
+    assertThat(
+        userIdsByMeasureId.get(measureId1).get(1),
+        is(equalTo(measure1.getMeasureSet().getAcls().get(0).getUserId())));
 
     assertTrue(userIdsByMeasureId.containsKey(measureId2));
     assertThat(userIdsByMeasureId.get(measureId2).size(), is(equalTo(1)));
-    assertThat(userIdsByMeasureId.get(measureId2).get(0), is(equalTo(measure2.getMeasureSet().getAcls().get(0).getUserId())));
-  }
-  @Test
-  void getMeasuresByMeasureSetSuccess() {
-    String measureSetId = "validMeasureSetId";
-    List<MeasureListDTO> expectedMeasures = List.of(new MeasureListDTO());
-    when(measureRepository.getMeasuresByMeasureSetId(measureSetId)).thenReturn(expectedMeasures);
-
-    List<MeasureListDTO> result = measureService.getMeasuresByMeasureSet(measureSetId);
-
-    assertNotNull(result);
-    assertEquals(expectedMeasures.size(), result.size());
-    verify(measureRepository, times(1)).getMeasuresByMeasureSetId(measureSetId);
-  }
-
-  @Test
-  void getMeasuresByMeasureError() {
-    String blankMeasureSetId = "   ";
-
-    InvalidRequestException exception =
-        assertThrows(
-            InvalidRequestException.class,
-            () -> measureService.getMeasuresByMeasureSet(blankMeasureSetId));
-
-    assertEquals("Please provide measureSetId.", exception.getMessage());
-    verifyNoInteractions(measureRepository);
+    assertThat(
+        userIdsByMeasureId.get(measureId2).get(0),
+        is(equalTo(measure2.getMeasureSet().getAcls().get(0).getUserId())));
   }
 }

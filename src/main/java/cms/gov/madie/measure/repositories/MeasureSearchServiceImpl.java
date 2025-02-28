@@ -188,19 +188,6 @@ public class MeasureSearchServiceImpl implements MeasureSearchService {
         results.get(0).getQueryResults(), pageable, results.get(0).getCount().size());
   }
 
-  public List<MeasureListDTO> getMeasuresByMeasureSetId(String measureSetId) {
-    LookupOperation lookupOperation = getLookupOperation();
-
-    Criteria measureCriteria =
-        Criteria.where("active").is(true).and("measureSetId").is(measureSetId);
-
-    MatchOperation matchOperation = match(measureCriteria);
-
-    Aggregation aggregation = newAggregation(lookupOperation, matchOperation);
-
-    return mongoTemplate.aggregate(aggregation, "measure", MeasureListDTO.class).getMappedResults();
-  }
-
   @Override
   public List<LibraryUsage> findLibraryUsageByLibraryName(String name) {
     LookupOperation lookupOperation = getLookupOperation();

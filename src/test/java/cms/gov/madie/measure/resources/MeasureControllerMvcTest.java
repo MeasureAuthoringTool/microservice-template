@@ -2040,7 +2040,10 @@ public class MeasureControllerMvcTest {
                 .with(csrf())
                 .header("Authorization", "test-okta"))
         .andExpect(status().isOk())
-        .andExpect(content().string("{\"measureId1\":[\"userId1\",\"userId2\"],\"measureId2\":[\"userId1\",\"userId2\"]}"));
+        .andExpect(
+            content()
+                .string(
+                    "{\"measureId1\":[\"userId1\",\"userId2\"],\"measureId2\":[\"userId1\",\"userId2\"]}"));
 
     verify(measureService, times(1)).getSharedWithUserIds(eq(measureIds));
   }
