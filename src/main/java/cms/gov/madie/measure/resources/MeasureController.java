@@ -66,7 +66,7 @@ public class MeasureController {
   public ResponseEntity<List<MeasureListDTO>> getMeasuresByMeasureSetId(
       @RequestParam(name = "measureSetId") String measureSetId) {
     List<MeasureListDTO> results = measureSetService.getMeasuresByMeasureSetId(measureSetId);
-    return ResponseEntity.status(HttpStatus.CREATED).body(results);
+    return ResponseEntity.status(HttpStatus.OK).body(results);
   }
 
   @GetMapping("/measures")
