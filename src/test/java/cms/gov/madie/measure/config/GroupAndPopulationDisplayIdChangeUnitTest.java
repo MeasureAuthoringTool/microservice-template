@@ -32,11 +32,10 @@ public class GroupAndPopulationDisplayIdChangeUnitTest {
 
   private Measure measure;
   private Group group;
-  private Population ip;
 
   @BeforeEach
   void setUp() {
-    ip =
+    Population ip =
         Population.builder().id("testPopulationId").name(PopulationType.INITIAL_POPULATION).build();
     group = Group.builder().id("testGroupId").populations(List.of(ip)).build();
     measure = Measure.builder().id("testMeasureId").model(ModelType.QI_CORE.toString()).build();

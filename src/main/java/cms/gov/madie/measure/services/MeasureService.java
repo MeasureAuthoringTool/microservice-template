@@ -414,7 +414,7 @@ public class MeasureService {
   public Map<String, List<String>> getSharedWithUserIds(List<String> measureIds) {
     Map<String, List<String>> userIdsByMeasureId = new HashMap<>();
 
-    for (String measureId: measureIds) {
+    for (String measureId : measureIds) {
       Measure measure = findMeasureById(measureId);
 
       if (measure == null) {
@@ -429,11 +429,14 @@ public class MeasureService {
       if (measure.getMeasureSet().getAcls() == null) {
         userIdsByMeasureId.put(measureId, Collections.emptyList());
       } else {
-        userIdsByMeasureId.put(measureId, measure.getMeasureSet().getAcls().stream()
-            .filter(aclSpecification -> aclSpecification.getRoles().contains(RoleEnum.SHARED_WITH))
-            .map(AclSpecification::getUserId)
-            .sorted()
-            .toList());
+        userIdsByMeasureId.put(
+            measureId,
+            measure.getMeasureSet().getAcls().stream()
+                .filter(
+                    aclSpecification -> aclSpecification.getRoles().contains(RoleEnum.SHARED_WITH))
+                .map(AclSpecification::getUserId)
+                .sorted()
+                .toList());
       }
     }
 
