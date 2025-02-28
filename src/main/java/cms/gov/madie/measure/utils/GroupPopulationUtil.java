@@ -9,7 +9,9 @@ import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.Population;
 import gov.cms.madie.models.measure.PopulationType;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class GroupPopulationUtil {
   private GroupPopulationUtil() {}
 

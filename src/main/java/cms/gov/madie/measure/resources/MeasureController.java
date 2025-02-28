@@ -181,6 +181,12 @@ public class MeasureController {
     return ResponseEntity.ok().body(aclSpecifications);
   }
 
+  @GetMapping("/measures/shared")
+  public ResponseEntity<Map<String, List<String>>> getSharedWithUserIds(
+      HttpServletRequest request, @RequestParam(name = "measureIds") List<String> measureIds) {
+    return ResponseEntity.ok().body(measureService.getSharedWithUserIds(measureIds));
+  }
+
   @PutMapping("/measures/{id}/ownership")
   @PreAuthorize("#request.getHeader('api-key') == #apiKey")
   public ResponseEntity<String> changeOwnership(
@@ -295,6 +301,7 @@ public class MeasureController {
       @RequestBody(required = false) MeasureSearchCriteria searchCriteria,
       @RequestParam(required = false, defaultValue = "10", name = "limit") int limit,
       @RequestParam(required = false, defaultValue = "0", name = "page") int page) {
+
     final String username = principal.getName();
     final Pageable pageReq = PageRequest.of(page, limit, Sort.by("lastModifiedAt").descending());
 
