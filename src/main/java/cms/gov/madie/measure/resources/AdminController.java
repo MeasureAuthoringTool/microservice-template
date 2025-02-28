@@ -284,7 +284,7 @@ public class AdminController {
                 && target.getTitle().equals(source.getTitle())
                 && target.getSeries().equals(source.getSeries()))) {
           target.setGroupPopulations(source.getGroupPopulations());
-          correctGroupIdsAndExpectedValueType(target.getGroupPopulations(), targetMeasure);
+          correctIdsAndExpectedValueType(target.getGroupPopulations(), targetMeasure);
         }
       }
     }
@@ -295,7 +295,7 @@ public class AdminController {
         Measure.class,
         ActionType.UPDATED,
         principal.getName(),
-        "Admin Action: Overwrote Expected Values with pre-2.1.3 release snapshot.");
+        "Admin Action: Overwrote Expected Values.");
     return ResponseEntity.ok(targetMeasure);
   }
 
@@ -313,16 +313,24 @@ public class AdminController {
             == sourceMeasure.getVersion().getRevisionNumber();
   }
 
-  private void correctGroupIdsAndExpectedValueType(
-      List<TestCaseGroupPopulation> groupPopulations, Measure msr) {
-    if (msr instanceof FhirMeasure fhirMeasure) {
-      for (int i = 0; i < groupPopulations.size(); i++) {
-        TestCaseGroupPopulation group = groupPopulations.get(i);
-        group.setGroupId(fhirMeasure.getGroups().get(i).getId());
-        if (group.getPopulationBasis() != null
-            && group.getPopulationBasis().equalsIgnoreCase("boolean")) {
-          // adjust FHIR data
-          for (TestCasePopulationValue populationValue : group.getPopulationValues()) {
+  private void correctIdsAndExpectedValueType(
+      List<TestCaseGroupPopulation> tcGroupPopulations, Measure msr) {
+    for (int i = 0; i < tcGroupPopulations.size(); i++) {
+      TestCaseGroupPopulation tcGroup = tcGroupPopulations.get(i);
+      tcGroup.setGroupId(msr.getGroups().get(i).getId());
+      // Correct Stratification IDs
+      if (CollectionUtils.isNotEmpty(msr.getGroups().get(i).getStratifications())) {
+        for (int j = 0; j < msr.getGroups().get(i).getStratifications().size(); j++) {
+          tcGroup
+              .getStratificationValues()
+              .get(j)
+              .setId(msr.getGroups().get(i).getStratifications().get(j).getId());
+        }
+      }
+      if (msr instanceof FhirMeasure) {
+        if (tcGroup.getPopulationBasis() != null
+            && tcGroup.getPopulationBasis().equalsIgnoreCase("boolean")) {
+          for (TestCasePopulationValue populationValue : tcGroup.getPopulationValues()) {
             if (populationValue.getExpected() instanceof String originalValue) {
               if (originalValue.equalsIgnoreCase("1")) {
                 populationValue.setExpected(Boolean.TRUE);
@@ -332,20 +340,13 @@ public class AdminController {
             }
           }
         }
-      }
-    } else {
-      // adjust QDM data
-      for (int i = 0; i < groupPopulations.size(); i++) {
-        TestCaseGroupPopulation group = groupPopulations.get(i);
-        group.setGroupId(msr.getGroups().get(i).getId());
-        if (((QdmMeasure) msr).isPatientBasis()) {
-          for (TestCasePopulationValue populationValue : group.getPopulationValues()) {
-            if (populationValue.getExpected() instanceof Integer originalValue) {
-              if (originalValue == 1) {
-                populationValue.setExpected(Boolean.TRUE);
-              } else {
-                populationValue.setExpected(Boolean.FALSE);
-              }
+      } else if (((QdmMeasure) msr).isPatientBasis()) {
+        for (TestCasePopulationValue populationValue : tcGroup.getPopulationValues()) {
+          if (populationValue.getExpected() instanceof Integer originalValue) {
+            if (originalValue == 1) {
+              populationValue.setExpected(Boolean.TRUE);
+            } else {
+              populationValue.setExpected(Boolean.FALSE);
             }
           }
         }
