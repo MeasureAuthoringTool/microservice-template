@@ -1,7 +1,6 @@
 package cms.gov.madie.measure.utils;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 
@@ -23,16 +22,16 @@ public class GroupPopulationUtil {
 
     // set population display id
     if (!CollectionUtils.isEmpty(group.getPopulations())) {
-      List<Population> ips =
+      boolean hasMultipleIps =
           group.getPopulations().stream()
-              .filter(pop -> pop.getName().equals(PopulationType.INITIAL_POPULATION))
-              .collect(Collectors.toList());
+                  .filter(pop -> pop.getName().equals(PopulationType.INITIAL_POPULATION))
+                  .count()
+              > 1;
 
       for (int index = 0; index < group.getPopulations().size(); index++) {
         Population population = group.getPopulations().get(index);
         String popDisplayId =
-            getPopulationDisplayId(
-                population, groupNumber, (!CollectionUtils.isEmpty(ips) && ips.size() > 1), index);
+            getPopulationDisplayId(population, groupNumber, hasMultipleIps, index);
         population.setDisplayId(popDisplayId);
       }
     }
@@ -51,8 +50,7 @@ public class GroupPopulationUtil {
 
   static String getPopulationDisplayId(
       Population population, String groupNumber, boolean multipleIps, int index) {
-    String newPopDisplayId = null;
-    newPopDisplayId = population.getName().getDisplay().replace(" ", "") + "_" + groupNumber;
+    String newPopDisplayId = population.getName().getDisplay().replace(" ", "") + "_" + groupNumber;
     if (multipleIps && (index == 0 || index == 1)) {
       newPopDisplayId = newPopDisplayId + "_" + (index + 1);
     }
