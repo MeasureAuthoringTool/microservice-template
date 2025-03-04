@@ -110,6 +110,8 @@ public class GroupServiceTest implements ResourceUtil {
     // new group, not in DB, so no ID
     group1 =
         Group.builder()
+            .id("xyz-p11r-11ert")
+            .displayId("Group_1")
             .scoring("Cohort")
             .populationBasis("Encounter")
             .measureGroupTypes(Arrays.asList(MeasureGroupTypes.OUTCOME))
@@ -120,7 +122,8 @@ public class GroupServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "InitialPopulation_1")))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .build();
@@ -128,19 +131,26 @@ public class GroupServiceTest implements ResourceUtil {
     group2 =
         Group.builder()
             .id("xyz-p12r-12ert")
+            .displayId("Group_2")
             .populationBasis("Encounter")
             .measureGroupTypes(Arrays.asList(MeasureGroupTypes.OUTCOME))
             .scoring("Continuous Variable")
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "FactorialOfFive", null, null),
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        "FactorialOfFive",
+                        null,
+                        null,
+                        "IntialPopulation_2"),
                     new Population(
                         "id-2",
                         PopulationType.MEASURE_POPULATION,
                         "Measure Population",
                         null,
-                        null)))
+                        null,
+                        "MeasurePopulation_2")))
             .measureObservations(
                 List.of(
                     new MeasureObservation(
@@ -156,6 +166,7 @@ public class GroupServiceTest implements ResourceUtil {
     // Ratio group
     ratioGroup =
         Group.builder()
+            .id("ratioGroup_id")
             .scoring("Ratio")
             .populationBasis("Encounter")
             .measureGroupTypes(Arrays.asList(MeasureGroupTypes.OUTCOME))
@@ -166,12 +177,31 @@ public class GroupServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null),
-                    new Population("id-2", PopulationType.DENOMINATOR, "Denominator", null, null),
+                        null,
+                        "InitialPopulation_1_1"),
                     new Population(
-                        "id-3", PopulationType.DENOMINATOR_EXCLUSION, "Denominator", null, null),
-                    new Population("id-4", PopulationType.NUMERATOR, "Numerator", null, null),
-                    new Population("id-4", PopulationType.NUMERATOR_EXCLUSION, "", null, null)))
+                        "id-2",
+                        PopulationType.INITIAL_POPULATION,
+                        "Initial Population",
+                        null,
+                        null,
+                        "InitialPopulation_1_2"),
+                    new Population(
+                        "id-3",
+                        PopulationType.DENOMINATOR,
+                        "Denominator",
+                        null,
+                        null,
+                        "Denominator_1"),
+                    new Population(
+                        "id-4", PopulationType.NUMERATOR, "Numerator", null, null, "Numerator_1"),
+                    new Population(
+                        "id-4",
+                        PopulationType.NUMERATOR_EXCLUSION,
+                        "",
+                        null,
+                        null,
+                        "NumeratorExclusion_1")))
             .measureObservations(
                 new ArrayList<>(
                     List.of(
@@ -323,6 +353,7 @@ public class GroupServiceTest implements ResourceUtil {
 
   @Test
   public void testCreateGroupWhenMeasureGroupsAreMultiple() {
+    measure.setGroups(List.of(group1, group2));
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     Optional<Measure> optional = Optional.of(measure);
     doReturn(optional).when(measureRepository).findById(any(String.class));
@@ -340,7 +371,7 @@ public class GroupServiceTest implements ResourceUtil {
     assertEquals(measure.getLastModifiedAt(), savedMeasure.getLastModifiedAt());
     assertNotNull(savedMeasure.getGroups());
     assertEquals(2, savedMeasure.getGroups().size());
-    Group capturedGroup = savedMeasure.getGroups().get(1);
+    Group capturedGroup = savedMeasure.getGroups().get(0);
     assertEquals("Cohort", capturedGroup.getScoring());
     assertEquals("Initial Population", capturedGroup.getPopulations().get(0).getDefinition());
     assertEquals(
@@ -351,6 +382,7 @@ public class GroupServiceTest implements ResourceUtil {
 
   @Test
   public void testCreateGroupWithObservationWhenMeasureGroupsAreMultiple() {
+    measure.setGroups(List.of(ratioGroup, group2));
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
     Optional<Measure> optional = Optional.of(measure);
     doReturn(optional).when(measureRepository).findById(any(String.class));
@@ -374,7 +406,7 @@ public class GroupServiceTest implements ResourceUtil {
     assertEquals(measure.getLastModifiedAt(), savedMeasure.getLastModifiedAt());
     assertNotNull(savedMeasure.getGroups());
     assertEquals(2, savedMeasure.getGroups().size());
-    Group capturedGroup = savedMeasure.getGroups().get(1);
+    Group capturedGroup = savedMeasure.getGroups().get(0);
     assertEquals("Ratio", capturedGroup.getScoring());
     assertEquals("Initial Population", capturedGroup.getPopulations().get(0).getDefinition());
     assertEquals(
@@ -432,7 +464,8 @@ public class GroupServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "InitialPopulation_1")))
             .build();
 
     Measure existingMeasure =
@@ -465,7 +498,8 @@ public class GroupServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "InitialPopulation_1")))
             .build();
     List<TestCase> testCases = List.of(TestCase.builder().groupPopulations(null).build());
 
@@ -566,7 +600,8 @@ public class GroupServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "InitialPopulation_1")))
             .build();
 
     Measure existingMeasure =
@@ -701,7 +736,8 @@ public class GroupServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "InitialPopulation_1")))
             .build();
     final List<TestCase> testCases =
         List.of(
@@ -853,6 +889,7 @@ public class GroupServiceTest implements ResourceUtil {
 
   @Test
   public void testUpdateGroupWithValidStratification() {
+    group2.setDisplayId("Group_1");
     group2.setPopulations(null);
     Optional<Measure> optional = Optional.of(measure);
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
@@ -871,6 +908,7 @@ public class GroupServiceTest implements ResourceUtil {
 
   @Test
   public void testUpdateGroupWhenPopulationFunctionReturnTypeMatchingWithPopulationBasis() {
+    group2.setDisplayId("Group_1");
     group2.setPopulations(null);
     Optional<Measure> optional = Optional.of(measure);
     ArgumentCaptor<Measure> measureCaptor = ArgumentCaptor.forClass(Measure.class);
@@ -935,6 +973,7 @@ public class GroupServiceTest implements ResourceUtil {
 
   @Test
   public void testUpdateGroupWithNoFunctions() {
+    measure.setGroups(List.of(group1));
     measure.setElmJson(getData("/test_elm_no_functions.json"));
     Optional<Measure> optional = Optional.of(measure);
     doReturn(optional).when(measureRepository).findById(any(String.class));
@@ -1050,12 +1089,31 @@ public class GroupServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null),
-                    new Population("id-2", PopulationType.DENOMINATOR, "Denominator", null, null),
+                        null,
+                        "InitialPopulation_1"),
                     new Population(
-                        "id-3", PopulationType.DENOMINATOR_EXCLUSION, "Denominator", null, null),
-                    new Population("id-4", PopulationType.NUMERATOR, "Numerator", null, null),
-                    new Population("id-4", PopulationType.NUMERATOR_EXCLUSION, "", null, null)))
+                        "id-2",
+                        PopulationType.DENOMINATOR,
+                        "Denominator",
+                        null,
+                        null,
+                        "Denominator_1"),
+                    new Population(
+                        "id-3",
+                        PopulationType.DENOMINATOR_EXCLUSION,
+                        "Denominator",
+                        null,
+                        null,
+                        "DenominatorExclusion_1"),
+                    new Population(
+                        "id-4", PopulationType.NUMERATOR, "Numerator", null, null, "Numerator_1"),
+                    new Population(
+                        "id-4",
+                        PopulationType.NUMERATOR_EXCLUSION,
+                        "",
+                        null,
+                        null,
+                        "NumeratorExlusion_1")))
             .measureObservations(
                 new ArrayList<>(
                     List.of(
@@ -1738,7 +1796,8 @@ public class GroupServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "InitialPopulation_1")))
             .build();
 
     Measure existingMeasure =

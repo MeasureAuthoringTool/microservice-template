@@ -1593,7 +1593,8 @@ public class MeasureControllerMvcTest {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "IntialPopulation_1")))
             .measureGroupTypes(List.of(MeasureGroupTypes.PROCESS))
             .build();
     final String groupJson =
@@ -1638,7 +1639,8 @@ public class MeasureControllerMvcTest {
                         PopulationType.INITIAL_POPULATION,
                         updateIppDefinition,
                         null,
-                        null)))
+                        null,
+                        "IntialPopulation_1")))
             .measureGroupTypes(List.of(MeasureGroupTypes.PROCESS))
             .build();
 

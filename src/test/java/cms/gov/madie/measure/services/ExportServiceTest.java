@@ -68,7 +68,8 @@ class ExportServiceTest {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "IntialPopulation_1")))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .build();

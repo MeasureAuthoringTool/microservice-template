@@ -129,9 +129,19 @@ public class VersionServiceTest {
           .populations(
               List.of(
                   new Population(
-                      "id-1", PopulationType.INITIAL_POPULATION, "FactorialOfFive", null, null),
+                      "id-1",
+                      PopulationType.INITIAL_POPULATION,
+                      "FactorialOfFive",
+                      null,
+                      null,
+                      "IntialPopulation_1"),
                   new Population(
-                      "id-2", PopulationType.MEASURE_POPULATION, "Measure Population", null, null)))
+                      "id-2",
+                      PopulationType.MEASURE_POPULATION,
+                      "Measure Population",
+                      null,
+                      null,
+                      "MeasurePopulation_1")))
           .measureObservations(
               List.of(
                   new MeasureObservation(

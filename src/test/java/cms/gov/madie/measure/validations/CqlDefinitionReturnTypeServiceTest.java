@@ -44,9 +44,15 @@ class CqlDefinitionReturnTypeServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null),
+                        null,
+                        "IntialPopulation_1"),
                     new Population(
-                        "id-2", PopulationType.INITIAL_POPULATION, "Denominator", null, null)))
+                        "id-2",
+                        PopulationType.INITIAL_POPULATION,
+                        "Denominator",
+                        null,
+                        null,
+                        "Denominator_1")))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .build();
@@ -85,7 +91,14 @@ class CqlDefinitionReturnTypeServiceTest implements ResourceUtil {
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .populations(
-                List.of(new Population("id-1", PopulationType.INITIAL_POPULATION, "", null, null)))
+                List.of(
+                    new Population(
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        "",
+                        null,
+                        null,
+                        "IntialPopulation_1")))
             .build();
 
     String elmJson = getData("/test_elm.json");
@@ -120,7 +133,8 @@ class CqlDefinitionReturnTypeServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "IntialPopulation_1")))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .stratifications(Arrays.asList(strat, strat2))
@@ -159,7 +173,8 @@ class CqlDefinitionReturnTypeServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "IntialPopulation_1")))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .stratifications(Arrays.asList(strat, strat2))
@@ -192,7 +207,8 @@ class CqlDefinitionReturnTypeServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "IntialPopulation_1")))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .stratifications(Arrays.asList(strat))
@@ -216,7 +232,12 @@ class CqlDefinitionReturnTypeServiceTest implements ResourceUtil {
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "SDE Race", null, null)))
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        "SDE Race",
+                        null,
+                        null,
+                        "IntialPopulation_1")))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .build();
@@ -272,7 +293,8 @@ class CqlDefinitionReturnTypeServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "IntialPopulation_1")))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .build();
@@ -304,9 +326,15 @@ class CqlDefinitionReturnTypeServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null),
+                        null,
+                        "IntialPopulation_1"),
                     new Population(
-                        "id-2", PopulationType.INITIAL_POPULATION, "Denominator", null, null)))
+                        "id-2",
+                        PopulationType.INITIAL_POPULATION,
+                        "Denominator",
+                        null,
+                        null,
+                        "Denominator_1")))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .build();
@@ -331,7 +359,8 @@ class CqlDefinitionReturnTypeServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "IntialPopulation_1")))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .build();
@@ -359,9 +388,15 @@ class CqlDefinitionReturnTypeServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null),
+                        null,
+                        "IntialPopulation_1_1"),
                     new Population(
-                        "id-2", PopulationType.INITIAL_POPULATION, "SDE Payer", null, null)))
+                        "id-2",
+                        PopulationType.INITIAL_POPULATION,
+                        "SDE Payer",
+                        null,
+                        null,
+                        "IntialPopulation_1_2")))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .build();
@@ -385,7 +420,12 @@ class CqlDefinitionReturnTypeServiceTest implements ResourceUtil {
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "boolIpp", null, null)))
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        "boolIpp",
+                        null,
+                        null,
+                        "IntialPopulation_1")))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .build();
@@ -411,9 +451,15 @@ class CqlDefinitionReturnTypeServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null),
+                        null,
+                        "IntialPopulation_1_1"),
                     new Population(
-                        "id-2", PopulationType.INITIAL_POPULATION, "Denominator", null, null)))
+                        "id-2",
+                        PopulationType.INITIAL_POPULATION,
+                        "Denominator",
+                        null,
+                        null,
+                        "IntialPopulation_1_2")))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .build();
@@ -455,7 +501,13 @@ class CqlDefinitionReturnTypeServiceTest implements ResourceUtil {
             .scoringUnit("test-scoring-unit")
             .populations(
                 List.of(
-                    new Population("id-1", PopulationType.INITIAL_POPULATION, null, null, null)))
+                    new Population(
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        null,
+                        null,
+                        null,
+                        "IntialPopulation_1")))
             .build();
 
     String elmJson = getData("/test_elm.json");
@@ -475,7 +527,12 @@ class CqlDefinitionReturnTypeServiceTest implements ResourceUtil {
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "boolIpp", null, null)))
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        "boolIpp",
+                        null,
+                        null,
+                        "IntialPopulation_1")))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .build();
@@ -504,9 +561,19 @@ class CqlDefinitionReturnTypeServiceTest implements ResourceUtil {
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "boolIpp", null, null),
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        "boolIpp",
+                        null,
+                        null,
+                        "IntialPopulation_1_1"),
                     new Population(
-                        "id-2", PopulationType.INITIAL_POPULATION, "boolIpp2", null, null)))
+                        "id-2",
+                        PopulationType.INITIAL_POPULATION,
+                        "boolIpp2",
+                        null,
+                        null,
+                        "IntialPopulation_1_2")))
             .stratifications(List.of(strat))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
@@ -535,8 +602,20 @@ class CqlDefinitionReturnTypeServiceTest implements ResourceUtil {
             .scoring("Cohort")
             .populations(
                 List.of(
-                    new Population("id-1", PopulationType.INITIAL_POPULATION, "ipp", null, null),
-                    new Population("id-2", PopulationType.INITIAL_POPULATION, "denom", null, null)))
+                    new Population(
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        "ipp",
+                        null,
+                        null,
+                        "IntialPopulation_1_1"),
+                    new Population(
+                        "id-2",
+                        PopulationType.INITIAL_POPULATION,
+                        "denom",
+                        null,
+                        null,
+                        "IntialPopulation_1_2")))
             .stratifications(List.of(strat))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
@@ -565,8 +644,20 @@ class CqlDefinitionReturnTypeServiceTest implements ResourceUtil {
             .scoring("Cohort")
             .populations(
                 List.of(
-                    new Population("id-1", PopulationType.INITIAL_POPULATION, "ipp", null, null),
-                    new Population("id-2", PopulationType.INITIAL_POPULATION, "denom", null, null)))
+                    new Population(
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        "ipp",
+                        null,
+                        null,
+                        "IntialPopulation_1_1"),
+                    new Population(
+                        "id-2",
+                        PopulationType.INITIAL_POPULATION,
+                        "denom",
+                        null,
+                        null,
+                        "IntialPopulation_1_2")))
             .stratifications(List.of(strat))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
@@ -592,8 +683,20 @@ class CqlDefinitionReturnTypeServiceTest implements ResourceUtil {
             .scoring("Cohort")
             .populations(
                 List.of(
-                    new Population("id-1", PopulationType.INITIAL_POPULATION, "ipp", null, null),
-                    new Population("id-2", PopulationType.INITIAL_POPULATION, "denom", null, null)))
+                    new Population(
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        "ipp",
+                        null,
+                        null,
+                        "IntialPopulation_1_1"),
+                    new Population(
+                        "id-2",
+                        PopulationType.INITIAL_POPULATION,
+                        "denom",
+                        null,
+                        null,
+                        "IntialPopulation_1_2")))
             .stratifications(List.of(strat))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
@@ -621,7 +724,12 @@ class CqlDefinitionReturnTypeServiceTest implements ResourceUtil {
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "boolIpp", null, null)))
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        "boolIpp",
+                        null,
+                        null,
+                        "IntialPopulation_1")))
             .stratifications(List.of(strat))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")

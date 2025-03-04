@@ -41,7 +41,8 @@ public class CqlObservationFunctionServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "IntialPopulation_1")))
             .groupDescription("Description")
             .measureObservations(List.of(observation))
             .build();
@@ -67,7 +68,8 @@ public class CqlObservationFunctionServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "IntialPopulation_1")))
             .groupDescription("Description")
             .measureObservations(List.of(observation))
             .build();
@@ -89,7 +91,8 @@ public class CqlObservationFunctionServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "IntialPopulation_1")))
             .groupDescription("Description")
             .measureObservations(null)
             .build();
@@ -114,7 +117,8 @@ public class CqlObservationFunctionServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "IntialPopulation_1")))
             .groupDescription("Description")
             .measureObservations(List.of(observation))
             .build();
@@ -142,7 +146,8 @@ public class CqlObservationFunctionServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "IntialPopulation_1")))
             .groupDescription("Description")
             .measureObservations(List.of(observation))
             .build();
@@ -169,7 +174,8 @@ public class CqlObservationFunctionServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "IntialPopulation_1")))
             .groupDescription("Description")
             .measureObservations(List.of(observation))
             .build();
@@ -195,7 +201,8 @@ public class CqlObservationFunctionServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "IntialPopulation_1")))
             .groupDescription("Description")
             .measureObservations(null)
             .build();
@@ -220,7 +227,8 @@ public class CqlObservationFunctionServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "IntialPopulation_1")))
             .groupDescription("Description")
             .measureObservations(List.of(observation))
             .build();
@@ -249,7 +257,8 @@ public class CqlObservationFunctionServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "IntialPopulation_1")))
             .groupDescription("Description")
             .measureObservations(List.of(observation))
             .build();
@@ -279,7 +288,8 @@ public class CqlObservationFunctionServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "IntialPopulation_1")))
             .groupDescription("Description")
             .measureObservations(List.of(observation))
             .build();
@@ -310,7 +320,8 @@ public class CqlObservationFunctionServiceTest implements ResourceUtil {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "IntialPopulation_1")))
             .groupDescription("Description")
             .measureObservations(List.of(observation))
             .build();

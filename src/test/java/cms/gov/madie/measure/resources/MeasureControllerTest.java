@@ -602,7 +602,8 @@ class MeasureControllerTest {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "IntialPopulation_1")))
             .build();
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
@@ -650,7 +651,8 @@ class MeasureControllerTest {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "IntialPopulation_1")))
             .build();
     Principal principal = mock(Principal.class);
     when(principal.getName()).thenReturn("test.user");
