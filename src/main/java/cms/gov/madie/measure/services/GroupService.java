@@ -100,7 +100,7 @@ public class GroupService {
     updateGroupForTestCases(group, measure.getTestCases(), measure.getModel());
 
     if (!ModelType.QDM_5_6.getValue().equalsIgnoreCase(measure.getModel())) {
-      GroupPopulationUtil.validatePopulations(measure, group);
+      GroupPopulationUtil.setGroupAndPopulationsDisplayIds(measure, group);
     }
 
     Measure errors = measureUtil.validateAllMeasureDependencies(measure);

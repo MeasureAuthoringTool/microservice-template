@@ -1,8 +1,6 @@
 package cms.gov.madie.measure.utils;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -13,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import cms.gov.madie.measure.exceptions.GroupPopulationDisplayIdException;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.MeasureGroupTypes;
@@ -97,106 +94,6 @@ public class GroupPopulationUtilTest {
         GroupPopulationUtil.getGroupNumber(
             group2IPs, List.of(Group.builder().id("testGroup1").build(), group2IPs));
     assertEquals(result, 2);
-  }
-
-  @Test
-  public void testValidate2IPPopulationsSuccess() {
-    measure.setGroups(List.of(group2IPs));
-
-    assertDoesNotThrow(() -> GroupPopulationUtil.validatePopulations(measure, group2IPs));
-  }
-
-  @Test
-  public void testValidate1IPPopulationsSuccess() {
-    population11.setDisplayId("InitialPopulation_1");
-    measure.setGroups(List.of(group1IP));
-
-    assertDoesNotThrow(() -> GroupPopulationUtil.validatePopulations(measure, group1IP));
-  }
-
-  @Test
-  public void testValidatePopulationsInvalidGroupDisplayId() {
-    group1IP =
-        Group.builder()
-            .id("testGroupId1")
-            .displayId("Invalid_Group_1")
-            .scoring("Proportion")
-            .populationBasis("Encounter")
-            .measureGroupTypes(Arrays.asList(MeasureGroupTypes.OUTCOME))
-            .populations(List.of(population11, population2, population3))
-            .build();
-    measure.setGroups(List.of(group1IP));
-
-    assertThrows(
-        GroupPopulationDisplayIdException.class,
-        () -> GroupPopulationUtil.validatePopulations(measure, group1IP));
-  }
-
-  @Test
-  public void testValidatePopulationsNoGroupDisplayId() {
-    population11.setDisplayId("InitialPopulation_1");
-    group1IP =
-        Group.builder()
-            .id("testGroupId1")
-            .scoring("Proportion")
-            .populationBasis("Encounter")
-            .measureGroupTypes(Arrays.asList(MeasureGroupTypes.OUTCOME))
-            .populations(List.of(population11, population2, population3))
-            .build();
-    measure.setGroups(List.of(group1IP));
-
-    assertDoesNotThrow(() -> GroupPopulationUtil.validatePopulations(measure, group1IP));
-  }
-
-  @Test
-  public void testValidatePopulationsInvalidGroupPopulationDisplayId() {
-    group1IP =
-        Group.builder()
-            .id("testGroupId1")
-            .displayId("Group_1")
-            .scoring("Proportion")
-            .populationBasis("Encounter")
-            .measureGroupTypes(Arrays.asList(MeasureGroupTypes.OUTCOME))
-            .populations(List.of(population11, population2, population3))
-            .build();
-    measure.setGroups(List.of(group1IP));
-
-    assertThrows(
-        GroupPopulationDisplayIdException.class,
-        () -> GroupPopulationUtil.validatePopulations(measure, group1IP));
-  }
-
-  @Test
-  public void testValidatePopulationsNoPopulationDisplayId() {
-    population11.setDisplayId(null);
-    group1IP =
-        Group.builder()
-            .id("testGroupId1")
-            .displayId("Group_1")
-            .scoring("Proportion")
-            .populationBasis("Encounter")
-            .measureGroupTypes(Arrays.asList(MeasureGroupTypes.OUTCOME))
-            .populations(List.of(population11, population2, population3))
-            .build();
-    measure.setGroups(List.of(group1IP));
-
-    assertDoesNotThrow(() -> GroupPopulationUtil.validatePopulations(measure, group1IP));
-  }
-
-  @Test
-  public void testValidatePopulationsNoIP() {
-    Group group =
-        Group.builder()
-            .id("testGroupId1")
-            .displayId("Group_1")
-            .scoring("Proportion")
-            .populationBasis("Encounter")
-            .measureGroupTypes(Arrays.asList(MeasureGroupTypes.OUTCOME))
-            .populations(List.of(population2, population3))
-            .build();
-    measure.setGroups(List.of(group));
-
-    assertDoesNotThrow(() -> GroupPopulationUtil.validatePopulations(measure, group));
   }
 
   @Test

@@ -1,11 +1,9 @@
 package cms.gov.madie.measure.utils;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 
-import cms.gov.madie.measure.exceptions.GroupPopulationDisplayIdException;
 import gov.cms.madie.models.measure.Group;
 import gov.cms.madie.models.measure.Measure;
 import gov.cms.madie.models.measure.Population;
@@ -16,34 +14,25 @@ import lombok.extern.slf4j.Slf4j;
 public class GroupPopulationUtil {
   private GroupPopulationUtil() {}
 
-  public static void validatePopulations(Measure measure, Group group) {
-    String existingGroupDisplayId = group.getDisplayId();
-    String newGroupDisplayId = String.valueOf(getGroupNumber(group, measure.getGroups()));
+  public static void setGroupAndPopulationsDisplayIds(Measure measure, Group group) {
+    String groupNumber = String.valueOf(getGroupNumber(group, measure.getGroups()));
 
-    if (existingGroupDisplayId != null
-        && !existingGroupDisplayId.equalsIgnoreCase("Group_" + String.valueOf(newGroupDisplayId))) {
-      throw new GroupPopulationDisplayIdException("Invalid group display id.");
-    }
+    // set group display id
+    group.setDisplayId("Group_" + groupNumber);
 
+    // set population display id
     if (!CollectionUtils.isEmpty(group.getPopulations())) {
-      List<Population> ips =
+      boolean hasMultipleIps =
           group.getPopulations().stream()
-              .filter(pop -> pop.getName().equals(PopulationType.INITIAL_POPULATION))
-              .collect(Collectors.toList());
+                  .filter(pop -> pop.getName().equals(PopulationType.INITIAL_POPULATION))
+                  .count()
+              > 1;
 
       for (int index = 0; index < group.getPopulations().size(); index++) {
         Population population = group.getPopulations().get(index);
-        if (population.getDisplayId() != null
-            && !population
-                .getDisplayId()
-                .equalsIgnoreCase(
-                    getPopulationDisplayId(
-                        population,
-                        newGroupDisplayId,
-                        (!CollectionUtils.isEmpty(ips) && ips.size() > 1),
-                        index))) {
-          throw new GroupPopulationDisplayIdException("Invalid group population display id.");
-        }
+        String popDisplayId =
+            getPopulationDisplayId(population, groupNumber, hasMultipleIps, index);
+        population.setDisplayId(popDisplayId);
       }
     }
   }
@@ -61,34 +50,10 @@ public class GroupPopulationUtil {
 
   static String getPopulationDisplayId(
       Population population, String groupNumber, boolean multipleIps, int index) {
-    String newPopDisplayId = null;
-    newPopDisplayId = population.getName().getDisplay().replace(" ", "") + "_" + groupNumber;
+    String newPopDisplayId = population.getName().getDisplay().replace(" ", "") + "_" + groupNumber;
     if (multipleIps && (index == 0 || index == 1)) {
       newPopDisplayId = newPopDisplayId + "_" + (index + 1);
     }
     return newPopDisplayId;
-  }
-
-  public static void setGroupAndPopulationsDisplayIds(Measure measure, Group group) {
-    String groupNumber = String.valueOf(getGroupNumber(group, measure.getGroups()));
-
-    // set group display id
-    group.setDisplayId("Group_" + groupNumber);
-
-    // set population display id
-    if (!CollectionUtils.isEmpty(group.getPopulations())) {
-      List<Population> ips =
-          group.getPopulations().stream()
-              .filter(pop -> pop.getName().equals(PopulationType.INITIAL_POPULATION))
-              .collect(Collectors.toList());
-
-      for (int index = 0; index < group.getPopulations().size(); index++) {
-        Population population = group.getPopulations().get(index);
-        String popDisplayId =
-            getPopulationDisplayId(
-                population, groupNumber, (!CollectionUtils.isEmpty(ips) && ips.size() > 1), index);
-        population.setDisplayId(popDisplayId);
-      }
-    }
   }
 }
