@@ -1,5 +1,6 @@
 package cms.gov.madie.measure.services;
 
+import cms.gov.madie.measure.dto.MeasureListDTO;
 import cms.gov.madie.measure.exceptions.*;
 import cms.gov.madie.measure.repositories.GeneratorRepository;
 import cms.gov.madie.measure.repositories.MeasureRepository;
@@ -12,11 +13,19 @@ import gov.cms.madie.models.measure.MeasureSet;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.LookupOperation;
+import org.springframework.data.mongodb.core.aggregation.MatchOperation;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
 
 @Slf4j
 @Service
@@ -27,6 +36,7 @@ public class MeasureSetService {
   private final MeasureSetRepository measureSetRepository;
   private final GeneratorRepository generatorRepository;
   private final ActionLogService actionLogService;
+  private final MongoTemplate mongoTemplate;
 
   public void createMeasureSet(
       final String harpId, final String measureId, final String savedMeasureSetId, String cmsId) {
@@ -228,5 +238,26 @@ public class MeasureSetService {
         .filter(existingAcl -> Objects.equals(existingAcl.getUserId(), userId))
         .findFirst()
         .orElse(null);
+  }
+
+  private LookupOperation getLookupOperation() {
+    return LookupOperation.newLookup()
+        .from("measureSet")
+        .localField("measureSetId")
+        .foreignField("measureSetId")
+        .as("measureSet");
+  }
+
+  public List<MeasureListDTO> getMeasuresByMeasureSetId(String measureSetId) {
+    LookupOperation lookupOperation = getLookupOperation();
+
+    Criteria measureCriteria =
+        Criteria.where("active").is(true).and("measureSetId").is(measureSetId);
+
+    MatchOperation matchOperation = match(measureCriteria);
+
+    Aggregation aggregation = newAggregation(lookupOperation, matchOperation);
+
+    return mongoTemplate.aggregate(aggregation, "measure", MeasureListDTO.class).getMappedResults();
   }
 }

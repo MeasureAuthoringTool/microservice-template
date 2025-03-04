@@ -20,12 +20,7 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -648,6 +643,20 @@ public class MeasureServiceTest implements ResourceUtil {
         DuplicateKeyException.class,
         () -> measureService.createMeasure(measureToSave, "john rao", "token", false),
         "CQL library with given name already exists");
+  }
+
+  @Test
+  void getMeasuresByMeasureSetSuccess() {
+    String measureSetId = "validMeasureSetId";
+    List<MeasureListDTO> expectedMeasures = List.of(new MeasureListDTO());
+
+    when(measureSetService.getMeasuresByMeasureSetId(measureSetId)).thenReturn(expectedMeasures);
+
+    List<MeasureListDTO> result = measureSetService.getMeasuresByMeasureSetId(measureSetId);
+
+    assertNotNull(result);
+    assertEquals(expectedMeasures.size(), result.size());
+    verify(measureSetService, times(1)).getMeasuresByMeasureSetId(measureSetId);
   }
 
   @Test
