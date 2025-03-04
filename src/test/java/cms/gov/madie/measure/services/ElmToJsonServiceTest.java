@@ -46,7 +46,12 @@ class ElmToJsonServiceTest implements ResourceUtil {
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "FactorialOfFive", null, null)))
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        "FactorialOfFive",
+                        null,
+                        null,
+                        null)))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
             .build();

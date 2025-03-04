@@ -1593,7 +1593,8 @@ public class MeasureControllerMvcTest {
                         PopulationType.INITIAL_POPULATION,
                         "Initial Population",
                         null,
-                        null)))
+                        null,
+                        "IntialPopulation_1")))
             .measureGroupTypes(List.of(MeasureGroupTypes.PROCESS))
             .build();
     final String groupJson =
@@ -1638,7 +1639,8 @@ public class MeasureControllerMvcTest {
                         PopulationType.INITIAL_POPULATION,
                         updateIppDefinition,
                         null,
-                        null)))
+                        null,
+                        "IntialPopulation_1")))
             .measureGroupTypes(List.of(MeasureGroupTypes.PROCESS))
             .build();
 
@@ -2040,7 +2042,10 @@ public class MeasureControllerMvcTest {
                 .with(csrf())
                 .header("Authorization", "test-okta"))
         .andExpect(status().isOk())
-        .andExpect(content().string("{\"measureId1\":[\"userId1\",\"userId2\"],\"measureId2\":[\"userId1\",\"userId2\"]}"));
+        .andExpect(
+            content()
+                .string(
+                    "{\"measureId1\":[\"userId1\",\"userId2\"],\"measureId2\":[\"userId1\",\"userId2\"]}"));
 
     verify(measureService, times(1)).getSharedWithUserIds(eq(measureIds));
   }

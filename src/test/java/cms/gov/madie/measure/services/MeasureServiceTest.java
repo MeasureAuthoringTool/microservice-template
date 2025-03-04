@@ -160,7 +160,12 @@ public class MeasureServiceTest implements ResourceUtil {
             .populations(
                 List.of(
                     new Population(
-                        "id-1", PopulationType.INITIAL_POPULATION, "FactorialOfFive", null, null)))
+                        "id-1",
+                        PopulationType.INITIAL_POPULATION,
+                        "FactorialOfFive",
+                        null,
+                        null,
+                        "IntialPopulation_1")))
             .stratifications(List.of(strat1, emptyStrat))
             .groupDescription("Description")
             .scoringUnit("test-scoring-unit")
@@ -1635,7 +1640,12 @@ public class MeasureServiceTest implements ResourceUtil {
             .build();
 
     String measureId1 = "measureId1";
-    Measure measure1 = Measure.builder().id(measureId1).measureSetId(measureSet1.getMeasureSetId()).measureSet(measureSet1).build();
+    Measure measure1 =
+        Measure.builder()
+            .id(measureId1)
+            .measureSetId(measureSet1.getMeasureSetId())
+            .measureSet(measureSet1)
+            .build();
 
     String measureId2 = "measureId2";
     Measure measure2 = Measure.builder().id(measureId2).build();
@@ -1663,16 +1673,23 @@ public class MeasureServiceTest implements ResourceUtil {
             .build();
 
     String measureId1 = "measureId1";
-    Measure measure1 = Measure.builder().id(measureId1).measureSetId(measureSet1.getMeasureSetId()).measureSet(measureSet1).build();
-
-    MeasureSet measureSet2 =
-        MeasureSet.builder()
-            .measureSetId("measureSetId1")
-            .owner("testUser")
+    Measure measure1 =
+        Measure.builder()
+            .id(measureId1)
+            .measureSetId(measureSet1.getMeasureSetId())
+            .measureSet(measureSet1)
             .build();
 
+    MeasureSet measureSet2 =
+        MeasureSet.builder().measureSetId("measureSetId1").owner("testUser").build();
+
     String measureId2 = "measureId2";
-    Measure measure2 = Measure.builder().id(measureId1).measureSetId(measureSet1.getMeasureSetId()).measureSet(measureSet2).build();
+    Measure measure2 =
+        Measure.builder()
+            .id(measureId1)
+            .measureSetId(measureSet1.getMeasureSetId())
+            .measureSet(measureSet2)
+            .build();
 
     List<String> measureIds = List.of(measureId1, measureId2);
 
@@ -1685,7 +1702,9 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertTrue(userIdsByMeasureId.containsKey(measureId1));
     assertThat(userIdsByMeasureId.get(measureId1).size(), is(equalTo(1)));
-    assertThat(userIdsByMeasureId.get(measureId1).get(0), is(equalTo(measure1.getMeasureSet().getAcls().get(0).getUserId())));
+    assertThat(
+        userIdsByMeasureId.get(measureId1).get(0),
+        is(equalTo(measure1.getMeasureSet().getAcls().get(0).getUserId())));
 
     assertTrue(userIdsByMeasureId.containsKey(measureId2));
     assertThat(userIdsByMeasureId.get(measureId2).size(), is(equalTo(0)));
@@ -1709,7 +1728,12 @@ public class MeasureServiceTest implements ResourceUtil {
             .build();
 
     String measureId1 = "measureId1";
-    Measure measure1 = Measure.builder().id(measureId1).measureSetId(measureSet1.getMeasureSetId()).measureSet(measureSet1).build();
+    Measure measure1 =
+        Measure.builder()
+            .id(measureId1)
+            .measureSetId(measureSet1.getMeasureSetId())
+            .measureSet(measureSet1)
+            .build();
 
     MeasureSet measureSet2 =
         MeasureSet.builder()
@@ -1719,7 +1743,12 @@ public class MeasureServiceTest implements ResourceUtil {
             .build();
 
     String measureId2 = "measureId2";
-    Measure measure2 = Measure.builder().id(measureId1).measureSetId(measureSet1.getMeasureSetId()).measureSet(measureSet2).build();
+    Measure measure2 =
+        Measure.builder()
+            .id(measureId1)
+            .measureSetId(measureSet1.getMeasureSetId())
+            .measureSet(measureSet2)
+            .build();
 
     List<String> measureIds = List.of(measureId1, measureId2);
 
@@ -1732,12 +1761,17 @@ public class MeasureServiceTest implements ResourceUtil {
 
     assertTrue(userIdsByMeasureId.containsKey(measureId1));
     assertThat(userIdsByMeasureId.get(measureId1).size(), is(equalTo(2)));
-    assertThat(userIdsByMeasureId.get(measureId1).get(0), is(equalTo(measure1.getMeasureSet().getAcls().get(1).getUserId())));
-    assertThat(userIdsByMeasureId.get(measureId1).get(1), is(equalTo(measure1.getMeasureSet().getAcls().get(0).getUserId())));
-
+    assertThat(
+        userIdsByMeasureId.get(measureId1).get(0),
+        is(equalTo(measure1.getMeasureSet().getAcls().get(1).getUserId())));
+    assertThat(
+        userIdsByMeasureId.get(measureId1).get(1),
+        is(equalTo(measure1.getMeasureSet().getAcls().get(0).getUserId())));
 
     assertTrue(userIdsByMeasureId.containsKey(measureId2));
     assertThat(userIdsByMeasureId.get(measureId2).size(), is(equalTo(1)));
-    assertThat(userIdsByMeasureId.get(measureId2).get(0), is(equalTo(measure2.getMeasureSet().getAcls().get(0).getUserId())));
+    assertThat(
+        userIdsByMeasureId.get(measureId2).get(0),
+        is(equalTo(measure2.getMeasureSet().getAcls().get(0).getUserId())));
   }
 }
