@@ -161,6 +161,16 @@ class MeasureControllerTest {
   }
 
   @Test
+  void getMeasuresByMeasureSetId() {
+    measure1.setId("testId");
+    List<MeasureListDTO> measures = Arrays.asList(measureList);
+    when(measureSetService.getMeasuresByMeasureSetId(anyString())).thenReturn(measures);
+    ResponseEntity<List<MeasureListDTO>> response = controller.getMeasuresByMeasureSetId("test");
+    verify(measureSetService, times(1)).getMeasuresByMeasureSetId(anyString());
+    assertNotNull(response.getBody());
+  }
+
+  @Test
   void getMeasure() {
     String id = "testid";
     Optional<Measure> optionalMeasure = Optional.of(measure1);
